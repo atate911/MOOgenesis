@@ -36,4 +36,15 @@ module.exports = function (M, t) {
       t.eq(run(), 'stepProduction stepEco stepResearchTotal stepDefense stepShips stepIndustry', 'the switch restores the single pass');
     } finally { for (const k in orig) Sim.Econ[k] = orig[k]; Cfg.QUIRKS = savedQ; }
   });
+
+  t.test('Econ.refresh keeps E.research.total current after a slider change (no stale value until the next turn)', () => {
+    const Sim = M.Sim;
+    const S = Sim.Setup.create({ size: 'small', opponents: 1, race: 'human', seed: 'refresh-rp', difficulty: 'average' });
+    Sim.Econ.refresh(S);
+    const E = S.empires[S.playerId], p = S.planets.find(q => q.owner === E.id);
+    p.lock = [false, false, false, false, false]; p.sliders = [0, 0, 100, 0, 0]; Sim.Econ.refresh(S);
+    const before = E.research.total;
+    Sim.Colony.setSlider(S, E, p, 4, 100); Sim.Econ.refresh(S);
+    t.ok(E.research.total > before, 'research total follows the slider: ' + before + ' -> ' + E.research.total);
+  });
 };

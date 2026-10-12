@@ -98,6 +98,7 @@ MOO.def(function (M) {
   X.refresh = function (S) {
     X.stepProduction(S);
     for (const p of S.planets) if (p.owner >= 0) C.applyEcoFloor(S, S.empires[p.owner], p);
+    X.stepResearchTotal(S);                                  // slider changes (and the ECO floor) alter the RP: keep E.research.total current between turns
   };
 
   // ---- orders: sliders, build item, tax, security, reserve transfer ---------------------------------------------------------------------------------

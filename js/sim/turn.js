@@ -59,6 +59,8 @@ MOO.def(function (M) {
 
     // (20–21) research: interest + breakthrough rolls; then choose next projects
     for (const e of alive()) Sim.Research.advance(S, e, R);
+    // the breakthrough / discovery scene comes BEFORE the choice of the next project (original order); the trailing take below catches anything pushed later
+    for (const ev of Sim.Ev.take(S, x => x.type === 'tech' && S.empires[x.empire].human)) yield ev;
     for (const e of alive()) {
       const rs = e.research;
       for (let f = 0; f < 6; f++) {
