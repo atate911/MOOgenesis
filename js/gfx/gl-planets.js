@@ -211,8 +211,8 @@
   // each look: p = parameter overrides (see FKEYS), pal = palette overrides (sRGB hex), vort = number of cloud cyclones
   const LOOKS = {
     terran: {
-      p: { water: 0.62, ice: 0.80, mount: 1.0, bump: 0.55, warp: 0.35, freq: 0.62, cover: 0.38, cscale: 1.8, copac: 0.95, atm: 1.0, atmH: 0.03, wrap: 0.26, spec: 1.0, sand: 0.02, city: 1.0, grain: 0.12, depthS: 4.5 },
-      pal: { shallow: '#3ab8c8', deep: '#0a2d68', beach: '#dccb92', dry: '#cdb177', steppe: '#9fae5c', grass: '#5a9441', forest: '#2c6a36', rock: '#7c6c5a', snow: '#f6f8fb', seaice: '#d4e6f4', atm: '#68a8ff', twi: '#ff9a5a', cloud: '#ffffff' }, vort: 2
+      p: { water: 0.62, ice: 0.80, mount: 1.0, bump: 0.55, warp: 0.35, freq: 0.62, cover: 0.31, cscale: 2.1, copac: 0.8, atm: 1.0, atmH: 0.03, wrap: 0.26, spec: 1.0, sand: 0.02, city: 1.0, grain: 0.12, depthS: 4.5 },
+      pal: { shallow: '#3ab8c8', deep: '#0a2d68', beach: '#dccb92', dry: '#cdb177', steppe: '#9fae5c', grass: '#5a9441', forest: '#2c6a36', rock: '#7c6c5a', snow: '#f6f8fb', seaice: '#d4e6f4', atm: '#68a8ff', twi: '#ff9a5a', cloud: '#f2f5f8' }, vort: 1
     },
     jungle: {
       p: { water: 0.34, ice: 1.2, mount: 0.7, bump: 0.6, warp: 0.4, freq: 0.85, cover: 0.5, cscale: 1.9, copac: 0.93, atm: 1.0, atmH: 0.03, wrap: 0.28, spec: 0.7, moist: 0.30, temp: 0.28, river: 1.0, sand: 0.02, city: 0.9, grain: 0.16, depthS: 4.5 },
@@ -1435,7 +1435,7 @@ void main() {
     pp += nzV(P * uP.x * 0.45 + uSd.yzx).xyz * 0.7;
     vec3 w1 = worleyA(pp, tm);
     float lane = sst(0.0, 0.42, w1.y - w1.x);
-    float B = mix(0.42, 1.0, lane) * (0.74 + 0.5 * w1.z);
+    float B = mix(0.66, 1.0, lane) * (0.84 + 0.26 * w1.z);          // v2: low-contrast granulation (was cracked-plate look)
     if (uP.w > 0.5) {
       vec3 w2 = worleyA(pp * 3.0 + 5.3, tm * 1.6);
       B *= mix(0.84, 1.06, sst(0.0, 0.3, w2.y - w2.x));
@@ -1560,9 +1560,9 @@ void main() {
 
   const STAR_KINDS = ['yellow', 'orange', 'red', 'blue', 'white', 'green', 'purple', 'blackhole'];
   const STAR = {
-    yellow: { cl: '#b8480a', cm: '#ff9d1c', ch: '#ffe58a', cor: '#ffcc55', limb: [0.55, 0.85, 1.2], spots: 0.45, freq: 5.5, glow: 1.0, tight: 1.0, streak: 0.55, prom: 3 },
-    orange: { cl: '#8a2e06', cm: '#ff7a14', ch: '#ffc060', cor: '#ff8f30', limb: [0.5, 0.8, 1.2], spots: 0.6, freq: 5.0, glow: 0.9, tight: 0.9, streak: 0.5, prom: 2 },
-    red: { cl: '#4a0a04', cm: '#d8300e', ch: '#ff7a44', cor: '#ff4a28', limb: [0.45, 0.8, 1.3], spots: 0.9, freq: 4.2, glow: 0.85, tight: 0.85, streak: 0.4, prom: 4 },
+    yellow: { cl: '#c8681e', cm: '#ffb440', ch: '#fff0c0', cor: '#ffd070', limb: [0.55, 0.85, 1.2], spots: 0.3, freq: 9.0, glow: 0.85, tight: 1.0, streak: 0.5, prom: 0 },
+    orange: { cl: '#8a2e06', cm: '#f07a1c', ch: '#ffc468', cor: '#ff9438', limb: [0.5, 0.8, 1.2], spots: 0.5, freq: 8.0, glow: 0.8, tight: 0.9, streak: 0.5, prom: 0 },
+    red: { cl: '#4a0a04', cm: '#d8300e', ch: '#ff7a44', cor: '#ff4a28', limb: [0.45, 0.8, 1.3], spots: 0.8, freq: 7.0, glow: 0.8, tight: 0.85, streak: 0.4, prom: 2 },
     blue: { cl: '#2c58c8', cm: '#7ab4ff', ch: '#e6f4ff', cor: '#6ea6ff', limb: [0.35, 0.5, 0.7], spots: 0.0, freq: 7.0, glow: 1.5, tight: 1.4, streak: 0.8, prom: 1 },
     white: { cl: '#9aaad8', cm: '#e6ecff', ch: '#ffffff', cor: '#cfdcff', limb: [0.4, 0.55, 0.75], spots: 0.08, freq: 6.5, glow: 1.2, tight: 1.2, streak: 0.6, prom: 1 },
     green: { cl: '#14762c', cm: '#52e07c', ch: '#e0ffd0', cor: '#58f08c', limb: [0.5, 0.55, 0.9], spots: 0.2, freq: 5.5, glow: 1.1, tight: 1.1, streak: 0.6, prom: 2 },
