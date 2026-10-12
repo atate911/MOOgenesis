@@ -39,6 +39,7 @@ function start(page, o = {}) {
             return out;
           }
           if (cur === 'council') { const ks = opts.councilKeys || ['Space', '1', '2', '0', 'y', 'n']; press(ks[Math.floor(rv * ks.length)]); out.did = 'council'; return out; }
+          if (cur === 'endings') { const b = [...document.querySelectorAll('.end-act button')].filter(vis); if (b.length) { const k = b.find(x => /keep/i.test(x.textContent)); (k || b[b.length - 1]).click(); out.did = 'ending-btn'; } else press('Space'); return out; }
           if (cur !== 'galaxy') { press(cur === 'landing' ? 'Enter' : 'Space'); out.did = 'space@' + cur; return out; }
           return out;
         }, { rv: rnd(), opts: o });

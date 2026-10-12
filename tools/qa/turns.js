@@ -4,7 +4,7 @@ const { serve, open, sleep } = require('./lib'); const bot = require('./bot');
   const [turns = 60, seed = 'q1', opp = 4, diff = 'hard', race = 'human'] = process.argv.slice(2);
   const srv = await serve(+process.env.PORT || 8766);
   const { browser, page, errors } = await open();
-  await page.goto(`http://localhost:${process.env.PORT || 8766}/index.html?dev=1&screen=galaxy&race=${race}&size=medium&opp=${opp}&seed=${seed}&diff=${diff}&turns=0`);
+  await page.goto(`http://localhost:${process.env.PORT || 8766}/index.html?dev=1&screen=galaxy&race=${race}&size=${process.env.SIZE || "medium"}&opp=${opp}&seed=${seed}&diff=${diff}&turns=0${process.env.AI ? "&ai=1" : ""}${process.env.SIZE ? "&size=" + process.env.SIZE : ""}`);
   await sleep(1200);
   await page.evaluate(() => { const H = MOO.Game.handlers; window.__int = []; for (const k of Object.keys(H)) { const f = H[k]; H[k] = async function (it, S) { window.__int.push(k + (it && (it.kind || it.field !== undefined && ('f' + it.field)) ? ':' + (it.kind || it.field) : '')); window.__cur = k; const r = await f.apply(this, arguments); window.__cur = null; return r; }; } });
   const b = bot.start(page, { verbose: !!process.env.V });

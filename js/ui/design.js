@@ -778,7 +778,7 @@
     const info = D.itemInfo(E_(), 'weapons', K.WEAPONS.indexOf(w), st.draft.hull), per = firepower({ weapons: [Object.assign({}, w, { count: 1 })] });
     let t = '<b>' + esc(w.name) + '</b> (' + KIND_LABEL[w.kind] + ')<br>' + dmgText(w) + ' damage · range ' + rangeOf(w, s) + (w.rof > 1 ? ' · fires ' + w.rof + '×' : '') + '<br>' + info.cost + ' BC · size ' + info.space + ' · power ' + info.power;
     if (per) t += '<br>≈ ' + per + ' damage per round each (before shields)';
-    if (w.kind === 'missile' || w.kind === 'torpedo') t += '<br>Speed ' + w.speed + ' squares/round · ' + (w.ammo > 0 ? w.ammo + ' volleys per battle' : 'unlimited');
+    if (w.kind === 'missile' || w.kind === 'torpedo') t += '<br>Speed ' + w.speed + ' squares/round · ' + (w.ammo > 0 ? w.ammo + (w.ammo === 1 ? ' volley' : ' volleys') + ' per battle' : 'unlimited');
     return t;
   }
 
