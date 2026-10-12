@@ -172,7 +172,8 @@ MOO.def(function (M) {
     for (const t of landed) {
       S.trans = S.trans.filter(x => x !== t);
       const p = S.planets[t.to], E = S.empires[t.owner];
-      if (p.owner === t.owner) { p.pop = Math.min(p.pop + t.n, p.mp3); out.push({ kind: 'reinforce', empire: t.owner, planet: p.id, n: t.n }); }
+      if (E && !E.alive) out.push({ kind: 'lost', empire: t.owner, planet: p.id, n: t.n });     // never let a dead empire's transports capture anything
+      else if (p.owner === t.owner) { p.pop = Math.min(p.pop + t.n, p.mp3); out.push({ kind: 'reinforce', empire: t.owner, planet: p.id, n: t.n }); }
       else if (p.owner < 0) out.push({ kind: 'lost', empire: t.owner, planet: p.id, n: t.n });
       else if (allied(S, t.owner, p.owner)) out.push({ kind: 'lost', empire: t.owner, planet: p.id, n: t.n });
       else out.push({ kind: 'invade', empire: t.owner, target: p.owner, planet: p.id, n: t.n });

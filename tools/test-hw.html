@@ -1,0 +1,136 @@
+<!doctype html>
+<html lang="en" data-theme="v2"><head><meta charset="utf-8"><title>Hardware test - threads, workers, GPU</title>
+<link rel="stylesheet" href="../css/base.css"><link rel="stylesheet" href="../css/kit.css"><link rel="stylesheet" href="../css/theme-v2.css">
+<style>body{overflow:auto;padding:1.5rem;background:var(--void)} pre{white-space:pre-wrap;user-select:text;color:var(--ivory);font:13px/1.5 monospace} .ok{color:var(--leaf)} .bad{color:var(--rose)} .dim{color:var(--fog)}
+ table{border-collapse:collapse;font:12.5px monospace;margin:.4rem 0} td,th{padding:.15rem .7rem;text-align:right;border-bottom:1px solid var(--line-1,#233)} th:first-child,td:first-child{text-align:left}</style></head>
+<body>
+<h2>Hardware: threads, worker pool, GPU</h2>
+<div class="row" style="margin:.6rem 0;gap:.6rem">
+  <button class="btn primary" id="go-all">Run everything</button><button class="btn" id="go-gpu">GPU timings</button><button class="btn" id="go-work">Workers + determinism</button>
+  <label class="dim">turns <input id="turns" type="number" value="100" min="5" max="300" style="width:4.5rem"></label>
+</div>
+<div id="hw" class="dim"></div>
+<h3>GPU vs Canvas2D, per tier</h3>
+<div id="gpu">idle</div>
+<h3>Worker pool vs inline (same seed, same game)</h3>
+<pre id="out">idle</pre>
+<script>
+// Loads exactly the DOM-free sim + the art modules that matter, from the one manifest (works from file://).
+(function () {
+  var s = document.createElement('script'); s.src = '../js/manifest.js'; s.onload = function () {
+    var man = window.MOO_MANIFEST.js.filter(function (f) { return /^js\/(core|data|sim|ai)\//.test(f) || /^js\/gfx\/(gl|space|planets|fx|gl-planets|gl-space|gl-fx|pick)\.js$/.test(f); });
+    var i = 0; (function next() { if (i >= man.length) return main(); var e = document.createElement('script'); e.src = '../' + man[i++]; e.async = false; e.onload = next; e.onerror = function () { console.warn('missing', e.src); next(); }; document.head.appendChild(e); })();
+  }; document.head.appendChild(s);
+})();
+function main() {
+  const M = window.MOO, Q = new URLSearchParams(location.search);
+  const out = document.getElementById('out'), gpuEl = document.getElementById('gpu');
+  const log = (t, c) => { out.innerHTML += '\n<span class="' + (c || '') + '">' + t + '</span>'; };
+  const now = () => performance.now();
+  const sleep = ms => new Promise(r => setTimeout(r, ms));
+  const results = window.__hw = { gpu: [], workers: null };
+  M.Perf.start();
+
+  function header() {
+    const gl = M.Gfx.GL.supported() ? M.Gfx.GL.info : null;
+    document.getElementById('hw').textContent = 'logical threads ' + M.HW.threads + ' | deviceMemory ' + M.HW.memoryGB + ' GB | WebGL2 ' + (gl ? 'yes' : 'no') + ' | GPU ' + (M.HW.gpu || (gl && gl.renderer) || '?') + ' | auto tier ' + M.Perf.cap
+      + (/swiftshader|llvmpipe|software/i.test(M.HW.gpu || '') ? '  (software renderer: absolute GPU numbers are NOT representative, compare the ratios only)' : '');
+  }
+
+  // ---------------------------------------------------------------- GPU timings
+  // every GL job ends with a 1-pixel readback so the GPU work is really finished when the clock stops
+  function sync() { try { const g = M.Gfx.GL.gl(); if (g) { const b = new Uint8Array(4); g.readPixels(0, 0, 1, 1, g.RGBA, g.UNSIGNED_BYTE, b); } } catch (e) { /* ignore */ } }
+  function bench(name, fn, n, budget) {
+    fn(0); sync();                                            // warm (shader compile, caches)
+    const t0 = now(); let k = 0;
+    while (k < n && (now() - t0) < budget) { fn(k++); }
+    sync(); return (now() - t0) / Math.max(1, k);
+  }
+  const TIERS = ['low', 'medium', 'high', 'ultra'];
+  async function gpuRun() {
+    gpuEl.textContent = 'running...'; results.gpu = [];
+    const cv = document.createElement('canvas'); cv.width = 1280; cv.height = 720; const ctx = cv.getContext('2d');
+    const cap = M.Perf.q; const rows = [];
+    const desc = { look: 'terran', seed: 'hw', inhabited: true, color: '#d6b36a' };
+    for (const tier of TIERS) {
+      M.Perf.setPreset(tier); await sleep(50);
+      const P = M.Gfx.pick('planets'), S = M.Gfx.pick('space'), F = M.Gfx.pick('fx');
+      const gl = M.Gfx.pick.on();
+      const row = { tier, path: gl ? 'GL' : '2D', dpr: M.Perf.q.dpr };
+      row.planetLive = bench('planet', k => { ctx.clearRect(0, 0, 1280, 720); P.draw(ctx, desc, 640, 360, 260, k * 0.05, { spin: 0.02 }); }, 30, 2500);
+      row.planetSprite = bench('sprite', k => { P.sprite({ look: 'ocean', seed: 'hw' + k, inhabited: true }, 256); }, 12, 2500);
+      row.backdrop = bench('backdrop', k => { S.makeBackdrop(1280, 720, 'hw' + k, {}); }, 6, 3000);
+      row.star = bench('star', k => { ctx.clearRect(0, 0, 1280, 720); S.drawStarSurface(ctx, 'yellow', 640, 360, 180, k * 0.05, {}); }, 30, 2500);
+      if (M.Gfx.GLSpace && gl) row.vortex = bench('vortex', k => { ctx.clearRect(0, 0, 1280, 720); M.Gfx.GLSpace.vortex(ctx, 640, 360, 300, k * 0.05, {}); }, 30, 2500);
+      const fx = F.create({ w: 1280, h: 720 });
+      row.fxFrame = bench('fx', k => { if (k % 4 === 0) { fx.explosion(300 + (k * 37) % 700, 200 + (k * 53) % 300, 60, { kind: 'fire' }); fx.beam(100, 600, 1100, 150, 'laser', 0.5, {}); } fx.update(1 / 60); ctx.clearRect(0, 0, 1280, 720); fx.draw(ctx); }, 90, 3000);
+      row.fxParts = fx.count ? fx.count() : 0;
+      rows.push(row); results.gpu.push(row);
+      render(rows);
+    }
+    M.Perf.setPreset('auto');
+  }
+  function render(rows) {
+    const cols = [['planetLive', 'planet live 520px'], ['planetSprite', 'planet sprite 256'], ['backdrop', 'backdrop 1280x720'], ['star', 'star surface'], ['vortex', 'vortex'], ['fxFrame', 'fx frame']];
+    gpuEl.innerHTML = '<table><tr><th>tier</th><th>path</th><th>dpr</th>' + cols.map(c => '<th>' + c[1] + ' ms</th>').join('') + '<th>fx particles</th></tr>' +
+      rows.map(r => '<tr><td>' + r.tier + '</td><td>' + r.path + '</td><td>' + r.dpr + '</td>' + cols.map(c => '<td>' + (r[c[0]] === undefined ? '-' : r[c[0]].toFixed(1)) + '</td>').join('') + '<td>' + r.fxParts + '</td></tr>').join('') + '</table>';
+  }
+
+  // ---------------------------------------------------------------- workers + determinism
+  function hash(o) { const s = JSON.stringify(o); let h = 2166136261; for (let i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 16777619); } return (h >>> 0).toString(16) + ':' + s.length; }
+  function newGame() { return M.Sim.Setup.create({ size: 'medium', difficulty: 'average', opponents: 4, race: 'human', banner: 0, seed: 'hw-determinism' }); }
+  // plays turns with the same interrupt answers as Game.endTurn, planning either inline or through the pool
+  async function play(turns, pooled, tag) {
+    const S = newGame(), planHashes = [], t0 = now(); let aiMs = 0, combatMs = 0, battles = 0;
+    for (let n = 0; n < turns; n++) {
+      const gen = M.Sim.Turn.run(S); let r = gen.next();
+      while (!r.done) {
+        const it = r.value; let ans;
+        if (it.type === 'aiPlan') {
+          const ids = S.empires.filter(e => e.alive && !e.human).map(e => e.id), t = now(); ans = {};
+          if (pooled) { M.Workers.setSnapshot(S); const res = await M.Workers.map('aiPlan', ids.map(id => ({ empire: id, seed: M.AI.seedFor(S, id) })), { snap: true }); ids.forEach((id, i) => { ans[id] = res[i]; }); }
+          else ids.forEach(id => { ans[id] = M.AI.plan(S, id, M.AI.seedFor(S, id)); });
+          aiMs += now() - t; planHashes.push(hash(ans));
+        } else if (it.type === 'battles') {
+          const t = now(); battles += it.battles.length; const jobs = it.battles.map(b => ({ battle: b, seed: S.seed + ':' + S.turn + ':' + b.star }));
+          const rs = pooled ? await M.Workers.map('resolveBattle', jobs) : jobs.map(j => M.Ops.resolveBattle(j));
+          ans = { results: rs }; combatMs += now() - t;
+        } else if (it.type === 'colonize') ans = true;
+        else if (it.type === 'techChoice') ans = it.choices[0] ? it.choices[0].level : 0;
+        else if (it.type === 'council') ans = M.Sim.Council && M.Sim.Council.autoVote ? M.Sim.Council.autoVote(S, it.info) : 0;
+        r = gen.next(ans);
+      }
+      if (r.value) break;
+      if (n % 10 === 9) await sleep(0);
+    }
+    return { S, planHashes, ms: now() - t0, aiMs, combatMs, battles, final: hash(S), turn: S.turn, tag };
+  }
+  async function workRun() {
+    out.textContent = 'logical threads: ' + M.HW.threads;
+    let t = now(); const n = await M.Workers.init();
+    log('pool ready: ' + n + ' workers in ' + Math.round(now() - t) + ' ms', n ? 'ok' : 'bad');
+    const jobs = Array.from({ length: 48 }, () => ({ n: 2e6 }));
+    t = now(); for (let i = 0; i < 4; i++) M.Ops.burn(jobs[i]); const inl = (now() - t) / 4;
+    t = now(); await M.Workers.map('burn', jobs); const par = now() - t;
+    log('burn x48: inline ~' + Math.round(inl * 48) + ' ms, pooled ' + Math.round(par) + ' ms -> speed-up x' + (inl * 48 / par).toFixed(1), 'ok');
+    const turns = +document.getElementById('turns').value || 100;
+    log('playing ' + turns + ' turns inline ...'); const A = await play(turns, false, 'inline');
+    log('inline: ' + A.turn + ' turns in ' + Math.round(A.ms) + ' ms (AI planning ' + Math.round(A.aiMs) + ' ms, ' + A.battles + ' battles resolved in ' + Math.round(A.combatMs) + ' ms)');
+    log('playing ' + turns + ' turns on the pool ...'); const B = await play(turns, true, 'pool');
+    const st = M.Workers.stats();
+    log('pool:   ' + B.turn + ' turns in ' + Math.round(B.ms) + ' ms (AI planning ' + Math.round(B.aiMs) + ' ms, ' + B.battles + ' battles in ' + Math.round(B.combatMs) + ' ms)  -> game speed-up x' + (A.ms / B.ms).toFixed(2) + ', AI planning x' + (A.aiMs / Math.max(1, B.aiMs)).toFixed(2));
+    log('utilisation: ' + (st.perWorker ? st.perWorker.map(w => w.done + ' jobs/' + w.ms + ' ms').join(' | ') : JSON.stringify(st)), 'dim');
+    let firstDiff = -1; for (let i = 0; i < Math.max(A.planHashes.length, B.planHashes.length); i++) if (A.planHashes[i] !== B.planHashes[i]) { firstDiff = i; break; }
+    const same = firstDiff < 0 && A.final === B.final;
+    log(same ? 'DETERMINISM OK: all ' + A.planHashes.length + ' AI plan batches and the final state are identical (' + A.final + ')' : 'DETERMINISM FAIL: first differing plan batch ' + firstDiff + '; final ' + A.final + ' vs ' + B.final, same ? 'ok' : 'bad');
+    results.workers = { threads: M.HW.threads, workers: n, inlineMs: A.ms, poolMs: B.ms, inlineAiMs: A.aiMs, poolAiMs: B.aiMs, deterministic: same, turns: A.turn, battles: A.battles, burnSpeedup: inl * 48 / par };
+  }
+
+  header();
+  document.getElementById('go-gpu').onclick = () => gpuRun();
+  document.getElementById('go-work').onclick = () => workRun();
+  document.getElementById('go-all').onclick = async () => { await gpuRun(); await workRun(); window.__hwDone = true; };
+  if (Q.get('auto')) { document.getElementById('turns').value = Q.get('turns') || 100; document.getElementById('go-all').click(); }
+}
+</script>
+</body></html>

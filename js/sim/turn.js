@@ -157,7 +157,11 @@ MOO.def(function (M) {
       const hasPlanet = S.planets.some(p => p.owner === e.id);
       let hasColonizer = false;
       if (!hasPlanet) for (const f of S.fleets) if (f.owner === e.id) for (let i = 0; i < 6; i++) if (f.ships[i] && Sim.Design.stats(S, e, i).colonyMin) hasColonizer = true;
-      if (!hasPlanet && !hasColonizer) { e.alive = false; Sim.Ev.push(S, { type: 'empireDestroyed', empire: e.id }); }
+      if (!hasPlanet && !hasColonizer) {
+        e.alive = false; Sim.Ev.push(S, { type: 'empireDestroyed', empire: e.id });
+        // its population transports in flight vanish with it; otherwise they land later, 'invade' a planet and hand it to a dead empire (soak DEAD_OWNER, seed 24052)
+        if (S.trans) S.trans = S.trans.filter(t => t.owner !== e.id);
+      }
     }
   };
   // conquest victory: only one empire left (or the human is dead)
