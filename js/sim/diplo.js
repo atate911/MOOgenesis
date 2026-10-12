@@ -245,6 +245,7 @@ MOO.def(function (M) {
           const hum = A.human || B.human;
           if (A.human) { ra.met = 1; rb.met = 2; } else if (B.human) { rb.met = 1; ra.met = 2; } else { ra.met = rb.met = 2; }
           if (hum && !silent) news(S, 'firstContact', a, b);
+          else if (!hum && Array.isArray(S.newsThisTurn)) S.newsThisTurn.push('firstContact');          // AI-vs-AI contact: no broadcast, only the headless/soak tag
           log(S, 'contact', a, b);
         }
         changes.push({ a, b, first: ra.met === 1 || rb.met === 1 });

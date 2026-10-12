@@ -13,9 +13,9 @@ const St = require('./lib/stats.js');
 const C = { NEXT: 0, STOP: 1, GO: 2, READY: 3, SLOTS: 4 };
 
 // Event classification by report.events[].type only. Edit these if the sim names its diplomacy events differently.
-const RE_CONTACT = /contact/i;
-const RE_WAR = /war/i, RE_NOT_WAR = /peace|end|over|weary|ward|warn|aware|reward|toward|software/i;
-const RE_TREATY = /treaty|alliance|pact|peace|accord|agreement/i;
+const RE_CONTACT = /contact/i;                                           // news:firstContact, diplomacy:firstContact (greeting audience), bare 'contact' events
+const RE_WAR = /(?:^|:)war(?:Declared)?$/i;                              // news:warDeclared (every war, also AI-vs-AI) and bare 'war' events; the human's diplomacy:warDeclared audience repeats a news item, so it is not counted twice
+const RE_TREATY = /treaty|alliance|pact|peace|accord|agreement|napSigned|tradeSigned|^diplomacy:(?:nap|alliance|trade|peace)/i;   // news:peaceTreaty / allianceFormed / napSigned / tradeSigned / treatyBroken, diplomacy:* proposals
 
 const safeHash = S => { try { return St.hashState(S); } catch (e) { return null; } };
 const errInfo = e => ({ name: (e && e.name) || 'Error', message: String((e && e.message) || e), stack: String((e && e.stack) || '') });
@@ -150,7 +150,7 @@ function playGame(env, job, hooks) {
       res.events[type] = (res.events[type] || 0) + 1;
       const txt = String(type);
       if (RE_CONTACT.test(txt)) { if (res.firstContact === null) res.firstContact = played; }
-      else if (RE_WAR.test(txt) && !RE_NOT_WAR.test(txt)) res.wars++;
+      else if (RE_WAR.test(txt)) res.wars++;
       else if (RE_TREATY.test(txt)) res.treaties++;
     }
   };

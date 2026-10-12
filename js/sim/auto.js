@@ -22,11 +22,12 @@ MOO.def(function (M) {
       }
       seen.push(it && it.type);
       // soak/test visibility: news categories and diplomacy kinds as extra tagged entries ('news:warDeclared', 'diplomacy:peaceOffer'…)
-      if (it && it.type === 'gnn') for (const x of it.items || []) seen.push('news:' + x.cat);
+      if (it && it.type === 'gnn') for (const x of it.items || []) { if ((S.newsThisTurn || []).indexOf(x.cat) < 0) seen.push('news:' + x.cat); }     // compile-made items (starsReport, rankings, empireDestroyed)
       else if (it && it.type === 'diplomacy' && it.kind) seen.push('diplomacy:' + it.kind);
       else if (it && it.type === 'notice' && it.kind) seen.push('notice:' + it.kind);
       r = gen.next(ans);
     }
+    for (const cat of (S.newsThisTurn || [])) seen.push('news:' + cat);               // EVERY news event of the turn, also the AI-vs-AI ones the human never sees
     timings.total = now() - t0;
     return { turn: S.turn, events: seen, timings, over: r.value || null };
   };

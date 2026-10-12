@@ -24,7 +24,7 @@ Every warning/failure prints a `--replay` line that reproduces it exactly (same 
   plus the same metrics per race at turn ~100 (who expands/techs faster).
 - **Turn time**: wall + each `report.timings` phase (mean/p50/p90/p99/max), worst turn with seed; `--profile` adds it by game stage.
 - **Diplomacy** from `report.events` (strings or `{type}`): types matching /contact/, /war/, /treaty|peace|alliance/ (regexes at the top of `soak-worker.js`).
-  Needs the Sim to emit such events: today's `autoTurn` reports only interrupt names (aiPlan, gnn), so contact/war/treaty counts stay empty (`NO_WARS` info).
+  `autoTurn` tags every news category of the turn (`S.newsThisTurn`, so AI-vs-AI wars/contacts too) as `news:<cat>` and diplomacy audiences as `diplomacy:<kind>`; wars = `news:warDeclared`, contact = `*firstContact`, treaties = peace/alliance/nap/trade/treaty news.
 
 ## Sanity warnings (ERROR fails the exit code; WARN with `--strict`)
 ERROR: `NAN` NaN/Infinity anywhere in S | `NEG_POP` negative pop/factories/counts | `NOT_PLAIN` undefined/function/Map/Set/class in S | `CYCLE` |
