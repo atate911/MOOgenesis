@@ -1,7 +1,7 @@
 // Tactical combat demo scenarios: boot each, let it animate, auto-resolve, screenshot, collect errors
 const { open, report } = require('./lib');
 (async () => {
-  for (const scn of ['planet', 'fleet', 'defend', 'monster', 'crystal', 'amoeba', 'big', 'specials', 'nebula']) {
+  for (const scn of (process.argv[2] || 'planet,fleet,defend,monster,crystal,amoeba,big,specials,nebula').split(',')) {
     let ctx;
     try {
       ctx = await open(`dev=1&screen=combat&scn=${scn}`, { wait: 2500 });

@@ -10,9 +10,17 @@ Run: `NODE_PATH=$(npm root -g) node tools/qa/screens.js` (Playwright + /opt/pw-b
 - [x] 40 consecutive end-turns via Enter
 - Baseline: `check.js` 97/97 ok; `rules-test.js` 758 passed, 1 skipped.
 
+## Added in later passes (all zero console errors/warnings)
+- [x] `title.js`: title -> wizard (size, race step, Next, Begin) for all 10 races; each game starts and plays 6 turns
+- [x] `saveload.js`: save slot 1 at T20, play a turn, load -> state restored exactly; turn after load runs
+- [x] `combat.js`: tactical demo scenarios planet, fleet, defend, monster, crystal, amoeba, big, specials, nebula all boot, render, and resolve via Auto (planet/big hit the 51-round cap, nebula 42 rounds: worth a balance look, not a crash)
+- [x] `modes.js`: GPU off, low tier, reduced motion, threads=1, and all combined: boot, 8 real endTurns, hotkey screens d/m/r/p/t
+  - Caveat: headless SwiftShader auto-detects tier `low` in every run, so the high/ultra tiers and real GPU paths are untested here.
+
 ## Not yet covered (still open in HANDOFF item 1)
-Title/new-game wizard clicks, Fleet screen, tactical battle + animations, diplomacy audiences, spy/council choices,
-bombard/landing scenes, event cards, the four endings, save/load round-trip, GPU-off / workers-off / low tier.
+Fleet screen clicks, galaxy interactions (send fleets/colonise prompt), diplomacy audiences, spy/council choices, bombard + landing scenes,
+event cards, the four endings, autosave/Continue, 4K / reduced-motion visuals, rapid clicking, keyboard-only play, audio.
+Note: the combat run drives the demo fixtures, not a battle arising from `Game.endTurn`.
 
 ## Bugs found
-None so far. (Two script failures were wrong button labels in the test, not game defects: there is no "Colonies" button; "Fleet" not "Fleets".)
+None so far. (Script failures were my own: wrong button labels, race step needing Next, and script timeouts killing the browser.)
