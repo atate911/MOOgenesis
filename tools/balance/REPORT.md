@@ -15,13 +15,13 @@ Default setup of the runs: medium galaxy, 3 AI opponents + slot 0 played by the 
 | Flag | Default | Decision / evidence (A/B over 48 games, average, T150 cap; differences below ~10 % are noise at that size, so fidelity to the research decided) |
 |---|---|---|
 | `Config.QUIRKS.aiFirstTechCost` (new) | **false = FIXED** | AI first project costs `level^2*50` (2.5-4x the normal cost at tier 1) in v1.3. Fix (1oom `ai_first_tech_cost_fix`): first new tech T22 instead of T28, techs at T100 22 vs 20 (+10 %), RP T100 +17 %, droughts >30 turns 3 % vs 27 %. The ladder is unchanged. `options.aiClassic` restores the quirk. This is the "slow AI tech pace" answer; the remaining slowness (techs T150 34, T200 48 at average) is the tech cost curve itself, which is verified (research/02), not a bug. |
-| `popTenthsTwice` / `hiddenChildLabor` | true (kept) | existing decisions (verification-fixes.md); removing popTenthsTwice slows everything ~6 % RP and ends games earlier |
+| `popTenthsTwice` / `hiddenChildLabor` | true (kept) | existing decisions (verification-fixes.md); removing popTenthsTwice cuts RP at T100 by 14 % and ends games earlier |
 | `wasteSub1`, `shipBonusBC`, `soilRounding` | false (fixed) | unchanged; flipping them gave +/-3-9 % production, no stability change |
 | `designExcludeNewest` | true (kept) | original design-quality feel (engines 1-2 tiers behind); false: ships T100 36 vs 44.5, otherwise equal |
 | `designScrapCounter`, `transOwnRebelSource`, `transOwnOverwrite`, `attackDesignBound`, `transFromRebellion`, `threat16`, `spyCeasefireIndex` | false (fixed) | no measurable effect (identical or within noise); either they are dormant in AI-vs-AI games (spy ceasefire index only matters against a human) or too rare |
 | `panicCountsAllies`, `threatCountsAllies` | false (fixed) | Classic counts allied fleets as threats: more defence ships (54 vs 44 at T100), games end earlier (100 vs 125); Classic+ behaviour kept |
 | `fourthColonyShip` | false (fixed) | the "4th colony-ship curse" costs ~1 colony and ~7 % RP at T100 |
-| `colonyDesignIndex`, `staleColonyOrbit` | false (fixed) | Classic delays the first colony ships (design index) / wastes sources; fixed variants are the 1oom/Classic+ behaviour |
+| `colonyDesignIndex`, `staleColonyOrbit` | false (fixed) | per research/07 s3 Classic delays recognising the colony design / wastes sources; the A/B shows no benefit from the quirk; fixed variants are the 1oom/Classic+ behaviour |
 | `colonyRangeCap` | false (fixed) | cap lowers colonies (7 vs 8) and RP (-8 %) |
 | `sliderOverspend`, `fleetCheatBug` | false (fixed) | `fleetCheatBug` makes planets dump everything into ships: RP -13 %, games end ~T107 vs T125 |
 | `ecoWeightIsIndustry`, `silicoidEcoRatchet` | true (kept) | original table reading; flipping gives +/-5 % RP, no collapse |
@@ -89,8 +89,8 @@ Default setup of the runs: medium galaxy, 3 AI opponents + slot 0 played by the 
 | hard | 60 | 49 | 129 | 20.4 | 25 |  |
 | impossible | 60 | 39 | 125 | 15.4 | 31 |  |
 
-Early game: first colony ships arrive around T10-15 (2 colonies at T10 on every difficulty), RP starts ~T15-20 (AI start sliders), first new tech T22 median. Colonies per difficulty differ little (Simple and Easy throttle colony spawning, Hard/Impossible start with pop 40).
-Slot 0 win rate (finished games, chance ~25 %): simple 30 / easy 24 / average 41 / hard 20 / impossible 15 - the player's race is random so this is noise-level except the monotone trend of the hardest AIs winning more of the time overall.
+Early game: 2 colonies at T10 on every difficulty (the free colony ship), RP present from T10 only on Impossible and by T25 on the others (AI start sliders), first new tech T22 median. Colonies per difficulty differ little (Simple and Easy throttle colony spawning, Hard/Impossible start with pop 40).
+Slot 0 (an AI-played empire with the rotating race) wins 30 / 24 / 41 / 20 / 15 % of finished games at simple..impossible (chance ~25 %): the rate falls at Hard/Impossible because the other AIs get the production multipliers.
 
 ## 3-4 Objective, personality and race signatures (`signatures.js`, 240 games, T100; cell = ratio to the game mean, 1.00 = average)
 ### by objective at T100
@@ -128,7 +128,7 @@ Slot 0 win rate (finished games, chance ~25 %): simple 30 / easy 24 / average 41
 | silicoid | 110 | 0.24 | 1.06 | 1.82 | 1.42 | 1.29 | 1.07 | 0.94 | 0.44 | 0.27 |
 
 
-Reading: the **race** signatures are clear and match the traits - Psilon RP 1.58 / techs 1.25, Meklar factories 1.70 / RP 1.37, Silicoid colonies 1.82 (any terrain), Sakkra pop 1.19 (growth), Klackon ships 2.53 and RP 1.35, Alkari ships 1.77, Bulrathi the weakest builder (ships 0.26). Mrrshan RP 0.48 comes from its +15 SHIP slider add and poor early growth, Darlok low colonies (0.79) has no research bonus - both follow research/07 s2.3 and the race data, kept.
+Reading: the **race** signatures are clear and match the traits - Psilon RP 1.58 / techs 1.25, Meklar factories 1.70 / RP 1.37, Silicoid colonies 1.82 (any terrain), Sakkra pop 1.19 (growth), Klackon ships 2.53 and RP 1.35, Alkari ships 1.77, Bulrathi the weakest builder (ships 0.26). Mrrshan RP 0.48 is the lowest (its +15 SHIP slider add and no research bonus), Darlok colonies 0.79 - both consistent with research/07 s2.3 and the race data, kept.
 **Personality** signatures: Erratic starts the most wars (0.29 vs 0.17-0.24: the d300<=difficulty path A), Pacifistic/Honorable sign the most treaties (1.24/1.19 vs Ruthless 0.72, Xenophobic 0.78), Xenophobic expands/builds most (colonies 1.28, ships 1.46).
 **Objective** signatures are deliberately faint in the original (research/07 s2.4: weight rows differ by 1-2 points of 13): Militarist builds the most ships (1.32) and Industrialist the fewest (0.63), Ecologist leads RP/pop slightly; Technologist RP is only average and wars/game barely differ (0.18-0.27) because war checks depend on relative fleet/production envy and relations, not on the aggressor's objective (research/08 s3.2: only Erratic and the Militarist/Expansionist fleet-envy path differ). No code change: this is the specified behaviour.
 Win rates (300 mixed games, council wins weighted by population): klackon 47 %, silicoid 47, sakkra 46, psilon 38, human 21, meklar 19, alkari 12, bulrathi 10 (chance 25 %). Bulrathi/Alkari are combat races (ground troops, speed) whose edge rarely shows because AI-vs-AI games are decided by the council economy, so they sit at ~0.4-0.5x - documented, not changed. Klackon is 1.9x (see decisions).
