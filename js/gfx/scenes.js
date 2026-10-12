@@ -3753,7 +3753,8 @@
   Object.keys(GRADE).forEach(function (name) {
     const sc = Scenes[name]; if (!sc || !sc.draw) return; const raw = sc.draw;
     sc.draw = function (ctx, w, h, t, o) {
-      const r = raw.apply(this, arguments);
+      const GR = G.Grade; if (GR) GR.depth = (GR.depth || 0) + 1;
+      let r; try { r = raw.apply(this, arguments); } finally { if (GR) GR.depth--; }
       if (!(o && o.grade === false) && G.Grade) { try { G.Grade.apply(ctx, w, h, t || 0, GRADE[name]); } catch (e) { warnOnce('Grade', e); } }
       return r;
     };

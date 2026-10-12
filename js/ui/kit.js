@@ -54,7 +54,27 @@
 
   // ------------------------------------------------------------------ per-module CSS
   // UI.css('galaxy', '.galaxy-panel { ... }')  — injects (or replaces) a <style id="css-galaxy">; lets each screen own its styles.
+  // Theme v2 retint: the per-screen stylesheets were written with indigo literals (#0d1540, rgba(8,12,34,.9) ...). In v2 every dark indigo/violet
+  // literal is pulled to the cool gunmetal ramp (hue ~210, low saturation) at injection time, so all screens follow the new palette without edits.
+  // Bright accents (cyan, azure, violet text, ...) are left alone: only dark/mid, blue-dominant colours with r<=150 and b<=200 are touched.
+  function retint(r, g, b) {
+    if (!(b > r + 14 && b > g + 5 && r <= 150 && b <= 200)) return null;
+    const mx = Math.max(r, g, b) / 255, mn = Math.min(r, g, b) / 255, d = mx - mn, l = (mx + mn) / 2;
+    if (!d) return null;
+    const sat = d / (1 - Math.abs(2 * l - 1));
+    let hue = mx === b / 255 ? 4 + (r - g) / 255 / d : mx === g / 255 ? 2 + (b - r) / 255 / d : ((g - b) / 255 / d + 6) % 6; hue *= 60;
+    if (hue < 205 || hue > 295) return null;                       // cyan / teal / green / red families untouched
+    const ns = Math.min(sat * 0.36, 0.26), nh = 208 + (hue - 208) * 0.12, nl = l * 0.94, c = (1 - Math.abs(2 * nl - 1)) * ns, hp = nh / 60, x = c * (1 - Math.abs(hp % 2 - 1)), m = nl - c / 2;
+    const rgb = [0, x, c];                                         // nh is always 208..219 deg -> sector 3 of the hue wheel
+    return [Math.round((rgb[0] + m) * 255), Math.round((rgb[1] + m) * 255), Math.round((rgb[2] + m) * 255)];
+  }
+  const hex2 = n => (n < 16 ? '0' : '') + n.toString(16);
+  UI.retintCss = function (text) {
+    return text.replace(/#([0-9a-fA-F]{6})\b/g, (m, h) => { const o = retint(parseInt(h.slice(0, 2), 16), parseInt(h.slice(2, 4), 16), parseInt(h.slice(4), 16)); return o ? '#' + hex2(o[0]) + hex2(o[1]) + hex2(o[2]) : m; })
+      .replace(/rgba?\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*(,\s*[\d.]+\s*)?\)/g, (m, r, g, b, a) => { const o = retint(+r, +g, +b); return o ? (a ? 'rgba(' : 'rgb(') + o[0] + ',' + o[1] + ',' + o[2] + (a ? a.replace(/\s+/g, '') : '') + ')' : m; });
+  };
   UI.css = function (id, text) {
+    if (doc.documentElement.getAttribute('data-theme') === 'v2') { try { text = UI.retintCss(text); } catch (e) { /* keep original */ } }
     let s = doc.getElementById('css-' + id);
     if (!s) { s = doc.createElement('style'); s.id = 'css-' + id; doc.head.appendChild(s); }
     s.textContent = text;

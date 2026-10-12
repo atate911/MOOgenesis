@@ -666,6 +666,8 @@
     if (o.flip) { ctx.translate(x + w / 2, 0); ctx.scale(-1, 1); ctx.translate(-(x + w / 2), 0); }
     if (o.bg !== false) backdrop(ctx, x, y, w, h, bgTint(pa, o), pa.accent, t);
     renderFigure(ctx, ent, A, view);
+    const GR = M.Gfx.Grade;
+    if (GR && !GR.depth && o.grade !== false && GR.on()) { ctx.translate(x, y); GR.apply(ctx, w, h, t, 'portrait'); }       // v2 grade (scenes grade their whole frame instead)
     ctx.restore();
   }
   function drawBadge(ctx, race, cx, cy, r, o) {
@@ -686,14 +688,15 @@
     ctx.save();
     ctx.shadowColor = 'rgba(0,0,0,.55)'; ctx.shadowBlur = r * 0.18; ctx.shadowOffsetY = r * 0.05;
     ctx.beginPath(); ctx.arc(cx, cy, r - rw / 2, 0, TAU); ctx.lineWidth = rw;
-    ctx.strokeStyle = lg(ctx, cx - r, cy - r, cx + r, cy + r, [0, '#f6e3b0', 0.3, '#d6b36a', 0.62, '#8a7040', 0.82, '#c9a35c', 1, '#6e5830']);
+    const v2 = typeof document !== 'undefined' && document.documentElement.getAttribute('data-theme') === 'v2';
+    ctx.strokeStyle = lg(ctx, cx - r, cy - r, cx + r, cy + r, v2 ? [0, '#dbe7f1', 0.3, '#8ea4ba', 0.62, '#46596c', 0.82, '#7b90a5', 1, '#34455a'] : [0, '#f6e3b0', 0.3, '#d6b36a', 0.62, '#8a7040', 0.82, '#c9a35c', 1, '#6e5830']);
     ctx.stroke(); ctx.restore();
     ctx.beginPath(); ctx.arc(cx, cy, fr + 0.4, 0, TAU); ctx.lineWidth = Math.max(1, r * 0.03); ctx.strokeStyle = 'rgba(8,6,18,.7)'; ctx.stroke();
-    ctx.beginPath(); ctx.arc(cx, cy, r - rw * 0.3, PI * 1.08, PI * 1.58); ctx.lineWidth = Math.max(0.8, rw * 0.2); ctx.strokeStyle = 'rgba(255,248,215,.7)'; ctx.stroke();
+    ctx.beginPath(); ctx.arc(cx, cy, r - rw * 0.3, PI * 1.08, PI * 1.58); ctx.lineWidth = Math.max(0.8, rw * 0.2); ctx.strokeStyle = v2 ? 'rgba(225,238,250,.6)' : 'rgba(255,248,215,.7)'; ctx.stroke();
     if (o.color) {
       const a = PI * 0.25, px = cx + cos(a) * (r - rw * 0.2), py = cy + sin(a) * (r - rw * 0.2), pr = Math.max(2.2, r * 0.17);
       ctx.beginPath(); ctx.arc(px, py, pr, 0, TAU); ctx.fillStyle = o.color; ctx.fill();
-      ctx.lineWidth = Math.max(1, pr * 0.28); ctx.strokeStyle = '#d6b36a'; ctx.stroke();
+      ctx.lineWidth = Math.max(1, pr * 0.28); ctx.strokeStyle = v2 ? '#8ea4ba' : '#d6b36a'; ctx.stroke();
     }
   }
   const _cc = new Map();

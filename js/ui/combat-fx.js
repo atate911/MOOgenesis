@@ -22,10 +22,12 @@
   const NO = {};
 
   const FONT_UI = '"IBM Plex Sans Condensed","Bahnschrift SemiCondensed","Bahnschrift","Segoe UI",system-ui,sans-serif';
-  const FONT_DISP = '"Marcellus SC","Marcellus","Palatino Linotype","Book Antiqua",Georgia,serif';
+  const V2 = document.documentElement.getAttribute('data-theme') === 'v2';          // v2: steel instead of brass, technical display face
+  const BR = V2 ? '142,164,186' : '214,179,106', BH = V2 ? '210,224,236' : '243,220,160';
+  const FONT_DISP = V2 ? '"Oxanium","Saira Semi Condensed","Bahnschrift SemiBold","Bahnschrift","DIN Condensed","Segoe UI Semibold",system-ui,sans-serif' : '"Marcellus SC","Marcellus","Palatino Linotype","Book Antiqua",Georgia,serif';
   const EMP = ['#4a90e8', '#4ed17a', '#b45be8', '#e8504d', '#f1eee4', '#e8c94a'];
   const MON = { guardian: '#ffb347', crystal: '#79e8ff', amoeba: '#9dff6a' };
-  const C = { brass: '#d6b36a', brassHi: '#f3dca0', brassLo: '#8a7040', cyan: '#62d8ff', rose: '#ff5c6a', ember: '#ff9440', leaf: '#5fdc8f', violet: '#a98bff', azure: '#5b8cff', ivory: '#ece6d3', mist: '#98a5cf', gold: '#ffd54f' };
+  const C = { brass: V2 ? '#8ea4ba' : '#d6b36a', brassHi: V2 ? '#d2e0ec' : '#f3dca0', brassLo: V2 ? '#46596c' : '#8a7040', cyan: '#62d8ff', rose: '#ff5c6a', ember: '#ff9440', leaf: '#5fdc8f', violet: '#a98bff', azure: '#5b8cff', ivory: '#ece6d3', mist: '#98a5cf', gold: '#ffd54f' };
   const HULL_LEN = [0.5, 0.64, 0.8, 0.98];                    // length of a Small / Medium / Large / Huge hull as a share of the base ship length
 
   // ---- weapon id → visual family ---------------------------------------------------------------------------------------------------------------------
@@ -743,21 +745,21 @@
       for (let j = 0; j < 8; j++) for (let i = 0; i < 10; i++) if ((i + j) & 1) g.fillRect(x0 + i * cw, y0 + j * ch, cw, ch);
       // lines
       g.lineWidth = 1;
-      g.strokeStyle = 'rgba(214,179,106,0.16)'; g.beginPath();
+      g.strokeStyle = ('rgba(' + BR + ',0.16)'); g.beginPath();
       for (let i = 1; i < 10; i++) { const x = Math.round(x0 + i * cw) + 0.5; g.moveTo(x, y0); g.lineTo(x, y0 + gh); }
       for (let j = 1; j < 8; j++) { const y = Math.round(y0 + j * ch) + 0.5; g.moveTo(x0, y); g.lineTo(x0 + gw, y); }
       g.stroke();
       // intersection ticks
-      g.strokeStyle = 'rgba(243,220,160,0.5)'; g.beginPath();
+      g.strokeStyle = ('rgba(' + BH + ',0.5)'); g.beginPath();
       for (let i = 0; i <= 10; i++) for (let j = 0; j <= 8; j++) { const x = x0 + i * cw, y = y0 + j * ch; g.moveTo(x - 3, y); g.lineTo(x + 3, y); g.moveTo(x, y - 3); g.lineTo(x, y + 3); }
       g.stroke();
       // frame + corner brackets
-      g.strokeStyle = 'rgba(214,179,106,0.55)'; g.strokeRect(x0 - 0.5, y0 - 0.5, gw + 1, gh + 1);
-      g.strokeStyle = 'rgba(243,220,160,0.9)'; g.lineWidth = 2; const bl = min(cw, ch) * 0.34;
+      g.strokeStyle = ('rgba(' + BR + ',0.55)'); g.strokeRect(x0 - 0.5, y0 - 0.5, gw + 1, gh + 1);
+      g.strokeStyle = ('rgba(' + BH + ',0.9)'); g.lineWidth = 2; const bl = min(cw, ch) * 0.34;
       for (const [px, py, sx, sy] of [[x0, y0, 1, 1], [x0 + gw, y0, -1, 1], [x0, y0 + gh, 1, -1], [x0 + gw, y0 + gh, -1, -1]]) { g.beginPath(); g.moveTo(px + sx * bl, py); g.lineTo(px, py); g.lineTo(px, py + sy * bl); g.stroke(); }
       // axis labels
       const fs = clamp(ch * 0.15, 9, 14);
-      g.font = '600 ' + fs + 'px ' + FONT_UI; g.fillStyle = 'rgba(214,179,106,0.6)'; g.textAlign = 'center'; g.textBaseline = 'alphabetic';
+      g.font = '600 ' + fs + 'px ' + FONT_UI; g.fillStyle = ('rgba(' + BR + ',0.6)'); g.textAlign = 'center'; g.textBaseline = 'alphabetic';
       for (let i = 0; i < 10; i++) g.fillText(String.fromCharCode(65 + i), x0 + (i + 0.5) * cw, y0 - 6);
       g.textAlign = 'right';
       for (let j = 0; j < 8; j++) g.fillText(String(j + 1), x0 - 6, y0 + (j + 0.5) * ch + fs * 0.35);
@@ -791,7 +793,7 @@
       const bx = o.align === 'left' ? x : o.align === 'right' ? x - w : x - w / 2, by = y - h / 2;
       chamfer(ctx, bx, by, w, h, min(4, h * 0.3));
       ctx.fillStyle = o.bg || 'rgba(6,9,26,0.88)'; ctx.fill();
-      ctx.lineWidth = 1; ctx.strokeStyle = o.border || 'rgba(214,179,106,0.6)'; ctx.stroke();
+      ctx.lineWidth = 1; ctx.strokeStyle = o.border || ('rgba(' + BR + ',0.6)'); ctx.stroke();
       ctx.fillStyle = o.color || C.ivory; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(text, bx + w / 2, y + 0.5);
       return w;
     }
@@ -860,7 +862,7 @@
             ctx.beginPath(); ctx.moveTo(cx(au.x), cy(au.y)); ctx.lineTo(cx(u.x), cy(u.y)); ctx.stroke(); ctx.setLineDash([]);
           }
           ctx.strokeStyle = C.rose; ctx.lineWidth = 1.6; ctx.strokeRect(x + 2, y + 2, cw - 4, ch - 4);
-        } else { ctx.strokeStyle = 'rgba(214,179,106,0.5)'; ctx.lineWidth = 1; ctx.strokeRect(x + 1.5, y + 1.5, cw - 3, ch - 3); }
+        } else { ctx.strokeStyle = ('rgba(' + BR + ',0.5)'); ctx.lineWidth = 1; ctx.strokeRect(x + 1.5, y + 1.5, cw - 3, ch - 3); }
         ctx.restore();
       }
     }
@@ -887,7 +889,7 @@
       const gr = ctx.createLinearGradient(x, 0, x + w, 0); gr.addColorStop(0, rgba(col, 0.75)); gr.addColorStop(1, col);
       ctx.fillStyle = gr; ctx.fillRect(x, y, w * clamp(frac, 0, 1), h);
       if (count0 > 1 && count0 <= 20) { ctx.strokeStyle = 'rgba(4,6,18,0.8)'; ctx.lineWidth = 1; ctx.beginPath(); for (let i = 1; i < count0; i++) { const px = Math.round(x + w * i / count0) + 0.5; ctx.moveTo(px, y); ctx.lineTo(px, y + h); } ctx.stroke(); }
-      ctx.strokeStyle = 'rgba(214,179,106,0.5)'; ctx.lineWidth = 1; ctx.strokeRect(x - 0.5, y - 0.5, w + 1, h + 1);
+      ctx.strokeStyle = ('rgba(' + BR + ',0.5)'); ctx.lineWidth = 1; ctx.strokeRect(x - 0.5, y - 0.5, w + 1, h + 1);
     }
 
     const COPY_OFF = [[0, 0], [-0.2, -0.26], [-0.12, 0.26], [-0.3, 0.02]];

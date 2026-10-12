@@ -10,7 +10,7 @@
     scene: { tone: [1.14, 0.92, 0.72], sat: 0.34, cool: 0.34, dark: 0.12, vig: 0.5, grain: 0.03, lift: 0.0, bloom: 0.0 },
     room: { tone: [1.3, 0.66, 0.45], sat: 0.6, cool: 0.4, dark: 0.55, vig: 0.66, grain: 0.028, lift: 0.0, bloom: 0.0 },
     space: { sat: 0.12, cool: 0.10, vig: 0.38, grain: 0.035, lift: 0.0, bloom: 0.0 },
-    portrait: { sat: 0.22, cool: 0.18, vig: 0.30, grain: 0.04, lift: 0.0, bloom: 0.0 },
+    portrait: { sat: 0.26, cool: 0.2, dark: 0.1, vig: 0.34, grain: 0, lift: 0.0, bloom: 0.0 },
   };
   let noise = null, tmp = null;
   function noiseTile() {
