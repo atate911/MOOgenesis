@@ -41,7 +41,7 @@ MOO.def(function (M) {
       const E = {
         id: i, race: rd.id, name: rd.name, plural: rd.plural, leader, color: bannerFor[i], human: i === 0 && !st.playerAI, alive: true, capital: homes[i],
         bc: 0, tax: 0, security: 0, spyBudget: [0, 0, 0, 0, 0, 0], spies: [0, 0, 0, 0, 0, 0], spyMode: [0, 0, 0, 0, 0, 0],
-        personality: RACES().rollPersonality(R, rd.id), objective: i === 0 ? 0 : RACES().rollObjective(R, rd.id),
+        personality: RACES().rollPersonality(R, rd.id), objective: (i === 0 && !st.playerAI) ? 0 : RACES().rollObjective(R, rd.id),
         designs: [null, null, null, null, null, null], dstats: [], stats: {}, flow: {}, relations: [], ai: null,
       };
       S.empires.push(E);

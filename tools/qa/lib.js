@@ -15,6 +15,7 @@ async function open(opts = {}) {
   const browser = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium', args: ['--no-sandbox', '--disable-background-timer-throttling', '--disable-renderer-backgrounding', '--disable-backgrounding-occluded-windows', '--enable-unsafe-swiftshader', '--use-gl=swiftshader', '--autoplay-policy=no-user-gesture-required'].concat(opts.args || []) });
   const ctx = await browser.newContext({ viewport: opts.viewport || { width: 1280, height: 720 } });
   const page = await ctx.newPage();
+  if (process.env.TIER) { const go = page.goto.bind(page); page.goto = (u, o) => go(u + (u.includes('?') ? '&' : '?') + 'tier=' + process.env.TIER, o); }   // TIER=low|medium|high|ultra forces a perf tier (software GL is detected as 'low')
   const errors = [];
   page.on('console', m => { if (m.type() === 'error' || m.type() === 'warning') errors.push(m.type() + ': ' + m.text()); });
   page.on('response', r => { if (r.status() >= 400) errors.push('HTTP ' + r.status() + ' ' + r.url()); });

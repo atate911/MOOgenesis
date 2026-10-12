@@ -12,10 +12,13 @@
   }
   const store = () => { try { return typeof localStorage !== 'undefined' ? localStorage : null; } catch (e) { return null; } };
 
+  // calendar year (Config.displayYear), not the S.year turn counter
+  function calYear(S) { try { return M.Data.Config.displayYear(S); } catch (e) { return S.year; } }
+
   function meta(S) {
     const me = S.empires && S.empires[S.playerId];
     return {
-      turn: S.turn, year: S.year, race: me && me.race, leader: me && me.leader, color: me && me.color,
+      turn: S.turn, year: calYear(S), race: me && me.race, leader: me && me.leader, color: me && me.color,
       size: S.settings && S.settings.size, difficulty: S.settings && S.settings.difficulty, stars: S.stars ? S.stars.length : 0,
       planets: S.planets ? S.planets.filter(p => p.owner === S.playerId).length : 0, at: Date.now(),
     };
