@@ -398,13 +398,17 @@
     R.btnS = UI.button('Status', () => openStatus(), { kbd: 'S', tip: 'The Racial Stats: how every empire compares' });
     R.btnR = UI.button('Report', () => act('report'), { kbd: 'R', tip: 'What your spies know about one empire' });
     R.btnA = UI.button('Audience', () => act('audience'), { kbd: 'A', tip: 'Speak with an empire’s ambassador' });
+    R.btnC = UI.button('Spies caught', () => { if (UI.Spy && UI.Spy.caught) UI.Spy.caught(); }, { kbd: 'X', tip: 'Spies caught this year: yours and theirs' });
+    R.btnN = UI.button('News', () => { if (UI.GNN && UI.GNN.archive) UI.GNN.archive(G.S); }, { kbd: 'N', tip: 'The GNN news archive' });
     R.btnO = UI.button('OK', () => goBack('confirm', R), { primary: true, kbd: 'Space', sfx: 'confirm' });
-    const sheet = h('div.rx-sheet.panel', h('div.rx-head', h('div.rx-title', 'Races'), R.sub, R.chips), grid, h('div.rx-foot', R.prompt, R.btnS, R.btnR, R.btnA, R.btnO));
+    const sheet = h('div.rx-sheet.panel', h('div.rx-head', h('div.rx-title', 'Races'), R.sub, R.chips), grid, h('div.rx-foot', R.prompt, R.btnS, R.btnR, R.btnA, R.btnC, R.btnN, R.btnO));
     R.el = h('div.rx', sheet);
+    grid.setAttribute('data-help', 'races.cells'); sheet.querySelector('.rx-foot').setAttribute('data-help', 'races.foot');
     root.appendChild(R.el);
     R.built = true;
     const scr = { screen: 'races' };
     UI.bindKey('s', openStatus, scr); UI.bindKey('r', () => act('report'), scr); UI.bindKey('a', () => act('audience'), scr);
+    UI.bindKey('x', () => R.btnC.click(), scr); UI.bindKey('n', () => R.btnN.click(), scr);
     UI.bindKey('o', () => goBack('confirm', R), scr); UI.bindKey('space', () => goBack('confirm', R), scr);
     UI.bindKey('escape', () => { if (R.mode) { setMode(null); UI.sfx('cancel'); } else goBack('cancel', R); }, scr);
     for (let k = 1; k <= 5; k++) UI.bindKey(String(k), () => { const E = rivals(G.S)[k - 1]; if (E) pick(E.id); else UI.sfx('error'); }, scr);

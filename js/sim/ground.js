@@ -606,8 +606,8 @@ MOO.def(function (M) {
   function classicCancelBio(S, p, plan, R) { const core = bombCore(S, p, plan, R); shrinkMaxPop(p, core.maxPopLoss); }
 
   G.inbound = function (S, empire, planet) {
-    const p = plan_(S, planet), st = S.stars[p.starId], a = eid(empire); let n = 0;
-    for (const t of (S.trans || [])) if (t.owner === a && t.to === p.starId && t.x === st.x && t.y === st.y) n += t.n | 0;     // transports arriving this turn
+    const p = plan_(S, planet), a = eid(empire); let n = 0;
+    for (const t of (S.trans || [])) if (t.owner === a && t.to === p.starId) n += t.n | 0;     // ALL of the bomber's transports in flight to this planet (1oom game_turn_bomb), not only those arriving this turn
     return n;
   };
   G.aiBombs = function (S, E, planet) {
@@ -699,6 +699,7 @@ MOO.def(function (M) {
       if (yes === undefined || yes === null) {
         if (E.human) yes = RULES.humanBombard === 'yes' ? true : RULES.humanBombard === 'no' ? false : undefined;
         else if (treatyOf(S, it.empire, p.owner) === 'nap' || (M.Sim.Diplo && M.Sim.Diplo.canFight && !M.Sim.Diplo.canFight(S, it.empire, p.owner, p.owner))) yes = false;
+        else if (S.empires[p.owner] && S.empires[p.owner].human && M.Sim.Diplo && M.Sim.Diplo.ceasefire && M.Sim.Diplo.ceasefire(S, it.empire, p.owner) > 0) yes = false;   // an AI never bombs a human it holds a ceasefire with (research/03-verification §2.9)
         else yes = G.aiBombs(S, E, p);
       }
       if (yes === undefined) { keep.push(it.entry || { empire: it.empire, planet: it.planet }); continue; }

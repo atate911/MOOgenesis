@@ -2055,6 +2055,49 @@
   }
   function entryBytes(e) { return e.W * e.H * 4 * (e.gc ? 2 : 1) + 2048; }
 
+  // ---- v2 grade: serious hard-surface look, baked once per hull sprite (no per-frame cost) ----------------------------
+  const V1 = (typeof document !== 'undefined' && document.documentElement.getAttribute('data-theme') === 'v1');
+  // calmer saturation, key-light falloff along the light axis, panel seams (groove + lit bevel), rivet rows, cool rim opposite the key
+  function gradeHull(c, W, H, S, Ld, seed, isHull) {
+    if (V1 || S < 22) return;
+    try {
+      const g = c.getContext('2d'), r = rng(seed ^ 0x51ed);
+      g.save(); g.setTransform(1, 0, 0, 1, 0, 0);
+      if ('filter' in g) {
+        const t = mk(W, H); t.getContext('2d').drawImage(c, 0, 0);
+        g.globalCompositeOperation = 'copy'; g.filter = 'saturate(' + (isHull ? 0.66 : 0.8) + ') contrast(1.12) brightness(0.94)'; g.drawImage(t, 0, 0);
+        g.filter = 'none';
+      }
+      g.globalCompositeOperation = 'source-atop';
+      const cx = W / 2, cy = H / 2, R = Math.hypot(W, H) * 0.42;
+      let gr = g.createLinearGradient(cx + Ld.x * R, cy + Ld.y * R, cx - Ld.x * R, cy - Ld.y * R);
+      gr.addColorStop(0, 'rgba(255,238,215,.10)'); gr.addColorStop(0.45, 'rgba(0,0,0,0)'); gr.addColorStop(1, 'rgba(2,6,14,.5)');
+      g.fillStyle = gr; g.fillRect(0, 0, W, H);
+      if (isHull && S >= 38) {
+        const lw = Math.max(1, S / 170), sp = Math.max(7, W / 26);
+        const dx = -Ld.x * lw, dy = -Ld.y * lw;                 // bevel highlight sits on the lit side of each groove
+        const seam = (x0, y0, x1, y1) => {
+          g.strokeStyle = 'rgba(2,5,10,.5)'; g.lineWidth = lw; g.beginPath(); g.moveTo(x0, y0); g.lineTo(x1, y1); g.stroke();
+          g.strokeStyle = 'rgba(235,245,255,.13)'; g.beginPath(); g.moveTo(x0 - dx, y0 - dy); g.lineTo(x1 - dx, y1 - dy); g.stroke();
+        };
+        for (let x = W * 0.16; x < W * 0.9; x += sp * (0.7 + r() * 0.9)) {
+          const half = H * (0.14 + r() * 0.3); seam(x, cy - half, x + (r() - 0.5) * sp * 0.4, cy + half);
+        }
+        for (let k = 0; k < 3; k++) {
+          const y = cy + (r() - 0.5) * H * 0.62, a = W * (0.12 + r() * 0.3), b = a + W * (0.25 + r() * 0.35);
+          seam(a, y, Math.min(b, W * 0.92), y);
+          if (S >= 90) { g.fillStyle = 'rgba(220,235,250,.2)'; for (let x = a + 4; x < Math.min(b, W * 0.92); x += 6) g.fillRect(x, y + lw * 2, lw, lw); }
+        }
+      }
+      // cool rim light on the edge facing away from the key
+      const rm = mk(W, H), rg = rm.getContext('2d'), d = Math.max(1.5, S / 60);
+      rg.drawImage(c, 0, 0); rg.globalCompositeOperation = 'destination-out'; rg.drawImage(c, Ld.x * d, Ld.y * d);
+      rg.globalCompositeOperation = 'source-in'; rg.fillStyle = '#7cc4e4'; rg.fillRect(0, 0, W, H);
+      g.globalCompositeOperation = 'source-over'; g.globalAlpha = 0.42; g.drawImage(rm, 0, 0);
+      g.restore();
+    } catch (e) { /* cosmetic */ }
+  }
+
   // ---- hull painting ---------------------------------------------------------------
   function pickSites(meta, seed) {
     const r = rng(seed), sh = meta.shapes, sites = [];
@@ -2083,6 +2126,7 @@
     const meta = P.meta;
     meta.sites = pickSites(meta, hash(race + 's' + code));
     meta.shapes = null;
+    gradeHull(c, W, H, S, Ld, hash(race + code), true);
     for (let i = 0; i < meta.lights.length; i++) meta.lights[i].spr = glowSprite(meta.lights[i].c);
     return { c: c, gc: meta.glow ? gc : null, W: W, H: H, cx: cx, cy: cy, S: S, meta: meta, pal: pal, eng: pal.eng, spr: flameSprite(pal.eng), team: P.team };
   }
@@ -2350,12 +2394,12 @@
     if (cloak < 0.9 && o.glow !== false) {
       if (size < 84) { // small ships: soft team-coloured halo so they pop against the starfield
         ctx.globalCompositeOperation = 'lighter';
-        ctx.globalAlpha = (0.14 + 0.34 * (1 - size / 84)) * (1 - cloak);
+        ctx.globalAlpha = (V1 ? 1 : 0.4) * (0.14 + 0.34 * (1 - size / 84)) * (1 - cloak);
         ctx.drawImage(glowSprite(e.team), x0 - 0.12, y0 - 0.08, w + 0.24, h + 0.16);
         ctx.globalCompositeOperation = 'source-over'; ctx.globalAlpha = 1;
       } else if (code === 4) { // doomstar: ominous bloom
         ctx.globalCompositeOperation = 'lighter';
-        ctx.globalAlpha = (0.2 + 0.06 * sin(t * 1.3 + ph)) * (1 - cloak);
+        ctx.globalAlpha = (V1 ? 1 : 0.5) * (0.2 + 0.06 * sin(t * 1.3 + ph)) * (1 - cloak);
         ctx.drawImage(glowSprite(e.eng[1]), x0 - 0.2, y0 - 0.14, w + 0.4, h + 0.28);
         ctx.globalCompositeOperation = 'source-over'; ctx.globalAlpha = 1;
       }
@@ -2383,7 +2427,7 @@
     const vis = 1 - cloak * 0.8;
     if (e.gc && lod > 0) {
       ctx.globalCompositeOperation = 'lighter';
-      ctx.globalAlpha = (0.4 + 0.3 * sin(t * 1.7 + ph) + 0.15 * sin(t * 4.1 + ph * 2)) * vis;
+      ctx.globalAlpha = (V1 ? 1 : 0.7) * (0.4 + 0.3 * sin(t * 1.7 + ph) + 0.15 * sin(t * 4.1 + ph * 2)) * vis;
       ctx.drawImage(e.gc, x0, y0, w, h);
       ctx.globalCompositeOperation = 'source-over';
       ctx.globalAlpha = 1;
@@ -2421,6 +2465,7 @@
     const meta = P.meta;
     meta.sites = pickSites(meta, hash(race + 'ss' + code));
     meta.shapes = null;
+    gradeHull(c, W, H, S, Ld, hash(race + 'S' + code), false);
     for (let i = 0; i < meta.lights.length; i++) meta.lights[i].spr = glowSprite(meta.lights[i].c);
     if (meta.chase) meta.chase.spr = glowSprite(meta.chase.col);
     return { c: c, gc: meta.glow ? gc : null, W: W, H: H, cx: cx, cy: cy, S: S, meta: meta, pal: pal, eng: pal.eng, spr: flameSprite(pal.eng), team: P.team };

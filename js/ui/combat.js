@@ -135,7 +135,7 @@
     try {
       const sp = S && S.planets && pl ? S.planets[pl.id] : null;
       const look = sp ? (sp.type === 'none' ? 'asteroids' : sp.growth === 'gaia' ? 'gaia' : sp.type) : (pl && pl.type) || 'barren';
-      const spr = M.Gfx.Planets.sprite({ look, seed: sp ? sp.id * 7919 + (sp.gfx | 0) : 7, inhabited: true }, size * 2);
+      const spr = ((M.Gfx.pick && M.Gfx.pick('planets')) || M.Gfx.Planets).sprite({ look, seed: sp ? sp.id * 7919 + (sp.gfx | 0) : 7, inhabited: true }, size * 2);
       c.getContext('2d').drawImage(spr, 0, 0, size * 2, size * 2);
     } catch (e) { const x = c.getContext('2d'); x.fillStyle = '#445'; x.beginPath(); x.arc(size, size, size * 0.8, 0, 6.3); x.fill(); }
     return c;
@@ -440,6 +440,7 @@
     const bar = h('div.cb-bar', info, btns, right);
     const wrap = h('div.cb', field, bar);
     root.appendChild(wrap);
+    btns.setAttribute('data-help', 'combat.bar'); field.setAttribute('data-help', 'combat.field');
     ui = { canvas, tip, sideL, sideR, order, ticker, field, who, stats, weps, b, btns, spd, bar, chips: new Map(), ov: null, pinfo: null };
     // pointer input
     let lastCell = null;

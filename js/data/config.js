@@ -23,5 +23,20 @@ MOO.def(function (M) {
     SHIP_UPKEEP_DIV: 50,                     // 2% of design cost per ship per turn
     STARGATE_COST: 3000, STARGATE_UPKEEP: 100,
     SCRAP_REFUND: 0.25,
+    // Original-executable (1oom v1.3 "classic") economy quirks, research/04-verification C4/C7/C8/C9/B8/B9/C10. Selectable per key; code reads them as
+    //   Q.x === true  (opt-in quirks)   or   Q.x !== false  (quirks that are ON by default), so a partial replacement object in a test keeps working.
+    //   popTenthsTwice  ON  : the carried population tenths are added twice (colony.growPop)                                    [C7]
+    //   hiddenChildLabor ON : production is recomputed a second time before defence/ships/industry (turn.js)                       [C5]
+    //   transportBC     ON  : an outgoing transport costs 1 BC per pop of its planet's output at processing time (Strategy Guide). false = 1oom, which clears
+    //                         trans_num BEFORE the first production update, so nothing is ever deducted (research/04 row 33 / C10: the sources disagree)
+    //   wasteSub1       off : second waste term +floor((100-waste%)*floor(operating*oper/10)/100), added after the cleanup need is computed (~+20 % waste) [C8]
+    //   shipBonusBC     off : +1 BC whenever the SHIP slider is > 0 (a known original bug)                                         [C9]
+    //   soilRounding    off : soil enrichment increment (m/20)*5 + ((m/20)%5 ? 5:0) and Gaia (m/10)*5 + ((m/10)%5 ? 5:0) (integer division) instead of
+    //                         "+25 % / +50 % rounded UP to a multiple of 5"                                                         [B8]
+    //   factoryRefit    off : classic factory billing: a planet whose new factories would exceed pop*tier pays a flat refit (oper-tier-Meklar2)*floor(factoryBase/2),
+    //                         and factories beyond the maximum go to the reserve at floor(excess*cost/2) while the remaining BC stay in the build accumulator [B9]
+    // Defaults keep the remake's tuned numbers; flip a key to reproduce the shipped game.
+    QUIRKS: { popTenthsTwice: true, hiddenChildLabor: true, transportBC: true, wasteSub1: false, shipBonusBC: false, soilRounding: false, factoryRefit: false },
+    quirk(name) { const Q = M.Data.Config.QUIRKS; return !!(Q && Q[name] === true); },       // opt-in quirk enabled?
   };
 });

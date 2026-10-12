@@ -1266,6 +1266,7 @@
   }
 
   /* ================================================================ the pixel loop */
+  var GRADE = !(typeof document !== 'undefined' && document.documentElement.getAttribute('data-theme') === 'v1');
   function renderBody(inst, tex, lvl, fr) {
     var g = inst.geom, lt = inst.lt, P = inst.P, cfg = P.cfg;
     var L = tex.levels[lvl], Wl = L.W, Hl = L.H, Wm = Wl - 1, S = L.s, D = L.d, C = L.c;
@@ -1345,8 +1346,18 @@
         var hz = hzA[k], tn = tnA[k];
         r += (atR - r) * hz + tiR * tn; g2 += (atG - g2) * hz + tiG * tn; b += (atB - b) * hz + tiB * tn;
       }
+      if (GRADE) {                                          // v2 grade: calmer land saturation, soft shoulder, warm scattering at the terminator
+        var lum = 0.299 * r + 0.587 * g2 + 0.114 * b;
+        r = lum + (r - lum) * 0.78; g2 = lum + (g2 - lum) * 0.78; b = lum + (b - lum) * 0.78;
+        var tdn = 1 + b0 * b0 * 26, tw = 1 / (tdn * tdn);
+        if (tw > 0.01) { var tk = tw * (hasC ? 1 - 0.5 * ca : 1); r += 34 * tk; g2 += 11 * tk; b -= 9 * tk; }
+        if (r > 190 || g2 > 190 || b > 190) {
+          r = r > 190 ? 190 + (r - 190) * 0.62 : r; g2 = g2 > 190 ? 190 + (g2 - 190) * 0.62 : g2; b = b > 190 ? 190 + (b - 190) * 0.62 : b;
+        }
+        if (r < 0) r = 0; if (b < 0) b = 0;
+      }
       if (lmA) { var lf = lmA[k]; r *= lf; g2 *= lf; b *= lf; }
-      r = r > 255 ? 255 : r; g2 = g2 > 255 ? 255 : g2; b = b > 255 ? 255 : b;
+      r = r > 255 ? 255 : g2 = g2 > 255 ? 255 : g2; b = b > 255 ? 255 : b;
       var px = pos[k], cvv = cov[k], ri = r | 0, gi2 = g2 | 0, bi = b | 0;
       if (cvv === 255) out[px] = 0xff000000 | (bi << 16) | (gi2 << 8) | ri;
       else {

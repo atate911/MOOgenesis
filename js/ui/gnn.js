@@ -173,15 +173,15 @@
   const CAT_GROUP = {};
   [
     ['war', 'warDeclared battleWon battleLost fleetDestroyed invasionSuccess invasionRepelled bombardment planetDestroyed empireDestroyed antaranRaid piracy'],
-    ['space', 'guardianSlain monsterAttack'],
+    ['space', 'guardianSlain monsterAttack monsterSpawn monsterVanishes monsterKilled'],
     ['colony', 'colonyFounded colonyLost planetRebels terraform'],
-    ['disaster', 'systemNova plague planetStarving'],
+    ['disaster', 'systemNova plague planetStarving earthquake accident accidentCleaned novaWarning novaProgress novaAverted comet cometProgress cometDestroyed virus plagueProgress plagueCured'],
     ['diplomacy', 'peaceTreaty napSigned allianceFormed allianceBroken tradeSigned treatyBroken tributeDemanded tributePaid firstContact'],
     ['spy', 'spyCaught techStolen sabotage'],
-    ['science', 'techBreakthrough artifactFound'],
+    ['science', 'techBreakthrough artifactFound derelict orionColonised'],
     ['council', 'councilConvened councilVote emperorElected councilRefused'],
-    ['economy', 'economicBoom rankings'],
-    ['life', 'flavor'],
+    ['economy', 'economicBoom rankings richPlanet poorPlanet donation starsReport'],
+    ['life', 'flavor coup'],
   ].forEach(([g, list]) => list.split(' ').forEach(c => { CAT_GROUP[c] = g; }));
   const groupOf = cat => CAT_GROUP[cat] || 'life';
   // per-category overrides of the default graphic and of the special effect played on it
@@ -191,6 +191,8 @@
     artifactFound: ['planet', 'sparkle'], bombardment: ['planet', 'strike'], invasionSuccess: ['planet', 'strike'], invasionRepelled: ['planet', 'strike'],
     monsterAttack: ['battle', ''], antaranRaid: ['battle', ''], piracy: ['battle', ''], guardianSlain: ['battle', ''],
     warDeclared: ['map', 'alarm'], empireDestroyed: ['map', 'alarm'], allianceBroken: ['map', 'alarm'], treatyBroken: ['map', 'alarm'],
+    earthquake: ['planet', 'strike'], accident: ['planet', 'plague'], novaWarning: ['planet', 'nova'], novaProgress: ['planet', 'nova'], comet: ['planet', 'strike'], cometProgress: ['planet', 'strike'],
+    richPlanet: ['planet', 'sparkle'], poorPlanet: ['planet', 'hunger'], plagueProgress: ['planet', 'plague'], monsterSpawn: ['battle', ''], monsterKilled: ['battle', ''], piracyProgress: ['battle', ''], genocide: ['map', 'alarm'],
     spyCaught: ['ticker', 'redact'], techStolen: ['ticker', 'redact'], sabotage: ['ticker', 'redact'],
   };
   const GFX_KINDS = { planet: 1, battle: 1, map: 1, chart: 1, ticker: 1 };
@@ -711,7 +713,7 @@
     const key = seed + '|' + round(w) + 'x' + round(hh) + '*' + S.toFixed(2);
     let c = _gbg.get(key);
     if (c) return c;
-    const pw = max(8, round(w * S)), ph = max(8, round(hh * S)), Sp = M.Gfx && M.Gfx.Space;
+    const pw = max(8, round(w * S)), ph = max(8, round(hh * S)), Sp = (M.Gfx && M.Gfx.pick && M.Gfx.pick('space')) || (M.Gfx && M.Gfx.Space);
     if (Sp && typeof Sp.makeBackdrop === 'function') {
       try { c = Sp.makeBackdrop(pw, ph, 'gnn' + seed, { intensity: 0.8, stars: 1, palette: pal }); } catch (e) { warnOnce('Space.makeBackdrop', e); c = null; }
     }
@@ -752,7 +754,7 @@
     };
   }
   function makeFx() {
-    const F = M.Gfx && M.Gfx.Fx;
+    const F = (M.Gfx && M.Gfx.pick && M.Gfx.pick('fx')) || (M.Gfx && M.Gfx.Fx);
     if (F && typeof F.create === 'function') {
       try { const f = F.create({ maxParticles: 1800, maxEntities: 160 }); if (f && typeof f.explosion === 'function' && typeof f.beam === 'function' && typeof f.update === 'function') { f.real = true; if (f.setQuality) f.setQuality(clamp(PQ().particles || 0.7, 0.3, 1)); return f; } } catch (e) { warnOnce('Gfx.Fx', e); }
     }
@@ -761,7 +763,7 @@
 
   // ---- planet / ship / star wrappers with plain fallbacks
   function drawPlanetSafe(g, desc, cx, cy, r, t, opt) {
-    const P = M.Gfx && M.Gfx.Planets;
+    const P = (M.Gfx && M.Gfx.pick && M.Gfx.pick('planets')) || (M.Gfx && M.Gfx.Planets);
     if (P && typeof P.draw === 'function') {
       try { P.draw(g, desc, cx, cy, r, t, opt); return; } catch (e) { warnOnce('Planets.draw', e); }
     }
@@ -794,7 +796,9 @@
     g.restore();
   }
   function starSurface(g, kind, cx, cy, r, t, S) {
-    const Sp = M.Gfx && M.Gfx.Space;
+    const Sp = M.Gfx && M.Gfx.Space, GP = (M.Gfx && M.Gfx.pick && M.Gfx.pick('planets'));
+    const kk = kind === 'brown' ? 'red' : kind === 'neutron' ? 'purple' : kind;
+    if (GP && GP !== M.Gfx.Planets && GP.drawStar) { try { if (GP.drawStar(g, kk, cx, cy, r, t, { dpr: S, spin: 0.012 })) return; } catch (e) { warnOnce('GLPlanets.drawStar', e); } }
     if (Sp && typeof Sp.drawStarSurface === 'function') {
       try { Sp.drawStarSurface(g, kind === 'brown' ? 'red' : kind === 'neutron' ? 'purple' : kind, cx, cy, r, t, { dpr: S, spin: 0.012 }); return; } catch (e) { warnOnce('Space.drawStarSurface', e); }
     }

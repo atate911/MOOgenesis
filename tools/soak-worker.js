@@ -13,9 +13,14 @@ const St = require('./lib/stats.js');
 const C = { NEXT: 0, STOP: 1, GO: 2, READY: 3, SLOTS: 4 };
 
 // Event classification by report.events[].type only. Edit these if the sim names its diplomacy events differently.
+// Tagged entries come from Sim.autoTurn: 'news:<cat>', 'diplomacy:<kind>', 'notice:<kind>' (matched explicitly); bare types fall back to loose regexes.
 const RE_CONTACT = /contact/i;
 const RE_WAR = /war/i, RE_NOT_WAR = /peace|end|over|weary|ward|warn|aware|reward|toward|software/i;
 const RE_TREATY = /treaty|alliance|pact|peace|accord|agreement/i;
+const RE_TAG_CONTACT = /^(news:firstContact|diplomacy:(firstContact|contact))$/;
+const RE_TAG_WAR = /^(news:(warDeclared|genocide)|diplomacy:(declareWar|war|warDeclared))$/;
+const RE_TAG_TREATY = /^(news:(peaceTreaty|napSigned|allianceFormed|tradeSigned)|diplomacy:(nap|peace|alliance|trade|offerTrade|techExchange|techSwap))$/;
+const isTag = t => /^(news|diplomacy|notice):/.test(t);
 
 const safeHash = S => { try { return St.hashState(S); } catch (e) { return null; } };
 const errInfo = e => ({ name: (e && e.name) || 'Error', message: String((e && e.message) || e), stack: String((e && e.stack) || '') });
@@ -149,6 +154,12 @@ function playGame(env, job, hooks) {
       if (type === undefined || type === null) continue;
       res.events[type] = (res.events[type] || 0) + 1;
       const txt = String(type);
+      if (isTag(txt)) {
+        if (RE_TAG_CONTACT.test(txt)) { if (res.firstContact === null) res.firstContact = played; }
+        else if (RE_TAG_WAR.test(txt)) res.wars++;
+        else if (RE_TAG_TREATY.test(txt)) res.treaties++;
+        continue;
+      }
       if (RE_CONTACT.test(txt)) { if (res.firstContact === null) res.firstContact = played; }
       else if (RE_WAR.test(txt) && !RE_NOT_WAR.test(txt)) res.wars++;
       else if (RE_TREATY.test(txt)) res.treaties++;

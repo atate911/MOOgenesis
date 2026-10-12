@@ -143,7 +143,7 @@
 
     view.makeFx = function () {
       fx = null;
-      try { if (G.GLFx && G.GLFx.create) fx = G.GLFx.create(); } catch (e) { console.warn('[CombatFx] GLFx unavailable', e); fx = null; }
+      try { const FXm = G.pick && G.pick('fx'); if (FXm && FXm.create) fx = FXm.create(); } catch (e) { console.warn('[CombatFx] GLFx unavailable', e); fx = null; }
       if (!fx) { try { if (G.Fx && G.Fx.create) fx = G.Fx.create(); } catch (e) { fx = null; } }
       view.fx = fx;
       try { if (fx && fx.setQuality && M.Perf && M.Perf.q) fx.setQuality(clamp(M.Perf.q.particles, 0.3, 1)); } catch (e) { /* optional */ }
@@ -970,7 +970,7 @@
       ctx.fillStyle = gl; ctx.beginPath(); ctx.arc(x, y, R * 1.8, 0, TAU); ctx.fill(); ctx.restore();
       const la = atan2(star.y - y, star.x - x);
       let drawn = false;
-      const P = G.GLPlanets || G.Planets;
+      const P = (G.pick && G.pick('planets')) || G.Planets;
       if (P && P.draw && u.planetDesc) {
         try { P.draw(ctx, u.planetDesc, x, y, R, t, { dpr: dpr, lightAngle: la, spin: 0.01 }); drawn = true; } catch (err) { if (!view._plWarn) { view._plWarn = 1; console.warn('[CombatFx] planet draw failed', err); } }
       }

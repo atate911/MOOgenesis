@@ -421,7 +421,7 @@
         bgSrc.width = pw; bgSrc.height = ph; bgSrcKey = k;
         const c = bgSrc.getContext('2d');
         let done = false;
-        const S = M.Gfx && M.Gfx.Space;
+        const S = (M.Gfx && M.Gfx.pick && M.Gfx.pick('space')) || (M.Gfx && M.Gfx.Space);
         if (S && typeof S.makeBackdrop === 'function') {
           try {
             const src = S.makeBackdrop(Math.min(w, 1280), Math.min(hh, 720), seed, { intensity: .85, stars: 1.1, palette: ['#2b2a86', '#14357a', '#5b2a86', '#0d4f7a'] });

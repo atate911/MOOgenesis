@@ -292,14 +292,27 @@ module.exports = function (M, t) {
     B = F.arena({ fleet: [{ draft: F.LASER(1), n: 1 }] }, { fleet: [{ draft: mk('doom-virus'), n: 600 }] }, { planet: { bases: 1, pop: 5000, antidote: 1 }, planetSide: 0, seed: 'bio2' });
     F.activate(B, 2); F.place(B, 2, 2, 3);
     const ev = C.act(B, 2, { type: 'fire', target: 0 });
-    t.eq(ev.find(e => e.type === 'bio-hit').popKilled, B.planet.popKilled);
-    t.near(B.planet.popKilled / 600, 1 / 3, 0.07);
-    t.eq(B.planet.bio, B.planet.popKilled);
+    const bh = ev.find(e => e.type === 'bio-hit').popKilled;
+    t.ok(B.planet.popKilled >= bh, 'the damage loop vs the planet may add collateral deaths (errata 8)');
+    t.near(bh / 600, 1 / 3, 0.07);
+    t.eq(B.planet.bio, bh);
     B = F.arena({ fleet: [{ draft: F.LASER(1), n: 1 }] }, { fleet: [{ draft: mk('bio-terminator'), n: 30 }] }, { planet: { bases: 1, pop: 5000, antidote: 0 }, planetSide: 0, seed: 'bio3' });
     F.activate(B, 2); F.place(B, 2, 2, 3);
     C.act(B, 2, { type: 'fire', target: 0 });
     t.near(B.planet.popKilled / 30, 1.5, 0.6);
     t.eq(B.units[2].weapons[0].shots, 4);
+  });
+  t.test('errata 8: bio weapons also run the damage loop vs the planet — shots do their damage (1/2/3) minus the absorb, so a shielded planet\'s bases are untouched', () => {
+    const mk = w => ({ hull: 2, comp: 'mark-1-computer', engine: 'retro-engine', man: 0, armor: 'titanium-armor', weapons: [{ type: w, count: 1 }] });
+    const run = absorb => {
+      const B = F.arena({ fleet: [{ draft: F.LASER(1), n: 1 }] }, { fleet: [{ draft: mk('bio-terminator'), n: 400 }] }, { planet: { bases: 3, pop: 5000, antidote: 0 }, planetSide: 0, seed: 'bio-dmg' });
+      B.units[0].absorb = absorb; F.activate(B, 2); F.place(B, 2, 2, 3);
+      const before = B.units[0].count * B.units[0].hp1 - B.units[0].hploss;
+      C.act(B, 2, { type: 'fire', target: 0 });
+      return before - (B.units[0].count * B.units[0].hp1 - B.units[0].hploss);
+    };
+    t.ok(run(0) > 0, 'no absorb: the bases take damage');
+    t.eq(run(3), 0, 'absorb >= damage: the bases are untouched');
   });
   t.test('a planet with no bases is a valid target only for bombs and bio weapons', () => {
     const d = { hull: 2, comp: 'mark-11-computer', engine: 'retro-engine', man: 0, armor: 'titanium-armor', weapons: [{ type: 'laser', count: 1 }, { type: 'nuclear-bomb', count: 1 }] };

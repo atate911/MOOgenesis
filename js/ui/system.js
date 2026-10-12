@@ -212,7 +212,7 @@
     st.geo = { pr, px, py, sx, sy, sr, la, starOpts: { dpr }, optsGL: Object.assign({ spin: 0.018 }, base), optsCPU: Object.assign({ spin: 0.004 }, base) };
   }
   function drawStar(t) {
-    const g = st.geo, kind = st.info.kind, Sp = Gfx().Space;
+    const g = st.geo, kind = st.info.kind, Sp = (Gfx().pick && Gfx().pick('space')) || Gfx().Space;
     // wide soft bloom over the whole scene
     try {
       if (Sp && Sp.starSprite) {

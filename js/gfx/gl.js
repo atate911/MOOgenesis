@@ -32,6 +32,16 @@
     } catch (err) { console.warn('[GL] init failed', err); failed = true; return null; }
   }
   GL.gl = () => ensure();
+  // ONE helper every consumer uses to choose an implementation:  Gfx.pick('planets'|'space'|'fx') -> the GL renderer when GL.supported()
+  // (Settings.gpu, Perf tier, context alive), else the Canvas2D module. The GL modules also fall back internally while a shader still compiles.
+  M.Gfx.pick = function (kind) {
+    const g = M.Gfx; let on = false;
+    try { on = GL.supported(); } catch (e) { on = false; }
+    if (kind === 'planets') return (on && g.GLPlanets) || g.Planets;
+    if (kind === 'space') return (on && g.GLSpace) || g.Space;
+    if (kind === 'fx') return (on && g.GLFx) || g.Fx;
+    return null;
+  };
   GL.canvas = () => (ensure() ? canvas : null);
 
   // size the shared canvas (grows only; viewport = requested size) and clear it transparent

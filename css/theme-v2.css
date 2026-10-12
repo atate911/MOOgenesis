@@ -206,3 +206,8 @@
 }
 :root[data-theme="v2"] .v2-ticks { height: 6px; background: repeating-linear-gradient(90deg, var(--line-2) 0 1px, transparent 1px 8px); }
 @media (prefers-reduced-motion: reduce) { :root[data-theme="v2"] #app::after { background: radial-gradient(ellipse at 50% 50%, transparent 58%, rgba(0, 0, 0, .38) 100%); } }
+
+/* ---- 14. icons: line style (outline + faint fill) — data-icons="solid" on <html> restores the solid glyphs --------- */
+:root[data-theme="v2"]:not([data-icons="solid"]) .ico path[fill-rule] {
+  fill: color-mix(in srgb, currentColor 13%, transparent); stroke: currentColor; stroke-width: 1.15px; stroke-linejoin: miter; stroke-miterlimit: 3;
+}

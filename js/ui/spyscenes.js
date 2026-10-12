@@ -6,7 +6,7 @@
 //   MOO.UI.Spy.sabotage(it)     -> Promise<pick>   it = {type:'spySabotageChoice', planets:[{planet,name,pop,factories,bases,unrest,canIncite}], units, n, frame, frameChoices, answer(pick)}
 //                                                  pick a colony, then Destroy factories / Destroy missile bases / Incite revolt; result card. Resolves with {planet, action[, frame]} | null.
 //   MOO.UI.Spy.victimNotice(ev) -> Promise         ev = {type:'notice', kind:'techStolen'|'sabotage'|'spiesCaught'|'spiesLost'|'spyNothing', by, …}
-//   MOO.UI.Spy.caught()         -> Promise         the "Spies Caught  Yours / Theirs" table (Sim.Spy.reports). Key C is taken on the galaxy screen: ask the lead to bind another key / the Races screen.
+//   MOO.UI.Spy.caught()         -> Promise         the "Spies Caught  Yours / Theirs" table (Sim.Spy.reports). Key X on the galaxy screen, or the 'Spies caught' button on the Races screen (C is taken by the map).
 // This module also wires Game.handlers.spySabotageChoice and the spy notices (guarded; flow.js may route them itself later).
 (function (M) {
   'use strict';
@@ -180,6 +180,7 @@
     return UI.modal({ title: 'Spies caught', body: h('div', body, h('p.dim.small', 'Yours: your spies caught by them this year. Theirs: their spies you caught.')), buttons: [{ label: 'OK', value: true, primary: true, kbd: 'Space' }], width: '34rem' });
   };
   Spy.isOpen = () => UI.modalOpen();
+  UI.bindKey('x', () => { if (!UI.modalOpen()) Spy.caught(); }, { screen: 'galaxy' });      // C is the map's 'centre on selection'; the Races screen has a button too
 
   // ---------------------------------------------------------------------------------------------------- wiring into the turn driver (guarded; harmless if flow.js routes these itself)
   const SPY_KINDS = { techStolen: 1, sabotage: 1, spiesCaught: 1, spiesLost: 1, spyNothing: 1 };

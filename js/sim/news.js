@@ -10,6 +10,32 @@ MOO.def(function (M) {
     warDeclared: 'map', firstContact: 'map', peaceTreaty: 'map', allianceFormed: 'map', napSigned: 'map', empireDestroyed: 'map', economicBoom: 'chart', starsReport: 'map' };
 
   const text = () => (M.Data.text && M.Data.text.news) || {};
+  // built-in templates for the random-event / late categories that Data.text.news does not carry (Data.text wins when it defines a category).
+  const EXTRA = {
+    earthquake: ['An earthquake devastates {planet}; the {race} count their dead', 'Tremors ravage {planet} — {race} colonists and factories buried'],
+    accident: ['Industrial accident poisons {planet}: the {race} colony shrinks', 'Toxic spill on {planet} halves the {adj} world\'s capacity'],
+    accidentCleaned: ['{planet} is clean again as the {adj} cleanup crews finish', 'The poison on {planet} is gone'],
+    novaWarning: ['Star {star} is unstable: nova expected in {n} years, {planet} at risk', 'Astronomers warn the {star} star will go nova in {n} years'],
+    novaProgress: ['{race} scientists race to stabilise {star}: {n} years left', 'Countdown continues at {star}: {n} years to nova'],
+    novaAverted: ['{star} stabilised! {planet} is saved', '{adj} scientists tame the {star} star; the nova is averted'],
+    virus: ['A computer virus ravages {adj} research labs: {field} work lost', '{race} {field} projects wiped out by a computer virus'],
+    comet: ['A comet is on course for {planet}: impact in {n} years', 'Doomsday rock heads for the {race} colony on {planet}'],
+    cometProgress: ['The comet bound for {planet} still has {n} years to impact', '{adj} ships chip away at the comet threatening {planet}'],
+    cometDestroyed: ['{planet} is spared as the comet is destroyed', '{adj} fleet blasts the comet threatening {planet}'],
+    derelict: ['{race} scientists uncover an ancient derelict near {star}', 'Ancient wreck at {star} yields secrets to the {race}'],
+    richPlanet: ['Rich mineral deposits found on {planet}: {adj} industry set to boom', '{race} geologists strike it rich on {planet}'],
+    poorPlanet: ['Mines on {planet} are running dry for the {race}', '{planet}\'s mineral wealth is nearly exhausted'],
+    donation: ['A wealthy benefactor donates {n} BC to the {race}', 'The {race} treasury swells with a {n} BC gift'],
+    plagueProgress: ['Plague on {planet} still claims {adj} lives', 'The {race} search for a plague cure on {planet} continues'],
+    plagueCured: ['A cure is found: the plague on {planet} is over', '{adj} doctors defeat the plague on {planet}'],
+    piracyProgress: ['Pirates near {star} still strangle {adj} trade', 'Raiders keep cutting {race} trade lanes at {star}'],
+    piracyEnded: ['Pirates near {star} destroyed; {adj} trade recovers', '{race} trade lanes at {star} are free again'],
+    monsterSpawn: ['A space monster has been sighted near {star}', 'Something huge stirs at the edge of the galaxy near {star}'],
+    coup: ['A coup rocks the {race} government', 'Palace intrigue: the {race} regime changes hands'],
+    orionColonised: ['The {race} have colonised Orion, throne-world of the Ancients', '{race} flag raised on legendary Orion'],
+    genocide: ['The {race} have wiped out the {race2}; every empire is horrified', 'Genocide: the {race2} are no more, and the {race} are to blame'],
+  };
+
   const pick = (R, arr) => arr[R.int(0, arr.length - 1)];
   const fmt = (tpl, v) => String(tpl).replace(/\{(\w+)\}/g, (m, k) => (v[k] !== undefined ? v[k] : m));
 
@@ -25,7 +51,8 @@ MOO.def(function (M) {
   }
 
   N.line = function (S, R, cat, ev) {
-    const T = text()[cat]; if (!T || !T.length) return null;
+    const T = text()[cat] && text()[cat].length ? text()[cat] : EXTRA[cat];
+    if (!T || !T.length) return ev && ev.headline ? String(ev.headline) : null;      // no template: the event's own headline
     return fmt(pick(R, T), vars(S, ev || {}));
   };
 

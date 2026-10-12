@@ -370,16 +370,21 @@ MOO.def(function (M) {
     for (let c = idx; c >= 0 && rm.dist[c] > 0; c = rm.par[c]) out.push({ x: c % B.w, y: Math.floor(c / B.w) });
     return out.reverse();
   }
-  // a beam is "blocked" when its line of fire passes through a rock square (+30 miss, counted once per attack)
+  // a beam is "blocked" (+30 miss, counted once per attack) only when the LAST obstructing square on the line of fire is a rock: the walk keeps a single "last obstruction" value, a rock
+  // sets it and the planet's own square overwrites it (so a shot AT the planet never gets +30, and a planet standing between a rock and the target clears it). Ships never count
+  // (research/03-verification §2 item 4, errata 4).
   function lineBlocked(B, a, b) {
     if (!B.rocks.length) return false;
+    const pl = B.units.find(u => u.kind === 'planet');
     const dx = b.x - a.x, dy = b.y - a.y, n = Math.max(Math.abs(dx), Math.abs(dy)) * 4;
+    let last = 0;                                              // 0 nothing · 1 rock · 2 planet square
     for (let i = 1; i < n; i++) {
       const t = i / n, cx = Math.floor(a.x + 0.5 + dx * t), cy = Math.floor(a.y + 0.5 + dy * t);
       if ((cx === a.x && cy === a.y) || (cx === b.x && cy === b.y)) continue;
-      if (rockAt(B, cx, cy)) return true;
+      if (rockAt(B, cx, cy)) last = 1;
+      else if (pl && pl.x === cx && pl.y === cy) last = 2;
     }
-    return false;
+    return last === 1;
   }
 
   // ---- building the battle -------------------------------------------------------------------------------------------------------------------------------
@@ -702,7 +707,7 @@ MOO.def(function (M) {
     logLine(B, u.name + ' fires ' + w.name + ' x' + shots + ' at ' + t.name + ': ' + hits + ' hit, ' + dealt + ' damage');
     report(B, t, { absorbed, dealt, kills, hits }, ev);
   }
-  function fireBio(B, r, u, w, wi, t, ev) {
+  function fireBio(B, r, u, w, wi, t, acc, ev) {
     const n = u.count * w.count * w.numfire, P = B.planet, anti = P ? P.antidote : 0;
     w.numfire = 0; if (w.shots > 0) w.shots--;
     let tot = 0;
@@ -712,6 +717,17 @@ MOO.def(function (M) {
     ev.push({ type: 'beam', unit: u.id, target: t.id, slot: wi, weapon: w.id, name: w.name, kind: w.kind, shots: n, hits: n, damage: tot, x0: u.x, y0: u.y, x1: t.x, y1: t.y, blocked: false });
     ev.push({ type: 'bio-hit', target: t.id, popKilled: killed });
     logLine(B, u.name + ' drops ' + w.name + ': ' + killed + ' population killed');
+    // research/03-verification §2 item 8 (errata 8): bio weapons ALSO run the ordinary damage loop against the planet after the population step — every shot does its damage
+    // (1/2/3 = the weapon's maximum; no to-hit roll) minus the planet's absorb, collateral included; "never hurts bases" only holds while absorb >= that damage.
+    if (P && t.kind === 'planet' && t.count > 0) {
+      const per = Math.max(0, w.dmax - t.absorb);
+      if (per > 0) {
+        const dealt = per * n;
+        acc.collat += Math.min(per, t.hp1) * n;
+        const kills = hitStack(t, dealt, Infinity);
+        report(B, t, { absorbed: (w.dmax - per) * n, dealt, kills, hits: n }, ev);
+      }
+    }
   }
   function launch(B, u, w, wi, t, ev) {
     const n = u.count * w.count * w.warheads;
@@ -733,7 +749,7 @@ MOO.def(function (M) {
     for (const p of pl.plan) {
       const w = u.weapons[p.slot];
       if (t.kind === 'planet' && t.count <= 0 && w.kind !== 'bomb' && w.kind !== 'bio') continue;
-      if (w.kind === 'bio') fireBio(B, r, u, w, p.slot, t, ev);
+      if (w.kind === 'bio') fireBio(B, r, u, w, p.slot, t, acc, ev);
       else if (isBeam(w.kind)) fireBeam(B, r, u, w, p.slot, t, p.miss, false, pl.bm.blocked, acc, ev);
       else if (w.kind === 'bomb') fireBeam(B, r, u, w, p.slot, t, p.miss, true, false, acc, ev);
       else launch(B, u, w, p.slot, t, ev);

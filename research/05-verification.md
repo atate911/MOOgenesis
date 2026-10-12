@@ -175,3 +175,8 @@ Findings (ranked; none crashes):
 3. LOW – `warCheck` path D draws `rnd0(10)` once per human before testing the (p3) conditions; original draws once per matching (p3,p4) pair after the three cheap tests (P = 1-(9/10)^k). Also path C is skipped when B already started a war (original re-runs `war_do` and re-announces with type 13).
 4. LOW – `breakTreaty` returns early when `old===NONE`; original still sets all four moods -200 and clears bounties (only matters for direct calls). `startWar` omits the human `have_met=1` marking.
 5. INFO/UNVERIFIED – events.js victim weights (`n<4 → 0`, human×5) vs 05's `max(w,1)`: resolve against `game_event_new_get_victim`; coup→funeral route; `esp_sub1` modes.
+
+## Resolution log (HANDOFF item 3, verification-gaps pass)
+
+- Finding 1 (MEDIUM, `dispatch`/`callToArms` not clearing `diplo_type`): the clearing is in place (`dispatch`'s final `else` sets `r.dipType = 0` before `callToArms`, which only sets 76); locked with a test in `tools/rules/46-verification-gaps.test.js` (a recorded type 1/2 does not survive a quiet turn, with or without an alliance).
+- Findings 2-5 (per-pair 50% roll in `diploAdjust`, `warCheck` path D draw pattern, `breakTreaty` early return, `startWar` have_met marking) and everything under NOT verified (spy missions/sabotage internals, event type table / monster stats, difficulty table, `Diplo.preTurn` genocide -36) remain open: they need further source reads, nothing was invented.

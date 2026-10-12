@@ -946,7 +946,7 @@
         for (let i = 0; i < 90; i++) amb.sparks.push({ u: r(), v: r(), s: 6 + r() * 11, ph: r() * TAU, fr: 0.4 + r() * 1.3, k: r() < 0.6 ? 'white' : r() < 0.6 ? 'blue' : 'yellow', f: 0.06 + r() * 0.1 });
       }
       // optional external backdrop (MOO.Gfx.Space.makeBackdrop), rebuilt a little after a resize settles
-      const Sp = M.Gfx && M.Gfx.Space;
+      const Sp = (M.Gfx && M.Gfx.pick ? M.Gfx.pick('space') : M.Gfx && M.Gfx.Space);
       if (opts.backdrop !== 'builtin' && Sp && Sp.makeBackdrop && !amb.extFailed) {
         const key = (W >> 5) + 'x' + (H >> 5);
         if (key !== amb.extKey && (!amb.ext || clock - amb.extAt > 0.4)) {
@@ -1167,7 +1167,7 @@
     const STAR_LODS = [32, 48, 64, 96, 128, 192, 256];
     const warm = { q: [], key: '' };
     function queueWarmup() {                                       // build the star sprites we will need during idle frames (each one costs a few ms)
-      const Sp = M.Gfx && M.Gfx.Space; if (!Sp || !Sp.starSprite || SPR.spaceBad) return;
+      const Sp = (M.Gfx && M.Gfx.pick ? M.Gfx.pick('space') : M.Gfx && M.Gfx.Space); if (!Sp || !Sp.starSprite || SPR.spaceBad) return;
       const key = galaxyKey + ':' + dpr; if (warm.key === key) return; warm.key = key; warm.q.length = 0;
       const kinds = {}; for (const sd of SD) if (KINDS[sd.kind] && sd.kind !== 'unknown') kinds[sd.kind] = 1;
       for (const lod of [48, 64, 96, 128]) for (const k in kinds) for (const spk of [true, false]) warm.q.push(() => { try { Sp.starSprite(k, lod, { spikes: spk && Q.spikes, dpr: 1 }); } catch (e) { SPR.spaceBad = true; } });
@@ -1175,7 +1175,7 @@
     function pumpWarmup() { if (warm.q.length) warm.q.shift()(); }
     // Gfx.Space.starSprite (core + halo [+ spikes] in one sprite) when available; quantised sizes keep its cache small
     function spaceStar(kind, D, spikes) {
-      const Sp = M.Gfx && M.Gfx.Space;
+      const Sp = (M.Gfx && M.Gfx.pick ? M.Gfx.pick('space') : M.Gfx && M.Gfx.Space);
       if (!Sp || !Sp.starSprite || SPR.spaceBad || !KINDS[kind] || kind === 'unknown') return null;
       const need = D * dpr * 0.85; let L = STAR_LODS[STAR_LODS.length - 1];
       for (let i = 0; i < STAR_LODS.length; i++) if (STAR_LODS[i] >= need) { L = STAR_LODS[i]; break; }
@@ -1255,14 +1255,14 @@
       }
       ctx.globalAlpha = 1; ctx.globalCompositeOperation = 'source-over';
       // ---- D: animated star surfaces (Gfx.Space.drawStarSurface) for stars that are big on screen
-      const Sp = M.Gfx && M.Gfx.Space;
+      const Sp = M.Gfx && M.Gfx.Space, GPs = M.Gfx && M.Gfx.pick && M.Gfx.pick('planets'), glStar = GPs && GPs.drawStar && GPs !== M.Gfx.Planets ? GPs : null;
       if (Sp && Sp.drawStarSurface && Q.glow >= 0.75 && !SPR.surfBad && znv > 250) {
         for (let i = 0; i < n; i++) {
           const s = SD[i]; if (!s.on || !s.known || s.r < 10) continue;
           const kd = KINDS[s.vkind]; if (!kd || kd.bh || s.sx < -60 || s.sx > W + 60 || s.sy < -60 || s.sy > H + 60) continue;
           let keep = 1; if (wCol > 0 && s.owner < 0) keep = lerp(1, 0.45, wCol); if (wEnv > 0 || wMin > 0) keep = Math.min(keep, lerp(1, 0.45, Math.max(wEnv, wMin)));
           ctx.globalAlpha = keep * sstep(250, 300, znv);
-          try { Sp.drawStarSurface(ctx, s.vkind, s.sx, s.sy, Math.round(s.r * 0.78 / 2) * 2, t, { dpr: dpr }); } catch (e) { SPR.surfBad = true; console.warn('[GalaxyMap] Space.drawStarSurface failed', e); }
+          try { const rr = Math.round(s.r * 0.78 / 2) * 2; if (!(glStar && glStar.drawStar(ctx, s.vkind, s.sx, s.sy, rr, t, { dpr: dpr }))) Sp.drawStarSurface(ctx, s.vkind, s.sx, s.sy, rr, t, { dpr: dpr }); } catch (e) { SPR.surfBad = true; console.warn('[GalaxyMap] Space.drawStarSurface failed', e); }
         }
         ctx.globalAlpha = 1; ctx.globalCompositeOperation = 'source-over';
       }

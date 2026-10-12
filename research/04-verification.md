@@ -150,3 +150,18 @@ Status: **FIXED** = changed + test, **OPEN** = described with a patch, nothing c
 The 1oom "improved" homeworld generator, `game_event.c` (doc §3.13), `game_turn_update_trade`, ground combat beyond the transport gauntlet, ship combat, the AI planner, names / descriptive text, UI behaviour,
 exact last digits of the trig tables (+-1 on ~15 of 180 entries; only sin 30 / cos 60 matter), the value of `FLEET_SPEED_STARGATE`, whether transports really cost BC in the original (row 33), the SG-only tables (T3-2 sizes, T3-8, rocks percentages),
 and every Strategy-Guide / Let's-Play number (only used as cross-checks above).
+
+## Resolution log (HANDOFF item 3, verification-gaps pass)
+
+Switches live in `Data.Config.QUIRKS` (js/data/config.js; read through `Data.Config.quirk(name)` for opt-ins). Tests: `tools/rules/46-verification-gaps.test.js`.
+
+| Item | Status | Notes |
+|---|---|---|
+| C8 / B8 waste second term | DONE, `QUIRKS.wasteSub1` (default off) | added in `Colony.buildEco` after the cleanup `need` is computed: `+floor((100 - waste%) * floor(operating*oper/10) / 100)`. AMBIGUOUS: whether waste% is taken before or after the first term; we use the post-first-term value. The ECO floor never includes it (as in the source). |
+| C9 / B8 SHIP +1 BC | DONE, `QUIRKS.shipBonusBC` (default off) | `Colony.buildShips`, after carry and richness multiplier, only when the slider is > 0. |
+| B8 soil rounding | DONE, `QUIRKS.soilRounding` (default off) | `Colony.soilInc`; reproduces every example of the §2.3 table (Fertile 20 -> 10 ... 120 -> 35, Gaia 55 -> 25 ... 105 -> 50). |
+| B9 factory refit / overflow | DONE, `QUIRKS.factoryRefit` (default off) | `Colony.buildIndustryClassic`: flat `(oper - tier - Meklar2) * floor(factoryBase/2)` collected in `acc.refit` once `floor(bc/cost) + factories > pop*tier`, tier raised afterwards; whole factories above the maximum go to the reserve at `floor(excess*cost/2)`, the remainder stays in `acc.factory`. NOT in the sources, assumed: BC left over after the refit is paid build factories the same turn; the Meklar bonus is the +2 in `Colony.oper`. Operating factories still use the empire level for every planet (row 40). |
+| C10 / row 33 transport BC timing | DONE as a switch, `QUIRKS.transportBC` (default true = Strategy Guide, a deduction at processing time) | `false` reproduces 1oom (`trans_num` cleared at launch before the first production update: no deduction ever). The two sources contradict each other; this stays a product decision. |
+| B10 defence-upgrade billing (`max(0, new-old) * bases + carry`) | OPEN, deliberately not changed | The report says old/new differ only by "newly owned weapon/shield/computer techs at the same miniaturisation level" but does not say WHEN a tech counts as new (this turn only? since the planet last paid?) nor whether the previous loadout is stored per planet or per empire. A wrong guess would mis-bill every planet; the per-planet `baseCostPaid` model stays. Needs one more read of `game_turn_build_def` (the `base_*_prev` bookkeeping). |
+| `autoSwitch` differences (B7) | OPEN | Belongs to `econ.js`, which another agent is editing; patch text in B7 is still valid. |
+| B14-B17 | OPEN | unchanged. |

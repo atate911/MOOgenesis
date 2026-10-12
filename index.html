@@ -4,11 +4,17 @@
 <meta charset="utf-8">
 <title>Master of Orion — Reborn</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="theme-color" content="#060919">
+<meta name="theme-color" content="#05080c">
+<script>/* theme v2 ("serious sci-fi") is the default; ?theme=v1 restores the old brass look. Set before first paint. */
+(function(){try{var q=/[?&]theme=(v1|v2)/.exec(location.search),t=q?q[1]:null;
+if(q){try{localStorage.setItem('moo.theme',t)}catch(e){}}else{try{t=localStorage.getItem('moo.theme')}catch(e){}}
+var h=document.documentElement;h.setAttribute('data-theme',t==='v1'?'v1':'v2');
+var a=/[?&]accent=(cyan|amber|leaf)/.exec(location.search);if(a)h.setAttribute('data-accent',a[1]);
+if(/[?&]fx=off/.test(location.search))h.setAttribute('data-fx','off');}catch(e){document.documentElement.setAttribute('data-theme','v2')}})();</script>
 <!-- Optional web fonts: the game falls back to system fonts when offline. -->
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Condensed:wght@400;500;600;700&family=Marcellus&family=Marcellus+SC&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Condensed:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=Oxanium:wght@500;600;700&family=Marcellus&family=Marcellus+SC&display=swap" rel="stylesheet">
 </head>
 <body>
 <div id="app">

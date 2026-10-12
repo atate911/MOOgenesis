@@ -370,6 +370,15 @@ module.exports = function (M, t) {
     t.near(C.targets(B, 0)[0].hitChance, 0.06, 1e-12);                                         // 50 + 50 + 30(no: the rock moved) = 100 -> capped 95 -> 6%
     t.eq(C.targets(B, 0)[0].cloaked, true);
   });
+  t.test('errata 4: the rock +30 needs the LAST obstruction on the line to be a rock — ships never count, the planet\'s square overwrites an earlier rock', () => {
+    const att = { hull: 2, comp: 'mark-3-computer', engine: 'retro-engine', man: 0, armor: 'titanium-armor', weapons: [{ type: 'heavy-laser', count: 1 }] };
+    const B = F.arena({ fleet: [{ draft: att, n: 1 }] }, { fleet: [{ draft: F.DUMMY, n: 1 }] });
+    F.activate(B, 0); F.place(B, 0, 1, 3); F.place(B, 1, 7, 3);
+    B.rocks = [{ x: 3, y: 3 }]; t.eq(C.lineBlocked(B, B.units[0], B.units[1]), true, 'plain rock');
+    B.units.push({ kind: 'planet', x: 5, y: 3 });                                           // a planet square between the shooter and the target
+    t.eq(C.lineBlocked(B, B.units[0], B.units[1]), false, 'rock then planet square: overwritten');
+    B.rocks = [{ x: 3, y: 3 }, { x: 6, y: 3 }]; t.eq(C.lineBlocked(B, B.units[0], B.units[1]), true, 'planet then rock: blocked');
+  });
 
   // ---------------------------------------------------------------------------------------------------------------- Monte-Carlo agreement of the real shots with the numbers shown
   const volleys = (B, id, target, n) => {

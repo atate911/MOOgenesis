@@ -59,6 +59,8 @@ MOO.def(function (M) {
 
     // (20–21) research: interest + breakthrough rolls; then choose next projects
     for (const e of alive()) Sim.Research.advance(S, e, R);
+    // the breakthrough scene comes FIRST, then the choice of the next project (original order)
+    for (const ev of Sim.Ev.take(S, x => x.type === 'tech' && S.empires[x.empire].human)) yield ev;
     for (const e of alive()) {
       const rs = e.research;
       for (let f = 0; f < 6; f++) {
@@ -72,7 +74,6 @@ MOO.def(function (M) {
         }
       }
     }
-    for (const ev of Sim.Ev.take(S, x => x.type === 'tech' && S.empires[x.empire].human)) yield ev;
 
     // (22) explore + colonise
     for (const st of S.stars) {
@@ -141,7 +142,7 @@ MOO.def(function (M) {
     S.year += 1; S.turn += 1;
     for (const e of alive()) { Sim.Research.refreshTL(e); Sim.Design.refresh(S, e); }
     Sim.Fleet.updateRange(S); Sim.Vis.update(S);
-    Sim.Econ.autoSwitch(S); Sim.Econ.refresh(S); Sim.Econ.stepResearchTotal(S);
+    Sim.Econ.autoSwitch(S); Sim.Econ.refresh(S);
     if (has('News') && Sim.News.compile) { const gnn = Sim.News.compile(S, R); if (gnn && gnn.items.length) yield gnn; }
     if (over) yield (Sim.Victory && Sim.Victory.payload ? Sim.Victory.payload(S, over) : { type: 'gameover', reason: over.reason, winner: over.winner });
     return over;

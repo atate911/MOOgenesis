@@ -108,6 +108,9 @@ MOO.def(function (M) {
       p.waste = (p.waste | 0) + Math.floor((100 - pct) * newWaste / 100);
       if (p.unrest === 2) p.waste = 0;
       const n = C.ecoN(E), need = Math.floor(p.waste / n);
+      // classic second term (research/04-verification C8, Data.Config.QUIRKS.wasteSub1): added AFTER the cleanup need was computed, so a fully funded cleanup wipes it
+      // and an under-funded one keeps it (~+20 % waste at oper 2); the ECO floor percentage never includes it
+      if (M.Data.Config.quirk('wasteSub1')) p.waste += Math.floor((100 - Math.floor(p.waste * 100 / Math.max(1, p.mp2))) * Math.floor(operating * C.oper(E) / 10) / 100);
       if (eco >= need) { eco -= need; p.waste = 0; } else { p.waste -= n * eco; eco = 0; }
       p.waste = clamp(p.waste, 0, Math.max(0, p.mp2 - 10));
     } else p.waste = 0;
@@ -174,6 +177,10 @@ MOO.def(function (M) {
   };
 
   C.soilInc = function (mp1, kind) {
+    if (M.Data.Config.quirk('soilRounding')) {                     // original executable (research/04 §2.3): integer division, +5 unless the quotient is already a multiple of 5
+      const q = Math.floor(mp1 / (kind === 'gaia' ? 10 : 20));
+      return Math.max(5, q * 5 + (q % 5 ? 5 : 0));
+    }
     const step = v => Math.max(5, Math.ceil(v / 5) * 5);
     return kind === 'gaia' ? step(mp1 * 0.5) : step(mp1 * 0.25);
   };
@@ -228,6 +235,7 @@ MOO.def(function (M) {
   };
   C.buildShips = function (S, E, p, out) {
     let bc = C.richMul(p, Math.floor(p.spendable * p.sliders[SHIP] / 100)) + p.acc.ship;
+    if (p.sliders[SHIP] > 0 && M.Data.Config.quirk('shipBonusBC')) bc += 1;        // original bug (C9): +1 BC whenever the slider is > 0, after the carry and the richness multiplier
     p.acc.ship = bc;
     if (p.sliders[SHIP] === 0 && bc <= 0) return;
     if (p.build === -1) {                                            // stargate (original: excess BC carry, build item resets to design 0, a human's SHIP percentage moves to TECH)
@@ -245,11 +253,31 @@ MOO.def(function (M) {
   C.buildIndustry = function (S, E, p) {
     let bc = C.richMul(p, Math.floor(p.spendable * p.sliders[IND] / 100)) + p.acc.factory;
     const max = C.maxFactories(E, p), cost = Math.max(1, C.factoryCost(E));
+    if (M.Data.Config.quirk('factoryRefit')) return C.buildIndustryClassic(S, E, p, bc, max, cost);
     if (p.factories >= max) { E.bc += Math.floor(bc / 2); p.acc.factory = 0; return true; }       // surplus at 50% to the reserve
     const n = Math.min(Math.floor(bc / cost), max - p.factories);
     p.factories += n; bc -= n * cost;
     if (p.factories >= max) { E.bc += Math.floor(bc / 2); bc = 0; return true; }
     p.acc.factory = bc; return false;
+  };
+
+  // Classic factory billing (research/04-verification row 41 / B9, Data.Config.QUIRKS.factoryRefit). The per-planet tier p.operTier only gates a refit: when this turn's new
+  // factories would push the count above pop*tier and the empire's operating level is higher, the planet first collects a flat (oper - tier - Meklar2) * floor(factoryBase/2)
+  // (acc.refit); once paid the tier is raised and the rest of the BC builds factories. Whole factories above the maximum are not built: they go to the reserve at floor(excess*cost/2),
+  // the remainder BC stays in the accumulator. NOT in the sources (assumed): BC left over after the refit is paid are spent on factories in the same turn.
+  C.buildIndustryClassic = function (S, E, p, bc, max, cost) {
+    const oper = C.oper(E), bonus = E.race === 'meklar' ? 2 : 0;
+    let tier = p.operTier | 0 || 2;
+    if (tier + bonus < oper && Math.floor(bc / cost) + p.factories > p.pop * tier) {
+      const rc = (oper - tier - bonus) * Math.floor(C.factoryBase(E) / 2);
+      p.acc.refit = (p.acc.refit | 0) + bc; bc = 0;
+      if (p.acc.refit >= rc) { bc = p.acc.refit - rc; p.acc.refit = 0; tier = oper - bonus; p.operTier = tier; }
+    }
+    const whole = Math.floor(bc / cost), room = Math.max(0, max - p.factories), n = Math.min(whole, room), excess = whole - n;
+    p.factories += n;
+    if (excess > 0) E.bc += Math.floor(excess * cost / 2);
+    p.acc.factory = bc - whole * cost;
+    return p.factories >= max;
   };
 
   // ---- queries used by the UI ---------------------------------------------------------------------------------------------

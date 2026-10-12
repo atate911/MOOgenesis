@@ -587,7 +587,9 @@ module.exports = function (M, t) {
     f.p.pop = 45; tr(40); t.eq(G.inbound(f.S, 2, f.p), 40); t.eq(G.aiBombs(f.S, f.other, f.p), true);
     f.other.race = 'bulrathi'; t.eq(G.aiBombs(f.S, f.other, f.p), false, '45 > 40 × 1.2 is false'); f.p.pop = 49; t.eq(G.aiBombs(f.S, f.other, f.p), true);
     f.other.race = 'human'; f.p.pop = 30; t.eq(G.aiBombs(f.S, f.other, f.p), false); tr(0); t.eq(G.aiBombs(f.S, f.other, f.p), true);
-    f.S.trans = [{ id: 7, owner: 2, from: 0, to: f.p.starId, n: 99, x: st.x + 40, y: st.y, speed: 1 }]; t.eq(G.inbound(f.S, 2, f.p), 0, 'transports still in flight do not count');
+    f.S.trans = [{ id: 7, owner: 2, from: 0, to: f.p.starId, n: 99, x: st.x + 40, y: st.y, speed: 1 }]; t.eq(G.inbound(f.S, 2, f.p), 99, 'transports still in flight count too (1oom game_turn_bomb)');
+    f.S.trans = [{ id: 7, owner: 2, from: 0, to: f.p.starId, n: 10, x: st.x + 40, y: st.y, speed: 1 }, { id: 8, owner: 2, from: 0, to: f.p.starId, n: 15, x: st.x, y: st.y, speed: 1 }, { id: 9, owner: 2, from: 0, to: f.p.starId + 1, n: 50, x: st.x, y: st.y, speed: 1 }, { id: 10, owner: 0, from: 0, to: f.p.starId, n: 7, x: st.x, y: st.y, speed: 1 }];
+    t.eq(G.inbound(f.S, 2, f.p), 25, 'all of this bomber\'s transports to this planet, nobody else\'s, none heading elsewhere');
     f.S.trans = []; f.p.pop = 30; f.S.bombard = undefined;
     t.eq(G.bombard(f.S, f.R, true).filter(e => e.empire === 2).length, 1, 'AI fleets in orbit bomb without being asked');
     f.p.pop = 30; f.S.bombard = undefined; t.eq(G.bombard(f.S, f.R).length, 0, 'AI-vs-AI bombardments are not reported to the human');
@@ -598,6 +600,17 @@ module.exports = function (M, t) {
       M.Sim.Diplo = { isAllied: (S, a, b) => a !== b, atWar: () => false, status: () => ({ treaty: 'alliance' }) };
       t.eq(G.canBombard(f.S, 2, f.p.id).ok, false); t.eq(G.canBombard(f.S, 2, f.p.id).reason, 'allied planet');
     } finally { if (saved) M.Sim.Diplo = saved; else delete M.Sim.Diplo; }
+  });
+  t.test('an AI never bombs a HUMAN it holds a ceasefire with (research/03-verification 2.9); with the ceasefire over it bombs again', () => {
+    const f = fx('cf'); fleet(f, 2, 3, 10); f.def.human = true; f.p.pop = 30; f.S.bombard = undefined;
+    const saved = M.Sim.Diplo;
+    try {
+      let cf = 5;
+      M.Sim.Diplo = { isAllied: () => false, atWar: () => false, status: () => ({ treaty: 'none' }), ceasefire: () => cf };
+      t.eq(G.bombard(f.S, f.R, true).filter(e => e.empire === 2).length, 0, 'ceasefire: no bombardment');
+      cf = 0; f.S.bombard = undefined;
+      t.eq(G.bombard(f.S, f.R, true).filter(e => e.empire === 2).length, 1, 'no ceasefire: bombs');
+    } finally { if (saved) M.Sim.Diplo = saved; else delete M.Sim.Diplo; f.def.human = false; }
   });
   t.test('bombTargets lists what an empire can bomb; bombPreview explains why not', () => {
     const f = bomberFx('tg');

@@ -233,6 +233,7 @@
       const side = h('aside.ov-side', h('div.panel', h('div.ov-title', 'Galaxy Map', subEl), h('div.ov-modes', MODES.map(m => modeBtns[m[0]])), keyEl, h('div.ov-ok', ok)));
       el = h('div.ov', mapHost, side);
       root.appendChild(el);
+      const modesEl = el.querySelector('.ov-modes'); if (modesEl) modesEl.setAttribute('data-help', 'overview.modes');
       const scr = { screen: 'mapoverview' };
       MODES.forEach(([id, , key]) => UI.bindKey(key.toLowerCase(), () => setMode(id), scr));
       UI.bindKey('o', () => close('confirm'), scr); UI.bindKey('space', () => close('confirm'), scr); UI.bindKey('escape', () => close('cancel'), scr);

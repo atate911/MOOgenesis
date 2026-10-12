@@ -1243,6 +1243,8 @@
       h('aside.dz-right',
         h('div.panel.dz-pv', ui.pvh, ui.cvw, auto), ui.spc, ui.cmp, ui.hints));
     root.appendChild(dom);
+    const hook = (sel, name) => { const x = dom.querySelector(sel); if (x) x.setAttribute('data-help', name); };      // anchors for the F1 help overlay
+    hook('.dz-mc', 'design.parts'); hook('.dz-cmp', 'design.stats'); hook('.dz-btns', 'design.build');
 
     // preview interaction: drag to turn, double-click to reset
     const cv = PV.cv;

@@ -552,7 +552,36 @@
   }
 
   /* ======================================================================= backdrop */
-  function backdrop(ctx, x, y, w, h, tint, accent, t) {
+  /* v2 backdrop: dark graphite control room — low-key, desaturated race tint, a few out-of-focus practical lights, cool rim wash */
+  const V1 = (document.documentElement.getAttribute('data-theme') === 'v1');
+  const BOKEH = [[0.14, 0.2, 0.085, 0, 0.55], [0.3, 0.1, 0.05, 1, 0.4], [0.82, 0.16, 0.1, 0, 0.45], [0.93, 0.34, 0.06, 1, 0.5], [0.06, 0.46, 0.06, 1, 0.35], [0.7, 0.05, 0.045, 0, 0.35]];
+  function backdropV2(ctx, x, y, w, h, tint, accent, t) {
+    const c0 = mixc(tint, '#1c2733', 0.8), cx = x + w * 0.5, cy = y + h * 0.4, r = hypot(w, h) * 0.66;
+    ctx.fillStyle = rgd(ctx, cx, cy, 0, r, [0, lite(c0, 0.02), 0.5, mixc(c0, '#070b10', 0.55), 1, '#04070a'], cx - w * 0.1, cy - h * 0.05);
+    ctx.fillRect(x, y, w, h);
+    // practical lights, defocused (amber / cyan), very slow drift
+    ctx.save(); ctx.globalCompositeOperation = 'lighter';
+    for (let i = 0; i < BOKEH.length; i++) {
+      const b = BOKEH[i], bx = x + w * (b[0] + 0.004 * sin(t * 0.21 + i * 2)), by = y + h * (b[1] + 0.003 * sin(t * 0.17 + i)), br = w * b[2];
+      ctx.globalAlpha = 0.2 * b[4] * (0.9 + 0.1 * sin(t * 0.9 + i * 1.7));
+      ctx.drawImage(glowSprite(b[3] ? '#6fc8e6' : '#e8a95a'), bx - br, by - br, br * 2, br * 2);
+    }
+    ctx.restore();
+    // far-wall panel seams (very faint) give the room a scale
+    ctx.fillStyle = 'rgba(160,190,210,.035)';
+    for (let i = 1; i < 6; i++) ctx.fillRect(x + w * i / 6, y, Math.max(1, w * 0.002), h * 0.78);
+    // cool backlight from camera-right behind the sitter
+    const pulse = 0.2 + 0.03 * sin(t * 0.7);
+    ctx.fillStyle = lg(ctx, x + w, 0, x + w * 0.35, 0, [0, 'rgba(110,190,225,' + pulse * 0.55 + ')', 0.55, 'rgba(110,190,225,' + pulse * 0.1 + ')', 1, 'rgba(110,190,225,0)']);
+    ctx.fillRect(x, y, w, h);
+    // floor falloff + left-side flag
+    ctx.fillStyle = lg(ctx, 0, y + h * 0.55, 0, y + h, [0, 'rgba(2,4,6,0)', 1, 'rgba(2,4,6,.7)']);
+    ctx.fillRect(x, y, w, h);
+    ctx.fillStyle = lg(ctx, x, 0, x + w * 0.4, 0, [0, 'rgba(2,4,6,.5)', 1, 'rgba(2,4,6,0)']);
+    ctx.fillRect(x, y, w, h);
+  }
+
+  function backdropV1(ctx, x, y, w, h, tint, accent, t) {
     const c0 = mixc(tint, '#33449a', 0.38), cx = x + w * 0.5, cy = y + h * 0.42, r = hypot(w, h) * 0.64;
     ctx.fillStyle = rgd(ctx, cx, cy, 0, r, [0, lite(c0, 0.06), 0.4, c0, 0.78, mixc(tint, '#0b1236', 0.78), 1, '#060a1f'], cx - w * 0.07, cy - h * 0.04);
     ctx.fillRect(x, y, w, h);
@@ -563,6 +592,38 @@
     ctx.fillRect(x, y, w, h);
     ctx.fillStyle = lg(ctx, x, 0, x + w * 0.4, 0, [0, 'rgba(3,5,16,.45)', 1, 'rgba(3,5,16,0)']);
     ctx.fillRect(x, y, w, h);
+  }
+  function backdrop(ctx, x, y, w, h, tint, accent, t) { return V1 ? backdropV1(ctx, x, y, w, h, tint, accent, t) : backdropV2(ctx, x, y, w, h, tint, accent, t); }
+
+  /* v2 grade: applied ONCE per cached layer (zero per-frame cost) — less saturation, key from camera-left with a falloff to
+     the shadow side, cool rim light on the right-hand silhouette. Skipped for 'sheen'. */
+  function gradeLayer(c, name, bucket) {
+    if (name === 'sheen') return;
+    const g = c.getContext('2d'), cw = c.width, ch = c.height;
+    try {
+      if ('filter' in g) {
+        const t = document.createElement('canvas'); t.width = cw; t.height = ch; t.getContext('2d').drawImage(c, 0, 0);
+        g.save(); g.setTransform(1, 0, 0, 1, 0, 0); g.globalCompositeOperation = 'copy';
+        g.filter = 'saturate(.72) contrast(1.1) brightness(.9)'; g.drawImage(t, 0, 0); g.restore();
+      }
+      g.save(); g.setTransform(1, 0, 0, 1, 0, 0); g.globalCompositeOperation = 'source-atop';
+      let gr = g.createLinearGradient(cw * 0.2, 0, cw * 0.95, 0);
+      gr.addColorStop(0, 'rgba(4,10,18,0)'); gr.addColorStop(1, 'rgba(4,10,18,.55)');
+      g.fillStyle = gr; g.fillRect(0, 0, cw, ch);
+      gr = g.createLinearGradient(0, ch * 0.45, 0, ch);
+      gr.addColorStop(0, 'rgba(4,10,18,0)'); gr.addColorStop(1, 'rgba(4,10,18,.4)');
+      g.fillStyle = gr; g.fillRect(0, 0, cw, ch);
+      g.restore();
+      // rim: silhouette sliver on the right edge
+      const r = document.createElement('canvas'); r.width = cw; r.height = ch;
+      const rg = r.getContext('2d'), dx = Math.max(1.5, 3.2 * bucket);
+      rg.drawImage(c, 0, 0); rg.globalCompositeOperation = 'destination-out'; rg.drawImage(c, -dx, 0); rg.drawImage(c, -dx * 0.6, dx * 0.6);
+      rg.globalCompositeOperation = 'source-in'; rg.fillStyle = '#8fd4ee'; rg.fillRect(0, 0, cw, ch);
+      rg.globalCompositeOperation = 'destination-in';
+      const mg = rg.createLinearGradient(cw * 0.35, 0, cw * 0.75, 0); mg.addColorStop(0, 'rgba(0,0,0,0)'); mg.addColorStop(1, 'rgba(0,0,0,1)');
+      rg.fillStyle = mg; rg.fillRect(0, 0, cw, ch);
+      g.save(); g.setTransform(1, 0, 0, 1, 0, 0); g.globalAlpha = 0.6; g.drawImage(r, 0, 0); g.restore();
+    } catch (e) { /* grade is cosmetic */ }
   }
 
   /* ======================================================================= cache + render */
@@ -598,6 +659,7 @@
       const g = c.getContext('2d'); g.setTransform(bucket, 0, 0, bucket, 0, 0);
       fn.call(pa, g, P, T);
       if (name !== 'sheen') grain(g, cw, ch, pa.grain);
+      if (name !== 'sheen' && !V1) gradeLayer(c, name, bucket);
       layers[name] = cropLayer(c, bucket);
     };
     mk('body', pa.body); mk('head', pa.head); mk('fore', pa.fore); mk('collar', pa.collar); mk('sheen', pa.sheen); mk('ears', pa.ears); mk('aux', pa.aux); mk('aux2', pa.aux2);
@@ -686,14 +748,14 @@
     ctx.save();
     ctx.shadowColor = 'rgba(0,0,0,.55)'; ctx.shadowBlur = r * 0.18; ctx.shadowOffsetY = r * 0.05;
     ctx.beginPath(); ctx.arc(cx, cy, r - rw / 2, 0, TAU); ctx.lineWidth = rw;
-    ctx.strokeStyle = lg(ctx, cx - r, cy - r, cx + r, cy + r, [0, '#f6e3b0', 0.3, '#d6b36a', 0.62, '#8a7040', 0.82, '#c9a35c', 1, '#6e5830']);
+    ctx.strokeStyle = lg(ctx, cx - r, cy - r, cx + r, cy + r, V1 ? [0, '#f6e3b0', 0.3, '#d6b36a', 0.62, '#8a7040', 0.82, '#c9a35c', 1, '#6e5830'] : [0, '#c9d4de', 0.3, '#8397ab', 0.62, '#3d4f60', 0.82, '#6f8296', 1, '#27323d']);
     ctx.stroke(); ctx.restore();
     ctx.beginPath(); ctx.arc(cx, cy, fr + 0.4, 0, TAU); ctx.lineWidth = Math.max(1, r * 0.03); ctx.strokeStyle = 'rgba(8,6,18,.7)'; ctx.stroke();
-    ctx.beginPath(); ctx.arc(cx, cy, r - rw * 0.3, PI * 1.08, PI * 1.58); ctx.lineWidth = Math.max(0.8, rw * 0.2); ctx.strokeStyle = 'rgba(255,248,215,.7)'; ctx.stroke();
+    ctx.beginPath(); ctx.arc(cx, cy, r - rw * 0.3, PI * 1.08, PI * 1.58); ctx.lineWidth = Math.max(0.8, rw * 0.2); ctx.strokeStyle = V1 ? 'rgba(255,248,215,.7)' : 'rgba(225,238,248,.55)'; ctx.stroke();
     if (o.color) {
       const a = PI * 0.25, px = cx + cos(a) * (r - rw * 0.2), py = cy + sin(a) * (r - rw * 0.2), pr = Math.max(2.2, r * 0.17);
       ctx.beginPath(); ctx.arc(px, py, pr, 0, TAU); ctx.fillStyle = o.color; ctx.fill();
-      ctx.lineWidth = Math.max(1, pr * 0.28); ctx.strokeStyle = '#d6b36a'; ctx.stroke();
+      ctx.lineWidth = Math.max(1, pr * 0.28); ctx.strokeStyle = V1 ? '#d6b36a' : '#9fb3c6'; ctx.stroke();
     }
   }
   const _cc = new Map();

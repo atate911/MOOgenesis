@@ -41,7 +41,7 @@ MOO.def(function (M) {
       const E = {
         id: i, race: rd.id, name: rd.name, plural: rd.plural, leader, color: bannerFor[i], human: i === 0 && !st.playerAI, alive: true, capital: homes[i],
         bc: 0, tax: 0, security: 0, spyBudget: [0, 0, 0, 0, 0, 0], spies: [0, 0, 0, 0, 0, 0], spyMode: [0, 0, 0, 0, 0, 0],
-        personality: RACES().rollPersonality(R, rd.id), objective: i === 0 ? 0 : RACES().rollObjective(R, rd.id),
+        personality: RACES().rollPersonality(R, rd.id), objective: i === 0 && !st.playerAI ? humanObjective(st) : RACES().rollObjective(R, rd.id),
         designs: [null, null, null, null, null, null], dstats: [], stats: {}, flow: {}, relations: [], ai: null,
       };
       S.empires.push(E);
@@ -74,6 +74,13 @@ MOO.def(function (M) {
     M.Sim.Econ.stepResearchTotal(S);
     return S;
   };
+
+  // the human has no AI objective of its own: 0 (diplomat, the neutral default) unless the caller names one (index or name); an AI-played slot 0 rolls like any AI (soak/dev)
+  function humanObjective(st) {
+    const o = st.objective, list = RACES().OBJECTIVES || [];
+    if (typeof o === 'number' && o >= 0 && o < list.length) return o | 0;
+    const i = list.indexOf(o); return i >= 0 ? i : 0;
+  }
 
   // AI initial planet/research allocation (research/01 §5.1 step 8); humans keep Industry 100% + ECO floor
   function initAllocation(S, E, R) {

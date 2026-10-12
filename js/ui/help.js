@@ -74,7 +74,7 @@
     const line = (x1, y1, x2, y2) => { const l = doc.createElementNS(svg.namespaceURI, 'line'); l.setAttribute('x1', x1); l.setAttribute('y1', y1); l.setAttribute('x2', x2); l.setAttribute('y2', y2); svg.appendChild(l); };
     const loose = []; let n = 0;
     for (const it of (page.items || [])) {
-      const r = it.sel ? targetRect(it.sel) : (it.at ? { left: it.at[0] * W, top: it.at[1] * H, right: it.at[0] * W, bottom: it.at[1] * H, width: 0, height: 0 } : null);
+      const r = (it.sel && targetRect(it.sel)) || (it.at ? { left: it.at[0] * W, top: it.at[1] * H, right: it.at[0] * W, bottom: it.at[1] * H, width: 0, height: 0 } : null);
       const box = h('div.hp-box', { html: it.text }); box.style.visibility = 'hidden'; el.appendChild(box);
       const bw = box.offsetWidth, bh = box.offsetHeight;
       if (!r) { loose.push(box); box.style.visibility = ''; continue; }
@@ -138,7 +138,7 @@
       { sel: hp('colony.build', '.sc-build'), text: '<b>Build box.</b> What the Ship slider builds. <b>Ships</b> chooses a design, <b>Reloc</b> sets the rally point for new ships, <b>Trans</b> moves up to half the population to another colony.' }] }
       : { title: 'Select a colony', text: 'Click one of your own stars to see its five sliders (Ship, Def, Ind, Eco, Tech), its build box and the Ships / Reloc / Trans buttons.', items: [] },
     { title: 'Keys on the control screen', text: 'Mouse-only play works everywhere; these make it fast.', items: [
-      { at: [0.3, 0.45], text: '<b>G D F M R P T</b> open Game, Design, Fleet, Map, Races, Planets and Tech. <b>N</b> ends the turn. <b>Home</b> centres on your capital, <b>C</b> on the selection.' },
+      { at: [0.3, 0.45], text: '<b>G D F M R P T</b> open Game, Design, Fleet, Map, Races, Planets and Tech. <b>N</b> ends the turn. <b>Home</b> centres on your capital, <b>C</b> on the selection, <b>X</b> shows the spies caught.' },
       { at: [0.3, 0.65], text: '<b>F2 / F3</b> cycle your colonies, <b>F4 / F5</b> colonies with ships, <b>F10</b> quick-saves, <b>F1</b> is this help.' }] }];
   });
   Help.register('planets', [{ title: 'The planets ledger', text: 'One row per colony; click a row to open it. Sort by clicking a column heading.', items: [
@@ -155,17 +155,17 @@
     { sel: hp('tech.project', '.tch-proj'), text: '<b>Current project.</b> When the invested points exceed its cost, the tech arrives with a growing chance each turn (the breakthrough meter).' },
     { sel: hp('tech.list', '.tch-listp', '.tch-list'), text: '<b>Known and available techs.</b> When a field finishes, you choose the next project from the list.' }] }]);
   Help.register('design', [{ title: 'The ship designer', text: 'A design is a hull plus components. You can keep six designs; a design is locked once ships of it exist.', items: [
-    { at: [0.3, 0.3], text: '<b>Hull and slots.</b> Computer, shield, ECM, armor, engine and manoeuvre, four weapon slots and three special devices — everything must fit the hull’s space.' },
-    { at: [0.7, 0.55], text: '<b>Live numbers.</b> Attack level, missile defence, hit points, warp, cost and free space update as you choose. Newer tech makes components smaller and cheaper (miniaturisation).' },
-    { at: [0.5, 0.85], text: '<b>Build</b> stores the design; colonies then build it with their Ship slider. A colony ship needs a colony-base special on a large hull.' }] }]);
+    { sel: hp('design.parts', '.dz-mc'), at: [0.3, 0.3], text: '<b>Hull and slots.</b> Computer, shield, ECM, armor, engine and manoeuvre, four weapon slots and three special devices — everything must fit the hull’s space.' },
+    { sel: hp('design.stats', '.dz-cmp'), at: [0.7, 0.55], text: '<b>Live numbers.</b> Attack level, missile defence, hit points, warp, cost and free space update as you choose. Newer tech makes components smaller and cheaper (miniaturisation).' },
+    { sel: hp('design.build', '.dz-btns'), at: [0.5, 0.85], text: '<b>Build</b> stores the design; colonies then build it with their Ship slider. A colony ship needs a colony-base special on a large hull.' }] }]);
   Help.register('races', [{ title: 'Races and diplomacy', text: 'What you know about every empire.', items: [
-    { at: [0.3, 0.4], text: '<b>Attitude bar.</b> From hostile (red) to friendly (green): it decides what a leader will agree to in an audience.' },
-    { at: [0.7, 0.6], text: '<b>Spies.</b> Choose Hide, Espionage or Sabotage for each target and set the security slider. <b>Audience</b> opens talks: treaties, trade, tribute, tech exchange.' }] }]);
+    { sel: hp('races.cells', '.rc-grid'), at: [0.3, 0.4], text: '<b>Attitude bar.</b> From hostile (red) to friendly (green): it decides what a leader will agree to in an audience.' },
+    { sel: hp('races.foot', '.rx-foot'), at: [0.7, 0.6], text: '<b>Spies.</b> Choose Hide, Espionage or Sabotage for each target and set the security slider. <b>Audience</b> opens talks: treaties, trade, tribute, tech exchange.' }] }]);
   Help.register('mapoverview', [{ title: 'Galaxy map overview', text: 'The whole galaxy in one picture.', items: [
-    { at: [0.8, 0.2], text: '<b>Colonies / Environments / Minerals.</b> Switch the filter: empire flags, which planets you can colonise now (green) and which you cannot yet (red), or the mineral and artifact specials.' }] }]);
+    { sel: hp('overview.modes', '.ov-modes'), at: [0.8, 0.2], text: '<b>Colonies / Environments / Minerals.</b> Switch the filter: empire flags, which planets you can colonise now (green) and which you cannot yet (red), or the mineral and artifact specials.' }] }]);
   Help.register('combat', [{ title: 'Tactical combat', text: 'Ships fight on a 10 × 8 grid; each ship acts in initiative order.', items: [
-    { at: [0.5, 0.92], text: '<b>Command bar.</b> Auto · Planet · Scan · Missiles · Special · Retreat · Wait · Done. Click a square to move, an enemy to fire everything that reaches it.' },
-    { at: [0.5, 0.4], text: 'Beams never run out; missiles and torpedoes do. Rocks block movement and shield against missiles. Battles happen only in orbit over a planet.' }] }]);
+    { sel: hp('combat.bar', '.cb-btns'), at: [0.5, 0.92], text: '<b>Command bar.</b> Auto · Planet · Scan · Missiles · Special · Retreat · Wait · Done. Click a square to move, an enemy to fire everything that reaches it.' },
+    { sel: hp('combat.field', '.cb-field'), at: [0.5, 0.4], text: 'Beams never run out; missiles and torpedoes do. Rocks block movement and shield against missiles. Battles happen only in orbit over a planet.' }] }]);
   Help.register('landing', [{ title: 'Landings and bombardment', text: 'Space skips ahead, Esc skips the whole scene.', items: [
     { at: [0.5, 0.45], text: '<b>Invasion.</b> Transports run past the missile bases, then troops fight in rounds; each exchange rolls d100 plus the force rating of each side, the loser loses one trooper, ties go to the defender.' },
     { at: [0.5, 0.7], text: '<b>Bombardment.</b> After a battle your ships may bomb the planet: they kill colonists and factories; biological weapons also shrink its maximum population.' }] }]);
@@ -176,6 +176,7 @@
   // ================================================================================================================================ tutor pop-ups (Simple / Easy only; once per topic; remembered in Settings)
   const TOPICS = [
     { id: 'start', title: 'Welcome, emperor', text: 'You rule one colony. Open it (click your home star) and look at the five spending sliders: Industry builds factories, Ecology keeps the planet clean, Tech funds research and Ship builds ships. Send your scouts out with the Fleet panel, and press <b>N</b> to end the turn.', test: S => S.turn === 0 },
+    { id: 'noRP', title: 'No research', text: 'Your scientists have nothing to do: not one colony puts any of its output into <b>Tech</b>, so you produce 0 research points. Select a colony and drag its <b>Tech</b> slider up (or open <b>Tech</b> to see the six fields).', test: (S, E) => S.turn >= 1 && E.alive && (E.research.total | 0) <= 0 && S.planets.some(p => p.owner === E.id) },
     { id: 'contact', title: 'First contact', text: 'You have met another empire. Open <b>Races</b> to see its attitude and ask for an audience: a non-aggression pact is a cheap way to keep the peace while you grow.', test: (S, E) => (E.relations || []).some(r => r && r.contact && r.with !== E.id) },
     { id: 'bases', title: 'An undefended colony', text: 'A populous colony without missile bases invites raiders. Give it a few points on the <b>Def</b> slider so it can build bases and, later, a planetary shield.', test: (S, E) => S.planets.some(p => p.owner === E.id && p.pop >= 70 && !(p.bases > 0)) },
     { id: 'year30', title: 'Thirty years in', text: 'By now neighbours are growing too. Check the <b>Races</b> screen for rivals who out-produce you, and keep a few warships near your core.', test: S => S.turn >= 29 },

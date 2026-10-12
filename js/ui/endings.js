@@ -107,7 +107,7 @@
       for (let i = 0; i < n; i++) g.fillRect((((h2(i, L * 7 + 1) * w - t * sp) % w) + w) % w, h2(i, L * 7 + 2) * hh, sz, sz);
     }
     g.globalAlpha = 1;
-    const Pl = M.Gfx && M.Gfx.Planets, Sh = M.Gfx && M.Gfx.Ships;
+    const Pl = (M.Gfx && M.Gfx.pick && M.Gfx.pick('planets')) || (M.Gfx && M.Gfx.Planets), Sh = M.Gfx && M.Gfx.Ships;
     const k = clamp(t / 40, 0, 1), pr = hh * (0.2 - 0.15 * k);                                   // the throne-world of Orion recedes
     try { if (Pl && Pl.draw) { g.globalAlpha = 0.9 - 0.4 * k; Pl.draw(g, { look: 'terran', seed: 7, inhabited: true }, w * (0.82 - 0.06 * k), hh * 0.3, pr, t, { dpr: 1 }); g.globalAlpha = 1; } } catch (e) { g.globalAlpha = 1; }
     const sx = w * (0.42 + 0.06 * sin(t * 0.2)), sy = hh * 0.55 + sin(t * 0.7) * hh * 0.012;

@@ -158,7 +158,7 @@
     Host.ctx = Host.cv.getContext('2d');
     Host.cv.addEventListener('pointerdown', e => { if (e.button === 0) act('click'); });
     Host.el.addEventListener('contextmenu', e => { e.preventDefault(); act('cancel'); });
-    const fxm = gfx('Fx'); if (fxm && fxm.create) { try { Host.fx = fxm.create({ maxParticles: 3500 }); } catch (e) { warnOnce('fx', e); } }
+    const fxm = (M.Gfx && M.Gfx.pick && M.Gfx.pick('fx')) || gfx('Fx'); if (fxm && fxm.create) { try { Host.fx = fxm.create({ maxParticles: 3500 }); } catch (e) { warnOnce('fx', e); } }
   }
   function fit() {
     if (!Host.cv) return;

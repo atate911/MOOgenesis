@@ -158,7 +158,7 @@ MOO.def(function (M) {
       const q = F.canTransportTo(S, E, p, tr.to);
       let cnt = Math.min(tr.n, Math.max(0, p.pop - 1), Math.floor(p.pop / 2));
       if (!q.ok || tr.to === p.starId || cnt <= 0) { p.trans = null; continue; }
-      p.pop -= cnt; p.rebels = Math.max(0, (p.rebels | 0) - (Math.floor(cnt / 2) + 1)); p.transCost = cnt;
+      p.pop -= cnt; p.rebels = Math.max(0, (p.rebels | 0) - (Math.floor(cnt / 2) + 1)); p.transCost = M.Data.Config.QUIRKS && M.Data.Config.QUIRKS.transportBC === false ? 0 : cnt;     // Data.Config.QUIRKS.transportBC (research/04 C10)
       const A = S.stars[p.starId];
       const speed = F.gateLink(S, E, p.starId, tr.to) ? STARGATE_SPEED : F.transSpeed(E);
       S.trans.push({ id: nextId(S), owner: E.id, from: p.starId, to: tr.to, n: cnt, x: A.x, y: A.y, speed });
