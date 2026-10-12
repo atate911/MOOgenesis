@@ -6,4 +6,3 @@ Done: pace + difficulty ladder, tech pace (new flag `Data.Config.QUIRKS.aiFirstT
 Easy < Simple kept + new `options.aiProdGuide` (monotone guide table for one game; `Config.aiProdFactor(diff, S)`), Klackon kept (spec-verified economy), signatures, war statistics, 1000-game robustness, save/load round trip, perf numbers.
 Tool changes: `MOO_OVERRIDES` env hook in `tools/soak-worker.js` (dotted-path overrides for A/B runs).
 Not done / next: expose `aiProdGuide` in the new-game wizard (js/ui); display `Sim.Q.hints` (tutor); two-empire AI-only games rarely finish (council needs 2/3); stalemate wars; one DEAD_OWNER warning (seed 24052, simple/medium/young, 4 opp) undiagnosed;
-perf.js (Huge/Colossal, 5 opponents) written but its numbers are not in REPORT.md.

@@ -151,7 +151,7 @@ Stuck states (1000 games): STUCK_RESEARCH 67 / NO_EXPANSION 68 / STUCK_TECH 15 o
 See the headline; `node tools/balance/robust.js --det` adds the soak's determinism replay. Round trip: `node tools/balance/roundtrip.js` (12 games, sizes small..huge, 0 mismatches).
 
 ## 7 Performance (soak timings over 56 404 AI turns, medium galaxy)
-Whole turn: p50 6.8 ms, p90 31 ms, p99 127 ms, max 1.0 s; AI planning p50 1 ms / p90 9 ms / p99 50 ms. Save size median 118 KB, max 174 KB. Run `node tools/balance/perf.js` for Huge/Colossal with 5 opponents (single thread).
+Whole turn: p50 6.8 ms, p90 31 ms, p99 127 ms, max 1.0 s; AI planning p50 1 ms / p90 9 ms / p99 50 ms. Save size median 118 KB, max 174 KB. `node tools/balance/perf.js` (Huge/Colossal, 5 opponents, hard, 4 games = 480 turns, one thread): whole turn p50 7.9 ms, p90 17 ms, p99 29 ms, max 64 ms; AI planning p50 2 ms, p90 5 ms, max 23 ms; final save ~197 KB.
 
 ## Remaining concerns
 1. The 1-opponent (two-empire) AI-only case almost never finishes; a human plays it to conquest, so only soak statistics suffer.
