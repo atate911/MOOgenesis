@@ -142,8 +142,8 @@
     g.save();
     g.fillStyle = rgr(g, cx - r * 0.3, cy - r * 0.35, r * 0.1, r * 1.1, [0, lite(c, 0.25), 1, dark(c, 0.7)]);
     g.beginPath(); g.arc(cx, cy, r, 0, TAU); g.fill();
-    g.lineWidth = max(1.5, r * 0.12); g.strokeStyle = '#d6b36a'; g.stroke();
-    g.fillStyle = '#f3dca0'; g.font = '400 ' + round(r * 1.1) + 'px ' + FONT_D; g.textAlign = 'center'; g.textBaseline = 'middle';
+    g.lineWidth = max(1.5, r * 0.12); g.strokeStyle = cssHex('--brass'); g.stroke();
+    g.fillStyle = cssHex('--brass-hi'); g.font = '400 ' + round(r * 1.1) + 'px ' + FONT_D; g.textAlign = 'center'; g.textBaseline = 'middle';
     g.fillText(raceName(race).charAt(0).toUpperCase() || '?', cx, cy + r * 0.06);
     g.restore();
   }
@@ -463,7 +463,7 @@
     g.beginPath(); g.moveTo(x + c, y); g.lineTo(x + w - c, y); g.lineTo(x + w, y + c); g.lineTo(x + w, y + hh - c);
     g.lineTo(x + w - c, y + hh); g.lineTo(x + c, y + hh); g.lineTo(x, y + hh - c); g.lineTo(x, y + c); g.closePath();
   }
-  const brassGrad = (g, x0, y0, x1, y1) => lgr(g, x0, y0, x1, y1, [0, '#f3dca0', 0.3, '#d6b36a', 0.62, '#8a7040', 0.85, '#d6b36a', 1, '#f3dca0']);
+  const brassGrad = (g, x0, y0, x1, y1) => lgr(g, x0, y0, x1, y1, document.documentElement.getAttribute('data-theme') === 'v2' ? [0, '#d2e0ec', 0.3, '#8ea4ba', 0.62, '#46596c', 0.85, '#8ea4ba', 1, '#d2e0ec'] : [0, '#f3dca0', 0.3, '#d6b36a', 0.62, '#8a7040', 0.85, '#d6b36a', 1, '#f3dca0']);
   function brassFrame(g, x, y, w, hh, c, lw) {
     lw = lw || 2;
     chamferPath(g, x, y, w, hh, c); g.lineWidth = lw; g.strokeStyle = brassGrad(g, x, y, x + w, y + hh); g.stroke();

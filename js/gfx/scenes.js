@@ -15,13 +15,18 @@
   const sin = Math.sin, cos = Math.cos, abs = Math.abs, sqrt = Math.sqrt, floor = Math.floor, min = Math.min, max = Math.max;
   const atan2 = Math.atan2, hypot = Math.hypot, exp = Math.exp, pow = Math.pow;
 
-  const FONT_D = "'Marcellus SC','Marcellus','Palatino Linotype','Book Antiqua',Georgia,serif";
+  const V2 = typeof document !== 'undefined' && document.documentElement.getAttribute('data-theme') === 'v2';
+  const FONT_D = V2 ? "'Oxanium','Saira Semi Condensed','Bahnschrift SemiBold','Bahnschrift','DIN Condensed','Segoe UI Semibold',system-ui,sans-serif" : "'Marcellus SC','Marcellus','Palatino Linotype','Book Antiqua',Georgia,serif";
   const FONT_U = "'IBM Plex Sans Condensed','Bahnschrift SemiCondensed','Bahnschrift','Segoe UI',system-ui,sans-serif";
   const C = {
     void: '#060919', night: '#0a1030', deep: '#0d153a', steel: '#19224d', steelHi: '#2b3875',
     brass: '#d6b36a', brassHi: '#f3dca0', brassLo: '#8a7040', ivory: '#ece6d3', mist: '#98a5cf', fog: '#5d6a96',
     cyan: '#62d8ff', ember: '#ff9440', leaf: '#5fdc8f', rose: '#ff5c6a', violet: '#a98bff', gold: '#ffd54f', teal: '#38d6c4', azure: '#5b8cff',
   };
+  if (typeof document !== 'undefined' && document.documentElement.getAttribute('data-theme') === 'v2') {      // v2 "serious sci-fi" palette: gunmetal neutrals, steel instead of brass, restrained accents
+    Object.assign(C, { void: '#05080c', night: '#0a0f15', deep: '#0f161e', steel: '#161f29', steelHi: '#2a3744', brass: '#8ea4ba', brassHi: '#d2e0ec', brassLo: '#46596c',
+      ivory: '#e9eef3', mist: '#9aa8b6', fog: '#5d6b79', cyan: '#52c8ec', ember: '#ec8a45', leaf: '#62c488', rose: '#ee6679', violet: '#a58df0', gold: '#dcb54f', teal: '#3cc5b4', azure: '#6396ee' });
+  }
   const RACE_IDS = ['alkari', 'bulrathi', 'darlok', 'human', 'klackon', 'meklar', 'mrrshan', 'psilon', 'sakkra', 'silicoid'];
   const RACE_NAMES = { alkari: 'Alkari', bulrathi: 'Bulrathi', darlok: 'Darlok', human: 'Human', klackon: 'Klackon', meklar: 'Meklar', mrrshan: 'Mrrshan', psilon: 'Psilon', sakkra: 'Sakkra', silicoid: 'Silicoid' };
 
@@ -3743,6 +3748,16 @@
     victory: Scenes.victory, defeat: Scenes.defeat, warp: Scenes.warp,
   };
 
+  /* v2 colour grade: every scene's draw() is followed by the shared grade pass (opt out per call with o.grade === false) */
+  const GRADE = { audience: 'room', council: 'room', newsroom: 'room', lab: 'scene', surface: 'scene', battle: 'space', victory: 'scene', defeat: 'scene', warp: 'space' };
+  Object.keys(GRADE).forEach(function (name) {
+    const sc = Scenes[name]; if (!sc || !sc.draw) return; const raw = sc.draw;
+    sc.draw = function (ctx, w, h, t, o) {
+      const r = raw.apply(this, arguments);
+      if (!(o && o.grade === false) && G.Grade) { try { G.Grade.apply(ctx, w, h, t || 0, GRADE[name]); } catch (e) { warnOnce('Grade', e); } }
+      return r;
+    };
+  });
   Scenes.SCENE_NAMES = ['lab', 'council', 'newsroom', 'audience', 'surface', 'battle', 'victory', 'defeat', 'warp'];
   Scenes.draw = function (name, ctx, w, h, t, o) {
     const s = Scenes[name];
