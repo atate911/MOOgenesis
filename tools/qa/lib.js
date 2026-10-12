@@ -1,0 +1,24 @@
+// Shared QA harness: static server + Playwright Chromium with console capture.
+const { chromium } = require('/opt/node-tools/node_modules/playwright');
+const http = require('http'), fs = require('fs'), path = require('path');
+const ROOT = path.resolve(__dirname, '../..');
+const MIME = { '.html': 'text/html', '.js': 'text/javascript', '.css': 'text/css', '.json': 'application/json', '.png': 'image/png', '.svg': 'image/svg+xml', '.woff2': 'font/woff2' };
+function serve(port = 8765) {
+  return new Promise(res => {
+    const s = http.createServer((q, r) => {
+      const p = path.join(ROOT, decodeURIComponent(q.url.split('?')[0]));
+      fs.readFile(p.endsWith('/') ? p + 'index.html' : p, (e, d) => { if (e) { r.writeHead(404); r.end(); } else { r.writeHead(200, { 'content-type': MIME[path.extname(p)] || 'application/octet-stream' }); r.end(d); } });
+    }).listen(port, () => res(s));
+  });
+}
+async function open(opts = {}) {
+  const browser = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium', args: ['--no-sandbox', '--disable-background-timer-throttling', '--disable-renderer-backgrounding', '--disable-backgrounding-occluded-windows', '--enable-unsafe-swiftshader', '--use-gl=swiftshader', '--autoplay-policy=no-user-gesture-required'].concat(opts.args || []) });
+  const ctx = await browser.newContext({ viewport: opts.viewport || { width: 1280, height: 720 } });
+  const page = await ctx.newPage();
+  const errors = [];
+  page.on('console', m => { if (m.type() === 'error' || m.type() === 'warning') errors.push(m.type() + ': ' + m.text()); });
+  page.on('pageerror', e => errors.push('pageerror: ' + e.message + ' @ ' + (e.stack || '').split('\n')[1]));
+  return { browser, ctx, page, errors };
+}
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+module.exports = { serve, open, sleep, ROOT };
