@@ -93,7 +93,7 @@
     if (UI.modalOpen()) return;
     if (M.Settings.get('confirmEndTurn')) { const ok = await UI.confirm('End the turn?'); if (!ok) return; }
     UI.Galaxy.busy(true, 'Year ' + Q.year(G.S) + ' …');
-    const off = M.Bus.on('turn:waiting', type => UI.Galaxy.busy(true, 'Year ' + Q.year(G.S) + ' … waiting on “' + type + '”'));
+    const off = M.Bus.on('turn:waiting', type => UI.Screens.current && UI.Screens.current.id === 'galaxy' && !UI.modalOpen() && UI.Galaxy.busy(true, 'Year ' + Q.year(G.S) + ' … waiting on “' + type + '”'));
     try { await G.endTurn(); } finally { if (typeof off === 'function') off(); UI.Galaxy.busy(false); }
     if (UI.Screens.current && UI.Screens.current.id !== 'galaxy' && G.S && !(G.last && G.last.over)) UI.Screens.go('galaxy');
     UI.Galaxy.refresh();
