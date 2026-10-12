@@ -5,6 +5,7 @@ window.MOO_MANIFEST = {
   css: [
     'css/base.css',
     'css/kit.css',
+    'css/theme-v2.css',          // opt-out layer: active unless <html data-theme> is removed (?theme=v1)
   ],
   js: [
     // ---- core ----
