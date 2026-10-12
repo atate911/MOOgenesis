@@ -69,7 +69,11 @@
     return [Math.round((rgb[0] + m) * 255), Math.round((rgb[1] + m) * 255), Math.round((rgb[2] + m) * 255)];
   }
   const hex2 = n => (n < 16 ? '0' : '') + n.toString(16);
+  const BRASS = { f6e3b0: 'dbe7f1', f3dca0: 'd2e0ec', e0c27a: 'a9bccd', d6b36a: '8ea4ba', c9a35c: '7b90a5', a07f3c: '5f758a', '8a7040': '46596c', '6e5830': '34455a' };     // the v1 brass ramp -> steel
+  const BRASS_RGB = { '214,179,106': '142,164,186', '243,220,160': '210,224,236', '138,112,64': '70,89,108' };
   UI.retintCss = function (text) {
+    text = text.replace(/#(f6e3b0|f3dca0|e0c27a|d6b36a|c9a35c|a07f3c|8a7040|6e5830)\b/gi, (m, h) => '#' + BRASS[h.toLowerCase()])
+      .replace(/rgba?\((214|243|138),\s*(179|220|112),\s*(106|160|64)/g, (m, a, b, c) => { const k = a + ',' + b + ',' + c; return BRASS_RGB[k] ? m.slice(0, m.indexOf('(') + 1) + BRASS_RGB[k] : m; });
     return text.replace(/#([0-9a-fA-F]{6})\b/g, (m, h) => { const o = retint(parseInt(h.slice(0, 2), 16), parseInt(h.slice(2, 4), 16), parseInt(h.slice(4), 16)); return o ? '#' + hex2(o[0]) + hex2(o[1]) + hex2(o[2]) : m; })
       .replace(/rgba?\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*(,\s*[\d.]+\s*)?\)/g, (m, r, g, b, a) => { const o = retint(+r, +g, +b); return o ? (a ? 'rgba(' : 'rgb(') + o[0] + ',' + o[1] + ',' + o[2] + (a ? a.replace(/\s+/g, '') : '') + ')' : m; });
   };
