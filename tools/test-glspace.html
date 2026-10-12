@@ -1,0 +1,511 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>GL space &amp; fx lab</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="../css/base.css">
+<link rel="stylesheet" href="../css/kit.css">
+<style>
+  html { font-size: 15px; }
+  body { overflow: auto; background: #04061a; user-select: text; -webkit-user-select: text; }
+  #bg { position: fixed; left: 0; top: 0; width: 100vw; height: 100vh; z-index: 0; display: block; }
+  #stats { position: sticky; top: 0; z-index: 20; display: flex; flex-wrap: wrap; gap: 4px 20px; align-items: center; padding: 6px 14px; background: rgba(4,6,26,.92); border-bottom: 1px solid rgba(214,179,106,.35); font-variant-numeric: tabular-nums; font-size: .9rem; }
+  #stats b { color: var(--brass-hi); font-weight: 600; }
+  #stats .ttl { font-family: var(--font-display); color: var(--brass-hi); font-size: 1.05rem; }
+  #errs { position: relative; z-index: 21; background: #3a0610; color: #ffb4bc; font: 12px/1.4 monospace; padding: 6px 12px; white-space: pre-wrap; display: none; border-bottom: 1px solid #ff5c6a; max-height: 30vh; overflow: auto; }
+  #page { position: relative; z-index: 1; max-width: 1480px; margin: 0 auto; padding: 4px 18px 90px; }
+  .card { margin: 16px 0; padding: 10px 14px 14px; background: rgba(5,8,26,.55); border: 1px solid rgba(214,179,106,.30); }
+  .card h2 { font-size: 1.25rem; margin: 2px 0 6px; }
+  .card p { color: var(--mist); margin: 0 0 8px; }
+  .ctl { display: flex; flex-wrap: wrap; gap: 6px 16px; align-items: center; margin: 6px 0 10px; color: var(--mist); }
+  .ctl label { display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; }
+  .ctl input[type=range] { width: 120px; }
+  .ctl input[type=text] { width: 110px; }
+  button.b, select.b, input.b { background: #0a1030; color: var(--ivory); border: 1px solid rgba(214,179,106,.55); padding: 3px 10px; cursor: pointer; font-size: .9rem; }
+  button.b:hover { background: #18225a; border-color: var(--brass-hi); }
+  button.b.hot { border-color: var(--rose); color: #ffd0d4; }
+  button.b.on { background: #2b3875; }
+  canvas.cv { display: block; width: 100%; background: #02030c; border: 1px solid rgba(214,179,106,.28); }
+  .rw { display: flex; gap: 12px; flex-wrap: wrap; align-items: flex-start; }
+  .rw > * { min-width: 0; }
+  .cap { color: var(--fog); font-size: .82rem; margin-top: 3px; }
+  .kvs { color: var(--mist); font-size: .88rem; }
+  .kvs b { color: var(--ivory); font-weight: 500; }
+  .ok { color: var(--leaf); } .warn { color: var(--ember); } .bad { color: var(--rose); }
+  .btns { display: flex; flex-wrap: wrap; gap: 6px; margin: 4px 0 8px; align-items: center; }
+  .btns > i { font: 400 .95rem var(--font-display); color: var(--brass); min-width: 78px; font-style: normal; }
+  .sample { max-width: 640px; padding: 10px 16px; background: rgba(6,9,25,.35); border-left: 3px solid var(--brass); }
+  .sample h3 { font-size: 1.4rem; margin-bottom: 4px; }
+  .sample p { color: var(--ivory); }
+  #sprites canvas { background: #03051a; border: 1px solid rgba(214,179,106,.18); }
+  .sprrow { display: flex; flex-wrap: wrap; gap: 4px 14px; align-items: flex-end; margin: 2px 0 8px; }
+  .sprrow > span { color: var(--brass); font: 400 .9rem var(--font-display); min-width: 70px; align-self: center; }
+</style>
+</head>
+<body>
+<canvas id="bg"></canvas>
+<div id="stats">
+  <span class="ttl">GL space &amp; fx lab</span>
+  <span>FPS <b id="s-fps">–</b></span>
+  <span>frame <b id="s-ms">–</b> ms</span>
+  <span>bg <b id="s-bg">–</b></span>
+  <span>vortex <b id="s-vx">–</b></span>
+  <span>fx <b id="s-fx">–</b></span>
+  <span>GPU particles <b id="s-gp">0</b></span>
+  <span>CPU particles <b id="s-cp">–</b></span>
+  <label>tier <select class="b" id="s-tier"><option>auto</option><option>low</option><option>medium</option><option selected>high</option><option>ultra</option></select></label>
+  <label><input type="checkbox" id="s-sync"> sync GPU timing</label>
+  <span id="s-gl" class="kvs"></span>
+</div>
+<div id="errs"></div>
+<div id="page">
+
+  <div class="card" id="sec-bg">
+    <h2>Live nebula (full-window backdrop behind this page)</h2>
+    <p>GPU domain-warped nebula + twinkling parallax stars drawn every frame; the nebula layer re-renders at reduced resolution (&le;24&nbsp;Hz) and is bilinearly upscaled.</p>
+    <div class="ctl">
+      <label>seed <input class="b" type="text" id="bg-seed" value="menu"></label>
+      <label>intensity <input type="range" id="bg-int" min="0" max="1.5" step="0.01" value="0.9"><span id="bg-int-o"></span></label>
+      <label>stars <input type="range" id="bg-stars" min="0" max="3" step="0.05" value="1"><span id="bg-stars-o"></span></label>
+      <label>dust <input type="range" id="bg-dust" min="0" max="1.5" step="0.05" value="1"><span id="bg-dust-o"></span></label>
+      <label>vignette <input type="range" id="bg-vig" min="0" max="1" step="0.05" value="0.55"><span id="bg-vig-o"></span></label>
+      <label>palette <select class="b" id="bg-pal"><option value="">seed default</option><option value="house">indigo / violet / teal / magenta</option><option value="ember">ember / violet</option><option value="emerald">emerald / blue</option></select></label>
+      <button class="b" id="bg-luma">measure readability</button>
+      <span class="kvs" id="bg-luma-o"></span>
+    </div>
+    <div class="sample"><h3>Imperial observatory</h3><p>UI text laid over the live backdrop must stay readable: ivory ink on indigo void. The brightest nebula cores are kept deliberately dim.</p></div>
+  </div>
+
+  <div class="card" id="sec-bd">
+    <h2>Static backdrop &mdash; makeBackdrop(w, h, seed, opts)</h2>
+    <p>Bakes a full nebula + multi-layer starfield into a canvas on the GPU. Timing includes a forced GPU sync (readback of one pixel).</p>
+    <div class="ctl">
+      <label>w <input class="b" type="text" id="bd-w" value="1920" style="width:60px"></label>
+      <label>h <input class="b" type="text" id="bd-h" value="1080" style="width:60px"></label>
+      <label>seed <input class="b" type="text" id="bd-seed" value="alpha"></label>
+      <button class="b" id="bd-run">Bake GPU &times;6</button>
+      <button class="b" id="bd-cpu">Bake CPU</button>
+      <span class="kvs" id="bd-out"></span>
+    </div>
+    <div class="rw">
+      <div style="flex:1 1 560px"><canvas class="cv" id="bd-gpu" style="aspect-ratio:16/9"></canvas><div class="cap" id="bd-gpu-cap">GPU</div></div>
+      <div style="flex:1 1 560px"><canvas class="cv" id="bd-cpuc" style="aspect-ratio:16/9"></canvas><div class="cap" id="bd-cpu-cap">CPU (MOO.Gfx.Space)</div></div>
+    </div>
+  </div>
+
+  <div class="card" id="sec-vx">
+    <h2>Galaxy vortex &mdash; vortex(ctx, cx, cy, R, t, opts)</h2>
+    <p>Hundreds of thousands of instanced stars (arm stars flowing inward along log-spiral arms, rotating haze, dense bulge) + shader-based disc, core glow, dust lanes, HDR bloom. Right: the old CPU vortex from menu.js (4,200 sprites).</p>
+    <div class="ctl">
+      <label>tilt <input type="range" id="vx-tilt" min="0.15" max="1" step="0.01" value="0.42"><span id="vx-tilt-o"></span></label>
+      <label>rot <input type="range" id="vx-rot" min="-1.57" max="1.57" step="0.01" value="-0.35"><span id="vx-rot-o"></span></label>
+      <label>density <input type="range" id="vx-den" min="0.1" max="2.5" step="0.05" value="1"><span id="vx-den-o"></span></label>
+      <label>twist <input type="range" id="vx-tw" min="0.8" max="5" step="0.05" value="2.2"><span id="vx-tw-o"></span></label>
+      <label>speed <input type="range" id="vx-sp" min="0" max="6" step="0.1" value="1"><span id="vx-sp-o"></span></label>
+      <label><input type="checkbox" id="vx-bloom" checked> bloom</label>
+      <span class="kvs" id="vx-out"></span>
+    </div>
+    <div class="rw">
+      <div style="flex:2 1 640px"><canvas class="cv" id="vx-gpu" style="aspect-ratio:16/9"></canvas><div class="cap">GPU</div></div>
+      <div style="flex:1 1 300px"><canvas class="cv" id="vx-cpu" style="aspect-ratio:16/9"></canvas><div class="cap" id="vx-cpu-cap">CPU (menu.js)</div></div>
+    </div>
+  </div>
+
+  <div class="card" id="sec-sp">
+    <h2>Star sprites &mdash; starSprite(kind, sizePx, opts)</h2>
+    <p>Cached GPU-rendered glow sprites. Top row of each kind: GPU. Bottom row: CPU (MOO.Gfx.Space) when loaded.</p>
+    <div class="ctl"><label><input type="checkbox" id="sp-spikes"> diffraction spikes</label><span class="kvs" id="sp-out"></span></div>
+    <div id="sprites"></div>
+  </div>
+
+  <div class="card" id="sec-fx">
+    <h2>Combat sandbox &mdash; GLFx.create()</h2>
+    <p>Same API as the CPU Fx. Additive instanced particles (typed-array ring buffer, GPU-evaluated physics), shader beams, hex-ripple shields, HDR bloom.</p>
+    <div class="btns" id="fx-beams"><i>Beams</i></div>
+    <div class="btns" id="fx-missiles"><i>Missiles</i></div>
+    <div class="btns" id="fx-expl"><i>Explosions</i></div>
+    <div class="btns" id="fx-misc"><i>Misc</i></div>
+    <div class="ctl">
+      <button class="b hot" id="fx-stress">Stress: spawn 100,000 particles</button>
+      <label><input type="checkbox" id="fx-hold"> hold 100k live</label>
+      <label><input type="checkbox" id="fx-auto"> auto barrage</label>
+      <label><input type="checkbox" id="fx-bloom" checked> bloom</label>
+      <button class="b" id="fx-clear">Clear</button>
+      <span class="kvs" id="fx-out"></span>
+    </div>
+    <div class="rw">
+      <div style="flex:1 1 640px"><canvas class="cv" id="sb-gpu" style="height:560px"></canvas><div class="cap">GPU (MOO.Gfx.GLFx)</div></div>
+      <div style="flex:1 1 420px" id="sb-cpu-wrap"><canvas class="cv" id="sb-cpu" style="height:560px"></canvas><div class="cap" id="sb-cpu-cap">CPU (MOO.Gfx.Fx)</div></div>
+    </div>
+  </div>
+</div>
+
+<script src="../js/core/ns.js"></script>
+<script src="../js/core/util.js"></script>
+<script src="../js/core/bus.js"></script>
+<script src="../js/core/settings.js"></script>
+<script src="../js/core/perf.js"></script>
+<script src="../js/gfx/gl.js"></script>
+<script src="../js/gfx/space.js"></script>
+<script src="../js/gfx/ships.js"></script>
+<script src="../js/gfx/fx.js"></script>
+<script src="../js/gfx/gl-space.js"></script>
+<script src="../js/gfx/gl-fx.js"></script>
+<script>
+(function (M) {
+  'use strict';
+  const $ = id => document.getElementById(id);
+  const GL = M.Gfx.GL, GS = M.Gfx.GLSpace, GF = M.Gfx.GLFx, CS = M.Gfx.Space, CF = M.Gfx.Fx, Ships = M.Gfx.Ships;
+  const qs = new URLSearchParams(location.search);
+  const fmt = (v, d) => (isFinite(v) ? v.toFixed(d === undefined ? 1 : d) : '–');
+  const now = () => performance.now();
+
+  // ---- error display -----------------------------------------------------------------------
+  const errBox = $('errs'), seenErr = new Set();
+  function showErr(msg) { if (seenErr.has(msg) || seenErr.size > 12) return; seenErr.add(msg); errBox.style.display = 'block'; errBox.textContent += msg + '\n'; }
+  window.addEventListener('error', e => showErr('JS error: ' + e.message + ' @' + (e.filename || '').split('/').pop() + ':' + e.lineno));
+  window.addEventListener('unhandledrejection', e => showErr('Promise: ' + e.reason));
+  const ce = console.error; console.error = function () { try { showErr('console.error: ' + Array.prototype.slice.call(arguments).join(' ').slice(0, 600)); } catch (x) { /* */ } ce.apply(console, arguments); };
+
+  // ---- perf tier (set directly; does not touch persisted Settings) -----------------------------
+  M.Perf.start();
+  function setTier(name) {
+    const P = M.Perf;
+    const t = name === 'auto' ? P.cap : name;
+    P.preset = name; P.tier = t; P.q = Object.assign({}, P.TIERS[t]);
+    if (P.caps && !P.caps.webgl2) P.q.gl = false;
+    if (name === 'auto' && P.caps && P.caps.software) P.q.gl = false;
+  }
+  const tierSel = $('s-tier');
+  tierSel.value = qs.get('tier') || 'high';
+  setTier(tierSel.value);
+  tierSel.onchange = () => { setTier(tierSel.value); resetAll(); };
+  $('s-gl').textContent = 'GPU: ' + ((M.Perf.caps && M.Perf.caps.gpu) || 'n/a');
+
+  const supported = () => !!(GS && GS.supported());
+
+  // ---- canvas helper -------------------------------------------------------------------------
+  function fit(cv, cap) {
+    const r = cv.getBoundingClientRect(), dpr = Math.min(window.devicePixelRatio || 1, cap || 2);
+    const w = Math.max(16, Math.round(r.width)), h = Math.max(16, Math.round(r.height));
+    const pw = Math.round(w * dpr), ph = Math.round(h * dpr);
+    if (cv.width !== pw || cv.height !== ph) { cv.width = pw; cv.height = ph; cv._gen = (cv._gen || 0) + 1; }
+    const ctx = cv.getContext('2d'); ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    cv._w = w; cv._h = h; cv._dpr = dpr;
+    return ctx;
+  }
+  function lumaStats(src) {
+    const w = 240, h = Math.max(1, Math.round(240 * src.height / src.width));
+    const c = document.createElement('canvas'); c.width = w; c.height = h;
+    const x = c.getContext('2d', { willReadFrequently: true }); x.drawImage(src, 0, 0, w, h);
+    const d = x.getImageData(0, 0, w, h).data, L = new Float32Array(w * h);
+    let sum = 0;
+    for (let i = 0; i < w * h; i++) { const l = (0.2126 * d[i * 4] + 0.7152 * d[i * 4 + 1] + 0.0722 * d[i * 4 + 2]) / 255; L[i] = l; sum += l; }
+    L.sort();
+    const q = p => L[Math.min(L.length - 1, Math.floor(p * L.length))];
+    // WCAG contrast of ivory text (#ece6d3) against the p99 pixel
+    const lin = v => (v <= 0.04045 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4));
+    const txt = 0.2126 * lin(0xec / 255) + 0.7152 * lin(0xe6 / 255) + 0.0722 * lin(0xd3 / 255);
+    const bgL = lin(q(0.99));
+    return { mean: sum / L.length, p50: q(0.5), p95: q(0.95), p99: q(0.99), max: L[L.length - 1], contrast: (txt + 0.05) / (bgL + 0.05) };
+  }
+  function lumaText(s) { return 'luma mean <b>' + fmt(s.mean, 3) + '</b> · p95 <b>' + fmt(s.p95, 3) + '</b> · p99 <b>' + fmt(s.p99, 3) + '</b> · max ' + fmt(s.max, 2) + ' · ivory-text contrast on p99: <b class="' + (s.contrast >= 7 ? 'ok' : s.contrast >= 4.5 ? 'warn' : 'bad') + '">' + fmt(s.contrast, 1) + ':1</b>'; }
+  function syncGL() { if ($('s-sync').checked) { try { GL.gl().finish(); } catch (e) { /* */ } } }
+
+  // ---- palettes ---------------------------------------------------------------------------------
+  const PALS = { house: ['#3c40b4', '#7a3cc4', '#1f90b4', '#c4408c'], ember: ['#6a1a3a', '#3b1d86', '#a4401a', '#1a3a86'], emerald: ['#0f6a52', '#14357a', '#1f90b4', '#4a2a96'] };
+  const sliders = ['bg-int', 'bg-stars', 'bg-dust', 'bg-vig', 'vx-tilt', 'vx-rot', 'vx-den', 'vx-tw', 'vx-sp'];
+  sliders.forEach(id => { const el = $(id), o = $(id + '-o'); const f = () => { if (o) o.textContent = (+el.value).toFixed(2); }; el.addEventListener('input', f); f(); });
+  const bgOpts = () => ({ intensity: +$('bg-int').value, stars: +$('bg-stars').value, dust: +$('bg-dust').value, vignette: +$('bg-vig').value, palette: PALS[$('bg-pal').value] });
+
+  // ================================================================ live background ==================
+  const bgCv = $('bg');
+  let bgCpu = null;
+  function drawBg(t) {
+    const k = Math.min(window.devicePixelRatio || 1, M.Perf.q.dpr), w = window.innerWidth, h = window.innerHeight;
+    const pw = Math.round(w * k), ph = Math.round(h * k);
+    if (bgCv.width !== pw || bgCv.height !== ph) { bgCv.width = pw; bgCv.height = ph; }
+    const ctx = bgCv.getContext('2d'); ctx.setTransform(k, 0, 0, k, 0, 0);
+    const o = bgOpts(), seed = $('bg-seed').value;
+    let ok = false;
+    if (supported()) { ok = GS.drawLive(ctx, w, h, t, seed, o); syncGL(); }
+    if (!ok) {
+      const key = seed + '|' + w + 'x' + h + '|' + $('bg-int').value;
+      if (!bgCpu || bgCpu.key !== key) bgCpu = { key, cv: CS ? CS.makeBackdrop(Math.min(w, 1280), Math.min(h, 720), seed, o) : null };
+      if (bgCpu.cv) ctx.drawImage(bgCpu.cv, 0, 0, w, h); else { ctx.fillStyle = '#04061a'; ctx.fillRect(0, 0, w, h); }
+    }
+  }
+  $('bg-luma').onclick = () => { $('bg-luma-o').innerHTML = lumaText(lumaStats(bgCv)); };
+
+  // ================================================================ static backdrop ==================
+  function bakeSync(c) { try { c.getContext('2d').getImageData(0, 0, 1, 1); } catch (e) { /* */ } }
+  function showCanvas(dst, src) {
+    const r = dst.getBoundingClientRect(), w = Math.max(16, Math.round(r.width)), h = Math.max(16, Math.round(r.width * src.height / src.width));
+    dst.width = w * 2 > src.width ? src.width : w * 2; dst.height = Math.round(dst.width * src.height / src.width);
+    const x = dst.getContext('2d'); x.imageSmoothingQuality = 'high'; x.drawImage(src, 0, 0, dst.width, dst.height);
+  }
+  let lastGpuBake = null;
+  $('bd-run').onclick = () => {
+    const W = Math.max(16, +$('bd-w').value | 0), H = Math.max(16, +$('bd-h').value | 0), seed = $('bd-seed').value, out = $('bd-out');
+    if (!supported()) { out.innerHTML = '<span class="bad">GL unsupported at this tier</span>'; }
+    const ts = [];
+    let c = null;
+    for (let i = 0; i < 6; i++) { const t0 = now(); c = GS.makeBackdrop(W, H, seed, { intensity: 0.9, stars: 1.3 }); bakeSync(c); ts.push(now() - t0); }
+    lastGpuBake = c;
+    const rest = ts.slice(1).sort((a, b) => a - b);
+    const st = lumaStats(c);
+    out.innerHTML = 'cold <b>' + fmt(ts[0]) + ' ms</b> · warm min <b class="' + (rest[0] < 50 ? 'ok' : 'warn') + '">' + fmt(rest[0]) + '</b> / median <b>' + fmt(rest[2]) + '</b> / max ' + fmt(rest[rest.length - 1]) + ' ms (' + W + '×' + H + ', tier ' + M.Perf.tier + ') · ' + lumaText(st);
+    showCanvas($('bd-gpu'), c);
+    $('bd-gpu-cap').textContent = 'GPU ' + W + '×' + H + ' · ' + fmt(rest[0]) + ' ms warm';
+  };
+  $('bd-cpu').onclick = () => {
+    if (!CS || !CS.makeBackdrop) { $('bd-cpu-cap').textContent = 'MOO.Gfx.Space not loaded'; return; }
+    const W = Math.max(16, +$('bd-w').value | 0), H = Math.max(16, +$('bd-h').value | 0);
+    const t0 = now(); const c = CS.makeBackdrop(W, H, $('bd-seed').value, { intensity: 0.9, stars: 1.3 }); const ms = now() - t0;
+    showCanvas($('bd-cpuc'), c);
+    $('bd-cpu-cap').innerHTML = 'CPU (MOO.Gfx.Space) ' + W + '×' + H + ' · <b>' + fmt(ms, 0) + ' ms</b> · ' + lumaText(lumaStats(c));
+  };
+
+  // ================================================================ vortex =============================
+  function makeCpuVortex() {   // faithful copy of the old menu.js CPU vortex, for the side-by-side
+    let s = 12345; const rnd = () => { s = (s * 1664525 + 1013904223) >>> 0; return s / 4294967296; };
+    function spr(r, g, b) { const c = document.createElement('canvas'); c.width = c.height = 16; const x = c.getContext('2d'), gr = x.createRadialGradient(8, 8, 0, 8, 8, 8); gr.addColorStop(0, `rgba(${r},${g},${b},1)`); gr.addColorStop(.35, `rgba(${r},${g},${b},.45)`); gr.addColorStop(1, `rgba(${r},${g},${b},0)`); x.fillStyle = gr; x.fillRect(0, 0, 16, 16); return c; }
+    const sprites = [spr(255, 190, 255), spr(150, 120, 255), spr(110, 200, 255), spr(255, 230, 190)], p = [];
+    for (let i = 0; i < 4200; i++) { const arm = i % 3, r = Math.pow(rnd(), 0.7) + 0.04; p.push({ a: arm * 2.0944 + r * 5.2 + (rnd() - .5) * .55, r, s: 0.35 + rnd() * .8, z: 0.5 + rnd() * 1.6, k: rnd() < .1 ? 3 : rnd() < .45 ? 0 : rnd() < .6 ? 2 : 1 }); }
+    return { draw(ctx, cx, cy, R, t, tilt, rot) {
+      ctx.save(); ctx.translate(cx, cy); ctx.rotate(rot); ctx.globalCompositeOperation = 'lighter';
+      let g = ctx.createRadialGradient(0, 0, 0, 0, 0, R * .5);
+      g.addColorStop(0, 'rgba(255,240,255,.95)'); g.addColorStop(.12, 'rgba(255,170,255,.55)'); g.addColorStop(.4, 'rgba(120,70,220,.22)'); g.addColorStop(1, 'rgba(60,30,160,0)');
+      ctx.save(); ctx.scale(1, tilt); ctx.fillStyle = g; ctx.beginPath(); ctx.arc(0, 0, R * .5, 0, 6.2832); ctx.fill(); ctx.restore();
+      for (let i = 0; i < p.length; i++) {
+        const q = p[i]; q.r -= (0.012 + 0.03 / (q.r * 4 + .3)) * q.s * 0.016; q.a += (0.16 / Math.sqrt(q.r + .06)) * q.s * 0.016;
+        if (q.r < 0.035) q.r = 0.95 + Math.random() * 0.1;
+        const rr = q.r * R, x = Math.cos(q.a) * rr, y = Math.sin(q.a) * rr * tilt, sz = (1.6 + (1 - q.r) * 5) * q.z * (R / 520);
+        ctx.globalAlpha = Math.min(1, .25 + (1 - q.r) * .9) * (.6 + .4 * Math.sin(t * 1.5 + i));
+        ctx.drawImage(sprites[q.k], x - sz, y - sz, sz * 2, sz * 2);
+      }
+      ctx.restore();
+    } };
+  }
+  const cpuVortex = makeCpuVortex();
+  const vxBg = {};
+  function backdropFor(cv, name) {
+    const key = cv._w + 'x' + cv._h + '|' + M.Perf.tier;
+    let e = vxBg[name];
+    if (!e || e.key !== key || cv._gen !== e.gen) {
+      let c = null;
+      try { c = GS && supported() ? GS.makeBackdrop(Math.min(cv._w, 1600), Math.min(cv._h, 900), 'menu', { intensity: 0.9, stars: 1.3, palette: ['#3b1d86', '#14357a', '#7a2a86', '#0d5a7a'] }) : (CS ? CS.makeBackdrop(Math.min(cv._w, 1200), Math.min(cv._h, 700), 'menu', { intensity: 0.9, stars: 1.3 }) : null); } catch (x) { showErr('backdrop: ' + x.message); }
+      e = vxBg[name] = { key, gen: cv._gen, c };
+    }
+    return e.c;
+  }
+  let vxMs = 0, vxFin = 0;
+  function drawVortex(t) {
+    const cv = $('vx-gpu'), ctx = fit(cv, 2), w = cv._w, h = cv._h;
+    const bgc = backdropFor(cv, 'vx');
+    ctx.globalCompositeOperation = 'source-over';
+    if (bgc) ctx.drawImage(bgc, 0, 0, w, h); else { ctx.fillStyle = '#04061a'; ctx.fillRect(0, 0, w, h); }
+    const R = Math.min(w, h) * 0.62;
+    const o = { tilt: +$('vx-tilt').value, rot: +$('vx-rot').value, density: +$('vx-den').value, twist: +$('vx-tw').value, speed: +$('vx-sp').value, bloom: $('vx-bloom').checked };
+    const t0 = now(); let ok = false;
+    if (supported()) { ok = GS.vortex(ctx, w * 0.62, h * 0.5, R, t, o); syncGL(); }
+    const ms = now() - t0; vxMs += (ms - vxMs) * 0.1;
+    if (!ok) { ctx.fillStyle = '#9ab'; ctx.font = '14px sans-serif'; ctx.fillText('GL vortex unavailable (tier ' + M.Perf.tier + ') — CPU only', 14, 22); }
+    // CPU copy
+    const cv2 = $('vx-cpu'), c2 = fit(cv2, 1), w2 = cv2._w, h2 = cv2._h, bg2 = backdropFor(cv2, 'vx2');
+    c2.globalCompositeOperation = 'source-over';
+    if (bg2) c2.drawImage(bg2, 0, 0, w2, h2); else { c2.fillStyle = '#04061a'; c2.fillRect(0, 0, w2, h2); }
+    const t1 = now();
+    cpuVortex.draw(c2, w2 * 0.62, h2 * 0.5, Math.min(w2, h2) * 0.62, t, o.tilt, o.rot);
+    vxFin += (now() - t1 - vxFin) * 0.1;
+    $('vx-out').innerHTML = 'GPU <b>' + fmt(vxMs, 2) + ' ms</b>' + ($('s-sync').checked ? ' (synced)' : ' (submit)') + ' · stars ' + Math.round(260000 * M.Perf.q.particles * o.density).toLocaleString() + ' · CPU <b>' + fmt(vxFin, 2) + ' ms</b> for 4,200';
+  }
+
+  // ================================================================ sprites ===============================
+  function buildSprites() {
+    const host = $('sprites'); host.innerHTML = '';
+    const kinds = (GS && GS.STAR_KINDS) || ['yellow', 'orange', 'red', 'blue', 'white', 'green', 'purple', 'blackhole'];
+    const sizes = [24, 40, 64, 96, 160], spikes = $('sp-spikes').checked;
+    let tot = 0, n = 0;
+    kinds.forEach(k => {
+      ['gpu', 'cpu'].forEach(which => {
+        const src = which === 'gpu' ? GS : CS;
+        if (!src || !src.starSprite || (which === 'gpu' && !supported())) return;
+        const row = document.createElement('div'); row.className = 'sprrow';
+        const lab = document.createElement('span'); lab.textContent = k + (which === 'cpu' ? ' · cpu' : ''); row.appendChild(lab);
+        sizes.forEach(s => {
+          const t0 = now(); let c = null;
+          try { c = src.starSprite(k, s, { spikes }); } catch (e) { showErr('sprite ' + which + ': ' + e.message); }
+          if (which === 'gpu') { tot += now() - t0; n++; }
+          if (c) { const x = document.createElement('canvas'); x.width = x.height = s; x.style.width = x.style.height = s + 'px'; x.getContext('2d').drawImage(c, 0, 0, s, s); row.appendChild(x); }
+        });
+        host.appendChild(row);
+      });
+    });
+    $('sp-out').innerHTML = n ? 'GPU sprite avg <b>' + fmt(tot / n, 2) + ' ms</b> each (first build, ' + n + ' sprites)' : '<span class="warn">GL unavailable</span>';
+  }
+  $('sp-spikes').onchange = buildSprites;
+
+  // ================================================================ combat sandbox =========================
+  const BEAMS = { laser: 0.45, neutron: 0.6, disruptor: 0.55, phasor: 0.7, plasma: 0.8, deathray: 1.3, mass: 0.9 };
+  const MISSILES = ['nuclear', 'hyperx', 'merculite', 'scatter', 'stinger', 'torpedo', 'antimatter'];
+  const EXPL = ['fire', 'plasma', 'energy', 'nova'];
+  const sbG = $('sb-gpu'), sbC = $('sb-cpu');
+  let gpuSys = null, cpuSys = null, cpuOk = false;
+  function makeSystems() {
+    gpuSys = null; cpuSys = null; cpuOk = false;
+    try { if (GF && GF.supported()) gpuSys = GF.create({ forceGL: true }); } catch (e) { showErr('GLFx.create: ' + e.message); }
+    try {
+      if (CF && CF.create) { const s = CF.create(); if (s && typeof s.explosion === 'function' && typeof s.beam === 'function') { cpuSys = s; cpuOk = true; } }
+    } catch (e) { showErr('Fx.create: ' + e.message); }
+    $('sb-cpu-wrap').style.display = cpuOk ? '' : 'none';
+    if (!cpuOk) sbG.parentElement.style.flex = '1 1 100%';
+    else sbG.parentElement.style.flex = '1 1 640px';
+  }
+  const fleet = { w: 0, h: 0, ships: [] };
+  function layoutFleet(w, h) {
+    fleet.w = w; fleet.h = h; fleet.ships = [];
+    const s = Math.min(w, h) * 0.17;
+    const L = [[0.10, 0.22, 1.1], [0.17, 0.46, 1.25], [0.09, 0.70, 0.95], [0.20, 0.82, 0.8], [0.22, 0.30, 0.85]];
+    const Rr = [[0.90, 0.26, 1.2], [0.83, 0.5, 1.0], [0.91, 0.74, 1.15], [0.79, 0.84, 0.8], [0.78, 0.2, 0.9]];
+    L.forEach((p, i) => fleet.ships.push({ side: 0, x: p[0] * w, y: p[1] * h, size: s * p[2], r: s * p[2] * 0.62, hull: [2, 3, 1, 0, 1][i], race: 'human', angle: 0, color: '#4a90e8' }));
+    Rr.forEach((p, i) => fleet.ships.push({ side: 1, x: p[0] * w, y: p[1] * h, size: s * p[2], r: s * p[2] * 0.62, hull: [3, 2, 4, 0, 1][i], race: 'klackon', angle: Math.PI, color: '#e8504d' }));
+  }
+  const sbBg = {};
+  function sandboxBg(cv, name) {
+    const key = cv._w + 'x' + cv._h + '|' + M.Perf.tier;
+    let e = sbBg[name];
+    if (!e || e.key !== key) {
+      let c = null;
+      try { c = supported() ? GS.makeBackdrop(cv._w, cv._h, 'sandbox', { intensity: 0.85, stars: 1.3 }) : (CS ? CS.makeBackdrop(cv._w, cv._h, 'sandbox', { intensity: 0.85 }) : null); } catch (x) { showErr('sandbox bg: ' + x.message); }
+      e = sbBg[name] = { key, c };
+    }
+    return e.c;
+  }
+  function drawScene(cv, ctx, t) {
+    const w = cv._w, h = cv._h;
+    if (fleet.w !== w || fleet.h !== h) layoutFleet(w, h);
+    const bg = sandboxBg(cv, cv.id);
+    if (bg) ctx.drawImage(bg, 0, 0, w, h); else { ctx.fillStyle = '#04061a'; ctx.fillRect(0, 0, w, h); }
+    if (bare) return;
+    // planet
+    const pr = h * 0.36, px = w * 0.52, py = h * 1.12;
+    let g = ctx.createRadialGradient(px - pr * 0.35, py - pr * 0.45, pr * 0.1, px, py, pr);
+    g.addColorStop(0, '#6aa6a0'); g.addColorStop(0.5, '#27607a'); g.addColorStop(0.85, '#0c2036'); g.addColorStop(1, '#050a18');
+    ctx.fillStyle = g; ctx.beginPath(); ctx.arc(px, py, pr, 0, 6.2832); ctx.fill();
+    g = ctx.createRadialGradient(px, py, pr * 0.96, px, py, pr * 1.08); g.addColorStop(0, 'rgba(110,190,255,.35)'); g.addColorStop(1, 'rgba(110,190,255,0)');
+    ctx.fillStyle = g; ctx.beginPath(); ctx.arc(px, py, pr * 1.08, 0, 6.2832); ctx.fill();
+    // ships
+    fleet.ships.forEach(s => {
+      let ok = false;
+      if (Ships && Ships.draw) { try { Ships.draw(ctx, { race: s.race, hull: s.hull, x: s.x, y: s.y + Math.sin(t * 0.7 + s.x) * 3, size: s.size, angle: s.angle, color: s.color, t: t, thrust: 0.5 }); ok = true; } catch (e) { /* fallback below */ } }
+      if (!ok) { ctx.save(); ctx.translate(s.x, s.y); ctx.rotate(s.angle); ctx.fillStyle = s.color; ctx.beginPath(); ctx.moveTo(s.size * 0.5, 0); ctx.lineTo(-s.size * 0.4, s.size * 0.3); ctx.lineTo(-s.size * 0.25, 0); ctx.lineTo(-s.size * 0.4, -s.size * 0.3); ctx.closePath(); ctx.fill(); ctx.restore(); }
+    });
+  }
+  const rnd = (a, b) => a + Math.random() * (b - a);
+  const pick = a => a[Math.floor(Math.random() * a.length)];
+  function pair() {
+    const side = Math.random() < 0.6 ? 0 : 1;
+    const A = fleet.ships.filter(s => s.side === side), B = fleet.ships.filter(s => s.side !== side);
+    return [pick(A), pick(B)];
+  }
+  function eachSys(fn) { if (gpuSys) { try { fn(gpuSys, 'gpu'); } catch (e) { showErr('gpu fx: ' + e.message + ' ' + (e.stack || '').split('\n')[1]); } } if (cpuSys) { try { fn(cpuSys, 'cpu'); } catch (e) { showErr('cpu fx: ' + e.message); } } }
+  function angleTo(a, b) { return Math.atan2(b.y - a.y, b.x - a.x); }
+  const SHIELD = { 0: '#62d8ff', 1: '#ff9a62' };
+  const lab = {
+    fireBeam(kind) {
+      const [a, b] = pair(), ang = angleTo(a, b), x1 = a.x + Math.cos(ang) * a.r * 0.8, y1 = a.y + Math.sin(ang) * a.r * 0.8;
+      const ix = b.x - Math.cos(ang) * b.r, iy = b.y - Math.sin(ang) * b.r;
+      eachSys((s) => { s.beam(x1, y1, ix, iy, kind, undefined, {}); s.shieldHit(b.x, b.y, b.r * 1.25, ang + Math.PI, SHIELD[b.side]); });
+    },
+    fireMissile(kind) {
+      const [a, b] = pair(), ang = angleTo(a, b), x1 = a.x + Math.cos(ang) * a.r * 0.7, y1 = a.y + Math.sin(ang) * a.r * 0.7;
+      const ix = b.x - Math.cos(ang) * b.r * 0.9 + rnd(-8, 8), iy = b.y - Math.sin(ang) * b.r * 0.9 + rnd(-8, 8);
+      eachSys((s) => { s.missile(x1, y1, ix, iy, rnd(380, 520), kind, {}); });
+    },
+    explode(kind, size) {
+      const b = pick(fleet.ships), x = b.x + rnd(-20, 20), y = b.y + rnd(-20, 20);
+      eachSys((s) => { s.explosion(x, y, size || (kind === 'nova' ? 150 : 60), { kind }); });
+    },
+    misc(name) {
+      const [a, b] = pair(), ang = angleTo(a, b);
+      eachSys((s) => {
+        if (name === 'shield') s.shieldHit(b.x, b.y, b.r * 1.25, ang + Math.PI, SHIELD[b.side]);
+        else if (name === 'warp') s.warpFlash(b.x, b.y, b.size * 1.3, {});
+        else if (name === 'nova') s.novaBlast(sbG._w * 0.5, sbG._h * 0.45, Math.min(sbG._w, sbG._h) * 0.55, {});
+        else if (name === 'planet') s.planetImpact(sbG._w * 0.52 + rnd(-60, 60), sbG._h * 0.80, 70, { angle: -Math.PI / 2 + rnd(-0.5, 0.5) });
+        else if (name === 'pulse') s.pulse(b.x, b.y, b.size * 0.9, '#62d8ff');
+        else if (name === 'debris') s.debris(b.x, b.y, 22, b.size);
+        else if (name === 'sparks') s.sparks(b.x, b.y, 40, '#ffd080');
+      });
+    },
+    barrage() {
+      const r = Math.random();
+      if (r < 0.40) lab.fireBeam(pick(Object.keys(BEAMS))); else if (r < 0.80) lab.fireMissile(pick(MISSILES));
+      else if (r < 0.95) lab.explode(pick(EXPL.slice(0, 3))); else lab.misc(pick(['warp', 'shield', 'planet', 'pulse', 'debris']));
+    },
+  };
+  const mk = (host, label, fn, cls) => { const b = document.createElement('button'); b.className = 'b' + (cls ? ' ' + cls : ''); b.textContent = label; b.onclick = fn; $(host).appendChild(b); return b; };
+  Object.keys(BEAMS).forEach(k => mk('fx-beams', k, () => lab.fireBeam(k)));
+  MISSILES.forEach(k => mk('fx-missiles', k, () => lab.fireMissile(k)));
+  EXPL.forEach(k => mk('fx-expl', k, () => lab.explode(k)));
+  ['shield', 'warp', 'nova', 'planet', 'pulse', 'debris', 'sparks'].forEach(k => mk('fx-misc', k === 'nova' ? 'novaBlast' : k === 'warp' ? 'warpFlash' : k === 'planet' ? 'planetImpact' : k === 'shield' ? 'shieldHit' : k, () => lab.misc(k)));
+  $('fx-stress').onclick = () => { if (gpuSys && gpuSys.stress) gpuSys.stress(100000, { w: sbG._w, h: sbG._h }); else showErr('GLFx stress not available'); };
+  $('fx-clear').onclick = () => { eachSys(s => s.clear()); };
+  $('fx-bloom').onchange = () => { if (gpuSys) gpuSys.bloom = $('fx-bloom').checked; };
+  let fxMs = 0, autoT = 0, holdT = 0, paused = false, bare = false;
+  function drawSandbox(t, dt) {
+    const ctx = fit(sbG, 2);
+    if (!gpuSys && !cpuSys) makeSystems();
+    drawScene(sbG, ctx, t);
+    const t0 = now();
+    if ($('fx-auto').checked) { autoT -= dt; if (autoT <= 0) { lab.barrage(); autoT = rnd(0.12, 0.45); } }
+    if ($('fx-hold').checked && gpuSys && gpuSys.stress) { holdT -= dt; if (holdT <= 0 && gpuSys.count() < 90000) { gpuSys.stress(25000, { w: sbG._w, h: sbG._h }); } if (holdT <= 0) holdT = 0.25; }
+    if (gpuSys) { gpuSys.bloom = $('fx-bloom').checked; if (!paused) gpuSys.update(dt); gpuSys.draw(ctx); syncGL(); }
+    const ms = now() - t0; fxMs += (ms - fxMs) * 0.1;
+    if (cpuSys) {
+      const c2 = fit(sbC, 1); drawScene(sbC, c2, t);
+      const t1 = now(); if (!paused) cpuSys.update(dt); cpuSys.draw(c2); cpuMs += (now() - t1 - cpuMs) * 0.1;
+    }
+    $('fx-out').innerHTML = 'GPU fx <b>' + fmt(fxMs, 2) + ' ms</b>' + (cpuSys ? ' · CPU fx <b>' + fmt(cpuMs, 2) + ' ms</b>' : ' · CPU Fx API not available yet') + (gpuSys ? ' · live GPU particles <b>' + gpuSys.count().toLocaleString() + '</b>' : ' · <span class="warn">GLFx unavailable</span>');
+  }
+  let cpuMs = 0;
+
+  // ================================================================ loop ================================
+  const vis = { vx: false, sb: false, sp: false };
+  const io = new IntersectionObserver(es => es.forEach(e => { vis[e.target.dataset.k] = e.isIntersecting; }), { rootMargin: '100px' });
+  [['sec-vx', 'vx'], ['sec-fx', 'sb']].forEach(a => { const el = $(a[0]); el.dataset.k = a[1]; io.observe(el); });
+  function resetAll() { bgCpu = null; for (const k in vxBg) delete vxBg[k]; for (const k in sbBg) delete sbBg[k]; makeSystems(); buildSprites(); }
+  let last = now(), fps = 60, frameMs = 16, acc = 0, bgMs = 0;
+  function frame(ts) {
+    const dtRaw = Math.max(0.0005, (ts - last) / 1000); last = ts;
+    const dt = Math.min(0.05, dtRaw);
+    fps += (1 / dtRaw - fps) * 0.05; frameMs += (dtRaw * 1000 - frameMs) * 0.05;
+    const t = ts / 1000;
+    try {
+      const a = now(); drawBg(t); bgMs += (now() - a - bgMs) * 0.1;
+      if (vis.vx) drawVortex(t);
+      if (vis.sb) drawSandbox(t, dt);
+    } catch (e) { showErr('frame: ' + e.message + ' ' + ((e.stack || '').split('\n')[1] || '')); }
+    acc += dtRaw;
+    if (acc > 0.25) {
+      acc = 0;
+      $('s-fps').textContent = fmt(fps, 0); $('s-ms').textContent = fmt(frameMs, 1);
+      $('s-bg').textContent = fmt(bgMs, 2) + ' ms'; $('s-vx').textContent = vis.vx ? fmt(vxMs, 2) + ' ms' : 'idle'; $('s-fx').textContent = vis.sb ? fmt(fxMs, 2) + ' ms' : 'idle';
+      $('s-gp').textContent = gpuSys ? gpuSys.count().toLocaleString() : '0'; $('s-cp').textContent = cpuSys ? cpuSys.count() : 'n/a';
+    }
+    requestAnimationFrame(frame);
+  }
+  makeSystems(); buildSprites();
+  if (qs.get('auto')) $('fx-auto').checked = true;
+  if (qs.get('bloom') === '0') { $('fx-bloom').checked = false; $('vx-bloom').checked = false; }
+  if (qs.get('seed')) $('bg-seed').value = qs.get('seed');
+  if (qs.get('sec')) setTimeout(() => { const el = $('sec-' + qs.get('sec')); if (el) { el.scrollIntoView(); window.scrollBy(0, -44); } }, 120);
+  window.__lab = { lab, GS, GF, setTier, pause(v) { paused = v !== false; }, bare(v) { bare = v !== false; }, step(sec) { const n = Math.round(sec * 60); for (let i = 0; i < n; i++) eachSys(s => s.update(1 / 60)); }, fire(fn) { eachSys(fn); },
+    size() { return [sbG._w, sbG._h]; }, get gpu() { return gpuSys; }, get cpu() { return cpuSys; }, lumaStats, vis };
+  requestAnimationFrame(frame);
+})(window.MOO);
+</script>
+</body>
+</html>

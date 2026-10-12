@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>Worker pool test</title>
+<link rel="stylesheet" href="../css/base.css"><link rel="stylesheet" href="../css/kit.css">
+<style>body{overflow:auto;padding:1.5rem;background:var(--void)} pre{white-space:pre-wrap;user-select:text;color:var(--ivory);font:13px/1.5 monospace} .ok{color:var(--leaf)} .bad{color:var(--rose)}</style></head>
+<body>
+<h2>Worker pool &amp; hardware</h2>
+<div class="row" style="margin:.6rem 0"><button class="btn primary" id="go">Run benchmark</button></div>
+<pre id="out">idle</pre>
+<script src="../js/core/ns.js"></script>
+<script src="../js/core/util.js"></script>
+<script src="../js/core/rng.js"></script>
+<script src="../js/core/ops.js"></script>
+<script src="../js/core/bus.js"></script>
+<script src="../js/core/settings.js"></script>
+<script src="../js/core/workers.js"></script>
+<script>
+(function (M) {
+  const out = document.getElementById('out');
+  const log = (s, c) => { out.innerHTML += '\n<span class="' + (c || '') + '">' + s + '</span>'; };
+  function gpuName() {
+    try { const c = document.createElement('canvas'); const gl = c.getContext('webgl2'); if (!gl) return 'no WebGL2';
+      const e = gl.getExtension('WEBGL_debug_renderer_info'); return (e ? gl.getParameter(e.UNMASKED_RENDERER_WEBGL) : gl.getParameter(gl.RENDERER)) + ' (WebGL2)'; } catch (e) { return 'error ' + e; }
+  }
+  async function run() {
+    out.textContent = 'logical threads: ' + M.HW.threads + '   deviceMemory: ' + M.HW.memoryGB + ' GB   GPU: ' + gpuName();
+    log('worker-safe module sources registered: ' + M.__defs.length);
+    let t = performance.now();
+    const n = await M.Workers.init();
+    log('pool ready: ' + n + ' workers in ' + Math.round(performance.now() - t) + ' ms', n ? 'ok' : 'bad');
+    const jobs = Array.from({ length: 96 }, () => ({ n: 3e6 }));
+    t = performance.now();
+    for (let i = 0; i < 6; i++) M.Ops.burn(jobs[i]);               // inline sample of 6 jobs
+    const inl = (performance.now() - t) / 6;
+    log('inline: ~' + inl.toFixed(1) + ' ms per job  → 96 jobs ≈ ' + Math.round(inl * 96) + ' ms single-threaded');
+    t = performance.now();
+    const r = await M.Workers.map('burn', jobs);
+    const par = performance.now() - t;
+    log('pooled: 96 jobs in ' + Math.round(par) + ' ms  → speed-up ×' + (inl * 96 / par).toFixed(1), 'ok');
+    // snapshot sharing
+    M.Workers.setSnapshot({ turn: 7, stars: [1, 2, 3], empires: [{}, {}] });
+    const info = await M.Workers.map('snapInfo', Array.from({ length: 8 }, () => ({})), { snap: true });
+    log('snapshot seen by workers: ' + JSON.stringify(info[0]) + ' (' + info.length + ' replies)', info[0] && info[0].turn === 7 ? 'ok' : 'bad');
+    const st = M.Workers.stats();
+    log('stats: size ' + st.size + ', completed ' + st.completed + ', errors ' + st.errors + ', utilisation ' + (st.utilisation * 100).toFixed(0) + '%, per-worker jobs [' + st.perWorker.map(w => w.done).join(',') + ']');
+    // rng determinism
+    const a = M.RNG.create('x'), b = M.RNG.create('x'); const same = a.next() === b.next() && a.int(1, 100) === b.int(1, 100);
+    const st4 = M.RNG.seedState('y'); const rb = M.RNG.bind(st4); rb.next(); const adv = st4.join() !== M.RNG.seedState('y').join();
+    log('rng deterministic: ' + same + ', bind mutates state array: ' + adv, same && adv ? 'ok' : 'bad');
+  }
+  document.getElementById('go').onclick = () => run().catch(e => log(String(e && e.stack || e), 'bad'));
+  run().catch(e => log(String(e && e.stack || e), 'bad'));
+})(window.MOO);
+</script>
+</body></html>

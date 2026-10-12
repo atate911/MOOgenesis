@@ -1,0 +1,95 @@
+/* =========================================================================
+   Master of Orion — Reborn · design tokens + base
+   Direction: "imperial observatory" — indigo void, brass instrument edges, ivory ink.
+   Panels are chamfered (45° cuts) with a 1px brass hairline; no rounded cards.
+   ========================================================================= */
+:root {
+  /* surfaces */
+  --void: #060919;
+  --night: #0a1030;
+  --deep: #0d153a;
+  --glass: rgba(11, 17, 42, .93);
+  --glass-hi: rgba(22, 31, 72, .95);
+  --steel: #19224d;
+  --steel-hi: #2b3875;
+  /* brass (edges, titles, primary action) */
+  --brass: #d6b36a;
+  --brass-hi: #f3dca0;
+  --brass-lo: #8a7040;
+  /* ink */
+  --ivory: #ece6d3;
+  --mist: #98a5cf;
+  --fog: #5d6a96;
+  /* signal colours — each means one thing everywhere in the game */
+  --cyan: #62d8ff;     /* focus, interactive, research progress */
+  --ember: #ff9440;    /* industry, warning */
+  --leaf: #5fdc8f;     /* food, success, growth */
+  --rose: #ff5c6a;     /* danger, war, losses */
+  --violet: #a98bff;   /* diplomacy, special */
+  --gold: #ffd54f;     /* BC / money */
+  --teal: #38d6c4;     /* ecology */
+  --azure: #5b8cff;    /* ships, defense */
+  /* colony slider categories */
+  --c-ship: #62a8ff;
+  --c-def: #ff6b6b;
+  --c-ind: #ffb04a;
+  --c-eco: #4be0b0;
+  --c-res: #b48cff;
+  /* empire banner colours (index = banner id; original order: Blue, Green, Purple, Red, White, Yellow) */
+  --emp0: #4a90e8; --emp1: #4ed17a; --emp2: #b45be8; --emp3: #e8504d; --emp4: #f1eee4; --emp5: #e8c94a;
+
+  --font-ui: 'IBM Plex Sans Condensed', 'Bahnschrift SemiCondensed', 'Bahnschrift', 'Segoe UI', system-ui, sans-serif;
+  --font-display: 'Marcellus SC', 'Marcellus', 'Palatino Linotype', 'Book Antiqua', Georgia, serif;
+  --font-title: 'Marcellus', 'Palatino Linotype', 'Book Antiqua', Georgia, serif;
+  --ease: cubic-bezier(.2, .8, .2, 1);
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+html {
+  /* fluid UI scale: ~14px @720p, 17px @1080p, 20px @1440p (driven by the smaller of height / 16:9-width) */
+  font-size: clamp(12px, calc(8px + 0.833 * min(1vh, 0.5625vw)), 22px);
+  background: var(--void);
+}
+body {
+  margin: 0; overflow: hidden; background: var(--void); color: var(--ivory);
+  font: 400 1rem/1.35 var(--font-ui); -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility;
+  user-select: none; -webkit-user-select: none;
+}
+#app { position: fixed; inset: 0; overflow: hidden; }
+#screens { position: absolute; inset: 0; }
+.screen { position: absolute; inset: 0; display: none; overflow: hidden; }
+.screen.active { display: block; }
+.screen.fade-in { animation: scr-in .35s var(--ease) both; }
+@keyframes scr-in { from { opacity: 0; filter: blur(6px) brightness(1.4); } to { opacity: 1; filter: none; } }
+canvas { display: block; }
+button { font: inherit; color: inherit; }
+input, select, textarea { font: inherit; color: inherit; user-select: text; -webkit-user-select: text; }
+h1, h2, h3, h4 { margin: 0; font-weight: 400; font-family: var(--font-display); color: var(--brass-hi); letter-spacing: .02em; }
+p { margin: 0 0 .6em; }
+a { color: var(--cyan); }
+::selection { background: rgba(98, 216, 255, .3); }
+:focus-visible { outline: 2px solid var(--cyan); outline-offset: 2px; }
+.sel-ok { user-select: text; -webkit-user-select: text; }
+
+/* thin scrollbars */
+* { scrollbar-width: thin; scrollbar-color: var(--steel-hi) transparent; }
+::-webkit-scrollbar { width: .55rem; height: .55rem; }
+::-webkit-scrollbar-thumb { background: var(--steel-hi); border: 2px solid transparent; background-clip: padding-box; }
+::-webkit-scrollbar-thumb:hover { background: var(--brass-lo); background-clip: padding-box; border: 2px solid transparent; }
+::-webkit-scrollbar-track { background: transparent; }
+
+/* boot splash */
+#boot {
+  position: absolute; inset: 0; z-index: 100; display: flex; flex-direction: column; align-items: center; justify-content: center;
+  background: radial-gradient(ellipse at 50% 40%, #121c4a 0%, var(--void) 70%); transition: opacity .6s var(--ease);
+}
+#boot.gone { opacity: 0; pointer-events: none; }
+.boot-mark { font: 400 clamp(2rem, 5vw, 4rem)/1 var(--font-title); color: var(--brass-hi); letter-spacing: .08em; text-shadow: 0 0 30px rgba(214, 179, 106, .4); }
+.boot-sub { margin-top: .8rem; color: var(--mist); }
+.boot-bar { width: min(22rem, 70vw); height: 3px; margin-top: 1.4rem; background: rgba(255, 255, 255, .08); }
+.boot-bar i { display: block; width: 0; height: 100%; background: linear-gradient(90deg, var(--brass-lo), var(--brass-hi)); transition: width .15s linear; }
+#boot-err { color: var(--rose); font: 12px/1.4 monospace; max-width: 80vw; white-space: pre-wrap; user-select: text; }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: .001s !important; transition-duration: .001s !important; }
+}

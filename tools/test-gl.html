@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>GL core test</title>
+<link rel="stylesheet" href="../css/base.css"><link rel="stylesheet" href="../css/kit.css">
+<style>body{overflow:auto;padding:1.5rem;background:var(--void)} pre{white-space:pre-wrap;user-select:text;color:var(--ivory);font:13px/1.5 monospace} canvas{border:1px solid #445;margin:.5rem}</style></head>
+<body>
+<h3>Shared WebGL2 core</h3><pre id="out"></pre><canvas id="c" width="420" height="260"></canvas>
+<script src="../js/core/ns.js"></script><script src="../js/core/util.js"></script><script src="../js/core/bus.js"></script>
+<script src="../js/core/settings.js"></script><script src="../js/core/perf.js"></script><script src="../js/gfx/gl.js"></script>
+<script>
+(function (M) {
+  const out = document.getElementById('out'), GL = M.Gfx.GL;
+  M.Perf.start();
+  out.textContent = 'supported: ' + GL.supported() + '\nrenderer: ' + (GL.info && GL.info.renderer) + '\nmaxTex: ' + (GL.info && GL.info.maxTex) + '\nPerf tier: ' + M.Perf.tier + ' (cap ' + M.Perf.cap + ')\nPerf caps: ' + JSON.stringify(M.Perf.caps);
+  if (!GL.supported()) return;
+  const fs = `#version 300 es
+  precision highp float; in vec2 vUv; out vec4 o; uniform float t;
+  ${GL.glsl.noise}
+  void main(){ vec3 p = vec3(vUv*4.0, t*0.2); float n = fbm(p, 6); float r = ridged(p*0.7, 5); float v = voronoi(p*1.5);
+    vec3 c = mix(vec3(0.05,0.07,0.2), vec3(0.9,0.7,0.3), n) + vec3(0.2,0.1,0.4)*r*0.5 - v*0.15; o = vec4(c, 1.0); }`;
+  const prog = GL.program('test', null, fs);
+  const ctx = document.getElementById('c').getContext('2d');
+  let t0 = performance.now(), frames = 0;
+  (function loop(now) {
+    const g = GL.begin(420, 260);
+    prog.use().f1('t', (now - t0) / 1000); GL.drawQuad(); GL.blit(ctx, 0, 0);
+    frames++; if (frames === 60) out.textContent += '\n60 frames rendered OK (' + Math.round(now - t0) + ' ms)';
+    requestAnimationFrame(loop);
+  })(performance.now());
+})(window.MOO);
+</script></body></html>

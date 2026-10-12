@@ -1,0 +1,279 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>MOO · GL planets test</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="../css/base.css">
+<style>
+  html { font-size: 15px; }
+  body { overflow: auto; background: #04061a; }
+  #page { max-width: 1500px; margin: 0 auto; padding: 14px 18px 60px; }
+  h1 { font-size: 1.5rem; } h2 { font-size: 1.15rem; margin: 22px 0 8px; }
+  #stats { position: sticky; top: 0; z-index: 5; padding: 6px 12px; background: rgba(4,6,26,.94); border-bottom: 1px solid rgba(214,179,106,.3);
+    font-variant-numeric: tabular-nums; display: flex; gap: 20px; align-items: center; flex-wrap: wrap; font-size: .92rem; color: var(--mist); }
+  #stats b { color: var(--brass-hi); font-weight: 600; }
+  .cv { display: block; background: #03051a; border: 1px solid rgba(214,179,106,.28); }
+  .row { display: flex; gap: 14px; flex-wrap: wrap; align-items: flex-start; }
+  .ctl { min-width: 270px; flex: 0 0 270px; display: grid; gap: 7px; align-content: start; font-size: .92rem; }
+  .ctl label { display: grid; grid-template-columns: 82px 1fr 52px; gap: 6px; align-items: center; color: var(--mist); }
+  .ctl .chk { display: flex; flex-wrap: wrap; gap: 4px 12px; color: var(--mist); }
+  .ctl .chk label { display: inline-flex; grid-template-columns: none; gap: 5px; }
+  select, input[type=text], input[type=color] { background: #0a1030; border: 1px solid rgba(214,179,106,.5); color: var(--ivory); padding: 3px; min-width: 0; }
+  button { background: #141c4a; border: 1px solid rgba(214,179,106,.6); color: var(--ivory); padding: 4px 10px; cursor: pointer; }
+  button:hover { background: #1f2a68; }
+  .note { color: var(--fog); font-size: .85rem; }
+  pre { margin: 0; font: 12px/1.45 monospace; color: #cfe; white-space: pre-wrap; user-select: text; }
+  .col { display: flex; flex-direction: column; gap: 4px; }
+  .lbl { color: var(--mist); font-size: .85rem; }
+</style>
+</head>
+<body>
+<div id="stats">
+  <strong style="color:var(--brass-hi);font-family:var(--font-display)">GL planets lab</strong>
+  <span>FPS <b id="fps">-</b></span>
+  <span>frame <b id="ms">-</b> ms</span>
+  <span>GL draw (CPU submit) <b id="glms">-</b> ms</span>
+  <span>CPU planets <b id="cpums">-</b> ms</span>
+  <span>tier <b id="tier">-</b></span>
+  <span id="gpu" class="note"></span>
+</div>
+<div id="page">
+  <h2>Viewer</h2>
+  <div class="row">
+    <div class="col"><div class="lbl">GL (WebGL2 shader)</div><canvas id="view" class="cv"></canvas></div>
+    <div class="col" id="cpuWrap"><div class="lbl">CPU (MOO.Gfx.Planets) — same descriptor</div><canvas id="viewCpu" class="cv"></canvas></div>
+    <div class="ctl">
+      <label>look <select id="look"></select><span></span></label>
+      <label>bands <select id="bands"></select><span></span></label>
+      <label>seed <input id="seed" type="text" value="42"><button id="rnd" title="random seed">dice</button></label>
+      <label>radius <input id="rad" type="range" min="20" max="400" step="1" value="240"><span id="rad-o"></span></label>
+      <label>spin <input id="spin" type="range" min="0" max="0.25" step="0.001" value="0.015"><span id="spin-o"></span></label>
+      <label>light <input id="la" type="range" min="-3.14" max="3.14" step="0.01" value="-2.3"><span id="la-o"></span></label>
+      <label>elev <input id="le" type="range" min="-0.2" max="0.95" step="0.01" value="0.55"><span id="le-o"></span></label>
+      <label>empire <input id="col" type="color" value="#4a90e8"><span></span></label>
+      <label>tier <select id="tierSel"><option>auto</option><option>low</option><option>medium</option><option>high</option><option>ultra</option></select><span></span></label>
+      <label>dpr <select id="dprSel"><option value="1">1</option><option value="1.5">1.5</option><option value="2">2</option></select><span></span></label>
+      <div class="chk">
+        <label><input type="checkbox" id="inh" checked> inhabited</label>
+        <label><input type="checkbox" id="rings"> rings</label>
+        <label><input type="checkbox" id="clouds" checked> clouds</label>
+        <label><input type="checkbox" id="atm" checked> atmosphere</label>
+        <label><input type="checkbox" id="lights" checked> lights</label>
+        <label><input type="checkbox" id="anim" checked> animate</label>
+      </div>
+      <div class="btns"><button id="bench">Benchmark</button> <button id="shot">Snapshot sprite</button></div>
+      <pre id="info"></pre>
+    </div>
+  </div>
+
+  <h2>All looks (animated, radius 56, same seed)</h2>
+  <canvas id="grid" class="cv" style="width:100%"></canvas>
+
+  <h2>Small sizes (64 px and 32 px diameter)</h2>
+  <canvas id="small" class="cv" style="width:100%"></canvas>
+
+  <h2>Stars (animated surface, corona, prominences) and black hole</h2>
+  <canvas id="stars" class="cv" style="width:100%"></canvas>
+
+  <h2>Asteroid field (parallax, tumbling) and belt cluster</h2>
+  <canvas id="ast" class="cv" style="width:100%"></canvas>
+
+  <h2>Sprites (cached static spheres)</h2>
+  <canvas id="sprites" class="cv" style="width:100%"></canvas>
+</div>
+
+<script src="../js/core/ns.js"></script>
+<script src="../js/core/util.js"></script>
+<script src="../js/core/bus.js"></script>
+<script src="../js/core/settings.js"></script>
+<script src="../js/core/perf.js"></script>
+<script src="../js/gfx/gl.js"></script>
+<script src="../js/gfx/gl-planets.js"></script>
+<script>
+(function () {   // optional CPU modules (side-by-side comparison + Canvas2D fallback); the GL module works without them
+  var list = ['../js/gfx/planets.js', '../js/gfx/space.js'];
+  (function next() {
+    if (!list.length) return start();
+    var s = document.createElement('script'); s.src = list.shift();
+    s.onload = next; s.onerror = next; document.head.appendChild(s);
+  })();
+})();
+function start() {
+  (function (M) {
+    'use strict';
+    var GP = M.Gfx.GLPlanets, CP = M.Gfx.Planets, $ = function (id) { return document.getElementById(id); };
+    M.Perf.start();
+    var qs = new URLSearchParams(location.search);
+    GP.fallback = qs.get('fallback') === '1';   // default: show the pure GL path (the CPU viewer sits next to it); ?fallback=1 lets GLPlanets hand over to Canvas2D
+    var FIXED_T = qs.has('t') ? parseFloat(qs.get('t')) : null;
+    var LOOKS = GP.LOOKS, BANDS = GP.BANDS;
+    LOOKS.forEach(function (k) { var o = document.createElement('option'); o.textContent = k; $('look').appendChild(o); });
+    BANDS.forEach(function (k) { var o = document.createElement('option'); o.textContent = k; $('bands').appendChild(o); });
+    if (qs.has('look')) $('look').value = qs.get('look');
+    if (qs.has('seed')) $('seed').value = qs.get('seed');
+    if (qs.has('bands')) $('bands').value = qs.get('bands');
+    if (qs.has('rad')) $('rad').value = qs.get('rad');
+    if (qs.has('rings')) $('rings').checked = qs.get('rings') === '1';
+    if (qs.has('dpr')) $('dprSel').value = qs.get('dpr');
+    if (qs.has('la')) $('la').value = qs.get('la');
+    if (qs.has('anim')) $('anim').checked = qs.get('anim') === '1';
+    if (qs.has('tier')) { $('tierSel').value = qs.get('tier'); M.Perf.setPreset(qs.get('tier')); }
+    if (!CP) $('cpuWrap').style.display = 'none';
+    $('gpu').textContent = (GP.supported() ? 'GL ok' : 'GL UNSUPPORTED (' + (GP.fallback ? 'Canvas2D fallback active' : 'fallback off') + ')') + ' · ' + (M.HW.gpu || '');
+
+    var view = $('view'), vctx = view.getContext('2d'), cview = $('viewCpu'), cctx = cview.getContext('2d');
+    var grid = $('grid'), gctx = grid.getContext('2d'), small = $('small'), sctx = small.getContext('2d');
+    var stars = $('stars'), stctx = stars.getContext('2d'), ast = $('ast'), actx = ast.getContext('2d'), spr = $('sprites'), spctx = spr.getContext('2d');
+
+    function dprNow() { return parseFloat($('dprSel').value) || 1; }
+    function sizeCanvas(cv, w, h, dpr) {
+      var W = Math.round(w * dpr), H = Math.round(h * dpr);
+      if (cv.width !== W || cv.height !== H) { cv.width = W; cv.height = H; cv.style.width = w + 'px'; cv.style.height = h + 'px'; }
+    }
+    function readDesc() {
+      return { look: $('look').value, seed: isNaN(+$('seed').value) ? $('seed').value : +$('seed').value, rings: $('rings').checked, bands: $('bands').value, inhabited: $('inh').checked, color: $('col').value };
+    }
+    function readOpts() {
+      return { lightAngle: +$('la').value, lightElev: +$('le').value, spin: +$('spin').value, clouds: $('clouds').checked, atmosphere: $('atm').checked, lights: $('lights').checked, dpr: dprNow() };
+    }
+    ['rad', 'spin', 'la', 'le'].forEach(function (id) { var o = $(id + '-o'); function u() { o.textContent = (+$(id).value).toFixed(id === 'rad' ? 0 : 3); } $(id).addEventListener('input', u); u(); });
+    $('rnd').onclick = function () { $('seed').value = Math.floor(Math.random() * 99999); };
+    $('tierSel').onchange = function () { M.Perf.setPreset($('tierSel').value); };
+
+    var t0 = performance.now(), anim = true, tmanual = 0, frames = 0, lastFps = performance.now(), fpsVal = 0, glAcc = 0, glN = 0, cpuAcc = 0, cpuN = 0, lastFrame = performance.now(), msSmooth = 16;
+    var gridLooks = [];
+    LOOKS.forEach(function (k) {
+      if (k === 'gasgiant') BANDS.forEach(function (b) { gridLooks.push({ look: k, bands: b, rings: b === 'saturn' }); });
+      else gridLooks.push({ look: k });
+    });
+    var STAR_KINDS = ['yellow', 'orange', 'red', 'blue', 'white', 'green', 'purple', 'blackhole'];
+
+    function drawLabel(ctx, txt, x, y) { ctx.fillStyle = 'rgba(236,230,211,.85)'; ctx.font = '12px sans-serif'; ctx.textAlign = 'center'; ctx.fillText(txt, x, y); }
+
+    function frame(now) {
+      var t = FIXED_T !== null ? FIXED_T : ($('anim').checked ? (now - t0) / 1000 : tmanual);
+      if ($('anim').checked && FIXED_T === null) tmanual = t;
+      var dpr = dprNow(), desc = readDesc(), opts = readOpts(), R = +$('rad').value;
+      var vw = Math.max(320, Math.min(R * 2 * 1.9 + 20, 900)), vh = vw;
+      sizeCanvas(view, vw, vh, dpr); vctx.setTransform(dpr, 0, 0, dpr, 0, 0); vctx.fillStyle = '#03051a'; vctx.fillRect(0, 0, vw, vh);
+      var a = performance.now();
+      var ok = GP.draw(vctx, desc, vw / 2, vh / 2, R, t, opts);
+      glAcc += performance.now() - a; glN++;
+      if (!ok) { vctx.fillStyle = '#f66'; vctx.font = '14px sans-serif'; vctx.fillText('GL draw returned false', 10, 20); }
+      if (CP) {
+        sizeCanvas(cview, vw, vh, dpr); cctx.setTransform(dpr, 0, 0, dpr, 0, 0); cctx.fillStyle = '#03051a'; cctx.fillRect(0, 0, vw, vh);
+        var b = performance.now(); CP.draw(cctx, desc, vw / 2, vh / 2, R, t, opts); cpuAcc += performance.now() - b; cpuN++;
+      }
+      // grid of looks
+      var cols = 7, cw = 150, rh = 146, rows = Math.ceil(gridLooks.length / cols), gw = cols * cw, gh = rows * rh;
+      sizeCanvas(grid, gw, gh, 1); gctx.setTransform(1, 0, 0, 1, 0, 0); gctx.fillStyle = '#03051a'; gctx.fillRect(0, 0, gw, gh);
+      var gd = { seed: desc.seed, inhabited: desc.inhabited, color: desc.color };
+      for (var i = 0; i < gridLooks.length; i++) {
+        var g = gridLooks[i], d = Object.assign({}, gd, g), cx = (i % cols) * cw + cw / 2, cy = Math.floor(i / cols) * rh + 66;
+        GP.draw(gctx, d, cx, cy, 52, t, { dpr: 1, lightAngle: opts.lightAngle, spin: 0.03 });
+        drawLabel(gctx, g.look + (g.bands ? ' · ' + g.bands : ''), cx, cy + 68);
+      }
+      // small sizes
+      var smw = 14 * 100, smh = 150;
+      sizeCanvas(small, smw, smh, 1); sctx.setTransform(1, 0, 0, 1, 0, 0); sctx.fillStyle = '#03051a'; sctx.fillRect(0, 0, smw, smh);
+      for (var j = 0; j < 14; j++) {
+        var lk = LOOKS[j], dd = { look: lk, seed: desc.seed, inhabited: true, color: desc.color };
+        GP.draw(sctx, dd, j * 100 + 50, 38, 32, t, { dpr: 1, lightAngle: opts.lightAngle });
+        GP.draw(sctx, dd, j * 100 + 50, 100, 16, t, { dpr: 1, lightAngle: opts.lightAngle });
+      }
+      // stars
+      var stw = 8 * 160, sth = 190;
+      sizeCanvas(stars, stw, sth, 1); stctx.setTransform(1, 0, 0, 1, 0, 0); stctx.fillStyle = '#02030c'; stctx.fillRect(0, 0, stw, sth);
+      for (var k = 0; k < 8; k++) {
+        GP.drawStar(stctx, STAR_KINDS[k], k * 160 + 80, 86, k === 7 ? 26 : 34, t, { dpr: 1 });
+        drawLabel(stctx, STAR_KINDS[k], k * 160 + 80, 182);
+      }
+      // asteroids
+      var aw = 1300, ah = 260;
+      sizeCanvas(ast, aw, ah, 1); actx.setTransform(1, 0, 0, 1, 0, 0); actx.fillStyle = '#02030c'; actx.fillRect(0, 0, aw, ah);
+      GP.drawAsteroids(actx, { look: 'asteroids', seed: desc.seed, color: desc.color }, 330, 130, 640, 240, t, { dpr: 1, lightAngle: opts.lightAngle });
+      GP.draw(actx, { look: 'asteroids', seed: desc.seed }, 880, 130, 110, t, { dpr: 1, lightAngle: opts.lightAngle });
+      GP.draw(actx, { look: 'asteroids', seed: 7 }, 1130, 130, 70, t, { dpr: 1, lightAngle: opts.lightAngle });
+      // sprites
+      var spw = 1300, sph = 190;
+      sizeCanvas(spr, spw, sph, 1); spctx.setTransform(1, 0, 0, 1, 0, 0); spctx.fillStyle = '#03051a'; spctx.fillRect(0, 0, spw, sph);
+      var sx = 10;
+      [160, 120, 96, 72, 48, 32].forEach(function (D) {
+        var c = GP.sprite({ look: desc.look, seed: desc.seed, rings: desc.rings, bands: desc.bands, inhabited: desc.inhabited, color: desc.color }, D, { lightAngle: opts.lightAngle });
+        if (c) { spctx.drawImage(c, sx, 10, D, D); sx += D + 16; }
+      });
+
+      frames++;
+      var dt = now - lastFrame; lastFrame = now; msSmooth += (dt - msSmooth) * 0.08;
+      if (now - lastFps > 500) {
+        fpsVal = frames * 1000 / (now - lastFps); frames = 0; lastFps = now;
+        $('fps').textContent = fpsVal.toFixed(0); $('ms').textContent = msSmooth.toFixed(1);
+        $('glms').textContent = (glAcc / Math.max(1, glN)).toFixed(2); glAcc = 0; glN = 0;
+        $('cpums').textContent = CP ? (cpuAcc / Math.max(1, cpuN)).toFixed(2) : 'n/a'; cpuAcc = 0; cpuN = 0;
+        $('tier').textContent = M.Perf.tier + ' (detail ' + M.Perf.q.planetDetail + ')';
+      }
+      requestAnimationFrame(frame);
+    }
+
+    // ---- benchmark: forced GPU sync via readPixels so the numbers include GPU time
+    function syncGL() { var g = M.Gfx.GL.gl(); var px = new Uint8Array(4); g.readPixels(0, 0, 1, 1, g.RGBA, g.UNSIGNED_BYTE, px); }
+    function bench(label, n, fn) {
+      for (var i = 0; i < 6; i++) { fn(i); syncGL(); }
+      var t = performance.now();
+      for (var k = 0; k < n; k++) { fn(k); syncGL(); }
+      return { label: label, ms: (performance.now() - t) / n };
+    }
+    window.__bench = function (dpr) {
+      dpr = dpr || 1;
+      var c = document.createElement('canvas'); c.width = 1400 * dpr; c.height = 900 * dpr; var cx = c.getContext('2d'); cx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      var res = [];
+      ['terran', 'gasgiant', 'inferno', 'barren'].forEach(function (lk) {
+        res.push(bench('1x R300 ' + lk + ' dpr' + dpr, 40, function (i) { GP.draw(cx, { look: lk, seed: 5, rings: lk === 'gasgiant', inhabited: true, color: '#4a90e8' }, 700, 450, 300, i * 0.1, { dpr: dpr }); }));
+      });
+      var looks12 = ['terran', 'jungle', 'ocean', 'arid', 'steppe', 'desert', 'tundra', 'gaia', 'inferno', 'toxic', 'barren', 'gasgiant'];
+      res.push(bench('12x R48 mixed dpr' + dpr, 60, function (i) {
+        for (var j = 0; j < 12; j++) GP.draw(cx, { look: looks12[j], seed: j + 1, inhabited: true, color: '#e8504d', rings: j === 11 }, 80 + j * 110, 120 + (j % 2) * 20, 48, i * 0.1, { dpr: dpr });
+      }));
+      if (CP) {
+        res.push(bench('CPU 1x R300 terran', 10, function (i) { CP.draw(cx, { look: 'terran', seed: 5, inhabited: true }, 700, 450, 300, i * 0.1, { dpr: dpr }); }));
+        res.push(bench('CPU 12x R48 mixed', 20, function (i) { for (var j = 0; j < 12; j++) CP.draw(cx, { look: looks12[j], seed: j + 1, inhabited: true }, 80 + j * 110, 120, 48, i * 0.1, { dpr: dpr }); }));
+      }
+      return res;
+    };
+    // per-tier benchmark: sets the Perf preset, then times batches of draws with one GPU sync (readPixels) at the end of each batch.
+    // Low tier has q.gl = false, so GLPlanets hands over to the CPU planets there (that row is the Canvas2D path).
+    window.__benchTiers = function (tiers) {
+      var prevFb = GP.fallback; GP.fallback = true;
+      var looks12 = ['terran', 'jungle', 'ocean', 'arid', 'steppe', 'desert', 'tundra', 'gaia', 'inferno', 'toxic', 'barren', 'gasgiant'];
+      var res = [], gl = M.Gfx.GL;
+      (tiers || ['low', 'medium', 'high', 'ultra']).forEach(function (tier) {
+        M.Perf.setPreset(tier);
+        var dpr = M.Perf.dpr(), c = document.createElement('canvas'); c.width = Math.round(1400 * dpr); c.height = Math.round(900 * dpr);
+        var cx = c.getContext('2d'); cx.setTransform(dpr, 0, 0, dpr, 0, 0);
+        function run(n, fn) { for (var i = 0; i < 4; i++) fn(i); if (gl.supported()) syncGL(); var t = performance.now(); for (var k = 0; k < n; k++) fn(k); if (gl.supported()) syncGL(); return (performance.now() - t) / n; }
+        var r = { tier: tier, dpr: dpr, detail: M.Perf.q.planetDetail, gl: gl.supported() };
+        r.planetR300 = run(30, function (i) { GP.draw(cx, { look: 'terran', seed: 5, inhabited: true, color: '#4a90e8' }, 700, 450, 300, i * 0.1, { dpr: dpr }); });
+        r.planetR150 = run(40, function (i) { GP.draw(cx, { look: 'gaia', seed: 9, inhabited: true }, 700, 450, 150, i * 0.1, { dpr: dpr }); });
+        r.gasR300rings = run(30, function (i) { GP.draw(cx, { look: 'gasgiant', bands: 'jovian', seed: 3, rings: true }, 700, 450, 300, i * 0.1, { dpr: dpr }); });
+        r.twelveR48 = run(40, function (i) { for (var j = 0; j < 12; j++) GP.draw(cx, { look: looks12[j], seed: j + 1, inhabited: true, color: '#e8504d', rings: j === 11 }, 80 + j * 110, 120 + (j % 2) * 20, 48, i * 0.1, { dpr: dpr }); });
+        r.perPlanetR48 = r.twelveR48 / 12;
+        r.starR100 = run(30, function (i) { GP.drawStar(cx, 'yellow', 700, 450, 100, i * 0.1, { dpr: dpr }); });
+        r.blackholeR100 = run(30, function (i) { GP.drawStar(cx, 'blackhole', 700, 450, 100, i * 0.1, { dpr: dpr }); });
+        r.asteroids640x240 = run(30, function (i) { GP.drawAsteroids(cx, { seed: 3 }, 700, 450, 640, 240, i * 0.1, { dpr: dpr }); });
+        Object.keys(r).forEach(function (k) { if (typeof r[k] === 'number' && k !== 'dpr' && k !== 'detail') r[k] = +r[k].toFixed(2); });
+        res.push(r);
+      });
+      GP.fallback = prevFb; M.Perf.setPreset('auto');
+      return res;
+    };
+    $('bench').onclick = function () { var r = window.__bench(dprNow()); $('info').textContent = r.map(function (x) { return x.label + ': ' + x.ms.toFixed(2) + ' ms'; }).join('\n'); };
+    $('shot').onclick = function () { var c = GP.sprite(readDesc(), 256, readOpts()); if (c) { var w = window.open(); w.document.body.style.background = '#000'; w.document.body.appendChild(c); } };
+    window.__T = { GP: GP, CP: CP, M: M, setT: function (v) { FIXED_T = v; }, desc: readDesc };
+    requestAnimationFrame(frame);
+    $('info').textContent = 'GL info: ' + (M.Gfx.GL.info ? M.Gfx.GL.info.renderer : 'n/a');
+  })(window.MOO);
+}
+</script>
+</body>
+</html>

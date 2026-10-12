@@ -1,0 +1,243 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>GNN broadcast - test page</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="../css/base.css">
+<link rel="stylesheet" href="../css/kit.css">
+<style>
+  /* dev bar: a small tab at the top centre; click "dev" to unfold it (or open the page with ?dev=1) */
+  #devbar { position: fixed; z-index: 400; top: 0; left: 50%; transform: translateX(-50%); display: flex; flex-direction: column; align-items: center; font: 12px/1.2 var(--font-ui); }
+  #devbar .tab { padding: 1px 14px 2px; cursor: pointer; color: var(--brass); background: rgba(4, 6, 20, .92); border: 1px solid rgba(214, 179, 106, .4); border-top: 0; letter-spacing: .12em; text-transform: uppercase; font-size: 10px; }
+  #devbar .tab:hover { color: var(--brass-hi); }
+  #devbar .body { display: none; flex-wrap: wrap; justify-content: center; align-items: center; gap: 3px 4px; max-width: min(66rem, 94vw); padding: 5px 6px; background: rgba(4, 6, 20, .95); border: 1px solid rgba(214, 179, 106, .4); border-top: 0; }
+  #devbar.open .body { display: flex; }
+  #devbar button { padding: 3px 8px; cursor: pointer; font: 11px var(--font-ui); color: var(--ivory); background: #19224d; border: 1px solid rgba(214, 179, 106, .45); }
+  #devbar button:hover { background: #2b3875; }
+  #devbar button.on { color: #261b06; background: var(--brass); }
+  #devbar label { display: inline-flex; align-items: center; gap: 4px; color: var(--mist); font-size: 11px; }
+  #devbar select { font: 11px var(--font-ui); color: var(--ivory); background: #0a1030; border: 1px solid rgba(214, 179, 106, .45); padding: 2px 3px; }
+  #devbar .sep { width: 1px; align-self: stretch; margin: 0 4px; background: rgba(214, 179, 106, .4); }
+  #devbar .log { flex-basis: 100%; text-align: center; color: var(--mist); min-height: 14px; font-size: 11px; }
+  /* mock 'galaxy' screen: where GNN returns to */
+  .mock-galaxy { position: absolute; inset: 0; display: grid; place-items: center; background: radial-gradient(ellipse at 50% 30%, #141e55, var(--void) 70%); }
+  .mock-galaxy pre { margin: .6rem 0 1rem; max-height: 14rem; overflow: auto; font: 12px/1.35 Consolas, monospace; color: var(--mist); user-select: text; white-space: pre-wrap; }
+  #boot-err { position: fixed; z-index: 500; left: 0; right: 0; bottom: 0; margin: 0; padding: 6px 10px; color: var(--rose); font: 12px/1.4 monospace; white-space: pre-wrap; background: rgba(0, 0, 0, .85); }
+  #boot-err:empty { display: none; }
+</style>
+</head>
+<body>
+<div id="app">
+  <div id="screens"></div>
+  <div id="overlay"></div>
+  <div id="toasts"></div>
+  <div id="tip" role="tooltip"></div>
+</div>
+<div id="devbar"><div class="tab" id="devtab">dev</div><div class="body" id="devbody"></div></div>
+<pre id="boot-err"></pre>
+
+<script>
+/* Test harness for js/ui/gnn.js (the GNN broadcast screen + news archive).
+   Loads the real core + kit + every gfx / audio module that exists, then drives MOO.UI.GNN.show() with hand-written items.
+   URL params:  ?auto=quiet|busy|rank|empty|breaking  start a broadcast on load      &speed=0|1|2  animSpeed     &rm=1  reduceMotion
+                &anchor=<race id>  force the anchor      &dev=1  unfold the dev bar      &gfx=0  load no gfx/audio modules (fallback look)      &noscene=1  skip gfx/scenes.js (built-in studio)
+                &motion=1  ignore the OS reduced-motion preference (exercise the animated paths)      &still=1  freeze CSS animations      &nosfx=1 */
+(function () {
+  'use strict';
+  var Q = new URLSearchParams(location.search), J = '../js/', DEFS = {};
+  var errBox = document.getElementById('boot-err');
+  /* ?motion=1: pretend the OS does NOT ask for reduced motion (JS media query + the CSS rules that react to it), to exercise the animated paths */
+  if (Q.get('motion') === '1') {
+    var mm0 = window.matchMedia;
+    window.matchMedia = function (q) { return /reduced-motion/.test(q) ? { matches: false, media: q, addListener: function () {}, removeListener: function () {}, addEventListener: function () {}, removeEventListener: function () {} } : mm0.call(window, q); };
+  }
+  function stripReduceRules() {
+    Array.prototype.forEach.call(document.styleSheets, function (ss) {
+      try { for (var i = ss.cssRules.length - 1; i >= 0; i--) { var r = ss.cssRules[i]; if (r.type === 4 && /reduced-motion/.test(r.conditionText || r.media.mediaText)) ss.deleteRule(i); } } catch (e) { /* cross-origin sheet */ }
+    });
+  }
+  function fail(msg) { errBox.textContent += msg + '\n'; console.error(msg); }
+  function load(src) {
+    return new Promise(function (res, rej) {
+      var s = document.createElement('script');
+      s.src = src + '?_=' + Date.now();
+      s.onload = res; s.onerror = function () { rej(new Error('failed to load ' + src)); };
+      document.head.appendChild(s);
+    });
+  }
+  function exists(src) { return fetch(src, { method: 'HEAD', cache: 'no-store' }).then(function (r) { return r.ok; }, function () { return false; }); }
+
+  /* ------------------------------------------------------------------ mock broadcasts */
+  var P = function (look, seed, inh, color) { return { look: look, seed: seed, inhabited: inh, color: color || null }; };
+  var ITEMS = {
+    colony: { cat: 'colonyFounded', headline: 'Psilons plant a flag on Tyr and call it home', sub: 'The new colony joins the Zhar Directorate; settlers report excellent views and no plumbing.', graphic: 'planet', planet: P('minimal', 21, true, '#c06bd8'), star: { name: 'Tyr', kind: 'orange' }, race: 'psilon', race2: '', importance: 0 },
+    nap: { cat: 'napSigned', headline: 'Humans and Sakkra sign a non-aggression pact; both promise to behave', sub: 'Diplomats on both sides declined to say for how long.', graphic: 'map', planet: null, star: { name: 'Sol', kind: 'yellow' }, race: 'human', race2: 'sakkra', importance: 1 },
+    destroyed: { cat: 'planetDestroyed', headline: 'Kholdan Prime is gone: Antarans reduce a world to a cloud of gravel', sub: 'Eleven million colonists were aboard. The Alkari have called an emergency session.', graphic: 'planet', planet: P('arid', 7, true, '#4aa3df'), star: { name: 'Kholdan', kind: 'orange' }, race: 'alkari', race2: '', importance: 2 },
+    war: { cat: 'warDeclared', headline: 'Alkari declare war on Darlok; skies over the Orion lanes expected to be busy', sub: '', graphic: 'map', planet: null, star: { name: 'Orion', kind: 'blue' }, race: 'alkari', race2: 'darlok', importance: 2 },
+    battle: { cat: 'battleWon', headline: 'Mrrshan fleet crushes Silicoid raiders at Procyon, destroying 14 ships', sub: 'Admiral Rashaka thanked the gunners and, briefly, the weather.', graphic: 'battle', planet: P('toxic', 12, false), star: { name: 'Procyon', kind: 'white' }, race: 'mrrshan', race2: 'silicoid', importance: 1 },
+    nova: { cat: 'systemNova', headline: 'Brilliant and brief: the star Vega goes nova', sub: 'No inhabited worlds were in range. Astronomers are, officially, delighted.', graphic: 'planet', planet: null, star: { name: 'Vega', kind: 'blue' }, race: '', race2: '', importance: 2 },
+    tech: { cat: 'techBreakthrough', headline: 'Meklar scientists unveil the Class V Deflector Shield', sub: 'Engineers say it can stop nearly anything, including the occasional meeting.', graphic: 'chart', planet: null, star: null, race: 'meklar', race2: '', importance: 0 },
+    plague: { cat: 'plague', headline: 'Plague grips Sidera as Klackon hives close their gates', sub: '', graphic: 'planet', planet: P('jungle', 33, true, '#6ab04c'), star: { name: 'Sidera', kind: 'green' }, race: 'klackon', race2: '', importance: 0 },
+    vote: { cat: 'councilVote', headline: 'Council vote: Humans lead the Alkari by fourteen votes with two ballots to count', sub: '', graphic: 'chart', planet: null, star: null, race: 'human', race2: 'alkari', importance: 1 },
+    pirates: { cat: 'piracy', headline: 'Pirates strike freight lanes near Procyon; insurers raise rates again', sub: '', graphic: 'battle', planet: null, star: { name: 'Procyon', kind: 'white' }, race: 'human', race2: '', importance: 0 },
+    flavor: { cat: 'flavor', headline: 'Debate rages over whether a gas giant is a planet or just a very large opinion', sub: '', graphic: 'ticker', planet: null, star: null, race: '', race2: '', importance: 0 },
+    spy: { cat: 'techStolen', headline: 'Darlok agents lift the Gauss cannon blueprints from a Bulrathi shipyard', sub: 'Bulrathi security chiefs "were not available for comment".', graphic: 'ticker', planet: null, star: { name: 'Bulrath', kind: 'red' }, race: 'darlok', race2: 'bulrathi', importance: 0 },
+    land: { cat: 'terraform', headline: 'Terraformers declare Eden a garden world, pending an apology from the weather', sub: '', graphic: 'planet', planet: P('terran', 5, true, '#4a8be0'), star: { name: 'Eden', kind: 'yellow' }, race: 'human', race2: '', importance: 0 },
+    strike: { cat: 'bombardment', headline: 'Sakkra warships bombard Ressik; defenders hold the surface for now', sub: '', graphic: 'planet', planet: P('ocean', 44, true, '#3fb58a'), star: { name: 'Ressik', kind: 'yellow' }, race: 'sakkra', race2: 'bulrathi', importance: 1 },
+    rebels: { cat: 'planetRebels', headline: 'Revolt on Qiraa: colonists reject Alkari rule and raise their own banner', sub: '', graphic: 'planet', planet: P('steppe', 52, true, '#4aa3df'), star: { name: 'Qiraa', kind: 'yellow' }, race: 'alkari', race2: '', importance: 0 },
+  };
+  function R(i, race, name, color, v) { return { empire: i, race: race, name: name, color: color, value: v }; }
+  var RANKINGS = {
+    production: [R(0, 'psilon', 'Psilon Directorate', 0, 1284), R(1, 'human', 'Terran Federation', '#4ed17a', 962), R(2, 'meklar', 'Meklar Collective', 'var(--emp2)', 871), R(3, 'alkari', 'Alkari Sky-Court', undefined, 640), R(4, 'klackon', 'Klackon Hive', 4, 455), R(5, 'sakkra', 'Sakkra Brood', 5, 310)],
+    research: [R(2, 'meklar', 'Meklar Collective', 'var(--emp2)', 903), R(0, 'psilon', 'Psilon Directorate', 0, 877), R(1, 'human', 'Terran Federation', '#4ed17a', 540), R(3, 'alkari', 'Alkari Sky-Court', 3, 402), R(5, 'sakkra', 'Sakkra Brood', 5, 190)],
+    military: [R(3, 'alkari', 'Alkari Sky-Court', 3, 214), R(1, 'human', 'Terran Federation', 1, 188), R(0, 'psilon', 'Psilon Directorate', 0, 77), R(4, 'klackon', 'Klackon Hive', 4, 61)],
+    population: [R(4, 'klackon', 'Klackon Hive', 4, 412), R(5, 'sakkra', 'Sakkra Brood', 5, 380), R(0, 'psilon', 'Psilon Directorate', 0, 205), R(1, 'human', 'Terran Federation', 1, 198), R(2, 'meklar', 'Meklar Collective', 2, 120), R(3, 'alkari', 'Alkari Sky-Court', 3, 96)],
+  };
+  var TICKER = ['Titanium steady as freighter fleets expand across three sectors', 'Ion storms over northern domes; residents advised to enjoy the light show', 'Zero-G skyball: Meridian Meteors beat Cinder Hawks, 7 to 4',
+    'Rumor: a famous admiral was seen shopping for hats', 'Biologists confirm: the cave moss has opinions', 'Customs reminds captains that contraband includes anything not declared'];
+  function pick() { var o = []; for (var i = 0; i < arguments.length; i++) o.push(Object.assign({}, ITEMS[arguments[i]])); return o; }
+  var SCENARIOS = {
+    quiet: function () { return { type: 'gnn', year: 2347, turn: 48, items: pick('colony', 'nap'), ticker: TICKER }; },
+    busy: function () { return { type: 'gnn', year: 2351, turn: 52, items: pick('colony', 'destroyed', 'nap', 'battle', 'war', 'nova', 'tech', 'plague', 'vote', 'pirates', 'spy', 'flavor'), ticker: TICKER }; },
+    rank: function () { return { type: 'gnn', year: 2355, turn: 56, items: pick('tech', 'land'), rankings: RANKINGS, ticker: TICKER }; },
+    rankonly: function () { return { type: 'gnn', year: 2355, turn: 56, items: [], rankings: RANKINGS, ticker: TICKER }; },
+    breaking: function () { return { type: 'gnn', year: 2349, turn: 50, items: pick('destroyed'), ticker: TICKER }; },
+    fx: function () { return { type: 'gnn', year: 2360, turn: 61, items: pick('strike', 'rebels', 'land', 'plague'), ticker: TICKER }; },
+    empty: function () { return { type: 'gnn', year: 2352, turn: 53, items: [], ticker: [] }; },
+    long: function () { return { type: 'gnn', year: 2353, turn: 54, items: [Object.assign({}, ITEMS.war, { headline: 'In a stunning reversal that surprised diplomats, generals and at least one very confident fortune-teller, the Alkari Sky-Court has formally declared war on the Darlok Shadow Syndicate over a disputed asteroid belt', sub: 'Both fleets are already moving; sources describe the mood in the capital as "extremely focused" and the mood in the markets as "extremely loud".' })], ticker: TICKER }; },
+  };
+
+  /* mock newsLog for the archive */
+  function makeLog() {
+    var races = ['alkari', 'bulrathi', 'darlok', 'human', 'klackon', 'meklar', 'mrrshan', 'psilon', 'sakkra', 'silicoid'];
+    var cats = ['colonyFounded', 'warDeclared', 'battleWon', 'napSigned', 'techBreakthrough', 'plague', 'systemNova', 'councilVote', 'piracy', 'economicBoom', 'spyCaught', 'planetRebels', 'flavor', 'allianceFormed', 'artifactFound', 'planetDestroyed'];
+    var T = {
+      colonyFounded: '{a} plant a flag on {s} and call it home', warDeclared: '{a} declare war on {b}', battleWon: '{a} fleet defeats {b} raiders at {s}', napSigned: '{a} and {b} sign a non-aggression pact',
+      techBreakthrough: '{a} scientists unveil a new weapon system', plague: 'Plague grips {s}; {a} colonists quarantined', systemNova: 'The star {s} goes nova', councilVote: 'Council vote: {a} lead {b} by {n} votes',
+      piracy: 'Pirates strike freight lanes near {s}', economicBoom: 'Prosperity strikes {a}: shops are full, vaults are fuller', spyCaught: '{a} spies caught red-handed in {b} space',
+      planetRebels: 'Revolt on {s}: colonists reject {a} rule', flavor: 'Debate rages over whether a gas giant is a planet or just a very large opinion', allianceFormed: '{a} and {b} form an alliance',
+      artifactFound: '{a} archaeologists uncover ancient ruins on {s}', planetDestroyed: '{s} is gone: {a} reduce a world to gravel',
+    };
+    var stars = ['Orion', 'Sol', 'Vega', 'Tyr', 'Procyon', 'Kholdan', 'Sidera', 'Eden', 'Qiraa'], log = [];
+    for (var i = 0; i < 60; i++) {
+      var year = 2301 + Math.floor(i * 46 / 59), c = cats[(i * 7 + 3) % cats.length], a = races[(i * 3) % 10], b = races[(i * 3 + 4) % 10];
+      var two = /war|battle|nap|vote|alliance|spy/i.test(c);
+      log.push({ year: year, cat: c, headline: T[c].replace('{a}', cap(a) + 's').replace('{b}', cap(b)).replace('{s}', stars[i % stars.length]).replace('{n}', String(3 + (i * 5) % 17)), race: c === 'flavor' ? '' : a, race2: two ? b : '' });
+    }
+    return log;
+  }
+  function cap(s) { return s.charAt(0).toUpperCase() + s.slice(1); }
+
+  /* ------------------------------------------------------------------ dev bar + mock galaxy screen */
+  var devLog = function () {};
+  var lastResult = null, runCount = 0;
+  function installGame() {
+    var M = window.MOO;
+    M.Game = M.Game || { S: { playerId: 0, year: 2347, turn: 48, newsLog: makeLog() } };
+  }
+  function installGalaxyStub() {
+    var M = window.MOO, UI = M.UI, h = UI.h, pre;
+    UI.Screens.register('galaxy', {
+      create: function (el) {
+        pre = h('pre');
+        el.appendChild(h('div.mock-galaxy', UI.panel('Galaxy screen (mock)', h('div', h('p', 'This is where GNN returns to. Result of the last broadcast:'), pre,
+          h('div.row.g2.wrap', UI.button('Quiet turn', function () { run('quiet'); }, { primary: true }), UI.button('Busy turn', function () { run('busy'); }), UI.button('With rankings', function () { run('rank'); }),
+            UI.button('Archive', function () { M.UI.GNN.archive(M.Game.S); }))))));
+      },
+      enter: function () { pre.textContent = JSON.stringify({ runs: runCount, lastResult: lastResult, current: M.UI.Screens.current && M.UI.Screens.current.id }, null, 1); },
+    });
+  }
+  function run(name) {
+    var M = window.MOO, UI = M.UI;
+    if (!UI.Screens.current || UI.Screens.current.id !== 'galaxy') UI.Screens.go('galaxy');
+    var intr = SCENARIOS[name]();
+    var anchor = document.getElementById('anchorSel') && document.getElementById('anchorSel').value;
+    if (Q.get('anchor')) intr.anchorRace = Q.get('anchor'); else if (anchor && anchor !== 'auto') intr.anchorRace = anchor;
+    devLog('GNN.show(' + name + ') ...');
+    var t0 = performance.now();
+    return M.UI.GNN.show(intr).then(function (r) {
+      runCount++; lastResult = r; devLog('resolved after ' + ((performance.now() - t0) / 1000).toFixed(1) + ' s: ' + JSON.stringify(r) + ' -> screen ' + (UI.Screens.current && UI.Screens.current.id));
+      if (UI.Screens.current && UI.Screens.current.id === 'galaxy') UI.Screens.refresh();
+      return r;
+    });
+  }
+  function buildDevBar() {
+    var M = window.MOO, bar = document.getElementById('devbar'), body = document.getElementById('devbody'), log = document.createElement('div');
+    log.className = 'log'; devLog = function (t) { log.textContent = t; };
+    document.getElementById('devtab').onclick = function () { bar.classList.toggle('open'); };
+    if (Q.get('dev') === '1') bar.classList.add('open');
+    function btn(label, fn) { var b = document.createElement('button'); b.textContent = label; b.onclick = function () { fn(b); }; body.appendChild(b); return b; }
+    function sep() { var s = document.createElement('i'); s.className = 'sep'; body.appendChild(s); }
+    function sel(id, label, opts, val, fn) {
+      var l = document.createElement('label'), s = document.createElement('select'); s.id = id; l.textContent = label;
+      opts.forEach(function (o) { var e = document.createElement('option'); e.value = o[0]; e.textContent = o[1]; s.appendChild(e); });
+      s.value = val; s.onchange = function () { fn(s.value); }; l.appendChild(s); body.appendChild(l); return s;
+    }
+    btn('Quiet turn', function () { run('quiet'); }); btn('Busy turn', function () { run('busy'); }); btn('With rankings', function () { run('rank'); });
+    btn('Archive', function () { M.UI.GNN.archive(M.Game.S).then(function (v) { devLog('archive closed -> ' + v); }); });
+    sep();
+    btn('Breaking only', function () { run('breaking'); }); btn('Effects', function () { run('fx'); }); btn('Rankings only', function () { run('rankonly'); });
+    btn('Long headline', function () { run('long'); }); btn('Empty', function () { run('empty'); }); btn('Empty archive', function () { M.UI.GNN.archive({ newsLog: [] }); });
+    sep();
+    sel('speedSel', 'anim', [['0', 'instant'], ['1', 'normal'], ['2', 'fast']], String(M.Settings.get('animSpeed')), function (v) { M.Settings.set('animSpeed', +v); devLog('animSpeed = ' + v); });
+    var rm = document.createElement('label'), cb = document.createElement('input'); cb.type = 'checkbox'; cb.checked = !!M.Settings.get('reduceMotion');
+    cb.onchange = function () { M.Settings.set('reduceMotion', cb.checked); devLog('reduceMotion = ' + cb.checked); }; rm.appendChild(cb); rm.appendChild(document.createTextNode('reduce motion')); body.appendChild(rm);
+    var races = [['auto', 'anchor: random']]; ['alkari', 'bulrathi', 'darlok', 'human', 'klackon', 'meklar', 'mrrshan', 'psilon', 'sakkra', 'silicoid'].forEach(function (r) { races.push([r, r]); });
+    sel('anchorSel', '', races, Q.get('anchor') || 'auto', function () {});
+    btn('Skip (Esc)', function () { M.UI.GNN.skip(); });
+    body.appendChild(log);
+  }
+
+  /* ------------------------------------------------------------------ boot */
+  var CORE = ['core/ns.js', 'core/util.js', 'core/rng.js', 'core/bus.js', 'core/settings.js', 'core/perf.js', 'data/text.js'];
+  var OPT = ['gfx/icons.js', 'gfx/space.js', 'gfx/planets.js', 'gfx/ships.js', 'gfx/portraits.js', 'gfx/fx.js', 'gfx/scenes.js', 'data/races.js', 'audio/audio.js', 'audio/music.js', 'audio/sfx.js'];
+  var UIF = ['ui/kit.js', 'ui/screens.js', 'ui/gnn.js'];
+
+  (async function () {
+    try {
+      for (var i = 0; i < CORE.length; i++) await load(J + CORE[i]);
+      if (Q.get('gfx') !== '0') for (i = 0; i < OPT.length; i++) { if (Q.get('noscene') === '1' && OPT[i] === 'gfx/scenes.js') continue; if (await exists(J + OPT[i])) await load(J + OPT[i]); }
+      if (!window.MOO.Audio) window.MOO.Audio = {};
+      for (i = 0; i < UIF.length; i++) {
+        await load(J + UIF[i]);
+        if (UIF[i] === 'ui/screens.js') {            // capture screen definitions so TEST.step() can drive frames by hand (a hidden browser tab throttles rAF)
+          var reg = window.MOO.UI.Screens.register;
+          window.MOO.UI.Screens.register = function (id, def) { DEFS[id] = def; return reg.apply(this, arguments); };
+        }
+      }
+    } catch (e) { fail(String(e && e.stack || e)); return; }
+
+    var M = window.MOO, UI = M.UI;
+    if (Q.get('motion') === '1') stripReduceRules();
+    if (Q.get('speed') !== null) M.Settings.set('animSpeed', +Q.get('speed'));
+    if (Q.get('rm') === '1') M.Settings.set('reduceMotion', true);
+    if (Q.get('nosfx') === '1' && M.Audio && M.Audio.SFX) M.Audio.SFX.play = function () { return false; };
+    installGame();
+    UI.init(); UI.startLoop();
+    var unlock = function () { try { if (M.Audio && M.Audio.init) M.Audio.init(); } catch (e) { console.warn('audio init failed', e); } window.removeEventListener('pointerdown', unlock); window.removeEventListener('keydown', unlock); };
+    window.addEventListener('pointerdown', unlock); window.addEventListener('keydown', unlock);
+    var shown = 0;
+    window.addEventListener('error', function (e) { if (shown++ < 4) UI.toast('Error: ' + (e.message || e.error), 'bad', 9000); });
+    window.addEventListener('unhandledrejection', function (e) { if (shown++ < 4) UI.toast('Error: ' + (e.reason && e.reason.message || e.reason), 'bad', 9000); });
+    installGalaxyStub(); buildDevBar();
+    if (Q.get('still') === '1') { var st = document.createElement('style'); st.textContent = '.gnn *, .gnn *::before, .gnn *::after { animation: none !important; transition: none !important; }'; document.head.appendChild(st); }
+    var frozen = false, gnnUpdate = DEFS.gnn && DEFS.gnn.update;
+    if (gnnUpdate) DEFS.gnn.update = function (dt, t) { if (!frozen) gnnUpdate.call(this, dt, t); };
+    UI.Screens.go('galaxy');
+    window.TEST = {
+      M: M, run: run, scenarios: SCENARIOS, items: ITEMS, rankings: RANKINGS,
+      freeze: function (on) { frozen = on !== false; },
+      step: function (dt, n) { n = n || 1; for (var k = 0; k < n; k++) if (gnnUpdate) gnnUpdate(dt || 0.05, 0); return M.UI.GNN._state(); },
+      state: function () { return M.UI.GNN._state(); },
+      press: function (key) { var k = key === 'Space' ? ' ' : key; window.dispatchEvent(new KeyboardEvent('keydown', { key: k, bubbles: true, cancelable: true })); },
+      jump: function (n) { return M.UI.GNN._jump(n); },
+      archive: function () { return M.UI.GNN.archive(M.Game.S); },
+    };
+    var auto = Q.get('auto');
+    if (auto && SCENARIOS[auto]) setTimeout(function () { run(auto); }, 120);
+  })();
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,15 @@
+# Brief: QA playthrough — play the real game through the UI and fix what breaks
+
+You are the QA lead for *Master of Orion — Reborn*. Everything is built; your job is to **play it like a player** in the built-in browser (own tab; `tabs_create`, pass `tabId` everywhere; 1280×720 and 1920×1080; reset the viewport to `desktop` and close your tab at the end) and fix or report every defect. Product priorities: faithful mechanics, gorgeous presentation, no crashes, every feature reachable by mouse and by the original's hotkeys (research/06 §10).
+
+## Script (do all of it; take notes as you go; fix small UI bugs directly, report big ones)
+1. Title → New game: all three wizard steps (size, difficulty, opponents, seed, remake options; race pick for all 10 races incl. their portraits/stats; banner; names) → Start. Continue / Load / Options / Almanac from the title.
+2. Galaxy screen: pan/zoom, select stars, fleets; send scouts and a colony ship (`right-click` / SEND flow, route preview, ETA, range rings); colonise (prompt); open every panel (colony sliders with locks, build list, reloc, transports, star card, fleet panel); end turn repeatedly; handle every interrupt (explore, colonize, tech choice, notices, GNN, battle, diplomacy, council, events).
+3. Bottom-bar screens & hotkeys: Colonies ledger, Fleets, Map modes, Design (create several designs: all hulls, weapons, specials, miniaturisation, validation messages, scrap), Research (sliders, picking projects, tech tree viewer, breakthrough scenes), Planets/System/Overview, Races (+ racial stats), Diplomacy audiences (propose every treaty type, trade, tribute, tech exchange, threats, declaring war, breaking treaties), Spies (budgets, modes, caught reports), Council (vote, accept/defy), Help/Almanac/Tutor, Game menu (save/load/options/quit), F-keys.
+4. Combat: provoke tactical battles (give yourself a fleet via the console `MOO.Game.S` / dev URL flags, or play to a war) — pre-battle card, move/fire/missiles/specials/scan/retreat/auto, planet defences, bombardment, transports + ground combat landing screens; check the results are applied (ships lost, planet captured).
+5. Long game: let 200+ turns pass (use `ai=1` autoplay and also manual turns) on Small/Medium/Huge maps; watch performance (F3 overlay), memory, saves (round-trip), autosave, loading a save mid-game; endings: council victory, conquest, defeat, exile/funeral cinematics (force via console).
+6. Robustness: window resize (1024×600 up to 4K), reduced motion, low graphics tier, GPU off (`Settings.gpu=false`), workers off (`threads` option), audio muted/unlocked, rapid clicking, Esc/right-click/Space grammar, keyboard-only play.
+7. Console: zero errors/warnings across everything (except documented ones). Use `read_console_messages`.
+
+## Output
+Fix what you can (you may edit any UI file except `js/manifest.js`, `js/ui/kit.js`, `css/base.css|kit.css`, `js/core/ns.js` — report needed changes to those). Write `tools/qa/REPORT.md`: tested scenarios (checked list), bugs found/fixed/open with repro steps, screenshots notes, performance numbers. Final reply ≤150 words.

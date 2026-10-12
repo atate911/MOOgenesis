@@ -1,0 +1,403 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>MOO · ships &amp; fx lab</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="../css/base.css">
+<link rel="stylesheet" href="../css/kit.css">
+<style>
+  html { font-size: 15px; }
+  body { overflow: auto; background: #04061a; }
+  #page { max-width: 1480px; margin: 0 auto; padding: 14px 18px 60px; }
+  h2 { font-size: 1.15rem; margin: 22px 0 8px; }
+  .bar { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; margin: 6px 0 10px; color: var(--mist); }
+  .bar label { display: inline-flex; align-items: center; gap: 6px; }
+  .cv { display: block; width: 100%; background: #03051a; border: 1px solid rgba(214,179,106,.28); }
+  .row { display: flex; gap: 14px; flex-wrap: wrap; }
+  .cvw { flex: 1 1 520px; min-width: 0; }
+  .ctl { min-width: 250px; flex: 0 0 250px; display: grid; gap: 7px; align-content: start; font-size: .92rem; }
+  .ctl label { display: grid; grid-template-columns: 78px 1fr 40px; gap: 6px; align-items: center; color: var(--mist); }
+  .ctl .chk { display: inline-flex; gap: 6px; margin-right: 8px; }
+  .ctl select, .ctl input[type=color] { width: 100%; background: #0a1030; border: 1px solid rgba(214,179,106,.5); color: var(--ivory); padding: 3px; }
+  .btns { display: flex; flex-wrap: wrap; gap: 6px; margin: 4px 0 6px; align-items: center; }
+  .btns b { color: var(--brass); font: 400 .95rem var(--font-display); min-width: 78px; }
+  .btns select { background: #0a1030; border: 1px solid rgba(214,179,106,.5); color: var(--ivory); padding: 3px 4px; }
+  .btn.small { padding: .22em .7em; font-size: .9rem; }
+  .btn.on { filter: brightness(1.45); }
+  .sw { width: 22px; height: 22px; border: 1px solid #fff4; cursor: pointer; display: inline-block; }
+  #stats { position: sticky; top: 0; z-index: 5; padding: 6px 10px; background: rgba(4,6,26,.94); border-bottom: 1px solid rgba(214,179,106,.3); font-variant-numeric: tabular-nums; display: flex; gap: 18px; align-items: center; flex-wrap: wrap; }
+  #stats span b { color: var(--brass-hi); font-weight: 600; }
+  #err { color: var(--rose); font: 12px monospace; white-space: pre-wrap; }
+</style>
+</head>
+<body>
+<div id="stats">
+  <strong style="color:var(--brass-hi);font-family:var(--font-display)">Ships &amp; FX lab</strong>
+  <span>FPS <b id="fps">–</b></span>
+  <span>Particles <b id="pcount">0</b></span>
+  <span>Ships drawn <b id="scount">0</b></span>
+  <span>Cache <b id="ccount">0</b></span>
+  <label>Team colour <input id="team" type="color" value="#4a90e8"></label>
+  <span id="swatches"></span>
+</div>
+<div id="page">
+  <div id="err"></div>
+
+  <h2>Fleet roster — 10 races × 5 hull classes</h2>
+  <div class="bar">
+    <label><input type="checkbox" id="g-spin"> spin</label>
+    <label><input type="checkbox" id="g-flags"> all add-ons</label>
+    <label>thrust <input type="range" id="g-thrust" min="0" max="1" step="0.01" value="0.55"></label>
+    <label>scale <input type="range" id="g-scale" min="0.6" max="1.6" step="0.05" value="1"></label>
+  </div>
+  <canvas id="grid" class="cv"></canvas>
+
+  <h2>Single ship viewer</h2>
+  <div class="row">
+    <div class="cvw" style="height:560px"><canvas id="view" class="cv" style="height:100%"></canvas></div>
+    <div class="ctl panel">
+      <label>race <select id="v-race"></select><span></span></label>
+      <label>hull <select id="v-hull"></select><span></span></label>
+      <label>size <input type="range" id="v-size" min="40" max="640" step="1" value="380"><span id="v-size-o">380</span></label>
+      <label>thrust <input type="range" id="v-thrust" min="0" max="1" step="0.01" value="0.5"><span id="v-thrust-o"></span></label>
+      <label>damage <input type="range" id="v-dmg" min="0" max="1" step="0.01" value="0"><span id="v-dmg-o"></span></label>
+      <label>shield <input type="range" id="v-shield" min="0" max="1" step="0.01" value="0"><span id="v-shield-o"></span></label>
+      <label>cloak <input type="range" id="v-cloak" min="0" max="1" step="0.01" value="0"><span id="v-cloak-o"></span></label>
+      <label>angle <input type="range" id="v-angle" min="-3.1416" max="3.1416" step="0.01" value="0"><span id="v-angle-o"></span></label>
+      <div>
+        <label class="chk"><input type="checkbox" id="v-rot" checked> rotate</label>
+        <label class="chk"><input type="checkbox" id="v-shadow"> shadow</label>
+      </div>
+      <div>
+        <label class="chk"><input type="checkbox" id="f-colony"> colony</label>
+        <label class="chk"><input type="checkbox" id="f-troops"> troops</label>
+        <label class="chk"><input type="checkbox" id="f-beams"> beams</label>
+        <label class="chk"><input type="checkbox" id="f-missiles"> missiles</label>
+        <label class="chk"><input type="checkbox" id="f-bomb"> bomb</label>
+      </div>
+    </div>
+  </div>
+
+  <h2>Structures (race-styled) &amp; the neutral stargate — follows the viewer's race</h2>
+  <canvas id="structs" class="cv" style="height:300px"></canvas>
+  <h2>Starbases of all races · sprites · fleet markers</h2>
+  <canvas id="markers" class="cv" style="height:330px"></canvas>
+
+  <h2>Combat sandbox</h2>
+  <div id="sandbox-ui"></div>
+  <canvas id="sandbox" class="cv" style="height:520px; cursor: crosshair"></canvas>
+</div>
+
+<script src="../js/core/ns.js"></script>
+<script src="../js/gfx/ships.js"></script>
+<script src="../js/gfx/fx.js"></script>
+<script>
+(function () {
+  'use strict';
+  const Ships = MOO.Gfx.Ships, Fx = MOO.Gfx.Fx;
+  const $ = (id) => document.getElementById(id);
+  const DPR = Math.min(2, window.devicePixelRatio || 1);
+  const TAU = Math.PI * 2;
+  let team = '#4a90e8';
+  window.addEventListener('error', (e) => { $('err').textContent += (e.message || e) + ' @' + (e.filename || '').split('/').pop() + ':' + e.lineno + '\n'; });
+
+  // ---------- helpers ----------
+  function fit(cv) {
+    const r = cv.getBoundingClientRect(), w = Math.max(10, Math.round(r.width)), h = Math.max(10, Math.round(r.height));
+    if (cv.width !== Math.round(w * DPR) || cv.height !== Math.round(h * DPR)) { cv.width = Math.round(w * DPR); cv.height = Math.round(h * DPR); cv._bg = null; }
+    cv._w = w; cv._h = h;
+    const ctx = cv.getContext('2d');
+    ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+    return ctx;
+  }
+  function starfield(w, h, seed) {
+    const c = document.createElement('canvas'); c.width = Math.round(w * DPR); c.height = Math.round(h * DPR);
+    const g = c.getContext('2d'); g.scale(DPR, DPR);
+    let s = seed >>> 0; const rnd = () => { s = (s * 1664525 + 1013904223) >>> 0; return s / 4294967296; };
+    const bg = g.createLinearGradient(0, 0, w, h); bg.addColorStop(0, '#040720'); bg.addColorStop(0.55, '#06092a'); bg.addColorStop(1, '#03051a');
+    g.fillStyle = bg; g.fillRect(0, 0, w, h);
+    for (let i = 0; i < 4; i++) {
+      const x = rnd() * w, y = rnd() * h, r = 120 + rnd() * 220, hue = [225, 260, 200, 280][i];
+      const gr = g.createRadialGradient(x, y, 0, x, y, r);
+      gr.addColorStop(0, 'hsla(' + hue + ',70%,45%,0.10)'); gr.addColorStop(1, 'hsla(' + hue + ',70%,45%,0)');
+      g.fillStyle = gr; g.fillRect(x - r, y - r, r * 2, r * 2);
+    }
+    const n = Math.round(w * h / 1700);
+    for (let i = 0; i < n; i++) {
+      const x = rnd() * w, y = rnd() * h, b = Math.pow(rnd(), 3), rad = 0.4 + b * 1.1;
+      g.fillStyle = 'rgba(' + (200 + rnd() * 55 | 0) + ',' + (210 + rnd() * 45 | 0) + ',255,' + (0.25 + b * 0.75) + ')';
+      g.beginPath(); g.arc(x, y, rad, 0, TAU); g.fill();
+    }
+    return c;
+  }
+  function clearBg(cv, ctx, seed) {
+    if (!cv._bg) cv._bg = starfield(cv._w, cv._h, seed || 7);
+    ctx.drawImage(cv._bg, 0, 0, cv._w, cv._h);
+  }
+  function allFlags() { return { colony: true, troops: true, beams: true, missiles: true, bomb: true }; }
+  let shipsDrawn = 0;
+
+  // ---------- team colour ----------
+  ['#e8504d', '#4a90e8', '#4ed17a', '#e8c94a', '#b45be8', '#e88a3a'].forEach((c) => {
+    const s = document.createElement('span'); s.className = 'sw'; s.style.background = c; s.title = c;
+    s.onclick = () => { team = c; $('team').value = c; };
+    $('swatches').appendChild(s);
+  });
+  $('team').oninput = (e) => { team = e.target.value; };
+
+  // ---------- roster grid ----------
+  const gridCv = $('grid');
+  function drawGrid(t) {
+    const scale = +$('g-scale').value;
+    const base = 26 * scale, sizes = Ships.HULLS.map((h) => base * h.length);
+    const colW = sizes.map((s, i) => s * (i >= 3 ? 1.5 : 1.25) + 40), labelW = 96, rowH = Math.round(sizes[4] * 0.95 + 14);
+    gridCv.style.height = (34 + rowH * 10) + 'px';
+    const ctx = fit(gridCv);
+    clearBg(gridCv, ctx, 11);
+    ctx.font = '13px "IBM Plex Sans Condensed", sans-serif'; ctx.textBaseline = 'middle';
+    let x = labelW;
+    ctx.fillStyle = '#d6b36a'; ctx.textAlign = 'center';
+    Ships.HULLS.forEach((h, i) => { ctx.fillText(h.name, x + colW[i] / 2, 16); x += colW[i]; });
+    const flags = $('g-flags').checked ? allFlags() : null;
+    const thrust = +$('g-thrust').value, spin = $('g-spin').checked;
+    Ships.RACES.forEach((race, r) => {
+      const y = 34 + r * rowH + rowH / 2;
+      ctx.textAlign = 'left'; ctx.fillStyle = '#ece6d3';
+      ctx.fillText(Ships.RACE_NAMES[race], 12, y);
+      let cx = labelW;
+      for (let i = 0; i < 5; i++) {
+        Ships.draw(ctx, { race: race, hull: i, x: cx + colW[i] / 2, y: y, size: sizes[i], angle: spin ? t * 0.5 + r : 0, color: team, t: t, thrust: thrust, flags: flags });
+        shipsDrawn++;
+        cx += colW[i];
+      }
+    });
+  }
+
+  // ---------- viewer ----------
+  const vRace = $('v-race'), vHull = $('v-hull');
+  Ships.RACES.forEach((r) => { const o = document.createElement('option'); o.value = r; o.textContent = Ships.RACE_NAMES[r]; vRace.appendChild(o); });
+  Ships.HULLS.forEach((h) => { const o = document.createElement('option'); o.value = h.id; o.textContent = h.name; vHull.appendChild(o); });
+  Ships.STRUCTURES.forEach((s) => { const o = document.createElement('option'); o.value = s; o.textContent = s; vHull.appendChild(o); });
+  vRace.value = 'human'; vHull.value = '2';
+  ['size', 'thrust', 'dmg', 'shield', 'cloak', 'angle'].forEach((k) => {
+    const el = $('v-' + k), out = $('v-' + k + '-o');
+    const f = () => { out.textContent = (+el.value).toFixed(k === 'size' ? 0 : 2); };
+    el.oninput = f; f();
+  });
+  const viewCv = $('view');
+  function drawView(t) {
+    const ctx = fit(viewCv);
+    clearBg(viewCv, ctx, 21);
+    const hv = vHull.value, hull = /^\d$/.test(hv) ? +hv : hv;
+    const f = {}; ['colony', 'troops', 'beams', 'missiles', 'bomb'].forEach((k) => { f[k] = $('f-' + k).checked; });
+    const size = Math.min(+$('v-size').value, viewCv._w * 0.9, viewCv._h * 1.5);
+    let ang = +$('v-angle').value;
+    if ($('v-rot').checked) { ang = t * 0.35; $('v-angle').value = ((ang + Math.PI) % TAU) - Math.PI; $('v-angle-o').textContent = (+$('v-angle').value).toFixed(2); }
+    Ships.draw(ctx, { race: vRace.value, hull: hull, x: viewCv._w / 2, y: viewCv._h / 2, size: size, angle: ang, color: team, t: t,
+      thrust: +$('v-thrust').value, damage: +$('v-dmg').value, shield: +$('v-shield').value, cloaked: +$('v-cloak').value, flags: f, shadow: $('v-shadow').checked });
+    shipsDrawn++;
+  }
+
+  // ---------- structures ----------
+  const stCv = $('structs');
+  function drawStructs(t) {
+    const ctx = fit(stCv);
+    clearBg(stCv, ctx, 33);
+    const names = Ships.STRUCTURES, w = stCv._w / names.length;
+    names.forEach((s, i) => {
+      Ships.draw(ctx, { race: vRace.value, hull: s, x: w * (i + 0.5), y: stCv._h / 2 - 8, size: Math.min(220, w * 0.8), angle: 0, color: team, t: t });
+      shipsDrawn++;
+      ctx.fillStyle = '#d6b36a'; ctx.font = '13px sans-serif'; ctx.textAlign = 'center'; ctx.fillText(s, w * (i + 0.5), stCv._h - 12);
+    });
+  }
+
+  // ---------- sprites & markers ----------
+  const mkCv = $('markers');
+  function drawMarkers(t) {
+    const ctx = fit(mkCv);
+    clearBg(mkCv, ctx, 44);
+    const w = mkCv._w;
+    const cell = Math.min(110, w / 10);
+    Ships.RACES.forEach((race, i) => {
+      Ships.draw(ctx, { race: race, hull: 'starbase', x: cell * (i + 0.5), y: 62, size: cell * 0.86, color: team, t: t });
+      shipsDrawn++;
+    });
+    let x = 16;
+    Ships.RACES.forEach((race) => {
+      const c = Ships.sprite(race, 1, 44, team, null);
+      ctx.drawImage(c, x - c.cx, 150 - c.cy, c.width, c.height);
+      const c2 = Ships.sprite(race, 3, 64, team, { beams: true });
+      ctx.drawImage(c2, x - c2.cx + 22, 210 - c2.cy, c2.width, c2.height);
+      x += cell;
+    });
+    const cols = ['#e8504d', '#4a90e8', '#4ed17a', '#e8c94a', '#b45be8', '#e88a3a'];
+    for (let i = 0; i < 6; i++) Ships.drawFleetMarker(ctx, 60 + i * 90, 280, 20, cols[i], t * 0.4 + i, t, { selected: i === 1, count: i === 2 ? 7 : 1, moving: i % 2 === 0 });
+    ctx.fillStyle = '#98a5cf'; ctx.font = '12px sans-serif'; ctx.textAlign = 'left';
+    ctx.fillText('sprite(): 44px destroyers / 64px battleship with turrets', 12, 236);
+    ctx.fillText('drawFleetMarker(): plain · selected · stack of 7 · moving', 12, 316);
+  }
+
+  // ---------- combat sandbox ----------
+  const sbCv = $('sandbox'), fx = Fx.create();
+  const sb = { aRace: 'human', aHull: 3, bRace: 'klackon', bHull: 3, shield: 0.8, planet: false, stress: false, swarm: false, clickKind: 'fire', swarmShips: null };
+  const ui = $('sandbox-ui');
+  function btn(label, fn, parent) { const b = document.createElement('button'); b.className = 'btn small'; b.textContent = label; b.onclick = fn; parent.appendChild(b); return b; }
+  function group(title) { const d = document.createElement('div'); d.className = 'btns'; const b = document.createElement('b'); b.textContent = title; d.appendChild(b); ui.appendChild(d); return d; }
+  function select(parent, opts, val, fn) { const s = document.createElement('select'); opts.forEach((o) => { const e = document.createElement('option'); e.value = o[0]; e.textContent = o[1]; s.appendChild(e); }); s.value = val; s.onchange = () => fn(s.value); parent.appendChild(s); return s; }
+
+  function geom() {
+    const w = sbCv._w || 900, h = sbCv._h || 520, sA = Math.min(210, w * 0.2), sB = Math.min(240, w * 0.24);
+    return { w: w, h: h, ax: w * 0.14, ay: h * 0.5, as: sA, bx: w * 0.76, by: h * 0.55, bs: sB, aa: 0, ba: Math.PI };
+  }
+  function bRadius() { const g = geom(); return Ships.shieldRadius(sb.bRace, sb.bHull, g.bs); }
+  function muzzle() {
+    const g = geom();
+    const an = Ships.anchors({ race: sb.aRace, hull: sb.aHull, x: g.ax, y: g.ay, size: g.as, angle: g.aa, flags: { beams: true, missiles: true }, color: team });
+    const list = an.turrets.length ? an.turrets : [{ x: g.ax + g.as * 0.4, y: g.ay }];
+    const m = list[(Math.random() * list.length) | 0];
+    return { x: m.x, y: m.y + (Math.random() - 0.5) * 4 };
+  }
+  function targetPoint(forShield) {
+    const g = geom(), m = muzzle();
+    const a = Math.atan2(m.y - g.by, m.x - g.bx), R = bRadius();
+    if (forShield && sb.shield > 0.02) return { x: g.bx + Math.cos(a) * R, y: g.by + Math.sin(a) * R, a: a, m: m, shield: true };
+    const o = g.bs * 0.14;
+    return { x: g.bx + (Math.random() - 0.5) * o * 2, y: g.by + (Math.random() - 0.5) * o, a: a, m: m, shield: false };
+  }
+  let flicker = 0;
+  function shieldFlash(a) { const g = geom(); fx.shieldHit(g.bx, g.by, bRadius(), a, '#7fd8ff'); flicker = 1; }
+  function fireBeam(kind) {
+    const tp = targetPoint(true);
+    fx.beam(tp.m.x, tp.m.y, tp.x, tp.y, kind);
+    if (tp.shield) setTimeout(() => { shieldFlash(tp.a); }, 70);
+    sb.clickKind = kind === 'plasma' ? 'plasma' : kind === 'disruptor' ? 'energy' : sb.clickKind;
+  }
+  function fireMissile(kind) {
+    const tp = targetPoint(true), h = fx.missile(tp.m.x, tp.m.y, tp.x, tp.y, 360, kind);
+    if (tp.shield) h.onHit = () => shieldFlash(tp.a);
+  }
+  const gBeams = group('Beams'); ['laser', 'neutron', 'disruptor', 'phasor', 'plasma', 'deathray', 'mass'].forEach((k) => btn(k, () => fireBeam(k), gBeams));
+  const gMis = group('Missiles'); ['nuclear', 'hyperx', 'merculite', 'scatter', 'stinger', 'torpedo', 'antimatter'].forEach((k) => btn(k, () => fireMissile(k), gMis));
+  const gBl = group('Blasts');
+  ['fire', 'plasma', 'energy', 'nova'].forEach((k) => btn('explosion: ' + k, () => { const tp = targetPoint(false); fx.explosion(tp.x, tp.y, k === 'nova' ? 110 : 60, { kind: k }); sb.clickKind = k; }, gBl));
+  btn('debris', () => { const tp = targetPoint(false); fx.debris(tp.x, tp.y, 14, 70); }, gBl);
+  btn('sparks', () => { const tp = targetPoint(false); fx.sparks(tp.x, tp.y, 30, '#ffd080'); }, gBl);
+  btn('nova blast', () => { const g = geom(); fx.novaBlast(g.bx, g.by, 150); }, gBl);
+  const gEv = group('Events');
+  btn('shield hit', () => { const tp = targetPoint(true); shieldFlash(tp.a); }, gEv);
+  btn('shield hit (random)', () => { shieldFlash(Math.random() * TAU); }, gEv);
+  btn('warp in', () => { const g = geom(); fx.warpFlash(g.bx, g.by, g.bs * 0.5, { mode: 'in', angle: 0.1 }); }, gEv);
+  btn('warp out', () => { const g = geom(); fx.warpFlash(g.ax, g.ay, g.as * 0.5, { mode: 'out', angle: 0 }); }, gEv);
+  btn('planet impact', () => { sb.planet = true; const g = geom(); fx.planetImpact(g.w * 0.9, g.h * 0.24, 62); }, gEv);
+  btn('pulse (scan)', () => { const g = geom(); fx.pulse(g.ax, g.ay, 240, '#62d8ff'); }, gEv);
+  btn('pulse (red)', () => { const g = geom(); fx.pulse(g.bx, g.by, 200, '#ff5c6a'); }, gEv);
+  const gSet = group('Setup');
+  const raceOpts = Ships.RACES.map((r) => [r, Ships.RACE_NAMES[r]]), hullOpts = Ships.HULLS.map((h) => [h.id, h.name]);
+  const lblA = document.createElement('span'); lblA.textContent = 'attacker'; gSet.appendChild(lblA);
+  select(gSet, raceOpts, sb.aRace, (v) => { sb.aRace = v; }); select(gSet, hullOpts, sb.aHull, (v) => { sb.aHull = +v; });
+  const lblB = document.createElement('span'); lblB.textContent = 'target'; gSet.appendChild(lblB);
+  select(gSet, raceOpts, sb.bRace, (v) => { sb.bRace = v; }); select(gSet, hullOpts, sb.bHull, (v) => { sb.bHull = +v; });
+  const lblS = document.createElement('label'); lblS.textContent = 'shield '; const sl = document.createElement('input'); sl.type = 'range'; sl.min = 0; sl.max = 1; sl.step = 0.05; sl.value = sb.shield; sl.oninput = () => { sb.shield = +sl.value; }; lblS.appendChild(sl); gSet.appendChild(lblS);
+  const gTest = group('Stress');
+  btn('barrage', () => {
+    let i = 0;
+    const iv = setInterval(() => {
+      fireBeam(['laser', 'plasma', 'phasor', 'mass', 'neutron', 'disruptor'][(Math.random() * 6) | 0]);
+      if (i % 2) fireMissile(['nuclear', 'hyperx', 'stinger', 'scatter', 'torpedo', 'merculite'][(Math.random() * 6) | 0]);
+      if (++i > 22) clearInterval(iv);
+    }, 120);
+  }, gTest);
+  const bStress = btn('2000+ particles', () => { sb.stress = !sb.stress; bStress.classList.toggle('on', sb.stress); }, gTest);
+  const bSwarm = btn('100 ships', () => { sb.swarm = !sb.swarm; bSwarm.classList.toggle('on', sb.swarm); if (sb.swarm) makeSwarm(); }, gTest);
+  btn('clear fx', () => fx.clear(), gTest);
+  const note = document.createElement('span'); note.style.color = 'var(--fog)'; note.textContent = 'click the canvas = explosion (last kind)'; gTest.appendChild(note);
+  sbCv.addEventListener('pointerdown', (e) => { const r = sbCv.getBoundingClientRect(); fx.explosion(e.clientX - r.left, e.clientY - r.top, sb.clickKind === 'nova' ? 100 : 56, { kind: sb.clickKind }); });
+
+  function makeSwarm() {
+    const w = sbCv._w, h = sbCv._h, arr = [];
+    for (let i = 0; i < 100; i++) {
+      const hull = (Math.random() * 5) | 0;
+      arr.push({ race: Ships.RACES[i % 10], hull: hull, x: Math.random() * w, y: Math.random() * h, size: (24 + Math.random() * 30) * Math.min(1.8, Ships.HULLS[hull].length * 0.7), vx: (Math.random() - 0.5) * 90, vy: (Math.random() - 0.5) * 90, a: Math.random() * TAU, va: (Math.random() - 0.5) * 0.8, dmg: Math.random() < 0.3 ? Math.random() : 0, sh: Math.random() < 0.3 ? 0.7 : 0 });
+    }
+    sb.swarmShips = arr;
+  }
+  function drawPlanet(ctx, x, y, r) {
+    const g = ctx.createRadialGradient(x - r * 0.4, y - r * 0.4, r * 0.1, x, y, r);
+    g.addColorStop(0, '#6aa0d8'); g.addColorStop(0.55, '#2f5a96'); g.addColorStop(1, '#0c1838');
+    ctx.fillStyle = g; ctx.beginPath(); ctx.arc(x, y, r, 0, TAU); ctx.fill();
+  }
+  window.__sandbox = function (t, dt) {
+    const ctx = fit(sbCv);
+    clearBg(sbCv, ctx, 55);
+    const g = geom();
+    ctx.save();
+    if (fx.shake > 0.1) ctx.translate((Math.random() - 0.5) * fx.shake * 1.6, (Math.random() - 0.5) * fx.shake * 1.6);
+    if (sb.planet) drawPlanet(ctx, g.w * 0.9, g.h * 0.24, 62);
+    if (sb.swarm && sb.swarmShips) {
+      for (let i = 0; i < sb.swarmShips.length; i++) {
+        const s = sb.swarmShips[i];
+        s.x += s.vx * dt; s.y += s.vy * dt; s.a += s.va * dt;
+        if (s.x < -50) s.x = g.w + 50; if (s.x > g.w + 50) s.x = -50; if (s.y < -50) s.y = g.h + 50; if (s.y > g.h + 50) s.y = -50;
+        Ships.draw(ctx, { race: s.race, hull: s.hull, x: s.x, y: s.y, size: s.size, angle: s.a, color: team, t: t, thrust: 0.6, damage: s.dmg, shield: s.sh });
+      }
+      shipsDrawn += sb.swarmShips.length;
+    } else {
+      Ships.draw(ctx, { race: sb.aRace, hull: sb.aHull, x: g.ax, y: g.ay, size: g.as, angle: g.aa, color: team, t: t, thrust: 0.2, flags: { beams: true, missiles: true } });
+      flicker *= Math.pow(0.02, dt);
+      Ships.draw(ctx, { race: sb.bRace, hull: sb.bHull, x: g.bx, y: g.by, size: g.bs, angle: g.ba, color: '#e8504d', t: t, thrust: 0.15, shield: sb.shield * (0.5 + flicker * 0.5), flags: { beams: true } });
+      shipsDrawn += 2;
+    }
+    if (sb.stress) {
+      const n = Math.max(0, 2600 - fx.count());
+      for (let i = 0; i < Math.min(14, n / 60); i++) {
+        const x = Math.random() * g.w, y = Math.random() * g.h;
+        if (Math.random() < 0.5) fx.explosion(x, y, 30 + Math.random() * 40, { kind: ['fire', 'plasma', 'energy'][(Math.random() * 3) | 0] }); else fx.sparks(x, y, 25, ['#ffd080', '#80d8ff', '#ff80ff'][(Math.random() * 3) | 0]);
+      }
+    }
+    fx.update(dt);
+    fx.draw(ctx);
+    ctx.restore();
+    if (fx.flash > 0.02) { ctx.fillStyle = 'rgba(220,235,255,' + (fx.flash * 0.5) + ')'; ctx.fillRect(0, 0, g.w, g.h); }
+    ctx.fillStyle = '#98a5cf'; ctx.font = '12px sans-serif'; ctx.textAlign = 'left';
+    ctx.fillText('live fx: ' + fx.count() + ' · shake ' + fx.shake.toFixed(1), 10, g.h - 10);
+  };
+  window.__fx = fx; window.__sb = sb;
+
+  // ---------- URL params (handy for automated screenshots) ----------
+  (function () {
+    const qs = new URLSearchParams(location.search);
+    if (qs.get('race')) vRace.value = qs.get('race');
+    if (qs.get('hull')) vHull.value = qs.get('hull');
+    ['size', 'thrust', 'dmg', 'shield', 'cloak', 'angle'].forEach((k) => { if (qs.has(k)) { $('v-' + k).value = qs.get(k); $('v-' + k).oninput(); } });
+    if (qs.get('rot') === '0') $('v-rot').checked = false;
+    if (qs.get('shadow') === '1') $('v-shadow').checked = true;
+    if (qs.get('flags')) qs.get('flags').split(',').forEach((f) => { const el = $('f-' + f); if (el) el.checked = true; });
+    if (qs.get('team')) { team = '#' + qs.get('team'); $('team').value = team; }
+    if (qs.get('focus')) setTimeout(() => { const el = $(qs.get('focus')); if (el) { el.scrollIntoView(); window.scrollBy(0, -46); } }, 80);
+  })();
+
+  // ---------- main loop ----------
+  let last = performance.now(), fpsAvg = 60, acc = 0;
+  function frame(now) {
+    const dt = Math.min(0.1, (now - last) / 1000); last = now;
+    fpsAvg += (1 / Math.max(dt, 1e-4) - fpsAvg) * 0.06;
+    const t = now / 1000;
+    shipsDrawn = 0;
+    drawGrid(t); drawView(t); drawStructs(t); drawMarkers(t);
+    window.__sandbox(t, dt);
+    acc += dt;
+    if (acc > 0.25) {
+      acc = 0;
+      $('fps').textContent = fpsAvg.toFixed(0);
+      $('scount').textContent = shipsDrawn;
+      $('pcount').textContent = fx.count();
+      const ci = Ships.cacheInfo(); $('ccount').textContent = ci.entries + ' · ' + ci.mb + ' MB';
+    }
+    requestAnimationFrame(frame);
+  }
+  requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>

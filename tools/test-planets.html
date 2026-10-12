@@ -1,0 +1,357 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Gfx lab - planets and deep space</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="../css/base.css">
+<style>
+  html, body { height: 100%; }
+  body { overflow: hidden; background: var(--void); }
+  #bg { position: fixed; inset: 0; width: 100%; height: 100%; z-index: 0; }
+  #scroll { position: fixed; inset: 0; z-index: 1; overflow-y: auto; overflow-x: hidden; padding: 0 clamp(12px, 3vw, 40px) 60px; }
+  header.top { position: sticky; top: 0; z-index: 5; display: flex; align-items: center; gap: 18px; padding: 10px 0; margin: 0 calc(-1 * clamp(12px, 3vw, 40px)); padding-left: clamp(12px, 3vw, 40px); padding-right: clamp(12px, 3vw, 40px);
+    background: linear-gradient(180deg, rgba(6,9,25,.97), rgba(6,9,25,.88) 75%, rgba(6,9,25,0)); }
+  header.top h1 { font-size: 1.35rem; letter-spacing: .06em; }
+  header.top .sp { flex: 1; }
+  .stat { font: 500 .78rem/1.2 ui-monospace, Consolas, monospace; color: var(--mist); padding: 4px 8px; border: 1px solid rgba(214,179,106,.28); background: rgba(8,12,34,.7);
+    clip-path: polygon(6px 0, 100% 0, 100% calc(100% - 6px), calc(100% - 6px) 100%, 0 100%, 0 6px); }
+  .stat b { color: var(--brass-hi); font-weight: 600; }
+  section { margin-top: 26px; }
+  section > h2 { font-size: 1.05rem; padding-bottom: 6px; margin-bottom: 12px; border-bottom: 1px solid rgba(214,179,106,.35); color: var(--brass); }
+  section > h2 small { font: 400 .78rem var(--font-ui); color: var(--fog); margin-left: 10px; letter-spacing: 0; }
+  .panel { background: rgba(8,12,34,.62); border: 1px solid rgba(214,179,106,.22); padding: 10px;
+    clip-path: polygon(10px 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%, 0 10px); }
+  .grid { display: flex; flex-wrap: wrap; gap: 10px; }
+  .cell { width: 112px; text-align: center; font: 11px/1.3 ui-monospace, Consolas, monospace; color: var(--mist); }
+  .cell canvas { margin: 0 auto 4px; }
+  .cell.wait canvas { opacity: .25; }
+  .row { display: flex; flex-wrap: wrap; gap: 16px; align-items: flex-start; }
+  canvas { display: block; }
+  .ctl { display: grid; grid-template-columns: 90px 1fr; gap: 6px 10px; align-items: center; min-width: 260px; font-size: .85rem; color: var(--mist); }
+  .ctl label { text-align: right; }
+  .ctl select, .ctl input[type=number], .ctl input[type=text] { background: #0b1233; border: 1px solid rgba(214,179,106,.4); color: var(--ivory); padding: 3px 6px; width: 100%; }
+  .ctl input[type=range] { width: 100%; accent-color: var(--brass); }
+  .ctl .chk { grid-column: 1 / -1; display: flex; gap: 14px; flex-wrap: wrap; }
+  .ctl .chk label { text-align: left; display: inline-flex; gap: 5px; align-items: center; }
+  button.b { background: #121c4a; color: var(--brass-hi); border: 1px solid var(--brass-lo); padding: 3px 10px; cursor: pointer; }
+  button.b:hover { background: #1b2a6a; }
+  .lbl { font: 11px ui-monospace, Consolas, monospace; color: var(--fog); margin-top: 4px; text-align: center; }
+  #contact { padding-top: 6px; }
+</style>
+</head>
+<body>
+<canvas id="bg"></canvas>
+<div id="scroll">
+  <header class="top">
+    <h1>Gfx lab</h1><span style="color:var(--fog)">planets and deep space</span>
+    <span class="sp"></span>
+    <span class="stat">fps <b id="fps">--</b></span>
+    <span class="stat">backdrop <b id="bgms">--</b> ms</span>
+    <span class="stat">tex jobs <b id="tq">--</b></span>
+    <span class="stat">dpr <b id="dprv">1</b></span>
+  </header>
+  <div id="contact" class="grid" style="display:none"></div>
+  <div id="main">
+
+  <section>
+    <h2>Every look <small>96 px sprites (cached, lit from upper left) &middot; owner colour tints city lights</small></h2>
+    <div class="panel"><div id="spr96" class="grid"></div></div>
+    <div class="panel" style="margin-top:10px"><div id="sprSmall" class="grid"></div></div>
+  </section>
+
+  <section>
+    <h2>Showcase <small>animated, rotating lit sphere &middot; clouds drift against the surface</small></h2>
+    <div class="row">
+      <div class="panel"><canvas id="big"></canvas></div>
+      <div class="panel">
+        <div class="ctl" id="ctl">
+          <label>look</label><select id="c-look"></select>
+          <label>seed</label><div style="display:flex;gap:6px"><input id="c-seed" type="text" value="7"><button class="b" id="c-rnd">rnd</button></div>
+          <label>radius</label><input id="c-r" type="range" min="40" max="240" step="1" value="150">
+          <label>spin</label><input id="c-spin" type="range" min="0" max="0.25" step="0.001" value="0.015">
+          <label>light angle</label><input id="c-la" type="range" min="-3.1416" max="3.1416" step="0.01" value="-2.3">
+          <label>light elev</label><input id="c-le" type="range" min="0.05" max="0.95" step="0.01" value="0.55">
+          <label>bands</label><select id="c-bands"><option>jovian</option><option>saturn</option><option>ice</option><option>storm</option></select>
+          <label>owner</label><input id="c-col" type="color" value="#4a90e8">
+          <div class="chk">
+            <label><input id="c-inh" type="checkbox" checked> inhabited</label>
+            <label><input id="c-rings" type="checkbox"> rings</label>
+            <label><input id="c-clouds" type="checkbox" checked> clouds</label>
+            <label><input id="c-atm" type="checkbox" checked> atmosphere</label>
+            <label><input id="c-lights" type="checkbox" checked> city lights</label>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <h2>Gas giants <small>jovian &middot; saturn &middot; ice &middot; storm &middot; plain and ringed</small></h2>
+    <div class="panel"><div class="row" id="gasrow"></div></div>
+  </section>
+
+  <section>
+    <h2>Eight planets, radius 40 <small>performance target: &ge; 30 fps</small></h2>
+    <div class="panel"><canvas id="perf"></canvas></div>
+  </section>
+
+  <section>
+    <h2>Asteroid field <small>tumbling pre-lit rocks with parallax drift &middot; and the asteroid look as a sprite / orbiting cluster</small></h2>
+    <div class="row">
+      <div class="panel"><canvas id="belt"></canvas></div>
+      <div class="panel"><div class="row" id="astRow"></div></div>
+    </div>
+  </section>
+
+  <section>
+    <h2>Stars <small>map sprites (additive) &middot; animated close-up surface</small></h2>
+    <div class="row">
+      <div class="panel"><canvas id="starmap"></canvas></div>
+      <div class="panel">
+        <div class="ctl" style="margin-bottom:8px"><label>kind</label><select id="s-kind"></select><label>radius</label><input id="s-r" type="range" min="30" max="200" value="110"></div>
+        <canvas id="starbig"></canvas>
+      </div>
+    </div>
+    <div class="panel" style="margin-top:12px"><canvas id="starrow"></canvas></div>
+  </section>
+
+  <section>
+    <h2>Backdrops and parallax <small>makeBackdrop &middot; makeStarfield layers drifting at three speeds (seamless wrap)</small></h2>
+    <div class="row">
+      <div class="panel"><canvas id="parallax"></canvas></div>
+      <div class="panel"><div class="ctl"><label>palette</label><select id="b-pal"><option value="">default (indigo/violet/teal/magenta)</option><option value="1b4fa0,2fa0c4,6a3cc4">blue / cyan</option><option value="a02f3c,e0703c,5a2fa0">crimson / ember</option><option value="1f9a6a,2f6ac4,8a4fc4">emerald / azure</option></select>
+        <label>intensity</label><input id="b-int" type="range" min="0.1" max="1.2" step="0.05" value="0.55"></div></div>
+    </div>
+  </section>
+
+  </div>
+</div>
+
+<script src="../js/core/ns.js"></script>
+<script src="../js/gfx/space.js"></script>
+<script src="../js/gfx/planets.js"></script>
+<script>
+(function () {
+  'use strict';
+  var Space = MOO.Gfx.Space, Planets = MOO.Gfx.Planets, D = Planets._dbg;
+  var q = new URLSearchParams(location.search);
+  var DPR = q.has('dpr') ? +q.get('dpr') : (window.devicePixelRatio || 1);
+  var $ = function (id) { return document.getElementById(id); };
+  $('dprv').textContent = DPR;
+
+  /* ---------------------------------------------------------- backdrop viewer dev mode: ?bd=1&seed=a&intensity=.55&stars=1&pal=3c40b4,7a3cc4 */
+  if (q.get('bd')) {
+    $('scroll').style.display = 'none';
+    var bw = Math.round(innerWidth * DPR), bh = Math.round(innerHeight * DPR), bc = $('bg'); bc.width = bw; bc.height = bh;
+    var bo = {}; if (q.has('intensity')) bo.intensity = +q.get('intensity'); if (q.has('stars')) bo.stars = +q.get('stars');
+    if (q.has('pal')) bo.palette = q.get('pal').split(',').map(function (h) { return '#' + h; });
+    var bt0 = performance.now(); var bcv = Space.makeBackdrop(bw, bh, q.get('seed') || 'lab-7', bo); console.log('backdrop ms', (performance.now() - bt0).toFixed(0), bw + 'x' + bh);
+    bc.getContext('2d').drawImage(bcv, 0, 0);
+    return;
+  }
+
+  /* ---------------------------------------------------------- contact-sheet dev mode: ?looks=a,b,c&r=82&seed=5&t=0 ... */
+  if (q.get('looks')) {
+    $('main').style.display = 'none'; $('contact').style.display = 'flex';
+    var looks = q.get('looks').split(','), seed = q.get('seed') || '7', R = +(q.get('r') || 100), t = +(q.get('t') || 0);
+    var inh = q.get('inh') === '1', la = q.has('la') ? +q.get('la') : -2.3, le = q.has('le') ? +q.get('le') : undefined, rings = q.get('rings') === '1';
+    var xo = q.get('o') ? JSON.parse(q.get('o')) : {}, bands = q.get('bands') || undefined, spr = +(q.get('spr') || 0);
+    var bgc = $('bg'); bgc.width = innerWidth; bgc.height = innerHeight; bgc.getContext('2d').drawImage(Space.makeBackdrop(innerWidth, innerHeight, 3), 0, 0);
+    looks.forEach(function (lk, idx) {
+      var d = { look: lk, seed: seed + (q.get('vary') ? idx : ''), inhabited: inh, color: '#4a90e8', rings: rings, bands: bands };
+      var cv = document.createElement('canvas'), W = Math.round(R * (rings ? 4.6 : 2.9)), c = cv.getContext('2d');
+      if (spr) { var sp = Planets.sprite(d, spr, { dpr: DPR, lightAngle: la, lightElev: le }); cv.width = sp.width; cv.height = sp.height; c.drawImage(sp, 0, 0); }
+      else {
+        cv.width = W * DPR; cv.height = W * DPR; cv.style.width = W + 'px'; cv.style.height = W + 'px'; c.scale(DPR, DPR);
+        var pl = D.getPlanet(d); if (lk !== 'asteroids') D.requestTex(pl, q.get('tier') ? +q.get('tier') : 512, true);
+        var oo = { dpr: DPR, lightAngle: la, lightElev: le }; for (var k in xo) oo[k] = xo[k];
+        Planets.draw(c, d, W / 2, W / 2, R, t, oo);
+      }
+      var cell = document.createElement('div'); cell.className = 'cell'; cell.style.width = 'auto'; cell.appendChild(cv);
+      var lab = document.createElement('div'); lab.textContent = lk; cell.appendChild(lab); $('contact').appendChild(cell);
+    });
+    return;
+  }
+
+  /* ---------------------------------------------------------- star sprite viewer dev mode: ?starsprites=1&sizes=32,64,96 */
+  if (q.get('starsprites')) {
+    $('main').style.display = 'none'; $('contact').style.display = 'block';
+    var szs = (q.get('sizes') || '32,56,96').split(',').map(Number), ks2 = Space.STAR_KINDS, cvs = document.createElement('canvas'), rowH = 110, sw = 12 + ks2.length * 100;
+    cvs.width = sw * DPR; cvs.height = (szs.length * rowH + 8) * DPR; cvs.style.width = sw + 'px'; cvs.style.height = (szs.length * rowH + 8) + 'px';
+    var cx2 = cvs.getContext('2d'); cx2.scale(DPR, DPR); cx2.fillStyle = '#03040c'; cx2.fillRect(0, 0, sw, szs.length * rowH + 8);
+    cx2.globalCompositeOperation = 'lighter';
+    szs.forEach(function (sz, ri) { ks2.forEach(function (k, i) { var sp = Space.starSprite(k, sz, { dpr: DPR, spikes: q.get('spikes') === '1', glow: q.has('glow') ? +q.get('glow') : 1 }); cx2.drawImage(sp, 8 + i * 100 + (96 - sz) / 2, 6 + ri * rowH + (96 - sz) / 2, sz, sz); }); });
+    $('contact').appendChild(cvs);
+    return;
+  }
+
+  /* ---------------------------------------------------------- star viewer dev mode: ?starview=yellow,blue&sr=100&t=4 */
+  if (q.get('starview')) {
+    $('main').style.display = 'none'; $('contact').style.display = 'flex';
+    var sks = q.get('starview').split(','), srr = +(q.get('sr') || 100), stt = +(q.get('t') || 3), sW = Math.round(srr * 3.3);
+    sks.forEach(function (k) {
+      var cv = document.createElement('canvas'); cv.width = sW * DPR; cv.height = sW * DPR; cv.style.width = sW + 'px'; cv.style.height = sW + 'px';
+      var c = cv.getContext('2d'); c.scale(DPR, DPR); c.fillStyle = '#02030a'; c.fillRect(0, 0, sW, sW);
+      var t0 = performance.now(); Space.drawStarSurface(c, k, sW / 2, sW / 2, srr, stt - 0.5, { dpr: DPR }); Space.drawStarSurface(c, k, sW / 2, sW / 2, srr, stt, { dpr: DPR });
+      console.log(k, (performance.now() - t0).toFixed(1) + 'ms for 2 draws');
+      var cell = document.createElement('div'); cell.className = 'cell'; cell.style.width = 'auto'; cell.appendChild(cv);
+      var lab = document.createElement('div'); lab.textContent = k; cell.appendChild(lab); $('contact').appendChild(cell);
+    });
+    return;
+  }
+
+  /* ---------------------------------------------------------- backdrop */
+  var bg = $('bg'), bgSeed = 'lab-7', bgTimer = 0;
+  function paintBackdrop() {
+    var w = Math.max(320, Math.round(innerWidth * DPR)), h = Math.max(240, Math.round(innerHeight * DPR));
+    bg.width = w; bg.height = h;
+    var t0 = performance.now(), cv = Space.makeBackdrop(w, h, bgSeed);
+    $('bgms').textContent = (performance.now() - t0).toFixed(0);
+    bg.getContext('2d').drawImage(cv, 0, 0);
+  }
+  paintBackdrop();
+  window.addEventListener('resize', function () { clearTimeout(bgTimer); bgTimer = setTimeout(paintBackdrop, 250); });
+
+  /* ---------------------------------------------------------- view helper */
+  function view(cv, w, h) {
+    cv.width = Math.round(w * DPR); cv.height = Math.round(h * DPR); cv.style.width = w + 'px'; cv.style.height = h + 'px';
+    var c = cv.getContext('2d'); c.setTransform(DPR, 0, 0, DPR, 0, 0); return c;
+  }
+  var views = [];   // {cv, draw(ctx, t)}
+  function addView(cv, w, h, draw) { var v = { cv: cv, ctx: view(cv, w, h), w: w, h: h, draw: draw }; views.push(v); return v; }
+
+  /* ---------------------------------------------------------- sprite grids (progressive, via preload) */
+  var spr96 = $('spr96'), sprSmall = $('sprSmall'), LOOKS = Planets.LOOKS;
+  var descFor = function (lk, i) { return { look: lk, seed: 11 + i * 3, inhabited: i % 2 === 0, color: ['#e8504d', '#4a90e8', '#4ed17a', '#e8c94a', '#b45be8'][i % 5], rings: lk === 'gasgiant' }; };
+  var cells = LOOKS.map(function (lk, i) {
+    var cell = document.createElement('div'); cell.className = 'cell wait';
+    var ph = document.createElement('canvas'); ph.width = ph.height = 96; cell.appendChild(ph);
+    var lab = document.createElement('div'); lab.textContent = lk; cell.appendChild(lab); spr96.appendChild(cell); return cell;
+  });
+  Planets.preload(LOOKS.map(descFor), function () {
+    LOOKS.forEach(function (lk, i) {      // small-size ladder
+      var cell = document.createElement('div'); cell.className = 'cell'; cell.style.width = '82px';
+      [24, 40].forEach(function (s) { var c = Planets.sprite(descFor(lk, i), s, { dpr: DPR }); c.style.width = s + 'px'; c.style.height = s + 'px'; c.style.display = 'inline-block'; c.style.margin = '0 3px'; cell.appendChild(c); });
+      sprSmall.appendChild(cell);
+    });
+  }, {
+    sizes: [96], spriteOpts: { dpr: DPR },
+    onProgress: function (n) {
+      var i = n - 1, cell = cells[i], c = Planets.sprite(descFor(LOOKS[i], i), 96, { dpr: DPR });
+      c.style.width = '96px'; c.style.height = '96px'; cell.replaceChild(c, cell.firstChild); cell.className = 'cell';
+    }
+  });
+
+  /* ---------------------------------------------------------- showcase planet */
+  var look = $('c-look'); LOOKS.forEach(function (l) { var o = document.createElement('option'); o.textContent = l; look.appendChild(o); });
+  look.value = q.get('look') || 'terran'; if (q.get('seed')) $('c-seed').value = q.get('seed');
+  var big = $('big'), bigW = 560, bigH = 500;
+  function readCtl() {
+    return {
+      look: look.value, seed: $('c-seed').value, inhabited: $('c-inh').checked, rings: $('c-rings').checked, color: $('c-col').value, bands: $('c-bands').value,
+      r: +$('c-r').value, spin: +$('c-spin').value, la: +$('c-la').value, le: +$('c-le').value, clouds: $('c-clouds').checked, atm: $('c-atm').checked, lights: $('c-lights').checked
+    };
+  }
+  $('c-rnd').onclick = function () { $('c-seed').value = Math.floor(Math.random() * 99999); };
+  addView(big, bigW, bigH, function (ctx, t) {
+    var c = readCtl();
+    ctx.clearRect(0, 0, bigW, bigH);
+    Planets.draw(ctx, { look: c.look, seed: c.seed, inhabited: c.inhabited, rings: c.rings, color: c.color, bands: c.bands }, bigW / 2, bigH / 2, c.r, t,
+      { dpr: DPR, spin: c.spin, lightAngle: c.la, lightElev: c.le, clouds: c.clouds, atmosphere: c.atm, lights: c.lights });
+  });
+
+  /* ---------------------------------------------------------- gas giants */
+  var gasrow = $('gasrow');
+  ['jovian', 'saturn', 'ice', 'storm'].forEach(function (b, i) {
+    [false, true].forEach(function (rg) {
+      var box = document.createElement('div'), cv = document.createElement('canvas'); box.appendChild(cv);
+      var lb = document.createElement('div'); lb.className = 'lbl'; lb.textContent = b + (rg ? ' + rings' : ''); box.appendChild(lb); gasrow.appendChild(box);
+      var d = { look: 'gasgiant', seed: 5 + i * 17, bands: b, rings: rg, inhabited: false };
+      addView(cv, 200, 190, function (ctx, t) { ctx.clearRect(0, 0, 200, 190); Planets.draw(ctx, d, 100, 95, rg ? 56 : 70, t, { dpr: DPR, spin: 0.03 }); });
+    });
+  });
+
+  /* ---------------------------------------------------------- 8 planets r=40 */
+  var perfDescs = ['terran', 'arid', 'ocean', 'inferno', 'barren', 'gaia', 'toxic', 'tundra'].map(function (l, i) { return { look: l, seed: 100 + i, inhabited: i % 2 === 0, color: '#e8c94a' }; });
+  addView($('perf'), 8 * 92 + 10, 100, function (ctx, t) {
+    ctx.clearRect(0, 0, 8 * 92 + 10, 100);
+    for (var i = 0; i < 8; i++) Planets.draw(ctx, perfDescs[i], 51 + i * 92, 50, 40, t, { dpr: DPR, spin: 0.04 });
+  });
+
+  /* ---------------------------------------------------------- asteroids */
+  addView($('belt'), 520, 280, function (ctx, t) {
+    ctx.fillStyle = '#04061a'; ctx.fillRect(0, 0, 520, 280);
+    Planets.drawAsteroids(ctx, { look: 'asteroids', seed: 4 }, 260, 140, 520, 280, t);
+  });
+  var astRow = $('astRow');
+  var sp0 = document.createElement('div'), spc = Planets.sprite({ look: 'asteroids', seed: 9 }, 128, { dpr: DPR });
+  spc.style.width = '128px'; spc.style.height = '128px'; sp0.appendChild(spc);
+  var l0 = document.createElement('div'); l0.className = 'lbl'; l0.textContent = 'sprite 128'; sp0.appendChild(l0); astRow.appendChild(sp0);
+  var cb = document.createElement('div'), ccv = document.createElement('canvas'); cb.appendChild(ccv);
+  var l1 = document.createElement('div'); l1.className = 'lbl'; l1.textContent = 'draw() r=90'; cb.appendChild(l1); astRow.appendChild(cb);
+  addView(ccv, 220, 200, function (ctx, t) { ctx.clearRect(0, 0, 220, 200); Planets.draw(ctx, { look: 'asteroids', seed: 12 }, 110, 100, 90, t, { dpr: DPR, count: 24 }); });
+
+  /* ---------------------------------------------------------- stars */
+  var kinds = Space.STAR_KINDS, skind = $('s-kind');
+  kinds.forEach(function (k) { var o = document.createElement('option'); o.textContent = k; skind.appendChild(o); });
+  skind.value = q.get('star') || 'yellow';
+  var smW = 8 * 92 + 10, smH = 240, smBackdrop = Space.makeBackdrop(smW, smH, 'map-3', { intensity: 0.7 });
+  addView($('starmap'), smW, smH, function (ctx) {
+    ctx.drawImage(smBackdrop, 0, 0, smW, smH);
+    ctx.save(); ctx.globalCompositeOperation = 'lighter';
+    kinds.forEach(function (k, i) {
+      var plain = Space.starSprite(k, 88, { dpr: DPR }), spk = Space.starSprite(k, 88, { dpr: DPR, spikes: true });
+      ctx.drawImage(plain, 5 + i * 92, 6, 88, 88); ctx.drawImage(spk, 5 + i * 92, 100, 88, 88);
+    });
+    ctx.restore();
+    ctx.fillStyle = 'rgba(152,165,207,.8)'; ctx.font = '10px ui-monospace, Consolas, monospace'; ctx.textAlign = 'center';
+    kinds.forEach(function (k, i) { ctx.fillText(k, 50 + i * 92, 204); });
+    ctx.fillText('plain (top) / diffraction spikes (bottom)', smW / 2, 228);
+  });
+  addView($('starbig'), 520, 440, function (ctx, t) {
+    ctx.fillStyle = '#02030a'; ctx.fillRect(0, 0, 520, 440);
+    Space.drawStarSurface(ctx, skind.value, 260, 220, +$('s-r').value, t, { dpr: DPR });
+  });
+  addView($('starrow'), smW, 170, function (ctx, t) {
+    ctx.fillStyle = '#02030a'; ctx.fillRect(0, 0, smW, 170);
+    kinds.forEach(function (k, i) { Space.drawStarSurface(ctx, k, 51 + i * 92, 85, k === 'blackhole' ? 13 : 28, t, { dpr: DPR }); });
+  });
+
+  /* ---------------------------------------------------------- parallax starfield + backdrop palette preview */
+  var pfW = 700, pfH = 190, pfBack = null, pfLayers = [Space.makeStarfield(pfW, pfH, 'l1', 520), Space.makeStarfield(pfW, pfH, 'l2', 200), Space.makeStarfield(pfW, pfH, 'l3', 70)], pfKey = '';
+  addView($('parallax'), pfW, pfH, function (ctx, t) {
+    var key = $('b-pal').value + '|' + $('b-int').value;
+    if (key !== pfKey) {
+      pfKey = key; var o = { intensity: +$('b-int').value, stars: 0.3 }; if ($('b-pal').value) o.palette = $('b-pal').value.split(',').map(function (h) { return '#' + h; });
+      pfBack = Space.makeBackdrop(pfW, pfH, 'parallax-9', o);
+    }
+    ctx.drawImage(pfBack, 0, 0);
+    var sp = [6, 18, 44];
+    for (var i = 0; i < 3; i++) { var off = (t * sp[i]) % pfW; ctx.drawImage(pfLayers[i], -off, 0); ctx.drawImage(pfLayers[i], pfW - off, 0); }
+  });
+
+  /* ---------------------------------------------------------- main loop + FPS */
+  var last = performance.now(), acc = [], fpsEl = $('fps'), tqEl = $('tq'), t0 = last, lastUI = 0;
+  function visible(v) {
+    var r = v.cv.getBoundingClientRect();
+    return r.bottom > -20 && r.top < innerHeight + 20 && r.right > 0 && r.left < innerWidth;
+  }
+  function frame(ts) {
+    var dt = ts - last; last = ts; acc.push(dt); if (acc.length > 60) acc.shift();
+    var t = (ts - t0) / 1000;
+    for (var i = 0; i < views.length; i++) { var v = views[i]; if (visible(v)) v.draw(v.ctx, t); }
+    if (ts - lastUI > 400) {
+      var s = 0; for (var j = 0; j < acc.length; j++) s += acc[j];
+      fpsEl.textContent = acc.length ? (1000 / (s / acc.length)).toFixed(0) : '--';
+      var pend = 0; for (var k in D.cache) pend += Object.keys(D.cache[k].jobs).length;
+      tqEl.textContent = pend; lastUI = ts;
+    }
+    requestAnimationFrame(frame);
+  }
+  requestAnimationFrame(frame);
+  window.__lab = { views: views, readCtl: readCtl };
+})();
+</script>
+</body>
+</html>

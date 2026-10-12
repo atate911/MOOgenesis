@@ -1,0 +1,302 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>MOO · Scenes test</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="icon" href="data:,">
+<link rel="stylesheet" href="../css/base.css">
+<link rel="stylesheet" href="../css/kit.css">
+<style>
+  html, body { height: 100%; background: #04060f; }
+  #stage { position: fixed; inset: 0; display: grid; place-items: center; background: #04060f; }
+  #cv { position: relative; display: block; box-shadow: 0 0 0 1px rgba(214,179,106,.25); }
+  #top {
+    position: fixed; left: 0; right: 0; top: 0; z-index: 5; display: flex; align-items: center; gap: .75rem;
+    padding: .35rem .8rem; background: linear-gradient(180deg, rgba(4,6,18,.92), rgba(4,6,18,.55) 70%, rgba(4,6,18,0));
+  }
+  #top .tabs { margin: 0; border: 0; flex-wrap: wrap; }
+  #top .tabs button { padding: .25rem .65rem; font-size: .95rem; }
+  #top .stat { margin-left: auto; font: 500 .85rem var(--font-ui); color: var(--mist); text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  #top .stat b { color: var(--brass-hi); font-weight: 600; }
+  #dock {
+    position: fixed; left: 0; right: 0; bottom: 0; z-index: 5; display: flex; flex-wrap: wrap; align-items: center; gap: .35rem .9rem;
+    padding: .5rem .9rem .55rem; background: linear-gradient(0deg, rgba(4,6,18,.94), rgba(4,6,18,.7) 75%, rgba(4,6,18,0));
+    font-size: .88rem; max-height: 40vh; overflow: auto;
+  }
+  #dock label { display: inline-flex; align-items: center; gap: .35rem; color: var(--mist); white-space: nowrap; }
+  #dock select.field, #dock input.field { min-width: 0; padding: .15em .45em; font-size: .88rem; }
+  #dock input[type=range] { width: 8rem; }
+  #dock input[type=text].field { width: 18rem; }
+  #dock input[type=number].field { width: 3.6rem; }
+  #dock .seat { display: inline-flex; align-items: center; gap: .3rem; padding: .1rem .4rem; border: 1px solid rgba(214,179,106,.28); }
+  #dock .seat i { font-style: normal; color: var(--brass); }
+  #dock .sep { width: 1px; align-self: stretch; background: rgba(214,179,106,.25); }
+  #msg { position: fixed; left: 50%; top: 50%; transform: translate(-50%,-50%); z-index: 4; color: var(--rose); font: 14px/1.5 monospace; text-align: center; white-space: pre-wrap; pointer-events: none; }
+  body.clean #top, body.clean #dock { display: none; }
+  .btn.small { padding: .15em .7em; font-size: .85rem; }
+</style>
+</head>
+<body>
+<div id="stage"><canvas id="cv"></canvas></div>
+<div id="msg"></div>
+<div id="top">
+  <div class="tabs" id="tabs"></div>
+  <div class="stat"><b id="fps">--</b> fps · draw <b id="ms">--</b> ms · <span id="dim"></span> · t=<span id="tt">0.0</span></div>
+</div>
+<div id="dock"></div>
+
+<script src="../js/core/ns.js"></script>
+<script src="../js/gfx/space.js"></script>
+<script src="../js/gfx/planets.js"></script>
+<script src="../js/gfx/ships.js"></script>
+<script src="../js/gfx/portraits.js"></script>
+<script src="../js/gfx/scenes.js"></script>
+<script>
+(function () {
+  'use strict';
+  const MOO = window.MOO || {};
+  const Scenes = MOO.Gfx && MOO.Gfx.Scenes;
+  const NAMES = (Scenes && Scenes.SCENE_NAMES) || ['lab', 'council', 'newsroom', 'audience', 'surface', 'battle', 'victory', 'defeat', 'warp'];
+  const RACES = ['alkari', 'bulrathi', 'darlok', 'human', 'klackon', 'meklar', 'mrrshan', 'psilon', 'sakkra', 'silicoid'];
+  const FIELDS = ['computers', 'construction', 'forcefield', 'planetology', 'propulsion', 'weapons'];
+  const MOODS = ['neutral', 'pleased', 'angry', 'worried', 'scheming'];
+  const LOOKS = ['terran', 'jungle', 'ocean', 'arid', 'steppe', 'desert', 'minimal', 'barren', 'tundra', 'dead', 'inferno', 'toxic', 'radiated', 'gaia', 'gasgiant', 'asteroids'];
+  const STARS = ['yellow', 'orange', 'red', 'blue', 'white', 'green', 'purple', 'blackhole'];
+  const GRAPHICS = ['ticker', 'chart', 'map', 'battle', 'planet'];
+  const HOLOS = ['galaxy', 'crown', 'ballot'];
+  const SEAT_STATES = ['idle', 'speaking', 'abstain', 'voted', 'winner'];
+  const EMP = ['#e8504d', '#4a90e8', '#4ed17a', '#e8c94a', '#b45be8', '#e88a3a'];
+
+  const $ = (s) => document.querySelector(s);
+  const cv = $('#cv'), ctx = cv.getContext('2d');
+  const dock = $('#dock'), tabs = $('#tabs'), msg = $('#msg');
+
+  function defaultSeats(n) {
+    const out = [];
+    for (let i = 0; i < n; i++) out.push({ race: RACES[(i * 3 + 3) % 10], color: EMP[i % 6], name: 'Speaker ' + (i + 1), votes: i * 7 + 3, state: i === 1 ? 'speaking' : 'idle' });
+    return out;
+  }
+  const DEF = {
+    lab: { race: 'human', field: 'computers', mood: 'neutral', talking: true, color: '#4a90e8' },
+    council: { n: 6, hologram: 'galaxy', seats: defaultSeats(6), autoSpeak: false },
+    newsroom: { anchorRace: 'psilon', graphic: 'map', headline: 'Alkari fleet crushes Darlok raiders at Orion', ticker: 'GNN MARKET WATCH: Human industry up 4% * Klackon population boom * Council convenes next turn * Meklar unveil new Doom Star prototype * Psilon research output at record high', talking: true, cut: 0 },
+    audience: { race: 'alkari', mood: 'neutral', talking: true, table: false, color: '#e8c94a' },
+    surface: { look: 'terran', populated: true, seed: 7, rings: false },
+    battle: { starKind: 'yellow', planetLook: 'terran', seed: 11, nebula: true, grid: true, cols: 16, rows: 9 },
+    victory: { race: 'human', color: '#4a90e8' },
+    defeat: { race: 'human', focus: 'both' },
+    warp: { progress: 0.5, auto: true },
+  };
+  const state = { scene: 'lab', opts: JSON.parse(JSON.stringify(DEF)), paused: false, t: 0, showRects: false, res: 'window', speed: 1 };
+  try { const s = sessionStorage.getItem('tsc'); if (s) { const p = JSON.parse(s); if (p.scene && NAMES.indexOf(p.scene) >= 0) state.scene = p.scene; if (p.opts) for (const k in p.opts) state.opts[k] = Object.assign(state.opts[k] || {}, p.opts[k]); } } catch (e) {}
+  const h = location.hash.replace('#', '');
+  if (NAMES.indexOf(h) >= 0) state.scene = h;
+  function save() { try { sessionStorage.setItem('tsc', JSON.stringify({ scene: state.scene, opts: state.opts })); } catch (e) {} }
+
+  // ---------- control builders ----------
+  function el(tag, attrs, kids) {
+    const e = document.createElement(tag);
+    for (const k in (attrs || {})) { if (k === 'class') e.className = attrs[k]; else if (k === 'text') e.textContent = attrs[k]; else e.setAttribute(k, attrs[k]); }
+    (kids || []).forEach((c) => e.appendChild(typeof c === 'string' ? document.createTextNode(c) : c));
+    return e;
+  }
+  function sel(label, list, get, set) {
+    const s = el('select', { class: 'field' });
+    list.forEach((v) => { const o = el('option', { value: v, text: v }); s.appendChild(o); });
+    s.value = get(); s.onchange = () => { set(s.value); save(); };
+    return el('label', {}, [label, s]);
+  }
+  function chk(label, get, set) {
+    const c = el('input', { type: 'checkbox' }); c.checked = !!get(); c.onchange = () => { set(c.checked); save(); };
+    return el('label', { class: 'check' }, [c, label]);
+  }
+  function rng(label, min, max, step, get, set, fmt) {
+    const r = el('input', { type: 'range', min: min, max: max, step: step }); r.value = get();
+    const v = el('span', { text: (fmt || String)(get()) });
+    r.oninput = () => { set(+r.value); v.textContent = (fmt || String)(+r.value); save(); };
+    return el('label', {}, [label, r, v]);
+  }
+  function num(label, min, max, get, set) {
+    const n = el('input', { type: 'number', class: 'field', min: min, max: max }); n.value = get();
+    n.oninput = () => { set(+n.value); save(); };
+    return el('label', {}, [label, n]);
+  }
+  function txt(label, get, set, w) {
+    const t = el('input', { type: 'text', class: 'field' }); t.value = get(); if (w) t.style.width = w;
+    t.oninput = () => { set(t.value); save(); };
+    return el('label', {}, [label, t]);
+  }
+  function btn(label, fn) { const b = el('button', { class: 'btn small', text: label }); b.onclick = fn; return b; }
+  function sep() { return el('span', { class: 'sep' }); }
+
+  function buildDock() {
+    dock.innerHTML = '';
+    const o = state.opts[state.scene], S = state.scene;
+    const g = (k) => () => o[k], s = (k) => (v) => { o[k] = v; };
+    const add = (n) => dock.appendChild(n);
+    if (S === 'lab') {
+      add(sel('race', RACES, g('race'), s('race'))); add(sel('field', FIELDS, g('field'), s('field'))); add(sel('mood', MOODS, g('mood'), s('mood')));
+      add(chk('talking', g('talking'), s('talking')));
+      add(btn('cycle field', () => { o.field = FIELDS[(FIELDS.indexOf(o.field) + 1) % FIELDS.length]; buildDock(); save(); }));
+    } else if (S === 'council') {
+      add(sel('hologram', HOLOS, g('hologram'), s('hologram')));
+      add(num('seats', 1, 6, g('n'), (v) => { v = Math.max(1, Math.min(6, v | 0)); o.n = v; while (o.seats.length < v) o.seats.push(defaultSeats(6)[o.seats.length]); buildDock(); }));
+      add(chk('auto-speaker', g('autoSpeak'), s('autoSpeak')));
+      add(sep());
+      for (let i = 0; i < o.n; i++) {
+        const st = o.seats[i];
+        add(el('span', { class: 'seat' }, [el('i', { text: String(i + 1) }),
+          sel('', RACES, () => st.race, (v) => { st.race = v; }),
+          sel('', SEAT_STATES, () => st.state, (v) => { st.state = v; }),
+          num('v', 0, 99, () => st.votes, (v) => { st.votes = v; })]));
+      }
+    } else if (S === 'newsroom') {
+      add(sel('anchor', RACES, g('anchorRace'), s('anchorRace'))); add(sel('graphic', GRAPHICS, g('graphic'), s('graphic')));
+      add(chk('talking', g('talking'), s('talking')));
+      add(rng('cut', 0, 1, 0.01, g('cut'), s('cut'), (v) => v.toFixed(2)));
+      add(btn('trigger cut', () => { cutAnim = 0.0001; }));
+      add(el('br')); add(txt('headline', g('headline'), s('headline'), '28rem')); add(txt('ticker', g('ticker'), s('ticker'), '34rem'));
+    } else if (S === 'audience') {
+      add(sel('race', RACES, g('race'), s('race'))); add(sel('mood', MOODS, g('mood'), s('mood')));
+      add(chk('talking', g('talking'), s('talking'))); add(chk('trade table', g('table'), s('table')));
+      add(btn('next race', () => { o.race = RACES[(RACES.indexOf(o.race) + 1) % RACES.length]; buildDock(); save(); }));
+    } else if (S === 'surface') {
+      add(sel('look', LOOKS, g('look'), s('look'))); add(chk('populated', g('populated'), s('populated'))); add(chk('rings', g('rings'), s('rings')));
+      add(num('seed', 0, 9999, g('seed'), s('seed')));
+      add(btn('next look', () => { o.look = LOOKS[(LOOKS.indexOf(o.look) + 1) % LOOKS.length]; buildDock(); save(); }));
+    } else if (S === 'battle') {
+      add(sel('star', STARS, g('starKind'), s('starKind'))); add(sel('planet', ['none'].concat(LOOKS), g('planetLook'), s('planetLook')));
+      add(num('seed', 0, 9999, g('seed'), s('seed'))); add(chk('nebula', g('nebula'), s('nebula'))); add(chk('grid', g('grid'), s('grid')));
+      add(num('cols', 4, 40, g('cols'), s('cols'))); add(num('rows', 3, 30, g('rows'), s('rows')));
+    } else if (S === 'victory') {
+      add(sel('race', RACES, g('race'), s('race')));
+    } else if (S === 'defeat') {
+      add(sel('focus', ['both', 'star', 'planet'], g('focus'), s('focus')));
+    } else if (S === 'warp') {
+      add(rng('progress', 0, 1, 0.005, g('progress'), s('progress'), (v) => v.toFixed(2))); add(chk('auto', g('auto'), s('auto')));
+    }
+    add(sep());
+    add(sel('res', ['window', '1280x720', '1920x1080', '2560x1440'], () => state.res, (v) => { state.res = v; resize(); }));
+    add(chk('layout rects', () => state.showRects, (v) => { state.showRects = v; }));
+    add(chk('pause', () => state.paused, (v) => { state.paused = v; }));
+    add(rng('speed', 0, 3, 0.1, () => state.speed, (v) => { state.speed = v; }, (v) => v.toFixed(1) + 'x'));
+    add(btn('hide UI (H)', () => document.body.classList.add('clean')));
+  }
+  function buildTabs() {
+    tabs.innerHTML = '';
+    NAMES.forEach((n) => {
+      const b = el('button', { text: n }); if (n === state.scene) b.className = 'active';
+      b.onclick = () => { setScene(n); };
+      tabs.appendChild(b);
+    });
+  }
+  function setScene(n) { state.scene = n; location.hash = n; buildTabs(); buildDock(); save(); }
+
+  // ---------- canvas sizing ----------
+  let W = 0, H = 0, DPR = 1;
+  function resize() {
+    const vw = window.innerWidth, vh = window.innerHeight;
+    if (state.res === 'window') { W = vw; H = vh; DPR = Math.min(window.devicePixelRatio || 1, 2); cv.style.width = W + 'px'; cv.style.height = H + 'px'; }
+    else {
+      const m = state.res.split('x'); W = +m[0]; H = +m[1]; DPR = 1;
+      const k = Math.min(vw / W, vh / H); cv.style.width = Math.floor(W * k) + 'px'; cv.style.height = Math.floor(H * k) + 'px';
+    }
+    cv.width = Math.round(W * DPR); cv.height = Math.round(H * DPR);
+    $('#dim').textContent = W + 'x' + H + (DPR !== 1 ? ' @' + DPR + 'x' : '');
+  }
+  window.addEventListener('resize', resize);
+
+  // ---------- frame loop ----------
+  let cutAnim = 0, last = performance.now(), fpsAcc = 0, fpsN = 0, msAcc = 0, lastShown = 0, lastFrame = 0, errShown = false, rects = null;
+  const spk = { i: 0, at: 0 };
+  function render(t) {
+    const o = Object.assign({}, state.opts[state.scene]);
+    o.t = t;
+    if (state.scene === 'council') {
+      if (o.autoSpeak) {
+        const k = Math.floor(t / 3.2) % o.n;
+        o.seats = o.seats.slice(0, o.n).map((s, i) => Object.assign({}, s, { state: i === k ? 'speaking' : (s.state === 'speaking' ? 'idle' : s.state) }));
+      } else o.seats = o.seats.slice(0, o.n);
+    }
+    if (state.scene === 'newsroom' && cutAnim > 0) { o.cut = cutAnim; }
+    if (state.scene === 'surface') { o.look = o.look; }
+    if (state.scene === 'battle') {
+      o.planet = o.planetLook && o.planetLook !== 'none' ? { desc: { look: o.planetLook, seed: o.seed, rings: false, inhabited: true }, size: 0.8 } : null;
+      o.grid = o.grid ? { cols: o.cols, rows: o.rows } : null;
+    }
+    if (state.scene === 'warp' && o.auto) o.progress = (Math.sin(t * 0.8 - 1.2) * 0.5 + 0.5);
+    ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+    ctx.globalAlpha = 1; ctx.globalCompositeOperation = 'source-over';
+    ctx.fillStyle = '#04060f'; ctx.fillRect(0, 0, W, H);
+    const t0 = performance.now();
+    try {
+      if (!Scenes) throw new Error('MOO.Gfx.Scenes missing (js/gfx/scenes.js failed to load)');
+      rects = Scenes.draw(state.scene, ctx, W, H, t, o);
+      if (errShown) { msg.textContent = ''; errShown = false; }
+    } catch (e) {
+      ctx.setTransform(1, 0, 0, 1, 0, 0);
+      if (!errShown) { console.error(e); errShown = true; }
+      msg.textContent = 'scene error: ' + (e && e.message) + '\n' + String((e && e.stack) || '').split('\n').slice(1, 4).join('\n');
+      rects = null;
+    }
+    msgMs = performance.now() - t0;
+    ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+    if (state.showRects && rects) drawRects(rects, '');
+  }
+  let msgMs = 0;
+  function drawRects(r, name, depth) {
+    depth = depth || 0;
+    if (!r || typeof r !== 'object' || depth > 3) return;
+    if (typeof r.x === 'number' && typeof r.y === 'number' && typeof r.w === 'number' && typeof r.h === 'number') {
+      ctx.save(); ctx.strokeStyle = '#ff3df0'; ctx.fillStyle = '#ff3df0'; ctx.lineWidth = 1; ctx.setLineDash([6, 4]);
+      ctx.strokeRect(r.x + .5, r.y + .5, r.w, r.h); ctx.font = '11px monospace'; ctx.fillText(name, r.x + 3, r.y + 12); ctx.restore();
+    }
+    for (const k in r) if (r[k] && typeof r[k] === 'object') drawRects(r[k], (name ? name + '.' : '') + k, depth + 1);
+  }
+  function frame(now) { tick(now); requestAnimationFrame(frame); }
+  function tick(now) {
+    lastFrame = now;
+    const dt = Math.min(0.25, (now - last) / 1000); last = now;
+    if (!state.paused) state.t += dt * state.speed;
+    if (cutAnim > 0) { cutAnim += dt / 0.85; if (cutAnim >= 1) cutAnim = 0; }
+    render(state.t);
+    fpsAcc += dt; fpsN++; msAcc += msgMs;
+    if (now - lastShown > 500) {
+      $('#fps').textContent = (fpsN / fpsAcc).toFixed(0); $('#ms').textContent = (msAcc / fpsN).toFixed(2);
+      $('#tt').textContent = state.t.toFixed(1);
+      fpsAcc = 0; fpsN = 0; msAcc = 0; lastShown = now;
+    }
+  }
+  // hidden tabs do not get rAF: a slow watchdog keeps the page alive for screenshots
+  setInterval(() => { const now = performance.now(); if (now - lastFrame > 400) tick(now); }, 250);
+
+  window.addEventListener('keydown', (e) => {
+    if (e.target && /INPUT|SELECT|TEXTAREA/.test(e.target.tagName)) return;
+    if (e.key === 'h' || e.key === 'H') document.body.classList.toggle('clean');
+    else if (e.key === ' ') { state.paused = !state.paused; buildDock(); e.preventDefault(); }
+    else if (e.key === 'ArrowRight') { const i = NAMES.indexOf(state.scene); setScene(NAMES[(i + 1) % NAMES.length]); }
+    else if (e.key === 'ArrowLeft') { const i = NAMES.indexOf(state.scene); setScene(NAMES[(i + NAMES.length - 1) % NAMES.length]); }
+  });
+
+  // handy handle for scripted screenshots
+  window.TS = {
+    state: state,
+    set: function (scene, patch) { if (scene) setScene(scene); if (patch) Object.assign(state.opts[state.scene], patch); buildDock(); save(); },
+    pause: function (t) { state.paused = true; if (t != null) state.t = t; buildDock(); },
+    play: function () { state.paused = false; buildDock(); },
+    ui: function (on) { document.body.classList.toggle('clean', !on); },
+    res: function (r) { state.res = r; resize(); buildDock(); },
+    cut: function () { cutAnim = 0.0001; },
+    zoom: function (k, ox, oy) { cv.style.transformOrigin = (ox == null ? 50 : ox) + '% ' + (oy == null ? 50 : oy) + '%'; cv.style.transform = k && k !== 1 ? 'scale(' + k + ')' : ''; },
+    rects: function () { return rects; },
+    stats: function () { return { fps: $('#fps').textContent, ms: $('#ms').textContent }; },
+  };
+  if (new URLSearchParams(location.search).get('clean') === '1') document.body.classList.add('clean');
+
+  resize(); buildTabs(); buildDock();
+  requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>

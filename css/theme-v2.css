@@ -1,0 +1,208 @@
+/* =========================================================================
+   Master of Orion — Reborn · THEME V2 "serious sci-fi" (prototype layer — see research/09-art-direction.md)
+   OPT-IN ONLY: every rule is scoped to  :root[data-theme="v2"]  — without that attribute this file does nothing, so the
+   default (v1 "imperial observatory") look is untouched.  Activate with  <html data-theme="v2">  (set from ?theme=v2 or
+   Settings 'theme' before first paint).  Optional attributes on <html>:  data-accent="cyan|amber|leaf"  data-fx="on|off".
+   Load AFTER base.css and kit.css.  The lead merges this into base.css / kit.css later.
+   Contrast: every text token is >= 4.5:1 on --bg-2 (numbers in research/09 section 2.2).
+   ========================================================================= */
+
+/* ---- 1. tokens + legacy remap ------------------------------------------------------------------------------ */
+:root[data-theme="v2"] {
+  color-scheme: dark;
+  /* neutral ramp (cool gunmetal) */
+  --bg-0: #05080c; --bg-1: #0a0f15; --bg-2: #0f161e; --bg-3: #161f29; --bg-4: #1e2a36;
+  --line-0: #1b2530; --line-1: #2a3744; --line-2: #3d4f60; --line-3: #5b7186;
+  --ink-0: #e9eef3; --ink-1: #b7c3cf; --ink-2: #8794a2; --ink-3: #5d6b79;
+  /* accent semantics (meaning unchanged, desaturated/darker) */
+  --a-gold: #dcb54f; --a-ember: #ec8a45; --a-cyan: #52c8ec; --a-leaf: #62c488;
+  --a-rose: #ee6679; --a-violet: #a58df0; --a-teal: #3cc5b4; --a-azure: #6396ee;
+  --accent: var(--a-cyan);
+  --accent-dim: color-mix(in srgb, var(--accent) 14%, transparent);
+  --accent-line: color-mix(in srgb, var(--accent) 55%, var(--line-2));
+  --edge-rgb: 91 113 134;                      /* for rgb(var(--edge-rgb) / .3) — replaces the brass rgba literals */
+  --on-accent: #04121a;                        /* dark ink on accent fills (9.8:1 on cyan) */
+
+  /* legacy tokens -> v2 (existing var(--brass…) code re-skins without edits) */
+  --void: var(--bg-0); --night: var(--bg-1); --deep: var(--bg-2);
+  --glass: rgba(10, 15, 21, .94); --glass-hi: rgba(22, 31, 41, .96);
+  --steel: var(--bg-3); --steel-hi: var(--line-2);
+  --brass: #7f93a8; --brass-hi: var(--ink-0); --brass-lo: var(--line-2);
+  --ivory: var(--ink-0); --mist: var(--ink-1); --fog: var(--ink-2);
+  --cyan: var(--a-cyan); --ember: var(--a-ember); --leaf: var(--a-leaf); --rose: var(--a-rose);
+  --violet: var(--a-violet); --gold: var(--a-gold); --teal: var(--a-teal); --azure: var(--a-azure);
+  --c-ship: #5a98e8; --c-def: #e8627a; --c-ind: #e9a047; --c-eco: #3dc7a0; --c-res: #a58df0;
+
+  --font-ui: 'IBM Plex Sans Condensed', 'Bahnschrift SemiCondensed', 'Bahnschrift', 'Segoe UI', system-ui, sans-serif;
+  --font-display: 'Oxanium', 'Saira Semi Condensed', 'Bahnschrift SemiBold', 'Bahnschrift', 'DIN Condensed', 'Segoe UI Semibold', system-ui, sans-serif;
+  --font-title: var(--font-display);
+  --font-mono: 'IBM Plex Mono', 'Cascadia Mono', 'Consolas', 'SF Mono', ui-monospace, monospace;
+  --dur-1: 90ms; --dur-2: 160ms; --dur-3: 260ms;
+}
+:root[data-theme="v2"][data-accent="amber"] { --accent: var(--a-gold); --on-accent: #1a1304; }
+:root[data-theme="v2"][data-accent="leaf"]  { --accent: var(--a-leaf); --on-accent: #04140a; }
+
+/* ---- 2. base ------------------------------------------------------------------------------------------------ */
+:root[data-theme="v2"], :root[data-theme="v2"] body { background: var(--bg-0); color: var(--ink-0); }
+:root[data-theme="v2"] h1, :root[data-theme="v2"] h2, :root[data-theme="v2"] h3, :root[data-theme="v2"] h4 { letter-spacing: .04em; font-weight: 500; color: var(--ink-0); }
+:root[data-theme="v2"] ::selection { background: color-mix(in srgb, var(--accent) 35%, transparent); }
+:root[data-theme="v2"] :focus-visible { outline: 1px solid var(--accent); outline-offset: 2px; }
+:root[data-theme="v2"] * { scrollbar-color: var(--line-2) transparent; }
+:root[data-theme="v2"] ::-webkit-scrollbar { width: .5rem; height: .5rem; }
+:root[data-theme="v2"] ::-webkit-scrollbar-thumb { background: var(--line-2); border: 2px solid transparent; background-clip: padding-box; border-radius: 0; }
+:root[data-theme="v2"] ::-webkit-scrollbar-thumb:hover { background: var(--line-3); background-clip: padding-box; }
+:root[data-theme="v2"] .screen.fade-in { animation: v2-scr-in 180ms var(--ease) both; }
+@keyframes v2-scr-in { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
+
+/* boot splash */
+:root[data-theme="v2"] #boot { background: radial-gradient(ellipse at 50% 42%, #0f1a26 0%, var(--bg-0) 70%); }
+:root[data-theme="v2"] .boot-mark { color: var(--ink-0); text-shadow: none; letter-spacing: .14em; font-weight: 500; }
+:root[data-theme="v2"] .boot-bar { background: var(--line-1); height: 2px; }
+:root[data-theme="v2"] .boot-bar i { background: var(--accent); }
+
+/* full-screen overlay: vignette + faint scanlines (data-fx="off" removes it; low tier / reduceMotion should set off) */
+:root[data-theme="v2"] #app::after {
+  content: ""; position: absolute; inset: 0; z-index: 90; pointer-events: none;
+  background: radial-gradient(ellipse at 50% 50%, transparent 58%, rgba(0, 0, 0, .38) 100%),
+              repeating-linear-gradient(0deg, rgba(255, 255, 255, .018) 0 1px, transparent 1px 3px);
+}
+:root[data-theme="v2"][data-fx="off"] #app::after { display: none; }
+
+/* ---- 3. geometry: single 45-degree cut on top-left + bottom-right only ----------------------------------- */
+:root[data-theme="v2"] :is(.ch, .panel, .btn, .chip, .modal, #tip, .toast, .field) {
+  --poly: polygon(var(--ch) 0, 100% 0, 100% calc(100% - var(--ch)), calc(100% - var(--ch)) 100%, 0 100%, 0 var(--ch));
+}
+:root[data-theme="v2"] :is(.panel, .modal) { --ch: .5rem; }
+:root[data-theme="v2"] :is(.btn, .chip, .field, #tip, .toast) { --ch: .3rem; }
+
+/* ---- 4. panel ---------------------------------------------------------------------------------------------- */
+:root[data-theme="v2"] :is(.panel, .modal) {
+  padding: .75rem .9rem;
+  background: linear-gradient(135deg, var(--line-3) 0, var(--line-1) 16%, var(--line-1) 84%, var(--line-2) 100%);     /* = the 1px edge */
+}
+:root[data-theme="v2"] :is(.panel, .modal)::before { background: linear-gradient(180deg, rgba(20, 28, 38, .97), rgba(11, 17, 24, .97)); }
+:root[data-theme="v2"] .panel.flat::before { background: var(--glass); }
+:root[data-theme="v2"] .panel.clear::before { background: rgba(8, 12, 17, .55); }
+/* accent corner ticks (top-right + bottom-left: the corners that are NOT cut) */
+:root[data-theme="v2"] .panel::after {
+  content: ""; position: absolute; inset: 0; pointer-events: none; opacity: .6;
+  background:
+    linear-gradient(var(--accent), var(--accent)) right 0 top 0 / 10px 1px no-repeat,
+    linear-gradient(var(--accent), var(--accent)) right 0 top 0 / 1px 10px no-repeat,
+    linear-gradient(var(--accent), var(--accent)) left 0 bottom 0 / 10px 1px no-repeat,
+    linear-gradient(var(--accent), var(--accent)) left 0 bottom 0 / 1px 10px no-repeat;
+}
+:root[data-theme="v2"] .panel.tight::after, :root[data-theme="v2"] .panel.notick::after { display: none; }
+:root[data-theme="v2"] .panel-h {
+  gap: .55rem; margin: -.1rem 0 .6rem; padding-bottom: .45rem; border-bottom: 1px solid var(--line-1);
+  font: 500 .8rem/1.1 var(--font-display); letter-spacing: .16em; text-transform: uppercase; color: var(--ink-1);
+}
+:root[data-theme="v2"] .panel-h::before { content: ""; flex: none; width: 3px; height: .95em; background: var(--accent); }
+:root[data-theme="v2"] .panel-h .sub { font: 400 .78rem var(--font-mono); letter-spacing: 0; text-transform: none; color: var(--ink-2); }
+
+/* ---- 5. buttons -------------------------------------------------------------------------------------------- */
+:root[data-theme="v2"] .btn {
+  padding: .55em 1.1em; font: 500 .8rem/1.1 var(--font-display); letter-spacing: .1em; text-transform: uppercase;
+  color: var(--ink-0); background: var(--line-2); transition: background var(--dur-1), filter var(--dur-1);
+}
+:root[data-theme="v2"] .btn::before { background: linear-gradient(180deg, #1c2733, #141c25); }
+:root[data-theme="v2"] .btn:hover { filter: none; background: var(--line-3); }
+:root[data-theme="v2"] .btn:hover::before { background: linear-gradient(180deg, #243241, #19232e); }
+:root[data-theme="v2"] .btn:active { transform: none; filter: none; }
+:root[data-theme="v2"] .btn:active::before { background: var(--bg-1); }
+:root[data-theme="v2"] .btn:focus-visible::after { inset: 2px; border: 1px solid var(--accent); }
+:root[data-theme="v2"] .btn:disabled, :root[data-theme="v2"] .btn.disabled { opacity: .45; filter: none; }
+:root[data-theme="v2"] .btn.primary { color: var(--on-accent); background: var(--accent); }
+:root[data-theme="v2"] .btn.primary::before { background: color-mix(in srgb, var(--accent) 92%, #fff); }
+:root[data-theme="v2"] .btn.primary:hover::before { background: color-mix(in srgb, var(--accent) 80%, #fff); }
+:root[data-theme="v2"] .btn.danger { color: var(--a-rose); background: color-mix(in srgb, var(--a-rose) 60%, var(--line-1)); }
+:root[data-theme="v2"] .btn.danger::before { background: #2a1218; }
+:root[data-theme="v2"] .btn.danger:hover::before { background: #3a1822; }
+:root[data-theme="v2"] .btn.active { color: var(--accent); background: var(--accent-line); }
+:root[data-theme="v2"] .btn.active::before { background: color-mix(in srgb, var(--accent) 14%, var(--bg-2)); }
+:root[data-theme="v2"] .btn.small { padding: .3em .75em; font-size: .72rem; }
+:root[data-theme="v2"] .btn.big { padding: .7em 1.7em; font-size: 1rem; }
+:root[data-theme="v2"] .btn .kbd { font: 500 .66rem var(--font-mono); letter-spacing: 0; color: var(--ink-2); opacity: 1; padding: 0 .35em; border: 1px solid var(--line-2); }
+:root[data-theme="v2"] .btn.primary .kbd { color: var(--on-accent); border-color: color-mix(in srgb, var(--on-accent) 45%, transparent); }
+:root[data-theme="v2"] .btn.active .kbd { color: var(--accent); }
+
+/* ---- 6. chips, bars ---------------------------------------------------------------------------------------- */
+:root[data-theme="v2"] .chip { padding: .12em .6em; font: 500 .7rem var(--font-mono); letter-spacing: .06em; text-transform: uppercase; background: var(--line-2); }
+:root[data-theme="v2"] .chip::before { background: var(--bg-3); }
+:root[data-theme="v2"] .bar { height: .4rem; background: var(--bg-3); box-shadow: inset 0 0 0 1px var(--line-1); }
+:root[data-theme="v2"] .bar > i { background: var(--c, var(--cyan)); }
+:root[data-theme="v2"] .bar::after { content: ""; position: absolute; inset: 0; pointer-events: none; background: repeating-linear-gradient(90deg, transparent 0 calc(10% - 1px), rgba(5, 8, 12, .85) calc(10% - 1px) 10%); }
+:root[data-theme="v2"] .bar > span { z-index: 1; font: 500 .66rem var(--font-mono); text-shadow: 0 1px 2px #000; }
+
+/* ---- 7. sliders -------------------------------------------------------------------------------------------- */
+:root[data-theme="v2"] .slider .s-label { font-size: .9rem; color: var(--ink-1); }
+:root[data-theme="v2"] .slider .s-btn, :root[data-theme="v2"] .slider .s-lock { border: 1px solid var(--line-2); background: var(--bg-3); color: var(--ink-1); font-family: var(--font-mono); }
+:root[data-theme="v2"] .slider .s-btn:hover, :root[data-theme="v2"] .slider .s-lock:hover { background: var(--bg-4); border-color: var(--line-3); color: var(--ink-0); }
+:root[data-theme="v2"] .slider .s-lock.on { color: var(--a-rose); border-color: var(--a-rose); background: color-mix(in srgb, var(--a-rose) 12%, var(--bg-3)); }
+:root[data-theme="v2"] .slider .s-track { height: .8rem; background: var(--bg-3); box-shadow: inset 0 0 0 1px var(--line-1); }
+:root[data-theme="v2"] .slider .s-track::after { background: repeating-linear-gradient(90deg, transparent 0 calc(10% - 1px), rgba(5, 8, 12, .9) calc(10% - 1px) 10%); }
+:root[data-theme="v2"] .slider .s-fill { background: var(--c); opacity: .9; box-shadow: none; }
+:root[data-theme="v2"] .slider .s-knob { top: -3px; bottom: -3px; width: 3px; margin-left: -1.5px; background: var(--ink-0); box-shadow: 0 0 0 1px var(--bg-0), 0 0 8px color-mix(in srgb, var(--c) 55%, transparent); }
+:root[data-theme="v2"] .slider .s-val { font-family: var(--font-mono); font-weight: 500; font-size: .85rem; color: var(--ink-0); }
+
+/* ---- 8. fields --------------------------------------------------------------------------------------------- */
+:root[data-theme="v2"] .field { background: var(--line-2); color: var(--ink-0); }
+:root[data-theme="v2"] input.field, :root[data-theme="v2"] select.field { background: var(--bg-1); box-shadow: inset 0 0 0 1px var(--line-2); }
+:root[data-theme="v2"] input.field:focus, :root[data-theme="v2"] select.field:focus { box-shadow: inset 0 0 0 1px var(--accent); }
+:root[data-theme="v2"] select.field option { background: var(--bg-2); color: var(--ink-0); }
+:root[data-theme="v2"] input[type=range], :root[data-theme="v2"] input[type=checkbox] { accent-color: var(--accent); }
+
+/* ---- 9. tables --------------------------------------------------------------------------------------------- */
+:root[data-theme="v2"] .tbl th { padding: .36rem .6rem; font: 500 .7rem var(--font-display); letter-spacing: .14em; text-transform: uppercase; color: var(--ink-2); background: var(--bg-3); border-bottom: 1px solid var(--line-2); }
+:root[data-theme="v2"] .tbl th.sortable:hover { color: var(--ink-0); }
+:root[data-theme="v2"] .tbl td { padding: .28rem .6rem; border-bottom: 1px solid var(--line-0); }
+:root[data-theme="v2"] .tbl td.r, :root[data-theme="v2"] .tbl td.num { font-family: var(--font-mono); font-size: .92em; }
+:root[data-theme="v2"] .tbl tbody tr { transition: background var(--dur-1); }
+:root[data-theme="v2"] .tbl tbody tr:hover { background: var(--bg-3); }
+:root[data-theme="v2"] .tbl tbody tr.sel { background: var(--accent-dim); box-shadow: inset 2px 0 0 var(--accent); }
+
+/* ---- 10. tabs ---------------------------------------------------------------------------------------------- */
+:root[data-theme="v2"] .tabs { gap: 0; border-bottom: 1px solid var(--line-1); }
+:root[data-theme="v2"] .tabs button { padding: .45rem 1rem; font: 500 .78rem var(--font-display); letter-spacing: .12em; text-transform: uppercase; color: var(--ink-2); transition: color var(--dur-1), background var(--dur-1); }
+:root[data-theme="v2"] .tabs button:hover { color: var(--ink-0); }
+:root[data-theme="v2"] .tabs button.active { color: var(--ink-0); border-bottom-color: var(--accent); background: linear-gradient(180deg, transparent, var(--accent-dim)); }
+
+/* ---- 11. modal, tooltip, toast ----------------------------------------------------------------------------- */
+:root[data-theme="v2"] .scrim { background: rgba(2, 4, 8, .72); backdrop-filter: blur(2px); animation-duration: .14s; }
+:root[data-theme="v2"] .modal { animation: v2-modal-in var(--dur-2) var(--ease) both; }
+@keyframes v2-modal-in { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+:root[data-theme="v2"] .modal-h { font: 500 .95rem var(--font-display); letter-spacing: .16em; text-transform: uppercase; color: var(--ink-0); border-bottom: 1px solid var(--line-1); }
+:root[data-theme="v2"] .modal-f { border-top: 1px solid var(--line-1); }
+:root[data-theme="v2"] #tip { background: var(--line-2); color: var(--ink-0); font-size: .82rem; line-height: 1.4; }
+:root[data-theme="v2"] #tip::before { background: #0c1218; }
+:root[data-theme="v2"] #tip::after { content: ""; position: absolute; left: 0; top: .3rem; bottom: .3rem; width: 2px; background: var(--accent); }
+:root[data-theme="v2"] #tip b { color: var(--accent); font-weight: 600; }
+:root[data-theme="v2"] .toast { background: var(--line-2); animation-duration: .18s; }
+:root[data-theme="v2"] .toast::before { background: #0c1218; }
+:root[data-theme="v2"] .toast.ok { color: var(--a-leaf); } :root[data-theme="v2"] .toast.warn { color: var(--a-ember); } :root[data-theme="v2"] .toast.bad { color: var(--a-rose); }
+
+/* ---- 12. misc kit ------------------------------------------------------------------------------------------ */
+:root[data-theme="v2"] .divider { height: 1px; background: linear-gradient(90deg, var(--line-3) 0 6px, var(--line-1) 6px calc(100% - 6px), var(--line-3) calc(100% - 6px)); }
+:root[data-theme="v2"] .kv > :nth-child(even) { font-family: var(--font-mono); font-size: .92em; }
+:root[data-theme="v2"] .empire-dot { box-shadow: none; transform: none; }
+
+/* ---- 13. utilities for the new language (usable in any screen) --------------------------------------------- */
+:root[data-theme="v2"] .v2-label { font: 500 .7rem var(--font-display); letter-spacing: .16em; text-transform: uppercase; color: var(--ink-2); }
+:root[data-theme="v2"] .v2-readout { font: 500 1rem var(--font-mono); font-variant-numeric: tabular-nums; color: var(--ink-0); }
+:root[data-theme="v2"] .v2-readout small { font-size: .72em; color: var(--ink-2); margin-left: .25em; }
+:root[data-theme="v2"] .v2-led { display: inline-block; width: .5em; height: .5em; background: var(--c, var(--accent)); box-shadow: 0 0 6px color-mix(in srgb, var(--c, var(--accent)) 70%, transparent); }
+:root[data-theme="v2"] .v2-glass { background: rgba(10, 15, 21, .66); backdrop-filter: blur(6px); border: 1px solid var(--line-1); }
+:root[data-theme="v2"] .v2-corners { position: relative; }
+:root[data-theme="v2"] .v2-corners::before, :root[data-theme="v2"] .v2-corners::after { content: ""; position: absolute; inset: 0; pointer-events: none; }
+:root[data-theme="v2"] .v2-corners::before {
+  background:
+    linear-gradient(var(--accent), var(--accent)) left 0 top 0 / 10px 1px no-repeat, linear-gradient(var(--accent), var(--accent)) left 0 top 0 / 1px 10px no-repeat,
+    linear-gradient(var(--accent), var(--accent)) right 0 top 0 / 10px 1px no-repeat, linear-gradient(var(--accent), var(--accent)) right 0 top 0 / 1px 10px no-repeat;
+}
+:root[data-theme="v2"] .v2-corners::after {
+  background:
+    linear-gradient(var(--accent), var(--accent)) left 0 bottom 0 / 10px 1px no-repeat, linear-gradient(var(--accent), var(--accent)) left 0 bottom 0 / 1px 10px no-repeat,
+    linear-gradient(var(--accent), var(--accent)) right 0 bottom 0 / 10px 1px no-repeat, linear-gradient(var(--accent), var(--accent)) right 0 bottom 0 / 1px 10px no-repeat;
+}
+:root[data-theme="v2"] .v2-ticks { height: 6px; background: repeating-linear-gradient(90deg, var(--line-2) 0 1px, transparent 1px 8px); }
+@media (prefers-reduced-motion: reduce) { :root[data-theme="v2"] #app::after { background: radial-gradient(ellipse at 50% 50%, transparent 58%, rgba(0, 0, 0, .38) 100%); } }

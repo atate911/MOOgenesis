@@ -1,0 +1,147 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>MOO · galaxy map lab</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="../css/base.css">
+<link rel="stylesheet" href="../css/kit.css">
+<style>
+  #tg-map { position: absolute; inset: 0; }
+  .tg-strip { position: absolute; left: 2.2rem; top: 1.7rem; z-index: 20; width: 25.5rem; display: flex; flex-direction: column; gap: .45rem; }
+  .tg-strip .panel-h { margin-bottom: .2rem; }
+  .tg-strip .row { flex-wrap: wrap; gap: .3rem; }
+  .tg-strip .slider { grid-template-columns: 3.6rem 1.4rem 1fr 1.4rem 2.4rem 0; margin: .05rem 0; }
+  .tg-strip .s-lock { display: none; }
+  .tg-stats { display: flex; gap: .9rem; flex-wrap: wrap; font-size: .8rem; color: var(--mist); font-variant-numeric: tabular-nums; }
+  .tg-stats b { color: var(--brass-hi); font-weight: 600; }
+  .tg-hint { font-size: .74rem; color: var(--fog); line-height: 1.3; }
+  .tg-log { position: absolute; right: 4.2rem; top: 1.7rem; z-index: 20; width: 19rem; max-height: 11rem; overflow: hidden; font: 12px/1.35 ui-monospace, Consolas, monospace; color: var(--mist); }
+  .tg-log div { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; } .tg-log b { color: var(--cyan); font-weight: 600; }
+  .tg-collapse { position: absolute; left: .5rem; top: .45rem; z-index: 25; }
+  .tg-strip.hidden, .tg-log.hidden { display: none; }
+</style>
+</head>
+<body>
+<div id="app">
+  <div id="tg-map"></div>
+  <div id="tg-ui"></div>
+  <div id="overlay"></div><div id="toasts"></div><div id="tip" role="tooltip"></div>
+</div>
+<script>
+(function () {
+  'use strict';
+  // core + kit are required; gfx modules are optional (loaded only when the file exists, so the console stays clean)
+  var list = [
+    ['js/core/ns.js', 1], ['js/core/util.js', 1], ['js/core/rng.js', 1], ['js/core/bus.js', 1], ['js/core/settings.js', 1], ['js/core/perf.js', 1],
+    ['js/gfx/gl.js'], ['js/gfx/icons.js'], ['js/gfx/space.js'], ['js/gfx/ships.js'], ['js/gfx/fx.js'],
+    ['js/ui/kit.js', 1], ['js/ui/galaxymap.js', 1], ['tools/mockstate.js', 1]
+  ];
+  var q = new URLSearchParams(location.search);
+  function exists(url) { return fetch(url, { method: 'HEAD' }).then(function (r) { return r.ok; }, function () { return true; }); }
+  function inject(url) {
+    return new Promise(function (res, rej) {
+      var s = document.createElement('script'); s.src = url + '?_=' + Date.now(); s.async = false;
+      s.onload = function () { res(true); }; s.onerror = function () { rej(new Error('failed: ' + url)); }; document.head.appendChild(s);
+    });
+  }
+  (async function () {
+    var loaded = [];
+    for (var i = 0; i < list.length; i++) {
+      var url = '../' + list[i][0];
+      if (!list[i][1] && !(await exists(url))) continue;
+      try { await inject(url); loaded.push(list[i][0]); } catch (e) { if (list[i][1]) { document.body.insertAdjacentHTML('beforeend', '<pre style="position:fixed;left:1rem;top:1rem;color:#ff8a93;z-index:99">' + e.message + '</pre>'); throw e; } }
+    }
+    boot(loaded);
+  })();
+
+  function boot(loaded) {
+    var M = window.MOO, UI = M.UI, h = UI.h, MOCK = window.MOCK;
+    UI.init(); UI.startLoop();
+    try { M.Perf.start(); } catch (e) { console.warn('perf', e); }
+    if (q.get('grid') === '0') M.Settings.set('mapGrid', false);
+
+    var COUNTS = [24, 48, 70, 108, 160];
+    var cfg = { stars: +q.get('stars') || 108, seed: q.get('seed') || '7', exotic: q.get('exotic') === '1', empires: +q.get('empires') || 5 };
+    var S = null, ev = [];
+    var map = M.UI.GalaxyMap.create(document.getElementById('tg-map'), { legend: true, minimap: q.get('mini') === '0' ? false : 'auto', initialView: q.get('view') || 'auto' });
+    window.map = map;
+
+    function log(name, v) {
+      var t = (performance.now() / 1000).toFixed(1);
+      ev.unshift('<div><b>' + name + '</b> ' + (v === undefined ? '' : (typeof v === 'object' ? JSON.stringify(v).slice(0, 80) : String(v))) + ' <span style="opacity:.5">' + t + 's</span></div>');
+      if (ev.length > 9) ev.pop();
+      logEl.innerHTML = ev.join('');
+    }
+    ['selectStar', 'selectFleet', 'hoverStar', 'hoverFleet', 'moveOrder', 'contextStar', 'dblStar', 'routeCancel'].forEach(function (n) { map.on(n, function (v) { if (n.indexOf('hover') === 0 && !q.get('hoverlog')) return; log(n, v); }); });
+    var camTimer = 0; map.on('cameraChanged', function (c) { var now = performance.now(); if (now - camTimer > 600) { camTimer = now; } });
+
+    function newGalaxy() {
+      S = MOCK.makeState({ stars: cfg.stars, empires: cfg.empires, seed: cfg.seed, exotic: cfg.exotic });
+      window.S = S; map.setState(S); statsEl.dirty = true;
+      if (q.get('reveal') === '1') { MOCK.revealAll(S); map.refresh(); }
+    }
+    function pickStar(pred) { var l = S.stars.filter(pred); return l.length ? l[Math.floor(Math.random() * l.length)] : null; }
+
+    // ---- control strip
+    var modeBtns = {};
+    ['normal', 'colonies', 'environments', 'minerals'].forEach(function (m) {
+      modeBtns[m] = UI.button(m[0].toUpperCase() + m.slice(1), function () { setMode(m); }, { small: true, active: m === 'normal' });
+    });
+    function setMode(m) { map.setMode(m); for (var k in modeBtns) modeBtns[k].classList.toggle('active', k === m); }
+    var starSlider = UI.slider({ min: 0, max: 4, step: 1, value: Math.max(0, COUNTS.indexOf(cfg.stars)), label: 'Stars', color: 'var(--cyan)', lockable: false, fmt: function (v) { return COUNTS[v]; },
+      onChange: function (v) { cfg.stars = COUNTS[v]; newGalaxy(); } });
+    var labelModes = ['auto', 'all', 'owned'];
+    var btnLabels = UI.button('Labels: ' + M.Settings.get('mapLabels'), function () { var i = (labelModes.indexOf(M.Settings.get('mapLabels')) + 1) % 3; M.Settings.set('mapLabels', labelModes[i]); btnLabels.lastChild.nodeType === 3 ? (btnLabels.lastChild.textContent = 'Labels: ' + labelModes[i]) : 0; }, { small: true });
+    var btnFog = UI.button('Fog: on', function () { map.setFog(!map.getFog()); setText(btnFog, 'Fog: ' + (map.getFog() ? 'on' : 'off')); }, { small: true });
+    var btnGrid = UI.button('Grid', function () { M.Settings.set('mapGrid', M.Settings.get('mapGrid') === false); }, { small: true });
+    function setText(b, t) { b.lastChild.nodeType === 3 ? (b.lastChild.textContent = t) : (b.textContent = t); }
+    var sel = function () { return map.getSelection(); };
+    var strip = h('div.panel.tg-strip',
+      h('div.panel-h', 'Galaxy map lab', h('span.sub', 'tools/test-galaxymap.html')),
+      h('div.row', h('span.t-mist.small', 'Mode'), modeBtns.normal, modeBtns.colonies, modeBtns.environments, modeBtns.minerals),
+      starSlider,
+      h('div.row',
+        UI.button('Add fleet', function () { var o = Math.random() < 0.6 ? 0 : Math.floor(Math.random() * S.empires.length); var f = MOCK.addFleet(S, { owner: o }); map.refresh(); log('addFleet', '#' + f.id + ' owner ' + o); }, { small: true }),
+        UI.button('End turn', function () { MOCK.advance(S); map.refresh(); log('turn', S.turn); }, { small: true, primary: true }),
+        btnFog, UI.button('Reveal all', function () { MOCK.revealAll(S); map.refresh(); }, { small: true }), btnGrid, btnLabels),
+      h('div.row',
+        UI.button('Fit', function () { map.fit(); }, { small: true }), UI.button('Home', function () { map.home(); }, { small: true }),
+        UI.button('Route…', function () { var s = sel(); if (s.fleet !== null) map.beginRoute(s.fleet); else log('route', 'select a fleet first'); }, { small: true }),
+        UI.button('Ranges', function () { var s = sel(); if (s.star !== null) map.setRanges({ stars: [s.star], radius: 4 }); else map.setRanges(null); }, { small: true }),
+        UI.button('Highlight', function () { var s = sel(); if (s.star === null) { map.highlightStars(null); return; } var a = S.stars[s.star]; map.highlightStars(S.stars.filter(function (b) { return b.id !== a.id && Math.hypot(a.x - b.x, a.y - b.y) < 46; }).map(function (b) { return b.id; })); }, { small: true }),
+        UI.button('Preview', function () { var s = sel(); if (s.star === null) { map.setRoutePreview(null); return; } var b = pickStar(function (x) { return x.id !== s.star; }); map.setRoutePreview({ from: s.star, to: b.id, eta: 3, valid: Math.random() < 0.6, reason: 'Out of fuel range' }); }, { small: true }),
+        UI.button('New galaxy', function () { cfg.seed = String(Math.floor(Math.random() * 9999)); newGalaxy(); log('seed', cfg.seed); }, { small: true })),
+      h('div.tg-stats', h('span', 'fps ', h('b', { id: 'tg-fps' }, '–')), h('span', 'render ', h('b', { id: 'tg-ms' }, '–'), ' ms'), h('span', 'tier ', h('b', { id: 'tg-tier' }, '–')), h('span', 'stars ', h('b', { id: 'tg-n' }, '–')), h('span', 'fleets ', h('b', { id: 'tg-f' }, '–')), h('span', 'zoom ', h('b', { id: 'tg-z' }, '–'))),
+      h('div.tg-hint', 'Drag = pan · wheel = zoom · click star/fleet = select · right-click star (fleet selected) = move order · arrows / + − / Home / End / Esc'));
+    var logEl = h('div.panel.tight.clear.tg-log');
+    var uiRoot = document.getElementById('tg-ui');
+    var collapse = UI.button('☰', function () { strip.classList.toggle('hidden'); logEl.classList.toggle('hidden'); }, { small: true, tip: 'Hide the control strip' });
+    collapse.classList.add('tg-collapse');
+    uiRoot.appendChild(strip); uiRoot.appendChild(logEl); uiRoot.appendChild(collapse);
+    var statsEl = {};
+    var $ = function (id) { return document.getElementById(id); };
+    var fpsAvg = 60, acc = 0;
+    UI.onFrame(function (dt) {
+      fpsAvg += (1 / Math.max(dt, 1e-3) - fpsAvg) * 0.05; acc += dt;
+      if (acc > 0.3) {
+        acc = 0; var st = map.getStats ? map.getStats() : null;
+        $('tg-fps').textContent = fpsAvg.toFixed(0); $('tg-ms').textContent = st ? st.renderMs.toFixed(1) : '–'; $('tg-tier').textContent = M.Perf.tier;
+        $('tg-n').textContent = S ? S.stars.length : 0; $('tg-f').textContent = S ? S.fleets.length : 0; $('tg-z').textContent = map.getCamera().zoom.toFixed(2) + '×';
+      }
+    });
+
+    newGalaxy();
+    if (q.get('strip') === '0') collapse.click();
+    if (q.get('mode')) setMode(q.get('mode'));
+    if (q.get('sel')) map.select(+q.get('sel'), { center: q.get('center') !== '0' });
+    if (q.get('fleet')) map.selectFleet(+q.get('fleet'));
+    if (q.get('zoom')) { var cc = q.get('at') ? q.get('at').split(',').map(Number) : null; map.centerOn(cc ? { x: cc[0], y: cc[1] } : (q.get('sel') ? +q.get('sel') : { x: S.galaxy.w / 2, y: S.galaxy.h / 2 }), { zoom: +q.get('zoom'), animate: false }); }
+    if (q.get('fog') === '0') { map.setFog(false); setText(btnFog, 'Fog: off'); }
+    log('ready', loaded.length + ' scripts · ' + S.stars.length + ' stars');
+    console.log('[test-galaxymap] loaded', loaded.join(', '));
+  }
+})();
+</script>
+</body>
+</html>

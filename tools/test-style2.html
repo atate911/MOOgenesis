@@ -1,0 +1,114 @@
+<!doctype html>
+<html lang="en" data-theme="v2">
+<head>
+<meta charset="utf-8">
+<title>Style v2 — serious sci-fi chrome (prototype)</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- Optional web fonts (offline: falls back to Bahnschrift / Consolas / system). -->
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans+Condensed:wght@400;500;600;700&family=Oxanium:wght@400;500;600;700&family=Marcellus&family=Marcellus+SC&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../css/base.css">
+<link rel="stylesheet" href="../css/kit.css">
+<link rel="stylesheet" href="../css/theme-v2.css">
+<style>
+  /* page-only layout (not part of the theme) */
+  #pg { padding: 1.2rem 1.6rem 3rem; max-width: 96rem; margin: 0 auto; }
+  .grid2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(26rem, 1fr)); gap: 1rem; align-items: start; }
+  .sw { width: 6rem; } .sw i { display: block; height: 2.2rem; box-shadow: inset 0 0 0 1px rgba(255,255,255,.14); } .sw span { display: block; font: .72rem var(--font-mono, monospace); color: var(--mist); margin-top: .2rem; }
+  .sec { margin: 1.4rem 0 .5rem; font: 500 .8rem var(--font-display); letter-spacing: .18em; text-transform: uppercase; color: var(--mist); }
+  .hud { position: relative; height: 31rem; overflow: hidden; background: #04070b; border: 1px solid var(--steel-hi); }
+  .hud .slider { grid-template-columns: 3.4rem 1.3rem 1fr 1.3rem 2.7rem 1.3rem; margin: .12rem 0; font-size: .9rem; }
+  .hud canvas { position: absolute; inset: 0; width: 100%; height: 100%; }
+  .hud .top { position: absolute; left: .7rem; top: .6rem; display: flex; gap: 1.2rem; padding: .35rem .8rem; }
+  .hud .top b { font-family: var(--font-mono, monospace); font-weight: 500; }
+  .hud .side { position: absolute; right: .6rem; top: .6rem; width: 22rem; }
+  .hud .bar8 { position: absolute; left: 0; right: 0; bottom: 0; display: flex; gap: .4rem; padding: .5rem .6rem; background: rgba(8,12,17,.92); border-top: 1px solid var(--steel-hi); }
+  .hud .ret { position: absolute; left: 36%; top: 42%; width: 3.4rem; height: 3.4rem; }
+  .big-title { font: 500 clamp(2.4rem, 5vw, 4rem)/1 var(--font-title); letter-spacing: .05em; margin: .2rem 0; }
+</style>
+</head>
+<body>
+<div id="app">
+  <div id="screens"><div class="screen active"><div class="abs-fill scroll-y" id="scroll"><div id="pg"></div></div></div></div>
+  <div id="overlay"></div><div id="toasts"></div><div id="tip" role="tooltip"></div>
+</div>
+<script src="../js/core/ns.js"></script>
+<script src="../js/core/util.js"></script>
+<script src="../js/gfx/icons.js"></script>
+<script src="../js/ui/kit.js"></script>
+<script>
+(function (M) {
+  'use strict';
+  const UI = M.UI, h = UI.h, root = document.documentElement, Q = new URLSearchParams(location.search);
+  if (Q.get('theme') === 'v1') root.removeAttribute('data-theme');
+  if (Q.get('accent')) root.dataset.accent = Q.get('accent');
+  if (Q.get('fx')) root.dataset.fx = Q.get('fx');
+  UI.init();
+
+  const sw = (name, v, note) => h('div.sw', h('i', { style: { background: v } }), h('span', name), h('span', note || v));
+  const slider = (label, color, v) => UI.slider({ label, color, value: v, onChange: () => {} });
+  const ro = (label, val, unit, cls) => h('div', h('div.t-mist.small', label), h('div.num', { style: { fontSize: '1.15rem' }, class: cls }, val, unit ? h('small.t-mist', ' ' + unit) : null));
+
+  const tbl = UI.table(
+    [{ key: 'n', label: 'Planet' }, { key: 'p', label: 'Pop', align: 'r' }, { key: 'f', label: 'Factories', align: 'r' }, { key: 'w', label: 'Waste', align: 'r', fmt: (r, v) => h('span.t-teal', v) }, { key: 'pr', label: 'Production', align: 'r', fmt: (r, v) => h('span.t-ember', v) }],
+    [{ n: 'Mentar', p: 100, f: 220, w: 4, pr: 294 }, { n: 'Tyr', p: 34, f: 71, w: 0, pr: 91 }, { n: 'Inra', p: 68, f: 88, w: 12, pr: 134 }, { n: 'Denubius', p: 30, f: 24, w: 0, pr: 44 }],
+    { sortKey: 'pr', sortDir: -1, onRow: () => {}, selected: r => r.n === 'Tyr' });
+  const tabs = UI.tabs([
+    { id: 'a', label: 'Overview', render: () => h('p.t-mist', 'Tabs render lazily. Active = ink + 2 px accent underline.') },
+    { id: 'b', label: 'Colonies', render: () => h('p.t-mist', 'Second tab.') },
+    { id: 'c', label: 'Fleets', render: () => h('p.t-mist', 'Third tab.') }]);
+
+  function toggles() {
+    const set = (k, v) => { if (v === null) root.removeAttribute(k); else root.setAttribute(k, v); };
+    return h('div.row.wrap.g2',
+      UI.button('Theme v1', () => set('data-theme', null), { small: true }), UI.button('Theme v2', () => set('data-theme', 'v2'), { small: true, primary: true }),
+      h('span.t-fog', '|'), UI.button('Accent cyan', () => set('data-accent', 'cyan'), { small: true }), UI.button('amber', () => set('data-accent', 'amber'), { small: true }), UI.button('leaf', () => set('data-accent', 'leaf'), { small: true }),
+      h('span.t-fog', '|'), UI.button('FX on', () => set('data-fx', 'on'), { small: true }), UI.button('FX off', () => set('data-fx', 'off'), { small: true }));
+  }
+
+  function hud() {
+    const cv = h('canvas'), top = h('div.top.v2-glass', ro('Year', '2303'), ro('Reserve', '1,284', 'BC', 't-gold'), ro('Income', '+56', 'BC/y', 't-leaf'), ro('Research', '120', 'RP', 't-cyan'), ro('Colonies', '4')),
+      side = UI.panel('Mentar', h('div.col', h('div.row.between', h('span.t-mist', 'Terran'), h('span.num', 'POP 57 / 100')), slider('Ship', 'var(--c-ship)', 20), slider('Def', 'var(--c-def)', 10), slider('Ind', 'var(--c-ind)', 40), slider('Eco', 'var(--c-eco)', 10), slider('Tech', 'var(--c-res)', 20), UI.bar(0.62, { label: 'Scout · 62%' })), { sub: '294 BC' }),
+      bar = h('div.bar8', ['Game', 'Design', 'Fleet', 'Map', 'Races', 'Planets', 'Tech'].map(n => UI.button(n, null, { small: true, kbd: n[0] })), h('span.grow'), UI.button('Next turn', null, { primary: true, kbd: 'Space' })),
+      el = h('div.hud', cv, top, h('div.ret.v2-corners'), h('div.side', side), bar);
+    requestAnimationFrame(() => {
+      const w = cv.clientWidth, hh = cv.clientHeight, dpr = Math.min(2, devicePixelRatio || 1); cv.width = w * dpr; cv.height = hh * dpr;
+      const c = cv.getContext('2d'); c.scale(dpr, dpr); let s = 12345; const r = () => (s = (s * 1664525 + 1013904223) >>> 0) / 4294967296;
+      c.fillStyle = '#04070b'; c.fillRect(0, 0, w, hh);
+      [[.3, .55, '#17304a', .5], [.62, .3, '#2a2140', .4]].forEach(n => { const g = c.createRadialGradient(n[0] * w, n[1] * hh, 0, n[0] * w, n[1] * hh, w * .35); g.addColorStop(0, n[2] + 'cc'); g.addColorStop(1, '#04070b00'); c.globalAlpha = n[3]; c.fillStyle = g; c.fillRect(0, 0, w, hh); });
+      c.globalAlpha = 1; const tints = ['#ffd9b0', '#ffe9cf', '#fff6ea', '#cfe0ff', '#aac4ff', '#ffb98a'];
+      for (let i = 0; i < 260; i++) { const x = r() * w, y = r() * hh, m = Math.pow(r(), 4), col = tints[(r() * tints.length) | 0]; c.globalAlpha = .35 + .6 * m; c.fillStyle = col; const d = 1 + (m > .6 ? 1 : 0); c.fillRect(x, y, d, d);
+        if (m > .8) { c.globalAlpha = .25; c.fillRect(x - 5, y + .5, 11, 1); c.fillRect(x + .5, y - 5, 1, 11); } }
+      c.globalAlpha = 1;
+    });
+    return el;
+  }
+
+  UI.mount(document.getElementById('pg'),
+    h('div.row.between.wrap', h('div', h('div.v2-label', 'Master of Orion — Reborn · art direction v2 prototype'), h('div.big-title', 'Serious sci-fi chrome'),
+      h('div.t-mist', 'Opt-in layer css/theme-v2.css · ?theme=v1|v2 · ?accent=cyan|amber|leaf · ?fx=on|off · see research/09-art-direction.md')), toggles()),
+    h('div.sec', 'Neutral ramp & signal colours (contrast on bg-2 in research/09)'),
+    h('div.row.wrap.g3', ['--bg-0', '--bg-1', '--bg-2', '--bg-3', '--bg-4', '--line-1', '--line-2', '--line-3', '--ink-3', '--ink-2', '--ink-1', '--ink-0'].map(k => sw(k.slice(2), 'var(' + k + ')', k)),
+      ['--gold', '--ember', '--cyan', '--leaf', '--rose', '--violet', '--teal', '--azure'].map(k => sw(k.slice(2), 'var(' + k + ')', k))),
+    h('div.sec', 'Type'),
+    h('div.grid2', UI.panel('Display / UI / mono', h('div.col', h('div', { style: { font: '500 1.7rem var(--font-title)', letterSpacing: '.04em' } }, 'Mentar Prime — Terran'), h('div', { style: { fontSize: '1rem' } }, 'UI body in IBM Plex Sans Condensed: ten races, one throne-world.'),
+      h('div.v2-label', 'Panel header style'), h('div.v2-readout', '1,284.50', h('small', 'BC')), h('div.small.t-mist', 'Numbers: mono, tabular, right-aligned, unit at 72 %.'))),
+      UI.panel('Buttons & chips', h('div.col', h('div.row.wrap', UI.button('Next turn', null, { primary: true, kbd: 'Space' }), UI.button('Design'), UI.button('Active', null, { active: true }), UI.button('Scrap', null, { danger: true }), UI.button('Small', null, { small: true }), UI.button('Disabled', null, { disabled: true })),
+        h('div.row.wrap', UI.chip('Peace', 'ok'), UI.chip('War', 'bad'), UI.chip('Trade', 'cy'), UI.chip('Alliance', 'vi'), UI.chip('Rich', 'warn')),
+        h('div.row.g3', h('span.t-gold.num', '1,284 BC'), h('span.t-leaf.num', '+56'), h('span.t-ember.num', '294'), h('span.t-cyan.num', '120 RP'), h('span.t-rose.num', '-12'), h('span.t-violet.num', 'Treaty'), h('span.t-teal.num', 'Clean'), h('span.t-azure.num', 'Def 4')),
+        UI.bar(0.62, { color: 'var(--cyan)', thick: true, label: 'Hyper-X Rockets · 62%' }), UI.bar(0.3, { color: 'var(--leaf)' })), { sub: 'kit' })),
+    h('div.sec', 'Colony sliders, table, tabs'),
+    h('div.grid2', UI.panel('Colony spending', h('div', slider('Ship', 'var(--c-ship)', 20), slider('Defense', 'var(--c-def)', 10), slider('Industry', 'var(--c-ind)', 40), slider('Ecology', 'var(--c-eco)', 10), slider('Research', 'var(--c-res)', 20)), { sub: 'Mentar · 294 BC' }),
+      h('div.col', UI.panel('Planets', tbl, { sub: '4 colonies' }), UI.panel('Tabs', tabs.el))),
+    h('div.sec', 'Dialogs, tooltips, fields, icons'),
+    h('div.grid2', UI.panel('Dialogs', h('div.row.wrap',
+        UI.button('Open modal', () => UI.modal({ title: 'Colonise Tyr?', body: h('p', 'A small, barren world with abundant minerals. Population growth is halved.'), buttons: [{ label: 'Not now', value: false }, { label: 'Colonise', value: true, primary: true }] })),
+        UI.button('Toast', () => UI.toast('Research complete: Deuterium Fuel Cells', 'ok')), UI.button('Toast (bad)', () => UI.toast('Tyr is starving!', 'bad')),
+        h('span', { tip: '<b>Tooltip</b><br>Steel hairline, accent bar, <b>bold = accent</b>.' }, 'Hover me'))),
+      UI.panel('Fields & icons', h('div.col', h('div.row.wrap', h('input.field', { type: 'text', value: 'Emperor Zarek' }), h('select.field', h('option', 'Average'), h('option', 'Hard')), h('label.check', h('input', { type: 'checkbox', checked: true }), 'Fog of war'), h('input', { type: 'range' })),
+        h('div.row.wrap.g3', ['ship', 'fleet', 'scout', 'colony', 'planet', 'star', 'research', 'money', 'industry', 'defense', 'ecology', 'lock'].map(n => h('span.t-mist', { style: { fontSize: '1.6rem' }, tip: n }, UI.icon(n))))))),
+    h('div.sec', 'Galaxy HUD composition mock (CSS + 2-D canvas only — no art modules; judge chrome, type, star tints, reticle)'),
+    hud());
+})(window.MOO);
+</script>
+</body>
+</html>

@@ -1,0 +1,259 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Setup / options / save-load / game menu — test page</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- Optional web fonts (same as index.html): the page falls back to system fonts when offline. -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Condensed:wght@400;500;600;700&family=Marcellus&family=Marcellus+SC&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../css/base.css">
+<link rel="stylesheet" href="../css/kit.css">
+<style>
+  /* dev bar: a small tab at the top centre; click "dev" to unfold it */
+  #devbar { position: fixed; z-index: 400; top: 0; left: 50%; transform: translateX(-50%); display: flex; flex-direction: column; align-items: center; font: 12px/1.2 var(--font-ui); }
+  #devbar .tab { padding: 1px 14px 2px; cursor: pointer; color: var(--brass); background: rgba(4, 6, 20, .92); border: 1px solid rgba(214, 179, 106, .4); border-top: 0; letter-spacing: .12em; text-transform: uppercase; font-size: 10px; }
+  #devbar .tab:hover { color: var(--brass-hi); }
+  #devbar .body { display: none; flex-wrap: wrap; justify-content: center; gap: 3px; max-width: min(62rem, 94vw); padding: 5px 6px; background: rgba(4, 6, 20, .94); border: 1px solid rgba(214, 179, 106, .4); border-top: 0; }
+  #devbar.open .body { display: flex; }
+  #devbar button { padding: 3px 8px; cursor: pointer; font: 11px var(--font-ui); color: var(--ivory); background: #19224d; border: 1px solid rgba(214, 179, 106, .45); }
+  #devbar button:hover { background: #2b3875; }
+  #devbar button.on { color: #261b06; background: var(--brass); }
+  #devbar .sep { width: 1px; margin: 0 4px; background: rgba(214, 179, 106, .4); }
+  #devbar .log { flex-basis: 100%; text-align: center; color: var(--mist); min-height: 14px; font-size: 11px; }
+  /* mock 'galaxy' screen */
+  .mock-galaxy { position: absolute; inset: 0; display: grid; place-items: center; background: radial-gradient(ellipse at 50% 30%, #141e55, var(--void) 70%); }
+  .mock-galaxy pre { margin: .6rem 0 1rem; max-height: 16rem; overflow: auto; font: 12px/1.35 Consolas, monospace; color: var(--mist); user-select: text; }
+  #boot-err { position: fixed; z-index: 500; left: 0; right: 0; bottom: 0; margin: 0; padding: 6px 10px; color: var(--rose); font: 12px/1.4 monospace; white-space: pre-wrap; background: rgba(0, 0, 0, .85); }
+  #boot-err:empty { display: none; }
+</style>
+</head>
+<body>
+<div id="app">
+  <div id="screens"></div>
+  <div id="overlay"></div>
+  <div id="toasts"></div>
+  <div id="tip" role="tooltip"></div>
+</div>
+<div id="devbar"><div class="tab" id="devtab">dev</div><div class="body" id="devbody"></div></div>
+<pre id="boot-err"></pre>
+
+<script>
+/* Test harness for js/ui/setup.js, options.js, saveload.js, gamemenu.js.
+   Loads the real core + kit + whichever gfx modules exist, then MOCKS what other agents are still writing:
+   MOO.Data.races, MOO.Audio (volume API) and MOO.Game (newGame resolves after 1.5 s and only logs).
+   URL params:  ?screen=setup|options|saveload|menu  &step=0..2  &mode=save|load  &modal=options|save|load|menu  &gfx=0 (placeholders only)  &data=real|none  &fail=1  &export=real */
+(function () {
+  'use strict';
+  var Q = new URLSearchParams(location.search), J = '../js/';
+  var errBox = document.getElementById('boot-err');
+  function fail(msg) { errBox.textContent += msg + '\n'; console.error(msg); }
+
+  function load(src) {
+    return new Promise(function (res, rej) {
+      var s = document.createElement('script');
+      s.src = src + '?_=' + Date.now();
+      s.onload = res; s.onerror = function () { rej(new Error('failed to load ' + src)); };
+      document.head.appendChild(s);
+    });
+  }
+  function exists(src) { return fetch(src, { method: 'HEAD', cache: 'no-store' }).then(function (r) { return r.ok; }, function () { return false; }); }
+
+  /* ------------------------------------------------------------------ mock data */
+  function R(id, name, tagline, desc, home, leaders, primary, secondary, traits) {
+    return { id: id, name: name, plural: name === 'Human' ? 'Humans' : name, tagline: tagline, desc: desc, homeworld: home, leaderNames: leaders, art: { primary: primary, secondary: secondary },
+      traits: traits.map(function (t) { return { label: t[0], text: t[1], good: t[2] !== false }; }) };
+  }
+  function installData() {
+    var M = window.MOO;
+    M.Data.raceList = ['alkari', 'bulrathi', 'darlok', 'human', 'klackon', 'meklar', 'mrrshan', 'psilon', 'sakkra', 'silicoid'];
+    M.Data.races = {
+      alkari: R('alkari', 'Alkari', 'Peerless starfighter pilots', 'Feathered aerial hunters from a windswept world of cliffs. Their instinct for flight in three dimensions makes every Alkari captain a lethal dogfighter.', 'Alkaris',
+        ['Skyr', 'Qiraa', 'Vethun', 'Orlai', 'Taskeen'], '#4aa3df', '#e8d8a0', [['Ace pilots', 'Ships dodge more shots in battle'], ['Keen eyes', 'Longer scanner range'], ['Frail frames', 'Poor at ground combat', false]]),
+      bulrathi: R('bulrathi', 'Bulrathi', 'Mighty ground warriors', 'Hulking, fur-clad omnivores from a frozen world. Slow to breed and hard to anger, they are nearly impossible to dislodge from a planet they hold.', 'Bulrath',
+        ['Grom', 'Hrask', 'Dun-Mar', 'Brukk', 'Ulvar'], '#b0663a', '#6b4326', [['Ground fighters', 'Troops hit much harder'], ['Strong industry', 'Factories are more productive'], ['Slow breeders', 'Population grows slowly', false], ['Poor researchers', 'Research penalty', false]]),
+      darlok: R('darlok', 'Darlok', 'Masters of spycraft and theft', 'Secretive shapeshifters who thrive on whispers and stolen blueprints. Few notice a Darlok agent until the vault is already empty.', 'Darlokai',
+        ['Vess', 'Nyx', 'Sileth', 'Marrow', 'Quill'], '#6a4a8c', '#2d2a3e', [['Spy network', 'Agents steal more and are caught less'], ['Stealth', 'Hard to detect in enemy space'], ['Weak troops', 'Poor in ground combat', false], ['Thin economy', 'Reduced production', false]]),
+      human: R('human', 'Human', 'Gifted diplomats and traders', 'Adaptable and restless, humans make friends as easily as enemies. Their treaties are respected, their markets are crowded and their ambitions are boundless.', 'Terra',
+        ['Aurelia Cross', 'Marcus Hale', 'Imani Okoye', 'Jun Park', 'Elena Voss'], '#3a7bd5', '#d9d9d9', [['Diplomats', 'Treaties are easier to win'], ['Traders', 'Extra income from trade'], ['No glaring flaws', 'Average in every field']]),
+      klackon: R('klackon', 'Klackon', 'Tireless hive workers', 'A sprawling insectoid collective that never sleeps. Where others debate, the Klackon simply build; invention, however, does not come naturally to the hive.', 'Klackos',
+        ['Kzzt', 'Chitar', 'Vrrel', 'Skitha', 'Tak-Tak'], '#6ab04c', '#2f5d1f', [['Industrious', 'Greater food and production'], ['Hive mind', 'Colonies never rebel'], ['Rigid minds', 'Research penalty', false]]),
+      meklar: R('meklar', 'Meklar', 'Cybernetic industrial giants', 'Machine-minds fused with the bodies that built them. Meklar foundries run hot and tireless, and their warships leave dry-dock faster than rivals can count.', 'Meklon',
+        ['Unit-7', 'Aegis', 'Prime-Delta', 'Cogitor', 'Vex-9'], '#8a94a6', '#3a4256', [['Cyber-industry', 'Cheaper, stronger factories'], ['Self-repair', 'Ships mend between battles'], ['Cold diplomats', 'Poor at treaties', false], ['Costly growth', 'Population grows slowly', false]]),
+      mrrshan: R('mrrshan', 'Mrrshan', 'Fierce hunters with sharp aim', 'Proud feline hunters who treat war as sport and honour as law. Their gunners rarely miss; their patience for treaties is considerably shorter.', 'Mrrsha',
+        ['Rashaka', 'Mrraa', 'Tchessa', 'Khazir', 'Sorrel'], '#e0a030', '#7a4a12', [['Sharp gunners', 'Weapons hit more often'], ['Fast hunters', 'Ships close in quickly'], ['Poor spies', 'Weak at espionage', false], ['Hot-tempered', 'Diplomacy suffers', false]]),
+      psilon: R('psilon', 'Psilon', 'Superior research techniques', 'Frail bodies, vast minds. The Psilon turn every question into a laboratory and every laboratory into a discovery, if the galaxy lets them live to publish.', 'Psilos',
+        ['Zhar', 'Ilyn', 'Quorith', 'Senn', 'Vael'], '#c06bd8', '#4b2a6a', [['Brilliant minds', 'Large research bonus'], ['Creative', 'Discoveries yield extra options'], ['Weak troops', 'Poor in ground combat', false], ['Poor industry', 'Factories less productive', false]]),
+      sakkra: R('sakkra', 'Sakkra', 'Prolific reptilian breeders', 'Cold-blooded swarms that hatch by the thousand on swamp-worlds. Sakkra grow faster than any rival, and their troop ships are never short of eggs.', 'Sakkr',
+        ['Sssaran', 'Tkesh', 'Ressik', 'Ixil', 'Varrak'], '#3fb58a', '#1d5b45', [['Rapid growth', 'Population grows very fast'], ['Brood armies', 'Cheap, plentiful troops'], ['Poor researchers', 'Research penalty', false], ['Hostile to all', 'Weak diplomacy', false]]),
+      silicoid: R('silicoid', 'Silicoid', 'Crystalline beings of living rock', 'Slow, patient minds in bodies of living stone. Silicoids settle worlds no other race can touch, but their growth and their pace of thought are glacial.', 'Silica',
+        ['Obsidian', 'Quartzus', 'Basalt', 'Geode', 'Onyx'], '#b8a078', '#554a38', [['Hardy', 'Thrives on hostile worlds'], ['No hunger', 'Never starves'], ['Slow growth', 'Population grows slowly', false], ['Dull diplomats', 'Poor at treaties', false]]),
+    };
+  }
+
+  /* ------------------------------------------------------------------ mock audio + game */
+  var devLog = function () {};
+  function installAudio() {
+    var A = window.MOO.Audio;
+    if (A.setVolume) return;                               // a real audio module is present
+    A.settings = { music: 0.6, sfx: 0.8, muted: false };
+    A.setVolume = function (k, v) { A.settings[k] = v; devLog('Audio.setVolume(' + k + ', ' + v.toFixed(2) + ')'); };
+    A.setMuted = function (b) { A.settings.muted = !!b; devLog('Audio.setMuted(' + !!b + ')'); };
+  }
+  function mockState(cfg) {
+    var M = window.MOO; cfg = cfg || {};
+    var size = cfg.size || 'large', n = { small: 24, medium: 48, large: 70, huge: 108, colossal: 160 }[size] || 70, planets = [];
+    for (var i = 0; i < 24; i++) planets.push({ id: i, owner: i < (cfg.planets || 12) ? 0 : -1 });
+    return {
+      turn: cfg.turn || 37, year: cfg.year || 2347, playerId: 0,
+      empires: [{ race: cfg.race || 'psilon', leader: cfg.leader || 'Zhar', color: cfg.banner === undefined ? 0 : cfg.banner }],
+      settings: { size: size, difficulty: cfg.difficulty || 'hard' }, stars: new Array(n).fill(0), planets: planets, rng: M.RNG.create('mock'),
+    };
+  }
+  var lastNew = null;
+  function installGame() {
+    var M = window.MOO;
+    var cur = null;                                             // the mock state is built lazily (MOO.RNG is not loaded yet at this point)
+    M.Game = {
+      _has: true, _fail: Q.get('fail') === '1',
+      get S() { return cur || (cur = mockState()); }, set S(v) { cur = v; },
+      hasGame: function () { return this._has; },
+      newGame: function (settings) {
+        var g = this; lastNew = settings;
+        console.log('[mock] Game.newGame', JSON.parse(JSON.stringify(settings))); devLog('Game.newGame(' + settings.race + ', ' + settings.size + ', seed ' + settings.seed + ')');
+        return new Promise(function (res, rej) {
+          setTimeout(function () {
+            if (g._fail) rej(new Error('Mock failure: the galaxy generator exploded (this is a test).'));
+            else { g.S = mockState({ size: settings.size, race: settings.race, leader: settings.leader, banner: settings.banner, difficulty: settings.difficulty, turn: 1, year: 2300 }); g._has = true; res(); }
+          }, 1500);
+        });
+      },
+      saveSlot: function (slot) { if (!this.S) return false; var ok = M.Save.save(slot, this.S); devLog('Game.saveSlot(' + slot + ') -> ' + ok); return ok; },
+      loadSlot: function (slot) { var S = M.Save.load(slot); devLog('Game.loadSlot(' + slot + ') -> ' + !!S); if (!S) return false; this.S = S; this._has = true; M.UI.Screens.go('galaxy'); return true; },
+      quitToMenu: function () { this._has = false; devLog('Game.quitToMenu()'); M.UI.Screens.go('menu'); },
+    };
+  }
+
+  /* ------------------------------------------------------------------ sample saves, storage failure simulation */
+  var LS = 'moo.save.v1.';
+  function seedSaves() {
+    var M = window.MOO, defs = [
+      ['auto', 'psilon', 'Zhar', 0, 2347, 37, 'large', 'hard', 12, 3 * 60e3],
+      ['1', 'human', 'Aurelia Cross', 3, 2310, 11, 'medium', 'average', 5, 5 * 3600e3],
+      ['2', 'klackon', 'Kzzt', 1, 2501, 143, 'huge', 'impossible', 21, 3 * 86400e3],
+      ['4', 'sakkra', 'Sssaran', 5, 2330, 22, 'small', 'simple', 7, 40 * 86400e3],
+    ];
+    defs.forEach(function (d) {
+      var S = mockState({ race: d[1], leader: d[2], banner: d[3], year: d[4], turn: d[5], size: d[6], difficulty: d[7], planets: d[8] });
+      if (!M.Save.save(d[0], S)) return;
+      try { var meta = JSON.parse(localStorage.getItem(LS + d[0] + '.meta')); meta.at = Date.now() - d[9]; localStorage.setItem(LS + d[0] + '.meta', JSON.stringify(meta)); } catch (e) { /* ignore */ }
+    });
+    devLog('4 sample saves written');
+  }
+  function clearSaves() { var M = window.MOO; M.Save.SLOTS.forEach(function (s) { M.Save.remove(s); }); devLog('all saves removed'); }
+  var realSave = null;
+  function toggleStorage(btn) {
+    var M = window.MOO;
+    if (realSave) { Object.assign(M.Save, realSave); realSave = null; btn.textContent = 'Storage: ok'; btn.classList.remove('on'); }
+    else {
+      realSave = { available: M.Save.available, save: M.Save.save, list: M.Save.list, load: M.Save.load };
+      M.Save.available = function () { return false; }; M.Save.save = function () { return false; };
+      M.Save.list = function () { return M.Save.SLOTS.map(function (slot) { return { slot: slot, meta: null }; }); }; M.Save.load = function () { return null; };
+      btn.textContent = 'Storage: BROKEN'; btn.classList.add('on');
+    }
+  }
+
+  /* ------------------------------------------------------------------ mock 'galaxy' screen + dev bar */
+  function installGalaxyStub() {
+    var M = window.MOO, UI = M.UI, h = UI.h;
+    if (UI.Screens.has('galaxy')) return;
+    var pre;
+    UI.Screens.register('galaxy', {
+      create: function (el) {
+        pre = h('pre');
+        el.appendChild(h('div.mock-galaxy', UI.panel('Galaxy screen (mock)', h('div', h('p', 'The real galaxy screen is written elsewhere. The wizard handed this to Game.newGame:'), pre,
+          h('div.row.g2', UI.button('Game menu', function () { UI.gameMenu(); }, { primary: true }), UI.button('Back to setup', function () { UI.Screens.go('setup'); }), UI.button('Title', function () { UI.Screens.go('menu'); }))))));
+      },
+      enter: function () { pre.textContent = JSON.stringify(lastNew || { note: 'loaded from a save', S: M.Game.S && { turn: M.Game.S.turn, year: M.Game.S.year } }, null, 1); },
+    });
+    UI.bindKey('Escape', function () { UI.gameMenu(); }, { screen: 'galaxy' });
+  }
+  function buildDevBar() {
+    var M = window.MOO, UI = M.UI, bar = document.getElementById('devbar'), body = document.getElementById('devbody'), log = document.createElement('div');
+    log.className = 'log'; devLog = function (t) { log.textContent = t; };
+    document.getElementById('devtab').onclick = function () { bar.classList.toggle('open'); };
+    function btn(label, fn) { var b = document.createElement('button'); b.textContent = label; b.onclick = function () { fn(b); }; body.appendChild(b); return b; }
+    function sep() { var s = document.createElement('i'); s.className = 'sep'; body.appendChild(s); }
+    var go = function (id, p) { return function () { UI.closeAllModals(); UI.Screens.go(id, p || {}); }; };
+    btn('Title', go('menu')); btn('Setup', go('setup')); btn('Setup 2', go('setup', { step: 1 })); btn('Setup 3', go('setup', { step: 2 }));
+    btn('Options', go('options', { from: 'menu' })); btn('Save', go('saveload', { mode: 'save', from: 'galaxy' })); btn('Load', go('saveload', { mode: 'load', from: 'menu' }));
+    sep();
+    btn('Options (modal)', function () { UI.openOptions(); }); btn('Save (modal)', function () { UI.openSaveLoad('save').then(function (r) { devLog('save modal -> ' + JSON.stringify(r)); }); });
+    btn('Load (modal)', function () { UI.openSaveLoad('load').then(function (r) { devLog('load modal -> ' + JSON.stringify(r)); }); }); btn('Game menu', function () { UI.gameMenu().then(function (r) { devLog('game menu -> ' + r); }); });
+    sep();
+    var g = btn('Game: ON', function (b) { M.Game._has = !M.Game._has; b.textContent = 'Game: ' + (M.Game._has ? 'ON' : 'none'); b.classList.toggle('on', !M.Game._has); });
+    btn('Seed saves', seedSaves); btn('Clear saves', clearSaves); btn('Storage: ok', toggleStorage);
+    btn('newGame fails', function (b) { M.Game._fail = !M.Game._fail; b.classList.toggle('on', M.Game._fail); });
+    btn('Reset settings', function () { M.Settings.reset(); devLog('settings reset (reload to see the wizard defaults)'); });
+    body.appendChild(log);
+    if (M.Game._fail) { var f = body.querySelectorAll('button'); f[f.length - 2].classList.add('on'); }
+  }
+
+  /* ------------------------------------------------------------------ boot */
+  var CORE = ['core/ns.js', 'core/util.js', 'core/rng.js', 'core/bus.js', 'core/save.js', 'core/settings.js'];
+  var GFX = ['gfx/icons.js', 'gfx/space.js', 'gfx/planets.js', 'gfx/ships.js', 'gfx/portraits.js'];
+  var UIF = ['ui/kit.js', 'ui/screens.js', 'ui/menu.js', 'ui/setup.js', 'ui/options.js', 'ui/saveload.js', 'ui/gamemenu.js'];
+
+  // scripts are fetched in parallel and executed in order (async = false), like js/loader.js
+  function loadOrdered(files) {
+    return Promise.all(files.map(function (f) {
+      return new Promise(function (res, rej) {
+        var sc = document.createElement('script');
+        sc.async = false; sc.src = J + f + '?_=' + Date.now();
+        sc.onload = res; sc.onerror = function () { rej(new Error('failed to load ' + f)); };
+        document.head.appendChild(sc);
+      });
+    }));
+  }
+  (async function () {
+    try {
+      await load(J + CORE[0]);                                 // ns.js creates MOO.Data / MOO.Audio ... which the mocks fill in
+      var files = CORE.slice(1), real = Q.get('data') === 'real' && await exists(J + 'data/races.js');
+      if (real) files.push('data/races.js'); else if (Q.get('data') !== 'none') installData();
+      installAudio(); installGame();
+      if (Q.get('gfx') !== '0') {
+        var have = await Promise.all(GFX.map(function (f) { return exists(J + f); }));
+        GFX.forEach(function (f, i) { if (have[i]) files.push(f); });
+      }
+      await loadOrdered(files.concat(UIF));
+    } catch (e) { fail(String(e && e.stack || e)); return; }
+
+    var M = window.MOO, UI = M.UI;
+    UI.init(); UI.startLoop();
+    var shown = 0;
+    window.addEventListener('error', function (e) { if (shown++ < 4) UI.toast('Error: ' + (e.message || e.error), 'bad', 9000); });
+    window.addEventListener('unhandledrejection', function (e) { if (shown++ < 4) UI.toast('Error: ' + (e.reason && e.reason.message || e.reason), 'bad', 9000); });
+    // exports would trigger a real browser download; log them instead (add ?export=real to try the real thing)
+    if (Q.get('export') !== 'real') M.Save.exportFile = function (S, name) { devLog('Save.exportFile(' + name + '.json, turn ' + S.turn + ') [stubbed]'); console.log('[mock] exportFile', name, S && S.turn); };
+    installGalaxyStub(); buildDevBar();
+    var scr = Q.get('screen') || 'setup', params = { from: 'menu' };
+    if (Q.get('step')) params.step = +Q.get('step');
+    if (Q.get('mode')) params.mode = Q.get('mode');
+    if (Q.get('seed') === '1') seedSaves();
+    UI.Screens.go(UI.Screens.has(scr) ? scr : 'setup', params);
+    var modal = Q.get('modal');
+    if (modal === 'options') UI.openOptions(); else if (modal === 'save') UI.openSaveLoad('save'); else if (modal === 'load') UI.openSaveLoad('load'); else if (modal === 'menu') UI.gameMenu();
+    // zz(x, y, s): magnify the app by s with CSS px (x, y) at the top-left, for close-up screenshots; zz() resets
+    window.zz = function (x, y, s) {
+      var a = document.getElementById('app');
+      if (!s || s === 1) { a.style.transform = ''; return 'reset'; }
+      a.style.transformOrigin = '0 0'; a.style.transform = 'translate(' + (-x * s) + 'px,' + (-y * s) + 'px) scale(' + s + ')';
+      return 'zoom x' + s + ' at ' + x + ',' + y;
+    };
+    window.TEST = { M: M, lastNew: function () { return lastNew; }, seedSaves: seedSaves, clearSaves: clearSaves };
+  })();
+})();
+</script>
+</body>
+</html>

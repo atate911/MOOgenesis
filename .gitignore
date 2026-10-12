@@ -1,0 +1,5 @@
+node_modules/
+tools/out/
+*.tmp
+*.tmp.*
+.claude/settings.local.json
