@@ -47,4 +47,13 @@ module.exports = function (M, t) {
     Sim.Colony.setSlider(S, E, p, 4, 100); Sim.Econ.refresh(S);
     t.ok(E.research.total > before, 'research total follows the slider: ' + before + ' -> ' + E.research.total);
   });
+
+  t.test('Q.hints: a human with 0 RP gets the noResearch tip until a Tech slider is raised', () => {
+    const Sim = M.Sim, S = Sim.Setup.create({ size: 'small', opponents: 1, race: 'human', seed: 'hint-rp', difficulty: 'average' });
+    const E = S.empires[S.playerId], p = S.planets.find(q => q.owner === E.id);
+    p.lock = [false, false, false, false, false]; p.sliders = [0, 0, 100, 0, 0]; Sim.Econ.refresh(S);
+    t.eq(Sim.Q.hints(S).map(h => h.id).join(), 'noResearch');
+    Sim.Colony.setSlider(S, E, p, 4, 100); Sim.Econ.refresh(S);
+    t.eq(Sim.Q.hints(S).length, 0);
+  });
 };

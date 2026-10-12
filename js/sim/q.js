@@ -125,4 +125,17 @@ MOO.def(function (M) {
       return { id: r.id, race: r.race, alive: r.alive, color: E.color, fleet, pop: Math.floor(r.pop), tech, planets: r.colonies, production: r.production, power: 0 };
     }).map((r, _, a) => { const mx = k => Math.max(1, ...a.map(x => x[k])); r.power = Math.round((r.fleet / mx('fleet') + r.pop / mx('pop') + r.tech / mx('tech') + r.planets / mx('planets') + r.production / mx('production')) * 20); return r; });
   };
+
+  // ---- tutor hints (data only; the Help/tutor UI decides whether and how to show them) -------------------------------------------------------------
+  // [{id, severity:'tip'|'warn', text, planet?}] for the human's situation. Today: no research at all (the default sliders put everything into industry until Tech is set, research/04).
+  Q.hints = function (S, empireId) {
+    const E = S.empires[empireId === undefined ? S.playerId : empireId], out = [];
+    if (!E || !E.alive) return out;
+    const mine = S.planets.filter(p => p.owner === E.id);
+    if (mine.length && !((E.research && E.research.total) > 0)) {
+      const p = mine.slice().sort((a, b) => (b.pop | 0) - (a.pop | 0))[0];
+      out.push({ id: 'noResearch', severity: 'tip', planet: p.id, text: 'No research points: your planets spend nothing on Tech. Open a colony and drag its Tech slider (the last one) up to start discovering new technologies.' });
+    }
+    return out;
+  };
 });
