@@ -606,12 +606,14 @@ MOO.def(function (M) {
   function classicCancelBio(S, p, plan, R) { const core = bombCore(S, p, plan, R); shrinkMaxPop(p, core.maxPopLoss); }
 
   G.inbound = function (S, empire, planet) {
-    const p = plan_(S, planet), st = S.stars[p.starId], a = eid(empire); let n = 0;
-    for (const t of (S.trans || [])) if (t.owner === a && t.to === p.starId && t.x === st.x && t.y === st.y) n += t.n | 0;     // transports arriving this turn
+    const p = plan_(S, planet), a = eid(empire); let n = 0;
+    for (const t of (S.trans || [])) if (t.owner === a && t.to === p.starId) n += t.n | 0;     // ALL of the bomber's transports in flight to the planet (research/08 §4.8), not only those landing this turn
     return n;
   };
   G.aiBombs = function (S, E, planet) {
     const p = plan_(S, planet), rc = races()[E.race], mul = (rc && rc.ai && rc.ai.invasionMul) || 1;
+    const D = M.Sim.Diplo;                                       // never bomb a human who holds a ceasefire against us (research/03-verification #9, 08 §5.4)
+    if (D && p.owner >= 0 && S.empires[p.owner] && S.empires[p.owner].human && !E.human && D.ceasefire(S, E.id, p.owner) > 0) return false;
     return (p.pop | 0) > G.inbound(S, E.id, p) * mul;           // bomb until the pop is smaller than the troops already on the way
   };
 

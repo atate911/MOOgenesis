@@ -581,13 +581,16 @@ module.exports = function (M, t) {
     rules({ humanBombard: 'no' }, () => t.eq(G.bombard(f.S, f.R).length, 0));
     t.eq(M.Sim.Orders.apply(f.S, 0, { t: 'bombard', planet: 0, yes: true }).ok, M.Sim.Fleet.at(f.S, 0, 0) !== null && f.S.planets[0].owner > 0, 'only where the fleet really sits');
   });
-  t.test('AI bombing: bombs while pop > its own transports arriving this turn × invasion estimate (Bulrathi ×1.2); never a NAP partner', () => {
+  t.test('AI bombing: bombs while pop > its own transports in flight to the planet × invasion estimate (Bulrathi ×1.2); never a NAP partner', () => {
     const f = fx('ai'); fleet(f, 2, 3, 10);                         // empire 2 (AI) parks 10 Bombers over empire 1's capital
     const st = f.S.stars[f.p.starId], tr = n => { f.S.trans = [{ id: 7, owner: 2, from: 0, to: f.p.starId, n, x: st.x, y: st.y, speed: 1 }]; };
     f.p.pop = 45; tr(40); t.eq(G.inbound(f.S, 2, f.p), 40); t.eq(G.aiBombs(f.S, f.other, f.p), true);
     f.other.race = 'bulrathi'; t.eq(G.aiBombs(f.S, f.other, f.p), false, '45 > 40 × 1.2 is false'); f.p.pop = 49; t.eq(G.aiBombs(f.S, f.other, f.p), true);
     f.other.race = 'human'; f.p.pop = 30; t.eq(G.aiBombs(f.S, f.other, f.p), false); tr(0); t.eq(G.aiBombs(f.S, f.other, f.p), true);
-    f.S.trans = [{ id: 7, owner: 2, from: 0, to: f.p.starId, n: 99, x: st.x + 40, y: st.y, speed: 1 }]; t.eq(G.inbound(f.S, 2, f.p), 0, 'transports still in flight do not count');
+    f.S.trans = [{ id: 7, owner: 2, from: 0, to: f.p.starId, n: 99, x: st.x + 40, y: st.y, speed: 1 }]; t.eq(G.inbound(f.S, 2, f.p), 99, 'ALL of the bomber\'s transports in flight to the planet count');
+    f.S.trans[0].owner = 1; t.eq(G.inbound(f.S, 2, f.p), 0, 'other empires\' transports do not');
+    { const own = f.S.empires[f.p.owner], wasH = own.human, D = M.Sim.Diplo, sv = D.ceasefire; own.human = true; f.p.pop = 30; f.S.trans = [];
+      try { D.ceasefire = () => 5; t.eq(G.aiBombs(f.S, f.other, f.p), false, 'never bombs a human holding a ceasefire'); D.ceasefire = () => 0; t.eq(G.aiBombs(f.S, f.other, f.p), true); } finally { own.human = wasH; D.ceasefire = sv; } }
     f.S.trans = []; f.p.pop = 30; f.S.bombard = undefined;
     t.eq(G.bombard(f.S, f.R, true).filter(e => e.empire === 2).length, 1, 'AI fleets in orbit bomb without being asked');
     f.p.pop = 30; f.S.bombard = undefined; t.eq(G.bombard(f.S, f.R).length, 0, 'AI-vs-AI bombardments are not reported to the human');
