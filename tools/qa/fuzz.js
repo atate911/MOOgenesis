@@ -11,6 +11,7 @@ const { serve, open, sleep } = require('./lib');
   while (Date.now() - t0 < secs * 1000) {
     n++;
     const r = rnd(); let a;
+    let hung = false; const wd = setTimeout(() => { hung = true; console.log('HANG after', acts.join(' > '), 'n=', n); process.exit(3); }, 15000);
     try {
       if (r < 0.5) {
         a = await page.evaluate(v => { const bs = [...document.querySelectorAll('button, .au-item, .tbl tr.clickable, .dz-card, .dz-slot, select')].filter(b => b.offsetParent && !b.disabled && !/Quit to title|Next turn|^New game/i.test(b.textContent)); if (!bs.length) return 'none'; const b = bs[Math.floor(v * bs.length)]; b.click(); return 'click:' + (b.textContent || b.className).trim().replace(/\s+/g, ' ').slice(0, 24); }, rnd());
@@ -19,6 +20,7 @@ const { serve, open, sleep } = require('./lib');
         if (box) { const x = box.x + rnd() * box.w, y = box.y + rnd() * box.h, right = rnd() < 0.2; await page.mouse.move(x, y); if (rnd() < 0.15) await page.mouse.wheel(0, (rnd() - 0.5) * 600); else await page.mouse.click(x, y, { button: right ? 'right' : 'left', clickCount: rnd() < 0.15 ? 2 : 1 }); a = 'canvas' + (right ? 'R' : ''); } else a = 'nocanvas';
       } else { const k = keys[Math.floor(rnd() * keys.length)]; await page.keyboard.press(k); a = 'key:' + k; }
     } catch (e) { a = 'ERR ' + e.message.slice(0, 50); }
+    clearTimeout(wd);
     acts.push(a); if (acts.length > 8) acts.shift();
     if (errors.length > lastErr) { console.log('ERRORS after', acts.join(' > '), JSON.stringify(errors.slice(lastErr))); lastErr = errors.length; }
     // keep the run out of dead ends
