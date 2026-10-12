@@ -108,6 +108,9 @@ MOO.def(function (M) {
       p.waste = (p.waste | 0) + Math.floor((100 - pct) * newWaste / 100);
       if (p.unrest === 2) p.waste = 0;
       const n = C.ecoN(E), need = Math.floor(p.waste / n);
+      // classic second term (Data.Config.QUIRKS.wasteSub1, research/04 C8): added AFTER the cleanup cost is known; a fully funded cleanup still wipes it
+      const Q = M.Data.Config.QUIRKS;
+      if (Q && Q.wasteSub1 === true) p.waste += Math.floor((100 - Math.floor(p.waste * 100 / Math.max(1, p.mp2))) * Math.floor(operating * C.oper(E) / 10) / 100);
       if (eco >= need) { eco -= need; p.waste = 0; } else { p.waste -= n * eco; eco = 0; }
       p.waste = clamp(p.waste, 0, Math.max(0, p.mp2 - 10));
     } else p.waste = 0;
@@ -174,6 +177,11 @@ MOO.def(function (M) {
   };
 
   C.soilInc = function (mp1, kind) {
+    const Q = M.Data.Config.QUIRKS;
+    if (Q && Q.soilRounding === true) {                         // 1oom v1.3: Fertile (m/20)*5 + ((m/20)%5 ? 5 : 0), Gaia with m/10; integer division, min 5
+      const q = Math.floor(mp1 / (kind === 'gaia' ? 10 : 20));
+      return Math.max(5, q * 5 + (q % 5 ? 5 : 0));
+    }
     const step = v => Math.max(5, Math.ceil(v / 5) * 5);
     return kind === 'gaia' ? step(mp1 * 0.5) : step(mp1 * 0.25);
   };
@@ -228,6 +236,7 @@ MOO.def(function (M) {
   };
   C.buildShips = function (S, E, p, out) {
     let bc = C.richMul(p, Math.floor(p.spendable * p.sliders[SHIP] / 100)) + p.acc.ship;
+    if (p.sliders[SHIP] > 0 && M.Data.Config.QUIRKS && M.Data.Config.QUIRKS.shipBonusBC === true) bc += 1;   // original bug (research/04 C9): +1 BC after carry and richness
     p.acc.ship = bc;
     if (p.sliders[SHIP] === 0 && bc <= 0) return;
     if (p.build === -1) {                                            // stargate (original: excess BC carry, build item resets to design 0, a human's SHIP percentage moves to TECH)

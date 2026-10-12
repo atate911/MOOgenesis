@@ -23,5 +23,13 @@ MOO.def(function (M) {
     SHIP_UPKEEP_DIV: 50,                     // 2% of design cost per ship per turn
     STARGATE_COST: 3000, STARGATE_UPKEEP: 100,
     SCRAP_REFUND: 0.25,
+    // Original-executable (1oom v1.3) economy quirks.  true = the shipped behaviour, false = the intended/fixed rule.  Read as `QUIRKS && QUIRKS.x` so an absent table
+    // or key means the default below.  See tools/handoff/verification-fixes.md for the decision on each.
+    //   popTenthsTwice  (research/04 C7)  default ON  - the carried population tenths are added twice (small colonies grow ~2x faster)
+    //   hiddenChildLabor(research/04 C5)  default ON  - production is recomputed once more before defence/ships/industry
+    //   wasteSub1       (research/04 C8)  default OFF - second waste term (~+20 % waste at oper 2), added after the cleanup cost is computed
+    //   shipBonusBC     (research/04 C9)  default OFF - +1 BC for every planet whose SHIP slider is > 0
+    //   soilRounding    (research/04 2.3) default OFF - the 1oom soil-enrichment increment rounding (Fertile m/20, Gaia m/10) instead of 'round up to 5'
+    QUIRKS: { popTenthsTwice: true, hiddenChildLabor: true, wasteSub1: false, shipBonusBC: false, soilRounding: false },
   };
 });

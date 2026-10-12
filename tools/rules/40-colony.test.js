@@ -162,6 +162,36 @@ module.exports = function (M, t) {
     const a = mkP({ spendable: 100, sliders: [100, 0, 0, 0, 0], build: -1, acc: { ship: 2950, factory: 0, base: 0, baseUpg: 0, shield: 0, eco: 0, refit: 0 } });
     C.buildShips(S, mkE('human', { human: false }), a, []); t.deep(a.sliders, [100, 0, 0, 0, 0], 'AI sliders are not touched');
   });
+  const withQuirks = (q, fn) => { const prev = M.Data.Config.QUIRKS; M.Data.Config.QUIRKS = Object.assign({}, prev, q); try { fn(); } finally { M.Data.Config.QUIRKS = prev; } };
+  t.test('quirk defaults: popTenthsTwice / hiddenChildLabor classic, wasteSub1 / shipBonusBC / soilRounding fixed', () => {
+    const Q = M.Data.Config.QUIRKS;
+    t.eq(Q.popTenthsTwice, true); t.eq(Q.hiddenChildLabor, true); t.eq(Q.wasteSub1, false); t.eq(Q.shipBonusBC, false); t.eq(Q.soilRounding, false);
+  });
+  t.test('wasteSub1 (C8): +floor((100-waste%)*floor(op*oper/10)/100) after the cleanup cost; a funded cleanup wipes it, an unfunded one keeps it', () => {
+    withQuirks({ wasteSub1: true }, () => {
+      const E = mkE('human');
+      const q = mkP({ spendable: 43, sliders: [0, 0, 100, 0, 0] }); C.buildEco(S, E, q); t.eq(q.waste, 34, '30 + (70*6)/100');
+      const p = mkP({ spendable: 43, sliders: [0, 0, 65, 35, 0] }); C.buildEco(S, E, p); t.eq(p.waste, 0, 'fully funded cleanup wipes it');
+    });
+    const q = mkP({ spendable: 43, sliders: [0, 0, 100, 0, 0] }); C.buildEco(S, mkE('human'), q); t.eq(q.waste, 30, 'default: off');
+  });
+  t.test('shipBonusBC (C9): +1 BC to the ship accumulator whenever SHIP > 0 (after carry), nothing at SHIP 0', () => {
+    const mk = sl => mkP({ spendable: 100, sliders: sl, build: 0, acc: { ship: 5, factory: 0, base: 0, baseUpg: 0, shield: 0, eco: 0, refit: 0 } });
+    const E = mkE('human', { designs: [{ id: 0 }] }), des = M.Sim.Design, savedCost = des.cost; des.cost = () => 100000;
+    try {
+      let p = mk([10, 0, 90, 0, 0]); C.buildShips(S, E, p, []); const base = p.acc.ship;
+      withQuirks({ shipBonusBC: true }, () => { p = mk([10, 0, 90, 0, 0]); C.buildShips(S, E, p, []); t.eq(p.acc.ship, base + 1);
+        p = mk([0, 0, 100, 0, 0]); C.buildShips(S, E, p, []); t.eq(p.acc.ship, 5, 'no SHIP, no bonus'); });
+    } finally { des.cost = savedCost; }
+  });
+  t.test('soilRounding (2.3): 1oom increments Fertile (m/20)*5 + (...%5 ? 5 : 0), Gaia with m/10; the default stays ceil-to-5', () => {
+    withQuirks({ soilRounding: true }, () => {
+      const f = (m, k) => C.soilInc(m, k);
+      t.eq(f(20, 'fertile'), 10); t.eq(f(40, 'fertile'), 15); t.eq(f(60, 'fertile'), 20); t.eq(f(80, 'fertile'), 25); t.eq(f(105, 'fertile'), 25); t.eq(f(120, 'fertile'), 35);
+      t.eq(f(55, 'gaia'), 25); t.eq(f(60, 'gaia'), 35); t.eq(f(70, 'gaia'), 40); t.eq(f(90, 'gaia'), 50); t.eq(f(105, 'gaia'), 50); t.eq(f(5, 'fertile'), 5, 'min 5');
+    });
+    t.eq(C.soilInc(20, 'fertile'), 5);
+  });
   t.test('growth quirk (C7): the carried tenths are added twice — pop 2 -> 50 on a max-100 normal world takes 29 turns (46 with Data.Config.QUIRKS.popTenthsTwice = false)', () => {
     const E = mkE('human'), run = () => { const q = mkP({ pop: 2, popFrac: 0, mp3: 100, waste: 0, growth: 'normal', typeIdx: 13 }); let n = 0; while (q.pop < 50 && n < 200) { C.growPop(S, E, q, 0); n++; } return n; };
     t.eq(run(), 29, 'original behaviour is the default');
