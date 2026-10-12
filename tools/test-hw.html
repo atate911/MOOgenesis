@@ -32,7 +32,7 @@ function init() {
   const M = window.MOO, $ = id => document.getElementById(id), out = $('out');
   const qs = new URLSearchParams(location.search), N = +(qs.get('n') || 8), TURNS = +(qs.get('turns') || 100);
   const R = window.__hw = { checks: [], rows: [], errors: [], done: false };
-  const log = (s, c) => { out.innerHTML += '\n<span class="' + (c || '') + '">' + String(s).replace(/</g, '&lt;') + '</span>'; };
+  const log = (s, c) => { console.log('[hw] ' + s); out.innerHTML += '\n<span class="' + (c || '') + '">' + String(s).replace(/</g, '&lt;') + '</span>'; };
   const check = (name, ok, extra) => { R.checks.push({ name, ok: !!ok, extra }); log((ok ? 'PASS ' : 'FAIL ') + name + (extra ? '  ' + extra : ''), ok ? 'ok' : 'bad'); };
   const ce = console.error; console.error = function () { R.errors.push([].join.call(arguments, ' ')); ce.apply(console, arguments); };
   window.addEventListener('error', e => R.errors.push('window: ' + e.message));
@@ -55,7 +55,7 @@ function init() {
     'planet 360px': (P, n) => { ctx.clearRect(0, 0, 1280, 720); const t0 = performance.now(); for (let i = 0; i < n; i++) P.draw(ctx, DESC, 420, 360, 180, i * 0.1, { dpr: 1, spin: 0.02 }); sync(); return (performance.now() - t0) / n; },
     'star surface': (P, n, S) => { const t0 = performance.now(); for (let i = 0; i < n; i++) { if (P.drawStar) P.drawStar(ctx, 'yellow', 900, 300, 110, i * 0.1, { dpr: 1 }); else S.drawStarSurface(ctx, 'yellow', 900, 300, 110, i * 0.1, { dpr: 1 }); } sync(); return (performance.now() - t0) / n; },
     'backdrop 1280x720': (P, n, S, SP) => { const t0 = performance.now(); let c; for (let i = 0; i < Math.max(2, n >> 2); i++) c = SP.makeBackdrop(1280, 720, 'hw' + i, { intensity: 1, stars: 1 }); ctx.drawImage(c, 0, 0); sync(); return (performance.now() - t0) / Math.max(2, n >> 2); },
-    'fx 30 frames, many particles': (P, n, S, SP, FX) => { const f = FX.create(); const q = M.Perf.q; const t0 = performance.now(); for (let k = 0; k < 6; k++) f.explosion(200 + k * 150, 360, 90, { kind: 'fire' }); for (let i = 0; i < 30; i++) { f.update(1 / 60); ctx.clearRect(0, 0, 1280, 720); f.draw(ctx); } sync(); const ms = (performance.now() - t0) / 30; if (f.dispose) f.dispose(); return ms; },
+    'fx 8 frames, 3 explosions': (P, n, S, SP, FX) => { const f = FX.create(); const q = M.Perf.q; const t0 = performance.now(); for (let k = 0; k < 3; k++) f.explosion(300 + k * 300, 360, 90, { kind: 'fire' }); for (let i = 0; i < 8; i++) { f.update(1 / 60); ctx.clearRect(0, 0, 1280, 720); f.draw(ctx); } sync(); const ms = (performance.now() - t0) / 8; if (f.dispose) f.dispose(); return ms; },
   };
   async function gpu() {
     log('\n== GPU / Canvas2D per tier (ms per call, ' + N + ' iterations; CPU = Gfx.Planets/Space/Fx directly, picked = what Gfx.pick serves at that tier)');

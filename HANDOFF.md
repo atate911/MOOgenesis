@@ -21,3 +21,11 @@ User priorities: (1) mechanics / balance / AI accuracy to the original per race 
 
 ## Architecture in one paragraph
 Plain-JSON state `S`; every change is an *order* (`Sim.Orders.apply`); the turn is a generator (`Sim.Turn.run`) yielding interrupts (aiPlan, battles, techChoice, explore, colonize, bombardPrompt/bombard, ground, diplomacy, council/councilResult, spy choices, event, gnn, gameover) answered by `Game.handlers.*` (UI, `js/ui/flow.js` + each screen module) or defaults (headless `Sim.autoTurn`). AI planners are pure (`AI.plan(snapshot, id, seed) → orders`, step table in `js/ai/ai.js`, helpers in `js/ai/ctx.js`) and run on the worker pool; battle auto-resolution too. Treaty/war/council decisions live in the engines (`Sim.Diplo`, `Sim.Council`), not in AI planners. All modules load through `js/manifest.js` (single source of truth for the browser and the Node harness).
+
+
+## Session 3 update (see tools/qa/REPORT.md, tools/qa/GRAPHICS-V2.md)
+- Item 1 (QA) partly done: headless-Chromium scripts in `tools/qa/` cover the wizard for all 10 races, save/load, 9 combat demo scenarios, GPU-off/low-tier/reduced-motion/threads=1. Still untested: diplomacy audiences, council/spy choices, bombard/landing scenes, event cards, endings, fleet-send/colonise flows, real-GPU tiers.
+- Item 3 mostly done: `Data.Config.QUIRKS.*`, combat errata 6-7, ground inbound/ceasefire fixes, tests in `tools/rules/46-verification-gaps.test.js`; open items are in the `research/*-verification.md` logs.
+- Item 4 done except planet sprites in galaxymap/side-colony/ledgers/tech (GLPlanets has no preload); `Gfx.pick()` + `tools/test-hw.html` + `tools/qa/gpu.js`. GL under SwiftShader is slow (400-1700 ms/call), so real-GPU timing is unmeasured.
+- Item 5 partly done: v2 theme is default (`?theme=v1` = old); art is graded, not rebuilt; no post-FX pass, no GL shader restyle, no theme option in Options.
+- Item 6 done (tools/rules/83-polish.test.js). Item 2 (balance/AI audit) not started.
