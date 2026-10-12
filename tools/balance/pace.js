@@ -14,8 +14,8 @@ for (const m of M) {
   console.log('### ' + m + '\n' + L.table(['difficulty'].concat(TS.map(t => 'T' + t)), rows) + '\n');
 }
 console.log('### Slot-0 / all-empire outcomes by difficulty\n');
-console.log(L.table(['difficulty', 'games', 'finished', 'median end', 'slot0 win % (of finished)', 'techs T100', 'first-tech turn (median empire)'], DIFFS.map(d => {
+console.log(L.table(['difficulty', 'games', 'finished', 'median end', 'slot0 win % (of finished)', 'techs T100'], DIFFS.map(d => {
   const G = j.games.filter(g => g.difficulty === d), F = G.filter(g => g.finished);
   const t100 = []; for (const g of G) { const s = (g.snaps || []).find(x => x.turn === 100); if (s) for (const e of s.e) if (e.alive) t100.push(e.techs); }
-  return [d, G.length, F.length, L.median(F.map(g => g.endTurn)), L.pct(F.filter(g => g.winnerId === 0).length, F.length), L.median(t100), ''];
+  return [d, G.length, F.length, L.median(F.map(g => g.endTurn)), L.pct(F.filter(g => g.winnerId === 0).length, F.length), L.median(t100)];
 })));
