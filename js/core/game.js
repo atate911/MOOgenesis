@@ -90,7 +90,9 @@
       while (!r.done) {
         const it = r.value, h = G.handlers[it.type] || DEFAULTS[it.type];
         let ans;
+        const wd = setTimeout(() => { console.warn('[turn] still waiting on the "' + it.type + '" interrupt after 10 s', it); M.Bus.emit('turn:waiting', it.type); }, 10000);   // diagnostic: a handler that never answers is what freezes a turn
         try { ans = h ? await h(it, S) : undefined; } catch (e) { console.error('[interrupt ' + it.type + ']', e); ans = undefined; }
+        clearTimeout(wd);
         seen.push(it.type);
         r = gen.next(ans);
       }
