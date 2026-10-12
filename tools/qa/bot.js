@@ -24,11 +24,14 @@ function start(page, o = {}) {
           }
           if (cur === 'combat') { out.did = 'combat'; return out; }
           if (cur === 'galaxy') {
+            const pbA = document.querySelector('.pb-acts');
+            if (pbA) { const b = [...pbA.querySelectorAll('button')].find(x => new RegExp(opts.battle || 'Auto').test(x.textContent.trim())); if (b) { out.did = 'prebattle -> ' + b.textContent.trim(); b.click(); } return out; }
             const card = document.querySelector('.sm-actions');
             if (card) { const bs = [...card.querySelectorAll('button')].filter(vis); if (bs.length) { const b = bs.find(x => /^(yes|continue|accept)/i.test(x.textContent.trim())) || bs.find(x => x.classList.contains('primary')) || bs[0]; out.did = 'card:' + (document.querySelector('.sm-event h4') || {}).textContent + ' -> ' + b.textContent.trim(); b.click(); } return out; }
             const pb = document.querySelector('.pb-btns button, .prebattle button'); void pb;
             return out;
           }
+          if (cur === 'council') { const ks = opts.councilKeys || ['Space', '1', '2', '0', 'y', 'n']; press(ks[Math.floor(rv * ks.length)]); out.did = 'council'; return out; }
           if (cur !== 'galaxy') { press('Space'); out.did = 'space@' + cur; return out; }
           return out;
         }, { rv: rnd(), opts: o });

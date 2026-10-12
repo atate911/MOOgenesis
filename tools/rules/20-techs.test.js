@@ -1038,7 +1038,7 @@ tm 41-50 :  31 30 29 28 27 27 26 25 24 24
     rs.invest[0] = 300; t.eq(Rs.start(S, E, 0, 99), false); t.eq(rs.project[0], 5); t.eq(rs.invest[0], 300);       // an unavailable tech changes nothing
   });
 
-  t.test('research.aiFirst: an AI opens a field with a uniform tier-1 pick whatever the difficulty and pays level² x 50 whatever the race (original quirk)', () => {
+  t.test('research.aiFirst: an AI opens a field with a uniform tier-1 pick whatever the difficulty and pays level² x 50 whatever the race (original quirk, flag ON)', () => { const Q = M.Data.Config.QUIRKS, was = Q.aiFirstTechCost; Q.aiFirstTechCost = true; try {
     for (const race of ['human', 'psilon', 'silicoid', 'meklar']) for (const d of [0, 4]) {
       const { S, E, rs } = fresh(race, d, 'ai-first-' + race, false);
       rs.list[1] = CMLIKE.map(x => x.slice());
@@ -1053,7 +1053,7 @@ tm 41-50 :  31 30 29 28 27 27 26 25 24 24
     const { S, E, rs } = fresh('human', 2, 'ai-first-empty', false);
     rs.completed[0] = allLevels(0).concat(55, 60, 65, 70, 75, 80, 85, 90, 95, 100);
     t.eq(Rs.aiFirst(S, E, 0, M.RNG.create(1)), 0);
-  });
+  } finally { Q.aiFirstTechCost = was; } });
 
   t.test('research.planetRP: planet output x tech slider, Psilon +50 %, artifacts x2, Orion x4, capped at 32767', () => {
     const pl = (slider, special) => ({ sliders: [0, 0, 0, 0, slider], special: special || '' });

@@ -65,7 +65,9 @@ module.exports = function (M, t) {
   });
 
   // ---------------------------------------------------------------------------------------------------------------------------------- Research.aiFirst
-  t.test('research.aiFirst: uniform pick among the tier-1 entries at every difficulty, cost = level² × 50 for every race (original quirk)', () => {
+  // The quirk (Config.QUIRKS.aiFirstTechCost) is OFF by default (ai_first_tech_cost_fix); these tests pin the original behaviour by switching it on for their duration.
+  const withFirstCostQuirk = (on, fn) => { const Q = M.Data.Config.QUIRKS, was = Q.aiFirstTechCost; Q.aiFirstTechCost = on; try { fn(); } finally { Q.aiFirstTechCost = was; } };
+  t.test('research.aiFirst: uniform pick among the tier-1 entries at every difficulty, cost = level² × 50 for every race (original quirk, flag ON)', () => withFirstCostQuirk(true, () => {
     for (const d of [0, 2, 4]) {
       const { S, E, rs } = fresh('human', d, 'ai-first', false);
       rs.list[0] = CMLIKE.map(x => x.slice());
@@ -85,14 +87,25 @@ module.exports = function (M, t) {
     const e = fresh('human', 2, 'ai-first-empty', false); e.rs.list[0] = CMLIKE.map(x => x.slice());
     e.rs.completed[0] = [1].concat(CMLIKE.reduce((a, tr) => a.concat(tr), []), [55, 60, 65, 70, 75, 80, 85, 90, 95, 100]);
     t.eq(Rs.aiFirst(e.S, e.E, 0, M.RNG.create(1)), 0);
+  }));
+
+  t.test('research.aiFirst: default (fixed) charges the normal AI cost Techs.costAI; options.aiClassic forces the level² × 50 quirk back', () => {
+    t.eq(M.Data.Config.QUIRKS.aiFirstTechCost, false, 'decision: fixed by default (tools/balance/REPORT.md)');
+    for (const race of ['human', 'psilon', 'silicoid']) {
+      const m = fresh(race, 2, 'ai-first-fixed-' + race, false); m.rs.list[3] = CMLIKE.map(x => x.slice());
+      const lvl = Rs.aiFirst(m.S, m.E, 3, M.RNG.create('x')); t.eq(m.rs.cost[3], T.costAI(lvl, race, 3));
+      t.ok(m.rs.cost[3] <= lvl * lvl * 25, race + ': normal cost (<= 125 %) is cheaper than level² × 50');
+    }
+    const c = fresh('human', 2, 'ai-first-classic', false); c.S.settings.options = { aiClassic: true }; c.rs.list[3] = CMLIKE.map(x => x.slice());
+    const lvl = Rs.aiFirst(c.S, c.E, 3, M.RNG.create('x')); t.eq(c.rs.cost[3], lvl * lvl * 50);
   });
 
   // ---------------------------------------------------------------------------------------------------------------------------------- AI start allocation
-  t.test('setup: AI start allocation — "crowded" means at least ONE other habitable planet within 30 map units (the home planet counts in n); first projects are tier-1, cost level² × 50', () => {
+  t.test('setup: AI start allocation — "crowded" means at least ONE other habitable planet within 30 map units (the home planet counts in n); first projects are tier-1, cost level² × 50 (aiClassic)', () => {
     if (!M.Sim.Setup || !M.Data.Races) t.skip('Setup not available');
     let ais = 0, nTwo = 0;
     for (let s = 0; s < 6; s++) {
-      const S = M.Sim.Setup.create({ size: 'small', difficulty: 'average', opponents: 3, race: 'human', seed: 'crowd-' + s });
+      const S = M.Sim.Setup.create({ size: 'small', difficulty: 'average', opponents: 3, race: 'human', seed: 'crowd-' + s, options: { aiClassic: true } });
       for (const E of S.empires) {
         const rs = E.research;
         if (E.human) { t.deep(rs.project, [0, 0, 0, 0, 0, 0]); t.deep(rs.cost, [0, 0, 0, 0, 0, 0]); continue; }

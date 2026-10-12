@@ -105,7 +105,9 @@ MOO.def(function (M) {
     const ch = Rs.choices(E, f); if (!ch.length) return 0;
     const level = ch[R.int(0, ch.length - 1)];
     if (!Rs.start(S, E, f, level)) return 0;
-    E.research.cost[f] = level * level * 50;
+    // QUIRK Config.QUIRKS.aiFirstTechCost (default ON = original v1.3; OFF = 1oom's ai_first_tech_cost_fix: the normal AI cost, Techs.costAI); options.aiClassic forces ON
+    const Q = M.Data.Config && M.Data.Config.QUIRKS, classic = !!(S.settings && S.settings.options && S.settings.options.aiClassic);
+    if (classic || !Q || Q.aiFirstTechCost !== false) E.research.cost[f] = level * level * 50;
     return level;
   };
 

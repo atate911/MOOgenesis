@@ -29,7 +29,8 @@ MOO.def(function (M) {
     //   hiddenChildLabor(research/04 C5)  default ON  - production is recomputed once more before defence/ships/industry
     //   wasteSub1       (research/04 C8)  default OFF - second waste term (~+20 % waste at oper 2), added after the cleanup cost is computed
     //   shipBonusBC     (research/04 C9)  default OFF - +1 BC for every planet whose SHIP slider is > 0
+    //   aiFirstTechCost (research/07 s4.5) default see tools/balance/REPORT.md - the AI's first project of each field costs level^2*50 instead of Techs.costAI (ai_first_tech_cost_fix)
     //   soilRounding    (research/04 2.3) default OFF - the 1oom soil-enrichment increment rounding (Fertile m/20, Gaia m/10) instead of 'round up to 5'
-    QUIRKS: { popTenthsTwice: true, hiddenChildLabor: true, wasteSub1: false, shipBonusBC: false, soilRounding: false },
+    QUIRKS: { popTenthsTwice: true, hiddenChildLabor: true, wasteSub1: false, shipBonusBC: false, soilRounding: false, aiFirstTechCost: false },
   };
 });

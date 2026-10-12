@@ -28,6 +28,16 @@ function traitName(MOO, list, v) {
   return typeof v === 'number' && Array.isArray(tbl) && tbl[v] !== undefined ? String(tbl[v]) : String(v);
 }
 
+// A/B experiments: env MOO_OVERRIDES='{"AI.QUIRKS.fourthColonyShip":true,"Data.Config.QUIRKS.wasteSub1":true}' sets those dotted paths (under MOO) in every loaded sim.
+function applyOverrides(MOO) {
+  const raw = process.env.MOO_OVERRIDES; if (!raw) return;
+  const o = JSON.parse(raw);
+  for (const path of Object.keys(o)) {
+    const parts = path.split('.'); let t = MOO;
+    for (let i = 0; i < parts.length - 1; i++) t = t[parts[i]] = t[parts[i]] || {};
+    t[parts[parts.length - 1]] = o[path];
+  }
+}
 // ---- sim loading -------------------------------------------------------------------------------------------------
 // Uses the real MOO.Sim when it has newGame(), otherwise (or with opts.forceMock) installs tools/mock-sim.js over it.
 function loadSim(opts) {
@@ -40,6 +50,7 @@ function loadSim(opts) {
       if (typeof MOO.Sim[f] !== 'function') throw new Error('MOO.Sim.' + f + ' is missing (newGame exists, so the mock is not used; pass --mock to force it)');
     }
   }
+  applyOverrides(MOO);
   return { MOO, mock, why: opts.forceMock ? 'forced by --mock' : hasReal ? 'real MOO.Sim' : 'MOO.Sim.newGame missing' };
 }
 
