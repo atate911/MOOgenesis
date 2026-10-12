@@ -516,3 +516,9 @@
 :root[data-theme="v2"] .tt-act { border-top:1px solid rgba(109,126,141,0.25); }
 :root[data-theme="v2"] .ttp-head { border-bottom:1px solid rgba(109,126,141,0.35); }
 /* <<< GENERATED <<< */
+
+/* ---- 16. grading stop-gap for the WebGL backdrops (title vortex/nebula, galaxy map) ---------------------------------
+   The GL shaders (js/gfx/gl-space.js, gl-planets.js) still output the v1 saturation; until their palettes are re-graded at
+   source (research/09 section 3.1) a light CSS filter pulls the nebula violet back toward neutral. Removed by data-fx="off". */
+:root[data-theme="v2"]:not([data-fx="off"]) .menu-wrap > canvas { filter: saturate(.8) brightness(.96) contrast(1.04); }
+:root[data-theme="v2"]:not([data-fx="off"]) .gmap-cv { filter: saturate(.84) contrast(1.03); }
