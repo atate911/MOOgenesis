@@ -17,6 +17,7 @@
   let seq = 1, snapVer = 0, snapStr = '', snapObj = null;
   const pending = new Map();
   let initP = null, blobUrl = null, inlineOnly = false;
+  const JOB_TIMEOUT_MS = 30000;
   const stat = { submitted: 0, completed: 0, inline: 0, errors: 0, busyMs: 0, since: 0, lastBatchMs: 0, lastBatchN: 0 };
 
   function preamble() {
@@ -125,7 +126,21 @@
     run(op, payload, o) {
       o = o || {}; stat.submitted++;
       if (inlineOnly || !workers.length) return inline(op, payload, o.snap);
-      return new Promise((res, rej) => { queue.push({ id: seq++, op, payload, snap: !!o.snap, transfer: o.transfer, res, rej }); pump(); });
+      // a worker that never answers (crashed silently, lost message) must not freeze the turn: after JOB_TIMEOUT_MS the job is re-run inline
+      return new Promise((res, rej) => {
+        const id = seq++; let settled = false, timer = 0;
+        const fin = f => v => { if (settled) return; settled = true; clearTimeout(timer); f(v); };
+        queue.push({ id, op, payload, snap: !!o.snap, transfer: o.transfer, res: fin(res), rej: fin(rej) });
+        timer = setTimeout(() => {
+          if (settled) return;
+          console.warn('[workers] job ' + op + ' timed out after ' + JOB_TIMEOUT_MS + ' ms — re-running inline');
+          stat.errors++;
+          const qi = queue.findIndex(j => j.id === id); if (qi >= 0) queue.splice(qi, 1);
+          const p = pending.get(id); if (p && p.rec) { pending.delete(id); try { p.rec.w.terminate(); } catch (e) { /* ignore */ } const i = workers.indexOf(p.rec); if (i >= 0) { try { workers[i] = spawn(); } catch (e) { workers.splice(i, 1); } } }
+          inline(op, payload, o.snap).then(fin(res), fin(rej));
+        }, JOB_TIMEOUT_MS);
+        pump();
+      });
     },
     map(op, payloads, o) {
       const t0 = performance.now();
