@@ -45,7 +45,7 @@ MOO.def(function (M) {
     let perPop = Math.floor(p.pop * (3 * C.plLevel(E) + 50) / 100);
     if (E.race === 'klackon') perPop *= 2;
     let g = opFact + perPop;
-    if (!E.human) g = Math.floor(g * (M.Data.Config ? M.Data.Config.aiProdFactor(S.settings.diffIdx | 0) : 1));
+    if (!E.human) g = Math.floor(g * (M.Data.Config ? M.Data.Config.aiProdFactor(S.settings.diffIdx | 0, S) : 1));
     g += Math.min(p.bank | 0, g);                                         // transferred reserve can at most double output
     return g;
   };

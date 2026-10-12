@@ -31,6 +31,21 @@ module.exports = function (M, t) {
     t.ok(Cfg.aiProdFactor(1) < Cfg.aiProdFactor(0), 'documented original oddity');
     const g = Cfg.AI_PROD.guide; for (let i = 1; i < 5; i++) t.ok(g[i] > g[i - 1], 'guide table is monotonic');
   });
+  t.test('balance: options.aiProdGuide makes the AI production ladder monotonic for that game only (Colony.gross uses it)', () => {
+    const S = { settings: { options: { aiProdGuide: true } } };
+    t.deep([0, 1, 2, 3, 4].map(d => Cfg.aiProdFactor(d, S)), [0.8, 0.9, 1, 1.25, 1.5]);
+    t.deep([0, 1, 2, 3, 4].map(d => Cfg.aiProdFactor(d, { settings: { options: {} } })), [1, 0.8, 1.25, 1.5, 2]);
+    const mk = (diff, opts) => { const G = M.Sim.Setup.create({ size: 'small', difficulty: diff, opponents: 1, race: 'human', seed: 'bal-prod', playerAI: true, options: opts }); const E = G.empires[1], p = G.planets[E.capital]; return M.Sim.Colony.gross(G, E, p); };
+    t.ok(mk('easy', {}) < mk('simple', {}), 'original: an Easy AI home planet produces less than a Simple one');
+    t.ok(mk('easy', { aiProdGuide: true }) > mk('simple', { aiProdGuide: true }), 'guide table: Easy > Simple');
+  });
+  t.test('balance: Klackon worker term is doubled after the floor (kept: spec-verified, the 60 % AI-vs-AI win rate is an economy strength, not a bug)', () => {
+    const G = M.Sim.Setup.create({ size: 'small', difficulty: 'average', opponents: 1, race: 'klackon', seed: 'bal-klackon', playerAI: false });
+    const E = G.empires[0], p = G.planets[E.capital];
+    const per = Math.floor(p.pop * (3 * M.Sim.Colony.plLevel(E) + 50) / 100), opf = Math.min(p.factories, Math.max(0, p.pop - (p.rebels | 0)) * M.Sim.Colony.oper(E));
+    t.eq(M.Sim.Colony.gross(G, E, p), opf + 2 * per);
+    t.ok(M.Sim.Colony.gross(G, E, p) >= 80, 'tutorial Klackon home yields ~82 BC gross');
+  });
   t.test('balance: the difficulty ladder for AI research cost stays factor 20 (AI) vs 20/25/30/35/40 (human)', () => {
     const T = M.Data.Techs;
     const a = T.costAI(10, 'human', 0);

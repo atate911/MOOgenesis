@@ -13,7 +13,8 @@ MOO.def(function (M) {
     //   'guide' : the strategy-guide table (−20 / −10 / 0 / +25 / +50) — monotonic. Default follows the verified code; see research/07.
     AI_PROD: { '1oom': [100, 80, 125, 150, 200], guide: [80, 90, 100, 125, 150] },
     aiProdMode: '1oom',
-    aiProdFactor(diffIdx) { return M.Data.Config.AI_PROD[M.Data.Config.aiProdMode][diffIdx | 0] / 100; },
+    // decision (tools/balance/REPORT.md): 'Easy < Simple' is KEPT as the original oddity; options.aiProdGuide (a game option) switches one game to the monotonic strategy-guide table
+    aiProdFactor(diffIdx, S) { const C = M.Data.Config, guide = !!(S && S.settings && S.settings.options && S.settings.options.aiProdGuide); return C.AI_PROD[guide ? 'guide' : C.aiProdMode][diffIdx | 0] / 100; },
     displayYear: S => M.Data.Config.START_YEAR - 1 + S.year,
     // council: first when ≥ 2/3 of stars are colonised, then every 25 years
     COUNCIL_EVERY: 25, COUNCIL_COLONISED_FRACTION: 2 / 3,
