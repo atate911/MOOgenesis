@@ -32,7 +32,7 @@ function main() {
   M.Perf.start();
 
   function header() {
-    const gl = M.Gfx.GL.supported() ? M.Gfx.GL.info : null;
+    M.Perf.setPreset('medium'); const gl = M.Gfx.GL.supported() ? M.Gfx.GL.info : null; M.Perf.setPreset('auto');
     document.getElementById('hw').textContent = 'logical threads ' + M.HW.threads + ' | deviceMemory ' + M.HW.memoryGB + ' GB | WebGL2 ' + (gl ? 'yes' : 'no') + ' | GPU ' + (M.HW.gpu || (gl && gl.renderer) || '?') + ' | auto tier ' + M.Perf.cap
       + (/swiftshader|llvmpipe|software/i.test(M.HW.gpu || '') ? '  (software renderer: absolute GPU numbers are NOT representative, compare the ratios only)' : '');
   }
@@ -58,8 +58,8 @@ function main() {
       const gl = M.Gfx.pick.on();
       const row = { tier, path: gl ? 'GL' : '2D', dpr: M.Perf.q.dpr };
       row.planetLive = bench('planet', k => { ctx.clearRect(0, 0, 1280, 720); P.draw(ctx, desc, 640, 360, 260, k * 0.05, { spin: 0.02 }); }, 30, 2500);
-      row.planetSprite = bench('sprite', k => { P.sprite({ look: 'ocean', seed: 'hw' + k, inhabited: true }, 256); }, 12, 2500);
-      row.backdrop = bench('backdrop', k => { S.makeBackdrop(1280, 720, 'hw' + k, {}); }, 6, 3000);
+      row.planetSprite = bench('sprite', k => { P.sprite({ look: 'ocean', seed: tier + 'hw' + k, inhabited: true }, 256); }, 12, 2500);
+      row.backdrop = bench('backdrop', k => { S.makeBackdrop(1280, 720, tier + 'hw' + k, {}); }, 6, 3000);
       row.star = bench('star', k => { ctx.clearRect(0, 0, 1280, 720); S.drawStarSurface(ctx, 'yellow', 640, 360, 180, k * 0.05, {}); }, 30, 2500);
       if (M.Gfx.GLSpace && gl) row.vortex = bench('vortex', k => { ctx.clearRect(0, 0, 1280, 720); M.Gfx.GLSpace.vortex(ctx, 640, 360, 300, k * 0.05, {}); }, 30, 2500);
       const fx = F.create({ w: 1280, h: 720 });

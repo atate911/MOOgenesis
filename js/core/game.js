@@ -45,13 +45,27 @@
   G.quitToMenu = function () { if (G.S && M.Settings.get('autosave')) G.autosave(); G.S = null; M.Bus.emit('game:quit'); if (M.UI && M.UI.Screens) M.UI.Screens.go('menu'); };
 
   // ---- parallel helpers -----------------------------------------------------------------------------------------------------------
+  // AI planning runs inline or on the worker pool, whichever measures faster on this machine/map (posting the state snapshot costs a few ms, so
+  // small early-game maps are cheaper inline, big late-game ones on the pool). Both paths give identical plans (tools/test-hw.html asserts it).
+  const planStat = { inl: null, pool: null, n: 0 };          // moving averages of the planning time (ms) per path
+  G.planStat = planStat;
   async function planAI(S) {
     const ids = S.empires.filter(e => e.alive && !e.human).map(e => e.id);
     const out = {};
     if (!ids.length || !(M.AI && M.AI.plan)) return out;
-    M.Workers.setSnapshot(S);
-    const res = await M.Workers.map('aiPlan', ids.map(id => ({ empire: id, seed: M.AI.seedFor(S, id) })), { snap: true });
-    ids.forEach((id, i) => { out[id] = res[i]; });
+    const n = planStat.n++;
+    let pool = !!(M.HW && M.HW.workers > 0);
+    if (pool) {
+      if (planStat.pool === null) pool = true; else if (planStat.inl === null) pool = false;
+      else { pool = planStat.pool <= planStat.inl; if (n % 25 === 0) pool = !pool; }          // re-sample the other path every 25th turn
+    }
+    const t0 = performance.now(), key = pool ? 'pool' : 'inl';
+    if (pool) {
+      M.Workers.setSnapshot(S);
+      const res = await M.Workers.map('aiPlan', ids.map(id => ({ empire: id, seed: M.AI.seedFor(S, id) })), { snap: true });
+      ids.forEach((id, i) => { out[id] = res[i]; });
+    } else for (const id of ids) out[id] = M.AI.plan(S, id, M.AI.seedFor(S, id));
+    const dt = performance.now() - t0; planStat[key] = planStat[key] === null ? dt : planStat[key] * 0.6 + dt * 0.4;
     return out;
   }
   async function resolveBattles(S, battles) {
