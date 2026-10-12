@@ -73,9 +73,9 @@
 
   function rebuildBackdrop(w, hh) {
     const key = w + 'x' + hh;
-    if (key === bgKey || !M.Gfx.Space || !M.Gfx.Space.makeBackdrop) return;
+    if (key === bgKey || !M.Gfx.pick('space') || !M.Gfx.pick('space').makeBackdrop) return;
     bgKey = key;
-    bg = M.Gfx.Space.makeBackdrop(Math.min(w, 1600), Math.min(hh, 900), 'menu', { intensity: .9, stars: 1.3, palette: ['#3b1d86', '#14357a', '#7a2a86', '#0d5a7a'] });
+    bg = M.Gfx.pick('space').makeBackdrop(Math.min(w, 1600), Math.min(hh, 900), 'menu', { intensity: .9, stars: 1.3, palette: ['#3b1d86', '#14357a', '#7a2a86', '#0d5a7a'] });
   }
 
   function buildMenu() {
@@ -124,7 +124,7 @@
       if (GS && GS.supported && GS.supported()) { try { drew = GS.vortex(ctx, w * 0.66, hh * 0.46, R, t, { tilt: 0.42, rot }) !== false; } catch (e) { drew = false; } }
       if (!drew) vortex.draw(ctx, w * 0.66, hh * 0.46, R, t, 0.42, rot);
       // a big slow planet low-left of the vortex (GLPlanets falls back to the CPU renderer by itself)
-      const P = M.Gfx && (M.Gfx.GLPlanets || M.Gfx.Planets);
+      const P = M.Gfx && (M.Gfx.pick('planets'));
       if (P && P.draw) {
         try { P.draw(ctx, { look: 'terran', seed: 'menu-world', inhabited: true, color: '#d6b36a' }, w * 0.9, hh * 1.02, Math.min(w, hh) * 0.36, t, { lightAngle: -2.45, spin: 0.01 }); } catch (e) { /* ignore */ }
       }

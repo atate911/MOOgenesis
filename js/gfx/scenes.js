@@ -414,7 +414,7 @@
   /* live planet (rotating): Planets.draw re-renders its pixel loop when the spin moves, so keep r modest or pass spin:0 */
   function drawPlanet(g, d, cx, cy, r, t, opt) {
     d = d || { look: 'terran', seed: 1 };
-    const P = G.Planets;
+    const P = G.pick('planets');
     if (P && P.draw) { try { P.draw(g, d, cx, cy, r, t, opt); return; } catch (e) { warnOnce('Planets.draw', e); } }
     fbPlanet(g, d, cx, cy, r, t);
   }
@@ -422,7 +422,7 @@
      r = visible disc radius (CSS px); S = pixel scale of the target layer. */
   function planetStatic(g, d, cx, cy, r, S, opt) {
     d = d || { look: 'terran', seed: 1 };
-    const P = G.Planets;
+    const P = G.pick('planets');
     if (P && P.sprite) {
       try {
         const dia = Math.round(r * 2 * (d.rings ? 2.15 : 1.16));
@@ -459,7 +459,7 @@
     return c;
   }
   function backdropCanvas(w, h, seed, opts) {
-    const Sp = G.Space;
+    const Sp = G.pick('space');
     if (Sp && Sp.makeBackdrop) {
       try { const c = Sp.makeBackdrop(w, h, seed, opts || {}); if (c && (c.width || c.naturalWidth)) return c; } catch (e) { warnOnce('Space.makeBackdrop', e); }
     }
@@ -3463,7 +3463,7 @@
       for (const [cv, sp, a] of lay) { const off = (t * sp) % w; ctx.globalAlpha = a * 0.85; ctx.drawImage(cv, -off, 0, w, h); ctx.drawImage(cv, w - off, 0, w, h); }
       ctx.globalAlpha = 1;
       // the distant sun
-      const Sp = G.Space, sz = h * 0.32, pulse = 0.94 + 0.06 * sin(t * 0.8) * sin(t * 0.37 + 1);
+      const Sp = G.pick('space'), sz = h * 0.32, pulse = 0.94 + 0.06 * sin(t * 0.8) * sin(t * 0.37 + 1);
       let drawn = false;
       if (Sp && Sp.starSprite) { try { const spr = Sp.starSprite(kind, sz, { dpr: S, spikes: true }); ctx.save(); ctx.globalCompositeOperation = 'lighter'; ctx.globalAlpha = pulse; ctx.drawImage(spr, sx - sz / 2, sy - sz / 2, sz, sz); ctx.restore(); drawn = true; } catch (er) { warnOnce('Space.starSprite', er); } }
       if (!drawn) { glow(ctx, tint, sx, sy, sz * 0.9, 0.85 * pulse); glow(ctx, '#ffffff', sx, sy, sz * 0.22, 1); }
@@ -3652,7 +3652,7 @@
       });
       ctx.drawImage(e.c, 0, 0, w, h);
       // the dying star
-      const Sp = G.Space;
+      const Sp = G.pick('space');
       let ok = false;
       if (Sp && Sp.drawStarSurface) { try { Sp.drawStarSurface(ctx, 'red', sx, sy, sR, t, { dpr: S, spin: 0.01 }); ok = true; } catch (er) { warnOnce('Space.drawStarSurface', er); } }
       if (!ok) { glow(ctx, '#ff5a20', sx, sy, sR * 2.2, 0.8); ctx.fillStyle = rgr(ctx, sx, sy, 0, sR, [0, '#ffd8a0', 0.6, '#ff6a30', 1, '#601008']); ctx.beginPath(); ctx.arc(sx, sy, sR, 0, TAU); ctx.fill(); }

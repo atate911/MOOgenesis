@@ -29,7 +29,7 @@
   function planetPic(card, size, owner) {
     const c = h('canvas', { width: size * 2, height: size * 2 });
     try {
-      const P = M.Gfx.Planets; const look = card.type === 'none' ? 'asteroids' : card.growth === 'gaia' ? 'gaia' : card.type;
+      const P = M.Gfx.pick('planets'); const look = card.type === 'none' ? 'asteroids' : card.growth === 'gaia' ? 'gaia' : card.type;
       const sp = P.sprite({ look, seed: card.id * 7919 + (card.gfx | 0), inhabited: owner !== undefined && owner >= 0 }, size * 2); c.getContext('2d').drawImage(sp, 0, 0, size * 2, size * 2);
     } catch (e) { const x = c.getContext('2d'); x.fillStyle = '#445'; x.beginPath(); x.arc(size, size, size * .8, 0, 6.3); x.fill(); }
     return h('div.sm-pic', c);

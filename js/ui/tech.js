@@ -221,7 +221,7 @@
     g.restore();
   }
   function planetAt(g, look, x, y, r, seed, inhabited) {
-    const P = M.Gfx && M.Gfx.Planets;
+    const P = M.Gfx && M.Gfx.pick('planets');
     try {
       if (P && P.sprite) { const d = max(16, round(r * 2)), c = P.sprite({ look, seed: seed || 7, inhabited: !!inhabited }, d); g.drawImage(c, x - r, y - r, r * 2, r * 2); return; }
     } catch (e) { /* fall through */ }

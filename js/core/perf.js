@@ -103,7 +103,8 @@
   P.start = function () {
     if (P.started) return; P.started = true;
     P.caps = probe(); P.cap = heuristicTier(P.caps);
-    const pref = (M.Settings && M.Settings.get('graphics')) || 'auto';
+    let pref = (M.Settings && M.Settings.get('graphics')) || 'auto';
+    try { const qt = new URLSearchParams(location.search).get('tier'); if (qt && TIERS[qt]) pref = qt; } catch (e) { /* ?tier=low|medium|high|ultra forces a tier for this page load (QA / measuring) */ }
     P.preset = pref; apply(pref === 'auto' ? P.cap : pref, 'startup');
     if (M.UI && M.UI.onFrame) M.UI.onFrame(dt => { tick(dt); ovT += dt; if (ovT > 0.25) { ovT = 0; renderOverlay(); } });
     if (M.UI && M.UI.bindKey) M.UI.bindKey('F3', () => { P.overlay = !P.overlay; if (M.Settings) M.Settings.set('perfOverlay', P.overlay); renderOverlay(); }, { modal: true });

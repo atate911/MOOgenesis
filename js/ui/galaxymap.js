@@ -946,7 +946,7 @@
         for (let i = 0; i < 90; i++) amb.sparks.push({ u: r(), v: r(), s: 6 + r() * 11, ph: r() * TAU, fr: 0.4 + r() * 1.3, k: r() < 0.6 ? 'white' : r() < 0.6 ? 'blue' : 'yellow', f: 0.06 + r() * 0.1 });
       }
       // optional external backdrop (MOO.Gfx.Space.makeBackdrop), rebuilt a little after a resize settles
-      const Sp = M.Gfx && M.Gfx.Space;
+      const Sp = M.Gfx && M.Gfx.pick('space');
       if (opts.backdrop !== 'builtin' && Sp && Sp.makeBackdrop && !amb.extFailed) {
         const key = (W >> 5) + 'x' + (H >> 5);
         if (key !== amb.extKey && (!amb.ext || clock - amb.extAt > 0.4)) {
@@ -1167,7 +1167,7 @@
     const STAR_LODS = [32, 48, 64, 96, 128, 192, 256];
     const warm = { q: [], key: '' };
     function queueWarmup() {                                       // build the star sprites we will need during idle frames (each one costs a few ms)
-      const Sp = M.Gfx && M.Gfx.Space; if (!Sp || !Sp.starSprite || SPR.spaceBad) return;
+      const Sp = M.Gfx && M.Gfx.pick('space'); if (!Sp || !Sp.starSprite || SPR.spaceBad) return;
       const key = galaxyKey + ':' + dpr; if (warm.key === key) return; warm.key = key; warm.q.length = 0;
       const kinds = {}; for (const sd of SD) if (KINDS[sd.kind] && sd.kind !== 'unknown') kinds[sd.kind] = 1;
       for (const lod of [48, 64, 96, 128]) for (const k in kinds) for (const spk of [true, false]) warm.q.push(() => { try { Sp.starSprite(k, lod, { spikes: spk && Q.spikes, dpr: 1 }); } catch (e) { SPR.spaceBad = true; } });
@@ -1175,7 +1175,7 @@
     function pumpWarmup() { if (warm.q.length) warm.q.shift()(); }
     // Gfx.Space.starSprite (core + halo [+ spikes] in one sprite) when available; quantised sizes keep its cache small
     function spaceStar(kind, D, spikes) {
-      const Sp = M.Gfx && M.Gfx.Space;
+      const Sp = M.Gfx && M.Gfx.pick('space');
       if (!Sp || !Sp.starSprite || SPR.spaceBad || !KINDS[kind] || kind === 'unknown') return null;
       const need = D * dpr * 0.85; let L = STAR_LODS[STAR_LODS.length - 1];
       for (let i = 0; i < STAR_LODS.length; i++) if (STAR_LODS[i] >= need) { L = STAR_LODS[i]; break; }
@@ -1240,7 +1240,7 @@
           const sz = s.r * 7.5, tws = twk ? 0.75 + 0.25 * Math.sin(t * 1.3 + s.ph) : 1; ctx.globalAlpha = 0.3 * tws * keep; ctx.drawImage(spikeSprite('unknown'), s.sx - sz / 2, s.sy - sz / 2, sz, sz); continue;
         }
         if (kd.bh) {
-          if (!SPR.spaceBad && !(M.Gfx && M.Gfx.Space && M.Gfx.Space.starSprite) && Q.glow >= 0.75) { const bs = s.r * 7.2; ctx.save(); ctx.translate(s.sx, s.sy); ctx.scale(1, 0.34); ctx.rotate(t * 0.5 + s.ph); ctx.globalAlpha = 0.9; ctx.drawImage(bhSwirlSprite(), -bs * 0.55, -bs * 0.55, bs * 1.1, bs * 1.1); ctx.restore(); }
+          if (!SPR.spaceBad && !(M.Gfx && M.Gfx.pick('space') && M.Gfx.pick('space').starSprite) && Q.glow >= 0.75) { const bs = s.r * 7.2; ctx.save(); ctx.translate(s.sx, s.sy); ctx.scale(1, 0.34); ctx.rotate(t * 0.5 + s.ph); ctx.globalAlpha = 0.9; ctx.drawImage(bhSwirlSprite(), -bs * 0.55, -bs * 0.55, bs * 1.1, bs * 1.1); ctx.restore(); }
           continue;
         }
         const tws = twk ? 0.8 + 0.2 * Math.sin(t * 1.7 * kd.tw + s.ph) : 1;
@@ -1255,7 +1255,7 @@
       }
       ctx.globalAlpha = 1; ctx.globalCompositeOperation = 'source-over';
       // ---- D: animated star surfaces (Gfx.Space.drawStarSurface) for stars that are big on screen
-      const Sp = M.Gfx && M.Gfx.Space;
+      const Sp = M.Gfx && M.Gfx.pick('space');
       if (Sp && Sp.drawStarSurface && Q.glow >= 0.75 && !SPR.surfBad && znv > 250) {
         for (let i = 0; i < n; i++) {
           const s = SD[i]; if (!s.on || !s.known || s.r < 10) continue;
@@ -1331,13 +1331,13 @@
     const PL_LODS = [24, 32, 48, 64, 96, 128];
     let plPre = 0;
     function preloadPlanets() {                                   // Gfx.Planets builds its textures in timed slices; until ready we use our own icons
-      const P = M.Gfx && M.Gfx.Planets; if (plPre || !P || !P.preload) return; plPre = 1;
+      const P = M.Gfx && M.Gfx.pick('planets'); if (plPre || !P || !P.preload) return; plPre = 1;
       const seen = {}, descs = [];
       for (const pl of (S && S.planets) || []) if (pl && pl.type && pl.type !== 'none' && !seen[pl.type] && P.LOOKS.indexOf(pl.type) >= 0) { seen[pl.type] = 1; descs.push({ look: pl.type, seed: 'gm-' + pl.type }); }
       try { P.preload(descs, () => { plPre = 2; }, { tier: 128, budget: 6 }); } catch (e) { plPre = -1; }
     }
     function planetImg(type, px, owned, la, id) {
-      const P = M.Gfx && M.Gfx.Planets;
+      const P = M.Gfx && M.Gfx.pick('planets');
       if (plPre === 2 && P && P.sprite && P.LOOKS.indexOf(type) >= 0) {
         const need = px * dpr; let L = PL_LODS[PL_LODS.length - 1]; for (let i = 0; i < PL_LODS.length; i++) if (PL_LODS[i] >= need * 0.9) { L = PL_LODS[i]; break; }
         const step = TAU / 12, q = Math.round(la / step) * step;

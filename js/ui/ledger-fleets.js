@@ -104,7 +104,7 @@
     const c = h('canvas', { width: size, height: size });
     try {
       const look = p.type === 'none' ? 'asteroids' : (p.growth === 'gaia' ? 'gaia' : p.type);
-      const sp = M.Gfx.Planets.sprite({ look, seed: p.id * 7919 + (p.gfx | 0), inhabited: p.owner >= 0, color: p.owner >= 0 ? empCol(G.S.empires[p.owner]) : undefined }, size);
+      const sp = M.Gfx.pick('planets').sprite({ look, seed: p.id * 7919 + (p.gfx | 0), inhabited: p.owner >= 0, color: p.owner >= 0 ? empCol(G.S.empires[p.owner]) : undefined }, size);
       c.getContext('2d').drawImage(sp, 0, 0, size, size);
     } catch (e) { const x = c.getContext('2d'); x.fillStyle = '#556'; x.beginPath(); x.arc(size / 2, size / 2, size * 0.38, 0, 6.3); x.fill(); }
     return c;

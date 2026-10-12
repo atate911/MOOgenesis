@@ -77,6 +77,7 @@ window.MOO_MANIFEST = {
     'js/gfx/gl-planets.js',
     'js/gfx/gl-space.js',
     'js/gfx/gl-fx.js',
+    'js/gfx/pick.js',
     'js/audio/audio.js',
     'js/audio/music.js',
     'js/audio/sfx.js',
