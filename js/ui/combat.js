@@ -440,6 +440,7 @@
     const bar = h('div.cb-bar', info, btns, right);
     const wrap = h('div.cb', field, bar);
     root.appendChild(wrap);
+    field.dataset.help = 'combat.field'; btns.dataset.help = 'combat.buttons'; info.dataset.help = 'combat.info'; order.dataset.help = 'combat.order';      // F1 help anchors
     ui = { canvas, tip, sideL, sideR, order, ticker, field, who, stats, weps, b, btns, spd, bar, chips: new Map(), ov: null, pinfo: null };
     // pointer input
     let lastCell = null;

@@ -398,12 +398,16 @@
     R.btnS = UI.button('Status', () => openStatus(), { kbd: 'S', tip: 'The Racial Stats: how every empire compares' });
     R.btnR = UI.button('Report', () => act('report'), { kbd: 'R', tip: 'What your spies know about one empire' });
     R.btnA = UI.button('Audience', () => act('audience'), { kbd: 'A', tip: 'Speak with an empire’s ambassador' });
+    R.btnC = UI.button('Spies caught', () => { if (UI.Spy && UI.Spy.caught) UI.Spy.caught(); }, { kbd: 'C', tip: 'The Spies Caught table: your spies caught by each empire, and theirs caught by you' });
+    R.btnN = UI.button('News archive', () => { if (UI.GNN && UI.GNN.archive) UI.GNN.archive(G.S); }, { kbd: 'N', tip: 'Every GNN report so far, searchable' });
     R.btnO = UI.button('OK', () => goBack('confirm', R), { primary: true, kbd: 'Space', sfx: 'confirm' });
-    const sheet = h('div.rx-sheet.panel', h('div.rx-head', h('div.rx-title', 'Races'), R.sub, R.chips), grid, h('div.rx-foot', R.prompt, R.btnS, R.btnR, R.btnA, R.btnO));
+    const sheet = h('div.rx-sheet.panel', h('div.rx-head', h('div.rx-title', 'Races'), R.sub, R.chips), grid, h('div.rx-foot', R.prompt, R.btnS, R.btnR, R.btnA, R.btnC, R.btnN, R.btnO));
     R.el = h('div.rx', sheet);
     root.appendChild(R.el);
+    for (const [sel, name] of [['.rc-grid', 'races.grid'], ['.rc-sec', 'races.security'], ['.rx-foot', 'races.foot']]) { const e = R.el.querySelector(sel); if (e) e.dataset.help = name; }      // F1 help anchors
     R.built = true;
     const scr = { screen: 'races' };
+    UI.bindKey('c', () => R.btnC.click(), scr); UI.bindKey('n', () => R.btnN.click(), scr);
     UI.bindKey('s', openStatus, scr); UI.bindKey('r', () => act('report'), scr); UI.bindKey('a', () => act('audience'), scr);
     UI.bindKey('o', () => goBack('confirm', R), scr); UI.bindKey('space', () => goBack('confirm', R), scr);
     UI.bindKey('escape', () => { if (R.mode) { setMode(null); UI.sfx('cancel'); } else goBack('cancel', R); }, scr);

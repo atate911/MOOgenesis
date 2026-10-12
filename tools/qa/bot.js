@@ -10,7 +10,7 @@ function start(page, o = {}) {
         const r = await page.evaluate(({ rv, opts }) => {
           const UI = MOO.UI, cur = UI.Screens.current && UI.Screens.current.id, vis = e => e && e.offsetParent !== null && !e.disabled;
           const out = { screen: cur, did: null };
-          const press = (k, code) => { document.dispatchEvent(new KeyboardEvent('keydown', { key: k, code: code || k, bubbles: true })); window.dispatchEvent(new KeyboardEvent('keydown', { key: k, code: code || k, bubbles: true })); };
+          const press = k => { out.key = k; };
           const modal = [...document.querySelectorAll('.scrim .modal')].pop();
           if (modal) { const b = [...modal.querySelectorAll('.modal-f button')].filter(vis); const t = modal.textContent.slice(0, 80); const pick = b.find(x => x.classList.contains('primary')) || b[b.length - 1]; if (pick) { out.did = 'modal:' + t + ' -> ' + pick.textContent; pick.click(); } return out; }
           if (cur === 'audience') {
@@ -19,7 +19,7 @@ function start(page, o = {}) {
               const yes = items.filter(b => /accept|agree|yes|ok|continue|continue/i.test(b.textContent));
               const pool = opts.audiencePick === 'random' ? items : (yes.length ? yes : items);
               const b = pool[Math.floor(rv * pool.length)]; out.did = 'au:' + b.textContent.trim().replace(/\s+/g, ' ').slice(0, 40); b.click();
-            } else press(' ', 'Space');
+            } else press('Space');
             return out;
           }
           if (cur === 'combat') { out.did = 'combat'; return out; }
@@ -29,9 +29,10 @@ function start(page, o = {}) {
             const pb = document.querySelector('.pb-btns button, .prebattle button'); void pb;
             return out;
           }
-          if (['gnn', 'council', 'landing', 'endings', 'spyscene'].includes(cur) || /gnn|council|landing|ending|spy/.test(cur || '')) { press(' ', 'Space'); out.did = 'space@' + cur; return out; }
+          if (cur !== 'galaxy') { press('Space'); out.did = 'space@' + cur; return out; }
           return out;
         }, { rv: rnd(), opts: o });
+        if (r.key) await page.keyboard.press(r.key);
         stats.screens[r.screen] = (stats.screens[r.screen] || 0) + 1;
         if (r.did) { stats.clicks++; if (o.verbose) console.log('   bot:', r.did); stats.seen.push(r.did); }
         if (o.onTick) await o.onTick(r);

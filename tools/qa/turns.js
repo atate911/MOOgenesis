@@ -2,9 +2,9 @@
 const { serve, open, sleep } = require('./lib'); const bot = require('./bot');
 (async () => {
   const [turns = 60, seed = 'q1', opp = 4, diff = 'hard', race = 'human'] = process.argv.slice(2);
-  const srv = await serve(8766);
+  const srv = await serve(+process.env.PORT || 8766);
   const { browser, page, errors } = await open();
-  await page.goto(`http://localhost:8766/index.html?dev=1&screen=galaxy&race=${race}&size=medium&opp=${opp}&seed=${seed}&diff=${diff}&turns=0`);
+  await page.goto(`http://localhost:${process.env.PORT || 8766}/index.html?dev=1&screen=galaxy&race=${race}&size=medium&opp=${opp}&seed=${seed}&diff=${diff}&turns=0`);
   await sleep(1200);
   const b = bot.start(page, { verbose: !!process.env.V });
   const t0 = Date.now(); let last = '';

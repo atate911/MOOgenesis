@@ -172,10 +172,10 @@
   const GROUP_ORDER = ['war', 'space', 'disaster', 'colony', 'diplomacy', 'spy', 'science', 'council', 'economy', 'life'];
   const CAT_GROUP = {};
   [
-    ['war', 'warDeclared battleWon battleLost fleetDestroyed invasionSuccess invasionRepelled bombardment planetDestroyed empireDestroyed antaranRaid piracy'],
-    ['space', 'guardianSlain monsterAttack'],
-    ['colony', 'colonyFounded colonyLost planetRebels terraform'],
-    ['disaster', 'systemNova plague planetStarving'],
+    ['war', 'warDeclared battleWon battleLost fleetDestroyed invasionSuccess invasionRepelled bombardment planetDestroyed empireDestroyed antaranRaid piracy piracyProgress piracyEnded genocide'],
+    ['space', 'guardianSlain monsterAttack monsterSpawn monsterKilled monsterVanishes comet cometProgress cometDestroyed derelict orionColonised starsReport'],
+    ['colony', 'colonyFounded colonyLost planetRebels terraform coup richPlanet poorPlanet donation'],
+    ['disaster', 'systemNova plague planetStarving novaWarning novaProgress novaAverted plagueProgress plagueCured virus earthquake accident accidentCleaned'],
     ['diplomacy', 'peaceTreaty napSigned allianceFormed allianceBroken tradeSigned treatyBroken tributeDemanded tributePaid firstContact'],
     ['spy', 'spyCaught techStolen sabotage'],
     ['science', 'techBreakthrough artifactFound'],
@@ -191,6 +191,11 @@
     artifactFound: ['planet', 'sparkle'], bombardment: ['planet', 'strike'], invasionSuccess: ['planet', 'strike'], invasionRepelled: ['planet', 'strike'],
     monsterAttack: ['battle', ''], antaranRaid: ['battle', ''], piracy: ['battle', ''], guardianSlain: ['battle', ''],
     warDeclared: ['map', 'alarm'], empireDestroyed: ['map', 'alarm'], allianceBroken: ['map', 'alarm'], treatyBroken: ['map', 'alarm'],
+    genocide: ['planet', 'explode'], coup: ['planet', 'glitch'], virus: ['planet', 'plague'], plagueProgress: ['planet', 'plague'], plagueCured: ['planet', 'sparkle'],
+    novaWarning: ['planet', 'nova'], novaProgress: ['planet', 'nova'], novaAverted: ['planet', 'sparkle'], earthquake: ['planet', 'strike'], accident: ['planet', 'strike'], accidentCleaned: ['planet', 'sparkle'],
+    richPlanet: ['planet', 'sparkle'], poorPlanet: ['planet', ''], donation: ['planet', 'sparkle'], orionColonised: ['planet', 'sparkle'], derelict: ['planet', 'sparkle'],
+    monsterSpawn: ['battle', ''], monsterKilled: ['battle', ''], monsterVanishes: ['battle', ''], comet: ['planet', 'strike'], cometProgress: ['planet', 'strike'], cometDestroyed: ['planet', 'sparkle'],
+    piracyProgress: ['battle', ''], piracyEnded: ['battle', ''], starsReport: ['map', ''],
     spyCaught: ['ticker', 'redact'], techStolen: ['ticker', 'redact'], sabotage: ['ticker', 'redact'],
   };
   const GFX_KINDS = { planet: 1, battle: 1, map: 1, chart: 1, ticker: 1 };

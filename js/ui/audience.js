@@ -56,6 +56,7 @@
     .au-item:disabled { color:#5d7a86; cursor:default; } .au-item:disabled kbd { color:#5d7a86; box-shadow:inset 0 0 0 1px rgba(93,122,134,.45); }
     .au-item.warn:not(:disabled) .l { color:#ffcf9a; } .au-item.bad:not(:disabled) .l { color:#ffb3bb; } .au-item.back .l { color:#c4d6dd; }
     .au-hint { margin-top:.35rem; color:#7fa0ab; font-size:.82rem; letter-spacing:.02em; }
+    @media (max-aspect-ratio: 19/10) { .au-panel { width:min(50%, 54rem); } .au-text { font-size:1.15rem; } .au-item { font-size:1.05rem; } }
     @media (max-width: 62rem) { .au-panel { width:92%; left:4%; } .au-top { flex-wrap:wrap; } }
   `);
 

@@ -191,6 +191,15 @@
       .dz-cmpg { grid-template-columns:1fr; }
     }
 
+    @media (max-width: 1240px) { .dz-auto { flex-wrap:wrap; } .dz-cvw .tag { display:none; } }
+    /* small windows (about 1024 px and below): one scrolling column — library strip, the editor, then the preview and numbers */
+    @media (max-width: 960px) {
+      .dz { grid-template-columns:minmax(0,1fr); grid-template-rows:none; grid-auto-rows:min-content; overflow-y:auto; overflow-x:hidden; align-content:start; }
+      .dz-lib { max-height:15rem; } .dz-cards { display:grid; grid-template-columns:repeat(auto-fill, minmax(11rem, 1fr)); gap:.4rem; overflow-y:auto; }
+      .dz-main { overflow:visible; } .dz-mc { overflow:visible; max-height:none; }
+      .dz-pv { min-height:16rem; }
+    }
+
     /* pop-up tables */
     .dz-pop { position:absolute; inset:.3rem; z-index:6; display:none; flex-direction:column; border:1px solid var(--brass);
       background:linear-gradient(180deg, rgba(12,18,48,.985), rgba(6,9,25,.992)); box-shadow:0 0 0 1px rgba(0,0,0,.6), 0 12px 46px rgba(0,0,0,.65); }
@@ -1243,6 +1252,7 @@
       h('aside.dz-right',
         h('div.panel.dz-pv', ui.pvh, ui.cvw, auto), ui.spc, ui.cmp, ui.hints));
     root.appendChild(dom);
+    for (const [sel, name] of [['.dz-lib', 'design.library'], ['.dz-mc', 'design.parts'], ['.dz-pv', 'design.preview'], ['.dz-cmp', 'design.compare'], ['.dz-foot', 'design.build']]) { const e = dom.querySelector(sel); if (e) e.dataset.help = name; }      // F1 help anchors
 
     // preview interaction: drag to turn, double-click to reset
     const cv = PV.cv;

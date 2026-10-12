@@ -155,17 +155,20 @@
     { sel: hp('tech.project', '.tch-proj'), text: '<b>Current project.</b> When the invested points exceed its cost, the tech arrives with a growing chance each turn (the breakthrough meter).' },
     { sel: hp('tech.list', '.tch-listp', '.tch-list'), text: '<b>Known and available techs.</b> When a field finishes, you choose the next project from the list.' }] }]);
   Help.register('design', [{ title: 'The ship designer', text: 'A design is a hull plus components. You can keep six designs; a design is locked once ships of it exist.', items: [
-    { at: [0.3, 0.3], text: '<b>Hull and slots.</b> Computer, shield, ECM, armor, engine and manoeuvre, four weapon slots and three special devices — everything must fit the hull’s space.' },
-    { at: [0.7, 0.55], text: '<b>Live numbers.</b> Attack level, missile defence, hit points, warp, cost and free space update as you choose. Newer tech makes components smaller and cheaper (miniaturisation).' },
-    { at: [0.5, 0.85], text: '<b>Build</b> stores the design; colonies then build it with their Ship slider. A colony ship needs a colony-base special on a large hull.' }] }]);
+    { sel: hp('design.library', '.dz-lib'), text: '<b>Design library.</b> Your six design slots. Click a design to use it as a template; a padlock means ships of it exist, so it can only be scrapped.' },
+    { sel: hp('design.parts', '.dz-mc'), text: '<b>Hull and slots.</b> Computer, shield, ECM, armor, engine and manoeuvre, four weapon slots and three special devices — everything must fit the hull’s space.' },
+    { sel: hp('design.preview', '.dz-pv'), text: '<b>Preview.</b> Drag to turn the ship; autofill buttons pick the best parts, the most armor or the most weapons that fit.' },
+    { sel: hp('design.compare', '.dz-cmp'), text: '<b>Live numbers.</b> Attack level, missile defence, hit points, warp, cost and free space update as you choose. Newer tech makes components smaller and cheaper (miniaturisation).' },
+    { sel: hp('design.build', '.dz-foot'), text: '<b>Build</b> stores the design; colonies then build it with their Ship slider. A colony ship needs a colony-base special on a large hull.' }] }]);
   Help.register('races', [{ title: 'Races and diplomacy', text: 'What you know about every empire.', items: [
-    { at: [0.3, 0.4], text: '<b>Attitude bar.</b> From hostile (red) to friendly (green): it decides what a leader will agree to in an audience.' },
-    { at: [0.7, 0.6], text: '<b>Spies.</b> Choose Hide, Espionage or Sabotage for each target and set the security slider. <b>Audience</b> opens talks: treaties, trade, tribute, tech exchange.' }] }]);
+    { sel: hp('races.grid', '.rc-grid'), text: '<b>Attitude bar.</b> From hostile (red) to friendly (green): it decides what a leader will agree to in an audience.' },
+    { sel: hp('races.security', '.rc-sec'), text: '<b>Security.</b> The share of your production spent on counter-espionage; it raises the chance of catching enemy spies.' },
+    { sel: hp('races.foot', '.rx-foot'), text: '<b>Spies.</b> Choose Hide, Espionage or Sabotage for each target. <b>Audience</b> opens talks: treaties, trade, tribute, tech exchange. <b>Spies caught</b> and <b>News archive</b> open their tables.' }] }]);
   Help.register('mapoverview', [{ title: 'Galaxy map overview', text: 'The whole galaxy in one picture.', items: [
-    { at: [0.8, 0.2], text: '<b>Colonies / Environments / Minerals.</b> Switch the filter: empire flags, which planets you can colonise now (green) and which you cannot yet (red), or the mineral and artifact specials.' }] }]);
+    { sel: hp('overview.modes', '.ov-modes'), text: '<b>Colonies / Environments / Minerals.</b> Switch the filter: empire flags, which planets you can colonise now (green) and which you cannot yet (red), or the mineral and artifact specials.' }] }]);
   Help.register('combat', [{ title: 'Tactical combat', text: 'Ships fight on a 10 × 8 grid; each ship acts in initiative order.', items: [
-    { at: [0.5, 0.92], text: '<b>Command bar.</b> Auto · Planet · Scan · Missiles · Special · Retreat · Wait · Done. Click a square to move, an enemy to fire everything that reaches it.' },
-    { at: [0.5, 0.4], text: 'Beams never run out; missiles and torpedoes do. Rocks block movement and shield against missiles. Battles happen only in orbit over a planet.' }] }]);
+    { sel: hp('combat.buttons', '.cb-btns'), text: '<b>Command bar.</b> Auto · Planet · Scan · Missiles · Special · Retreat · Wait · Done. Click a square to move, an enemy to fire everything that reaches it.' },
+    { sel: hp('combat.field', '.cb-field'), text: 'Beams never run out; missiles and torpedoes do. Rocks block movement and shield against missiles. Battles happen only in orbit over a planet.' }] }]);
   Help.register('landing', [{ title: 'Landings and bombardment', text: 'Space skips ahead, Esc skips the whole scene.', items: [
     { at: [0.5, 0.45], text: '<b>Invasion.</b> Transports run past the missile bases, then troops fight in rounds; each exchange rolls d100 plus the force rating of each side, the loser loses one trooper, ties go to the defender.' },
     { at: [0.5, 0.7], text: '<b>Bombardment.</b> After a battle your ships may bomb the planet: they kill colonists and factories; biological weapons also shrink its maximum population.' }] }]);

@@ -23,6 +23,8 @@
     { id: 'save', label: 'Save game', icon: 'save', kbd: 'S', sep: true, ok: () => (UI.openSaveLoad ? (hasGame() ? true : 'There is no game in progress to save.') : 'Saving is not available.') },
     { id: 'load', label: 'Load game', icon: 'load', kbd: 'L', ok: () => (UI.openSaveLoad ? true : 'Loading is not available.') },
     { id: 'options', label: 'Options', icon: 'sliders', kbd: 'O', ok: () => (UI.openOptions ? true : 'Options are not available.') },
+    { id: 'news', label: 'GNN archive', icon: 'list', kbd: 'G', ok: () => (UI.GNN && UI.GNN.archive ? (hasGame() ? true : 'There is no game in progress.') : 'The news archive is not available.') },
+    { id: 'spies', label: 'Spies caught', icon: 'spy', kbd: 'C', ok: () => (UI.Spy && UI.Spy.caught ? (hasGame() ? true : 'There is no game in progress.') : 'Not available.') },
     { id: 'help', label: 'Almanac', icon: 'book', kbd: 'A', ok: () => (UI.Screens.has('help') ? true : 'The almanac is not available yet.') },
     { id: 'quit', label: 'Quit to title', icon: 'quit', kbd: 'Q', sep: true, danger: true, ok: () => (hasGame() ? true : 'There is no game in progress.') },
   ];
@@ -41,6 +43,8 @@
       case 'resume': return 'resume';
       case 'save': case 'load': return UI.openSaveLoad(id).then(res => (res && res.action) || UI.gameMenu());
       case 'options': return UI.openOptions().then(() => UI.gameMenu());
+      case 'news': return UI.GNN.archive(game().S).then(() => UI.gameMenu());
+      case 'spies': return UI.Spy.caught().then(() => UI.gameMenu());
       case 'help': { const cur = UI.Screens.current; UI.Screens.go('help', { from: cur && cur.id }); return 'help'; }
       case 'quit': return confirmQuit();
       default: return null;
