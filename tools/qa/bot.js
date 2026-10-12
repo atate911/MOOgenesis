@@ -32,7 +32,7 @@ function start(page, o = {}) {
             return out;
           }
           if (cur === 'council') { const ks = opts.councilKeys || ['Space', '1', '2', '0', 'y', 'n']; press(ks[Math.floor(rv * ks.length)]); out.did = 'council'; return out; }
-          if (cur !== 'galaxy') { press('Space'); out.did = 'space@' + cur; return out; }
+          if (cur !== 'galaxy') { press(cur === 'landing' ? 'Enter' : 'Space'); out.did = 'space@' + cur; return out; }
           return out;
         }, { rv: rnd(), opts: o });
         if (r.key) await page.keyboard.press(r.key);

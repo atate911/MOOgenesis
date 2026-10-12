@@ -29,7 +29,7 @@
 
   // ================================================================== the script of each ending
   function script(it) {
-    const S = G.S, me = S ? S.empires[S.playerId] : null, race = me ? me.race : 'human', leader = me ? me.leader : 'The Emperor', rn = me ? me.name : 'Human';
+    const S = G.S, me = S ? S.empires[S.playerId] : null, race = me ? me.race : 'human', leader = me ? me.leader : 'The Emperor', rn = me ? (me.plural || me.name) : 'Humans';
     const W = S && it.winner >= 0 ? S.empires[it.winner] : null, ep = (M.Data && M.Data.text && M.Data.text.epilogue) || { victory: {}, defeat: {} };
     const year = S ? M.Data.Config.displayYear(S) : '';
     let kind = ENDING[it.reason] || it.ending || 'funeral';
@@ -50,7 +50,7 @@
         { head: 'Master of Orion', text: (ep.victory.conquest && ep.victory.conquest[race]) || 'The universe is yours and all shall bow before you.' }];
       T.gnn = 'GNN notes the galaxy now has one ruler, one opinion and a very short list of approved headlines.';
     } else if (kind === 'exile') {
-      const wn = W ? W.leader + ' of the ' + W.name : 'a rival';
+      const wn = W ? W.leader + ' of the ' + (W.plural || W.name) : 'a rival';
       T.heading = 'Exile'; T.beats = [
         { head: 'Year ' + year, text: 'The Council has chosen ' + wn + ', and ' + leader + ' of the ' + rn + ' has accepted the ruling — and with it the long road out.' },
         { head: 'Beyond the Rim', text: 'Past the last charted star a lone ship runs dark and patient. Its captain remembers the throne-world of Orion, and Orion, one hopes, does not remember them.' }];
