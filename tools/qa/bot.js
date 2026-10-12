@@ -12,6 +12,12 @@ function start(page, o = {}) {
           const out = { screen: cur, did: null };
           const press = k => { out.key = k; };
           const modal = [...document.querySelectorAll('.scrim .modal')].pop();
+          if (modal && !opts.spyAbort) {
+            const f = [...modal.querySelectorAll('.spy-fld:not([disabled]):not(.off)')][0], a = [...modal.querySelectorAll('.spy-act button:not([disabled])')][0];
+            if (f) { out.did = 'spy-steal:' + f.textContent.trim().slice(0, 30); f.click(); return out; }
+            if (a) { out.did = 'spy-sab:' + a.textContent.trim(); a.click(); return out; }
+            if (/Frame a rival/.test(modal.textContent)) { const b = [...modal.querySelectorAll('button')].filter(vis); out.did = 'spy-frame:' + b[0].textContent; b[0].click(); return out; }
+          }
           if (modal) { const b = [...modal.querySelectorAll('.modal-f button')].filter(vis); const t = modal.textContent.slice(0, 80); const pick = b.find(x => x.classList.contains('primary')) || b[b.length - 1]; if (pick) { out.did = 'modal:' + t + ' -> ' + pick.textContent; pick.click(); } return out; }
           if (cur === 'audience') {
             const items = [...document.querySelectorAll('.au-item')].filter(vis);

@@ -22,7 +22,7 @@ const MODES = {
     await page.goto(`http://localhost:${PORT}/index.html?dev=1&screen=galaxy&race=human&size=medium&opp=3&seed=abc&turns=15`);
     await sleep(1500);
     await page.evaluate(() => { const S = MOO.Game.S; for (const E of S.empires) for (const o of S.empires) if (E.id !== o.id) MOO.Sim.Diplo.rec(S, E.id, o.id).contact = true; });
-    const info = await page.evaluate(() => ({ tier: MOO.Perf.tier || (MOO.Perf.q && MOO.Perf.q.name), workers: MOO.Workers.size ? MOO.Workers.size() : undefined, gl: MOO.Gfx.GL && MOO.Gfx.GL.supported && MOO.Gfx.GL.supported() }));
+    const info = await page.evaluate(() => ({ tier: MOO.Perf.tier, workers: MOO.Workers.size !== undefined ? (typeof MOO.Workers.size === 'function' ? MOO.Workers.size() : MOO.Workers.size) : undefined, gl: MOO.Gfx.GL && MOO.Gfx.GL.supported && MOO.Gfx.GL.supported() }));
     const scr = ['galaxy', 'planets', 'fleets', 'specs', 'design', 'tech', 'races', 'report', 'status', 'mapoverview', 'help', 'options', 'saveload', 'system', 'landing', 'gnn', 'council'];
     for (const s of scr) { await page.evaluate(id => { try { MOO.UI.Screens.go(id, { from: 'galaxy', empire: 1 }); } catch (e) { console.error('go ' + id, e.message); } }, s); await sleep(450); if (['design', 'races', 'tech'].includes(s)) await page.screenshot({ path: `/tmp/claude-0/mode-${name}-${s}.png` }); await page.keyboard.press('F1'); await sleep(150); await page.keyboard.press('Escape'); }
     await page.evaluate(() => MOO.UI.Screens.go('galaxy')); await sleep(300);
@@ -30,7 +30,7 @@ const MODES = {
     for (let i = 0; i < 8; i++) { const r = await Promise.race([page.evaluate(() => MOO.Game.endTurn().then(() => 1)), sleep(45000).then(() => 0)]); if (!r) { console.log('  STUCK turn', i); break; } ok++; await page.evaluate(() => MOO.UI.Screens.go('galaxy')); }
     b.stop(); await sleep(300);
     await page.screenshot({ path: `/tmp/claude-0/mode-${name}-galaxy.png` });
-    const perf = await page.evaluate(() => ({ fps: MOO.Perf.fps && MOO.Perf.fps(), q: MOO.Perf.q && MOO.Perf.q.name, mem: performance.memory && Math.round(performance.memory.usedJSHeapSize / 1e6) }));
+    const perf = await page.evaluate(() => ({ fps: Math.round(MOO.Perf.fps), frameMs: +MOO.Perf.frameMs.toFixed(1), tier: MOO.Perf.tier, mem: performance.memory && Math.round(performance.memory.usedJSHeapSize / 1e6) }));
     console.log(name, 'turns', ok, JSON.stringify(info), JSON.stringify(perf), 'errors:', JSON.stringify([...new Set(errors)]));
     await browser.close();
   }

@@ -88,7 +88,7 @@
     listEl.appendChild(UI.button('Load game', () => UI.Screens.has('saveload') ? UI.Screens.go('saveload', { mode: 'load', from: 'menu' }) : UI.toast('Load screen is not available yet', 'warn')));
     listEl.appendChild(UI.button('Options', () => UI.Screens.has('options') ? UI.Screens.go('options', { from: 'menu' }) : UI.toast('Options are not available yet', 'warn')));
     listEl.appendChild(UI.button('Almanac', () => UI.Screens.has('help') ? UI.Screens.go('help', { from: 'menu' }) : UI.toast('The almanac is not available yet', 'warn')));
-    metaEl.textContent = latest && latest.meta ? `Last played: ${M.Util.cap(latest.meta.race || '')} · year ${latest.meta.year} · ${latest.meta.planets} colonies` : '';
+    metaEl.textContent = latest && latest.meta ? `Last played: ${M.Util.cap(latest.meta.race || '')} · year ${M.Data.Config.displayYear({ year: latest.meta.year })} · ${latest.meta.planets} colonies` : '';
   }
 
   UI.Screens.register('menu', {

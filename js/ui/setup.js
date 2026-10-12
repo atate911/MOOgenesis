@@ -40,6 +40,8 @@
     compass: '<circle cx="12" cy="12" r="8.5"/><path d="M15.5 8.5l-2 5-5 2 2-5z"/>',
     flag: '<path d="M6 21V4"/><path d="M6 5h12l-2.5 4 2.5 4H6"/>',
     plus: '<path d="M12 5v14M5 12h14"/>',
+    news: '<path d="M4 5h13v14H4z"/><path d="M17 9h3v8a2 2 0 0 1-2 2"/><path d="M7 9h7M7 12h7M7 15h4"/>',
+    spy: '<path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12z"/><circle cx="12" cy="12" r="3"/>',
   };
   function icon(name, cls) {
     const t = doc.createElement('template');
