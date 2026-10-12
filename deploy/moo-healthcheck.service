@@ -1,0 +1,7 @@
+[Unit]
+Description=MOO site health check
+After=network-online.target
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/sbin/moo-healthcheck --quiet

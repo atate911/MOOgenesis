@@ -2,7 +2,9 @@
 (function () {
   'use strict';
   var man = window.MOO_MANIFEST;
-  var bust = '?_=' + Date.now();
+  var meta = document.querySelector('meta[name="moo-build"]');
+  var build = meta && meta.content;
+  var bust = '?_=' + (build && build !== 'dev' ? build : Date.now());   // deployed releases carry a stable build id
   var fill = document.getElementById('boot-fill');
   var errBox = document.getElementById('boot-err');
   var errors = [];
