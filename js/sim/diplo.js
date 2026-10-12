@@ -1053,6 +1053,7 @@ MOO.def(function (M) {
     if (type) r.dipType = type;
   }
   function callToArms(S, R, H, A, r, ex) {
+    r.dipType = 0;                                                                                          // sub2 (research/05-verification): clears the type unless it queues 76
     if (r.treaty !== T.ALLIANCE || rnd0(R, 10) !== 0) return;
     let x = -1;
     for (const E of S.empires) if (E.alive && E.id !== H.id && E.id !== A.id && rec(S, A.id, E.id).treaty >= T.WAR && rec(S, H.id, E.id).contact && rec(S, H.id, E.id).treaty < T.WAR) x = E.id;
@@ -1373,5 +1374,5 @@ MOO.def(function (M) {
   D.rec = rec;                                                                                              // the relation record of a about b (read-only use)
   D.setRel = setRel;
   D.VERSION = 1;
-  D._ = { checkMood, sweeten, warCheck, warDo, aiAiTurn, dispatch, proposals, reaction, humanTurn, aiTechSwap, diploAdjust, threaten, tributeTech, tributeBC, relax, buildAudience, trackOwners, envy, bandStat, bandStatBug, aiPropose };   // internals exposed for tools/rules/60-diplo.test.js
+  D._ = { callToArms, checkMood, sweeten, warCheck, warDo, aiAiTurn, dispatch, proposals, reaction, humanTurn, aiTechSwap, diploAdjust, threaten, tributeTech, tributeBC, relax, buildAudience, trackOwners, envy, bandStat, bandStatBug, aiPropose };   // internals exposed for tools/rules/60-diplo.test.js
 });

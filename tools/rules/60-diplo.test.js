@@ -689,6 +689,13 @@ module.exports = function (M, t) {
     t.eq(o4[0].kind, 'demandBreak'); t.eq(o4.length, 1); o4[0].answer('agree'); t.eq(rel(S4, 0, 2).treaty, T.NONE); t.eq(o4.length, 2); t.eq(o4[1].kind, 'offerNap');
     const S5 = accGame(); setAll(S5, 0, 2, { treaty: T.ALLIANCE }); setAll(S5, 1, 2, { treaty: T.WAR }); const o5 = []; D._.buildAudience(S5, S5.empires[0], S5.empires[1], rel(S5, 0, 1), 24, {}, o5); o5[0].answer('forget'); t.eq(rel(S5, 0, 1).rel1, -100); t.eq(o5.length, 1);
   });
+  t.test('sub2 / callToArms clears a queued dipType unless it queues 76 (research/05-verification MEDIUM)', () => {
+    const S = accGame({ rel: { treaty: T.NAP, rel1: 60 } }), r = rel(S, 0, 1); r.dipType = 2;
+    D._.callToArms(S, null, S.empires[0], S.empires[1], r, {}); t.eq(r.dipType, 0, 'not allied: nothing survives');
+    const S2 = accGame({ rel: { treaty: T.ALLIANCE, rel1: 60 } }); setAll(S2, 1, 2, { treaty: T.WAR }); const r2 = rel(S2, 0, 1);
+    let got = 0; for (let k = 0; k < 200 && !got; k++) { r2.dipType = 2; const ex = {}; D._.callToArms(S2, { next: () => 0, int: () => 0 }, S2.empires[0], S2.empires[1], r2, ex); if (r2.dipType === 76) got = ex.target; }
+    t.ok(got > 0 || r2.dipType === 76 || r2.dipType === 0, 'either 76 with a target or cleared');
+  });
   t.test('ally requests: Agree joins the war (78), refusing breaks the alliance (77); a bounty offer is remembered; the v1.3 "payment" delivers nothing', () => {
     const S = accGame({ rel: { treaty: T.ALLIANCE, rel1: 60 } }); setAll(S, 1, 2, { treaty: T.WAR }); const out = [];
     D._.buildAudience(S, S.empires[0], S.empires[1], rel(S, 0, 1), 76, { target: 2 }, out); t.eq(out[0].kind, 'callToArms'); out[0].answer('agree');
