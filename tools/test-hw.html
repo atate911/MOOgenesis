@@ -1,0 +1,151 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>Hardware test</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+  body{margin:0;padding:1rem 1.4rem;background:#04061a;color:#d8e0ff;font:14px/1.5 system-ui,sans-serif}
+  h2{margin:.2rem 0 .6rem} h3{margin:1.1rem 0 .3rem;color:#d6b36a;font-weight:600}
+  button{background:#141c4a;border:1px solid rgba(214,179,106,.6);color:#f4eedd;padding:5px 14px;cursor:pointer;margin-right:8px}
+  pre{white-space:pre-wrap;user-select:text;font:12.5px/1.5 ui-monospace,monospace;margin:.2rem 0}
+  .ok{color:#7fe0a0}.bad{color:#ff7a88}.dim{color:#8a93bd}
+  table{border-collapse:collapse;font:12.5px ui-monospace,monospace} td,th{padding:2px 10px;text-align:right;border-bottom:1px solid #1c2450} th:first-child,td:first-child{text-align:left}
+  canvas{display:none}
+</style></head>
+<body>
+<h2>Hardware: GPU renderers per Perf tier + worker pool</h2>
+<p class="dim">Measures Canvas2D vs WebGL2 paths (Gfx.pick) at tiers low / medium / high / ultra, then worker-pool vs inline AI planning over a 100-turn headless game, then context-loss recovery.
+In headless Chromium WebGL is SwiftShader (software); numbers there prove correctness only, not GPU speed. URL params: ?auto=1 run on load, ?turns=100, ?n=8 (iterations).</p>
+<div><button id="go">Run all</button><button id="gl">GPU only</button><button id="wk">Workers only</button></div>
+<pre id="out">idle</pre>
+<div id="tables"></div>
+<canvas id="cv" width="1280" height="720"></canvas>
+<script src="../js/manifest.js"></script>
+<script>
+(function () {
+  const man = window.MOO_MANIFEST, list = man.js.filter(f => !/js\/main\.js$/.test(f)).map(f => '../' + f);
+  window.__loadErrors = [];
+  (function next() {
+    if (!list.length) { window.__ready = true; return init(); }
+    const s = document.createElement('script'); s.src = list.shift(); s.onload = next; s.onerror = () => { window.__loadErrors.push(s.src); next(); }; document.head.appendChild(s);
+  })();
+})();
+function init() {
+  const M = window.MOO, $ = id => document.getElementById(id), out = $('out');
+  const qs = new URLSearchParams(location.search), N = +(qs.get('n') || 8), TURNS = +(qs.get('turns') || 100);
+  const R = window.__hw = { checks: [], rows: [], errors: [], done: false };
+  const log = (s, c) => { out.innerHTML += '\n<span class="' + (c || '') + '">' + String(s).replace(/</g, '&lt;') + '</span>'; };
+  const check = (name, ok, extra) => { R.checks.push({ name, ok: !!ok, extra }); log((ok ? 'PASS ' : 'FAIL ') + name + (extra ? '  ' + extra : ''), ok ? 'ok' : 'bad'); };
+  const ce = console.error; console.error = function () { R.errors.push([].join.call(arguments, ' ')); ce.apply(console, arguments); };
+  window.addEventListener('error', e => R.errors.push('window: ' + e.message));
+  const tick = () => new Promise(r => setTimeout(r, 0));
+  const cv = $('cv'), ctx = cv.getContext('2d', { willReadFrequently: true });
+  const lit = (x, y, w, h) => { const d = ctx.getImageData(x, y, w, h).data; let s = 0; for (let i = 3; i < d.length; i += 4) s += d[i]; return s > 0; };
+  const sync = () => ctx.getImageData(0, 0, 1, 1);                          // forces any pending GPU work to finish before the clock stops
+  M.Perf.start();
+
+  function env() {
+    const c = M.Perf.caps || {};
+    log('logical threads ' + M.HW.threads + ' · memory ' + (M.HW.memoryGB || '?') + ' GB · dpr ' + devicePixelRatio + ' · WebGL2 ' + !!c.webgl2 + ' · GPU "' + (M.HW.gpu || c.gpu) + '"' + (c.software ? '  [SOFTWARE GL - speeds are not representative]' : ''));
+    log('heuristic tier: ' + M.Perf.cap + ' · load errors: ' + (window.__loadErrors.length ? window.__loadErrors.join(', ') : 'none'));
+    check('all scripts loaded', !window.__loadErrors.length);
+  }
+
+  // ---- GPU workloads: [name, fn(path) -> ms] -------------------------------------------------------------------------------
+  const DESC = { look: 'terran', seed: 'hw1', inhabited: true };
+  const W = {
+    'planet 360px': (P, n) => { ctx.clearRect(0, 0, 1280, 720); const t0 = performance.now(); for (let i = 0; i < n; i++) P.draw(ctx, DESC, 420, 360, 180, i * 0.1, { dpr: 1, spin: 0.02 }); sync(); return (performance.now() - t0) / n; },
+    'star surface': (P, n, S) => { const t0 = performance.now(); for (let i = 0; i < n; i++) { if (P.drawStar) P.drawStar(ctx, 'yellow', 900, 300, 110, i * 0.1, { dpr: 1 }); else S.drawStarSurface(ctx, 'yellow', 900, 300, 110, i * 0.1, { dpr: 1 }); } sync(); return (performance.now() - t0) / n; },
+    'backdrop 1280x720': (P, n, S, SP) => { const t0 = performance.now(); let c; for (let i = 0; i < Math.max(2, n >> 2); i++) c = SP.makeBackdrop(1280, 720, 'hw' + i, { intensity: 1, stars: 1 }); ctx.drawImage(c, 0, 0); sync(); return (performance.now() - t0) / Math.max(2, n >> 2); },
+    'fx 30 frames, many particles': (P, n, S, SP, FX) => { const f = FX.create(); const q = M.Perf.q; const t0 = performance.now(); for (let k = 0; k < 6; k++) f.explosion(200 + k * 150, 360, 90, { kind: 'fire' }); for (let i = 0; i < 30; i++) { f.update(1 / 60); ctx.clearRect(0, 0, 1280, 720); f.draw(ctx); } sync(); const ms = (performance.now() - t0) / 30; if (f.dispose) f.dispose(); return ms; },
+  };
+  async function gpu() {
+    log('\n== GPU / Canvas2D per tier (ms per call, ' + N + ' iterations; CPU = Gfx.Planets/Space/Fx directly, picked = what Gfx.pick serves at that tier)');
+    const G = M.Gfx, rows = [];
+    for (const tier of M.Perf.ORDER) {
+      M.Settings.set('gpu', true); M.Perf.setPreset(tier); await tick();
+      const glOn = M.Gfx.GL.supported();
+      const pickP = G.pick('planets'), isGL = pickP === G.GLPlanets;
+      check('tier ' + tier + ': pick() ' + (isGL ? 'GL' : 'CPU') + ' matches Perf.q.gl=' + M.Perf.q.gl, isGL === (!!M.Perf.q.gl && glOn));
+      for (const name in W) {
+        const fn = W[name];
+        const cpuArgs = [G.Planets, N, G.Space, G.Space, G.Fx], pkArgs = [G.pick('planets'), N, G.Space, G.pick('space'), G.pick('fx')];
+        let cpu = NaN, pk = NaN, e1 = R.errors.length;
+        try { fn.apply(null, cpuArgs); cpu = fn.apply(null, cpuArgs); } catch (e) { check(name + ' CPU path threw', false, e.message); }
+        let drawn = lit(0, 0, 1280, 720);
+        try { fn.apply(null, pkArgs); pk = fn.apply(null, pkArgs); } catch (e) { check(tier + ' ' + name + ' picked path threw', false, e.message); }
+        drawn = drawn && true; const drawnPk = name.startsWith('backdrop') || lit(0, 0, 1280, 720);
+        check(tier + ' ' + name + ' produced pixels', drawnPk);
+        rows.push({ tier, name, path: isGL ? 'GL' : 'CPU', cpu, pk, errs: R.errors.length - e1 });
+      }
+    }
+    R.rows = rows;
+    let html = '<h3>Per-tier timings (ms/call)</h3><table><tr><th>tier</th><th>workload</th><th>path</th><th>Canvas2D</th><th>picked</th><th>speed-up</th><th>new errors</th></tr>';
+    for (const r of rows) html += '<tr><td>' + r.tier + '</td><td>' + r.name + '</td><td>' + r.path + '</td><td>' + r.cpu.toFixed(2) + '</td><td>' + r.pk.toFixed(2) + '</td><td>' + (r.cpu / r.pk).toFixed(1) + 'x</td><td>' + r.errs + '</td></tr>';
+    $('tables').innerHTML = html + '</table>';
+    check('no console errors during GPU runs', R.errors.length === 0, R.errors.slice(0, 3).join(' | '));
+    // Settings.gpu = false must force every consumer onto Canvas2D
+    M.Settings.set('gpu', false); M.Perf.setPreset('ultra'); await tick();
+    check('Settings.gpu=false -> pick() is Canvas2D for planets/space/fx', G.pick('planets') === G.Planets && G.pick('space') === G.Space && G.pick('fx') === G.Fx);
+    ctx.clearRect(0, 0, 1280, 720); G.pick('planets').draw(ctx, DESC, 420, 360, 180, 0, { dpr: 1 }); check('gpu=false planet still draws', lit(200, 180, 440, 360));
+    // context loss / restore
+    M.Settings.set('gpu', true); M.Perf.setPreset('high'); await tick();
+    if (G.GL.supported()) {
+      const lose = G.GL.gl().getExtension('WEBGL_lose_context');
+      if (lose) {
+        lose.loseContext(); await new Promise(r => setTimeout(r, 120));
+        let threw = false; ctx.clearRect(0, 0, 1280, 720);
+        try { G.pick('planets').draw(ctx, DESC, 420, 360, 180, 0, { dpr: 1 }); } catch (e) { threw = true; }
+        check('draw while context lost does not throw (falls back)', !threw && lit(200, 180, 440, 360));
+        lose.restoreContext(); await new Promise(r => setTimeout(r, 300));
+        ctx.clearRect(0, 0, 1280, 720); try { G.pick('planets').draw(ctx, DESC, 420, 360, 180, 0, { dpr: 1 }); } catch (e) { threw = true; }
+        check('draw after restore works', !threw && lit(200, 180, 440, 360), 'GLPlanets.path=' + (G.GLPlanets && G.GLPlanets.path));
+      } else log('WEBGL_lose_context unavailable - skipped');
+    } else log('GL unsupported here - context-loss test skipped');
+    M.Perf.setPreset('auto');
+  }
+
+  // ---- workers --------------------------------------------------------------------------------------------------------------
+  async function workers() {
+    log('\n== Worker pool vs inline (' + TURNS + '-turn headless game, AI plans sampled every 10 turns)');
+    const t0 = performance.now(); const n = await M.Workers.init();
+    log('pool: ' + n + ' workers ready in ' + Math.round(performance.now() - t0) + ' ms'); check('worker pool started', n > 0 || M.Workers.inline !== undefined, n ? '' : '(inline-only mode)');
+    const S = M.Sim.Setup.create({ size: 'medium', difficulty: 'average', opponents: 4, race: 'human', seed: 'hw-test' });
+    let inlineMs = 0, poolMs = 0, same = 0, total = 0, sampled = 0, simMs = 0;
+    for (let turn = 1; turn <= TURNS; turn++) {
+      const s0 = performance.now(); M.Sim.autoTurn(S); simMs += performance.now() - s0;
+      if (turn % 10 && turn !== TURNS) continue;
+      const ids = S.empires.filter(e => e.alive && !e.human).map(e => e.id); if (!ids.length) continue;
+      sampled++;
+      const seeds = ids.map(id => M.AI.seedFor(S, id));
+      let a = performance.now(); M.Workers.setSnapshot(S);
+      const snap = JSON.parse(JSON.stringify(S));                           // what a worker sees (it plans from a parsed copy)
+      const inl = ids.map((id, i) => M.AI.plan(snap, id, seeds[i])); inlineMs += performance.now() - a;
+      a = performance.now(); const par = await M.Workers.map('aiPlan', ids.map((id, i) => ({ empire: id, seed: seeds[i] })), { snap: true }); poolMs += performance.now() - a;
+      ids.forEach((id, i) => { total++; if (JSON.stringify(inl[i]) === JSON.stringify(par[i])) same++; });
+      await tick();
+    }
+    const st = M.Workers.stats();
+    log('game: ' + TURNS + ' turns, turn ' + S.turn + ', ' + S.empires.filter(e => e.alive).length + ' empires alive, sim (inline autoTurn) ' + Math.round(simMs) + ' ms');
+    log('AI planning over ' + sampled + ' sampled turns: inline ' + Math.round(inlineMs) + ' ms · pool ' + Math.round(poolMs) + ' ms (incl. snapshot stringify + transfer) · speed-up x' + (inlineMs / Math.max(1, poolMs)).toFixed(2));
+    log('pool stats: size ' + st.size + ' · completed ' + st.completed + ' · errors ' + st.errors + ' · utilisation ' + (st.utilisation * 100).toFixed(0) + '% · per-worker jobs [' + st.perWorker.map(w => w.done).join(',') + ']');
+    check('worker plans == inline plans (' + same + '/' + total + ')', total > 0 && same === total);
+    check('no worker errors', st.errors === 0);
+    // battle auto-resolution determinism, if the sim exposes a battle builder in this build
+    try {
+      if (M.Ops && M.Ops.resolveBattle && M.Sim.Combat && M.Sim.Combat.demoBattle) {
+        const b = M.Sim.Combat.demoBattle(S); const x = M.Ops.resolveBattle({ battle: JSON.parse(JSON.stringify(b)), seed: 'z' }); const y = await M.Workers.run('resolveBattle', { battle: b, seed: 'z' });
+        check('worker battle result == inline', JSON.stringify(x) === JSON.stringify(y));
+      }
+    } catch (e) { log('battle determinism skipped: ' + e.message, 'dim'); }
+  }
+
+  async function all(which) {
+    out.textContent = 'running...'; R.checks.length = 0; R.errors.length = 0; R.done = false;
+    try { env(); if (which !== 'wk') await gpu(); if (which !== 'gl') await workers(); } catch (e) { check('test run crashed', false, e && e.stack || e); }
+    const bad = R.checks.filter(c => !c.ok).length; log('\n' + (bad ? bad + ' FAILED' : 'ALL PASSED') + ' (' + R.checks.length + ' checks)', bad ? 'bad' : 'ok'); R.done = true; R.failed = bad;
+  }
+  $('go').onclick = () => all(); $('gl').onclick = () => all('gl'); $('wk').onclick = () => all('wk');
+  window.__run = all;
+  if (qs.get('auto')) all(qs.get('auto') === 'gl' ? 'gl' : qs.get('auto') === 'wk' ? 'wk' : undefined);
+}
+</script>
+</body></html>

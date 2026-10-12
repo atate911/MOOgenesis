@@ -17,11 +17,17 @@
 
   const FONT_D = "'Marcellus SC','Marcellus','Palatino Linotype','Book Antiqua',Georgia,serif";
   const FONT_U = "'IBM Plex Sans Condensed','Bahnschrift SemiCondensed','Bahnschrift','Segoe UI',system-ui,sans-serif";
-  const C = {
+  const V1 = (typeof document !== 'undefined' && document.documentElement.getAttribute('data-theme') === 'v1');
+  const C = V1 ? {
     void: '#060919', night: '#0a1030', deep: '#0d153a', steel: '#19224d', steelHi: '#2b3875',
     brass: '#d6b36a', brassHi: '#f3dca0', brassLo: '#8a7040', ivory: '#ece6d3', mist: '#98a5cf', fog: '#5d6a96',
     cyan: '#62d8ff', ember: '#ff9440', leaf: '#5fdc8f', rose: '#ff5c6a', violet: '#a98bff', gold: '#ffd54f', teal: '#38d6c4', azure: '#5b8cff',
+  } : {   // v2: graphite + steel, one cool accent (see research/09 section 2.2)
+    void: '#05080c', night: '#0a0f15', deep: '#0f161e', steel: '#161f29', steelHi: '#2a3744',
+    brass: '#7f93a8', brassHi: '#b9c8d6', brassLo: '#3d4f60', ivory: '#e9eef3', mist: '#b7c3cf', fog: '#6b7a89',
+    cyan: '#52c8ec', ember: '#ec8a45', leaf: '#62c488', rose: '#ee6679', violet: '#a58df0', gold: '#dcb54f', teal: '#3cc5b4', azure: '#6396ee',
   };
+
   const RACE_IDS = ['alkari', 'bulrathi', 'darlok', 'human', 'klackon', 'meklar', 'mrrshan', 'psilon', 'sakkra', 'silicoid'];
   const RACE_NAMES = { alkari: 'Alkari', bulrathi: 'Bulrathi', darlok: 'Darlok', human: 'Human', klackon: 'Klackon', meklar: 'Meklar', mrrshan: 'Mrrshan', psilon: 'Psilon', sakkra: 'Sakkra', silicoid: 'Silicoid' };
 
@@ -95,6 +101,16 @@
 
   /* ======================================================================= canvases, layer cache, DPR */
   function mk(w, h) { const c = document.createElement('canvas'); c.width = max(1, Math.ceil(w)); c.height = max(1, Math.ceil(h)); return c; }
+  // v2 grade of every baked static layer (architecture, textures, window views): calmer saturation, lower key, slightly cooler
+  function gradeBaked(c) {
+    try {
+      const g = c.getContext('2d');
+      if (!('filter' in g)) return;
+      const t = document.createElement('canvas'); t.width = c.width; t.height = c.height; t.getContext('2d').drawImage(c, 0, 0);
+      g.save(); g.setTransform(1, 0, 0, 1, 0, 0); g.globalCompositeOperation = 'copy';
+      g.filter = 'saturate(.48) contrast(1.08) brightness(.88) hue-rotate(-6deg)'; g.drawImage(t, 0, 0); g.restore();
+    } catch (e) { /* cosmetic */ }
+  }
   const CACHE = new Map();
   let _bytes = 0, _frame = 0;
   const BUDGET = 480 * 1024 * 1024;
@@ -107,6 +123,7 @@
       g.scale(c.width / w, c.height / h);
       e = { c: c, d: null, b: c.width * c.height * 4, u: _frame };
       e.d = build(g, w, h, c);
+      if (!V1) gradeBaked(c);
       CACHE.set(k, e); _bytes += e.b;
       if (_bytes > BUDGET) trim();
     }
@@ -318,12 +335,21 @@
   }
   const CONFIG = { filmGrain: false };
   /* final grade: vignette (+ optional animated grain) */
+  function grainOK() {
+    if (V1) return CONFIG.filmGrain;
+    try {
+      const P = M.Perf, st = M.Settings && M.Settings.get ? M.Settings.get('reduceMotion') : false;
+      return !st && (!P || P.tier !== 'low');
+    } catch (e) { return true; }
+  }
   function finish(g, w, h, vig, grain, t) {
+    if (!V1) vig = vig > 0 ? Math.min(0.62, vig * 1.25 + 0.08) : 0.14;
     if (vig > 0) {
-      g.fillStyle = rgr(g, w / 2, h * 0.5, min(w, h) * 0.38, hypot(w, h) * 0.62, [0, 'rgba(2,3,12,0)', 1, 'rgba(2,3,12,' + vig + ')'], w / 2, h * 0.48);
+      g.fillStyle = rgr(g, w / 2, h * 0.5, min(w, h) * 0.38, hypot(w, h) * 0.62, [0, 'rgba(2,3,6,0)', 1, 'rgba(2,3,6,' + vig + ')'], w / 2, h * 0.48);
       g.fillRect(0, 0, w, h);
     }
-    if (CONFIG.filmGrain && grain > 0) {
+    if (!V1 && !(grain > 0)) grain = 0.05;
+    if (grain > 0 && grainOK()) {
       const p = grainPattern(g), n = floor((t || 0) * 24);
       g.save(); g.globalAlpha = grain; g.globalCompositeOperation = 'overlay';
       g.translate((h2(n, 1) * 160) | 0, (h2(n, 2) * 160) | 0); g.fillStyle = p; g.fillRect(-160, -160, w + 320, h + 320);

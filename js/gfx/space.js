@@ -136,7 +136,9 @@
 
   /* ---------------------------------------------------------------- star kinds */
   var STAR_KINDS = ['yellow', 'orange', 'red', 'blue', 'white', 'green', 'purple', 'blackhole'];
-  var STAR = {
+  // v2: pastel blackbody-style tints (identity of each kind stays obvious, but no candy primaries); v1 keeps the saturated set
+  var V1 = (typeof document !== 'undefined' && document.documentElement.getAttribute('data-theme') === 'v1');
+  var STAR = V1 ? {
     yellow: { core: '#fffbe0', glow: '#ffd25a', rgb: [255, 224, 120], temp: 0.50 },
     orange: { core: '#ffeacc', glow: '#ff9a3a', rgb: [255, 156, 64], temp: 0.30 },
     red: { core: '#ffd2bc', glow: '#ff4a2e', rgb: [255, 84, 52], temp: 0.12 },
@@ -145,6 +147,15 @@
     green: { core: '#f4fff2', glow: '#58f08c', rgb: [160, 255, 176], temp: 0.62 },
     purple: { core: '#f6eaff', glow: '#9a50ff', rgb: [196, 120, 255], temp: 1.0 },
     blackhole: { core: '#fff2d8', glow: '#ff9a40', rgb: [255, 170, 80], temp: 0.4 }
+  } : {
+    yellow: { core: '#fff8e4', glow: '#f2cf7c', rgb: [246, 218, 150], temp: 0.50 },
+    orange: { core: '#ffeedd', glow: '#e89a58', rgb: [238, 170, 108], temp: 0.30 },
+    red: { core: '#ffe0d2', glow: '#d8644c', rgb: [226, 114, 92], temp: 0.12 },
+    blue: { core: '#f0f6ff', glow: '#7ea8e8', rgb: [150, 188, 240], temp: 0.95 },
+    white: { core: '#fbfcff', glow: '#d2dcef', rgb: [226, 233, 246], temp: 0.75 },
+    green: { core: '#f2fbf2', glow: '#7ccf98', rgb: [168, 222, 184], temp: 0.62 },
+    purple: { core: '#f4ecfb', glow: '#a47ee0', rgb: [196, 160, 238], temp: 1.0 },
+    blackhole: { core: '#fff0dc', glow: '#d98a48', rgb: [232, 160, 96], temp: 0.4 }
   };
   function starColor(kind) {
     var s = STAR[kind] || STAR.yellow;
@@ -153,7 +164,7 @@
   function kindOf(kind) { return STAR[kind] ? kind : 'yellow'; }
 
   /* ================================================================ backdrop + starfields */
-  var DEF_PAL = ['#3c40b4', '#7a3cc4', '#1f90b4', '#c4408c'];
+  var DEF_PAL = V1 ? ['#3c40b4', '#7a3cc4', '#1f90b4', '#c4408c'] : ['#34406e', '#51407a', '#2a6580', '#6e4264'];
   var TINTS = [[176, 200, 255], [236, 242, 255], [255, 248, 228], [255, 226, 186], [255, 190, 160]];
   function tintIndex(u) { return u < 0.22 ? 0 : u < 0.50 ? 1 : u < 0.74 ? 2 : u < 0.90 ? 3 : 4; }
 

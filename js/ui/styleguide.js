@@ -21,11 +21,11 @@
         { id: 'b', label: 'Colonies', render: () => h('p', 'Second tab.') },
         { id: 'c', label: 'Fleets', render: () => h('p', 'Third tab.') },
       ]);
-      el.appendChild(h('div.abs-fill.scroll-y', { style: { padding: '1.5rem 2rem', background: 'radial-gradient(ellipse at 30% 0%, #141e55, var(--void) 65%)' } },
+      el.appendChild(h('div.abs-fill.scroll-y', { style: { padding: '1.5rem 2rem', background: 'radial-gradient(ellipse at 30% 0%, var(--steel), var(--void) 65%)' } },
         h('h1.ttl', { style: { fontSize: '2.6rem', marginBottom: '.2rem' } }, 'Master of Orion'),
-        h('div.t-mist', { style: { marginBottom: '1.2rem' } }, 'Style guide — indigo void, brass hairlines, ivory ink.'),
+        h('div.t-mist', { style: { marginBottom: '1.2rem' } }, (document.documentElement.getAttribute('data-theme') === 'v1' ? 'Style guide — theme v1: indigo void, brass hairlines, ivory ink (?theme=v2 for the default).' : 'Style guide — theme v2: gunmetal neutrals, one cool accent, instrument-panel chrome (?theme=v1 = old look; ?accent=amber|leaf).')),
         h('div.row.wrap.g3', { style: { marginBottom: '1.2rem' } },
-          swatch('Void', '--void'), swatch('Night', '--night'), swatch('Steel', '--steel'), swatch('Brass', '--brass'), swatch('Brass hi', '--brass-hi'),
+          swatch('Void', '--void'), swatch('Night', '--night'), swatch('Deep', '--deep'), swatch('Steel', '--steel'), swatch('Edge', '--brass'), swatch('Edge hi', '--brass-hi'),
           swatch('Ivory', '--ivory'), swatch('Mist', '--mist'), swatch('Cyan', '--cyan'), swatch('Ember', '--ember'), swatch('Leaf', '--leaf'),
           swatch('Rose', '--rose'), swatch('Violet', '--violet'), swatch('Gold', '--gold'), swatch('Teal', '--teal')),
         h('div.row.g3', { style: { alignItems: 'flex-start' } },
@@ -33,7 +33,7 @@
             h('div.row.wrap', UI.button('Next turn', null, { primary: true, kbd: 'Space' }), UI.button('Design'), UI.button('Scrap', null, { danger: true }), UI.button('Small', null, { small: true }), UI.button('Disabled', null, { disabled: true })),
             h('div.row.wrap', UI.chip('Peace', 'ok'), UI.chip('War', 'bad'), UI.chip('Trade', 'cy'), UI.chip('Alliance', 'vi'), UI.chip('Rich', 'warn')),
             h('div.row.g2', h('span.t-gold.num', '1,284 BC'), h('span.t-leaf.num', '+56'), h('span.t-ember.num', '294'), h('span.t-cyan.num', '120 RP')),
-            h('div.small.t-mist', 'Body text in IBM Plex Sans Condensed; headings in Marcellus SC.'),
+            h('div.small.t-mist', 'Body text in IBM Plex Sans Condensed; headings in the display face (Oxanium / Bahnschrift stack under v2).'),
             UI.bar(0.62, { color: 'var(--cyan)', thick: true, label: 'Hyper-X Rockets · 62%' }),
             UI.bar(0.3, { color: 'var(--leaf)' }))),
             UI.panel('Colony spending', h('div',
@@ -46,7 +46,7 @@
               UI.button('Open modal', () => UI.modal({ title: 'Colonise Tyr?', body: h('p', 'A small, barren world with abundant minerals. Population growth is halved.'), buttons: [{ label: 'Not now', value: false }, { label: 'Colonise', value: true, primary: true }] })),
               UI.button('Toast', () => UI.toast('Research complete: Deuterium Fuel Cells', 'ok')),
               UI.button('Toast (bad)', () => UI.toast('Tyr is starving!', 'bad')),
-              h('span', { tip: '<b>Tooltip</b><br>Brass edge, indigo glass.' }, 'Hover me'))))
+              h('span', { tip: '<b>Tooltip</b><br>Steel edge, accent bar, graphite glass.' }, 'Hover me'))))
         )));
     },
   });
