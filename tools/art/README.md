@@ -6,6 +6,9 @@ description, traits and the race's UI colours). Three races so far: Silicoid, Mr
 ## Ways to use it
 * **Hosted tool** (Midjourney, an OpenAI/Google image model, Firefly, Flux via a web service): paste `style` + a race `prompt`, set the aspect
   to 3:4 (1024x1344), put `negative` in the negative-prompt box if the tool has one. Generate 4-8 candidates per race.
+* **Hosted image API from the dev environment** (`generate_api.py`): `GEMINI_API_KEY` for Google's Gemini image models ("Nano Banana") or
+  `OPENAI_API_KEY` for OpenAI's. Add the key as an environment secret and allow `generativelanguage.googleapis.com` / `api.openai.com`
+  under the environment's Network access. `python3 tools/art/generate_api.py --provider gemini --race all --n 4`. Not yet run live.
 * **Your own GPU:** `python3 tools/art/generate.py --race all --n 4 --upscale` (needs `torch diffusers transformers accelerate`). Not run in
   the dev sandbox — its network policy blocks Hugging Face — so treat the script as untested until its first run.
 * **Optional structural guides:** `python3 tools/render/<race>_model.py --guides DIR` renders depth / normal / line / mask / clay passes of the
