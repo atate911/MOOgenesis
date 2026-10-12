@@ -221,6 +221,25 @@ module.exports = function (M, t) {
     t.ok(hi / 40000 > surv, 'higher accuracy bonus survives better');
   });
 
+  t.test('rock +30 (verified #4): only when the LAST obstruction on the line is a rock; a planet cell behind it cancels it, shots at the planet never get it, ships do not count', () => {
+    const B = duel(MIS(1), 1, { seed: 'lb' }); F.place(B, 0, 0, 3); F.place(B, 1, 5, 3);
+    B.rocks = [{ x: 2, y: 3 }]; t.eq(C.lineBlocked(B, B.units[0], B.units[1]), true);
+    B.rocks = [{ x: 2, y: 3 }, { x: 3, y: 3 }]; t.eq(C.lineBlocked(B, B.units[0], B.units[1]), true);
+    const pl = { id: 99, kind: 'planet', x: 4, y: 3 }; B.units.unshift(pl);
+    t.eq(C.lineBlocked(B, B.units[1], B.units[2]), false, 'planet cell is the last obstruction on the line');
+    t.eq(C.lineBlocked(B, B.units[1], pl), false, 'never at the planet');
+    B.units.shift();
+  });
+  t.test('bio weapons also run the bomb damage loop on the planet afterwards (verified #8): dmin 3 minus absorb hits bases / collateral', () => {
+    const mk = { hull: 2, comp: 'mark-1-computer', engine: 'retro-engine', man: 0, armor: 'titanium-armor', weapons: [{ type: 'bio-terminator', count: 1 }] };
+    const B = F.arena({ fleet: [{ draft: F.LASER(1), n: 1 }] }, { fleet: [{ draft: mk, n: 30 }] }, { planet: { bases: 5, pop: 5000, factories: 500, antidote: 0 }, planetSide: 0, seed: 'bioloop' });
+    B.units[0].absorb = 0; B.planet.popAcc = 0; B.planet.facAcc = 0;
+    F.activate(B, 2); F.place(B, 2, 2, 3);
+    const ev = C.act(B, 2, { type: 'fire', target: 0 });
+    t.ok(B.planet.facAcc + B.planet.factoriesKilled * 50 > 0, 'collateral from the bomb loop');
+    t.ok(!ev.some(e => e.type === 'beam' && e.weapon !== 'bio-terminator'), 'no duplicate beam event');
+  });
+
   // ---------------------------------------------------------------------------------------------------------------- planets & bases (§4.8)
   t.test('planets: torpedoes do half damage, plain missiles full, beams half; the planet shield + deflector subtract afterwards', () => {
     const B = F.arena({ fleet: [{ draft: F.LASER(1), n: 1 }] }, { fleet: [{ draft: MIS(1), n: 1 }] }, { planet: { bases: 10, baseHp: 200, shield: 5, absorb: 0 }, planetSide: 0, seed: 'pl1' });
@@ -443,6 +462,17 @@ module.exports = function (M, t) {
     t.eq(B.units[1].unman, 0);
     F.place(B, 1, 5, 3); B.units[1].actman = 1;
     t.eq(C.act(B, 0, { type: 'special', device: 'dissipator', target: 1 }).ok, false);
+  });
+  t.test('warp dissipator accumulates: the second success removes the TOTAL unman from the remaining movement; defence -2 only while it can still move', () => {
+    const B = F.arena({ fleet: [{ draft: withDevice('warp-dissipator'), n: 1 }] }, { fleet: [{ draft: F.LASER(1), n: 1 }] }, { seed: 'wdc' });
+    F.activate(B, 0); F.place(B, 1, 3, 3);
+    const u = B.units[1]; u.actman = 5; u.unman = 1; u.def = 7; u.mdef = 7;
+    let done = false;
+    for (let k = 0; k < 40 && !done; k++) { B.units[0].st.used = {}; const ev = C.act(B, 0, { type: 'special', device: 'dissipator', target: 1 }); done = !!(ev.find(e => e.type === 'special-effect' && e.success)); }
+    t.ok(done); t.eq(u.unman, 2); t.eq(u.actman, 3); t.eq(u.def, 5);
+    u.actman = 2; u.unman = 1; u.def = 7; done = false;
+    for (let k = 0; k < 40 && !done; k++) { B.units[0].st.used = {}; const ev = C.act(B, 0, { type: 'special', device: 'dissipator', target: 1 }); done = !!(ev.find(e => e.type === 'special-effect' && e.success)); }
+    t.ok(done); t.eq(u.actman, 0); t.eq(u.def, 7, 'no movement left: no defence penalty');
   });
   t.test('technology nullifier: automatic hit, attack level -(2..6) (two d3), missile defense likewise but never below beam defense', () => {
     const drops = {};
