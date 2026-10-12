@@ -36,8 +36,15 @@ MOO.def(function (M) {
       terraform: 0, terraformCost: 0, incPopCost: 20, antidote: 0, planetShield: 0, planetShieldCost: 0, baseHp: 0, ground: { armor: 0, suit: 0, shield: 0, weapon: 0 } };
     const grants = {};
     const T = TECHS();
-    for (let f = 0; f < 6; f++) {
-      for (const lvl of rs.completed[f]) {
+    // processing order: every tech in ascending level, except those acquired later (rs.seq = acquisition order of Rs.grant) which come last in that order.
+    // base HP / transport HP / ground gear tiers take the LAST acquired tech of their group, not the best (research/03-verification #6, G2): a lower tier traded or stolen
+    // after a higher one overwrites it. Without rs.seq (old saves, the starting techs) the order is ascending, i.e. last = best as before.
+    const order = [], seq = Array.isArray(rs.seq) ? rs.seq : [], inSeq = {};
+    for (const x of seq) inSeq[x[0] * 1000 + x[1]] = true;
+    for (let f = 0; f < 6; f++) for (const lvl of rs.completed[f]) if (!inSeq[f * 1000 + lvl]) order.push([f, lvl]);
+    for (const x of seq) if (rs.completed[x[0]].indexOf(x[1]) >= 0) order.push(x);
+    for (const [f, lvl] of order) {
+      {
         // level 1 is the free starting BUNDLE (several techs share it); every other level is exactly one tech
         const list = lvl === 1 ? (T.l1Bundle && T.l1Bundle[f] ? T.l1Bundle[f] : [Rs.techAt(f, 1)]) : [Rs.techAt(f, lvl)];
         for (const t of list) {
@@ -46,7 +53,8 @@ MOO.def(function (M) {
           for (const k in fx) {
             const v = fx[k];
             if (k === 'planetShield') { if (v.level > mods.planetShield) { mods.planetShield = v.level; mods.planetShieldCost = v.cost; } }
-            else if (k === 'groundTier') { if (v.tier > mods.ground[v.group]) mods.ground[v.group] = v.tier; }
+            else if (k === 'groundTier') mods.ground[v.group] = v.tier;
+            else if (k === 'baseHp') mods.baseHp = v;
             else if (k === 'terraform') { if (v > mods.terraform) mods.terraform = v; }
             else if (k === 'terraformCost') { mods.terraformCost = (fx.terraform >= mods.terraform) ? v : mods.terraformCost; }
             else if (typeof v === 'number') { if (MIN_KEYS[k]) mods[k] = Math.min(mods[k] === undefined ? v : mods[k], v); else mods[k] = Math.max(mods[k] === undefined ? v : mods[k], v); }
@@ -116,6 +124,7 @@ MOO.def(function (M) {
     const rs = E.research;
     if (rs.completed[f].indexOf(level) >= 0) return false;
     rs.completed[f].push(level); rs.completed[f].sort((a, b) => a - b);
+    (rs.seq || (rs.seq = [])).push([f, level]);
     if (rs.project[f] === level) { rs.project[f] = 0; rs.invest[f] = 1; rs.cost[f] = 0; }
     Rs.recompute(E);
     const t = Rs.techAt(f, level);

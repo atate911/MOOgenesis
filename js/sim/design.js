@@ -299,7 +299,7 @@ MOO.def(function (M) {
     const std = Math.max(0, best(K.ARMOR, a => !a.heavy));
     const m2 = best(K.WEAPONS, w => w.kind === 'missile' && w.racks === 2 && w.warheads === 1);
     const sc = best(K.WEAPONS, w => w.kind === 'missile' && w.racks === 2 && w.warheads > 1);
-    return { comp: best(K.COMPUTERS), ecm: best(K.ECM), shield: best(K.SHIELDS), armor: std, armorTier: std >> 1, weapon: m2, weapon2: sc >= 0 ? sc : m2, hp: BASE_HP[std >> 1] };
+    return { comp: best(K.COMPUTERS), ecm: best(K.ECM), shield: best(K.SHIELDS), armor: std, armorTier: std >> 1, weapon: m2, weapon2: sc >= 0 ? sc : m2, hp: BASE_HP[E.mods && E.mods.baseHp !== undefined ? clamp(E.mods.baseHp | 0, 0, 6) : std >> 1] };      // HP of the LAST acquired armour tech (research/03-verification #6); the cost terms use the best
   };
   D.baseCost = function (S, E) {
     const K = M.Data.Components, b = D.baseLoadout(S, E), L = 2;                       // all terms use the LARGE hull column

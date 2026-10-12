@@ -1,0 +1,5 @@
+# Follow-ups for js/ui (sim side done, UI lines left to the graphics-pass owner)
+
+- `js/ui/menu.js:91`: `Save.meta.year` is now the CALENDAR year (`Config.displayYear`), so drop the extra `M.Data.Config.displayYear({ year: latest.meta.year })` and print `latest.meta.year` directly (old saves still hold the counter, < 1000; `UI.Controls.calendarYear` already passes values >= 1000 through, so saveload.js / gamemenu.js need no change).
+- Human spy choices (`spyStealChoice` / `spySabotageChoice`) do fire (rules test `84-leftovers`), but only for spies in Espionage / Sabotage mode (spyMode 1 / 2; the default 0 = hide never runs a mission) and rarely against equal or better computers (~15 % infiltration chance per turn per network, hard AIs lead in computers). A tutor line in the spy panel ("set the network to Espionage") would explain the QA observation "no choice in 12 turns".
+- `Sim.Q.hints` (noResearch) and `options.aiProdGuide` are still not displayed / exposed (see tools/handoff/balance.md).
