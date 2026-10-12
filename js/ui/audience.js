@@ -181,6 +181,7 @@
     const p = A.pending; if (!p || A.typing) { if (A.typing) finishTyping(); return; }
     const it = p.items[i]; if (!it || it.enabled === false) { UI.sfx('error'); return; }
     UI.sfx(it === p.o.cancel ? 'cancel' : 'click');
+    note('');                                                           // a remark such as "(They have nothing to trade…)" belongs to the menu it was said over
     p.res(it);
   }
   function cancelPick() {
