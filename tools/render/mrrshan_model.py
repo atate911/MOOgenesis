@@ -12,7 +12,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import modeltools as mt
 from modeltools import loft
 
-ap = argparse.ArgumentParser(); ap.add_argument('--sheet', default=None); ap.add_argument('--export', default=None)
+ap = argparse.ArgumentParser(); ap.add_argument('--sheet', default=None); ap.add_argument('--export', default=None); ap.add_argument('--guides', default=None)
 a = ap.parse_args(sys.argv[sys.argv.index('--') + 1:] if '--' in sys.argv else sys.argv[1:])
 sc = mt.new_scene()
 X, Y, Z = Vector((1, 0, 0)), Vector((0, 1, 0)), Vector((0, 0, 1))
@@ -90,4 +90,5 @@ for sgn in (1, -1):                       # round deltoids
 mt.finish(parts, 0.004)
 print('parts', len(parts), 'triangles', mt.tri_count(parts), ' skull', mt.tri_count(parts, head), ' torso', mt.tri_count(parts, torso))
 if a.export: mt.export(a.export)
+if a.guides: mt.guides(parts, a.guides)
 if a.sheet: mt.sheet(parts, a.sheet, head_target=(0, -0.2, 1.3), head_dist=5.6)

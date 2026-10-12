@@ -106,3 +106,60 @@ def sheet(parts, out, body_target=(0, 0, 0.7), head_target=(0, 0, 1.3), dist=11.
     W = Image.new('RGB', (1200, 1600))
     for i in range(4): W.paste(Image.open(f'{base}_{i + 1}.png'), ((i % 2) * 600, (i // 2) * 800))
     W.save(out); print('sheet', out)
+
+
+def guides(parts, outdir, tgt=(0, 0, 0.95), dist=9.0, size=(1024, 1280), lens=75, az_list=(0, 24)):
+    """Render ControlNet-style guide images at card framing: depth (near = white), camera-space normals, edge lines, silhouette mask, clay shading.
+    Written as <outdir>/<view>_{depth,normal,lines,mask,clay}.png"""
+    import numpy as np
+    from PIL import Image
+    os.makedirs(outdir, exist_ok=True)
+    sc.render.engine = 'CYCLES'; sc.cycles.device = 'CPU'; sc.cycles.use_denoising = False; sc.cycles.samples = 12
+    sc.render.resolution_x, sc.render.resolution_y = size; sc.view_settings.view_transform = 'Standard'; sc.render.film_transparent = True
+    sc.render.image_settings.color_mode = 'RGBA'
+    cam = bpy.data.cameras.new('gc'); cam.lens = lens; co = bpy.data.objects.new('gc', cam); sc.collection.objects.link(co); sc.camera = co
+    tgt = Vector(tgt)
+    def place(az):
+        az = math.radians(az); co.location = tgt + Vector((math.sin(az), -math.cos(az), 0.09)) * dist
+        co.rotation_euler = (tgt - co.location).to_track_quat('-Z', 'Y').to_euler()
+    def emit(name, build):
+        m = bpy.data.materials.new(name); m.use_nodes = True; n = m.node_tree.nodes; l = m.node_tree.links; n.clear()
+        out = n.new('ShaderNodeOutputMaterial'); em = n.new('ShaderNodeEmission'); em.inputs['Strength'].default_value = 1.0
+        l.new(build(n, l), em.inputs['Color']); l.new(em.outputs['Emission'], out.inputs['Surface']); return m
+    def depth_build(n, l):
+        cd = n.new('ShaderNodeCameraData'); mr = n.new('ShaderNodeMapRange'); mr.inputs['From Min'].default_value = dist - 2.6; mr.inputs['From Max'].default_value = dist + 2.6
+        mr.inputs['To Min'].default_value = 1.0; mr.inputs['To Max'].default_value = 0.0; mr.clamp = True
+        l.new(cd.outputs['View Z Depth'], mr.inputs['Value']); return mr.outputs['Result']
+    def normal_build(n, l):
+        g = n.new('ShaderNodeNewGeometry'); vt = n.new('ShaderNodeVectorTransform'); vt.vector_type = 'NORMAL'; vt.convert_from = 'WORLD'; vt.convert_to = 'CAMERA'
+        vm = n.new('ShaderNodeVectorMath'); vm.operation = 'MULTIPLY_ADD'; vm.inputs[1].default_value = (0.5, 0.5, 0.5); vm.inputs[2].default_value = (0.5, 0.5, 0.5)
+        l.new(g.outputs['Normal'], vt.inputs['Vector']); l.new(vt.outputs['Vector'], vm.inputs[0]); return vm.outputs['Vector']
+    def white_build(n, l):
+        rgb = n.new('ShaderNodeRGB'); rgb.outputs[0].default_value = (1, 1, 1, 1); return rgb.outputs[0]
+    mats = {'depth': emit('depth', depth_build), 'normal': emit('normal', normal_build), 'mask': emit('mask', white_build)}
+    def rd(path, override=None):
+        sc.view_layers[0].material_override = override; sc.render.filepath = path; bpy.ops.render.render(write_still=True)
+    for az in az_list:
+        place(az); tag = 'front' if az == 0 else 'three_quarter'; base = os.path.join(outdir, tag)
+        for k, m in mats.items(): rd(f'{base}_{k}.png', m)
+        # clay: normal materials, soft key light
+        sc.view_layers[0].material_override = None
+        lds = []
+        for loc, e in (((-5, -7, 6), 1800), ((6, -5, 1.5), 500)):
+            ld = bpy.data.lights.new('g', 'AREA'); ld.energy = e; ld.size = 5; ob = bpy.data.objects.new('g', ld); sc.collection.objects.link(ob); ob.location = loc
+            ob.rotation_euler = (Vector((0, 0, 0.7)) - Vector(loc)).to_track_quat('-Z', 'Y').to_euler(); lds.append(ob)
+        gm = bpy.data.materials.new('gclay'); gm.use_nodes = True; gm.node_tree.nodes['Principled BSDF'].inputs['Base Color'].default_value = (0.75, 0.75, 0.78, 1)
+        rd(f'{base}_clay.png', gm)
+        for ob in lds: bpy.data.objects.remove(ob)
+        # lines: edges of depth + normal discontinuities, white on black
+        d = np.asarray(Image.open(f'{base}_depth.png').convert('RGBA'), dtype=np.float32) / 255; nrm = np.asarray(Image.open(f'{base}_normal.png').convert('RGBA'), dtype=np.float32) / 255
+        mk = d[..., 3]
+        def grad(g): gy, gx = np.gradient(g); return np.hypot(gx, gy)
+        e = grad(d[..., 0]) * 6 + sum(grad(nrm[..., c]) for c in range(3)) * 1.2 + grad(mk) * 4
+        ln = (np.clip((e - 0.12) / 0.25, 0, 1) * 255).astype(np.uint8)
+        Image.fromarray(ln).save(f'{base}_lines.png')
+        # depth/normal on black, mask as luminance (alpha flattened)
+        for k in ('depth', 'normal', 'mask'):
+            im = Image.open(f'{base}_{k}.png').convert('RGBA'); bg = Image.new('RGBA', im.size, (0, 0, 0, 255)); bg.alpha_composite(im); bg.convert('RGB').save(f'{base}_{k}.png')
+        cl = Image.open(f'{base}_clay.png').convert('RGBA'); bg = Image.new('RGBA', cl.size, (20, 24, 34, 255)); bg.alpha_composite(cl); bg.convert('RGB').save(f'{base}_clay.png')
+    print('guides ->', outdir)

@@ -1,0 +1,28 @@
+{
+  "style": "premium sci-fi 4X strategy game race portrait, painterly digital concept art with photoreal materials, three-quarter bust, single clear focal point on the face, strong silhouette, dramatic cinematic lighting with one hard key light and a colored rim light, deep soft background out of focus, rich but restrained palette, volumetric haze, high micro-detail, sharp focus on the eyes, 8k, award-winning concept art",
+  "negative": "text, watermark, signature, logo, frame, border, UI, cartoon, flat colors, low poly, blurry, deformed, extra limbs, extra fingers, duplicate, cropped head, oversaturated, plastic, 3d render look, jpeg artifacts",
+  "size": [1024, 1344],
+  "races": {
+    "silicoid": {
+      "name": "Silicoid",
+      "tagline": "At home on any world",
+      "colors": ["#38c7c0", "#8a5cd6"],
+      "prompt": "a Silicoid, a living crystal being made of dark basalt plates and translucent quartz. Stoic, ancient and patient, slow to speak and quick to strike. Faceted gem-cut skull with a heavy overhanging brow, deeply recessed narrow amber eyes glowing like embers, a pointed chin and a thin mouth groove. Thin glowing orange lava fissures run between the dark basalt armour plates of the chest and shoulders. A swept-back crown of long hexagonal quartz crystals grows from the skull, spine and heavy pauldrons, graded in size, teal and violet, refracting light. Lit from below by lava glow with a cold teal rim light, a distant volcanic world on the horizon, drifting ash and embers, dark sky.",
+      "palette": "teal #38c7c0, violet #8a5cd6, lava orange, near-black basalt"
+    },
+    "mrrshan": {
+      "name": "Mrrshan",
+      "tagline": "Deadliest gunners in the galaxy",
+      "colors": ["#e0a030", "#a85a1e"],
+      "prompt": "a Mrrshan, a proud feline humanoid hunter-warrior. Powerful athletic build, tawny gold fur with dark tabby striping, a broad lion-like face with a short muzzle, long white whiskers, small fangs, tall pointed ears with a notched edge, slanted amber eyes with slit pupils and a cold, confident, disdainful gaze. A cheek ruff of longer fur. Wears a sleek dark leather and brushed-bronze gunner's harness with a targeting monocle over one eye and a bandolier of energy cells, battle-scarred. Warm golden key light from the side with a deep rust-orange rim light, the bridge of a warship with blurred weapon consoles and a starfield behind.",
+      "palette": "amber #e0a030, rust #a85a1e, near-black leather, brushed bronze"
+    },
+    "psilon": {
+      "name": "Psilon",
+      "tagline": "Peerless researchers",
+      "colors": ["#e8d6a0", "#5fb8b0"],
+      "prompt": "a Psilon, a hairless alien scholar with an enormous, smooth, high-domed cranium traced with faint luminous blue veins, a small delicate face with a tiny mouth and nostril slits, very large dark almond-shaped eyes with a calm, analytical, faintly amused expression, pale ivory-grey skin with a subtle teal undertone, a thin neck. Wears a tall flared stand-collar robe in cream and deep teal with fine gold circuit-like embroidery. Slim long-fingered hand raised, with small holographic data motes and equations floating around it. Soft top light with a cool teal rim, a vast observatory-library of glowing archives and a planet-sized telescope window, calm and intellectual mood.",
+      "palette": "cream #e8d6a0, teal #5fb8b0, ivory skin, soft gold"
+    }
+  }
+}

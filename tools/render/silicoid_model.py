@@ -10,7 +10,7 @@ import argparse, math, os, random, sys
 import bpy, bmesh
 from mathutils import Vector, Matrix
 
-ap = argparse.ArgumentParser(); ap.add_argument('--sheet', default=None); ap.add_argument('--export', default=None)
+ap = argparse.ArgumentParser(); ap.add_argument('--sheet', default=None); ap.add_argument('--export', default=None); ap.add_argument('--guides', default=None)
 ap.add_argument('--seed', type=int, default=3); ap.add_argument('--pitch', type=float, default=9.0, help='head pitch down, degrees')
 a = ap.parse_args(sys.argv[sys.argv.index('--') + 1:] if '--' in sys.argv else sys.argv[1:])
 rnd = random.Random(a.seed)
@@ -127,4 +127,5 @@ parts += mane
 mt.finish(parts)
 print('parts', len(parts), 'triangles', mt.tri_count(parts), ' head tris', mt.tri_count(parts, head), ' torso tris', mt.tri_count(parts, torso))
 if a.export: mt.export(a.export)
+if a.guides: mt.guides(parts, a.guides)
 if a.sheet: mt.sheet(parts, a.sheet)
