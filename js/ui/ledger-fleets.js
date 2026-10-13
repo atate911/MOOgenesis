@@ -39,7 +39,7 @@
     .lf-info { min-width:0; line-height:1.2; } .lf-info .nm { font:400 1.12rem var(--font-title); color:var(--brass-hi); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
     .lf-info .stt { font-size:.86rem; color:var(--mist); } .lf-info .stt b { color:var(--cyan); font-weight:600; } .lf-info .stt .own { color:var(--leaf); } .lf-info .stt .foe { color:var(--rose); }
     .lf-cell { position:relative; display:grid; place-items:center; min-height:4.4rem; border-left:1px solid rgba(255,255,255,.05); }
-    .lf-cell canvas { width:100%; height:3.6rem; }
+    .lf-cell canvas { width:100%; height:3.6rem; object-fit:contain; }
     .lf-n { position:absolute; right:.45rem; bottom:.3rem; min-width:1.5rem; padding:0 .4rem; text-align:center; font:600 .95rem/1.5 var(--font-ui); color:var(--ivory); font-variant-numeric:tabular-nums;
       background:rgba(8,12,34,.92); border:1px solid rgba(243,220,160,.7); clip-path:polygon(.2rem 0,100% 0,100% calc(100% - .2rem),calc(100% - .2rem) 100%,0 100%,0 .2rem); }
     .lf-total .v { font:400 1.25rem var(--font-title); color:var(--ivory); font-variant-numeric:tabular-nums; } .lf-total { display:grid; place-items:center; padding:.4rem; border-left:1px solid rgba(255,255,255,.05); }
@@ -54,7 +54,7 @@
     .lf-srow { display:grid; grid-template-columns:9rem 11.5rem minmax(21rem, 1.7fr) minmax(8rem, 1fr) minmax(8rem, 1fr) 6.5rem; gap:.9rem; align-items:center; padding:.7rem 1rem; border-bottom:1px solid rgba(255,255,255,.06); cursor:pointer; transition:background .1s; }
     .lf-srow:hover { background:rgba(98,216,255,.07); } .lf-srow.none { cursor:default; opacity:.55; } .lf-srow.none:hover { background:none; }
     .lf-spic { position:relative; height:5.2rem; display:grid; place-items:center; background:radial-gradient(ellipse at 50% 50%, rgba(40,58,140,.55), rgba(5,8,26,.4) 70%); box-shadow:inset 0 0 0 1px rgba(214,179,106,.32); }
-    .lf-spic canvas { width:100%; height:100%; }
+    .lf-spic canvas { width:100%; height:100%; object-fit:contain; }
     .lf-spic .lf-n { right:auto; left:.4rem; bottom:auto; top:.3rem; }
     .lf-sname .nm { font:400 1.4rem/1.1 var(--font-title); color:var(--brass-hi); }
     .lf-sname .cls { margin:.15rem 0 .45rem; color:var(--mist); font-size:.9rem; letter-spacing:.04em; }

@@ -23,7 +23,7 @@
     .sc-build { display:grid; grid-template-columns: 1fr auto; gap:.5rem; align-items:stretch; margin-top:.2rem; }
     .sc-bbox { display:flex; align-items:center; gap:.5rem; padding:.35rem .5rem; cursor:pointer; background:rgba(0,0,0,.3); border:1px solid var(--brass-lo); min-height:4rem; }
     .sc-bbox:hover { border-color:var(--brass-hi); background:rgba(214,179,106,.08); }
-    .sc-bbox canvas { width:3.6rem; height:3rem; flex:none; } .sc-bbox .bn { font:400 1.05rem var(--font-display); color:var(--brass-hi); } .sc-bbox .bc { font-size:.82rem; color:var(--mist); }
+    .sc-bbox canvas { width:3.6rem; height:3rem; flex:none; object-fit:contain; } .sc-bbox .bn { font:400 1.05rem var(--font-display); color:var(--brass-hi); } .sc-bbox .bc { font-size:.82rem; color:var(--mist); }
     .sc-btns { display:flex; flex-direction:column; gap:.3rem; } .sc-btns .btn { padding:.25em .9em; font-size:.92rem; }
     .sc-note { margin:.4rem 0; padding:.35rem .6rem; border-left:3px solid var(--ember); background:rgba(255,148,64,.08); font-size:.88rem; }
     .sc-pickhint { margin:.6rem 0; padding:.6rem .7rem; background:rgba(98,216,255,.08); border:1px dashed var(--cyan); color:var(--ivory); }
@@ -68,7 +68,7 @@
     .sc-bbox { flex-direction:column; justify-content:flex-end; align-items:stretch; gap:.1rem; padding:.3rem .3rem 0; min-height:5.2rem; border:2px solid; border-color:#e0bc48 #8a6a18 #8a6a18 #e0bc48;
       background:repeating-linear-gradient(45deg, rgba(190,140,70,.2) 0 2px, transparent 2px 9px), repeating-linear-gradient(-45deg, rgba(190,140,70,.2) 0 2px, transparent 2px 9px), linear-gradient(180deg, #2a2016, #130d08); }
     .sc-bbox:hover { border-color:#f4d868 #a88420 #a88420 #f4d868; }
-    .sc-bbox canvas { width:100%; height:3.2rem; filter:drop-shadow(0 2px 4px rgba(0,0,0,.7)); }
+    .sc-bbox canvas { width:100%; height:3.2rem; object-fit:contain; filter:drop-shadow(0 2px 4px rgba(0,0,0,.7)); }
     .sc-bbox > div { margin:0 -.3rem; padding:.12rem .3rem; text-align:center; background:#3a2810; border-top:1px solid #000; }
     .sc-bbox .bn { font:600 .8rem var(--font-display); letter-spacing:.12em; text-transform:uppercase; color:#f0d048; } .sc-bbox .bc { font-size:.7rem; color:#c8b078; }
     .sc-btns { gap:.25rem; min-width:4.8rem; }
@@ -95,7 +95,7 @@
   }
   function shipCanvas(E, slot, w, hh) {
     const c = h('canvas', { width: w * 2, height: hh * 2 }), d = E.designs[slot];
-    try { const S = M.Gfx && M.Gfx.Ships; if (S && S.sprite && d) { const sp = S.sprite(E.race, d.hull, Math.min(w, hh) * 1.7, getComputedStyle(document.documentElement).getPropertyValue('--emp' + E.color), {}); c.getContext('2d').drawImage(sp, (w * 2 - sp.width) / 2, (hh * 2 - sp.height) / 2); } } catch (e) { /* ignore */ }
+    try { const S = M.Gfx && M.Gfx.Ships; if (S && S.sprite && d) { const sp = S.sprite(E.race, d.hull, Math.min(w, hh) * 1.7, getComputedStyle(document.documentElement).getPropertyValue('--emp' + E.color), {}); const k = Math.min(1, (w * 2 - 4) / sp.width, (hh * 2 - 4) / sp.height); c.getContext('2d').drawImage(sp, (w * 2 - sp.width * k) / 2, (hh * 2 - sp.height * k) / 2, sp.width * k, sp.height * k); } } catch (e) { /* ignore */ }
     return c;
   }
 

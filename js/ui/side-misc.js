@@ -11,7 +11,7 @@
     .sm-range { margin:.5rem 0; padding:.35rem .6rem; border-left:3px solid var(--cyan); background:rgba(98,216,255,.07); }
     .sm-range.out { border-left-color:var(--rose); background:rgba(255,92,106,.07); }
     .sm-fleet { display:grid; grid-template-columns: 3.6rem 1fr auto; align-items:center; gap:.5rem; padding:.3rem .4rem; margin:.25rem 0; background:rgba(0,0,0,.28); border:1px solid rgba(214,179,106,.2); }
-    .sm-fleet canvas { width:3.6rem; height:2.6rem; } .sm-fleet .nm { font:400 1rem var(--font-display); color:var(--brass-hi); } .sm-fleet .ct { color:var(--mist); font-size:.85rem; }
+    .sm-fleet canvas { width:3.6rem; height:2.6rem; object-fit:contain; } .sm-fleet .nm { font:400 1rem var(--font-display); color:var(--brass-hi); } .sm-fleet .ct { color:var(--mist); font-size:.85rem; }
     .sm-step { display:flex; align-items:center; gap:.2rem; } .sm-step .btn { padding:.1em .5em; font-size:.85rem; } .sm-step .n { min-width:2.2rem; text-align:center; font-weight:600; font-variant-numeric:tabular-nums; }
     .sm-route { margin:.5rem 0; padding:.45rem .6rem; font-size:.92rem; border:1px solid var(--leaf); background:rgba(95,220,143,.08); } .sm-route.bad { border-color:var(--rose); background:rgba(255,92,106,.08); }
     .sm-actions { display:flex; gap:.5rem; justify-content:flex-end; margin-top:.6rem; }
@@ -56,7 +56,7 @@
   }
   function shipPic(E, slot, w, hh) {
     const c = h('canvas', { width: w * 2, height: hh * 2 }), d = E.designs[slot];
-    try { const sp = M.Gfx.Ships.sprite(E.race, d.hull, Math.min(w, hh) * 1.8, getComputedStyle(document.documentElement).getPropertyValue('--emp' + E.color), {}); c.getContext('2d').drawImage(sp, (w * 2 - sp.width) / 2, (hh * 2 - sp.height) / 2); } catch (e) { /* ignore */ }
+    try { const sp = M.Gfx.Ships.sprite(E.race, d.hull, Math.min(w, hh) * 1.8, getComputedStyle(document.documentElement).getPropertyValue('--emp' + E.color), {}); const k = Math.min(1, (w * 2 - 4) / sp.width, (hh * 2 - 4) / sp.height); c.getContext('2d').drawImage(sp, (w * 2 - sp.width * k) / 2, (hh * 2 - sp.height * k) / 2, sp.width * k, sp.height * k); } catch (e) { /* ignore */ }
     return c;
   }
 
