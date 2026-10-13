@@ -681,7 +681,8 @@
     .tch-nx { display:flex; align-items:center; gap:.55rem; padding:.2rem .4rem; cursor:pointer; font-size:.92rem; }
     .tch-nx:hover { background:rgba(98,216,255,.08); }
     .tch-nx .ico { width:1rem; height:1rem; flex:none; color:var(--fc); } .tch-nx .nm { flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; } .tch-nx .co { flex:none; color:var(--mist); font-size:.82rem; font-variant-numeric:tabular-nums; }
-    @media (max-height:779px) { .tch-xtra { display:none; } .tch-proj .pn { font-size:1.3rem; } }
+    /* the UI scale is proportional to the window (58 rem tall at 16:9), so 'spare height' only exists in taller-than-3:2 windows */
+    @media (min-aspect-ratio:3/2) { .tch-xtra { display:none; } .tch-proj .pn { font-size:1.3rem; } }
   `);
 
   const st = { el: null, E: null, field: 0, view: 'field', sel: null, from: 'galaxy', rows: [], tabs: [], listKey: '', detailKey: '', picDirty: true, acc: 0, tree: null, ready: false };

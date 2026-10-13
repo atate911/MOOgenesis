@@ -45,7 +45,7 @@
 
   // ===================================================================================================================================================
   UI.css('design', `
-    .dz { --gv:max(0px, calc(100vh - 720px)); --row:calc(2rem + var(--gv) * .035); position:absolute; inset:0; display:grid; grid-template-columns:clamp(15rem,17.5vw,20rem) minmax(0,1fr) clamp(25rem,31vw,38rem); grid-template-rows:auto minmax(0,1fr);
+    .dz { --gv:max(0px, calc(100vh - 58rem)); --row:calc(2rem + var(--gv) * .035); position:absolute; inset:0; display:grid; grid-template-columns:clamp(15rem,17.5vw,20rem) minmax(0,1fr) clamp(25rem,31vw,38rem); grid-template-rows:auto minmax(0,1fr);
       gap:.5rem .6rem; padding:.5rem .7rem .6rem; color:var(--ivory);
       background:radial-gradient(ellipse at 72% 6%, rgba(46,64,150,.30), transparent 55%), radial-gradient(ellipse at 4% 98%, rgba(24,70,104,.26), transparent 50%), var(--void); }
     .dz-head { grid-column:1 / -1; display:flex; align-items:baseline; gap:.9rem; padding:0 .2rem .32rem; border-bottom:1px solid rgba(214,179,106,.38); }
@@ -72,7 +72,7 @@
     .dz-card .thw { position:relative; align-self:stretch; display:grid; }
     .dz-card .cardemb { position:absolute; right:.1rem; bottom:.05rem; width:.95rem; height:.95rem; color:var(--c, var(--brass)); opacity:.85; }
     .dz-th { width:100%; height:100%; min-height:3.7rem; display:grid; place-items:center; }
-    .dz-th canvas { width:100%; height:100%; }
+    .dz-th canvas { width:100%; height:100%; object-fit:contain; }
     .dz-ci { min-width:0; line-height:1.2; display:flex; flex-direction:column; gap:.08rem; }
     .dz-ci .nm { display:flex; align-items:center; gap:.3rem; font:400 1.04rem var(--font-display); color:var(--brass-hi); white-space:nowrap; }
     .dz-ci .nm .t { min-width:0; overflow:hidden; text-overflow:ellipsis; }
@@ -179,7 +179,7 @@
     .btn.dz-off { opacity:.5; filter:grayscale(.55); }
 
     /* narrower windows (below the 1280 px design size): tighter columns, one slot column, the main panel scrolls */
-    @media (max-width: 1240px) {
+    @media (max-width: 1000px) {
       .dz { grid-template-columns:clamp(11.5rem,16vw,14rem) minmax(0,1fr) clamp(21rem,29vw,26rem); gap:.5rem .5rem; }
       .dz-slots { grid-template-columns:1fr; }
       .dz-slot { grid-template-columns:5.8rem minmax(0,1fr); }
@@ -191,7 +191,7 @@
       .dz-cmpg { grid-template-columns:1fr; }
     }
 
-    @media (max-width: 1240px) { .dz-auto { flex-wrap:wrap; } .dz-cvw .tag { display:none; } }
+    @media (max-width: 1000px) { .dz-auto { flex-wrap:wrap; } .dz-cvw .tag { display:none; } }
     /* small windows (about 1024 px and below): one scrolling column — library strip, the editor, then the preview and numbers */
     @media (max-width: 960px) {
       .dz { grid-template-columns:minmax(0,1fr); grid-template-rows:none; grid-auto-rows:min-content; overflow-y:auto; overflow-x:hidden; align-content:start; }
@@ -278,7 +278,7 @@
     .dz-hint.warn .ico { color:var(--ember); } .dz-hint.tip .ico { color:var(--cyan); } .dz-hint.good .ico { color:var(--leaf); }
     .dz-hint b { color:var(--ivory); font-weight:600; }
     .dz-rep { display:grid; grid-template-columns:5.4rem 1fr auto; gap:.6rem; align-items:center; padding:.3rem .4rem; margin:.25rem 0; border:1px solid rgba(214,179,106,.25); background:rgba(0,0,0,.25); }
-    .dz-rep canvas { width:100%; height:3rem; } .dz-rep .nm { font:400 1.05rem var(--font-display); color:var(--brass-hi); } .dz-rep .mt { color:var(--mist); font-size:.84rem; } .dz-rep.locked .mt { color:var(--ember); }
+    .dz-rep canvas { width:100%; height:3rem; object-fit:contain; } .dz-rep .nm { font:400 1.05rem var(--font-display); color:var(--brass-hi); } .dz-rep .mt { color:var(--mist); font-size:.84rem; } .dz-rep.locked .mt { color:var(--ember); }
   `);
 
   // "original" restyle: grey-metal family (research/ui-ref B 1c): steel bezel, black inset panes, orange title plates / chevrons, teal labels,

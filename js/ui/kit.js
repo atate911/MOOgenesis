@@ -330,9 +330,11 @@
   // Sizes the canvas backing store to its CSS box × devicePixelRatio. Returns {ctx,w,h,dpr} with w/h in CSS px.
   UI.fitCanvas = function (canvas, o) {
     o = o || {};
-    const dpr = Math.min(window.devicePixelRatio || 1, o.maxDpr || 2);
     const r = canvas.getBoundingClientRect();
     const w = Math.max(1, Math.round(r.width)), hh = Math.max(1, Math.round(r.height));
+    // device ratio, capped by the caller (o.maxDpr), the Perf tier (MOO.Perf.q.dpr) and a ~14 Mpx backing-store budget (4K / ultrawide)
+    const pq = M.Perf && M.Perf.q && M.Perf.q.dpr > 0 ? M.Perf.q.dpr : 2;
+    const dpr = Math.max(1, Math.min(window.devicePixelRatio || 1, o.maxDpr || 2, pq, Math.sqrt(14e6 / Math.max(1, w * hh))));
     if (canvas.width !== Math.round(w * dpr) || canvas.height !== Math.round(hh * dpr)) { canvas.width = Math.round(w * dpr); canvas.height = Math.round(hh * dpr); }
     const ctx = canvas.getContext('2d', o.ctxOpts);
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
