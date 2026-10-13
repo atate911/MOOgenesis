@@ -1,0 +1,23 @@
+name: checks
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Syntax of every manifest file
+        run: node tools/check.js
+      - name: Rules tests
+        run: node tools/rules-test.js
+      - name: Shell scripts
+        run: |
+          for f in scripts/*.sh; do bash -n "$f"; done
+          shellcheck -S warning scripts/*.sh

@@ -14,6 +14,9 @@ AI leaders that have personalities and objectives, spies, the Galactic Council, 
 * Double-click `index.html` (works from `file://` — no build step, no dependencies), **or** serve the folder: `python -m http.server 8765` → http://localhost:8765/
 * Chrome / Edge / Firefox (current). WebGL2 and Web Workers are used when available and are never required.
 
+## Host it on your own server
+Static files behind nginx + Let's Encrypt on Ubuntu: `sudo bash scripts/install.sh --email you@example.com` (defaults to moo.dhlab.us), then `sudo bash scripts/upgrade.sh --pull` to update, `rollback.sh` to undo, `doctor.sh` to check. See [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md).
+
 ## Playing (original conventions)
 * **Control screen**: galaxy map (drag / wheel / arrows), side panel for the selected star/colony/fleet, bottom bar **Game · Design · Fleet · Map · Races · Planets · Tech · Next turn** (hotkeys G D F M R P T N).
 * **Colony sliders**: Ship / Def / Ind / Eco / Tech (4% steps, lockable, always 100%). Eco keeps the planet clean first.

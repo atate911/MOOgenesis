@@ -1,0 +1,44 @@
+# nginx site for Master of Orion — Reborn (static files, no backend).
+# install.sh renders this once into /etc/nginx/sites-available/moogenesis.conf.
+# certbot --nginx later adds the 443 server block and the http->https redirect
+# to the INSTALLED copy; upgrade.sh never rewrites it.
+
+server {
+    listen 80;
+    listen [::]:80;
+    server_name @DOMAIN@;
+
+    root @ROOT@/current;
+    index index.html;
+
+    # Files are not fingerprinted, so make browsers revalidate (ETag/304) instead
+    # of risking a stale js/ file next to a new index.html after an upgrade.
+    add_header Cache-Control "no-cache" always;
+    add_header X-Content-Type-Options "nosniff" always;
+    add_header Referrer-Policy "strict-origin-when-cross-origin" always;
+    add_header X-Frame-Options "SAMEORIGIN" always;
+
+    gzip on;
+    gzip_vary on;
+    gzip_comp_level 5;
+    gzip_min_length 1024;
+    gzip_types text/css application/javascript text/javascript application/json image/svg+xml;
+
+    location = /version.txt {
+        add_header Cache-Control "no-store" always;
+        default_type text/plain;
+    }
+
+    location / {
+        try_files $uri $uri/ =404;
+    }
+
+    # Never serve dotfiles (.git, .well-known excepted for certificate renewal).
+    location ~ /\.(?!well-known) {
+        deny all;
+        return 404;
+    }
+
+    access_log /var/log/nginx/moogenesis.access.log;
+    error_log  /var/log/nginx/moogenesis.error.log;
+}

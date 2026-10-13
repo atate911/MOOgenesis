@@ -1,0 +1,10 @@
+[Unit]
+Description=Daily Master of Orion — Reborn health check
+
+[Timer]
+OnCalendar=*-*-* 06:15:00
+Persistent=true
+RandomizedDelaySec=300
+
+[Install]
+WantedBy=timers.target
