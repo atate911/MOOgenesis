@@ -131,7 +131,14 @@ fi
 ln -sfn "$SITE_AVAIL" "$SITE_ENABLED"
 nginx -t 2>&1 | sed 's/^/        /' || die "nginx config test failed — see above. Nothing was reloaded."
 systemctl enable nginx >/dev/null 2>&1 || true
-systemctl reload nginx 2>/dev/null || systemctl restart nginx
+if ! { systemctl reload nginx 2>/dev/null || systemctl restart nginx; }; then
+    echo
+    warn "nginx would not start. The usual cause is another program already listening on port 80/443:"
+    ss -ltnp 2>/dev/null | grep -E ':(80|443)\b' | sed 's/^/        /' || true
+    warn "Last nginx log lines:"
+    journalctl -u nginx -n 12 --no-pager 2>/dev/null | sed 's/^/        /' || true
+    die "nginx failed to start — fix the cause above, then re-run this installer (it is safe to re-run)."
+fi
 ok "nginx reloaded"
 
 if command -v ufw >/dev/null && ufw status 2>/dev/null | grep -q "Status: active"; then
