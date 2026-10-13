@@ -18,6 +18,7 @@
   const RACES = ['alkari', 'bulrathi', 'darlok', 'human', 'klackon', 'meklar', 'mrrshan', 'psilon', 'sakkra', 'silicoid'];
   const MOODS = ['neutral', 'pleased', 'angry', 'worried', 'scheming'];
   const PAINT = {};
+  const _v2bad = {};   // race -> error: a converted race whose v2 renderer threw falls back to the legacy painter
 
   /* ======================================================================= small helpers */
   const clamp = (v, a, b) => (v < a ? a : v > b ? b : v);
@@ -691,34 +692,46 @@
 
   function draw(ctx, race, x, y, w, h, o) {
     o = o || {};
-    const pa = PAINT[race]; if (!pa) return;
+    const nv = V2[race] && !_v2bad[race] ? V2[race] : null, pa = nv || PAINT[race]; if (!pa) return;
     const t = o.t == null ? performance.now() / 1000 : +o.t, variant = o.variant | 0;
     const s = Math.max(w / W, h / H), vw = W * s, vh = H * s;
     const view = { s: s, tx: x + (w - vw) / 2, ty: y + (h - vh) * 0.22 };
-    const ent = getEntry(race, pixelScale(ctx, s), variant, o.color);
-    const st = getState(keyOf(race, o)), A = animate(st, o, t, !!o._snap);
+    const st = getState(keyOf(race, o));
+    let ent = null;
+    if (nv) { try { ent = v2Entry(race, pixelScale(ctx, s), variant, o.color); } catch (e) { _v2bad[race] = e; console.warn('[portraits v2] ' + race, e); return draw(ctx, race, x, y, w, h, o); } }
+    else ent = getEntry(race, pixelScale(ctx, s), variant, o.color);
+    const A = animate(st, o, t, !!o._snap);
     ctx.save();
     ctx.beginPath(); ctx.rect(x, y, w, h); ctx.clip();
     if (o.flip) { ctx.translate(x + w / 2, 0); ctx.scale(-1, 1); ctx.translate(-(x + w / 2), 0); }
+    if (nv) { try { v2Render(ctx, ent, A, view, o, st, o.bg !== false, typeof o.bg === 'string' ? o.bg : null); } catch (e) { _v2bad[race] = e; console.warn('[portraits v2] ' + race, e); } }
+    else {
     if (o.bg !== false) backdrop(ctx, x, y, w, h, bgTint(pa, o), pa.accent, t);
     renderFigure(ctx, ent, A, view);
+    }
     const GR = M.Gfx.Grade;
     if (GR && !GR.depth && o.grade !== false && GR.on()) { ctx.translate(x, y); GR.apply(ctx, w, h, t, 'portrait'); }       // v2 grade (scenes grade their whole frame instead)
     ctx.restore();
   }
   function drawBadge(ctx, race, cx, cy, r, o) {
     o = o || {};
-    const pa = PAINT[race]; if (!pa) return;
+    const nv = V2[race] && !_v2bad[race] ? V2[race] : null, pa = nv || PAINT[race]; if (!pa) return;
     const t = o.t == null ? performance.now() / 1000 : +o.t, variant = o.variant | 0;
     const rw = Math.max(1.6, r * 0.09), fr = r - rw, crop = pa.badge, s = fr / crop[2];
     const view = { s: s, tx: cx - crop[0] * s, ty: cy - crop[1] * s };
-    const ent = getEntry(race, pixelScale(ctx, s), variant, o.color);
-    const st = getState(keyOf(race, o)), A = animate(st, o, t, !!o._snap);
+    const st = getState(keyOf(race, o));
+    let ent = null;
+    if (nv) { try { ent = v2Entry(race, pixelScale(ctx, s), variant, o.color); } catch (e) { _v2bad[race] = e; console.warn('[portraits v2] ' + race, e); return drawBadge(ctx, race, cx, cy, r, o); } }
+    else ent = getEntry(race, pixelScale(ctx, s), variant, o.color);
+    const A = animate(st, o, t, !!o._snap);
     ctx.save();
     ctx.beginPath(); ctx.arc(cx, cy, fr, 0, TAU); ctx.clip();
     if (o.flip) { ctx.translate(cx, 0); ctx.scale(-1, 1); ctx.translate(-cx, 0); }
+    if (nv) { try { v2Render(ctx, ent, A, view, o, st, o.bg !== false, typeof o.bg === 'string' ? o.bg : null); } catch (e) { _v2bad[race] = e; console.warn('[portraits v2] ' + race, e); } }
+    else {
     if (o.bg !== false) backdrop(ctx, cx - fr, cy - fr, fr * 2, fr * 2, bgTint(pa, o), pa.accent, t);
     renderFigure(ctx, ent, A, view);
+    }
     ctx.restore();
     // brass ring
     ctx.save();
@@ -751,6 +764,1124 @@
     if (_cc.size > 400) _cc.delete(_cc.keys().next().value);
     return c;
   }
+
+  /* #######################################################################################################################
+     V2 : PHYSICAL PORTRAIT RENDERER  (serious / grounded sci-fi look)      -- see tools/handoff/portraits.md
+     ---------------------------------------------------------------------------------------------------------------
+     A converted race is painted into a small G-BUFFER (albedo / height / material / micro-texture / emissive canvases, all in the
+     virtual 400x500 frame) and then RELIT per pixel on the CPU: key + fill + rim lights, wrapped diffuse with a warm
+     sub-surface term, blinn specular driven by a per-pixel spec/gloss map, height-field cast shadows + cavity AO, micro
+     bump from tiled noise (pores / fur strands / scale cells), filmic tone-map + gentle split-tone, tiny film grain.
+     Eyes / mouth are drawn live on top of the baked frame.  Backdrop = dark out-of-focus control room (baked, cached).
+     A race is converted by adding   V2.<race> = { ... }   in the V2-RACES section below (nothing else in this file changes).
+     ####################################################################################################################### */
+  const V2 = {};
+  const V2_CELL = 256;
+  const lutLin = new Float32Array(256), lutGam = new Uint8Array(4096);
+  for (let i = 0; i < 256; i++) lutLin[i] = Math.pow(i / 255, 2.2);
+  for (let i = 0; i < 4096; i++) lutGam[i] = Math.round(255 * Math.pow(i / 4095, 1 / 2.2));
+
+  /* ---- procedural micro-texture tiles (built once, shared by every race) ---- */
+  function vnoise(N, period, seed) {
+    const G = Math.max(1, Math.round(N / period)), r = mulberry32(seed), g = new Float32Array(G * G), out = new Float32Array(N * N);
+    for (let i = 0; i < g.length; i++) g[i] = r() * 2 - 1;
+    for (let y = 0; y < N; y++) {
+      const fy = y * G / N, y0 = Math.floor(fy), ty0 = fy - y0, ty = ty0 * ty0 * (3 - 2 * ty0), ya = y0 % G, yb = (y0 + 1) % G;
+      for (let x = 0; x < N; x++) {
+        const fx = x * G / N, x0 = Math.floor(fx), tx0 = fx - x0, tx = tx0 * tx0 * (3 - 2 * tx0), xa = x0 % G, xb = (x0 + 1) % G;
+        const a = g[ya * G + xa], b = g[ya * G + xb], c = g[yb * G + xa], d = g[yb * G + xb];
+        out[y * N + x] = (a + (b - a) * tx) * (1 - ty) + (c + (d - c) * tx) * ty;
+      }
+    }
+    return out;
+  }
+  function tileGrad(a, N) {
+    const gx = new Float32Array(N * N), gy = new Float32Array(N * N), m = N - 1;
+    for (let y = 0; y < N; y++) for (let x = 0; x < N; x++) {
+      const i = y * N + x;
+      gx[i] = (a[y * N + ((x + 1) & m)] - a[y * N + ((x - 1) & m)]) * 0.5;
+      gy[i] = (a[((y + 1) & m) * N + x] - a[((y - 1) & m) * N + x]) * 0.5;
+    }
+    return { gx: gx, gy: gy };
+  }
+  function tileBlur(a, N, r) {   // wrap-around box blur x2: value noise is grid-aligned and blocky until it is smoothed
+    const m = N - 1, t = new Float32Array(N * N), n = 2 * r + 1;
+    for (let pass = 0; pass < 2; pass++) {
+      for (let y = 0; y < N; y++) for (let x = 0; x < N; x++) { let acc = 0; for (let k = -r; k <= r; k++) acc += a[y * N + ((x + k) & m)]; t[y * N + x] = acc / n; }
+      for (let y = 0; y < N; y++) for (let x = 0; x < N; x++) { let acc = 0; for (let k = -r; k <= r; k++) acc += t[((y + k) & m) * N + x]; a[y * N + x] = acc / n; }
+    }
+    let mx = 0; for (let i = 0; i < a.length; i++) mx = Math.max(mx, Math.abs(a[i])); if (mx > 0) for (let i = 0; i < a.length; i++) a[i] /= mx;
+    return a;
+  }
+  let _tiles = null;
+  function tiles() {
+    if (_tiles) return _tiles;
+    const N = V2_CELL, m = N - 1;
+    // pores / fine grit
+    const na = vnoise(N, 2, 11), nb = vnoise(N, 5, 12), nc = vnoise(N, 16, 13), pore = new Float32Array(N * N);
+    for (let i = 0; i < pore.length; i++) pore[i] = na[i] * 0.55 + nb[i] * 0.35 + nc[i] * 0.1;
+    const pg = tileGrad(pore, N);
+    // strands: long thin streaks along tile-y, clumped
+    const R = mulberry32(777), strand = new Float32Array(N * N), clump = new Float32Array(N);
+    for (let x = 0; x < N; x++) clump[x] = R();
+    for (let x = 0; x < N; x++) {
+      const k = 0.55 + 0.45 * (clump[x] * 0.5 + clump[(x + 1) & m] * 0.25 + clump[(x + m) & m] * 0.25);
+      const c8 = [], c24 = [];
+      for (let i = 0; i < 8; i++) c8.push(R() * 2 - 1);
+      for (let i = 0; i < 24; i++) c24.push(R() * 2 - 1);
+      for (let y = 0; y < N; y++) {
+        const f1 = y * 8 / N, i1 = Math.floor(f1), t1 = f1 - i1, s1 = t1 * t1 * (3 - 2 * t1);
+        const f2 = y * 24 / N, i2 = Math.floor(f2), t2 = f2 - i2, s2 = t2 * t2 * (3 - 2 * t2);
+        const v1 = c8[i1 % 8] + (c8[(i1 + 1) % 8] - c8[i1 % 8]) * s1, v2 = c24[i2 % 24] + (c24[(i2 + 1) % 24] - c24[i2 % 24]) * s2;
+        strand[y * N + x] = (v1 * 0.35 + v2 * 0.65) * k + (R() - 0.5) * 0.18;
+      }
+    }
+    const sm = new Float32Array(N * N);
+    for (let y = 0; y < N; y++) for (let x = 0; x < N; x++) sm[y * N + x] = strand[y * N + x] * 0.6 + (strand[y * N + ((x + 1) & m)] + strand[y * N + ((x + m) & m)]) * 0.2;
+    const sg = tileGrad(sm, N);
+    // voronoi cells: per pixel vector from the cell centre (normalised to cell size), edge distance and a random id
+    const K = 10, px = new Float32Array(K * K), py = new Float32Array(K * K), R2 = mulberry32(4242);
+    for (let i = 0; i < K * K; i++) { px[i] = 0.12 + R2() * 0.76; py[i] = 0.12 + R2() * 0.76; }
+    const cdx = new Float32Array(N * N), cdy = new Float32Array(N * N), edge = new Float32Array(N * N), rid = new Float32Array(N * N);
+    for (let y = 0; y < N; y++) for (let x = 0; x < N; x++) {
+      const fx = x * K / N, fy = y * K / N, cx = Math.floor(fx), cy = Math.floor(fy);
+      let d1 = 1e9, d2 = 1e9, bx = 0, by = 0, bi = 0;
+      for (let oy = -1; oy <= 1; oy++) for (let ox = -1; ox <= 1; ox++) {
+        const gx = cx + ox, gy = cy + oy, ci = (((gy % K) + K) % K) * K + (((gx % K) + K) % K);
+        const dx = gx + px[ci] - fx, dy = gy + py[ci] - fy, dd = dx * dx + dy * dy;
+        if (dd < d1) { d2 = d1; d1 = dd; bx = -dx; by = -dy; bi = ci; } else if (dd < d2) d2 = dd;
+      }
+      const i = y * N + x; cdx[i] = bx; cdy[i] = by; edge[i] = (Math.sqrt(d2) - Math.sqrt(d1)) * 0.5; rid[i] = hash2(bi, 91);
+    }
+    return (_tiles = { N: N, K: K, blotch: tileBlur(vnoise(N, 30, 21), N, 10), pore: pore, pgx: pg.gx, pgy: pg.gy, strand: sm, sgx: sg.gx, sgy: sg.gy, cdx: cdx, cdy: cdy, edge: edge, rid: rid });
+  }
+
+  /* ---- soft painting primitives (work on any 2D context that is already in virtual 400x500 space) ---- */
+  const _rgbs = Object.create(null);
+  function trip(c) { let v = _rgbs[c]; if (!v) { const a = rgbOf(c); v = _rgbs[c] = (a[0] | 0) + ',' + (a[1] | 0) + ',' + (a[2] | 0); } return v; }
+  /* soft elliptical blob: colour c, peak alpha a, gaussian-ish falloff.  mode = globalCompositeOperation ('lighter' adds, 'difference' dents) */
+  function sblob(g, x, y, rx, ry, rot, c, a, mode) {
+    if (a <= 0.002) return;
+    const t = typeof c === 'number' ? c + ',' + c + ',' + c : trip(c);
+    g.save(); g.translate(x, y); if (rot) g.rotate(rot); g.scale(1, ry / rx);
+    const gr = g.createRadialGradient(0, 0, 0, 0, 0, rx);
+    for (let k = 0; k <= 12; k++) { const u = k / 12, wgt = (Math.exp(-4.2 * u * u) - 0.015) / 0.985; gr.addColorStop(u, 'rgba(' + t + ',' + (a * wgt).toFixed(4) + ')'); }   // smooth gaussian-like falloff (a 4-stop ramp leaves visible kinks in the normals)
+    g.fillStyle = gr; if (mode) g.globalCompositeOperation = mode;
+    g.beginPath(); g.arc(0, 0, rx, 0, TAU); g.fill(); g.restore();
+  }
+  function cssBlur(g, px) { try { g.filter = px > 0.2 ? 'blur(' + px.toFixed(2) + 'px)' : 'none'; } catch (e) { /* no filter support */ } }
+
+  /* ---- the G-buffer ---- */
+  function GBuf(rs, opt) {
+    opt = opt || {};
+    const w = Math.ceil(W * rs), h = Math.ceil(H * rs), self = this, fit = opt.fit || [1, 200, 250], fs = fit[0], fx = fit[1], fy = fit[2];
+    this.w = w; this.h = h; this.rs = rs;
+    const mk = (fill) => {
+      const c = document.createElement('canvas'); c.width = w; c.height = h;
+      const g = c.getContext('2d');
+      if (fill) { g.fillStyle = fill; g.fillRect(0, 0, w, h); }
+      g.setTransform(rs * fs, 0, 0, rs * fs, rs * fx * (1 - fs), rs * fy * (1 - fs));
+      return { c: c, g: g };
+    };
+    const a = mk(null), hh = mk(null), m = mk('#000'), t = mk('#000'), e = mk('#000');
+    this.cA = a.c; this.cH = hh.c; this.cM = m.c; this.cT = t.c; this.cE = e.c;
+    this.A = a.g; this.Hg = hh.g; this.M = m.g; this.T = t.g; this.E = e.g;
+    this.cellSize = opt.cellSize || 22; this.cellRot = opt.cellRot || 0; this.cellMode = opt.cellMode || 0; this.cellTilt = opt.cellTilt == null ? 0.5 : opt.cellTilt;
+    this.cellGroove = opt.cellGroove == null ? 0.1 : opt.cellGroove; this.cellJit = opt.cellJit == null ? 0.16 : opt.cellJit;
+    this.poreScale = opt.poreScale || 0.8; this.poreAmp = opt.poreAmp == null ? 0.5 : opt.poreAmp;
+    this.strandScale = opt.strandScale || 0.9; this.strandAmp = opt.strandAmp == null ? 0.6 : opt.strandAmp; this.flow = opt.flow || null;
+    this.depth = opt.depth || 90;
+    self.dispose = function () { self.cA = self.cH = self.cM = self.cT = self.cE = null; };
+  }
+  const GB = GBuf.prototype;
+  /* height: raise (delta>0, additive) or dent (delta<0) a soft blob */
+  GB.hs = 1;   // multiplier for hb() deltas: raise it while painting small features that must stay readable on top of a tall base dome
+  GB.hb = function (x, y, rx, ry, rot, delta) {
+    if (!delta) return;
+    delta *= this.hs;
+    if (delta > 0) sblob(this.Hg, x, y, rx, ry, rot, 255, delta / 255, 'lighter');
+    else sblob(this.Hg, x, y, rx, ry, rot, 255, Math.min(1, -delta / 150), 'destination-out');   // dents scale the existing height (never invert it)
+  };
+  /* albedo / material / texture / emissive soft blobs */
+  GB.ab = function (x, y, rx, ry, rot, c, a) { sblob(this.A, x, y, rx, ry, rot, c, a); };
+  GB.mb = function (x, y, rx, ry, rot, spec, gloss, sss, a) { sblob(this.M, x, y, rx, ry, rot, Math.round(spec * 255) + ',' + Math.round(gloss * 255) + ',' + Math.round(sss * 255), a == null ? 1 : a); };
+  GB.tb = function (x, y, rx, ry, rot, pore, cell, strand, a) { sblob(this.T, x, y, rx, ry, rot, Math.round(pore * 255) + ',' + Math.round(cell * 255) + ',' + Math.round(strand * 255), a == null ? 1 : a); };
+  GB.eb = function (x, y, rx, ry, rot, c, a) { sblob(this.E, x, y, rx, ry, rot, c, a, 'lighter'); };
+  /* paint a path into any subset of layers.  o = { a: colour|gradientFn(g)|null, h: level(0-255, plateau) , hAdd: delta, hb: blur px(virtual), m:[spec,gloss,sss], t:[pore,cell,strand], e: colour, clipA: true }
+     path: function(g) that issues beginPath + path commands (or a Path2D) */
+  GB.fill = function (path, o) {
+    const run = (g, style, blur, mode) => {
+      g.save(); if (mode) g.globalCompositeOperation = mode; if (blur) cssBlur(g, blur * this.rs);
+      g.fillStyle = style; if (path instanceof Path2D) g.fill(path); else { path(g); g.fill(); }
+      g.restore();
+    };
+    if (o.a) run(this.A, typeof o.a === 'function' ? o.a(this.A) : o.a, o.ab || 0);
+    if (o.hg) {   // height ramp across the path: hg = [x0, y0, x1, y1, level0, level1] (planar facets)
+      const g = this.Hg, gr = g.createLinearGradient(o.hg[0], o.hg[1], o.hg[2], o.hg[3]);
+      gr.addColorStop(0, 'rgba(255,255,255,' + (o.hg[4] / 255).toFixed(4) + ')'); gr.addColorStop(1, 'rgba(255,255,255,' + (o.hg[5] / 255).toFixed(4) + ')');
+      run(g, '#000', 0, 'destination-out'); run(g, gr, 0);
+    }
+    if (o.h != null) { run(this.Hg, '#000', o.hb || 0, 'destination-out'); run(this.Hg, 'rgba(255,255,255,' + (o.h / 255).toFixed(4) + ')', o.hb || 0); }
+    if (o.hAdd) { if (o.hAdd > 0) run(this.Hg, 'rgba(255,255,255,' + (o.hAdd / 255).toFixed(4) + ')', o.hb || 0, 'lighter'); else run(this.Hg, 'rgba(0,0,0,' + Math.min(1, -o.hAdd / 150).toFixed(4) + ')', o.hb || 0, 'destination-out'); }
+    if (o.m) run(this.M, 'rgb(' + Math.round(o.m[0] * 255) + ',' + Math.round(o.m[1] * 255) + ',' + Math.round(o.m[2] * 255) + ')', o.mb || 0);
+    if (o.t) run(this.T, 'rgb(' + Math.round(o.t[0] * 255) + ',' + Math.round(o.t[1] * 255) + ',' + Math.round(o.t[2] * 255) + ')', o.tb || 0);
+    if (o.e) run(this.E, o.e, o.eb || 0, 'lighter');
+  };
+  /* thin curved filament (hair, fur, wire, scratch) into albedo (+optional height / strand texture) */
+  GB.strand = function (x, y, ang, len, w, col, a, bend, hd) {
+    const g = this.A, ex = x + Math.sin(ang) * len, ey = y + Math.cos(ang) * len;
+    const mx = (x + ex) / 2 + Math.cos(ang) * bend, my = (y + ey) / 2 - Math.sin(ang) * bend;
+    g.save(); g.globalAlpha = a; g.strokeStyle = col; g.lineWidth = w; g.lineCap = 'round';
+    g.beginPath(); g.moveTo(x, y); g.quadraticCurveTo(mx, my, ex, ey); g.stroke(); g.restore();
+    if (hd) {
+      const h = this.Hg; h.save(); h.globalCompositeOperation = hd > 0 ? 'lighter' : 'destination-out'; h.strokeStyle = 'rgba(255,255,255,' + Math.min(1, hd > 0 ? hd / 255 : -hd / 150) + ')'; h.lineWidth = w; h.lineCap = 'round';
+      h.beginPath(); h.moveTo(x, y); h.quadraticCurveTo(mx, my, ex, ey); h.stroke(); h.restore();
+    }
+  };
+  /* run fn with every layer translated by (dx,dy) (virtual px) */
+  GB.xf = function (dx, dy, fn, rot) { const gs = [this.A, this.Hg, this.M, this.T, this.E]; gs.forEach((g) => { g.save(); g.translate(dx, dy); if (rot) g.rotate(rot); }); try { fn(); } finally { gs.forEach((g) => g.restore()); } };
+  /* soften the whole height map slightly (removes stair-steps from stacked blobs).  r in virtual px */
+  GB.smoothHeight = function (r) {
+    const t = document.createElement('canvas'); t.width = this.w; t.height = this.h; const g = t.getContext('2d');
+    cssBlur(g, r * this.rs); g.drawImage(this.cH, 0, 0); g.filter = 'none';
+    const o = this.Hg; o.save(); o.setTransform(1, 0, 0, 1, 0, 0); o.globalCompositeOperation = 'copy'; o.drawImage(t, 0, 0); o.restore();
+  };
+
+  /* default studio lighting (all vectors point TOWARDS the light, screen x right / y down / z to the viewer) */
+  const V2_LIGHT = {
+    key: { d: [-0.60, -0.50, 0.62], c: [1.00, 0.86, 0.70], i: 1.75 },
+    fill: { d: [0.78, 0.10, 0.60], c: [0.62, 0.68, 0.78], i: 0.30 },
+    rim: { d: [0.98, -0.12, -0.14], c: [0.55, 0.80, 1.0], i: 0.9 },
+    amb: { c: [0.26, 0.27, 0.31], i: 0.34 }, fall: null, edge: 0.6, wrap: 0.30, exposure: 1.0, sat: 0.82, shadowSoft: 14, ao: 0.9, grain: 0.012, split: 0.5
+  };
+
+  const V2_MOODLIGHT = {
+    neutral: null,
+    pleased: { key: 0.92, fill: 2.6, exp: 1.04, rim: [1.0, 0.82, 0.55] },
+    angry: { key: 1.18, fill: 0.5, exp: 0.98, rim: [1.0, 0.42, 0.28], rimK: 1.35 },
+    worried: { key: 0.82, fill: 1.5, exp: 0.9, rim: [0.5, 0.65, 0.9] },
+    scheming: { key: 1.12, fill: 0.3, exp: 0.95, keyD: [-0.9, -0.2, 0.34], rim: [0.45, 0.95, 0.75] }
+  };
+  /* ---- relight the G-buffer -> RGBA canvas ---- */
+  function relight(gb, L, q) {
+    const w = gb.w, h = gb.h, rs = gb.rs, T = tiles(), TN = V2_CELL, tm = TN - 1;
+    const rd = (c) => c.getContext('2d').getImageData(0, 0, w, h).data;
+    const AL = rd(gb.cA), HD = rd(gb.cH), MD = rd(gb.cM), TX = rd(gb.cT), ED = rd(gb.cE);
+    const HF = new Float32Array(w * h), HT = new Float32Array(w * h);
+    for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) { const i = y * w + x; let hz = Math.imul(x + 0x3f1, 0x27d4eb2d) ^ Math.imul(y + 0x165667b1, 0x85ebca6b); hz = Math.imul(hz ^ (hz >>> 15), 0x2c1b3c6d); hz = Math.imul(hz ^ (hz >>> 12), 0x297a2d39); hz ^= hz >>> 15; HF[i] = HD[i * 4 + 3] + (((hz >>> 8) & 1023) / 1023 - 0.5) * 2.2; }   // dither so the blur recovers sub-level slopes
+    const boxBlur = (A, r, passes) => {
+      for (let pass = 0; pass < passes; pass++) {
+        for (let y = 0; y < h; y++) { let acc = 0; const o = y * w; for (let x = -r; x <= r; x++) acc += A[o + Math.min(w - 1, Math.max(0, x))]; for (let x = 0; x < w; x++) { HT[o + x] = acc / (2 * r + 1); acc += A[o + Math.min(w - 1, x + r + 1)] - A[o + Math.max(0, x - r)]; } }
+        for (let x = 0; x < w; x++) { let acc = 0; for (let y = -r; y <= r; y++) acc += HT[Math.min(h - 1, Math.max(0, y)) * w + x]; for (let y = 0; y < h; y++) { A[y * w + x] = acc / (2 * r + 1); acc += HT[Math.min(h - 1, y + r + 1) * w + x] - HT[Math.max(0, y - r) * w + x]; } }
+      }
+    };
+    boxBlur(HF, Math.max(1, Math.round(2.2 * rs)), 2);
+    const HB = new Float32Array(HF); boxBlur(HB, Math.max(2, Math.round(9 * rs)), 2);
+    const out = new ImageData(w, h), O = out.data;
+    const norm = (v) => { const n = Math.hypot(v[0], v[1], v[2]) || 1; return [v[0] / n, v[1] / n, v[2] / n]; };
+    const kd = norm(L.key.d), fd = norm(L.fill.d), rd2 = norm(L.rim.d);
+    const hv = norm([kd[0], kd[1], kd[2] + 1]);
+    const kc = L.key.c, fc = L.fill.c, rc = L.rim.c, ac = L.amb.c, KI = L.key.i, FI = L.fill.i, RI = L.rim.i, AI = L.amb.i, wrap = L.wrap, ex = L.exposure;
+    const gk = gb.depth * rs / 510, depth = gb.depth;
+    const inv = 1 / rs, shadowOn = q.shadow && !V2.noShadow, soft = L.shadowSoft;
+    // shadow march (screen-space along the key light direction)
+    const lxy = Math.hypot(kd[0], kd[1]) || 1, sdx = kd[0] / lxy, sdy = kd[1] / lxy, slope = kd[2] / lxy;
+    const STEPS = [2.5, 5.5, 9, 14, 21, 30, 42];
+    const stp = STEPS.map((d) => ({ dx: Math.round(sdx * d * rs), dy: Math.round(sdy * d * rs), d: d }));
+    const cs = gb.cellSize, ks = TN / (T.K * cs), cr = Math.cos(gb.cellRot), sr = Math.sin(gb.cellRot);
+    const ps = gb.poreScale, ss = gb.strandScale, flow = gb.flow;
+    const mode = gb.cellMode, cTilt = gb.cellTilt, cGr = gb.cellGroove, cJit = gb.cellJit, pAmp = gb.poreAmp * 0.9, sAmp = gb.strandAmp * 0.9;
+    const wsplit = L.split, sat = L.sat, gr = L.grain, dbg = V2.dbg || null;
+    for (let y = 1; y < h - 1; y++) {
+      for (let x = 1; x < w - 1; x++) {
+        const i = y * w + x, o = i * 4, al = AL[o + 3]; if (al < 3) continue;
+        const hc = HF[i];
+        let nx = -(HF[i + 1] - HF[i - 1]) * gk, ny = -(HF[i + w] - HF[i - w]) * gk;
+        const vx = x * inv, vy = y * inv;
+        const tx = TX[o], ty = TX[o + 1], tz = TX[o + 2];
+        let cav = 0, cj = 1, spMul = 1;
+        if (tx > 3) { const u = (Math.round(vx * ps) & tm) + (Math.round(vy * ps) & tm) * TN; const k = tx / 255 * pAmp; nx += T.pgx[u] * k * 1.5; ny += T.pgy[u] * k * 1.5; cj *= 1 + T.pore[u] * 0.07 * tx / 255 + T.blotch[(Math.round(vx * 0.9) & tm) + (Math.round(vy * 0.9) & tm) * TN] * 0.055 * tx / 255; }
+        if (ty > 3) {
+          const wv = ty / 255, uu = vx * cr - vy * sr, vv = vx * sr + vy * cr, ux = Math.floor(uu * ks) & tm, uy = Math.floor(vv * ks) & tm, u = uy * TN + ux;
+          const ex2 = T.edge[u], gr2 = ex2 < cGr ? 1 - ex2 / cGr : 0;
+          if (mode === 0) {   // planar facets: random tilt per cell
+            const r1 = T.rid[u] * 6.2831, tl = cTilt * wv; nx += Math.cos(r1) * tl; ny += Math.sin(r1) * tl;
+          } else {            // domed cells (scales / plates)
+            nx += T.cdx[u] * cTilt * wv * 2.2; ny += T.cdy[u] * cTilt * wv * 2.2;
+          }
+          cav = gr2 * wv; cj = 1 + (T.rid[u] - 0.5) * cJit * wv * 2; spMul = 1 - cav * 0.7;
+        }
+        if (tz > 3) {
+          let a = 0; if (flow) a = flow(vx, vy);
+          const sa = Math.sin(a), ca = Math.cos(a), uu = vx * ca - vy * sa, vv = vx * sa + vy * ca;
+          const u = (Math.round(uu * ss) & tm) + (Math.round(vv * ss) & tm) * TN, k = tz / 255 * sAmp * 2.4;
+          nx += (T.sgx[u] * ca + T.sgy[u] * sa) * k; ny += (-T.sgx[u] * sa + T.sgy[u] * ca) * k;
+          cj *= 1 + T.strand[u] * 0.16 * tz / 255;
+        }
+        if (nx > 0.9) nx = 0.9; else if (nx < -0.9) nx = -0.9; if (ny > 0.9) ny = 0.9; else if (ny < -0.9) ny = -0.9;
+        const nl = 1 / Math.sqrt(nx * nx + ny * ny + 1), Nx = nx * nl, Ny = ny * nl, Nz = nl;
+        // cast shadow
+        let sh = 1;
+        if (shadowOn) {
+          let occ = 0;
+          for (let s = 0; s < stp.length; s++) {
+            const sx = x + stp[s].dx, sy = y + stp[s].dy;
+            if (sx < 0 || sy < 0 || sx >= w || sy >= h) break;
+            const hs = HF[sy * w + sx], dz = (hs - hc) * depth / 255 - stp[s].d * slope;
+            if (dz > 0) { const v = dz / soft; if (v > occ) occ = v; }
+          }
+          sh = 1 - (occ > 1 ? 1 : occ) * 0.96;
+        }
+        const ao = 1 - L.ao * Math.max(0, Math.min(1, (HB[i] - hc) / 255 * 3.4 + cav * 0.55));
+        const ndl = Nx * kd[0] + Ny * kd[1] + Nz * kd[2];
+        let dif = (ndl + wrap) / (1 + wrap); dif = dif < 0 ? 0 : dif; dif *= dif * (3 - 2 * dif) * 0.35 + dif * 0.65;
+        const mS = MD[o] / 255, mG = MD[o + 1] / 255, mSSS = MD[o + 2] / 255;
+        const ndf = Nx * fd[0] + Ny * fd[1] + Nz * fd[2], dfill = ndf < 0 ? 0 : ndf;
+        let rim = 1 - Nz; rim = rim * rim; const nr = Nx * rd2[0] + Ny * rd2[1]; rim *= nr > 0 ? nr : 0; rim *= 1.6;
+        const sky = 0.55 - 0.45 * Ny;
+        const ndh = Nx * hv[0] + Ny * hv[1] + Nz * hv[2];
+        const spec = ndh > 0 ? Math.pow(ndh, 6 + mG * mG * 220) * mS * (0.35 + mG * 0.9) * spMul : 0;
+        // sub-surface: red-orange bleed in the terminator band and in shadow transitions
+        let sss = 0; if (mSSS > 0.02) { const tt = (ndl - 0.12) / 0.62; sss = mSSS * Math.exp(-tt * tt) * (0.7 + 0.3 * sh); }
+        const lr = lutLin[AL[o]] * cj, lg2 = lutLin[AL[o + 1]] * cj, lb = lutLin[AL[o + 2]] * cj;
+        let kfall = 1;
+        if (L.fall) { let u = (vx - L.fall[0]) / (L.fall[1] - L.fall[0]); u = u < 0 ? 0 : u > 1 ? 1 : u; kfall = 1 - L.fall[2] * u * u * (3 - 2 * u); u = (vy - L.fall[3]) / (L.fall[4] - L.fall[3]); u = u < 0 ? 0 : u > 1 ? 1 : u; kfall *= 1 - L.fall[5] * u * u * (3 - 2 * u); }
+        const edgeDark = 1 - L.edge * Math.pow(1 - Nz, 1.4), kd2 = dif * sh * KI * kfall * edgeDark, fl = dfill * FI * (0.4 + 0.6 * ao), am = sky * AI * ao;
+        const fuzz = tz > 3 ? Math.pow(1 - Nz, 2.2) * tz / 255 * 0.5 * (0.35 + 0.65 * sh) : 0;
+        let r = lr * (kd2 * kc[0] + fl * fc[0] + am * ac[0] + rim * RI * rc[0] * 0.55) + (spec * sh * kfall * kc[0]) + sss * 0.13 * KI * kfall * Math.sqrt(lr) + fuzz * 0.3 * rc[0] + rim * RI * rc[0] * 0.16;
+        let g2 = lg2 * (kd2 * kc[1] + fl * fc[1] + am * ac[1] + rim * RI * rc[1] * 0.55) + (spec * sh * kfall * kc[1]) + sss * 0.05 * KI * kfall * lg2 * 1.4 + fuzz * 0.3 * rc[1] + rim * RI * rc[1] * 0.16;
+        let b = lb * (kd2 * kc[2] + fl * fc[2] + am * ac[2] + rim * RI * rc[2] * 0.55) + (spec * sh * kfall * kc[2]) + sss * 0.02 * KI * kfall * lb * 1.2 + fuzz * 0.3 * rc[2] + rim * RI * rc[2] * 0.16;
+        if (ED[o] + ED[o + 1] + ED[o + 2] > 6) { r += lutLin[ED[o]] * 1.4; g2 += lutLin[ED[o + 1]] * 1.4; b += lutLin[ED[o + 2]] * 1.4; }
+        if (dbg === 'alb') { O[o] = AL[o]; O[o + 1] = AL[o + 1]; O[o + 2] = AL[o + 2]; O[o + 3] = al; continue; }
+        if (dbg === 'spec') { O[o] = spec * 255 * 4; O[o + 1] = mS * 255; O[o + 2] = mG * 255; O[o + 3] = al; continue; }
+        if (dbg) { const v = dbg === 'ao' ? ao : dbg === 'sh' ? sh : dbg === 'dif' ? dif : dbg === 'sss' ? sss : dbg === 'cj' ? cj - 0.5 : 0; if (dbg === 'n') { O[o] = (Nx * 0.5 + 0.5) * 255; O[o + 1] = (Ny * 0.5 + 0.5) * 255; O[o + 2] = Nz * 255; } else { O[o] = O[o + 1] = O[o + 2] = v * 255; } O[o + 3] = al; continue; }
+        r *= ex; g2 *= ex; b *= ex;
+        // filmic curve, split-tone, desaturate
+        r = (r * (2.51 * r + 0.03)) / (r * (2.43 * r + 0.59) + 0.14); g2 = (g2 * (2.51 * g2 + 0.03)) / (g2 * (2.43 * g2 + 0.59) + 0.14); b = (b * (2.51 * b + 0.03)) / (b * (2.43 * b + 0.59) + 0.14);
+        const lum = r * 0.2126 + g2 * 0.7152 + b * 0.0722;
+        r = lum + (r - lum) * sat; g2 = lum + (g2 - lum) * sat; b = lum + (b - lum) * sat;
+        const sh2 = (1 - lum) * (1 - lum) * 0.045 * wsplit, hi2 = lum * lum * 0.04 * wsplit;
+        r += hi2 * 1.0 - sh2 * 0.6; g2 += hi2 * 0.55 + sh2 * 0.15; b += sh2 * 1.0 - hi2 * 0.6;
+        let hh2 = Math.imul(x, 0x27d4eb2d) ^ Math.imul(y + 0x165667b1, 0x85ebca6b); hh2 = Math.imul(hh2 ^ (hh2 >>> 15), 0x2c1b3c6d); const gn = (((hh2 ^ (hh2 >>> 13)) & 1023) / 1023 - 0.5) * 2 * gr;
+        const gn8 = gn * 255 * 2.2;   // film grain added in display space (adding in linear light made the darks speckle)
+        O[o] = lutGam[(r < 0 ? 0 : r > 1 ? 4095 : r * 4095) | 0] + gn8; O[o + 1] = lutGam[(g2 < 0 ? 0 : g2 > 1 ? 4095 : g2 * 4095) | 0] + gn8; O[o + 2] = lutGam[(b < 0 ? 0 : b > 1 ? 4095 : b * 4095) | 0] + gn8;
+        O[o + 3] = al;
+      }
+    }
+    // sub-surface softening: blur the lit result inside high-sss areas (skin) so pores / bump read as skin, not clay
+    const sr2 = Math.max(1, Math.round(1.6 * rs)), soft2 = L.soften == null ? 0.6 : L.soften;
+    if (soft2 > 0) {
+      const tmp = new Uint8ClampedArray(O.length), n2 = sr2 * 2 + 1;
+      for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) {
+        const o = (y * w + x) * 4; if (MD[o + 2] < 40) { tmp[o] = O[o]; tmp[o + 1] = O[o + 1]; tmp[o + 2] = O[o + 2]; tmp[o + 3] = O[o + 3]; continue; }
+        let r = 0, g = 0, b = 0, c = 0;
+        for (let k = -sr2; k <= sr2; k++) { const xx = x + k; if (xx < 0 || xx >= w) continue; const oo = (y * w + xx) * 4; if (O[oo + 3] < 8) continue; r += O[oo]; g += O[oo + 1]; b += O[oo + 2]; c++; }
+        if (!c) { tmp[o] = O[o]; tmp[o + 1] = O[o + 1]; tmp[o + 2] = O[o + 2]; tmp[o + 3] = O[o + 3]; continue; }
+        tmp[o] = r / c; tmp[o + 1] = g / c; tmp[o + 2] = b / c; tmp[o + 3] = O[o + 3];
+      }
+      for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) {
+        const o = (y * w + x) * 4, sm = MD[o + 2]; if (sm < 40 || O[o + 3] < 8) continue;
+        let r = 0, g = 0, b = 0, c = 0;
+        for (let k = -sr2; k <= sr2; k++) { const yy = y + k; if (yy < 0 || yy >= h) continue; const oo = (yy * w + x) * 4; if (tmp[oo + 3] < 8) continue; r += tmp[oo]; g += tmp[oo + 1]; b += tmp[oo + 2]; c++; }
+        if (!c) continue; const a = soft2 * sm / 255;
+        O[o] += (r / c - O[o]) * a; O[o + 1] += (g / c - O[o + 1]) * a; O[o + 2] += (b / c - O[o + 2]) * a;
+      }
+    }
+    const res = document.createElement('canvas'); res.width = w; res.height = h; res.getContext('2d').putImageData(out, 0, 0);
+    if (L.bloom) {   // emissive layer with alpha = brightness, so the glow can be blurred over the figure without filling the background
+      const em = new ImageData(w, h), E2 = em.data;
+      for (let i = 0; i < w * h; i++) { const o = i * 4, r = ED[o], g = ED[o + 1], b = ED[o + 2], mx = r > g ? (r > b ? r : b) : (g > b ? g : b); if (mx > 8) { E2[o] = r; E2[o + 1] = g; E2[o + 2] = b; E2[o + 3] = mx; } }
+      const ec = document.createElement('canvas'); ec.width = w; ec.height = h; ec.getContext('2d').putImageData(em, 0, 0); res.emit = ec;
+    }
+    return res;
+  }
+
+  /* ---- live eye (human-like almond eye lit to match the key light).  e = { x, y, w, h, rot, iris, pupil:'round'|'slit', irisR, sclera, open } ---- */
+  const _v2iris = new Map();
+  function v2IrisSprite(col, r) {
+    const key = col + '|' + r; let c = _v2iris.get(key); if (c) return c;
+    const S = 96; c = document.createElement('canvas'); c.width = c.height = S; const g = c.getContext('2d'), m = S / 2, R = mulberry32(strHash(key));
+    g.fillStyle = rgd(g, m, m, 0, m, [0, lite(col, 0.18), 0.55, col, 0.88, dark(col, 0.55), 1, dark(col, 0.85)]); g.beginPath(); g.arc(m, m, m - 0.5, 0, TAU); g.fill();
+    g.save(); g.beginPath(); g.arc(m, m, m - 0.5, 0, TAU); g.clip();
+    for (let i = 0; i < 110; i++) {
+      const a = R() * TAU, r0 = m * (0.18 + R() * 0.16), r1 = m * (0.62 + R() * 0.36);
+      g.strokeStyle = R() > 0.45 ? rgba(lite(col, 0.4), 0.2 + R() * 0.22) : rgba(dark(col, 0.7), 0.25 + R() * 0.25); g.lineWidth = 0.7 + R() * 1.3;
+      g.beginPath(); g.moveTo(m + cos(a) * r0, m + sin(a) * r0); g.lineTo(m + cos(a + (R() - 0.5) * 0.12) * r1, m + sin(a + (R() - 0.5) * 0.12) * r1); g.stroke();
+    }
+    g.strokeStyle = rgba(lite(col, 0.45), 0.35); g.lineWidth = 2; g.beginPath(); g.arc(m, m, m * 0.36, 0, TAU); g.stroke();       // collarette
+    g.strokeStyle = rgba('#000', 0.62); g.lineWidth = m * 0.13; g.beginPath(); g.arc(m, m, m * 0.94, 0, TAU); g.stroke();           // limbal ring
+    g.restore();
+    _v2iris.set(key, c); return c;
+  }
+  function almond(g, x, y, hw, hu, hl, rot, ct) {
+    // corners (x-hw,y)/(x+hw,y), upper lid peaks at y-hu (peak shifted by ct), lower lid at y+hl
+    g.save(); g.translate(x, y); g.rotate(rot || 0);
+    g.beginPath(); g.moveTo(-hw, 0);
+    g.bezierCurveTo(-hw * 0.5 + ct, -hu * 1.32, hw * 0.45 + ct, -hu * 1.32, hw, 0);
+    g.bezierCurveTo(hw * 0.5, hl * 1.32, -hw * 0.45, hl * 1.32, -hw, 0);
+    g.closePath(); g.restore();
+  }
+  function liveEye(g, e, A, side) {
+    const op = clamp(e.open * (1 - A.blink) - (A.m.lid > 0 ? A.m.lid * 0.7 : A.m.lid * 0.5) * (e.lidK == null ? 1 : e.lidK), 0, 1.15);
+    if (op < 0.04) return;
+    const hw = e.w / 2, hu = e.h * 0.5 * op * 1.02, hl = e.h * 0.34 * (0.4 + 0.6 * op);
+    g.save(); g.translate(e.x, e.y); g.rotate(e.rot || 0);
+    const ct = (e.peak || 0);
+    // clip to almond
+    g.beginPath(); g.moveTo(-hw, 0);
+    g.bezierCurveTo(-hw * 0.5 + ct, -hu * 1.32, hw * 0.45 + ct, -hu * 1.32, hw, 0);
+    g.bezierCurveTo(hw * 0.5, hl * 1.32, -hw * 0.45, hl * 1.32, -hw, 0);
+    g.closePath(); g.clip();
+    // sclera, darker towards the corners and under the lid
+    g.fillStyle = rgd(g, 0, 0, 0, hw * 1.05, [0, e.sclera[0], 0.55, e.sclera[1], 1, e.sclera[2]]); g.fillRect(-hw - 2, -hu * 1.5, hw * 2 + 4, hu * 1.5 + hl * 1.5);
+    // iris + pupil
+    const ir = e.irisR * Math.min(hw * 0.5, e.h * 0.62), lx = A.lx * hw * 0.28 + (e.dx || 0) * hw, ly = A.ly * hu * 0.35 - hu * 0.05;
+    g.save(); g.translate(lx, ly);
+    g.drawImage(v2IrisSprite(e.iris, Math.round(ir)), -ir, -ir, ir * 2, ir * 2);
+    const pr = ir * (e.pupil === 'slit' ? 0.5 : 0.36) * (1 + (A.m.pup || 0) * 0.28 + (e.pupK || 0));
+    g.fillStyle = '#05070a'; g.beginPath();
+    if (e.pupil === 'slit') g.ellipse(0, 0, pr * 0.36, ir * 0.92, 0, 0, TAU); else g.arc(0, 0, pr, 0, TAU);
+    g.fill();
+    g.restore();
+    // catch-lights: large soft window reflection + tiny practical
+    g.globalCompositeOperation = 'lighter';
+    g.fillStyle = 'rgba(255,255,255,0.52)'; g.beginPath(); g.ellipse(lx - ir * 0.38, ly - ir * 0.36, ir * 0.2, ir * 0.15, -0.5, 0, TAU); g.fill();
+    g.fillStyle = 'rgba(200,225,255,0.22)'; g.beginPath(); g.arc(lx + ir * 0.4, ly + ir * 0.42, ir * 0.1, 0, TAU); g.fill();
+    g.globalCompositeOperation = 'source-over';
+    // lid shadows over the ball (key light comes from above)
+    g.fillStyle = lg(g, 0, -hu * 1.3, 0, hu * 0.9, [0, 'rgba(10,5,4,0.88)', 0.42, 'rgba(10,5,4,0.42)', 1, 'rgba(10,5,4,0)']); g.fillRect(-hw - 2, -hu * 1.5, hw * 2 + 4, hu * 2.4);
+    g.fillStyle = lg(g, -hw, 0, hw, 0, [0, 'rgba(10,5,4,0.5)', 0.22, 'rgba(10,5,4,0)', 0.8, 'rgba(10,5,4,0)', 1, 'rgba(10,5,4,0.42)']); g.fillRect(-hw - 2, -hu * 1.5, hw * 2 + 4, hu * 1.5 + hl * 1.5);
+    g.fillStyle = lg(g, 0, hl * 0.3, 0, hl * 1.35, [0, 'rgba(10,5,4,0)', 1, 'rgba(10,5,4,0.4)']); g.fillRect(-hw - 2, 0, hw * 2 + 4, hl * 1.6);
+    g.restore();
+    // lash line + lid edge (soft, no outline)
+    g.save(); g.translate(e.x, e.y); g.rotate(e.rot || 0);
+    g.lineCap = 'round';
+    g.strokeStyle = 'rgba(14,8,6,0.82)'; g.lineWidth = e.lash == null ? 1.7 : e.lash;
+    g.beginPath(); g.moveTo(-hw, 0.2); g.bezierCurveTo(-hw * 0.5 + ct, -hu * 1.32, hw * 0.45 + ct, -hu * 1.32, hw, 0.2); g.stroke();
+    g.strokeStyle = 'rgba(190,120,105,0.28)'; g.lineWidth = 1;
+    g.beginPath(); g.moveTo(-hw * 0.7, hl * 0.9); g.bezierCurveTo(-hw * 0.4, hl * 1.28, hw * 0.35, hl * 1.28, hw * 0.7, hl * 0.9); g.stroke();
+    g.fillStyle = 'rgba(150,50,45,0.55)'; g.beginPath(); g.ellipse(side * -hw * 0.9, hl * 0.1, hw * 0.1, hl * 0.35, 0, 0, TAU); g.fill();   // tear duct
+    g.restore();
+  }
+
+  /* ---- backdrop: dark control room, out-of-focus practical lights, vignette (baked once per race/tint) ---- */
+  function bakeBackdrop(def, tint, rs) {
+    const bx = -50, by = -30, bw = 500, bh = 570, w = Math.ceil(bw * rs), h = Math.ceil(bh * rs);
+    const c = document.createElement('canvas'); c.width = w; c.height = h; const g = c.getContext('2d'); g.setTransform(rs, 0, 0, rs, -bx * rs, -by * rs);
+    const acc = def.accent, base = mixc(tint || def.bg, '#0b0f14', 0.82), R = mulberry32(strHash(def.accent + (tint || '')));
+    g.fillStyle = lg(g, 0, by, 0, by + bh, [0, mixc(base, '#2a3138', 0.35), 0.55, base, 1, '#05070a']); g.fillRect(bx, by, bw, bh);
+    // architectural panels in the far wall (very soft)
+    g.save(); cssBlur(g, 9 * rs);
+    for (let i = 0; i < 7; i++) {
+      const x = bx + 10 + i * 72 + R() * 18, ww = 40 + R() * 30;
+      g.fillStyle = 'rgba(' + trip(mixc(base, '#6d7a86', 0.28 + R() * 0.22)) + ',' + (0.35 + R() * 0.3) + ')'; g.fillRect(x, by + 20 + R() * 40, ww, 330 + R() * 120);
+    }
+    g.restore();
+    // bokeh discs (hex-ish)
+    g.save(); g.globalCompositeOperation = 'lighter'; cssBlur(g, 2.2 * rs);
+    const n = 15;
+    for (let i = 0; i < n; i++) {
+      const warm = R() < 0.55, col = warm ? mixc(acc, '#ffffff', 0.25) : mixc('#9fc6ff', acc, 0.3);
+      const x = bx + R() * bw, y = by + 30 + R() * 330, r = 10 + R() * 26, a = (0.05 + R() * 0.12) * (def.bokeh == null ? 1 : def.bokeh);
+      g.fillStyle = 'rgba(' + trip(col) + ',' + a + ')'; g.beginPath();
+      for (let k = 0; k < 6; k++) { const an = k / 6 * TAU + 0.3; g.lineTo(x + cos(an) * r, y + sin(an) * r); }
+      g.closePath(); g.fill();
+      g.strokeStyle = 'rgba(' + trip(col) + ',' + a * 0.8 + ')'; g.lineWidth = 1.2; g.stroke();
+    }
+    g.restore();
+    // accent practical behind the right shoulder + dark falloff to the left (rim source)
+    g.save(); g.globalCompositeOperation = 'lighter';
+    const gx = 330, gy = 230; g.fillStyle = rgd(g, gx, gy, 0, 230, [0, rgba(acc, 0.28), 0.3, rgba(acc, 0.1), 1, rgba(acc, 0)]); g.fillRect(bx, by, bw, bh);
+    g.restore();
+    g.fillStyle = rgd(g, 190, 215, 80, 360, [0, 'rgba(0,0,0,0)', 0.6, 'rgba(0,0,0,0.35)', 1, 'rgba(0,0,0,0.78)']); g.fillRect(bx, by, bw, bh);
+    g.setTransform(1, 0, 0, 1, 0, 0); grain(g, w, h, 0.06);
+    return { c: c, bx: bx, by: by, bw: bw, bh: bh };
+  }
+
+  /* ---- race entry: bake the frame for a mood lazily ---- */
+  function v2Cap() {
+    const t = (M.Perf && M.Perf.tier) || 'high';
+    return t === 'low' ? 0.6 : t === 'medium' ? 0.85 : 1.1;
+  }
+  function v2Entry(race, scale, variant, color) {
+    const def = V2[race], cap = v2Cap();
+    let bi = BUCKETS.length - 1;
+    for (let i = 0; i < BUCKETS.length; i++) if (BUCKETS[i] >= Math.min(scale, cap) * 0.94) { bi = i; break; }
+    const key = 'v2|' + race + '|' + bi + '|' + variant + '|' + (color || '');
+    let e = _ents.get(key);
+    if (e) { _ents.delete(key); _ents.set(key, e); return e; }
+    const rs = Math.min(BUCKETS[bi], cap);
+    const P = {
+      race: race, variant: variant, bucket: rs, color: colorPal(color || def.defColor), accent: def.accent, rs: rs,
+      rng: (salt) => mulberry32(variant * 7919 + RACES.indexOf(race) * 104729 + strHash(String(salt)))
+    };
+    const T = def.traits ? def.traits(P) : {};
+    e = { v2: true, key: key, race: race, def: def, P: P, T: T, rs: rs, frames: {}, bgs: {} };
+    _ents.set(key, e);
+    if (_ents.size > 40) _ents.delete(_ents.keys().next().value);
+    // a v2 entry holds up to 5 lit mood frames (~1 MB each at 1x): keep only the 14 most recent v2 entries
+    let n2 = 0; _ents.forEach((x) => { if (x.v2) n2++; });
+    if (n2 > 14) { for (const [k2, x] of _ents) { if (x.v2 && x !== e) { _ents.delete(k2); if (--n2 <= 14) break; } } }
+    return e;
+  }
+  function v2Frame(ent, mood) {
+    let f = ent.frames[mood]; if (f) return f;
+    const def = ent.def, t0 = performance.now(), q = { shadow: ((M.Perf && M.Perf.tier) || 'high') !== 'low' };
+    const gb = new GBuf(ent.rs, Object.assign({ fit: def.fit }, def.gbuf ? def.gbuf(ent.P, ent.T) : null));
+    def.build(gb, ent.P, ent.T, MOOD[mood] || MOOD.neutral, mood);
+    gb.smoothHeight(def.hsmooth == null ? 1.1 : def.hsmooth);
+    const dl = def.light || {}, L = Object.assign({}, V2_LIGHT, dl);
+    ['key', 'fill', 'rim', 'amb'].forEach((k) => { L[k] = Object.assign({}, V2_LIGHT[k], k === 'rim' ? { c: lutRGB(def.accent) } : null, dl[k] || null); });
+    const ml = V2_MOODLIGHT[mood];   // mood changes the lighting a little as well as the face: harder/redder when angry, softer/warmer when pleased...
+    if (ml) {
+      L.key = Object.assign({}, L.key, { i: L.key.i * ml.key }); L.fill = Object.assign({}, L.fill, { i: L.fill.i * ml.fill }); L.exposure *= ml.exp;
+      if (ml.rim) L.rim = Object.assign({}, L.rim, { c: ml.rim, i: L.rim.i * (ml.rimK || 1) });
+      if (ml.keyD) L.key.d = ml.keyD;
+    }
+    L.bloom = !!def.bloom;
+    const lit = relight(gb, L, q);
+    // emissive bloom
+    if (def.bloom && lit.emit) { const g = lit.getContext('2d'); g.save(); g.globalCompositeOperation = 'lighter'; cssBlur(g, def.bloom * ent.rs); g.globalAlpha = 0.9; g.drawImage(lit.emit, 0, 0); g.filter = 'none'; g.globalAlpha = 0.35; cssBlur(g, def.bloom * 3.2 * ent.rs); g.drawImage(lit.emit, 0, 0); g.restore(); lit.emit = null; }
+    if (def.dof !== false) {   // depth of field: the chest / shoulders fall out of focus, the face stays sharp
+      const w2 = lit.width, h2 = lit.height, bl = document.createElement('canvas'); bl.width = w2; bl.height = h2;
+      const bg2 = bl.getContext('2d'); cssBlur(bg2, 2.4 * ent.rs); bg2.drawImage(lit, 0, 0); bg2.filter = 'none';
+      bg2.globalCompositeOperation = 'destination-in'; bg2.fillStyle = lg(bg2, 0, h2 * 0.68, 0, h2 * 0.97, [0, 'rgba(0,0,0,0)', 1, 'rgba(0,0,0,1)']); bg2.fillRect(0, 0, w2, h2);
+      const lg2 = lit.getContext('2d'); lg2.drawImage(bl, 0, 0);
+    }
+    if (V2.keep) V2.lastGB = gb; else gb.dispose();   // V2.keep = true (dev only) retains the last G-buffer canvases for inspection
+    f = { c: lit, ms: performance.now() - t0 };
+    ent.frames[mood] = f; V2.lastBakeMs = f.ms;
+    if (!ent.idle && ent.rs >= 0.45 && !V2.noIdle && typeof window !== 'undefined') {   // bake the other moods in idle time so a mood change never hitches
+      ent.idle = true;
+      const todo = MOODS.filter((m) => !ent.frames[m]), ric = window.requestIdleCallback ? (fn) => window.requestIdleCallback(fn, { timeout: 4000 }) : (fn) => setTimeout(fn, 250);
+      const step = () => { const m = todo.shift(); if (!m) return; try { if (!ent.frames[m] && _ents.has(ent.key)) v2Frame(ent, m); } catch (e) { return; } if (todo.length) ric(step); };
+      ric(step);
+    }
+    return f;
+  }
+  function lutRGB(c) { const v = rgbOf(c); return [Math.pow(v[0] / 255, 2.2) * 1.0 + 0.1, Math.pow(v[1] / 255, 2.2) + 0.1, Math.pow(v[2] / 255, 2.2) + 0.12]; }
+  function v2Backdrop(ent, tint) {
+    const k = String(tint || ''); let b = ent.bgs[k]; if (b) return b;
+    b = ent.bgs[k] = bakeBackdrop(ent.def, tint, Math.min(ent.rs, 0.8)); return b;
+  }
+  /* shared animation-state helper for converted races: the existing animate() record A + crossfade between mood frames */
+  function v2Render(ctx, ent, A, view, o, st, withBg, bgTint2) {
+    const def = ent.def, mood = o.mood && MOOD[o.mood] ? o.mood : 'neutral';
+    if (st.vm !== mood) { if (st.vm) { st.vprev = st.vm; st.vfade = 0; } st.vm = mood; }
+    if (st.vfade == null) st.vfade = 1;
+    const dtf = A.t - (st.vt == null ? A.t : st.vt); st.vt = A.t; if (st.vfade < 1 && dtf > 0 && dtf < 0.5) st.vfade = Math.min(1, st.vfade + dtf / 0.32);
+    const f = v2Frame(ent, mood), fp = st.vfade < 1 && st.vprev && st.vprev !== mood ? v2Frame(ent, st.vprev) : null;
+    ctx.save();
+    ctx.translate(view.tx, view.ty); ctx.scale(view.s, view.s);
+    ctx.imageSmoothingEnabled = true; ctx.imageSmoothingQuality = 'high';
+    if (withBg) { const b = v2Backdrop(ent, bgTint2); ctx.drawImage(b.c, b.bx + A.hx * -0.35, b.by + A.hy * -0.2, b.bw, b.bh); }
+    const br = A.breath, px = def.pivot[0], py = def.pivot[1];
+    ctx.save();
+    ctx.translate(200, H); ctx.scale(1, 1 + br * 0.006); ctx.translate(-200, -H); ctx.translate(0, -br * 1.2);
+    ctx.translate(px + A.hx * 0.6, py + A.hy * 0.6); ctx.rotate(A.hr * 0.6); ctx.scale(A.hs, A.hs); ctx.translate(-px, -py);
+    if (fp) { ctx.drawImage(fp.c, 0, 0, W, H); ctx.globalAlpha = sstep(st.vfade); }
+    ctx.drawImage(f.c, 0, 0, W, H);
+    ctx.globalAlpha = 1;
+    if (def.dyn) { if (def.fit) { ctx.translate(def.fit[1] * (1 - def.fit[0]), def.fit[2] * (1 - def.fit[0])); ctx.scale(def.fit[0], def.fit[0]); } def.dyn(ctx, ent.P, ent.T, A); }
+    ctx.restore();
+    ctx.restore();
+  }
+
+  /* @@V2-RACES@@  (one block per converted race: V2.<race> = {...}; see tools/handoff/portraits.md) */
+
+  /* ---------------------------------------------------------------- HUMAN (v2) : fleet-admiral bust, 3/4 view */
+  V2.human = (function () {
+    const SK = [
+      { base: '#bf957f', blush: '#a8524c', lip: '#9c5852', deep: '#74463f' },
+      { base: '#b88b68', blush: '#a8503f', lip: '#8f5043', deep: '#664030' },
+      { base: '#946446', blush: '#92483a', lip: '#7a4538', deep: '#52321f' },
+      { base: '#69432f', blush: '#7a3b30', lip: '#5b3630', deep: '#3b221b' }
+    ];
+    const HAIR = [['#201f1e', '#4d4944'], ['#121110', '#34312f'], ['#3f2a20', '#7a6050'], ['#75747a', '#c3c2c4']];
+    const EYE = ['#5a7285', '#68502f', '#3c5f4a', '#46362a'];
+    const sp = (p, closed, k, corners) => shape(p, closed !== false, corners, k).path;
+    // landmarks (virtual 400x500)
+    const TURN = 12, EYN = [177, 201], EYF = [241, 200], BRY = 181, NOSE = [217, 248], MOUTH = [214, 277];
+    const P_HEAD = [206, 92, 242, 98, 273, 124, 284, 168, 283, 214, 277, 254, 264, 284, 244, 310, 214, 322, 184, 316, 158, 296, 142, 266, 134, 228, 130, 178, 139, 126, 168, 100].map((v, i) => (i % 2 ? 210 + (v - 210) * 0.96 : 210 + (v - 210) * 1.1));
+    const P_NECK = [180, 262, 174, 330, 166, 400, 268, 400, 256, 330, 250, 262];
+    const inside2 = (path, gb, x, y) => { const g = gb.A, T = g.getTransform(); return g.isPointInPath(path, T.a * x + T.c * y + T.e, T.b * x + T.d * y + T.f); };
+
+    function brow(gb, m, T, side) {
+      const sk = T.female ? 0.72 : 1;
+      const ix = side < 0 ? 193 : 224, ox = side < 0 ? 151 : 265, iy0 = BRY + 2, oy0 = BRY - 1;
+      const raise = -m.browY * 8 - (side > 0 ? m.bAsym * 8 : 0);
+      const iy = iy0 + raise + m.brow * 9 + (m.brow < 0 ? m.brow * 7 : 0), oy = oy0 + raise - m.brow * 2.5 + (m.brow < 0 ? -m.brow * 2.5 : 0);
+      const R = T.rb[side < 0 ? 0 : 1], hc = T.hair[0], thick = (side < 0 ? 6 : 5) * sk, arch = side < 0 ? 5 : 4, ang0 = Math.atan2(oy - iy, ox - ix);
+      const at = (u) => [ix + (ox - ix) * u, iy + (oy - iy) * u - Math.sin(u * Math.PI) * arch * (1 - m.brow * 0.5) + (u > 0.72 ? (u - 0.72) * 14 : 0)];
+      for (let i = 0; i < 10; i++) { const u = i / 9, p = at(u); gb.ab(p[0], p[1], 8, thick * 0.55 * (1 - Math.abs(u - 0.3) * 0.7), ang0, hc, 0.12); }
+      for (let i = 0; i < 70; i++) {
+        const u = R(), p = at(u), p2 = at(Math.min(1, u + 0.12)), a = Math.atan2(p2[0] - p[0], p2[1] - p[1]);
+        const th = thick * (1 - Math.abs(u - 0.28) * 0.8), oy2 = (R() - 0.5) * th;
+        gb.strand(p[0], p[1] + oy2, a - 0.2 - R() * 0.3, 5 + R() * 4, 0.7, R() < 0.6 ? hc : T.hair[1], 0.38 + R() * 0.3, (R() - 0.5) * 2, 4);
+      }
+      const mid = at(0.45); gb.hb(mid[0], mid[1], 24, 5, ang0, 7);
+    }
+
+    function hairCap(gb, T, front) {
+      const R = T.hr, hc = T.hair, f = T.female;
+      const cap = f ? [128, 262, 124, 200, 128, 140, 142, 104, 170, 80, 206, 68, 246, 72, 276, 92, 292, 128, 294, 170, 284, 204, 279, 164, 264, 134, 240, 117, 212, 112, 188, 120, 168, 138, 157, 172, 152, 222, 154, 272, 148, 304, 136, 292]
+        : [124, 214, 118, 164, 124, 124, 146, 94, 188, 74, 232, 74, 266, 92, 290, 124, 296, 170, 288, 198, 280, 160, 262, 133, 240, 118, 212, 113, 188, 120, 166, 135, 150, 160, 142, 192, 138, 220];
+      const hp = sp(cap, true, 1);
+      gb.fill(hp, { a: hc[0], ab: 1.4, h: 176, hb: 2.5, m: [0.5, 0.5, 0], t: [0.1, 0, 0.9] });
+      gb.hb(212, 104, 84, 40, 0, 40); gb.hb(150, 140, 16, 40, 0, 12); gb.hb(280, 150, 14, 40, 0, 8);
+      if (f) gb.hb(142, 230, 12, 60, 0, 14);
+      const N = f ? 2400 : 2600;
+      for (let i = 0; i < N; i++) {
+        const x = 126 + R() * 172, y = 66 + R() * (f ? 250 : 130);
+        if (!inside2(hp, gb, x, y)) continue;
+        let ang = 0.5 + (x - 170) * 0.0014 + (R() - 0.5) * 0.4;
+        if (f && y > 170) ang = (x < 200 ? 0.05 : -0.05) + (R() - 0.5) * 0.14;
+        const lit = clamp(1.0 - (x - 140) / 170 - (y - 76) / 230 + (R() - 0.5) * 0.5, 0, 1), k = R();
+        const col = mixc(mixc(hc[0], '#000', 0.35 * (1 - lit)), hc[1], clamp(lit * (0.35 + k * 0.7), 0, 1));
+        gb.strand(x, y, ang, 10 + R() * 18, 0.7 + R() * 0.3, col, 0.45 + R() * 0.4, (R() - 0.5) * 5, 3 + lit * 6);
+      }
+      for (let i = 0; i < 90; i++) { const x = 136 + R() * 156, y = 74 + R() * 70, a2 = 0.5 + (R() - 0.5) * 1.2; if (inside2(hp, gb, x, y)) continue; if (R() < 0.7) gb.strand(x, y, a2, 6 + R() * 8, 0.6, mixc(hc[0], hc[1], R() * 0.5), 0.3, (R() - 0.5) * 3, 0); }
+      if (!f) for (let i = 0; i < 180; i++) { const x = 168 + R() * 96, y = 112 + R() * 22, a = 0.7 + (R() - 0.5) * 0.5; gb.strand(x, y, a, 8 + R() * 12, 0.75, R() > 0.7 ? hc[1] : hc[0], 0.5, (R() - 0.5) * 3, 4); }
+    }
+
+    return {
+      accent: '#79a8d8', bg: '#2a3a52', defColor: '#b83a3a', pivot: [208, 340], badge: [210, 200, 134], fit: [1.12, 208, 300],
+      light: { rim: { i: 1.0 }, key: { d: [-0.72, -0.4, 0.58], c: [1.0, 0.9, 0.8], i: 2.0 }, fill: { i: 0.06 }, amb: { i: 0.12 }, wrap: 0.16, exposure: 1.08, fall: [160, 270, 0.86, 300, 440, 0.78], soften: 0.4 },
+      gbuf: function () { return { depth: 130, poreScale: 0.7, poreAmp: 0.22, strandScale: 1.0, strandAmp: 0.8, flow: function () { return 0.5; } }; },
+      traits: function (P) {
+        const v = P.variant | 0, r = P.rng('human');
+        return { skin: SK[v & 3], female: !!((v >> 2) & 1), hair: HAIR[(v >> 3) & 3], eye: EYE[(r() * 4) | 0], rb: [P.rng('b0'), P.rng('b1')], hr: P.rng('hair'), age: ((v >> 3) & 3) === 3 ? 1 : 0 };
+      },
+      build: function (gb, P, T, m) {
+        const sk = T.skin, f = T.female, col = P.color;
+        // ---------- long hair behind (female)
+        if (f) {
+          const bk = sp([124, 270, 118, 200, 126, 140, 150, 96, 196, 72, 244, 76, 282, 104, 300, 160, 306, 240, 302, 330, 284, 410, 250, 430, 236, 360, 226, 300, 180, 300, 168, 390, 140, 432, 116, 410, 108, 330], true, 1);
+          gb.fill(bk, { a: mixc(T.hair[0], '#000', 0.3), h: 110, hb: 4, m: [0.4, 0.5, 0], t: [0.1, 0, 0.9] });
+          gb.hb(290, 260, 16, 90, 0, 10);
+          for (let i = 0; i < 700; i++) { const x = 110 + T.hr() * 194, y = 100 + T.hr() * 320; if (!inside2(bk, gb, x, y)) continue; gb.strand(x, y, 0.02 + (T.hr() - 0.5) * 0.2, 20 + T.hr() * 30, 0.9, T.hr() > 0.8 ? T.hair[1] : mixc(T.hair[0], '#000', 0.25), 0.4, (T.hr() - 0.5) * 6, 0); }
+        }
+        // ---------- torso + jacket
+        gb.xf(0, -34, function () {
+        const tors = sp([-30, 560, -24, 466, 22, 436, 90, 414, 140, 402, 172, 388, 186, 372, 248, 372, 262, 386, 300, 402, 352, 414, 402, 436, 436, 468, 440, 560], true, 0.9, [0, 13]);
+        gb.fill(tors, { a: '#2b2e33', h: 74, hb: 5, m: [0.1, 0.3, 0], t: [0.16, 0, 0.1] });
+        gb.hb(215, 470, 150, 60, 0, 10);
+        gb.hb(70, 452, 60, 22, -0.35, 14); gb.hb(345, 448, 60, 22, 0.3, 12);
+        for (let i = 0; i < 6; i++) { const x = 100 + i * 52; gb.hb(x, 480, 5, 40, 0.2 + i * 0.05, -8); gb.ab(x, 480, 4, 40, 0.2 + i * 0.05, '#0d1118', 0.35); }
+        gb.ab(230, 462, 1.6, 60, 0.04, '#0a0d12', 0.9); gb.hb(230, 462, 2, 62, 0.04, -26);
+        // epaulettes (brushed steel plates with banner-colour bars)
+        for (let s = -1; s <= 1; s += 2) {
+          const ex = s < 0 ? 78 : 334, ey = s < 0 ? 432 : 424, rot = s < 0 ? -0.36 : 0.3, pp = sp([-34, -9, 30, -10, 34, 8, -30, 10], true, 0.2);
+          gb.xf(ex, ey, function () {
+            gb.fill(pp, { a: '#3d4551', h: 112, hb: 0.5, m: [0.63, 0.5, 0], t: [0.24, 0, 0] });
+            gb.fill((g) => { g.beginPath(); g.rect(-6, -9.5, 8, 19); g.rect(8, -9.5, 8, 19); }, { a: col.mid, h: 120, m: [0.5, 0.4, 0] });
+            gb.hb(0, 0, 34, 12, 0, 12);
+          }, rot);
+        }
+        gb.fill((g) => { g.beginPath(); g.arc(132, 478, 12, 0, TAU); }, { a: '#8a929c', h: 112, hb: 0.8, m: [0.85, 0.7, 0], t: [0, 0, 0] });
+        gb.fill((g) => { g.beginPath(); g.arc(132, 478, 6.5, 0, TAU); }, { a: col.mid, h: 118, hb: 0.5, m: [0.6, 0.6, 0] });
+        // ---------- neck + collar
+        gb.fill(sp(P_NECK, true, 1), { a: sk.base, h: 100, hb: 6, m: [0.1, 0.35, 0.8], t: [0.8, 0, 0] });
+        gb.hb(192, 330, 8, 44, 0.2, 12); gb.hb(238, 330, 8, 44, -0.2, 9); gb.hb(214, 326, 12, 30, 0, -10);
+        gb.ab(210, 300, 56, 40, 0, mixc(sk.base, sk.deep, 0.5), 0.3);
+        if (!f) gb.hb(218, 345, 5, 8, 0, 8);
+        const collar = sp([166, 350, 168, 392, 192, 416, 222, 422, 256, 412, 274, 388, 270, 346, 248, 370, 220, 376, 192, 370], true, 0.8);
+        gb.fill(collar, { a: '#1d242e', h: 132, hb: 3, m: [0.1, 0.3, 0], t: [0.4, 0, 0.1] });
+        gb.hb(220, 400, 50, 14, 0, 12);
+        const pipe = sp([168, 392, 192, 416, 222, 422, 256, 412, 274, 388], false, 0.8);
+        gb.A.save(); gb.A.strokeStyle = col.mid; gb.A.globalAlpha = 0.85; gb.A.lineWidth = 2.4; gb.A.stroke(pipe); gb.A.restore();
+        gb.Hg.save(); gb.Hg.strokeStyle = 'rgb(200,200,200)'; gb.Hg.lineWidth = 2.4; gb.Hg.globalCompositeOperation = 'lighter'; gb.Hg.globalAlpha = 0.25; gb.Hg.stroke(pipe); gb.Hg.restore();
+        });
+        // ---------- head
+        const jaw = f ? 0.85 : 1;
+        gb.fill(sp(P_HEAD, true, 1), { a: sk.base, h: 96, hb: 12, m: [0.13, 0.35, 0.85], t: [0.85, 0, 0] });
+        gb.hb(212, 205, 96, 128, 0, 52); gb.hb(208, 205, 76, 104, 0, 18);
+        gb.hb(208, 134, 56, 36, 0, 14);
+        gb.hb(150, 138, 14, 36, 0.25, -12);
+        gb.hb(162, 260, 24, 32, 0.15, -8);
+        gb.hs = 1.45;
+        gb.xf(TURN, 0, function () {
+        gb.hb(158, 232, 28, 18, 0.45, 18); gb.hb(260, 226, 15, 16, 0, 9);
+        gb.hb(160, 276, 17, 22, 0.1, 10 * jaw);
+        gb.hb(190, 308, 36, 13, 0.16, 12); gb.hb(214, 306, 20, 14, 0, 16);
+        });
+        gb.smoothHeight(3.4);   // broad forms first, so the facial detail below sits on a smooth skull
+        gb.xf(TURN, 0, function () {
+        gb.hb(176, BRY - 9, 28, 9, 0.12, 24); gb.hb(240, BRY - 9, 22, 8, -0.1, 18); gb.hb(209, BRY - 9, 12, 10, 0, 14);
+        gb.hb(EYN[0], EYN[1] - 1, 26, 15, 0.06, -46); gb.hb(EYF[0], EYF[1] - 1, 21, 13, -0.05, -36); gb.hb(EYN[0] + 14, EYN[1] + 2, 8, 12, 0, -14);
+        gb.hb(EYN[0], EYN[1] + 2, 14, 8, 0, 16); gb.hb(EYF[0], EYF[1] + 1, 12, 7, 0, 12);
+        // nose
+        gb.hb(209, 220, 7.5, 26, 0.07, 28); gb.hb(NOSE[0], NOSE[1], 12, 10.5, 0, 44); gb.hb(200, NOSE[1] + 5, 8.5, 7, 0, 24); gb.hb(233, NOSE[1] + 4, 7, 6, 0, 19);
+        gb.hb(216, NOSE[1] + 11, 17, 5, 0, -18); gb.hb(216, NOSE[1] + 17, 5, 7, 0, -10);
+        gb.hb(198, 240, 5, 18, -0.2, -12);
+        // ear (stays on the skull: undo the turn offset)
+        gb.xf(-TURN, 0, function () {
+        gb.fill(sp([143, 196, 134, 197, 127, 211, 128, 230, 136, 246, 146, 245, 152, 226, 151, 206], true, 1), { a: mixc(sk.base, sk.blush, 0.3), h: 150, hb: 1, m: [0.1, 0.35, 1], t: [0.7, 0, 0] });
+        gb.hb(139, 220, 4, 17, 0.1, -40); gb.hb(138, 220, 13, 28, 0, 52); gb.hb(134, 205, 5, 11, 0.2, 22); gb.hb(133, 234, 5, 11, -0.2, 18);
+        gb.ab(139, 218, 6, 16, 0.1, mixc(sk.deep, '#2a100e', 0.4), 0.5); gb.ab(134, 238, 6, 8, 0, sk.blush, 0.3);
+        });
+        // mouth + lips
+        const sm = m.smile, mx = MOUTH[0], my = MOUTH[1];
+        const cxL = mx - 25 - sm * 1.5, cxR = mx + 24 + sm * 1.5, cL = my - sm * 7, cR = my - sm * 6 - m.asym * 4;
+        const lipU = f ? 6.5 : 5.4, lipL = f ? 9 : 7.2;
+        gb.hb(mx, my - 6, 20, lipU, 0, 12); gb.hb(mx, my + 7, 18, lipL, 0, 17); gb.hb(mx + 1, my + 16, 15, 4.5, 0, -12);
+        gb.ab(mx, my - 6, 22, lipU * 0.9, 0, sk.lip, 0.7); gb.ab(mx, my + 7, 19, lipL * 0.85, 0, mixc(sk.lip, sk.base, 0.15), 0.66);
+        gb.mb(mx, my, 22, 11, 0, 0.5, 0.82, 0.3, 0.8);
+        const mouthPath = (g) => { g.beginPath(); g.moveTo(cxL, cL); g.quadraticCurveTo(mx, my + 1 + sm * 0.4, cxR, cR); };
+        [gb.A, gb.Hg].forEach((g, li) => {
+          g.save(); mouthPath(g); g.lineCap = 'round';
+          if (li === 0) { g.strokeStyle = mixc(sk.deep, '#1a0c0c', 0.45); g.globalAlpha = 0.85; g.lineWidth = 1.5; cssBlur(g, 0.35 * gb.rs); g.stroke(); }
+          else { g.globalCompositeOperation = 'destination-out'; g.strokeStyle = 'rgba(255,255,255,.3)'; g.lineWidth = 2.4; g.stroke(); }
+          g.restore();
+        });
+        gb.hb(cxL - 3, cL, 6, 6, 0, -12 - sm * 4); gb.hb(cxR + 3, cR, 5, 5, 0, -9);
+        gb.hb(196, 268, 4, 14, 0.2, -10 - sm * 8); gb.ab(196, 268, 3, 14, 0.2, sk.deep, 0.14 + Math.max(0, sm) * 0.12);
+        gb.hb(240, 268, 3.5, 12, -0.2, -6 - sm * 5);
+        if (sm > 0.2) gb.hb(160, 240, 20, 14, 0, sm * 10);
+        if (m.brow > 0.3) { gb.hb(209, 172, 3, 9, 0, -10 * m.brow); gb.ab(209, 174, 2.5, 9, 0, sk.deep, 0.25 * m.brow); }
+        if (m.brow < -0.3) { for (let i = 0; i < 3; i++) { gb.hb(207, 146 + i * 7, 36 - i * 5, 2.2, 0, -7); gb.ab(207, 146 + i * 7, 30, 2, 0, sk.deep, 0.15); } }
+        // ---------- skin albedo variation
+        gb.ab(207, 130, 62, 34, 0, mixc(sk.base, '#ffffff', 0.16), 0.3);
+        gb.ab(158, 240, 26, 17, 0, sk.blush, 0.12); gb.ab(260, 234, 14, 12, 0, sk.blush, 0.08);
+        gb.ab(134 - TURN, 230, 12, 70, 0, mixc(sk.deep, '#000', 0.3), 0.2); gb.ab(136 - TURN, 300, 20, 30, 0, mixc(sk.deep, '#000', 0.3), 0.2);   // edge fall-off on the near side
+        gb.ab(NOSE[0], NOSE[1], 12, 10, 0, sk.blush, 0.24); gb.ab(200, NOSE[1] + 4, 8, 6, 0, sk.blush, 0.2);
+        gb.ab(EYN[0], EYN[1], 25, 14, 0, mixc(sk.deep, '#5a4252', 0.4), 0.3); gb.ab(EYF[0], EYF[1], 20, 12, 0, mixc(sk.deep, '#5a4252', 0.4), 0.28);
+        gb.ab(EYN[0], EYN[1] - 11, 24, 3.6, 0.1, sk.deep, 0.4); gb.ab(EYF[0], EYF[1] - 11, 18, 3.2, -0.08, sk.deep, 0.34);
+        gb.ab(EYN[0], EYN[1] + 12, 20, 5, 0.05, '#5f4a5e', 0.2); gb.ab(EYF[0], EYF[1] + 11, 15, 4.5, 0, '#5f4a5e', 0.18);
+        gb.ab(208, 186, 8, 12, 0, mixc(sk.deep, '#5a4252', 0.3), 0.08);
+        gb.ab(139 - TURN, 218, 12, 24, 0, sk.blush, 0.3);
+        gb.ab(212, 310, 36, 13, 0, mixc(sk.base, '#ffffff', 0.1), 0.15);
+        if (!f) { gb.ab(214, 288, 62, 42, 0, '#3c4048', 0.12); gb.tb(214, 290, 56, 36, 0, 0.9, 0, 0.3, 0.8); gb.ab(mx, my - 14, 20, 6, 0, '#3c4048', 0.1); }
+        // nostrils, wings of the nose, lip definition
+        gb.ab(NOSE[0] - 12, NOSE[1] + 9, 4.5, 2.6, 0.25, '#150a0a', 0.85); gb.ab(NOSE[0] + 10, NOSE[1] + 8, 3.6, 2.2, -0.2, '#150a0a', 0.8);
+        gb.ab(NOSE[0] - 17, NOSE[1] + 3, 6, 6, 0, mixc(sk.deep, '#1a0c0a', 0.3), 0.3); gb.ab(NOSE[0] + 16, NOSE[1] + 3, 5, 5, 0, mixc(sk.deep, '#1a0c0a', 0.3), 0.25);
+        gb.hb(NOSE[0] - 12, NOSE[1] + 9, 4, 2.4, 0, -14); gb.hb(NOSE[0] + 10, NOSE[1] + 8, 3.2, 2, 0, -12);
+        gb.ab(MOUTH[0], MOUTH[1] - 6, 23, 6.5, 0, mixc(sk.lip, '#6a2a2c', 0.25), 0.55); gb.ab(MOUTH[0], MOUTH[1] + 8, 19, 7, 0, mixc(sk.lip, '#a0504e', 0.2), 0.6);
+        gb.mb(MOUTH[0], MOUTH[1] + 8, 15, 4, 0, 0.45, 0.7, 0.5, 0.9);
+        gb.ab(MOUTH[0], MOUTH[1] + 17, 15, 3.2, 0, mixc(sk.deep, '#000', 0.3), 0.25);
+        gb.mb(208, 136, 30, 22, 0, 0.2, 0.5, 0.85, 0.7);
+        gb.mb(NOSE[0], NOSE[1], 9, 8, 0, 0.18, 0.45, 0.7, 0.9);
+        if (T.age) { for (let i = 0; i < 4; i++) gb.hb(207, 140 + i * 7, 34 - i * 4, 1.8, 0, -6); gb.hb(176, 215, 18, 3, 0.15, -8); }
+        { // skin detail: stubble (male), freckles, fine lines
+          const R = T.hr;
+          if (!f) for (let i = 0; i < 900; i++) {
+            const x = 150 + R() * 130, y = 250 + R() * 76;
+            const ex = (x - 214) / 66, ey = (y - 290) / 38; if (ex * ex + ey * ey > 1 || (y < 268 && (x < 196 || x > 240))) continue;
+            gb.A.fillStyle = 'rgba(30,26,28,' + (0.1 + R() * 0.18) + ')'; gb.A.fillRect(x, y, 0.9, 0.9);
+          }
+          for (let i = 0; i < 46; i++) { const x = 160 + R() * 110, y = 205 + R() * 50; gb.A.fillStyle = 'rgba(' + trip(sk.deep) + ',' + (0.08 + R() * 0.1) + ')'; gb.A.beginPath(); gb.A.arc(x, y, 0.6 + R() * 1.2, 0, TAU); gb.A.fill(); }
+          for (let i = 0; i < 2; i++) { gb.hb(207, 146 + i * 9, 30 - i * 6, 1.5, 0, -5); }                    // forehead lines
+          gb.hb(EYN[0] - 18, EYN[1] + 1, 4, 8, 0.5, -7); gb.hb(EYN[0] - 17, EYN[1] + 8, 5, 3, 0.3, -5);            // crow's feet
+        }
+        brow(gb, m, T, -1); brow(gb, m, T, 1);
+        });
+        gb.hs = 1;
+        hairCap(gb, T);
+      },
+      dyn: function (g, P, T, A) {
+        g.save(); g.translate(TURN, 0);
+        const m = A.m, sm = m.smile, ec = T.eye;
+        liveEye(g, { x: EYN[0], y: EYN[1], w: 30, h: 16.5, rot: 0.07, iris: ec, irisR: 0.9, pupil: 'round', sclera: ['#aaa196', '#8e8176', '#4e403a'], open: 1, peak: -2, dx: 0.03 }, A, -1);
+        liveEye(g, { x: EYF[0], y: EYF[1], w: 24.5, h: 15, rot: -0.06, iris: ec, irisR: 0.86, pupil: 'round', sclera: ['#a0988d', '#85786e', '#483b36'], open: 1, peak: 2, dx: -0.05 }, A, 1);
+        { // lashes: short dark strokes along the upper lids
+          const op1 = clamp(1 - A.blink - Math.max(0, m.lid) * 0.6, 0, 1);
+          [[EYN, 30, 0.07, -2, 16.5], [EYF, 24.5, -0.06, 2, 15]].forEach(function (E) {
+            if (op1 < 0.25) return;
+            g.save(); g.translate(E[0][0], E[0][1]); g.rotate(E[2]); g.strokeStyle = 'rgba(12,8,6,0.3)'; g.lineWidth = 0.7; g.lineCap = 'round';
+            const hw = E[1] / 2, hu = E[4] * 0.5 * op1 * 1.02;
+            for (let i = 0; i < 12; i++) { const u = (i + 0.5) / 12, x = -hw + u * hw * 2, y = -hu * 0.97 * Math.sin(Math.PI * u) + 0.3; g.beginPath(); g.moveTo(x, y); g.lineTo(x + (u - 0.5) * 3, y - 1.4 - Math.sin(u * 3.14) * 0.8); g.stroke(); }
+            g.restore();
+          });
+        }
+        const op = clamp(m.open * 0.4 + A.talk, 0, 1);
+        if (op > 0.04) {
+          const cx = MOUTH[0], cy = MOUTH[1] + 1 - sm * 1, wd = 15 + sm * 2.5 - op * 2, hh = 1.4 + op * 8.5;
+          g.save();
+          g.fillStyle = rgd(g, cx, cy, 0, wd * 1.4, [0, 'rgba(24,8,8,.97)', 0.7, 'rgba(34,12,12,.9)', 1, 'rgba(34,12,12,0)']);
+          g.beginPath(); g.ellipse(cx, cy + hh * 0.35, wd + 1.5, hh + 1.2, 0, 0, TAU); g.fill();
+          g.fillStyle = 'rgba(205,196,184,' + (0.55 * clamp(op * 2, 0, 1)) + ')'; g.beginPath(); g.ellipse(cx, cy - hh * 0.35 + 0.8, wd * 0.72, Math.min(2.6, hh * 0.28), 0, 0, TAU); g.fill();
+          g.fillStyle = 'rgba(150,66,64,' + (0.7 * clamp(op * 1.6, 0, 1)) + ')'; g.beginPath(); g.ellipse(cx, cy + hh * 0.7, wd * 0.55, Math.max(0.5, hh * 0.3), 0, 0, TAU); g.fill();
+          g.fillStyle = rgba(T.skin.lip, 0.55); g.beginPath(); g.ellipse(cx, cy + hh + 2.2, wd * 0.85, 2.2, 0, 0, TAU); g.fill();
+          g.restore();
+        }
+        g.restore();
+      }
+    };
+  })();
+
+  /* ---------------------------------------------------------------- MRRSHAN (v2) : feline fleet commander, 3/4 view */
+  V2.mrrshan = (function () {
+    const FUR = [
+      { base: '#8c5f33', dark: '#150e09', light: '#bfae8e', nose: '#6c4745', stripes: 1, mane: 0 },       // tawny tiger
+      { base: '#9a9892', dark: '#232326', light: '#dedcd5', nose: '#765a59', stripes: 1, mane: 0 },       // ash tabby
+      { base: '#85633d', dark: '#2b1d14', light: '#c9bb9a', nose: '#5b423e', stripes: 0, mane: 1 },       // maned lion
+      { base: '#2a292d', dark: '#0e0e10', light: '#55545a', nose: '#3a2d2f', stripes: 0, mane: 0 }        // melanistic
+    ];
+    const EYES = ['#d6a02c', '#a8b34a', '#9fc0d2', '#e08c28'];
+    const sp = (p, closed, k, corners) => shape(p, closed !== false, corners, k).path;
+    const EYN = [172, 199], EYF = [247, 197], NOSE = [243, 243];
+    const P_HEAD = [206, 116, 246, 120, 282, 140, 303, 176, 303, 218, 294, 256, 272, 290, 244, 312, 214, 322, 184, 316, 154, 294, 130, 258, 114, 218, 113, 176, 130, 140, 166, 120];
+    const P_NECK = [150, 270, 138, 340, 124, 430, 302, 430, 288, 340, 274, 270];
+    const inside2 = (path, gb, x, y) => { const g = gb.A, T = g.getTransform(); return g.isPointInPath(path, T.a * x + T.c * y + T.e, T.b * x + T.d * y + T.f); };
+    /* tapered stripe along a polyline: crisp but feathered, into albedo */
+    function stripe(gb, pts, w0, w1, col, a) {
+      const g = gb.A; g.save(); cssBlur(g, 0.9 * gb.rs); g.lineCap = 'round'; g.strokeStyle = col; g.globalAlpha = a;
+      const n = pts.length / 2 - 1;
+      for (let i = 0; i < n; i++) { g.lineWidth = w0 + (w1 - w0) * (i + 0.5) / n; g.beginPath(); g.moveTo(pts[i * 2], pts[i * 2 + 1]); g.lineTo(pts[i * 2 + 2], pts[i * 2 + 3]); g.stroke(); }
+      g.restore();
+      const h = gb.Hg; h.save(); h.globalCompositeOperation = 'destination-out'; cssBlur(h, 0.9 * gb.rs); h.lineCap = 'round'; h.strokeStyle = 'rgba(255,255,255,0.1)';
+      for (let i = 0; i < n; i++) { h.lineWidth = w0 + (w1 - w0) * (i + 0.5) / n; h.beginPath(); h.moveTo(pts[i * 2], pts[i * 2 + 1]); h.lineTo(pts[i * 2 + 2], pts[i * 2 + 3]); h.stroke(); }
+      h.restore();
+    }
+    function furFlow(x, y) {
+      // strands radiate from the nose bridge, falling down the cheeks
+      const dx = x - 232, dy = (y - 205) * 0.9 + 26, l = Math.hypot(dx, dy) || 1;
+      return Math.atan2(dx / l, dy / l);
+    }
+
+    return {
+      accent: '#ffb35a', bg: '#4a3326', defColor: '#2a8aa0', pivot: [208, 340], badge: [210, 205, 138], fit: [1.06, 208, 300],
+      light: { rim: { c: [1.0, 0.7, 0.4], i: 1.15 }, key: { d: [-0.88, -0.32, 0.42], c: [1.0, 0.9, 0.78], i: 1.95 }, fill: { i: 0.07 }, amb: { i: 0.14 }, wrap: 0.2, exposure: 1.3, fall: [150, 285, 0.84, 268, 400, 0.85], soften: 0.0, sat: 0.84 },
+      gbuf: function () { return { depth: 150, poreScale: 0.5, poreAmp: 0.1, strandScale: 1.05, strandAmp: 1.05, flow: furFlow }; },
+      traits: function (P) {
+        const v = P.variant | 0, r = P.rng('mrr');
+        return { fur: FUR[v & 3], eye: EYES[(v >> 2) & 3], hr: P.rng('mrr-hair'), rs: P.rng('mrr-stripe'), scar: ((v >> 4) & 3) === 1 };
+      },
+      build: function (gb, P, T, m) {
+        const F = T.fur, R = T.hr, col = P.color, dk = F.dark, lt = F.light;
+        const fur = (x, y, rx, ry, rot, c, a) => gb.ab(x, y, rx, ry, rot, c, a);
+        // ---------- mane (behind everything)
+        if (F.mane) {
+          const mn = sp([122, 200, 108, 150, 130, 100, 176, 76, 232, 74, 282, 94, 310, 140, 318, 210, 322, 290, 330, 380, 300, 440, 140, 440, 112, 380, 112, 290], true, 1);
+          gb.fill(mn, { a: mixc(F.base, dk, 0.5), ab: 2, h: 110, hb: 6, m: [0.12, 0.3, 0.1], t: [0.2, 0, 1] });
+          gb.hb(215, 280, 110, 120, 0, 22);
+          for (let i = 0; i < 1800; i++) {
+            const x = 104 + R() * 226, y = 72 + R() * 370; if (!inside2(mn, gb, x, y)) continue;
+            const ang = Math.atan2(x - 218, 20 + (y - 215) * 0.9) + (R() - 0.5) * 0.4, k = R();
+            gb.strand(x, y, ang, 16 + R() * 26, 0.9 + R() * 0.6, mixc(mixc(F.base, dk, 0.3 + k * 0.5), lt, R() < 0.12 ? 0.35 : 0), 0.45 + R() * 0.4, (R() - 0.5) * 8, 3);
+          }
+        }
+        // ---------- torso: dark flight jacket, shoulder armour, banner flash
+        gb.xf(0, -34, function () {
+          const tors = sp([-30, 560, -24, 466, 22, 436, 90, 414, 140, 402, 166, 388, 172, 372, 258, 372, 270, 386, 300, 402, 352, 414, 402, 436, 436, 468, 440, 560], true, 0.9, [0, 13]);
+          gb.fill(tors, { a: '#262a27', h: 74, hb: 5, m: [0.12, 0.3, 0], t: [0.4, 0, 0.1] });
+          gb.hb(215, 470, 150, 60, 0, 10);
+          for (let i = 0; i < 6; i++) { const x = 100 + i * 52; gb.hb(x, 480, 5, 40, 0.2 + i * 0.05, -8); gb.ab(x, 480, 4, 40, 0.2 + i * 0.05, '#0b0d0c', 0.35); }
+          gb.ab(236, 462, 1.6, 60, 0.04, '#080a09', 0.9); gb.hb(236, 462, 2, 62, 0.04, -26);
+          // pauldrons: matte composite plates with a banner stripe
+          for (let s = -1; s <= 1; s += 2) {
+            const ex = s < 0 ? 72 : 340, ey = s < 0 ? 430 : 424, rot = s < 0 ? -0.34 : 0.3, pp = sp([-44, -12, 36, -14, 46, 8, -38, 16], true, 0.3);
+            gb.xf(ex, ey, function () {
+              gb.fill(pp, { a: '#343a36', h: 128, hb: 0.5, m: [0.47, 0.5, 0], t: [0.16, 0, 0] });
+              gb.fill((g) => { g.beginPath(); g.rect(-6, -13, 9, 27); }, { a: col.mid, h: 136, m: [0.5, 0.4, 0] });
+              gb.hb(0, 0, 40, 14, 0, 16);
+            }, rot);
+          }
+          gb.fill(sp(P_NECK, true, 1), { a: F.base, h: 100, hb: 7, m: [0.12, 0.3, 0.15], t: [0.2, 0, 1] });
+          gb.hb(214, 330, 40, 60, 0, 12);
+          for (let i = 0; i < 900; i++) { const x = 150 + R() * 140, y = 300 + R() * 110; gb.strand(x, y, furFlow(x, y), 8 + R() * 12, 0.9, mixc(F.base, R() < 0.5 ? dk : lt, 0.25 + R() * 0.3), 0.5, (R() - 0.5) * 3, 2); }
+          gb.ab(214, 330, 50, 50, 0, mixc(F.base, '#000', 0.5), 0.3);
+          const collar = sp([150, 338, 152, 388, 188, 420, 226, 428, 266, 418, 296, 388, 290, 332, 258, 356, 226, 362, 190, 356], true, 0.8);
+          gb.fill(collar, { a: '#1b1f1d', h: 134, hb: 3, m: [0.12, 0.3, 0], t: [0.4, 0, 0.1] });
+          gb.hb(222, 396, 64, 16, 0, 14);
+        });
+        // ---------- ruff: a dense mass of fur around the jaw and neck, between collar and head
+        {
+          const rp = sp([108, 236, 100, 290, 114, 346, 150, 384, 214, 398, 280, 384, 318, 346, 332, 290, 322, 236, 300, 214, 130, 214], true, 1);
+          gb.fill(rp, { a: mixc(F.base, lt, 0.18), ab: 3, h: 120, hb: 7, m: [0.1, 0.3, 0.2], t: [0.15, 0, 1] });
+          gb.hb(214, 330, 100, 60, 0, 26);
+          for (let i = 0; i < 3200; i++) {
+            const x = 96 + R() * 240, y = 210 + R() * 190; if (!inside2(rp, gb, x, y)) continue;
+            const side = (x - 215) / 120, k = R(), a2 = side * 0.55 + (R() - 0.5) * 0.4;
+            gb.strand(x, y, a2, 9 + R() * 16, 0.9 + R() * 0.6, mixc(mixc(F.base, lt, 0.15 + k * 0.55), dk, k < 0.16 ? 0.5 : 0), 0.5 + R() * 0.4, (R() - 0.5) * 5, 3 + (1 - Math.abs(side)) * 2);
+          }
+        }
+        // ---------- ears
+        for (let s = -1; s <= 1; s += 2) {
+          const ex = s < 0 ? 136 : 282, ey = 126, w = s < 0 ? 0.85 : 0.7;
+          const ear = sp([ex - 22 * w, ey + 22, ex - 20 * w, ey - 14, ex - 4 * w, ey - 34, ex + 14 * w, ey - 30, ex + 26 * w, ey - 6, ex + 24 * w, ey + 24], true, 1);
+          gb.fill(ear, { a: F.base, ab: 0.8, h: 138, hb: 2, m: [0.12, 0.3, 0.3], t: [0.2, 0, 1] });
+          gb.hb(ex, ey - 4, 20 * w, 26, 0, 14);
+          gb.ab(ex + 2 * w, ey - 2, 12 * w, 18, 0, '#8a5c58', 0.55); gb.hb(ex + 2 * w, ey, 10 * w, 15, 0, -18);
+          for (let i = 0; i < 24; i++) gb.strand(ex - 6 * w + R() * 14 * w, ey + 10 - R() * 20, (R() - 0.5) * 0.6, 6 + R() * 8, 0.8, mixc(lt, F.base, 0.3 + R() * 0.4), 0.6, 0, 3);
+        }
+        // ---------- head base
+        gb.fill(sp(P_HEAD, true, 1), { a: F.base, h: 150, hb: 6, m: [0.12, 0.35, 0.3], t: [0.15, 0, 1] });
+        gb.hb(208, 208, 92, 104, 0, 36);
+        gb.hb(208, 130, 60, 30, 0, 12);                                                   // forehead
+        gb.hb(172, 176, 30, 9, 0.12, 26); gb.hb(250, 174, 24, 8, -0.1, 20); gb.hb(214, 170, 14, 12, 0, 16);
+        gb.hb(EYN[0], EYN[1], 28, 16, 0.05, -56); gb.hb(EYF[0], EYF[1], 22, 14, -0.05, -44);
+        gb.hb(EYN[0], EYN[1] + 2, 14, 8, 0, 14); gb.hb(EYF[0], EYF[1] + 1, 11, 7, 0, 10);
+        gb.hb(228, 214, 14, 34, 0.1, 30);                                                  // nose bridge
+        gb.hb(236, 262, 38, 30, 0, 58);                                                   // muzzle
+        gb.hb(NOSE[0], NOSE[1], 18, 12, 0, 28); gb.hb(NOSE[0] - 14, NOSE[1] + 4, 6, 7, 0, 10);
+        gb.hb(214, 268, 18, 13, 0.1, 12); gb.hb(266, 264, 13, 12, 0, 10);                // whisker pads
+        gb.hb(226, 300, 22, 12, 0, 14);                                                   // chin
+        gb.hb(142, 244, 30, 44, 0.2, 20); gb.hb(285, 238, 15, 36, 0, 10);                // cheek ruff
+        gb.hb(148, 140, 16, 34, 0.25, -8);
+        // mouth (inverted-Y), mood shapes the corners
+        const sm = m.smile, mw = [200, 280], my = 284;
+        const mouth = (g) => { g.beginPath(); g.moveTo(mw[0], my - 2 - sm * 3); g.quadraticCurveTo(216, my + 7 + sm * 1.5, 241, my + 1); g.quadraticCurveTo(262, my + 7 + sm * 1.5, mw[1], my - 3 - sm * 3 - m.asym * 2); };
+        [gb.A, gb.Hg].forEach((g, li) => {
+          g.save(); mouth(g); g.lineCap = 'round';
+          if (li === 0) { g.strokeStyle = '#150d0c'; g.globalAlpha = 0.9; g.lineWidth = 1.7; cssBlur(g, 0.4 * gb.rs); g.stroke(); }
+          else { g.globalCompositeOperation = 'destination-out'; g.strokeStyle = 'rgba(255,255,255,.4)'; g.lineWidth = 3; g.stroke(); }
+          g.restore();
+        });
+        stripe(gb, [241, 252, 241, 268, 241, 281], 1.4, 1.6, '#150d0c', 0.85);                // philtrum
+        gb.hb(241, 266, 1.8, 15, 0, -16);
+        gb.hb(206, 288, 9, 7, 0, -10); gb.hb(274, 285, 8, 6, 0, -8);
+        // ---------- fur colouring
+        fur(236, 264, 36, 28, 0, lt, 0.8); fur(226, 298, 26, 14, 0, lt, 0.85); fur(214, 272, 24, 16, 0, lt, 0.5);
+        fur(EYN[0], EYN[1] - 4, 30, 17, 0, lt, 0.45); fur(EYF[0], EYF[1] - 4, 24, 15, 0, lt, 0.4);
+        fur(EYN[0] + 4, EYN[1] + 12, 24, 8, 0, lt, 0.6); fur(EYF[0], EYF[1] + 11, 18, 7, 0, lt, 0.5);
+        fur(150, 262, 30, 24, 0.4, mixc(lt, F.base, 0.35), 0.55); fur(284, 256, 14, 26, 0, mixc(lt, F.base, 0.35), 0.4);
+        fur(208, 150, 40, 30, 0, mixc(F.base, lt, 0.2), 0.25);
+        fur(NOSE[0], NOSE[1], 17, 11, 0, F.nose, 0.97); fur(NOSE[0] - 1, NOSE[1] + 7, 10, 4, 0, '#150d0c', 0.7);
+        fur(EYN[0], EYN[1], 27, 15, 0, '#120b08', 0.7); fur(EYF[0], EYF[1], 22, 13, 0, '#120b08', 0.65);
+        gb.mb(NOSE[0], NOSE[1], 15, 9, 0, 0.8, 0.8, 0.1, 0.95);
+        // nostril shadows
+        fur(NOSE[0] - 4, NOSE[1] + 7, 4, 2.4, 0.2, '#0c0807', 0.9); fur(NOSE[0] + 9, NOSE[1] + 6, 3.5, 2.2, -0.1, '#0c0807', 0.85);
+        gb.hb(NOSE[0] - 4, NOSE[1] + 7, 3, 2, 0, -12); gb.hb(NOSE[0] + 9, NOSE[1] + 6, 3, 2, 0, -10);
+        // markings
+        if (F.stripes) {
+          const rr = T.rs;
+          // forehead: a few irregular tapered stripes rising from the brow ridge (not a comb)
+          for (let i = -3; i <= 3; i++) {
+            if (i === 0 && rr() < 0.5) continue;
+            const bx = 214 + i * 14 + (rr() - 0.5) * 8, by = 156 - Math.abs(i) * 3 + (rr() - 0.5) * 6, len = 18 + rr() * 22, bend = (rr() - 0.5) * 9;
+            stripe(gb, [bx, by + 8, bx + i * 1.2 + bend * 0.4, by - len * 0.4, bx + i * 2.6 + bend, by - len], 3.6 - Math.abs(i) * 0.35, 0.6, dk, 0.78);
+          }
+          // cheek bars sweeping back from the outer eye corners
+          for (let k = 0; k < 2; k++) {
+            stripe(gb, [EYN[0] - 20, EYN[1] + 4 + k * 12, EYN[0] - 36, EYN[1] + 10 + k * 16, EYN[0] - 50, EYN[1] + 22 + k * 20], 3.4, 1, dk, 0.8);
+            stripe(gb, [EYF[0] + 15, EYF[1] + 4 + k * 11, EYF[0] + 28, EYF[1] + 9 + k * 14, EYF[0] + 36, EYF[1] + 18 + k * 17], 2.8, 0.8, dk, 0.8);
+          }
+          for (let k = 0; k < 2; k++) stripe(gb, [150 - k * 2, 236 + k * 14, 164, 244 + k * 15, 180, 250 + k * 14], 2.8, 1, dk, 0.7);
+          // tear lines
+          stripe(gb, [EYN[0] + 15, EYN[1] + 4, EYN[0] + 22, EYN[1] + 28, EYN[0] + 30, EYN[1] + 48], 2.6, 1.3, dk, 0.85);
+          stripe(gb, [EYF[0] - 12, EYF[1] + 4, EYF[0] - 10, EYF[1] + 28, EYF[0] - 6, EYF[1] + 46], 2.2, 1.1, dk, 0.8);
+          stripe(gb, [226, 196, 226, 216, 228, 234], 3, 1.2, dk, 0.55);
+        }
+        stripe(gb, [EYN[0] - 15, EYN[1] - 1, EYN[0] - 28, EYN[1] - 3, EYN[0] - 36, EYN[1] - 8], 2.2, 0.9, '#120b08', 0.85);
+        stripe(gb, [EYF[0] + 12, EYF[1] - 1, EYF[0] + 20, EYF[1] - 3, EYF[0] + 26, EYF[1] - 8], 2, 0.8, '#120b08', 0.8);
+        // whisker-pad dots
+        for (let r2 = 0; r2 < 3; r2++) for (let c2 = 0; c2 < 3; c2++) {
+          fur(204 + c2 * 8 + r2 * 2, 262 + r2 * 6, 1.1, 1.1, 0, dk, 0.8); fur(256 + c2 * 6 + r2 * 2, 258 + r2 * 6, 1, 1, 0, dk, 0.7);
+        }
+        if (T.scar) { stripe(gb, [EYN[0] - 8, EYN[1] - 22, EYN[0] - 2, EYN[1] - 6, EYN[0] + 6, EYN[1] + 16, EYN[0] + 12, EYN[1] + 26], 1.6, 1.4, '#a99486', 0.9); gb.hb(EYN[0] + 2, EYN[1] + 2, 2, 24, 0.3, 8); }
+        // ---------- individual hair: dense fur over the head, tip colours, then fuzzy silhouette
+        const hp = sp(P_HEAD, true, 1);
+        for (let i = 0; i < 900; i++) {
+          const x = 120 + R() * 180, y = 100 + R() * 220; if (!inside2(hp, gb, x, y)) continue;
+          const k = R(), lit = clamp(1 - (x - 130) / 190, 0, 1);
+          const base = mixc(F.base, lt, clamp(0.12 + k * 0.28, 0, 1)), tip = mixc(base, '#000', 0.25 * (1 - lit) + (k < 0.2 ? 0.25 : 0));
+          gb.strand(x, y, furFlow(x, y) + (R() - 0.5) * 0.3, 5 + R() * 8, 0.55 + R() * 0.3, tip, 0.1 + R() * 0.14, (R() - 0.5) * 2, 0);
+        }
+        for (let i = 0; i < 520; i++) {   // silhouette fuzz
+          const a = R() * TAU, cx = 208, cy = 210; let r = 150; let ok = false;
+          for (let t = 0; t < 40; t++) { r -= 3.5; if (inside2(hp, gb, cx + cos(a) * r * 1.0, cy + sin(a) * r * 0.9)) { ok = true; break; } }
+          if (!ok) continue;
+          const x = cx + cos(a) * r, y = cy + sin(a) * r * 0.9;
+          if (y > 300 && a > 0.2 && a < 2.9 && false) continue;
+          gb.strand(x - cos(a) * 3, y - sin(a) * 3, Math.atan2(cos(a), sin(a) * 0.9 + 0.3), 6 + R() * 8, 0.6, mixc(F.base, lt, 0.2 + R() * 0.3), 0.55, (R() - 0.5) * 3, 0);
+        }
+        // whiskers: long, stiff, thin, pale (albedo + a hair of height)
+        for (let i = 0; i < 7; i++) {
+          const sx = 214 + (i % 4) * 2, sy = 262 + (i >> 1) * 3.5, ang = -1.2 - i * 0.12 + (i > 3 ? 0.3 : 0);
+          gb.strand(sx, sy, -1.5 - i * 0.1 + 0.1 * R(), 34 + R() * 20, 0.7, '#d8d2c4', 0.55, 6 - i, 4);
+          gb.strand(262 + (i % 3) * 2, 258 + (i >> 1) * 3, 1.4 + i * 0.1, 22 + R() * 14, 0.65, '#d8d2c4', 0.45, -5 + i, 3);
+        }
+        // eyebrows: a few long vibrissae above the eyes
+        for (let s = 0; s < 3; s++) { gb.strand(EYN[0] - 8 + s * 6, EYN[1] - 16, -1.2, 16 + R() * 8, 0.7, '#d8d2c4', 0.7, 3, 3); gb.strand(EYF[0] + 4 + s * 4, EYF[1] - 15, 1.2, 12 + R() * 6, 0.65, '#d8d2c4', 0.6, -3, 3); }
+        // mood: frown / snarl creases
+        if (m.brow > 0.3) { gb.hb(226, 176, 5, 12, 0, -14 * m.brow); stripe(gb, [214, 168, 226, 176, 238, 168], 2.4, 2.4, dk, 0.5 * m.brow); }
+      },
+      dyn: function (g, P, T, A) {
+        const m = A.m, ec = T.eye;
+        liveEye(g, { x: EYN[0], y: EYN[1], w: 32, h: 15.5, rot: 0.1, iris: ec, irisR: 1.05, pupil: 'slit', pupK: m.pup * 0.1 - 0.12, sclera: ['#b9a98a', '#a08e72', '#5a4634'], open: 1, peak: -2, dx: 0.02, lash: 2.2 }, A, -1);
+        liveEye(g, { x: EYF[0], y: EYF[1], w: 26, h: 14.5, rot: -0.08, iris: ec, irisR: 1.0, pupil: 'slit', pupK: m.pup * 0.1 - 0.12, sclera: ['#ad9d80', '#94836a', '#54402f'], open: 1, peak: 2, dx: -0.05, lash: 2 }, A, 1);
+        const op = clamp(m.open * 0.45 + A.talk + Math.max(0, m.brow) * 0.45, 0, 1);
+        if (op > 0.05) {
+          const cx = 238, cy = 289 + 0.5, wd = 21 + op * 3, hh = 1.2 + op * 10;
+          g.save();
+          g.fillStyle = rgd(g, cx, cy, 0, wd * 1.3, [0, 'rgba(26,8,10,.98)', 0.75, 'rgba(48,14,16,.9)', 1, 'rgba(48,14,16,0)']);
+          g.beginPath(); g.ellipse(cx, cy + hh * 0.4, wd, hh + 0.8, 0, 0, TAU); g.fill();
+          // canines
+          const fa = clamp(op * 1.7, 0, 1);
+          g.fillStyle = 'rgba(224,214,192,' + fa + ')';
+          for (let s = -1; s <= 1; s += 2) { const fx = cx + s * wd * 0.62, fl = 3 + op * 7; g.beginPath(); g.moveTo(fx - 2.1, cy - 0.5); g.lineTo(fx + 2.1, cy - 0.5); g.lineTo(fx + s * 0.4, cy + fl); g.closePath(); g.fill(); g.beginPath(); g.moveTo(fx - 1.7, cy + hh * 1.5 + 1); g.lineTo(fx + 1.7, cy + hh * 1.5 + 1); g.lineTo(fx, cy + hh * 1.5 - fl * 0.6); g.closePath(); g.fill(); }
+          g.fillStyle = 'rgba(160,70,72,' + 0.65 * fa + ')'; g.beginPath(); g.ellipse(cx, cy + hh * 0.85, wd * 0.5, Math.max(0.6, hh * 0.34), 0, 0, TAU); g.fill();
+          g.restore();
+        }
+      }
+    };
+  })();
+
+  /* ---------------------------------------------------------------- SILICOID (v2) : crystalline / mineral being with metal inlays and glowing fissures */
+  V2.silicoid = (function () {
+    const STONE = [
+      { base: '#6a665f', dark: '#2f2d2b', vein: '#b9b2a4', glow: '#ffb340', quartz: '#a9b4b6' },   // granite + amber core
+      { base: '#403d3c', dark: '#171515', vein: '#8a7f78', glow: '#ff7436', quartz: '#8d8f94' },   // basalt + ember
+      { base: '#7a666c', dark: '#34292f', vein: '#d1b8c1', glow: '#ff6fb0', quartz: '#c8aab6' },   // rose quartz
+      { base: '#586a60', dark: '#1e2923', vein: '#a9c0b0', glow: '#7dffb4', quartz: '#9ab4a8' }    // malachite
+    ];
+    const poly = (p) => { const path = new Path2D(); path.moveTo(p[0], p[1]); for (let i = 2; i < p.length; i += 2) path.lineTo(p[i], p[i + 1]); path.closePath(); return path; };
+    const sp = (p, closed, k, corners) => shape(p, closed !== false, corners, k).path;
+    const EYN = [177, 201], EYF = [243, 199];
+    const P_HEAD = [206, 94, 247, 103, 277, 130, 295, 176, 291, 230, 273, 275, 244, 307, 214, 320, 183, 309, 156, 279, 139, 238, 129, 190, 141, 136, 172, 106];
+    const P_NECK = [178, 262, 170, 340, 158, 430, 276, 430, 262, 340, 252, 262];
+
+    function crackPath(R, x, y, ang, len) {
+      const pts = [x, y]; let a = ang, n = Math.max(3, Math.round(len / 7));
+      for (let i = 0; i < n; i++) { a += (R() - 0.5) * 1.1; x += Math.sin(a) * (5 + R() * 6); y += Math.cos(a) * (5 + R() * 6); pts.push(x, y); }
+      return pts;
+    }
+    function stroke(g, pts, w, style, mode) {
+      g.save(); if (mode) g.globalCompositeOperation = mode; g.strokeStyle = style; g.lineWidth = w; g.lineJoin = 'round'; g.lineCap = 'round';
+      g.beginPath(); g.moveTo(pts[0], pts[1]); for (let i = 2; i < pts.length; i += 2) g.lineTo(pts[i], pts[i + 1]); g.stroke(); g.restore();
+    }
+
+    return {
+      accent: '#ffc04a', bg: '#2a2438', defColor: '#d06a3a', pivot: [208, 340], badge: [210, 205, 134], fit: [1.1, 208, 300], bloom: 5,
+      light: { rim: { i: 1.2 }, key: { d: [-0.85, -0.36, 0.5], c: [0.96, 0.92, 0.88], i: 2.0 }, fill: { i: 0.06 }, amb: { i: 0.13 }, wrap: 0.1, exposure: 1.18, fall: [168, 282, 0.82, 330, 480, 0.7], soften: 0, sat: 0.86 },
+      gbuf: function () { return { depth: 170, cellSize: 19, cellMode: 0, cellTilt: 0.6, cellGroove: 0.09, cellJit: 0.4, cellRot: 0.35, poreScale: 0.7, poreAmp: 0.6 }; },
+      traits: function (P) {
+        const v = P.variant | 0, R = P.rng('sil'), S = STONE[v & 3], cracks = [];
+        cracks.push(crackPath(R, 222, 98, 0.25, 54), crackPath(R, 262, 150, 1.6, 44), crackPath(R, 150, 230, 0.4, 46), crackPath(R, 200, 268, 0.2, 30), crackPath(R, 236, 330, 0.1, 50), crackPath(R, 90, 440, -0.3, 60), crackPath(R, 330, 430, 0.4, 60));
+        return { S: S, glow: S.glow, cracks: cracks, R: R, rg: P.rng('sil-g') };
+      },
+      build: function (gb, P, T, m) {
+        const S = T.S, R = T.rg, col = P.color, gl = T.glow;
+        // ---------- torso: heavy mineral pauldrons on a dark pressure harness
+        gb.xf(0, -34, function () {
+          gb.fill(sp([-30, 560, -30, 470, 10, 428, 74, 398, 140, 390, 172, 376, 252, 376, 276, 390, 336, 398, 402, 428, 440, 470, 440, 560], true, 0.5, [0, 13]), { a: '#23262a', h: 76, hb: 4, m: [0.45, 0.5, 0], t: [0.55, 0, 0.0] });
+          gb.hb(215, 480, 150, 60, 0, 10);
+          // crystal shoulder masses (planar facets from the cell channel)
+          for (let s = -1; s <= 1; s += 2) {
+            const cx = s < 0 ? 62 : 352, cy = 424;
+            const sh = poly(s < 0 ? [-6, 470, 10, 400, 60, 372, 118, 380, 140, 412, 130, 470] : [420, 470, 404, 398, 356, 370, 300, 378, 278, 410, 286, 470]);
+            gb.fill(sh, { a: S.base, h: 120, hb: 2, m: [0.55, 0.62, 0], t: [0.2, 1, 0] });
+            gb.hb(cx, cy - 6, 50, 36, 0, 30);
+            gb.fill(poly(s < 0 ? [30, 452, 104, 450, 112, 462, 24, 466] : [320, 452, 394, 452, 400, 466, 312, 464]), { a: '#2e3236', h: 150, hb: 0.6, m: [0.9, 0.5, 0], t: [0.1, 0, 0] });
+            gb.fill(poly(s < 0 ? [24, 466, 112, 462, 116, 470, 20, 474] : [312, 464, 400, 466, 404, 474, 308, 472]), { a: col.mid, h: 156, hb: 0.5, m: [0.6, 0.45, 0] });
+          }
+          // harness straps + panel seams
+          gb.fill(poly([150, 394, 176, 392, 232, 560, 196, 560]), { a: '#1a1d20', h: 106, hb: 1, m: [0.5, 0.4, 0], t: [0.5, 0, 0] });
+          gb.fill(poly([276, 392, 250, 392, 236, 560, 272, 560]), { a: '#1a1d20', h: 106, hb: 1, m: [0.5, 0.4, 0], t: [0.5, 0, 0] });
+          gb.ab(214, 470, 2, 60, 0, '#050607', 0.8); gb.hb(214, 470, 2, 60, 0, -20);
+          // chest core: a small amber window
+          gb.fill((g) => { g.beginPath(); g.arc(214, 456, 14, 0, TAU); }, { a: '#15171a', h: 90, hb: 1, m: [0.8, 0.6, 0] });
+          gb.fill((g) => { g.beginPath(); g.arc(214, 456, 7, 0, TAU); }, { a: gl, e: mixc(gl, '#000', 0.25), eb: 0.6 });
+          // segmented neck (stacked metal rings around a dark core)
+          gb.fill(sp(P_NECK, true, 1), { a: '#1c1f22', h: 96, hb: 5, m: [0.5, 0.45, 0], t: [0.3, 0, 0] });
+          for (let i = 0; i < 6; i++) {
+            const y = 300 + i * 16, hw = 40 + i * 2 + (i > 4 ? 3 : 0);
+            gb.fill(sp([214 - hw, y, 214 - hw * 0.5, y + 7, 214 + hw * 0.5, y + 7, 214 + hw, y, 214 + hw * 0.5, y - 6, 214 - hw * 0.5, y - 6], true, 0.8), { a: '#383d42', h: 120, hb: 1.2, m: [0.85, 0.5, 0], t: [0.3, 0, 0] });
+            gb.hb(214, y, hw, 4, 0, 14); gb.ab(214, y + 5, hw, 2.4, 0, '#050607', 0.7);
+          }
+          gb.fill(sp([166, 358, 168, 396, 192, 418, 224, 424, 258, 414, 280, 390, 276, 352, 252, 372, 224, 378, 192, 372], true, 0.6), { a: '#262a2e', h: 134, hb: 2, m: [0.8, 0.5, 0], t: [0.3, 0, 0] });
+          gb.hb(222, 402, 52, 14, 0, 12);
+        });
+        // ---------- crystal shards: translucent, glossy, faintly lit from inside (behind / around the cranium)
+        const shard = (x, y, w, hgt, lean, tone) => {
+          const tipx = x + lean, tipy = y - hgt, mid = x + w * 0.12;
+          const L = poly([x - w / 2, y, tipx, tipy, mid, y]), Rr = poly([mid, y, tipx, tipy, x + w / 2, y]);
+          const col2 = mixc(mixc(S.quartz, S.dark, 0.55), gl, tone * 1.4);
+          gb.fill(L, { a: mixc(col2, '#fff', 0.1), hg: [x - w / 2, y, mid, y - hgt * 0.4, 205, 150], m: [1, 0.92, 0], e: mixc(gl, '#000', 0.9) });
+          gb.fill(Rr, { a: mixc(col2, '#000', 0.35), hg: [mid, y - hgt * 0.4, x + w / 2, y, 150, 215], m: [1, 0.92, 0] });
+          gb.eb(x + lean * 0.35, y - hgt * 0.3, w * 0.5, hgt * 0.4, 0, mixc(gl, '#000', 0.8), 0.55);
+        };
+        [[190, 130, 40, 72, -14, 0.14], [230, 122, 46, 96, 8, 0.22], [266, 146, 34, 58, 22, 0.16], [158, 152, 28, 40, -20, 0.12]].forEach((q) => shard(q[0], q[1], q[2], q[3], q[4], q[5]));
+        [[80, 402, 34, 58, -10, 0.1], [118, 396, 26, 44, 4, 0.15], [350, 400, 30, 50, 12, 0.12]].forEach((q) => shard(q[0], q[1] + 20, q[2], q[3], q[4], q[5]));
+        // ---------- head: faceted stone cranium
+        gb.fill(poly(P_HEAD), { a: S.base, h: 150, hb: 6, m: [0.4, 0.55, 0], t: [0.35, 1, 0] });
+        gb.hb(208, 208, 86, 108, 0, 40);
+        gb.hb(208, 130, 62, 36, 0, 22);                                        // crown
+        gb.hb(206, 176, 70, 14, 0, 36);                                        // massive brow shelf
+        gb.hb(178, 192, 24, 12, 0, 18); gb.hb(246, 190, 20, 11, 0, 14);
+        gb.hb(EYN[0], EYN[1], 21, 21, 0, -54); gb.hb(EYF[0], EYF[1], 17, 17, 0, -44);   // eye wells
+        gb.hb(158, 236, 20, 40, 0.2, 18); gb.hb(270, 238, 14, 36, 0, 12);        // cheek slabs
+        gb.hb(210, 214, 11, 28, 0, 22); gb.hb(218, 244, 14, 10, 0, 26);          // nose ridge (blunt)
+        gb.hb(212, 300, 30, 14, 0, 14);                                        // chin block
+        // quartz inclusions (translucent, glossy)
+        const qz = [[150, 160, 14, 9, 0.6], [268, 168, 10, 7, -0.4], [262, 250, 12, 8, 0.3], [160, 262, 10, 7, 0.2], [212, 122, 12, 8, 0.1]];
+        qz.forEach((q) => { gb.ab(q[0], q[1], q[2], q[3], q[4], S.quartz, 0.7); gb.mb(q[0], q[1], q[2], q[3], q[4], 1, 0.95, 0, 1); gb.hb(q[0], q[1], q[2], q[3], q[4], 12); gb.eb(q[0], q[1], q[2] * 0.7, q[3] * 0.7, q[4], mixc(gl, '#000', 0.82), 0.5); });
+        // metal brow band + cheek plates with panel seams and rivets
+        const metal = '#454a50';
+        gb.fill(poly([140, 168, 176, 160, 214, 158, 252, 160, 282, 170, 280, 182, 248, 176, 214, 174, 176, 178, 142, 184]), { a: metal, h: 172, hb: 0.8, m: [0.9, 0.55, 0], t: [0.2, 0, 0] });
+        gb.fill(poly([136, 232, 160, 226, 176, 258, 168, 296, 150, 290, 138, 262]), { a: metal, h: 168, hb: 0.8, m: [0.9, 0.55, 0], t: [0.2, 0, 0] });
+        gb.fill(poly([282, 236, 268, 232, 258, 262, 262, 292, 280, 282, 286, 260]), { a: metal, h: 164, hb: 0.8, m: [0.9, 0.55, 0], t: [0.2, 0, 0] });
+        [[148, 172], [176, 166], [214, 164], [252, 166], [276, 174], [146, 244], [160, 238], [152, 280], [272, 246]].forEach((r) => { gb.fill((g) => { g.beginPath(); g.arc(r[0], r[1], 1.7, 0, TAU); }, { a: '#8a8e94', h: 214, hb: 0.3, m: [1, 0.8, 0] }); });
+        gb.ab(214, 176, 70, 2, 0, '#05060a', 0.8); gb.hb(214, 177, 70, 1.6, 0, -24);                 // seam under the band
+        gb.ab(170, 262, 2, 28, 0.1, '#05060a', 0.7); gb.hb(170, 262, 1.6, 28, 0.1, -24);
+        // brass inlay lines
+        stroke(gb.A, [146, 186, 178, 182, 214, 180, 250, 182, 278, 188], 1.2, '#8a7648'); stroke(gb.Hg, [146, 186, 178, 182, 214, 180, 250, 182, 278, 188], 1.2, 'rgba(255,255,255,0.1)', 'lighter');
+        gb.mb(214, 178, 70, 8, 0, 1, 0.9, 0, 0.3);
+        // eye housings (dark machined sockets with a bevel ring)
+        [[EYN, 15], [EYF, 12.5]].forEach(function (e) {
+          gb.fill((g) => { g.beginPath(); g.arc(e[0][0], e[0][1], e[1] + 5, 0, TAU); }, { a: '#2a2d31', hAdd: 20, hb: 0.6, m: [0.9, 0.5, 0] });
+          gb.fill((g) => { g.beginPath(); g.arc(e[0][0], e[0][1], e[1], 0, TAU); }, { a: '#06070a', h: 40, hb: 0.5, m: [0.2, 0.3, 0] });
+        });
+        // mouth grille: vertical vents
+        for (let i = 0; i < 5; i++) {
+          const x = 192 + i * 11, h = 24 - Math.abs(i - 2) * 4;
+          gb.fill(poly([x - 2.2, 262 - h * 0.1, x + 2.2, 262 - h * 0.1, x + 2.2, 262 + h, x - 2.2, 262 + h]), { a: '#05060a', hAdd: -40, hb: 0.5, e: mixc(gl, '#000', 0.88) });
+        }
+        gb.fill(poly([184, 254, 248, 254, 252, 292, 180, 292]), { a: '#25282c', hAdd: 14, hb: 0.8, m: [0.9, 0.5, 0] });
+        for (let i = 0; i < 5; i++) { const x = 192 + i * 11, h = 24 - Math.abs(i - 2) * 4; gb.fill(poly([x - 2.2, 262, x + 2.2, 262, x + 2.2, 262 + h, x - 2.2, 262 + h]), { a: '#05060a', hAdd: -50, hb: 0.4, e: mixc(gl, '#000', 0.86) }); }
+        // fissures: dark crack, glowing core, dented height
+        T.cracks.forEach((c) => {
+          stroke(gb.A, c, 3.4, 'rgba(8,6,6,0.85)'); stroke(gb.Hg, c, 3, 'rgba(255,255,255,0.35)', 'destination-out');
+          stroke(gb.E, c, 5.5, rgba(mixc(gl, '#000', 0.78), 1), 'lighter'); stroke(gb.E, c, 1.7, rgba(mixc(gl, '#ffffff', 0.15), 1), 'lighter');
+        });
+        // mineral veins (pale), stone mottling, chips
+        for (let i = 0; i < 14; i++) { const v = crackPath(R, 130 + R() * 160, 100 + R() * 220, R() * 3, 26 + R() * 30); stroke(gb.A, v, 0.8 + R(), rgba(S.vein, 0.4 + R() * 0.3)); }
+        for (let i = 0; i < 22; i++) gb.ab(130 + R() * 160, 100 + R() * 220, 6 + R() * 18, 5 + R() * 12, R() * 3, R() < 0.5 ? S.dark : mixc(S.base, S.vein, 0.4), 0.18 + R() * 0.2);
+        gb.ab(150, 150, 28, 40, 0.3, mixc(S.base, S.vein, 0.4), 0.18);
+        gb.ab(262, 270, 30, 40, 0.3, S.dark, 0.25);
+        // moods: heavier brow shelf when angry
+        if (m.brow > 0.3) { gb.hb(206, 184, 64, 8, 0, 14 * m.brow); gb.ab(206, 190, 52, 8, 0, '#000', 0.2 * m.brow); }
+      },
+      dyn: function (g, P, T, A) {
+        const m = A.m, gl = T.glow, t = A.t;
+        const pulse = 0.78 + 0.22 * Math.sin(t * 1.6 + A.ph[0]) + A.talk * 0.25, ap = clamp(1 - A.blink * 0.8, 0.1, 1);
+        // fissure breathing
+        g.save(); g.globalCompositeOperation = 'lighter'; g.lineCap = 'round'; g.lineJoin = 'round';
+        T.cracks.forEach((c, i) => {
+          const k = (0.35 + 0.25 * Math.sin(t * 1.1 + i * 1.7)) * m.glow * pulse;
+          g.strokeStyle = rgba(gl, 0.22 * k); g.lineWidth = 7; g.beginPath(); g.moveTo(c[0], c[1]); for (let j = 2; j < c.length; j += 2) g.lineTo(c[j], c[j + 1]); g.stroke();
+          g.strokeStyle = rgba(mixc(gl, '#fff', 0.4), 0.5 * k); g.lineWidth = 1.4; g.stroke();
+        });
+        g.restore();
+        // lens eyes
+        [[EYN, 11, 1], [EYF, 9, 0.9]].forEach((e) => {
+          const lx = e[0][0] + A.lx * 2.4, ly = e[0][1] + A.ly * 1.8 - m.lid * 1.5, r = e[1] * (0.5 + 0.5 * ap) * (1 + m.pup * 0.1);
+          g.save();
+          g.beginPath(); g.arc(e[0][0], e[0][1], e[1] + 1.5, 0, TAU); g.clip();
+          g.fillStyle = rgd(g, lx, ly, 0, r, [0, rgba(mixc(gl, '#fff', 0.8), 1), 0.25, rgba(mixc(gl, '#fff', 0.35), 1), 0.65, rgba(gl, 0.95), 1, rgba(mixc(gl, '#000', 0.7), 1)]);
+          g.beginPath(); g.arc(lx, ly, r, 0, TAU); g.fill();
+          g.strokeStyle = 'rgba(0,0,0,.55)'; g.lineWidth = 1; for (let i = 0; i < 3; i++) { g.beginPath(); g.arc(lx, ly, r * (0.45 + i * 0.22), 0, TAU); g.stroke(); }
+          g.fillStyle = 'rgba(0,0,0,0.9)'; g.beginPath(); g.arc(lx, ly, r * 0.2, 0, TAU); g.fill();
+          g.fillStyle = 'rgba(255,255,255,0.5)'; g.beginPath(); g.ellipse(lx - r * 0.35, ly - r * 0.4, r * 0.18, r * 0.12, -0.5, 0, TAU); g.fill();
+          // upper lid shadow of the socket
+          g.fillStyle = lg(g, 0, e[0][1] - e[1], 0, e[0][1] + e[1], [0, 'rgba(0,0,0,0.75)', 0.5, 'rgba(0,0,0,0)', 1, 'rgba(0,0,0,0.25)']); g.fillRect(e[0][0] - e[1] - 2, e[0][1] - e[1] - 2, e[1] * 2 + 4, e[1] * 2 + 4);
+          g.restore();
+          glow(g, gl, e[0][0], e[0][1], e[1] * 3.4, 0.28 * m.glow * pulse);
+        });
+        // vents glow while speaking
+        const op = clamp(A.talk * 1.3 + m.open * 0.3, 0, 1);
+        g.save(); g.globalCompositeOperation = 'lighter';
+        for (let i = 0; i < 5; i++) {
+          const x = 192 + i * 11, h = 24 - Math.abs(i - 2) * 4, k = (0.12 + op * (0.5 + 0.5 * Math.sin(t * 14 + i * 1.9))) * m.glow;
+          g.fillStyle = rgba(gl, clamp(k, 0, 1)); g.fillRect(x - 1.4, 262 + h * 0.1, 2.8, h * 0.85);
+        }
+        g.restore();
+        glow(g, gl, 214, 278, 40, 0.12 * op);
+        glow(g, gl, 214, 422, 20, 0.2 * m.glow * pulse);
+      }
+    };
+  })();
 
   /* ======================================================================= HUMAN */
   PAINT.human = (function () {
@@ -3461,7 +4592,14 @@
   M.Gfx.Portraits = {
     RACES: RACES, MOODS: MOODS, NAMES: NAMES, light: LIGHT,
     draw: draw, canvas: canvas, drawBadge: drawBadge,
-    accent: function (race) { return PAINT[race] ? PAINT[race].accent : '#d6b36a'; },
+    accent: function (race) { const d = V2[race] || PAINT[race]; return d ? d.accent : '#d6b36a'; },
+    v2: V2, v2errors: _v2bad, converted: function () { return Object.keys(V2).filter((k) => V2[k] && typeof V2[k].build === 'function'); },
+    /* bake the lit frames of a converted race ahead of time (e.g. from an idle callback).  moods: array (default ['neutral']), size: px width the portrait will be shown at */
+    prewarm: function (race, size, o) {
+      o = o || {};
+      if (!V2[race] || _v2bad[race]) return false;
+      try { const ent = v2Entry(race, (size || 300) / W, o.variant | 0, o.color); (o.moods || ['neutral']).forEach((m) => v2Frame(ent, m)); if (o.bg !== false) v2Backdrop(ent, typeof o.bg === 'string' ? o.bg : null); return true; } catch (e) { return false; }
+    },
     clearCache: function () { _ents.clear(); _cc.clear(); _states.clear(); }
   };
 })(window.MOO);
