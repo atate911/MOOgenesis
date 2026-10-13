@@ -27,5 +27,5 @@ Plain-JSON state `S`; every change is an *order* (`Sim.Orders.apply`); the turn 
 - Item 1 (QA) partly done: headless-Chromium scripts in `tools/qa/` cover the wizard for all 10 races, save/load, 9 combat demo scenarios, GPU-off/low-tier/reduced-motion/threads=1. Still untested: diplomacy audiences, council/spy choices, bombard/landing scenes, event cards, endings, fleet-send/colonise flows, real-GPU tiers.
 - Item 3 mostly done: `Data.Config.QUIRKS.*`, combat errata 6-7, ground inbound/ceasefire fixes, tests in `tools/rules/46-verification-gaps.test.js`; open items are in the `research/*-verification.md` logs.
 - Item 4 done except planet sprites in galaxymap/side-colony/ledgers/tech (GLPlanets has no preload); `Gfx.pick()` + `tools/test-hw.html` + `tools/qa/gpu.js`. GL under SwiftShader is slow (400-1700 ms/call), so real-GPU timing is unmeasured.
-- Item 5 partly done: v2 theme is default (`?theme=v1` = old); art is graded, not rebuilt; no post-FX pass, no GL shader restyle, no theme option in Options.
+- Item 5 partly done: v2 theme is now OPT-IN (`?theme=v2`); default is v1 (indigo + brass) per user request to keep the original colour scheme recognisable; art is graded, not rebuilt; no post-FX pass, no GL shader restyle, no theme option in Options.
 - Item 6 done (tools/rules/83-polish.test.js). Item 2 (balance/AI audit) not started.

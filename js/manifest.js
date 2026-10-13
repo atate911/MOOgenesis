@@ -5,7 +5,7 @@ window.MOO_MANIFEST = {
   css: [
     'css/base.css',
     'css/kit.css',
-    'css/theme-v2.css',   // inert unless <html data-theme="v2"> (index.html sets it; ?theme=v1 = old look)
+    'css/theme-v2.css',   // inert unless <html data-theme="v2"> (index.html sets it; v1 is the default, ?theme=v2 = experimental graphite look)
   ],
   js: [
     // ---- core ----
