@@ -74,7 +74,7 @@
   // ---- fleet deployment (original: << < > >> steppers, click destination, Accept) ---------------------------------------------------------------------
   UI.Side.register('fleetDeploy', {
     render(host, ctx) {
-      const S = G.S, E = G.player(), star = ctx.params.star; this.star = star; this.rows = {}; this.sel = [0, 0, 0, 0, 0, 0]; this.dest = ctx.params.dest !== undefined ? ctx.params.dest : -1;
+      const S = G.S, E = G.player(), star = ctx.params.star; this.star = star; this.rows = {}; this.sel = (M.Sim.Fleet.at(S, star, E.id) || { ships: [0, 0, 0, 0, 0, 0] }).ships.slice(); this.dest = ctx.params.dest !== undefined ? ctx.params.dest : -1;
       const fl = M.Sim.Fleet.at(S, star, E.id);
       host.appendChild(UI.Side.title(star, S.playerId)); host.appendChild(h('h3', 'Fleet deployment'));
       if (!fl) { host.appendChild(h('p.dim', 'No ships in orbit.')); host.appendChild(UI.button('Close', () => ctx.defaultPanel())); return; }
@@ -82,7 +82,7 @@
         if (!fl.ships[i] || !E.designs[i]) continue;
         const total = fl.ships[i], step = Math.max(1, Math.floor(total / 10)), nEl = h('span.n', '0');
         const set = v => { this.sel[i] = Math.max(0, Math.min(total, v)); nEl.textContent = this.sel[i] + ' / ' + total; this.update(ctx); };
-        nEl.textContent = '0 / ' + total;
+        nEl.textContent = this.sel[i] + ' / ' + total;
         host.appendChild(h('div.sm-fleet', shipPic(E, i, 58, 42), h('div', h('div.nm', E.designs[i].name), h('div.ct', 'speed ' + M.Sim.Design.stats(S, E, i).warp + (M.Sim.Design.stats(S, E, i).tanks ? ' · extra fuel' : ''))),
           h('div.sm-step', UI.button('◀◀', () => set(0), { small: true }), UI.button('◀', () => set(this.sel[i] - step), { small: true }), nEl, UI.button('▶', () => set(this.sel[i] + step), { small: true }), UI.button('▶▶', () => set(total), { small: true }))));
       }
@@ -90,6 +90,7 @@
       host.appendChild(this.hint); host.appendChild(this.route);
       host.appendChild(h('div.sm-actions', UI.button('Cancel', () => { UI.Galaxy.pick = null; if (UI.Galaxy.map) UI.Galaxy.map.setRoutePreview(null); ctx.defaultPanel(); }), this.acc));
       UI.Galaxy.pick = id => { this.dest = id; this.update(ctx); };
+      UI.Galaxy.pendingSend = () => { if (this.dest < 0 || this.acc.disabled) return true; return this.accept(ctx, true); };   // Next turn auto-accepts the queued move
       this.update(ctx);
     },
     update(ctx) {
@@ -99,13 +100,14 @@
       this.acc.disabled = !r.ok; this.acc.classList.toggle('disabled', !r.ok);
       if (UI.Galaxy.map) UI.Galaxy.map.setRoutePreview({ from: this.star, to: this.dest, eta: r.eta, valid: r.ok, reason: r.reason });
     },
-    accept(ctx) {
+    accept(ctx, quiet) {
+      if (!this.sel.some(n => n > 0)) return true;
       const r = G.order({ t: 'fleetSend', from: this.star, to: this.dest, counts: this.sel.slice() });
-      if (!r.ok) { UI.toast(r.msg, 'bad'); return; }
+      if (!r.ok) { UI.toast(r.msg, 'bad'); return false; }
       UI.sfx('warp'); UI.Galaxy.pick = null; if (UI.Galaxy.map) UI.Galaxy.map.setRoutePreview(null);
-      ctx.defaultPanel(); UI.Galaxy.refresh();
+      ctx.defaultPanel(); UI.Galaxy.refresh(); return true;
     },
-    dispose() { UI.Galaxy.pick = null; if (UI.Galaxy.map) UI.Galaxy.map.setRoutePreview(null); },
+    dispose() { UI.Galaxy.pendingSend = null; UI.Galaxy.pick = null; if (UI.Galaxy.map) UI.Galaxy.map.setRoutePreview(null); },
   });
 
   // ---- fleets in flight / foreign fleets ---------------------------------------------------------------------------------------------------------------

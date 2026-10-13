@@ -91,6 +91,7 @@
   async function endTurn() {
     if (!G.S || G.busy) return;
     if (UI.modalOpen()) return;
+    if (UI.Galaxy.pendingSend && UI.Galaxy.pendingSend() === false) return;      // a queued fleet move is accepted automatically (an invalid one stops the turn with its message)
     if (M.Settings.get('confirmEndTurn')) { const ok = await UI.confirm('End the turn?'); if (!ok) return; }
     UI.Galaxy.busy(true, 'Year ' + Q.year(G.S) + ' …');
     const off = M.Bus.on('turn:waiting', type => UI.Screens.current && UI.Screens.current.id === 'galaxy' && !UI.modalOpen() && UI.Galaxy.busy(true, 'Year ' + Q.year(G.S) + ' … waiting on “' + type + '”'));

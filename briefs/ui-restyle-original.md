@@ -1,0 +1,11 @@
+# Brief: restyle the interface to echo the original game (modern resolution, modern rendering, NOT cartoonish)
+
+User directive: "update the interface to look a little more like the original game, but at modern resolution and with modern graphics, not so cartoon like." Keep our screen structure (already modelled on the original); change look: bevelled/inset panels, the original's colour feel, button style, label typography, slider/bar rendering, framed scene pictures — rendered crisply at any resolution (vector/CSS/canvas, no pixelation), with realistic lighting/texture in art (not flat cartoon shapes).
+
+Read first: HANDOFF.md (design guardrail), CONVENTIONS.md, research/ui-ref/A-*.md, B-*.md, C-*.md (written descriptions of the original: layouts, hex colours, frames — your primary reference), research/09-art-direction.md (rendering ideas; where it conflicts with the original's layout/feel, prefer the original), css/theme-v2.css (opt-in theme; you may retire/replace it). NO original images may be used or committed; recreate looks procedurally.
+Rules: keep everything working (run `node tools/check.js`, `node tools/rules-test.js`); verify visually in your own browser tab (tabs_create, tabs_select before screenshots, 1280×720 and 1920×1080, close tab at end); keep adaptive quality + Canvas2D fallbacks; don't touch js/sim, js/ai, js/data. Other agents work in parallel — edit ONLY your files. Finish with a ≤100-word report and add a short section to tools/handoff/restyle-<yourname>.md (done / not done).
+
+Split:
+- chrome: css/base.css, css/kit.css, css/theme-v2.css, js/ui/kit.js (+ js/ui/styleguide.js). Global tokens/palette from ref C, bevel/inset panels, buttons, sliders, bars, tables, tabs, modals, tooltips, fonts. Must land first-ish: others use tokens/classes.
+- control: js/ui/galaxy.js, side-colony.js, side-misc.js, flow.js cards, ledger-planets.js, ledger-fleets.js, overview.js, system.js, menu.js, setup.js — screens per ref A (control screen right panel, bottom bar, colony sliders, fleet panel, ledgers, title/setup).
+- scenes: js/gfx/portraits.js, scenes.js, ships.js (look: realistic lighting/materials, less cartoon), js/ui/gnn.js, tech.js, techtree.js, design.js, races.js, audience.js, council.js, combat.js, landing.js per refs B and C.
