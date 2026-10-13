@@ -93,6 +93,8 @@
     techChoice: it => (it.choices[0] ? it.choices[0].level : 0),
     council: (it, S) => (Sim.Council && Sim.Council.autoVote ? Sim.Council.autoVote(S, it.info) : 0),
   };
+  const SKIPPED = { skipped: true };
+  G.skipWait = null;
   G.endTurn = async function () {
     if (!G.S || G.busy) return null;
     G.busy = true; M.Bus.emit('turn:processing', true);
@@ -105,7 +107,10 @@
         const it = r.value, h = G.handlers[it.type] || DEFAULTS[it.type];
         let ans;
         const wd = setTimeout(() => { console.warn('[turn] still waiting on the "' + it.type + '" interrupt after 10 s', it); M.Bus.emit('turn:waiting', it.type); }, 10000);   // diagnostic: a handler that never answers is what freezes a turn
-        try { ans = h ? await h(it, S) : undefined; } catch (e) { console.error('[interrupt ' + it.type + ']', e); ans = undefined; }
+        const skipP = new Promise(res => { G.skipWait = () => { res(SKIPPED); }; });                 // the player's way out of a stuck interrupt (busy overlay "Skip" button)
+        try { ans = h ? await Promise.race([h(it, S), skipP]) : undefined; } catch (e) { console.error('[interrupt ' + it.type + ']', e); ans = undefined; }
+        if (ans === SKIPPED) { ans = undefined; console.warn('[turn] interrupt "' + it.type + '" skipped by the player'); M.Bus.emit('turn:skipped', it.type); }
+        G.skipWait = null;
         clearTimeout(wd);
         seen.push(it.type);
         r = gen.next(ans);

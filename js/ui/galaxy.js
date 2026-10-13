@@ -107,7 +107,9 @@
       UI.Side.show(p.owner === S.playerId ? 'colony' : 'star', { star: id });
     },
     message(text, kind) { if (!msgEl) return; const m = h('div.m' + (kind ? '.' + kind : ''), text); msgEl.appendChild(m); setTimeout(() => m.remove(), 7000); while (msgEl.children.length > 4) msgEl.firstChild.remove(); },
-    busy(on, text) { if (!busyEl) return; busyEl.classList.toggle('on', !!on); if (text) UI.mount(busyEl.firstChild, h('span.spin'), text); },
+    floatSkip() { if (document.getElementById('gx-float-skip')) return; const b = UI.button('Skip this step', () => { if (G.skipWait) G.skipWait(); b.remove(); if (UI.Screens.current && UI.Screens.current.id !== 'galaxy') UI.Screens.go('galaxy'); }, { primary: true }); b.id = 'gx-float-skip'; b.style.cssText = 'position:fixed;right:1rem;bottom:1rem;z-index:99999'; document.body.appendChild(b); M.Bus.once('turn:end', () => b.remove()); },
+    skipBtn(on) { if (!busyEl) return; let b = busyEl.querySelector('.skip'); if (!b) { b = h('div.skip', { style: { marginTop: '.8rem' } }, UI.button('Skip this step', () => { if (G.skipWait) G.skipWait(); UI.Galaxy.skipBtn(false); if (UI.Screens.current && UI.Screens.current.id !== 'galaxy') UI.Screens.go('galaxy'); }, { primary: true })); busyEl.firstChild.appendChild(b); } b.style.display = on ? '' : 'none'; },
+    busy(on, text) { if (!on) UI.Galaxy.skipBtn(false); if (!busyEl) return; busyEl.classList.toggle('on', !!on); if (text) { const sk = busyEl.querySelector('.skip'); UI.mount(busyEl.firstChild, h('span.spin'), text); if (sk) busyEl.firstChild.appendChild(sk); } },
     endTurn,
   };
 
@@ -129,7 +131,7 @@
     if (UI.Galaxy.pendingSend && UI.Galaxy.pendingSend() === false) return;      // a queued fleet move is accepted automatically (an invalid one stops the turn with its message)
     if (M.Settings.get('confirmEndTurn')) { const ok = await UI.confirm('End the turn?'); if (!ok) return; }
     UI.Galaxy.busy(true, 'Year ' + Q.year(G.S) + ' …');
-    const off = M.Bus.on('turn:waiting', type => UI.Screens.current && UI.Screens.current.id === 'galaxy' && !UI.modalOpen() && UI.Galaxy.busy(true, 'Year ' + Q.year(G.S) + ' … waiting on “' + type + '”'));
+    const off = M.Bus.on('turn:waiting', type => { if (!(UI.Screens.current && UI.Screens.current.id === 'galaxy' && !UI.modalOpen())) { UI.Galaxy.floatSkip(); return; } UI.Galaxy.busy(true, 'Year ' + Q.year(G.S) + ' … waiting on “' + type + '”'); UI.Galaxy.skipBtn(true); });
     try { await G.endTurn(); } finally { if (typeof off === 'function') off(); UI.Galaxy.busy(false); }
     if (UI.Screens.current && UI.Screens.current.id !== 'galaxy' && G.S && !(G.last && G.last.over)) UI.Screens.go('galaxy');
     UI.Galaxy.refresh();
