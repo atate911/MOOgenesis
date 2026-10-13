@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Portraits - photo art</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+  html, body { margin: 0; background: #05070a; color: #9aa6b2; font: 12px/1.4 monospace; }
+  #bar { padding: 6px 10px; display: flex; gap: 14px; flex-wrap: wrap; align-items: center; }
+  #bar a { color: #8fb2d6; }
+  .row { display: flex; flex-wrap: wrap; gap: 6px; padding: 4px 10px; align-items: flex-end; }
+  .c { text-align: center; }
+  canvas { display: block; box-shadow: 0 0 0 1px #1c242c; }
+  #err { color: #ff9a9a; white-space: pre-wrap; padding: 0 10px; }
+</style>
+</head>
+<body>
+<div id="bar"></div>
+<pre id="err"></pre>
+<div id="out"></div>
+<script src="../js/core/ns.js"></script>
+<script src="../js/gfx/portraits.js"></script>
+<script>
+/* Photo portraits: every race x (portrait 3:4, landscape 16:9, square, small strips, badges r=48/28/14) x moods.
+   ?races=human,mrrshan  &size=220  &anim=1 (animate talking)  &photos=0 (procedural fallback)  &mood=angry  */
+(function () {
+  'use strict';
+  const q = new URLSearchParams(location.search), P = MOO.Gfx.Portraits, $ = (id) => document.getElementById(id);
+  window.addEventListener('error', (e) => { $('err').textContent += 'ERROR ' + e.message + ' @' + e.lineno + '\n'; });
+  if (q.get('photos') === '0') P.photos = false;
+  const races = (q.get('races') || P.RACES.join(',')).split(',').filter(Boolean);
+  const size = +(q.get('size') || 200), anim = q.get('anim') === '1', mood = q.get('mood') || 'neutral';
+  const dpr = Math.min(2, window.devicePixelRatio || 1), cells = [];
+  $('bar').innerHTML = 'photo ready: <b id="rdy"></b> <a href="?anim=1">animate</a> <a href="?photos=0">procedural</a> <a href="?mood=angry">angry</a> <a href="?races=human&size=360">big</a>';
+  function cell(parent, label, w, h, fn) {
+    const d = document.createElement('div'); d.className = 'c';
+    const c = document.createElement('canvas'); c.width = Math.round(w * dpr); c.height = Math.round(h * dpr); c.style.width = w + 'px'; c.style.height = h + 'px';
+    d.appendChild(c); const l = document.createElement('div'); l.textContent = label; d.appendChild(l); parent.appendChild(d);
+    cells.push({ c: c, fn: fn, w: w, h: h });
+  }
+  function row(title) { const t = document.createElement('div'); t.style.padding = '8px 10px 0'; t.textContent = title; $('out').appendChild(t); const r = document.createElement('div'); r.className = 'row'; $('out').appendChild(r); return r; }
+  const draw = (cl, t) => { const g = cl.c.getContext('2d'); g.setTransform(dpr, 0, 0, dpr, 0, 0); g.fillStyle = '#10131a'; g.fillRect(0, 0, cl.w, cl.h); cl.fn(g, t); };
+  races.forEach((race) => {
+    const r = row(race);
+    cell(r, '3:4', size * 0.75, size, (g, t) => P.draw(g, race, 0, 0, size * 0.75, size, { t: t, mood: mood, talking: anim, key: 'tp' + race }));
+    cell(r, '16:9', size * 1.6, size * 0.9, (g, t) => P.draw(g, race, 0, 0, size * 1.6, size * 0.9, { t: t, mood: mood, talking: anim, key: 'tpl' + race }));
+    cell(r, '1:1 bg=false', size * 0.8, size * 0.8, (g, t) => P.draw(g, race, 0, 0, size * 0.8, size * 0.8, { t: t, bg: false, key: 'tps' + race }));
+    cell(r, '60x75', 60, 75, (g, t) => P.draw(g, race, 0, 0, 60, 75, { t: 0, bg: false }));
+    cell(r, '28x35', 28, 35, (g, t) => P.draw(g, race, 0, 0, 28, 35, { t: 0, bg: false }));
+    [48, 28, 14].forEach((rr) => cell(r, 'badge ' + rr, rr * 2 + 4, rr * 2 + 4, (g, t) => P.drawBadge(g, race, rr + 2, rr + 2, rr, { t: 0, color: '#c33' })));
+    cell(r, 'canvas()', 90, 112, (g) => g.drawImage(P.canvas(race, 90, 112, { mood: mood }), 0, 0));
+  });
+  if (races.length === 1 || q.get('moods') === '1') {
+    const race = races[0], r = row(race + ' moods');
+    P.MOODS.forEach((m) => cell(r, m, size * 0.75, size, (g, t) => P.draw(g, race, 0, 0, size * 0.75, size, { t: t, mood: m, talking: anim, key: 'tm' + m })));
+  }
+  function frame() {
+    const t = performance.now() / 1000;
+    cells.forEach((cl) => draw(cl, anim ? t : 3));
+    $('rdy').textContent = P.RACES.filter((r) => P.photo.ready(r)).length + '/10  cache ' + (P.photo.cacheBytes() / 1048576).toFixed(1) + ' MB';
+    if (anim || P.RACES.some((r) => !P.photo.ready(r))) requestAnimationFrame(frame); else setTimeout(frame, 1000);
+  }
+  frame();
+})();
+</script>
+</body>
+</html>

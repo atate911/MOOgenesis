@@ -274,7 +274,7 @@
       try {
         const c = doc.createElement('canvas'); c.width = 20; c.height = 25;
         const g = c.getContext('2d');
-        P.draw(g, id, 0, 0, 20, 25, { t: 0, bg: false });
+        (P.procedural || P).draw(g, id, 0, 0, 20, 25, { t: 0, bg: false });
         const d = g.getImageData(0, 0, 20, 25).data;
         for (let i = 3; i < d.length; i += 4) if (d[i] > 8) { ok = true; break; }
       } catch (e) { ok = false; }
@@ -344,6 +344,8 @@
     const wrap = h('div.ctl-badge', { style: { width: sizeRem + 'rem', height: sizeRem + 'rem' } }, cv);
     const ctx = cv.getContext('2d'); ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     drawBadge(ctx, id, px / 2, px / 2, px / 2 - 1, hex);
+    const PP = M.Gfx && M.Gfx.Portraits;
+    if (PP && PP.photo && !PP.photo.ready(id)) PP.photo.whenReady(id, () => { try { ctx.clearRect(0, 0, px, px); drawBadge(ctx, id, px / 2, px / 2, px / 2 - 1, hex); } catch (e) { /* ignore */ } });
     return wrap;
   }
 

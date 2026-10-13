@@ -54,7 +54,8 @@
     c.width = c.height = S; c.style.width = c.style.height = px + 'px';
     const g = c.getContext('2d'), P = M.Gfx && M.Gfx.Portraits;
     let ok = false;
-    try { if (P && P.drawBadge && (!P.RACES || P.RACES.indexOf(race) >= 0)) { P.drawBadge(g, race, S / 2, S / 2, S / 2 - 1, { t: 0, color: hex, bg: true, _snap: true, key: 'cou-badge|' + race + '|' + hex }); ok = true; } } catch (e) { ok = false; }
+    const paint = () => { P.drawBadge(g, race, S / 2, S / 2, S / 2 - 1, { t: 0, color: hex, bg: true, _snap: true, key: 'cou-badge|' + race + '|' + hex }); };
+    try { if (P && P.drawBadge && (!P.RACES || P.RACES.indexOf(race) >= 0)) { paint(); ok = true; if (P.photo && !P.photo.ready(race)) P.photo.whenReady(race, () => { try { g.clearRect(0, 0, S, S); paint(); } catch (e) { /* ignore */ } }); } } catch (e) { ok = false; }
     if (!ok) {
       g.fillStyle = hex || '#d6b36a'; g.beginPath(); g.arc(S / 2, S / 2, S / 2 - 1, 0, TAU); g.fill();
       g.fillStyle = 'rgba(6,9,25,.85)'; g.font = '700 ' + round(S * 0.5) + 'px sans-serif'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText(String(race || '?').charAt(0).toUpperCase(), S / 2, S / 2 + 1);

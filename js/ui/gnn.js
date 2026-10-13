@@ -129,7 +129,7 @@
     let ok = false;
     try {
       if (P.RACES && P.RACES.indexOf(race) < 0) throw new Error('unknown race');
-      const c = typeof P.canvas === 'function' ? P.canvas(race, 12, 15, { t: 0, bg: false }) : null;
+      const c = typeof P.canvas === 'function' ? (P.procedural || P).canvas(race, 12, 15, { t: 0, bg: false }) : null;
       if (c) {
         const d = c.getContext('2d').getImageData(0, 0, c.width, c.height).data;
         for (let i = 3; i < d.length; i += 4) if (d[i] > 8) { ok = true; break; }

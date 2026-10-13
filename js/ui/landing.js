@@ -61,7 +61,8 @@
   }
   function badge(race, color, px) {
     const c = h('canvas', { width: px * 2, height: px * 2 }), P = gfx('Portraits');
-    try { if (P && P.drawBadge) P.drawBadge(c.getContext('2d'), race, px, px, px - 2, { color, t: 0, _snap: true, key: '@ld-badge|' + race + color }); } catch (e) { warnOnce('badge', e); }
+    const paint = () => P.drawBadge(c.getContext('2d'), race, px, px, px - 2, { color, t: 0, _snap: true, key: '@ld-badge|' + race + color });
+    try { if (P && P.drawBadge) { paint(); if (P.photo && !P.photo.ready(race)) P.photo.whenReady(race, () => { try { c.getContext('2d').clearRect(0, 0, c.width, c.height); paint(); } catch (e) { /* ignore */ } }); } } catch (e) { warnOnce('badge', e); }
     return h('div.ld-badge', c);
   }
 
