@@ -247,3 +247,36 @@
 }
 :root[data-theme="v2"] .v2-ticks { height: 6px; background: repeating-linear-gradient(90deg, var(--line-2) 0 1px, transparent 1px 8px); }
 @media (prefers-reduced-motion: reduce) { :root[data-theme="v2"] #app::after { background: radial-gradient(ellipse at 50% 50%, transparent 58%, rgba(0, 0, 0, .38) 100%); } }
+
+/* ---- 14. legibility pass (D-restyle-comparison fixes): contrast >= 4.5:1, min sizes, gold primary, one warm selection colour ------------ */
+:root[data-theme="v2"] {
+  --ink-2: #a3afbc; --ink-3: #8794a2;                 /* secondary text was 3.3:1 on panels; now >= 4.5:1 */
+  --sel-1: #9a6218; --sel-2: #6d430d; --sel-ink: #fff4d8; --sel-line: #ffc860;
+  --bz-dim: #d2bc9a;                                  /* secondary text on bronze/brown tool screens (6.5:1 on #3a2c21) */
+  --gold-1: #ffd070; --gold-2: #c8741a; --gold-3: #6a3208;
+}
+/* min sizes: no tiny all-caps labels */
+:root[data-theme="v2"] .tbl th { font-size: .8rem; letter-spacing: .08em; }
+:root[data-theme="v2"] .btn.small { font-size: .8rem; }
+:root[data-theme="v2"] .chip { font-size: .78rem; }
+:root[data-theme="v2"] .btn .kbd { font-size: .74rem; color: var(--ink-1); }
+:root[data-theme="v2"] .bar > span { font-size: .76rem; }
+:root[data-theme="v2"] .v2-label { font-size: .8rem; letter-spacing: .1em; }
+:root[data-theme="v2"] .slider .s-label { font-size: .86rem; letter-spacing: .06em; }
+:root[data-theme="v2"] .panel-h .sub { font-size: .86rem; }
+:root[data-theme="v2"] .tabs button { font-size: .84rem; color: var(--ink-1); }
+:root[data-theme="v2"] .tabs button.active { color: var(--title); }
+:root[data-theme="v2"] .sec-h { font-size: .88rem; }
+/* primary action: a bright gold/amber slab that is clearly the call-to-action everywhere (beats per-screen button overrides) */
+:root:root:root[data-theme="v2"] .btn.primary { color: #25100a; text-shadow: 0 1px 0 rgba(255, 230, 170, .6); background: linear-gradient(135deg, #fff0c0, #d98a2a 35%, #5a2a06); box-shadow: 0 0 0 1px #000, 0 0 10px rgba(255, 190, 80, .28); }
+:root:root:root[data-theme="v2"] .btn.primary::before { background: linear-gradient(180deg, var(--gold-1), var(--gold-2)); box-shadow: inset 0 1px 0 rgba(255, 245, 210, .75), inset 0 -1px 0 rgba(0, 0, 0, .45), inset 0 .9em .9em -.7em rgba(255, 255, 255, .3); }
+:root:root:root[data-theme="v2"] .btn.primary:hover::before { background: linear-gradient(180deg, #ffe08c, #dc8620); }
+:root:root:root[data-theme="v2"] .btn.primary:active::before { background: linear-gradient(180deg, #b0601a, #d88a2a); box-shadow: inset 1px 2px 3px rgba(0, 0, 0, .55); }
+:root:root:root[data-theme="v2"] .btn.primary .kbd { color: #3a1a06; background: rgba(0, 0, 0, .14); box-shadow: none; }
+:root:root:root[data-theme="v2"] .btn.primary:disabled, :root:root:root[data-theme="v2"] .btn.primary.disabled { opacity: .6; }
+/* one selection colour: warm gold/orange (rows, tabs, active plates) */
+:root:root:root[data-theme="v2"] .tbl tbody tr.sel { background: linear-gradient(180deg, var(--sel-1), var(--sel-2)); color: var(--sel-ink); box-shadow: inset 3px 0 0 var(--sel-line), inset 0 1px 0 rgba(255, 235, 190, .3); }
+:root:root:root[data-theme="v2"] .tbl tbody tr.sel td { color: var(--sel-ink); }
+:root:root:root[data-theme="v2"] .tbl tbody tr.sel :is(.dim, .t-ember, .t-gold, .lp-warn, .gr, .nm, .idx) { color: #ffe3a0; }
+:root:root:root[data-theme="v2"] .tabs button.active { color: #2a1202; background: linear-gradient(180deg, var(--gold-1), var(--gold-2)); box-shadow: inset 1px 1px 0 rgba(255, 245, 210, .6), inset -1px 0 0 #000; text-shadow: 0 1px 0 rgba(255, 230, 170, .5); }
+:root:root:root[data-theme="v2"] .btn.active::before { background: linear-gradient(180deg, var(--sel-1), var(--sel-2)); }

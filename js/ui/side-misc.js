@@ -101,17 +101,27 @@
       for (let i = 0; i < 6; i++) {
         if (!fl.ships[i] || !E.designs[i]) continue;
         const total = fl.ships[i], step = Math.max(1, Math.floor(total / 10)), nEl = h('span.n', '0');
-        const set = v => { this.sel[i] = Math.max(0, Math.min(total, v)); nEl.textContent = this.sel[i] + ' / ' + total; this.update(ctx); };
+        const set = v => { this.sel[i] = Math.max(0, Math.min(total, v)); nEl.textContent = this.sel[i] + ' / ' + total; this.update(ctx); this.reach(); };
         nEl.textContent = this.sel[i] + ' / ' + total;
         host.appendChild(h('div.sm-fleet', shipPic(E, i, 58, 42), h('div', h('div.nm', E.designs[i].name), h('div.ct', 'speed ' + M.Sim.Design.stats(S, E, i).warp + (M.Sim.Design.stats(S, E, i).tanks ? ' · extra fuel' : ''))),
           h('div.sm-step', UI.button('◀◀', () => set(0), { small: true }), UI.button('◀', () => set(this.sel[i] - step), { small: true }), nEl, UI.button('▶', () => set(this.sel[i] + step), { small: true }), UI.button('▶▶', () => set(total), { small: true }))));
       }
       this.hint = h('div.sc-pickhint', 'Choose destination and number to send.'); this.route = h('div'); this.acc = UI.button('Accept', () => this.accept(ctx), { primary: true, disabled: true });
       host.appendChild(this.hint); host.appendChild(this.route);
-      host.appendChild(h('div.sm-actions', UI.button('Cancel', () => { UI.Galaxy.pick = null; if (UI.Galaxy.map) UI.Galaxy.map.setRoutePreview(null); ctx.defaultPanel(); }), this.acc));
+      host.appendChild(h('div.sm-actions', UI.button('Cancel', () => { UI.Galaxy.pick = null; if (UI.Galaxy.map) { UI.Galaxy.map.setRoutePreview(null); UI.Galaxy.map.setReach(null); } ctx.defaultPanel(); }), this.acc));
       UI.Galaxy.pick = id => { this.dest = id; this.update(ctx); };
+      this.reach();
       UI.Galaxy.pendingSend = () => { if (this.dest < 0 || this.acc.disabled) return true; return this.accept(ctx, true); };   // Next turn auto-accepts the queued move
       this.update(ctx);
+    },
+    // dim every star the selected ships cannot reach (fuel range; Reserve Fuel Tanks only count when every selected design has them, as Q.route does)
+    reach() {
+      const map = UI.Galaxy.map; if (!map || !map.setReach) return;
+      const S = G.S, E = G.player(), F = M.Sim.Fleet; let tanks = true, any = 0;
+      for (let i = 0; i < 6; i++) { if (!(this.sel[i] > 0)) continue; any += this.sel[i]; if (!M.Sim.Design.stats(S, E, i).tanks) tanks = false; }
+      if (!any) tanks = false;
+      const ok = []; for (let i = 0; i < S.stars.length; i++) if (i === this.star || (any && F.canReach(S, E, i, tanks))) ok.push(i);
+      map.setReach(ok);
     },
     update(ctx) {
       const S = G.S, E = G.player(); if (this.dest < 0) { this.acc.disabled = true; return; }
@@ -124,10 +134,10 @@
       if (!this.sel.some(n => n > 0)) return true;
       const r = G.order({ t: 'fleetSend', from: this.star, to: this.dest, counts: this.sel.slice() });
       if (!r.ok) { UI.toast(r.msg, 'bad'); return false; }
-      UI.sfx('warp'); UI.Galaxy.pick = null; if (UI.Galaxy.map) UI.Galaxy.map.setRoutePreview(null);
+      UI.sfx('warp'); UI.Galaxy.pick = null; if (UI.Galaxy.map) { UI.Galaxy.map.setRoutePreview(null); UI.Galaxy.map.setReach(null); }
       ctx.defaultPanel(); UI.Galaxy.refresh(); return true;
     },
-    dispose() { UI.Galaxy.pendingSend = null; UI.Galaxy.pick = null; if (UI.Galaxy.map) UI.Galaxy.map.setRoutePreview(null); },
+    dispose() { UI.Galaxy.pendingSend = null; UI.Galaxy.pick = null; if (UI.Galaxy.map) { UI.Galaxy.map.setRoutePreview(null); UI.Galaxy.map.setReach(null); } },
   });
 
   // ---- fleets in flight / foreign fleets ---------------------------------------------------------------------------------------------------------------

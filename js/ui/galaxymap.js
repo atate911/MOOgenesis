@@ -6,6 +6,7 @@
 //   map.select(starId|null) · selectFleet(id|null) · getSelection()             API-driven changes do NOT emit events unless {emit:true}; {center:true} also flies there
 //   map.centerOn(starId|{x,y}, {zoom, animate}) · fit() · home()                smooth fly-to camera. zoom is RELATIVE to the fit-all view (1 = whole galaxy, 4 = four times closer)
 //   map.setRoutePreview({from,to,eta,valid,reason}|null) · beginRoute(fleetId) · endRoute()    route mode: left-click a star -> 'moveOrder'
+//   map.setReach(ids|Set|fn|null) dims stars outside the set (fleet-pick range) · setPlanetIcons(bool)/getPlanetIcons()   colonisation glyphs beside explored free stars (legend + K key)
 //   map.highlightStars(ids, {color}) · setRanges({stars:[ids], radius (parsecs), color}|null)  pulsing target marks / dashed range rings
 //   map.setFog(bool) · getFog() · getCamera() · worldToScreen · screenToWorld · starAt(px,py) · resize() · destroy() · on(evt, fn) -> off() · off(evt, fn)
 //   Events: 'selectStar'(id) 'selectFleet'(id|null) 'hoverStar'(id|null) 'hoverFleet'(id|null) 'moveOrder'({fleetId,toStar}) 'routeCancel'(fleetId)
@@ -503,6 +504,8 @@
     .gmap-legend .gl-sw.hollow { background:transparent; box-shadow:none; border:1.5px solid var(--c); }
     .gmap-legend .gl-txt { min-width:0; } .gmap-legend .gl-sub { display:block; color:var(--mist); font-size:.72rem; }
     .gmap-legend .gl-n { margin-left:auto; color:var(--mist); font-variant-numeric:tabular-nums; }
+    .gmap-legend .gl-gl { flex:none; width:1rem; height:1rem; display:grid; place-items:center; } .gmap-legend .gl-gl svg { width:100%; height:100%; }
+    .gmap-legend .gl-tog { margin-top:.2rem; width:100%; padding:.18rem .4rem; font:400 .8rem var(--font-ui); color:var(--brass-hi); background:rgba(0,0,0,.3); border:1px solid rgba(214,179,106,.4); cursor:pointer; } .gmap-legend .gl-tog:hover { background:rgba(214,179,106,.14); }
     .gmap-legend .gl-sep { height:1px; margin:.35rem 0; background:linear-gradient(90deg,transparent,rgba(214,179,106,.35),transparent); }
     .gmap-tip { --ch:.35rem; position:absolute; z-index:6; left:0; top:0; display:none; max-width:21rem; min-width:9rem; padding:.45rem .75rem .55rem; font-size:.88rem; line-height:1.38; pointer-events:none;
       color:var(--ivory); background:linear-gradient(135deg,var(--brass),var(--brass-lo)); isolation:isolate; }
@@ -543,7 +546,8 @@
       svgBtn('<path d="M12 5v14M5 12h14"/>', 'Zoom in <b>+</b>', () => zoomStep(1.45)),
       svgBtn('<path d="M5 12h14"/>', 'Zoom out <b>−</b>', () => zoomStep(1 / 1.45)),
       svgBtn('<path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/>', 'Show the whole galaxy', () => api.fit()),
-      svgBtn('<path d="M12 3l9 9-9 9-9-9z"/><circle cx="12" cy="12" r="2.2"/>', 'Centre on your capital <b>Home</b>', () => api.home()));
+      svgBtn('<path d="M12 3l9 9-9 9-9-9z"/><circle cx="12" cy="12" r="2.2"/>', 'Centre on your capital <b>Home</b>', () => api.home()),
+      svgBtn('<circle cx="7" cy="7" r="2.6"/><path d="M13 7h8M13 17h8M4.4 14.4l5 5M9.4 14.4l-5 5"/>', 'Map key and planet icons <b>K</b>', () => api.showLegend(!legendShown())));
     const root = h('div.gmap', { tabindex: 0, role: 'application', 'aria-label': 'Galaxy map' }, canvas, miniEl, ctrlEl, legendEl, hintEl, tipEl);
     if (opts.controls === false) ctrlEl.style.display = 'none';
     container.appendChild(root);
@@ -552,7 +556,9 @@
     let S = null, me = null, destroyed = false, pcU = PC_DEFAULT, gw = 100, gh = 100, galaxyKey = '';
     let W = 0, H = 0, dpr = 1, ctx = null, uk = 1, sizeDirty = true, accDt = 0, clock = 0, lastFrameT = 0;
     let mode = 'normal', prevMode = 'normal', modeT = 1, wCol = 0, wEnv = 0, wMin = 0;
-    let fog = opts.fog !== false;
+    let fog = opts.fog !== false, reachSet = null, reachAnim = false;
+    const habSetting = () => !(M.Settings && M.Settings.get('mapIcons') === false);
+    let habIcons = opts.planetIcons !== undefined ? !!opts.planetIcons : habSetting();
     const cam = { x: 0, y: 0, z: 1 }, tgt = { x: 0, y: 0, z: 1 }, vel = { x: 0, y: 0 };
     let camSet = false, anchor = null, flight = null, fitZ = 1, minZ = 0.4, maxZ = 14, pendingView = null, pendingCmd = null, lastEmit = { x: NaN, y: NaN, z: NaN };
     let selStar = null, selFleet = null, hoverStar = null, hoverFleet = null, hoverGrp = null, hoverNeb = -1, routeFleet = null, routePrev = null, rangesSpec = null, hiSpec = null;
@@ -578,7 +584,7 @@
     function newSD(id) {
       const r = rng32(hashInt(id * 7919 + 13));
       return { id, st: null, pl: null, x: 0, y: 0, vis: 0, known: false, live: false, stale: false, owner: -1, mine: false, capital: false, kind: 'unknown', vkind: 'unknown', orion: false, guard: false, env: -1, min: -1, nebula: false, name: '', pri: 0,
-        art: false, pop: 0, maxPop: 0, ph: r() * TAU, ph2: r() * TAU, fr: 0.8 + r() * 1.2, ang: r() * TAU,
+        art: false, pop: 0, maxPop: 0, hab: 0, rk: 1, rkT: 1, ph: r() * TAU, ph2: r() * TAU, fr: 0.8 + r() * 1.2, ang: r() * TAU,
         sx: 0, sy: 0, r: 3, on: false, glowA: 1, coreA: 1, lblA: 0, lblSlot: 0, lblX: 0, lblY: 0, pipY: 0 };
     }
     function readGalaxy() {
@@ -588,6 +594,13 @@
       pcU = (g && g.pc) || PC_DEFAULT;
       const key = Math.round(gw) + 'x' + Math.round(gh) + ':' + ((S.stars || []).length);
       if (key !== galaxyKey) { galaxyKey = key; pendingView = opts.initialView; dirty.neb = true; amb.key = ''; }
+    }
+    // colonisation glyph class: 0 none | 1 a colony ship can settle it now | 2 needs a special colony base | 3 no planet (asteroids / empty)
+    function habKind(sd, pl, st) {
+      if (!sd.known || !pl || sd.owner >= 0 || pl.owner >= 0 || sd.orion) return 0;
+      if (pl.type === 'none' || !(pl.typeIdx > 0)) return 3;
+      const thr = me && me.race === 'silicoid' ? 1 : ((me && me.mods && me.mods.colonyFor) || 7);
+      return pl.typeIdx >= thr ? 1 : 2;
     }
     function derive() {
       const stars = S.stars || [], planets = S.planets || [], emps = S.empires || [], pid = pidOf();
@@ -612,6 +625,7 @@
         sd.env = sd.known && pl ? (opts.envOf ? opts.envOf(pl, st) : envClassOf(pl)) : -1;
         sd.min = sd.known && pl ? mineralClassOf(pl) : -1;
         sd.art = sd.known && !!pl && pl.special === 'artifacts';
+        sd.hab = habKind(sd, pl, st); if (reachSet !== null) { sd.rkT = (typeof reachSet === 'function' ? reachSet(sd.id) : reachSet.has(sd.id)) ? 1 : 0.2; reachAnim = true; }
         sd.nebula = !!(st.inNebula || st.nebula);
         sd.pop = vis === 2 ? (pl ? pl.pop || 0 : 0) : (seen ? seen.pop || 0 : 0); sd.maxPop = sd.known && pl ? pl.maxPop || 0 : 0;
         sd.name = st.name || ('Star ' + st.id); if (sd.lblName !== sd.name) { sd.lbl = null; sd.lblName = sd.name; }
@@ -894,6 +908,7 @@
       else if (k === '-' || k === '_' || k === 'Subtract') zoomStep(1 / 1.4);
       else if (k === 'Home') api.home();
       else if (k === 'End') api.fit();
+      else if (k === 'k' || k === 'K') api.showLegend(!legendShown());
       else if (k === 'Escape') {
         if (routeFleet !== null) { const fid = routeFleet; setRouteMode(null); emit('routeCancel', fid); }
         else if (selFleet !== null) setSelFleet(null, true);
@@ -1197,6 +1212,7 @@
           if (wMin > 0) keep = Math.min(keep, lerp(1, 0.4, wMin));
           a *= keep;
         }
+        a *= s.rk;
         const hot = s.id === selStar || s.id === hoverStar;
         const tws = twk ? 1 + 0.08 * Math.sin(t * kd.tw * 2.2 + s.ph) + 0.04 * Math.sin(t * 5.3 + s.ph2) : 1;
         const gk = (Q.glow < 0.6 ? 0.75 : 1) * (hot ? 1.12 : 1);
@@ -1217,13 +1233,13 @@
         const kd = KINDS[s.vkind] || KINDS.unknown;
         if (kd.bh) {
           const bs = s.r * 7.2, spb = spaceStar('blackhole', bs, false);
-          ctx.globalAlpha = s.known ? 1 : 0.85;
+          ctx.globalAlpha = (s.known ? 1 : 0.85) * s.rk;
           if (spb) ctx.drawImage(spb, s.sx - bs / 2, s.sy - bs / 2, bs, bs);
           else ctx.drawImage(bhSprite(), s.sx - bs / 2, s.sy - bs / 2, bs, bs);
           continue;
         }
         if (s.useSp) continue;
-        let a = s.live ? 1 : s.known ? 0.92 : 0.8;
+        let a = (s.live ? 1 : s.known ? 0.92 : 0.8) * s.rk;
         if (wCol > 0 && s.owner < 0) a *= lerp(1, 0.5, wCol);
         ctx.globalAlpha = a;
         const rr = s.r * (s.id === selStar ? 1.08 : 1), cs = coreSprite(s.vkind, rr * 2 * dpr);
@@ -1235,12 +1251,13 @@
         const s = SD[i]; if (!s.on) continue;
         const kd = KINDS[s.vkind] || KINDS.unknown;
         let keep = 1; if (wCol > 0 && s.owner < 0) keep = lerp(1, 0.2, wCol); if (wEnv > 0 || wMin > 0) keep = Math.min(keep, lerp(1, 0.3, Math.max(wEnv, wMin)));
+        keep *= s.rk;
         if (!s.known) {                                              // uncharted: a small cold sparkle so it reads as "a star I have not visited"
           if (!Q.spikes || s.r < 2.2) continue;
           const sz = s.r * 7.5, tws = twk ? 0.75 + 0.25 * Math.sin(t * 1.3 + s.ph) : 1; ctx.globalAlpha = 0.3 * tws * keep; ctx.drawImage(spikeSprite('unknown'), s.sx - sz / 2, s.sy - sz / 2, sz, sz); continue;
         }
         if (kd.bh) {
-          if (!SPR.spaceBad && !(M.Gfx && M.Gfx.pick('space') && M.Gfx.pick('space').starSprite) && Q.glow >= 0.75) { const bs = s.r * 7.2; ctx.save(); ctx.translate(s.sx, s.sy); ctx.scale(1, 0.34); ctx.rotate(t * 0.5 + s.ph); ctx.globalAlpha = 0.9; ctx.drawImage(bhSwirlSprite(), -bs * 0.55, -bs * 0.55, bs * 1.1, bs * 1.1); ctx.restore(); }
+          if (!SPR.spaceBad && !(M.Gfx && M.Gfx.pick('space') && M.Gfx.pick('space').starSprite) && Q.glow >= 0.75) { const bs = s.r * 7.2; ctx.save(); ctx.translate(s.sx, s.sy); ctx.scale(1, 0.34); ctx.rotate(t * 0.5 + s.ph); ctx.globalAlpha = 0.9 * s.rk; ctx.drawImage(bhSwirlSprite(), -bs * 0.55, -bs * 0.55, bs * 1.1, bs * 1.1); ctx.restore(); }
           continue;
         }
         const tws = twk ? 0.8 + 0.2 * Math.sin(t * 1.7 * kd.tw + s.ph) : 1;
@@ -1261,6 +1278,7 @@
           const s = SD[i]; if (!s.on || !s.known || s.r < 10) continue;
           const kd = KINDS[s.vkind]; if (!kd || kd.bh || s.sx < -60 || s.sx > W + 60 || s.sy < -60 || s.sy > H + 60) continue;
           let keep = 1; if (wCol > 0 && s.owner < 0) keep = lerp(1, 0.45, wCol); if (wEnv > 0 || wMin > 0) keep = Math.min(keep, lerp(1, 0.45, Math.max(wEnv, wMin)));
+          keep *= s.rk;
           ctx.globalAlpha = keep * sstep(250, 300, znv);
           try { Sp.drawStarSurface(ctx, s.vkind, s.sx, s.sy, Math.round(s.r * 0.78 / 2) * 2, t, { dpr: dpr }); } catch (e) { SPR.surfBad = true; console.warn('[GalaxyMap] Space.drawStarSurface failed', e); }
         }
@@ -1271,6 +1289,7 @@
       for (let i = 0; i < n; i++) {
         const s = SD[i]; if (!s.on) continue;
         const x = s.sx, y = s.sy, r = s.r;
+        ctx.globalAlpha = s.rk;
         // unexplored: a small plotted-point ring (chart "pin") so it never reads as background dust; a dotted outer ring when there is room
         if (!s.known && ovAny < 0.5) {
           ctx.beginPath(); ctx.arc(x, y, Math.max(3.4, r * 1.55) + 0.5, 0, TAU); ctx.lineWidth = 1; ctx.strokeStyle = 'rgba(150,172,236,' + (0.5 * (1 - ovAny)) + ')'; ctx.stroke();
@@ -1302,13 +1321,33 @@
         }
         // overlay badges
         if (wEnv > 0.01 || wMin > 0.01) drawBadge(s, t, znv);
+        if (s.hab && habOn(znv)) { ctx.globalAlpha = s.rk * (1 - Math.min(1, ovAny * 2)); drawHab(s, znv); }
+        ctx.globalAlpha = 1;
       }
       ctx.globalAlpha = 1;
+    }
+    // ---- colonisation glyphs: circle = settle now, triangle = needs a special colony base, hollow square = no planet (shape + lightness differ, so they read without colour)
+    const HAB_COL = ['', '#5cc8ff', '#ffa534', '#a9b4e0'];
+    const habOn = znv => habIcons && znv >= 34 && !(wEnv > 0.5 || wMin > 0.5);
+    function habPos(s, znv) { const rad = clamp(3.6 + znv * 0.014, 4.2, 7.4) * uk, rr = s.r * 1.6 + 4; return { x: s.sx - rr * 0.78 - rad * 0.6, y: s.sy + rr * 0.78 + rad * 0.6, r: rad }; }
+    function pathHab(g, kind, x, y, r) {
+      g.beginPath();
+      if (kind === 1) g.arc(x, y, r * 0.92, 0, TAU);
+      else if (kind === 2) { g.moveTo(x, y - r * 1.05); g.lineTo(x + r * 1.0, y + r * 0.8); g.lineTo(x - r * 1.0, y + r * 0.8); g.closePath(); }
+      else g.rect(x - r * 0.78, y - r * 0.78, r * 1.56, r * 1.56);
+    }
+    function drawHab(s, znv) {
+      const p = habPos(s, znv), k = s.hab, col = HAB_COL[k], lite = Q.glow < 0.75;
+      pathHab(ctx, k, p.x, p.y, p.r);
+      if (k === 3) { ctx.lineWidth = 1.3; ctx.strokeStyle = col; ctx.setLineDash([2, 1.5]); ctx.stroke(); ctx.setLineDash([]); return; }
+      ctx.fillStyle = col; ctx.fill();
+      if (!lite) { ctx.lineWidth = 1; ctx.strokeStyle = 'rgba(4,6,24,0.9)'; ctx.stroke(); }
+      if (k === 1 && !lite && p.r >= 4) { ctx.beginPath(); ctx.arc(p.x, p.y, p.r * 0.3, 0, TAU); ctx.fillStyle = 'rgba(4,6,24,0.75)'; ctx.fill(); }
     }
     function drawBadge(s, t, znv) {
       const x = s.sx, y = s.sy, r = s.r, rr = r * 1.8 + 3.5, pl = s.pl;
       for (let pass = 0; pass < 2; pass++) {
-        const w = pass === 0 ? wEnv : wMin; if (w < 0.01) continue;
+        const w = (pass === 0 ? wEnv : wMin) * s.rk; if (w < 0.01) continue;
         let col, known = s.known && pl, none = false, extra = 0, letter = '';
         if (known) {
           if (pass === 0) { const c = ENV[clamp(s.env, 0, ENV.length - 1)]; col = hex(c.col); none = s.env === 0; extra = s.env === 6 ? 1 : 0; letter = TYPE_LETTER[pl.type] || ''; }
@@ -1360,7 +1399,8 @@
           for (let k = 0; k < nr; k++) { const a = rnd() * TAU + (Q.reduce ? 0 : t * 0.03), rj = ro * (1.2 + rnd() * 0.12); ctx.fillRect(s.sx + Math.cos(a) * rj - 0.7, s.sy + Math.sin(a) * rj * 0.7 - 0.7, 1.4 + rnd() * 1.3, 1.4 + rnd() * 1.3); }
         }
         const owned = pl.owner >= 0 && s.owner >= 0, la = Math.atan2(s.sy - py, s.sx - px), im = planetImg(pl.type, pr * (2.5), owned, la, pl.id), sz = im.ext ? pr * 2.5 : pr * 2;
-        ctx.globalAlpha = fade; ctx.drawImage(im.c, px - sz / 2, py - sz / 2, sz, sz);
+        ctx.globalAlpha = fade * s.rk; ctx.drawImage(im.c, px - sz / 2, py - sz / 2, sz, sz);
+        ctx.globalAlpha = fade * s.rk;
         if (owned) { ctx.beginPath(); ctx.arc(px, py, pr + 2.2, 0, TAU); ctx.lineWidth = 1.4; ctx.strokeStyle = rgba(empCol(pl.owner), 0.95); ctx.stroke(); }
         if (znv > 260 && owned) { const tx = Math.round(s.pop) + '/' + (s.maxPop || '?'), ls = labelSprite(tx, Math.round(10 * uk), toneFor('ivory'), dpr, th.fontUi); ctx.globalAlpha = fade * 0.9; ctx.drawImage(ls.c, px - ls.w / 2, py + pr + 3, ls.w, ls.h); }
       }
@@ -1373,6 +1413,7 @@
       const znv = zn(), lm = (M.Settings && M.Settings.get('mapLabels')) || 'auto', px = clamp(Math.round((10.5 + znv * 0.016) * uk), 10, 17);
       const lr = lblRects; lr.length = 0;
       for (let i = 0; i < SD.length; i++) { const s = SD[i]; if (!s.on) continue; const rr = s.r * 2 + 3; lr.push(s.sx - rr, s.sy - rr, s.sx + rr, s.sy + rr); }
+      if (habIcons && habOn(znv)) for (let i = 0; i < SD.length; i++) { const s = SD[i]; if (s.on && s.hab) { const g = habPos(s, znv); lr.push(g.x - g.r - 1, g.y - g.r - 1, g.x + g.r + 1, g.y + g.r + 1); } }
       // keep the ranges/flags area of owned stars free too
       for (let i = 0; i < SD.length; i++) { const s = SD[i]; if (s.on && s.owner >= 0) { const rr = s.r * 1.95 + 5; lr.push(s.sx + rr * 0.5, s.sy - rr * 2, s.sx + rr * 2.2, s.sy - rr * 0.3); } }
       const own = lr.length;
@@ -1405,6 +1446,7 @@
         } else if (want) s.lblA = Math.max(0, s.lblA - dt * 7);
         if (s.lblA > 0.01) {
           let a = s.lblA; if (s.vis === 1) a *= 0.88; if (wCol > 0 && s.owner < 0) a *= lerp(1, 0.55, wCol);
+          if (s.rk < 1) a *= hot ? Math.max(s.rk, 0.85) : s.rk * 0.7;
           ctx.globalAlpha = a; ctx.drawImage(e.c, Math.round(s.lblX), Math.round(s.lblY), e.w, e.h);
         }
       }
@@ -1617,11 +1659,19 @@
 
     // ================================================================== legend (Map Key), tooltips
     let legendForce = null;
+    const legendShown = () => !legendEl.classList.contains('off');
     function buildLegend() {
       dirty.legend = false;
       const emps = (S && S.empires) || [], pid = pidOf();
       const row = (cls, col, text, sub, n) => h('div.gl-row' + (n === 0 ? '.dim' : ''), h('i.gl-sw' + cls, { style: { '--c': col } }), h('span.gl-txt', text, sub ? h('span.gl-sub', sub) : null), n !== undefined && n !== null ? h('span.gl-n', String(n)) : null);
       const kids = []; let sub = '';
+      const GSV = ['', '<circle cx="8" cy="8" r="5.6" fill="#5cc8ff" stroke="#040618" stroke-width="1"/><circle cx="8" cy="8" r="1.7" fill="#040618" fill-opacity=".75"/>', '<path d="M8 2 L14 13 L2 13 Z" fill="#ffa534" stroke="#040618" stroke-width="1"/>', '<rect x="3.2" y="3.2" width="9.6" height="9.6" fill="none" stroke="#a9b4e0" stroke-width="1.4" stroke-dasharray="2.4 1.6"/>'];
+      const glyphRows = () => {
+        const cnt = [0, 0, 0, 0]; for (const q of SD) cnt[q.hab]++;
+        const gr = (k, text, sub2) => { const i = h('i.gl-gl'); i.innerHTML = '<svg viewBox="0 0 16 16" width="16" height="16">' + GSV[k] + '</svg>'; return h('div.gl-row' + (cnt[k] === 0 ? '.dim' : ''), i, h('span.gl-txt', text, h('span.gl-sub', sub2)), h('span.gl-n', String(cnt[k]))); };
+        const tg = h('button.gl-tog', { type: 'button', 'aria-pressed': String(habIcons), onclick: e => { e.stopPropagation(); api.setPlanetIcons(!habIcons); root.focus({ preventScroll: true }); } }, 'Planet icons: ' + (habIcons ? 'on' : 'off'));
+        return [h('div.gl-sep'), gr(1, 'Can colonise now', 'colony ship can settle'), gr(2, 'Needs special base', 'toxic · radiated · inferno · dead · tundra · barren'), gr(3, 'No planet', 'asteroids / empty'), tg];
+      };
       const total = SD.length, unknown = SD.filter(s => !s.known).length;
       if (mode === 'colonies') {
         sub = 'Colonies';
@@ -1632,6 +1682,7 @@
         const free = SD.filter(s => s.owner < 0 && s.known).length;
         kids.push(h('div.gl-sep')); kids.push(row('.dot', '#c9d4ff', 'Free stars', 'known, no colony', free)); kids.push(row('.dot.hollow', '#7b89bd', 'Unexplored', '', SD.filter(s => !s.known).length));
         kids.push(row('', '#ffd86a', 'Capital', 'banner with gold star', SD.filter(s => s.capital).length));
+        kids.push(...glyphRows());
       } else if (mode === 'environments') {
         sub = 'Environments';
         const cnt = new Array(ENV.length).fill(0); for (const s of SD) if (s.known && s.env >= 0) cnt[clamp(s.env, 0, ENV.length - 1)]++;
@@ -1651,6 +1702,7 @@
         kids.push(row('.dot.hollow', '#7b89bd', 'Unexplored', 'planet unknown', SD.filter(s => !s.known).length));
         kids.push(row('.dot.hollow', '#bb82ff', 'Nebula', 'ships slow, shields fail', SD.filter(s => s.nebula).length));
         kids.push(row('', th.brass, 'Colony', 'flag + population pips', SD.filter(s => s.owner >= 0).length));
+        kids.push(...glyphRows());
       }
       UI.mount(legendEl, h('div.gl-h', 'Map Key', h('small', sub + ' · ' + total + ' stars')), kids);
       legendEl.classList.toggle('off', !(legendForce === null ? (opts.legend === 'always' || (opts.legend !== false && mode !== 'normal')) : legendForce));
@@ -1812,6 +1864,7 @@
       if (dirty.terr) rebuildTerritory();
       if (dirty.neb) rebuildNebulae();
       lap('rebuild');
+      if (reachAnim) { let any = false; const k = Math.min(1, dt * 9); for (let i = 0; i < SD.length; i++) { const q = SD[i]; if (q.rk !== q.rkT) { q.rk += (q.rkT - q.rk) * k; if (Math.abs(q.rkT - q.rk) < 0.01) q.rk = q.rkT; else any = true; } } reachAnim = any; }
       computeScreen(t, dt); updateFleets(dt); updateHover(); lap('update');
       drawBackdrop(t); lap('backdrop'); drawNebulae(t); lap('nebulae'); drawBounds(); lap('bounds'); drawTerritory(t); lap('territory'); drawGrid(t); lap('grid'); drawRanges(t); drawLanes(t); lap('lanes');
       drawStarsPass(t, dt); lap('stars'); drawSystems(t); lap('systems'); drawLabels(t, dt); lap('labels'); drawFleets(t); lap('fleets'); drawOverlays(t, dt); drawHud(t); lap('overlays');
@@ -1879,6 +1932,14 @@
       setFog(b) { fog = !!b; if (S) { derive(); deriveFleets(false); } return api; },
       getFog: () => fog,
       legend: () => legendEl,
+      setPlanetIcons(b) { habIcons = !!b; try { if (M.Settings) M.Settings.set('mapIcons', habIcons); } catch (e) { /* optional */ } dirty.legend = true; return api; },
+      getPlanetIcons: () => habIcons,
+      setReach(spec) {                                   // dim every star not in the set (array | Set | predicate(id)); null restores
+        reachSet = spec === null || spec === undefined ? null : (typeof spec === 'function' ? spec : (spec instanceof Set ? spec : new Set(spec)));
+        for (const q of SD) q.rkT = reachSet === null ? 1 : ((typeof reachSet === 'function' ? reachSet(q.id) : reachSet.has(q.id)) ? 1 : 0.2);
+        reachAnim = true; if (Q.reduce) { for (const q of SD) q.rk = q.rkT; reachAnim = false; } return api;
+      },
+      getReach: () => reachSet,
       showLegend(b) { legendForce = b === undefined ? null : !!b; dirty.legend = true; return api; },
       getCamera: camInfo,
       worldToScreen: (x, y) => ({ x: (x - cam.x) * cam.z + W / 2, y: (y - cam.y) * cam.z + H / 2 }),

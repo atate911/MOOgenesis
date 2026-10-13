@@ -41,14 +41,15 @@
     .ov-side .panel > * { position:relative; margin-left:.45rem; margin-right:.45rem; } .ov-side .panel > :first-child { margin-top:.45rem; } .ov-side .panel > :last-child { margin-bottom:.45rem; }
     .ov-title { text-align:center; padding:.35rem .4rem; font:400 1.6rem/1 var(--font-title); color:#ffd36a; text-shadow:0 1px 0 #2f1a0c, 0 2px 0 rgba(0,0,0,.5); border-bottom:0;
       background:linear-gradient(180deg, #5b4533, #3a2c21); box-shadow:inset 1px 1px 0 rgba(255,235,200,.25), inset -1px -1px 0 rgba(0,0,0,.6); }
-    .ov-title small { color:#d9bf9c; font-size:.8rem; }
-    .ov-modes .btn { clip-path:none; justify-content:center; padding:.4em .6em; background:rgba(0,0,0,.85); box-shadow:none; color:#0b0e13; font:700 .85rem var(--font-display); letter-spacing:.12em; text-transform:uppercase; }
+    .ov-title small { color:#f0dcc0; font-size:1rem; margin-top:.3rem; }
+    .ov-side .panel { flex:0 1 auto; }
+    .ov-modes .btn { clip-path:none; justify-content:center; padding:.4em .6em; background:rgba(0,0,0,.85); box-shadow:none; color:#0b0e13; font:700 .92rem var(--font-display); letter-spacing:.1em; text-transform:uppercase; }
     .ov-modes .btn::before { clip-path:none; inset:1px; background:linear-gradient(180deg, #a0a3ae, #6c707c); box-shadow:inset 1px 1px 0 rgba(255,255,255,.4), inset -1px -1px 0 rgba(0,0,0,.45); }
-    .ov-modes .btn.active { color:#0b0e13; } .ov-modes .btn.active::before { background:linear-gradient(180deg, #4a4e5a, #6c707c); box-shadow:inset 1px 1px 3px rgba(0,0,0,.7); }
+    .ov-modes .btn.active { color:#25100a; text-shadow:0 1px 0 rgba(255,230,170,.5); } .ov-modes .btn.active::before { background:linear-gradient(180deg, #ffd070, #c8741a); box-shadow:inset 1px 1px 3px rgba(0,0,0,.35), 0 0 0 1px #ffc860; }
     .ov-modes .btn .kbd { display:none; }
     .ov-key { background:#3a2c21; box-shadow:inset 1px 1px 3px rgba(0,0,0,.9), 0 0 0 1px rgba(255,235,200,.14); }
     .ov-kt { color:#f48201; border-bottom-color:rgba(255,235,200,.14); font-size:1.05rem; text-shadow:0 1px 0 #000; }
-    .ov-kh { color:#e0a050; } .ov-kr { color:#f0dcc0; } .ov-note { color:#d9bf9c; border-top-color:rgba(255,235,200,.14); }
+    .ov-kh { color:#f0b868; font-size:.92rem; } .ov-kr { color:#f0dcc0; } .ov-kr small { font-size:.86rem; color:#e0cba8; } .ov-kt small { font-size:.9rem; color:#e0cba8; } .ov-note { color:#ead4b0; font-size:.9rem; border-top-color:rgba(255,235,200,.14); }
     .ov-ok .btn { clip-path:none; background:rgba(0,0,0,.85); box-shadow:none; color:#0b0e13; font:700 .85rem var(--font-display); letter-spacing:.14em; text-transform:uppercase; }
     .ov-ok .btn::before { clip-path:none; inset:1px; background:linear-gradient(180deg, #a0a3ae, #6c707c); box-shadow:inset 1px 1px 0 rgba(255,255,255,.4), inset -1px -1px 0 rgba(0,0,0,.45); }
   `));

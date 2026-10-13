@@ -288,7 +288,7 @@
       --title:#ffa31f; --title-lo:#8a4a00; --accent:#f38600; --on-accent:#1a0c00; --accent-dim:rgba(243,134,0,.16); --accent-line:#b86400;
       --bg-0:#0a0a0a; --bg-1:#121212; --bg-2:#1a1a1a; --bg-3:#2a2a2a; --bg-4:#3a3a3a; --line-0:#1a1a1a; --line-1:#4d4d4d; --line-2:#797979; --line-3:#b5b5b5;
       --brass:#bdbdbd; --brass-hi:#ffffff; --brass-lo:#6a6a6a; --mist:#d2d2d2; --fog:#8e8e8e; --ivory:#f2f2f2; --gold:#ffb020; --cyan:#3fd1ac; --leaf:#43d843;
-      --o-teal:#3fd1ac; --o-orange:#ffb020; --o-sel:#620b03; --o-green:#40d040;
+      --o-teal:#3fd1ac; --o-orange:#ffb020; --o-sel:#7a4c12; --o-green:#40d040;
       background:radial-gradient(ellipse 60% 40% at 18% 112%, rgba(120,32,20,.45), transparent 70%), radial-gradient(ellipse 30% 60% at 50% 40%, rgba(70,84,104,.20), transparent 70%), linear-gradient(180deg,#171717,#0b0b0b); }
     .dz::after { content:""; position:absolute; inset:0; pointer-events:none; z-index:30; box-shadow:inset 0 0 0 .28rem #6c6c6c, inset .28rem .28rem 0 .28rem #9a9a9a, inset -.28rem -.28rem 0 .28rem #2a2a2a, inset 0 0 0 .62rem #121212; }
     .dz { padding:.9rem 1.1rem .95rem; }
@@ -305,7 +305,7 @@
     /* panes: black insets with a light/dark bevel line, no blue gradients */
     .dz-card, .dz-tile, .dz-count .n { background:linear-gradient(180deg,#0e0e0e,#050505); border:0; box-shadow:0 0 0 1px #000, inset 1px 1px 0 #2a2a2a, inset -1px -1px 0 #6c6c6c; }
     .dz-card:hover { background:linear-gradient(180deg,#1c1c1c,#0b0b0b); }
-    .dz-card.sel { background:linear-gradient(180deg,#2a0c06,#620b03); box-shadow:0 0 0 1px #000, inset 0 0 0 1px #f38600; }
+    .dz-card.sel { background:linear-gradient(180deg,#9a6218,#6d430d); box-shadow:0 0 0 1px #000, inset 0 0 0 1px #ffc860; }
     .dz-card .no { color:#f38600; } .dz-card.empty { border:0; background:#0a0a0a; color:#6a6a6a; box-shadow:inset 1px 1px 0 #000, inset -1px -1px 0 #3a3a3a; }
     .dz-ci .nm { color:var(--o-orange); text-transform:uppercase; letter-spacing:.05em; }
     .dz-ci .co b, .dz-ci .mt { color:var(--o-teal); } .dz-ci .co { color:#d2d2d2; }
@@ -313,10 +313,10 @@
     .dz-tile.ghost { background:linear-gradient(180deg,#0c2a24,#04120f); box-shadow:0 0 0 1px #000, inset 0 0 0 1px var(--o-teal); }
     .dz-sec { color:#1a0c00; font:700 .76rem var(--font-display); letter-spacing:.16em; padding:.12rem .8rem .14rem; width:max-content; background:linear-gradient(180deg,#ffb23c,#e87a00); box-shadow:inset 1px 1px 0 #ffd79a, inset -1px -1px 0 #7a3a00, 0 0 0 1px #000;
       clip-path:polygon(.4rem 0,calc(100% - .4rem) 0,100% 100%,0 100%); margin:.2rem 0 .3rem; }
-    .dz-sec .hint { color:var(--mist); }
+    .dz-sec .hint { color:#3a1c00; font-weight:600; letter-spacing:.04em; }
     .dz-lb { color:var(--o-teal); text-transform:uppercase; letter-spacing:.03em; font-size:.88rem; } .dz-lb .ico { color:var(--o-teal); }
     .dz-sel { background:linear-gradient(180deg,#0e0e0e,#040404); border:0; color:var(--o-orange); box-shadow:0 0 0 1px #000, inset 1px 1px 0 #2a2a2a, inset -1px -1px 0 #797979; text-transform:uppercase; letter-spacing:.03em; }
-    .dz-sel:hover { background:linear-gradient(180deg,#2a0c06,#620b03); color:#fff; box-shadow:0 0 0 1px #000, inset 0 0 0 1px #f38600; }
+    .dz-sel:hover { background:linear-gradient(180deg,#9a6218,#6d430d); color:#fff; box-shadow:0 0 0 1px #000, inset 0 0 0 1px #ffc860; }
     .dz-sel .ico, .dz-sel .chev { color:var(--o-teal); } .dz-sel .sp { color:#bdbdbd; } .dz-sel.none .nm { color:var(--o-teal); opacity:.7; font-style:normal; }
     .dz-wh { color:var(--o-green); border-bottom:1px solid #4d4d4d; text-shadow:1px 1px 0 #000; }
     .dz-wr .dmg, .dz-wr .rng { color:#fff; } .dz-wr .note { color:#bdbdbd; }
@@ -341,7 +341,18 @@
     .dz-pt tr.pr:hover, .dz-pt tr.pr.hi { background:rgba(255,255,255,.08); box-shadow:none; }
     .dz-pt tr.pr.cur { background:var(--o-sel); } .dz-pt tr.pr.cur td { color:#fff; } .dz-pt tr.pr.lock td, .dz-pt tr.pr.conf td { color:#707070; }
     .dz-pt td.nm .ico { color:var(--o-teal); }
-    .dz-kf button { background:#1a1a1a; border:0; box-shadow:inset 1px 1px 0 #4d4d4d, inset -1px -1px 0 #000; color:#d2d2d2; } .dz-kf button.on { background:var(--o-sel); color:#fff; border:0; }
+    .dz-kf button { background:#1a1a1a; border:0; box-shadow:inset 1px 1px 0 #4d4d4d, inset -1px -1px 0 #000; color:#d2d2d2; } .dz-kf button.on { background:var(--o-sel); color:#fff; border:0; box-shadow:inset 0 0 0 1px #ffc860; }
+    /* legibility pass: lighter greys (>= 4.5:1 on the black insets), no tiny all-caps */
+    .dz { --fog:#b4b4b4; --brass-lo:#9a9a9a; }
+    .dz-card.empty { color:#a8a8a8; } .dz-pt tr.pr.lock td, .dz-pt tr.pr.conf td { color:#a0a0a0; } .dz-hull { color:#c8c8c8; }
+    .dz-card .no { font-size:.84rem; color:#d2d2d2; } .dz-card.tgt::after { font-size:.78rem; }
+    .dz-sec { font-size:.88rem; } .dz-tile .k { font-size:.84rem; letter-spacing:.03em; } .dz-tile .v .rb { font-size:.82rem; } .dz-tile .d .bs { font-size:.84rem; }
+    .dz-wh { font-size:.86rem; } .dz-ci .ft { font-size:.88rem; } .dz-ci .ft .btn { font-size:.84rem; }
+    .dz-hull .sub { font-size:.84rem; opacity:.9; } .dz-name label, .dz-auto .lb, .dz-spc .sec { font-size:.84rem; letter-spacing:.08em; }
+    .dz-read .l { font-size:.84rem; } .dz-read .sm { font-size:.86rem; } .dz-cvw .tag { font-size:.8rem; color:#c8c8c8; }
+    .dz-cmp th { font-size:.8rem; letter-spacing:.04em; color:#f0b868; } .dz-cmp td { color:#e6e6e6; }
+    .dz-sel.none .nm { opacity:1; text-transform:none; } .dz-sel .nm { font-size:.94rem; } .dz-sel .sp { font-size:.8rem; }
+    .dz-wr .note { color:#d2d2d2; }
   `);
 
   // ===================================================================================================================================================
@@ -1305,7 +1316,7 @@
         h('div.dz-mc',
           ui.strip,
           h('div', h('div.dz-sec', 'Components'), ui.slots),
-          h('div', h('div.dz-sec', 'Weapons', h('span.hint', 'wheel · Ctrl ±10 · Alt max / zero')), ui.weap),
+          h('div', h('div.dz-sec', 'Weapons', h('span.hint', 'wheel ±1 · Ctrl ±10')), ui.weap),
           h('div', h('div.dz-sec', 'Special devices'), ui.spec),
           ui.msg,
           h('div.dz-foot',

@@ -663,20 +663,21 @@
     .tch-mini .bar { width:5.2rem; height:.34rem; } .tch-mini .bar > i { transition:none; }
     .tch-mini .btn { padding:.05em .75em; font-size:.82rem; }
     .tch-sl .foot { display:flex; align-items:center; gap:.7rem; margin-top:.45rem; padding-top:.45rem; border-top:1px solid rgba(214,179,106,.2); color:var(--fog); font-size:.8rem; }
-    .tch-proj { flex:1 1 auto; min-height:9.5rem; overflow-y:auto; padding:.65rem .85rem .7rem; }
+    .tch-proj { flex:1 0 auto; min-height:9.5rem; padding:.55rem .85rem .6rem; }   /* never clip: the column scrolls if the content is taller than the screen */
     .tch-proj .ph { display:flex; align-items:center; gap:.55rem; font:400 .82rem var(--font-display); letter-spacing:.1em; text-transform:uppercase; color:var(--mist); }
     .tch-proj .ph .ico { width:1.15rem; height:1.15rem; color:var(--fc); } .tch-proj .ph .btn { margin-left:auto; }
-    .tch-proj .pn { margin:.25rem 0 .1rem; font:400 1.5rem/1.1 var(--font-title); color:var(--cyan); }
+    .tch-proj .pn { margin:.1rem 0 0; font:400 1.5rem/1.1 var(--font-title); color:var(--cyan); }
     .tch-proj .pn small { margin-left:.6rem; font:400 .9rem var(--font-ui); color:var(--mist); }
     .tch-proj .pb { margin:.35rem 0 .2rem; } .tch-proj .pb .bar { height:1.05rem; }
     .tch-proj .pb .bar > span { font-size:.78rem; }
-    .tch-proj .kv { grid-template-columns:auto 1fr; gap:.18rem 1.1rem; margin-top:.45rem; font-size:.93rem; }
+    .tch-proj .kv { grid-template-columns:auto 1fr; gap:.1rem 1.1rem; margin-top:.35rem; font-size:.93rem; line-height:1.25; }
     .tch-proj .kv > :nth-child(even) { text-align:left; color:var(--ivory); }
     .tch-proj .warn { margin-top:.5rem; padding:.3rem .6rem; border-left:3px solid var(--rose); background:rgba(255,92,106,.09); font-size:.88rem; }
     .tch-proj .none { margin:.55rem 0 .4rem; color:var(--ivory); font-size:1rem; line-height:1.4; }
-    .tch-xtra { margin-top:.7rem; padding-top:.5rem; border-top:1px solid rgba(214,179,106,.25); }
+    .tch-xtra { margin-top:.4rem; padding-top:.3rem; border-top:1px solid rgba(214,179,106,.25); }
     .tch-xtra .xh { margin:.35rem 0 .2rem; font:400 .78rem var(--font-display); letter-spacing:.1em; text-transform:uppercase; color:var(--fog); }
-    .tch-xtra .tch-fx .k { display:none; }
+    .tch-xtra .tch-fx .k { display:none; } .tch-xtra .tch-fx { display:grid; grid-template-columns:1fr 1fr; gap:0 1rem; }
+    .tch-xtra .xh { font-size:.86rem; color:var(--mist); margin:.2rem 0 .1rem; } .tch-xtra .tch-nx { padding:.06rem .4rem; }
     .tch-nx { display:flex; align-items:center; gap:.55rem; padding:.2rem .4rem; cursor:pointer; font-size:.92rem; }
     .tch-nx:hover { background:rgba(98,216,255,.08); }
     .tch-nx .ico { width:1rem; height:1rem; flex:none; color:var(--fc); } .tch-nx .nm { flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; } .tch-nx .co { flex:none; color:var(--mist); font-size:.82rem; font-variant-numeric:tabular-nums; }
@@ -914,7 +915,7 @@
   }
   // taller windows: what the field gives you, and the cheapest technologies available next (click one to see it in the overview)
   function xtraBlocks(E, f) {
-    const F = FIELDS[f], R = RS(), cap = capability(E, f), proj = E.research.project[f], list = R.choices(E, f).filter(l => l !== proj).slice(0, 6);
+    const F = FIELDS[f], R = RS(), cap = capability(E, f), proj = E.research.project[f], list = R.choices(E, f).filter(l => l !== proj).slice(0, 2);
     return h('div.tch-xtra',
       h('div.xh', 'What ' + F.name + ' gives you'), h('ul.tch-fx', cap.tip.map(s => h('li', h('span.v', s)))),
       list.length ? h('div.xh', 'Available next') : null,
@@ -1014,14 +1015,14 @@
   const up = css => css.replace(/(^|})(s*)([^{}@]+){/g, (m, a, ws, sel) => a + ws + sel.split(',').map(x => { x = x.trim(); return x.startsWith(':root') ? x : ':root ' + x; }).join(', ') + ' {');
   UI.css('orig-brown', up(`
     .tch, .rx, .ttp {
-      --o-fill:#826551; --o-hi:#b39677; --o-lo:#2f231a; --o-well:#4a3a2c; --o-well2:#3a2c21; --o-row:#6d5645; --o-sel:#620b03;
-      --o-head:#f48201; --o-amber:#e3b327; --o-mint:#7fd8c0; --o-green:#40d040; --o-cream:#f0dcc0; --o-tan:#d9bf9c; --o-dim:#a58b6c;
+      --o-fill:#826551; --o-hi:#b39677; --o-lo:#2f231a; --o-well:#4a3a2c; --o-well2:#3a2c21; --o-row:#6d5645; --o-sel:#7a4c12;
+      --o-head:#f48201; --o-amber:#e3b327; --o-mint:#7fd8c0; --o-green:#40d040; --o-cream:#f0dcc0; --o-tan:#d9bf9c; --o-dim:#e0c9a6;
       --void:#5b4533; --night:#4a3a2c; --deep:#3a2c21; --glass:rgba(58,44,33,.94); --glass-hi:rgba(98,78,60,.96); --steel:#6d5645; --steel-hi:#9c8466;
       --brass:#e3b327; --brass-hi:#ffd36a; --brass-lo:#7a5a36; --ivory:var(--o-cream); --mist:var(--o-tan); --fog:var(--o-dim);
       --cyan:#7fe0cc; --leaf:#6fe070; --ember:#ff9a3c; --gold:#ffd54f; --violet:#c9a8ff; --rose:#ff6a5a; --azure:#8fc0ff;
       --bg-0:#3a2c21; --bg-1:#4a3a2c; --bg-2:#5b4533; --bg-3:#6d5645; --bg-4:#826551;
       --line-0:#3a2c21; --line-1:#6d5645; --line-2:#9c8466; --line-3:#c9ae88;
-      --ink-0:var(--o-cream); --ink-1:var(--o-tan); --ink-2:var(--o-dim); --ink-3:#8a735a;
+      --ink-0:var(--o-cream); --ink-1:var(--o-tan); --ink-2:var(--o-dim); --ink-3:#d0b890;
       --bev-hi:#b39677; --bev-mid:#7a604b; --bev-lo:#3a2c21; --face-1:#8e745d; --face-2:#5b4533; --plate-1:#6d5645; --plate-2:#4a3a2c; --well:#2f231a; --well-2:#3a2c21; --title:#f48201; --title-lo:#8a4a08;
       --accent:var(--o-amber); --accent-dim:rgba(227,179,39,.16); --accent-line:#b08a2e; --on-accent:#2a1405;
       color:var(--o-cream);
@@ -1058,11 +1059,11 @@
     .tch-trow { color:var(--o-tan); text-transform:uppercase; letter-spacing:.03em; font-size:.92rem; border-left-width:0; }
     .tch-trow + .tch-trow { border-top:0; }
     .tch-trow:hover { background:#52402f; color:#fff; }
-    .tch-trow.sel, .tt-chip.sel { background:var(--o-sel); color:#fff; box-shadow:inset 0 0 0 1px #b8432c; border-left-color:transparent; }
+    .tch-trow.sel, .tt-chip.sel { background:var(--o-sel); color:#fff; box-shadow:inset 0 0 0 1px #ffc860; border-left-color:transparent; }
     .tch-trow.sel .lv, .tch-trow.sel .nm { color:#fff; }
     .tch-trow.proj { background:linear-gradient(90deg, rgba(64,208,64,.32) var(--p,0%), rgba(64,208,64,.08) var(--p,0%)); } .tch-trow.proj .nm, .tch-trow.proj .lv { color:var(--o-green); }
     .tch-row { border-left-width:0; } .tch-row + .tch-row { border-top:1px solid #4a382a; box-shadow:0 1px 0 rgba(179,150,119,.35) inset; }
-    .tch-row.sel { background:linear-gradient(90deg, rgba(98,11,3,.55), transparent 90%); }
+    .tch-row.sel { background:linear-gradient(90deg, rgba(154,98,24,.55), transparent 90%); }
     .tch-cap b, .tch-proj .kv > :nth-child(even), .tch-dd { color:var(--o-cream); }
     .tch-pic, .tt-art { background:#0b0907; box-shadow:0 0 0 1px #2f231a, 0 0 0 .2rem #866853, 0 0 0 calc(.2rem + 1px) #3f3028, inset 0 0 0 1px #000; margin:.2rem; }
     .tch-dn, .tt-d .tn, .tch-proj .pn { color:var(--o-amber); text-shadow:1px 1px 0 #2f1a0c; font-family:var(--font-display); letter-spacing:.04em; text-transform:uppercase; }
@@ -1097,6 +1098,12 @@
     /* sliders + bars: recessed trough, bevelled thumb */
     ${bx('.slider .s-label')} { color:var(--o-cream); text-transform:uppercase; letter-spacing:.03em; } ${bx('.slider .s-val')} { color:var(--o-green); }
     ${bx('.kv > :nth-child(odd)')} { color:var(--o-tan); } ${bx('.kv > :nth-child(even)')} { color:var(--o-cream); }
+    ${bx('.rx-plate')} { background:linear-gradient(180deg,#4a3a2c,#2f231a); color:var(--o-cream); border-left:.45rem solid var(--c, #e3b327); text-shadow:1px 1px 0 #000; }
+    .rx-foot .rx-prompt, .rc-trade, .rc-spy .rd .nx, .rp-t .lv { color:var(--o-tan); } .rc-trade.on { color:var(--o-amber); } .rp-t .lv { font-size:.84rem; } .rc-spy .rd { font-size:.94rem; }
+    /* legibility pass: min ~12px, no tiny caps */
+    .tch-tab .tl, .tch-trow .lv, .tch-sep { font-size:.86rem; } .tch-tab .kb, .tch-colh { font-size:.8rem; }
+    .tch-proj .pb .bar > span { font-size:.84rem; } .tch-trow { font-size:.96rem; } .tch-tab .tl { color:var(--o-tan); }
+    .tt-count, .tch-total .k, .tch-title small { color:var(--o-cream); }
   `));
 
   // ================================================================== the scientist scenes (research/06 §5.13)
