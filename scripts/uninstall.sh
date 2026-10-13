@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Remove Master of Orion — Reborn from this server.
 #   sudo bash /opt/moogenesis/scripts/uninstall.sh [--root DIR] [--yes] [--purge-cert]
-# Removes the nginx site, the doctor timer and the install root. Leaves nginx,
+# Removes the nginx or Caddy site, the doctor timer and the install root. Leaves nginx,
 # certbot and any other sites alone. The Let's Encrypt certificate is kept
 # unless you pass --purge-cert. Takes a final backup into /root first.
 set -euo pipefail
@@ -38,6 +38,12 @@ fi
 systemctl disable --now moogenesis-doctor.timer >/dev/null 2>&1 || true
 rm -f /etc/systemd/system/moogenesis-doctor.{service,timer}; systemctl daemon-reload 2>/dev/null || true
 rm -f "/etc/nginx/sites-enabled/${MOO_SITE_NAME}.conf" "/etc/nginx/sites-available/${MOO_SITE_NAME}.conf"
+if [[ -f "/etc/caddy/conf.d/${MOO_SITE_NAME}.caddy" ]]; then
+    rm -f "/etc/caddy/conf.d/${MOO_SITE_NAME}.caddy"
+    # The 'import /etc/caddy/conf.d/*.caddy' line install.sh added is harmless with no matches; left in place.
+    command -v caddy >/dev/null && caddy validate --config "$(moo_caddyfile)" --adapter caddyfile >/dev/null 2>&1 && systemctl reload caddy 2>/dev/null || true
+    ok "Removed the Caddy site"
+fi
 if command -v nginx >/dev/null && nginx -t >/dev/null 2>&1; then systemctl reload nginx 2>/dev/null || true; fi
 ok "Removed the nginx site and timer"
 rm -rf "$INSTALL_ROOT"; ok "Removed ${INSTALL_ROOT}"

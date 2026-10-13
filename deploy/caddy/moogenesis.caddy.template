@@ -1,0 +1,33 @@
+# Caddy site for Master of Orion — Reborn (static files, no backend).
+# install.sh renders this into /etc/caddy/conf.d/moogenesis.caddy, which the main
+# Caddyfile pulls in with:  import /etc/caddy/conf.d/*.caddy
+# Caddy obtains and renews the TLS certificate for this name by itself.
+
+@DOMAIN@ {
+    root * @ROOT@/current
+    encode zstd gzip
+
+    # Never serve dotfiles.
+    @dotfiles path_regexp dot ^/\.
+    handle @dotfiles {
+        respond 404
+    }
+
+    # version.txt is how install/upgrade/doctor verify WHICH release is live.
+    handle /version.txt {
+        header Cache-Control "no-store"
+        file_server
+    }
+
+    # Files are not fingerprinted, so make browsers revalidate (ETag/304) instead
+    # of risking a stale js/ file next to a new index.html after an upgrade.
+    handle {
+        header {
+            Cache-Control "no-cache"
+            X-Content-Type-Options "nosniff"
+            Referrer-Policy "strict-origin-when-cross-origin"
+            X-Frame-Options "SAMEORIGIN"
+        }
+        file_server
+    }
+}

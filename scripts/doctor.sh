@@ -39,7 +39,14 @@ if [[ -f "${INSTALL_ROOT}/current/js/manifest.js" ]]; then
     else fail "files missing from the live release: $(echo $MISSING | tr '\n' ' ')"; hint "sudo bash ${INSTALL_ROOT}/scripts/upgrade.sh --force"; fi
 fi
 
-if command -v nginx >/dev/null; then
+WEB="$(moo_conf_get "$INSTALL_ROOT" web)"; WEB="${WEB:-nginx}"
+if [[ "$WEB" == caddy ]]; then
+    if systemctl is-active --quiet caddy; then pass "caddy is running"; else fail "caddy is not running"; hint "sudo systemctl start caddy; journalctl -u caddy -n 30"; fi
+    CF="$(moo_caddyfile)"
+    if caddy validate --config "$CF" --adapter caddyfile >/dev/null 2>&1; then pass "Caddy config is valid"; else fail "caddy validate fails"; hint "sudo caddy validate --config ${CF} --adapter caddyfile"; fi
+    [[ -f /etc/caddy/conf.d/${MOO_SITE_NAME}.caddy ]] && pass "site ${MOO_SITE_NAME}.caddy is installed" || fail "/etc/caddy/conf.d/${MOO_SITE_NAME}.caddy is missing"
+    grep -Eq '^[[:space:]]*import[[:space:]]+/etc/caddy/conf\.d/' "$CF" 2>/dev/null && pass "Caddyfile imports conf.d" || fail "Caddyfile does not import /etc/caddy/conf.d/*.caddy"
+elif command -v nginx >/dev/null; then
     if systemctl is-active --quiet nginx; then pass "nginx is running"; else fail "nginx is not running"; hint "sudo systemctl start nginx; journalctl -u nginx -n 30"; fi
     if nginx -t >/dev/null 2>&1; then pass "nginx config is valid"; else fail "nginx -t fails"; hint "sudo nginx -t"; fi
     [[ -e /etc/nginx/sites-enabled/${MOO_SITE_NAME}.conf ]] && pass "site ${MOO_SITE_NAME} is enabled" || fail "site ${MOO_SITE_NAME} is not enabled"
@@ -47,7 +54,7 @@ else fail "nginx is not installed"; fi
 
 if command -v curl >/dev/null && [[ -n "$CUR" ]]; then
     if moo_health "$INSTALL_ROOT" "$DOMAIN" "$CUR"; then pass "${DOMAIN} serves the live release locally"
-    else fail "${DOMAIN} is not serving ${CUR} locally"; hint "sudo tail /var/log/nginx/moogenesis.error.log"; fi
+    else fail "${DOMAIN} is not serving ${CUR} locally"; hint "$([[ "$WEB" == caddy ]] && echo "sudo journalctl -u caddy -n 30" || echo "sudo tail /var/log/nginx/moogenesis.error.log")"; fi
 fi
 
 DNS_IP=$(getent ahostsv4 "$DOMAIN" 2>/dev/null | awk '{print $1; exit}')
@@ -56,7 +63,12 @@ if [[ -z "$DNS_IP" ]]; then note "${DOMAIN} does not resolve"; hint "add an A re
 elif [[ -n "$PUB_IP" && "$DNS_IP" != "$PUB_IP" ]]; then note "${DOMAIN} → ${DNS_IP}, but this network's public IP is ${PUB_IP}"; hint "update the A record (home IPs change; consider DDNS)"
 else pass "DNS ${DOMAIN} → ${DNS_IP}${PUB_IP:+ (matches the public IP)}"; fi
 
-if [[ "$TLS" == "yes" ]]; then
+if [[ "$WEB" == caddy ]]; then
+    END=$(echo | timeout 10 openssl s_client -connect 127.0.0.1:443 -servername "$DOMAIN" 2>/dev/null | openssl x509 -noout -enddate 2>/dev/null | cut -d= -f2)
+    if [[ -z "$END" ]]; then fail "Caddy presented no certificate for ${DOMAIN}"; hint "DNS + ports 80/443 must reach this server; watch: sudo journalctl -u caddy -f"
+    elif echo | timeout 10 openssl s_client -connect 127.0.0.1:443 -servername "$DOMAIN" 2>/dev/null | openssl x509 -noout -checkend $((14 * 86400)) >/dev/null 2>&1; then pass "certificate valid for 14+ days (${END})"
+    else note "certificate expires within 14 days (${END})"; hint "Caddy renews automatically ~30 days out — check: sudo journalctl -u caddy | grep -i renew"; fi
+elif [[ "$TLS" == "yes" ]]; then
     CERT="/etc/letsencrypt/live/${DOMAIN}/fullchain.pem"
     if [[ -f "$CERT" ]]; then
         if openssl x509 -checkend $((14 * 86400)) -noout -in "$CERT" >/dev/null 2>&1; then

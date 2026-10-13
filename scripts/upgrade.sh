@@ -7,7 +7,7 @@
 # Builds a NEW release directory, flips the `current` symlink, health-checks
 # the live site and flips back automatically if it is not serving the new
 # release. Old releases are kept (newest 5) for scripts/rollback.sh.
-# Never touches the nginx site conf, so certbot's edits survive upgrades.
+# Never touches the nginx/Caddy site conf, so certbot's edits survive upgrades.
 set -euo pipefail
 
 INSTALL_ROOT="/opt/moogenesis"
@@ -122,7 +122,7 @@ if ! $HEALTHY; then
         moo_switch "${INSTALL_ROOT}" "$OLD_REL"
         moo_sync_version "${INSTALL_ROOT}"
         if moo_health "${INSTALL_ROOT}" "$DOMAIN" "$OLD_REL"; then warn "Back on ${OLD_REL}; the site is healthy."
-        else warn "Rolled back, but the health check still fails — see: sudo tail /var/log/nginx/moogenesis.error.log"; fi
+        else warn "Rolled back, but the health check still fails — see: doctor.sh (nginx: /var/log/nginx/moogenesis.error.log · caddy: journalctl -u caddy)"; fi
     else
         warn "No previous release to return to."
     fi
@@ -134,8 +134,8 @@ ok "Serving ${REL}"
 step "Refreshing operator scripts"
 cp "${REPO_DIR}/scripts/"*.sh "${INSTALL_ROOT}/scripts/"
 chmod 755 "${INSTALL_ROOT}/scripts/"*.sh
-mkdir -p "${INSTALL_ROOT}/deploy/nginx"
-cp "${REPO_DIR}/deploy/nginx/moogenesis.conf.template" "${INSTALL_ROOT}/deploy/nginx/"
+mkdir -p "${INSTALL_ROOT}/deploy"
+cp -a "${REPO_DIR}/deploy/." "${INSTALL_ROOT}/deploy/"
 cp "${REPO_DIR}/VERSION" "${INSTALL_ROOT}/VERSION"
 moo_conf_set "${INSTALL_ROOT}" repo "$REPO_DIR"
 for u in moogenesis-doctor.service moogenesis-doctor.timer; do

@@ -1,8 +1,10 @@
 # Deploying to a home Ubuntu server (moo.dhlab.us)
 
 The game is **static files** — `index.html`, `css/`, `js/`. There is no backend,
-database or service account. nginx serves a symlinked release directory;
-Let's Encrypt provides HTTPS. Player saves live in each player's browser
+database or service account. A web server serves a symlinked release directory
+and provides HTTPS. `install.sh` picks the web server for you: **Caddy** if it
+is already running on the machine (it owns ports 80/443, so nginx could not
+start), otherwise **nginx + Let's Encrypt (certbot)**. Force one with `--web`. Player saves live in each player's browser
 (localStorage), so the server holds nothing a player would miss.
 
 ```
@@ -11,7 +13,8 @@ Let's Encrypt provides HTTPS. Player saves live in each player's browser
   current -> releases/...                      what nginx serves (flipped atomically)
   install.conf                                 domain, email, tls, checkout path
   scripts/  deploy/  VERSION  backups/
-/etc/nginx/sites-available/moogenesis.conf     rendered once; certbot adds the 443 block
+/etc/nginx/sites-available/moogenesis.conf     nginx mode: rendered once; certbot adds the 443 block
+/etc/caddy/conf.d/moogenesis.caddy             caddy mode: one site block; Caddy handles TLS itself
 ```
 
 ## One-time network setup
@@ -40,6 +43,17 @@ the nginx site, opens ufw (if active), runs a health check, requests the
 certificate (`certbot --nginx --redirect`), and enables a daily doctor timer.
 It is idempotent and never overwrites a live nginx site conf.
 
+### Caddy mode
+
+If Caddy is already your front door, the installer writes
+`/etc/caddy/conf.d/moogenesis.caddy`, appends `import /etc/caddy/conf.d/*.caddy`
+to your Caddyfile (path read from the caddy unit, or `--caddyfile PATH`; a
+timestamped `.pre-moogenesis.*` backup is made first), runs `caddy validate`,
+and only then reloads Caddy. If validation fails it restores your Caddyfile and
+changes nothing. Caddy requests and renews the certificate for the domain
+itself — no certbot, no `--email` needed (set the ACME email in your Caddyfile's
+global options if you want expiry notices). Your other sites are untouched.
+
 ## Upgrade
 
 ```bash
@@ -63,7 +77,7 @@ new version on their next page load.
 | List / roll back releases | `sudo bash /opt/moogenesis/scripts/rollback.sh --list` · `… rollback.sh [RELEASE]` |
 | Server-side backup | `sudo bash /opt/moogenesis/scripts/backup.sh` |
 | Logs | `sudo tail -f /var/log/nginx/moogenesis.{access,error}.log` |
-| Certificate renewal | automatic (`certbot.timer`); test with `sudo certbot renew --dry-run` |
+| Certificate renewal | automatic — Caddy renews by itself; nginx mode uses `certbot.timer` (test: `sudo certbot renew --dry-run`) |
 | Remove everything | `sudo bash /opt/moogenesis/scripts/uninstall.sh` (`--purge-cert` also deletes the cert) |
 
 `doctor.sh` exit codes: 0 all clear · 1 warnings · 2 broken. The
@@ -82,6 +96,7 @@ loses saves.
 
 | Symptom | Check |
 | --- | --- |
+| `nginx` won't start / port 80 in use | Something else (often Caddy) owns 80/443: `sudo ss -ltnp \| grep -E ':(80\|443)\b'`. Use `--web caddy`. |
 | Certificate step fails | DNS points at your public IP? Router forwards 80/443? `doctor.sh` prints both IPs. |
 | Works on the LAN, not from outside | Router port forwards; ISP blocking 80/443 (some residential plans do). |
 | Old files after an upgrade | `curl -I https://moo.dhlab.us/js/manifest.js` should show `Cache-Control: no-cache`; check a CDN/proxy in front isn't caching. |

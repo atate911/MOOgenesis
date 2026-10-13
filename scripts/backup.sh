@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Snapshot the server-side state: install.conf, the nginx site, the Let's Encrypt
+# Snapshot the server-side state: install.conf, the nginx/Caddy site, the Let's Encrypt
 # account/cert config, and the current release. Players' SAVES are not here —
 # they live in each browser (localStorage); players can use the in-game
 # Save → Export to keep a copy.
@@ -40,7 +40,7 @@ for m in install.conf VERSION; do [[ -e "${INSTALL_ROOT}/${m}" ]] && MEMBERS+=("
 
 # System-side pieces are staged under system/ so the archive stays relocatable.
 TMP=$(mktemp -d); trap 'rm -rf "$TMP"' EXIT
-for p in /etc/nginx/sites-available/${MOO_SITE_NAME}.conf /etc/letsencrypt/renewal /etc/letsencrypt/accounts; do
+for p in /etc/nginx/sites-available/${MOO_SITE_NAME}.conf /etc/caddy/conf.d/${MOO_SITE_NAME}.caddy /etc/letsencrypt/renewal /etc/letsencrypt/accounts; do
     [[ -e "$p" ]] || continue
     mkdir -p "${TMP}/system$(dirname "$p")"; cp -a "$p" "${TMP}/system${p}"
 done

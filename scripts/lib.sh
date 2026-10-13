@@ -108,14 +108,35 @@ moo_health() {
     local root="$1" domain="$2" expect="$3" scheme body
     scheme=http; [[ "$(moo_conf_get "$root" tls)" == "yes" ]] && scheme=https
     local port=80; [[ "$scheme" == https ]] && port=443
-    body=$(curl -fsS --max-time 10 --resolve "${domain}:${port}:127.0.0.1" \
+    # MOO_CURL_OPTS is a test hook (e.g. "-k" against Caddy's local CA).
+    # shellcheck disable=SC2086
+    body=$(curl -fsS ${MOO_CURL_OPTS:-} --max-time 10 --resolve "${domain}:${port}:127.0.0.1" \
            "${scheme}://${domain}/version.txt" 2>/dev/null) || return 1
     [[ "$(tr -d '[:space:]' <<<"$body")" == "$expect" ]] || return 1
-    curl -fsS --max-time 15 -o /dev/null --resolve "${domain}:${port}:127.0.0.1" \
+    # shellcheck disable=SC2086
+    curl -fsS ${MOO_CURL_OPTS:-} --max-time 15 -o /dev/null --resolve "${domain}:${port}:127.0.0.1" \
          "${scheme}://${domain}/js/manifest.js" 2>/dev/null
 }
 
-# moo_render_nginx TEMPLATE DOMAIN ROOT — fill the nginx template on stdout.
+# moo_render_nginx TEMPLATE DOMAIN ROOT — fill a web-server template on stdout
+# (nginx and Caddy templates share the @DOMAIN@ / @ROOT@ placeholders).
 moo_render_nginx() {
     sed -e "s|@DOMAIN@|$2|g" -e "s|@ROOT@|$3|g" "$1"
+}
+
+# moo_detect_web — which web server already fronts this machine: "caddy" when
+# Caddy is running or listening on port 80/443 (it would block nginx from
+# starting), else "nginx".
+moo_detect_web() {
+    if systemctl is-active --quiet caddy 2>/dev/null; then echo caddy; return; fi
+    if ss -ltnp 2>/dev/null | grep -E ':(80|443)\b' | grep -q caddy; then echo caddy; return; fi
+    echo nginx
+}
+
+# moo_caddyfile — path of the Caddyfile the running Caddy actually loads
+# (read off its unit's --config), else /etc/caddy/Caddyfile.
+moo_caddyfile() {
+    local c
+    c=$(systemctl show caddy -p ExecStart 2>/dev/null | grep -o -- '--config [^ ;]*' | head -1 | awk '{print $2}')
+    printf '%s\n' "${c:-/etc/caddy/Caddyfile}"
 }

@@ -17,6 +17,8 @@ EMAIL=""
 WANT_TLS=true
 CERT_STAGING=false
 WANT_HEALTHWATCH=true
+WEB="auto"                # auto | nginx | caddy
+CADDYFILE=""
 SKIP_NGINX=false          # test hook: deploy the release only (no apt/nginx/certbot)
 REPO_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 
@@ -36,6 +38,8 @@ while [[ $# -gt 0 ]]; do
         --domain) DOMAIN="$2"; shift 2 ;;
         --email)  EMAIL="$2"; shift 2 ;;
         --root)   INSTALL_ROOT="$2"; shift 2 ;;
+        --web)    WEB="$2"; shift 2 ;;
+        --caddyfile) CADDYFILE="$2"; shift 2 ;;
         --no-tls) WANT_TLS=false; shift ;;
         --staging) CERT_STAGING=true; shift ;;
         --no-healthwatch) WANT_HEALTHWATCH=false; shift ;;
@@ -46,7 +50,10 @@ Usage: sudo bash $0 [options]
   --domain NAME      public host name (default: ${DOMAIN})
   --email ADDR       Let's Encrypt contact (recommended; expiry notices go here)
   --root PATH        install root (default: ${INSTALL_ROOT})
-  --no-tls           HTTP only — skip the Let's Encrypt certificate
+  --web nginx|caddy  which web server to configure (default: auto — Caddy if it is
+                     already running on this machine, otherwise nginx)
+  --caddyfile PATH   Caddyfile to extend in caddy mode (default: read from the caddy unit)
+  --no-tls           nginx mode only: HTTP only — skip the Let's Encrypt certificate (Caddy always uses HTTPS)
   --staging          use the Let's Encrypt staging CA (test without rate limits)
   --no-healthwatch   don't install the daily doctor timer
 USAGE
@@ -60,6 +67,10 @@ done
     || die "Run this from a MOOgenesis checkout (index.html / js/manifest.js not found in ${REPO_DIR})."
 [[ "$DOMAIN" =~ ^[A-Za-z0-9]([A-Za-z0-9.-]*[A-Za-z0-9])?$ ]] || die "Not a valid host name: ${DOMAIN}"
 
+[[ "$WEB" =~ ^(auto|nginx|caddy)$ ]] || die "--web must be auto, nginx or caddy"
+if [[ "$WEB" == auto ]]; then $SKIP_NGINX && WEB=nginx || WEB="$(moo_detect_web)"; fi
+[[ "$WEB" == caddy ]] && WANT_TLS=true
+
 VERSION=$(tr -d '[:space:]' < "${REPO_DIR}/VERSION" 2>/dev/null || echo "?")
 echo -e "\n${BOLD}╔══════════════════════════════════════════════════╗"
 echo    "║   Master of Orion — Reborn — Installer           ║"
@@ -67,24 +78,29 @@ echo -e "╚══════════════════════�
 echo    "   Repo    : ${REPO_DIR}  (v${VERSION})"
 echo    "   Target  : ${INSTALL_ROOT}"
 echo    "   Domain  : ${DOMAIN}"
-echo    "   TLS     : $($WANT_TLS && echo "Let's Encrypt" || echo "off")"
+echo    "   Web     : ${WEB}"
+echo    "   TLS     : $([[ $WEB == caddy ]] && echo "automatic (Caddy)" || { $WANT_TLS && echo "Let's Encrypt" || echo off; })"
 
 if ! $SKIP_NGINX; then
     step "Checking prerequisites"
     command -v apt-get >/dev/null || die "apt-get not found — this installer targets Ubuntu/Debian."
     NEED=()
-    command -v nginx   >/dev/null || NEED+=(nginx)
     command -v curl    >/dev/null || NEED+=(curl)
-    command -v certbot >/dev/null || { $WANT_TLS && NEED+=(certbot python3-certbot-nginx); }
-    if $WANT_TLS && ! dpkg -s python3-certbot-nginx >/dev/null 2>&1; then
-        [[ " ${NEED[*]} " == *" python3-certbot-nginx "* ]] || NEED+=(python3-certbot-nginx)
+    if [[ "$WEB" == caddy ]]; then
+        command -v caddy >/dev/null || die "--web caddy was requested but caddy is not installed."
+    else
+        command -v nginx   >/dev/null || NEED+=(nginx)
+        command -v certbot >/dev/null || { $WANT_TLS && NEED+=(certbot python3-certbot-nginx); }
+        if $WANT_TLS && ! dpkg -s python3-certbot-nginx >/dev/null 2>&1; then
+            [[ " ${NEED[*]} " == *" python3-certbot-nginx "* ]] || NEED+=(python3-certbot-nginx)
+        fi
     fi
     if [[ ${#NEED[@]} -gt 0 ]]; then
         info "Installing: ${NEED[*]}"
         DEBIAN_FRONTEND=noninteractive apt-get update -qq
         DEBIAN_FRONTEND=noninteractive apt-get install -y -qq "${NEED[@]}"
     fi
-    ok "nginx, curl$($WANT_TLS && echo ', certbot') present"
+    ok "${WEB}, curl$([[ $WEB == nginx ]] && $WANT_TLS && echo ', certbot') present"
 fi
 
 step "Directory tree"
@@ -101,20 +117,65 @@ ok "Release ${REL} is live  (previous: ${PREV:-none})"
 info "Installing operator scripts ..."
 cp "${REPO_DIR}/scripts/"*.sh "${INSTALL_ROOT}/scripts/"
 chmod 755 "${INSTALL_ROOT}/scripts/"*.sh
-mkdir -p "${INSTALL_ROOT}/deploy/nginx"
-cp "${REPO_DIR}/deploy/nginx/moogenesis.conf.template" "${INSTALL_ROOT}/deploy/nginx/"
+mkdir -p "${INSTALL_ROOT}/deploy"
+cp -a "${REPO_DIR}/deploy/." "${INSTALL_ROOT}/deploy/"
 cp "${REPO_DIR}/VERSION" "${INSTALL_ROOT}/VERSION"
 
 moo_conf_set "${INSTALL_ROOT}" domain "$DOMAIN"
 [[ -n "$EMAIL" ]] && moo_conf_set "${INSTALL_ROOT}" email "$EMAIL"
 moo_conf_set "${INSTALL_ROOT}" repo "$REPO_DIR"
 moo_conf_set "${INSTALL_ROOT}" tls "no"
+moo_conf_set "${INSTALL_ROOT}" web "$WEB"
 
 if $SKIP_NGINX; then
     ok "Skipped nginx (--no-nginx)."
     exit 0
 fi
 
+TLS_NOTE=""
+if [[ "$WEB" == caddy ]]; then
+    step "Caddy site"
+    SNIPPET_DIR="/etc/caddy/conf.d"; SNIPPET="${SNIPPET_DIR}/moogenesis.caddy"
+    [[ -n "$CADDYFILE" ]] || CADDYFILE="$(moo_caddyfile)"
+    [[ -f "$CADDYFILE" ]] || die "Caddyfile not found at ${CADDYFILE} — pass --caddyfile PATH."
+    mkdir -p "$SNIPPET_DIR"
+    moo_render_nginx "${REPO_DIR}/deploy/caddy/moogenesis.caddy.template" "$DOMAIN" "$INSTALL_ROOT" > "$SNIPPET"
+    chmod 644 "$SNIPPET"
+    ok "Wrote ${SNIPPET}"
+    BACKUP_CF=""
+    if ! grep -Eq '^[[:space:]]*import[[:space:]]+/etc/caddy/conf\.d/' "$CADDYFILE"; then
+        BACKUP_CF="${CADDYFILE}.pre-moogenesis.$(date +%Y%m%d%H%M%S)"
+        cp -a "$CADDYFILE" "$BACKUP_CF"
+        printf '\n# Master of Orion — Reborn (added by moogenesis install.sh)\nimport /etc/caddy/conf.d/*.caddy\n' >> "$CADDYFILE"
+        ok "Added 'import /etc/caddy/conf.d/*.caddy' to ${CADDYFILE}  (backup: ${BACKUP_CF})"
+    else
+        ok "${CADDYFILE} already imports /etc/caddy/conf.d/"
+    fi
+    if ! VOUT=$(caddy validate --config "$CADDYFILE" --adapter caddyfile 2>&1); then
+        echo "$VOUT" | tail -8 | sed 's/^/        /'
+        if [[ -n "$BACKUP_CF" ]]; then cp -a "$BACKUP_CF" "$CADDYFILE"; warn "Restored your Caddyfile from ${BACKUP_CF}"; fi
+        rm -f "$SNIPPET"
+        die "Caddy rejected the configuration (see above). Nothing was changed; your Caddy is untouched."
+    fi
+    ok "caddy validate: configuration is valid"
+    systemctl reload caddy || die "Could not reload Caddy — see: sudo journalctl -u caddy -n 30"
+    ok "Caddy reloaded (it requests the certificate for ${DOMAIN} on first use)"
+
+    step "Health check (https — the first request may wait for the certificate)"
+    moo_conf_set "${INSTALL_ROOT}" tls "yes"
+    HEALTHY=false
+    for i in $(seq 1 18); do
+        if moo_health "${INSTALL_ROOT}" "$DOMAIN" "$REL"; then HEALTHY=true; break; fi
+        [[ $i -lt 18 ]] && { info "Waiting for Caddy / the certificate ... (${i}/18)"; sleep 5; }
+    done
+    if $HEALTHY; then ok "Serving ${REL} on https://${DOMAIN}/"
+    else
+        warn "Caddy is configured but ${DOMAIN} is not answering over HTTPS yet."
+        echo "     Certificate issuance needs DNS for ${DOMAIN} → this server's public IP, and ports 80/443 forwarded."
+        echo "     Watch it:  sudo journalctl -u caddy -f      Re-check:  sudo bash ${INSTALL_ROOT}/scripts/doctor.sh"
+    fi
+    TLS_NOTE="https"
+else
 step "nginx site"
 SITE_AVAIL="/etc/nginx/sites-available/${MOO_SITE_NAME}.conf"
 SITE_ENABLED="/etc/nginx/sites-enabled/${MOO_SITE_NAME}.conf"
@@ -155,7 +216,6 @@ done
 $HEALTHY && ok "Serving ${REL} on http://${DOMAIN}/" \
          || die "nginx is not serving the new release. See: sudo tail /var/log/nginx/moogenesis.error.log"
 
-TLS_NOTE=""
 if $WANT_TLS; then
     step "TLS certificate (Let's Encrypt)"
     PUB_IP=$(curl -fsS --max-time 8 https://api.ipify.org 2>/dev/null || true)
@@ -181,6 +241,8 @@ if $WANT_TLS; then
         echo "     Fix, then re-run:  sudo bash ${REPO_DIR}/scripts/install.sh --domain ${DOMAIN} --email you@example.com"
     fi
 fi
+
+fi   # nginx / caddy
 
 if $WANT_HEALTHWATCH; then
     step "Daily health check"
