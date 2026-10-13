@@ -162,3 +162,13 @@ label.check { display: inline-flex; align-items: center; gap: .5em; cursor: poin
 .divider { height: 1px; margin: .6rem 0; background: linear-gradient(90deg, transparent, rgba(214, 179, 106, .45), transparent); }
 .kv { display: grid; grid-template-columns: auto 1fr; gap: .15rem .9rem; } .kv > :nth-child(odd) { color: var(--mist); } .kv > :nth-child(even) { text-align: right; font-variant-numeric: tabular-nums; }
 .empire-dot { display: inline-block; width: .7em; height: .7em; margin-right: .35em; transform: rotate(45deg); background: var(--c, var(--brass)); box-shadow: 0 0 6px var(--c, var(--brass)); }
+
+/* ---- original-echo helpers (restyled in theme-v2.css) ---------------------------------------------------------------- */
+.well, .readout { padding: .1rem .45rem; background: rgba(0, 0, 0, .35); box-shadow: inset 0 0 0 1px rgba(214, 179, 106, .2); }
+.readout { color: var(--lime, #78e060); font-variant-numeric: tabular-nums; text-align: right; }
+.plate { padding: .3rem .6rem; color: var(--title, var(--brass-hi)); font: 400 1rem var(--font-display); background: rgba(34, 40, 100, .8); }
+.sec-h { display: flex; align-items: center; gap: .6rem; margin: .5rem 0 .35rem; color: var(--amber, var(--ember)); }
+.sec-h::before, .sec-h::after { content: ""; flex: 1; height: 2px; background: linear-gradient(180deg, rgba(0, 0, 0, .75) 0 1px, rgba(255, 255, 255, .14) 1px); }
+.sec-h.mint { color: var(--mint, var(--leaf)); } .sec-h.gold { color: var(--title, var(--gold)); } .sec-h.red { color: var(--rose); }
+.t-title { color: var(--title, var(--brass-hi)); } .t-mint { color: var(--mint, var(--leaf)); } .t-amber { color: var(--amber, var(--ember)); } .t-lime { color: var(--lime, var(--leaf)); } .t-cream { color: var(--cream, var(--ivory)); }
+.panel.bronze, .panel.silver { /* variants are styled by the active theme */ }

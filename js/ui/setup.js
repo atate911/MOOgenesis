@@ -1400,4 +1400,20 @@
       .su-foot-hint { display:none; }
     }
   `);
+  const bump = css => css.replace(/(^|[}])([^{}]*)[{]/g, (m, a, sel) => a + sel.replace(/[/][*][^]*?[*][/]/g, '').split(',').map(s => s.trim()).filter(Boolean).map(s => ':root:root ' + s).join(', ') + ' {');   // raise specificity over the theme-v2 .panel/.btn rules
+  // Restyle: copper-embossed option plates with black inset value boxes (original options panel), bevelled selection cards, gold selection.
+  UI.css('setup-orig', bump(`
+    .su-opt, .su-race, .su-banner, .su-drow { background:linear-gradient(135deg, rgba(255,255,255,.34), rgba(255,255,255,.08) 40%, rgba(0,0,0,.7)); }
+    .su-opt::before, .su-race::before, .su-banner::before, .su-drow::before { background:linear-gradient(180deg, #232a33, #12161b); box-shadow:inset 1px 1px 0 rgba(255,255,255,.08), inset 0 -2px 6px rgba(0,0,0,.5); }
+    .su-opt:hover::before, .su-race:hover::before, .su-banner:hover::before, .su-drow:hover::before { background:linear-gradient(180deg, #2c353f, #181d23); }
+    .su-opt[aria-checked=true], .su-race[aria-checked=true], .su-banner[aria-checked=true], .su-drow[aria-checked=true] { background:linear-gradient(135deg, #f0a050, #c86a20 50%, #703010); color:#f4d890; }
+    .su-opt[aria-checked=true]::before, .su-race[aria-checked=true]::before, .su-banner[aria-checked=true]::before, .su-drow[aria-checked=true]::before { background:linear-gradient(180deg, #4a2a14, #2a170a); box-shadow:inset 0 0 1.4rem rgba(240,160,80,.22), inset 1px 1px 0 rgba(255,200,140,.25); }
+    .su-opt[aria-checked=true] .su-opt-l, .su-drow[aria-checked=true] .su-drow-l { color:#f4d890; text-shadow:0 1px 0 #000; }
+    .su-opt[aria-checked=true] .su-opt-n b { color:#b8e0a0; }
+    .su-drow[aria-checked=true] .su-drow-m { background:#f0a050; box-shadow:0 0 8px #c86a20; }
+    .su-opt-bar u { background:linear-gradient(90deg, #703010, #e08a38); }
+    .su-chart { background:#05070a; box-shadow:inset 1px 1px 3px rgba(0,0,0,.9), 0 0 0 1px rgba(255,255,255,.12); }
+    .su-pframe { background:linear-gradient(135deg, #f0e8d8, #8a8478 55%, #d8d0c0); }
+    .su-foot { border-top-color:rgba(255,255,255,.14); }
+  `));
 })(window.MOO);

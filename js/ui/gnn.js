@@ -424,6 +424,23 @@
     .gnn-arch-more { display:flex; justify-content:center; padding:.8rem 0; }
   `);
 
+  // "original" restyle (research/ui-ref C 4): lavender-grey console metal with a fine dotted meander rim, black text well, pale periwinkle copy.
+  UI.css('gnn-orig', `
+    .gnn { --tone:#a8b0d8; --tone-hi:#d4daf4; --tone-lo:#4c5480; --tone-ink:#14183a; }
+    .gnn-lt-bar { background:
+        radial-gradient(circle at 50% 50%, rgba(46,54,98,.9) 0 24%, transparent 28%) 0 0 / calc(var(--u)*.55) calc(var(--u)*.55),
+        linear-gradient(180deg, #d4daf4, #a8b0d8 22%, #8890b8 60%, #4c5480); box-shadow:inset 0 0 0 1px rgba(20,24,58,.9); }
+    .gnn-lt-bar::before { inset:max(5px, calc(var(--u)*.62)); clip-path:none; background:linear-gradient(180deg,#000008,#02030c 70%,#04061a);
+      box-shadow:inset 1px 1px 0 #000, inset -1px -1px 0 rgba(168,176,216,.55), inset 0 0 calc(var(--u)*2) rgba(40,60,140,.18); }
+    .gnn-lt-logo { border-right:1px solid rgba(168,176,216,.45); background:radial-gradient(circle at 50% 42%, rgba(70,96,210,.38), rgba(20,28,80,0) 72%); margin-left:max(5px, calc(var(--u)*.62)); }
+    .gnn-lt-txt { padding-left:calc(var(--u)*2.2); }
+    .gnn-lt-hl { color:#c2d6ff; font-weight:500; line-height:1.3; text-shadow:0 1px 0 #000; }
+    .gnn-lt-sub { color:#98b8f0; line-height:1.35; }
+    .gnn-tk { background:#02030c; }
+    .gnn-mon-cap b { color:#f8e080; text-shadow:1px 1px 0 #000; }
+    .gnn-mon-tag { background:rgba(2,3,12,.88); }
+  `);
+
   // ================================================================== canvas toolkit
   const warned = {};
   function warnOnce(k, e) { if (!warned[k]) { warned[k] = 1; console.warn('[gnn] ' + k + ' failed - using a fallback:', e && e.message || e); } }

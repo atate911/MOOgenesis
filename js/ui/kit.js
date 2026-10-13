@@ -166,6 +166,10 @@
     el.set(frac, o.label);
     return el;
   };
+  // original-echo helpers: section heading centred on a rule (kind: 'mint'|'gold'|'red'|'' = amber), recessed numeric readout, title plate
+  UI.secHead = (text, kind) => h('div.sec-h' + (kind ? '.' + kind : ''), h('span', text));
+  UI.readout = (text, o) => { o = o || {}; return h('span.readout' + (o.cls ? '.' + o.cls.split(/\s+/).join('.') : ''), { style: o.color ? { color: o.color } : null }, text); };
+  UI.plate = (text, cls) => h('div.plate' + (cls ? '.' + cls.split(/\s+/).join('.') : ''), text);
   UI.chip = (text, kind) => h('span.chip' + (kind ? '.' + kind : ''), text);
 
   // ------------------------------------------------------------------ slider

@@ -23,7 +23,7 @@
       ]);
       el.appendChild(h('div.abs-fill.scroll-y', { style: { padding: '1.5rem 2rem', background: 'radial-gradient(ellipse at 30% 0%, #141e55, var(--void) 65%)' } },
         h('h1.ttl', { style: { fontSize: '2.6rem', marginBottom: '.2rem' } }, 'Master of Orion'),
-        h('div.t-mist', { style: { marginBottom: '1.2rem' } }, 'Style guide — indigo void, brass hairlines, ivory ink.'),
+        h('div.t-mist', { style: { marginBottom: '1.2rem' } }, 'Style guide — original-echo chrome: bevelled steel, indigo title plates, gold/mint/amber slab labels, recessed wells, copper primary.'),
         h('div.row.wrap.g3', { style: { marginBottom: '1.2rem' } },
           swatch('Void', '--void'), swatch('Night', '--night'), swatch('Steel', '--steel'), swatch('Brass', '--brass'), swatch('Brass hi', '--brass-hi'),
           swatch('Ivory', '--ivory'), swatch('Mist', '--mist'), swatch('Cyan', '--cyan'), swatch('Ember', '--ember'), swatch('Leaf', '--leaf'),
@@ -42,6 +42,7 @@
           h('div.col.grow',
             UI.panel('Planets', tbl, { sub: '4 colonies' }),
             UI.panel('Tabs', tabs.el),
+            UI.panel('Tool-screen frame', h('div', UI.secHead('Spending Costs', 'mint'), h('div.row.between', h('span.t-amber', 'Ships'), UI.readout('23.5%')), UI.secHead('Fleet Strength'), h('div.row.between', h('span.t-amber', 'Reserve'), UI.readout('0 BC'))), { cls: 'bronze', sub: 'bronze' }),
             UI.panel('Dialogs', h('div.row.wrap',
               UI.button('Open modal', () => UI.modal({ title: 'Colonise Tyr?', body: h('p', 'A small, barren world with abundant minerals. Population growth is halved.'), buttons: [{ label: 'Not now', value: false }, { label: 'Colonise', value: true, primary: true }] })),
               UI.button('Toast', () => UI.toast('Research complete: Deuterium Fuel Cells', 'ok')),

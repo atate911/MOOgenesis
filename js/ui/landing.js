@@ -127,6 +127,22 @@
     @media (max-height:46rem) { .ld-title { font-size:1.7rem; margin-bottom:.3rem; } .ld-rtitle { font-size:1.8rem; } .ld-flav { display:none; } }
   `);
 
+  // "original" restyle (research/ui-ref C 3b): off-white outlined slab captions straight over the painting, pale-blue bevelled dialog, steel bevel info bars.
+  UI.css('landing-orig', `
+    .ld-top { background:linear-gradient(180deg, rgba(2,3,10,.7), rgba(2,3,10,0)); }
+    .ld-year { color:#f6eed6; font-family:var(--font-display); font-weight:700; letter-spacing:.08em; text-shadow:-1px -1px 0 #1a1208, 1px -1px 0 #1a1208, -1px 1px 0 #1a1208, 1px 1px 0 #1a1208, 0 3px 10px rgba(0,0,0,.6); }
+    .ld-race { color:#e0d4b8; text-shadow:1px 1px 0 #000; }
+    .ld-kind { color:#f0c060; font-weight:700; text-shadow:-1px -1px 0 #1a1208, 1px -1px 0 #1a1208, -1px 1px 0 #1a1208, 1px 1px 0 #1a1208; }
+    .ld-panel { --bev-hi:#e8eef8; --bev-mid:#8e9ab4; --bev-lo:#2c3446; }
+    :root:root .ld-panel::before { background:linear-gradient(180deg, rgba(10,16,34,.95), rgba(4,8,20,.97)) !important; }
+    .ld-eyebrow { color:#f0c060; text-shadow:1px 1px 0 #000; }
+    .ld-title { color:#f6eed6; font-family:var(--font-display); font-weight:700; text-shadow:-1px -1px 0 #1a1208, 1px -1px 0 #1a1208, -1px 1px 0 #1a1208, 1px 1px 0 #1a1208; }
+    .ld-hud > div { background:linear-gradient(180deg, rgba(58,62,72,.9), rgba(22,24,30,.92)); border-left-width:4px; box-shadow:0 0 0 1px #000, inset 1px 1px 0 rgba(255,255,255,.2), inset -1px -1px 0 rgba(0,0,0,.6); }
+    .ld-colhd { box-shadow:0 0 0 1px #000, inset 1px 1px 0 rgba(255,255,255,.18); }
+    .ld-rtitle { font-family:var(--font-display); font-weight:700; }
+    .ld-stat, .ld-kv > div { background:#06080e; border:0; box-shadow:inset 1px 1px 0 #000, inset -1px -1px 0 #5a6278; }
+  `);
+
   // ================================================================================================================================ pending renames
   // flow.js asks for the landing inside the colonise handler — the colony is founded a moment later, when Turn.run resumes.
   const pendingNames = {};

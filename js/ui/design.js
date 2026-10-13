@@ -281,6 +281,69 @@
     .dz-rep canvas { width:100%; height:3rem; } .dz-rep .nm { font:400 1.05rem var(--font-display); color:var(--brass-hi); } .dz-rep .mt { color:var(--mist); font-size:.84rem; } .dz-rep.locked .mt { color:var(--ember); }
   `);
 
+  // "original" restyle: grey-metal family (research/ui-ref B 1c): steel bezel, black inset panes, orange title plates / chevrons, teal labels,
+  // orange-yellow component names, dark-red selection bar, orange spinners. Colour tokens are re-mapped locally so kit controls follow.
+  UI.css('design-orig', `
+    .dz { --bev-hi:#9a9a9a; --bev-mid:#6c6c6c; --bev-lo:#2a2a2a; --face-1:#7d7d7d; --face-2:#4a4a4a; --plate-1:#ffa31f; --plate-2:#c26500; --well:#040404; --well-2:#0b0b0b;
+      --title:#ffa31f; --title-lo:#8a4a00; --accent:#f38600; --on-accent:#1a0c00; --accent-dim:rgba(243,134,0,.16); --accent-line:#b86400;
+      --bg-0:#0a0a0a; --bg-1:#121212; --bg-2:#1a1a1a; --bg-3:#2a2a2a; --bg-4:#3a3a3a; --line-0:#1a1a1a; --line-1:#4d4d4d; --line-2:#797979; --line-3:#b5b5b5;
+      --brass:#bdbdbd; --brass-hi:#ffffff; --brass-lo:#6a6a6a; --mist:#d2d2d2; --fog:#8e8e8e; --ivory:#f2f2f2; --gold:#ffb020; --cyan:#3fd1ac; --leaf:#43d843;
+      --o-teal:#3fd1ac; --o-orange:#ffb020; --o-sel:#620b03; --o-green:#40d040;
+      background:radial-gradient(ellipse 60% 40% at 18% 112%, rgba(120,32,20,.45), transparent 70%), radial-gradient(ellipse 30% 60% at 50% 40%, rgba(70,84,104,.20), transparent 70%), linear-gradient(180deg,#171717,#0b0b0b); }
+    .dz::after { content:""; position:absolute; inset:0; pointer-events:none; z-index:30; box-shadow:inset 0 0 0 .28rem #6c6c6c, inset .28rem .28rem 0 .28rem #9a9a9a, inset -.28rem -.28rem 0 .28rem #2a2a2a, inset 0 0 0 .62rem #121212; }
+    .dz { padding:.9rem 1.1rem .95rem; }
+    /* title plate: orange tab with cut corners */
+    .dz-head { position:relative; border-bottom:0; padding:0 .2rem .4rem; box-shadow:0 1px 0 #2a2a2a, 0 2px 0 #797979; }
+    .dz-head h1 { position:relative; padding:.18em 1.1em .2em; font:700 1.35rem/1 var(--font-display); letter-spacing:.16em; text-transform:uppercase; color:#1a0c00; text-shadow:0 1px 0 rgba(255,220,170,.5);
+      background:linear-gradient(180deg,#ffb23c,#f38600 55%,#b85c00); box-shadow:inset 1px 1px 0 #ffd79a, inset -1px -1px 0 #7a3a00, 0 0 0 1px #000;
+      clip-path:polygon(.55rem 0,calc(100% - .55rem) 0,100% 100%,0 100%); }
+    :root:root .dz-head h1 { color:#1a0c00; text-shadow:0 1px 0 rgba(255,220,170,.5); }
+    :root:root .dz .panel::before { background:linear-gradient(180deg,#0d0d0d,#050505); box-shadow:inset 1px 1px 0 #000, inset -1px -1px 0 rgba(255,255,255,.1); }
+:root:root .dz .panel-h { color:#1a0c00; text-shadow:0 1px 0 rgba(255,220,170,.45); } :root:root .dz .panel-h .sub { color:#3a1c00; }
+    .dz-head .sub { color:var(--mist); } .dz-head .fin b { color:#fff; }
+    .dz-head .fin .up { border-bottom-color:#f38600; }
+    /* panes: black insets with a light/dark bevel line, no blue gradients */
+    .dz-card, .dz-tile, .dz-count .n { background:linear-gradient(180deg,#0e0e0e,#050505); border:0; box-shadow:0 0 0 1px #000, inset 1px 1px 0 #2a2a2a, inset -1px -1px 0 #6c6c6c; }
+    .dz-card:hover { background:linear-gradient(180deg,#1c1c1c,#0b0b0b); }
+    .dz-card.sel { background:linear-gradient(180deg,#2a0c06,#620b03); box-shadow:0 0 0 1px #000, inset 0 0 0 1px #f38600; }
+    .dz-card .no { color:#f38600; } .dz-card.empty { border:0; background:#0a0a0a; color:#6a6a6a; box-shadow:inset 1px 1px 0 #000, inset -1px -1px 0 #3a3a3a; }
+    .dz-ci .nm { color:var(--o-orange); text-transform:uppercase; letter-spacing:.05em; }
+    .dz-ci .co b, .dz-ci .mt { color:var(--o-teal); } .dz-ci .co { color:#d2d2d2; }
+    .dz-tile .k { color:var(--o-teal); letter-spacing:.08em; } .dz-tile .v { color:#fff; text-shadow:none; font-family:var(--font-ui); font-weight:600; }
+    .dz-tile.ghost { background:linear-gradient(180deg,#0c2a24,#04120f); box-shadow:0 0 0 1px #000, inset 0 0 0 1px var(--o-teal); }
+    .dz-sec { color:#1a0c00; font:700 .76rem var(--font-display); letter-spacing:.16em; padding:.12rem .8rem .14rem; width:max-content; background:linear-gradient(180deg,#ffb23c,#e87a00); box-shadow:inset 1px 1px 0 #ffd79a, inset -1px -1px 0 #7a3a00, 0 0 0 1px #000;
+      clip-path:polygon(.4rem 0,calc(100% - .4rem) 0,100% 100%,0 100%); margin:.2rem 0 .3rem; }
+    .dz-sec .hint { color:var(--mist); }
+    .dz-lb { color:var(--o-teal); text-transform:uppercase; letter-spacing:.03em; font-size:.88rem; } .dz-lb .ico { color:var(--o-teal); }
+    .dz-sel { background:linear-gradient(180deg,#0e0e0e,#040404); border:0; color:var(--o-orange); box-shadow:0 0 0 1px #000, inset 1px 1px 0 #2a2a2a, inset -1px -1px 0 #797979; text-transform:uppercase; letter-spacing:.03em; }
+    .dz-sel:hover { background:linear-gradient(180deg,#2a0c06,#620b03); color:#fff; box-shadow:0 0 0 1px #000, inset 0 0 0 1px #f38600; }
+    .dz-sel .ico, .dz-sel .chev { color:var(--o-teal); } .dz-sel .sp { color:#bdbdbd; } .dz-sel.none .nm { color:var(--o-teal); opacity:.7; font-style:normal; }
+    .dz-wh { color:var(--o-green); border-bottom:1px solid #4d4d4d; text-shadow:1px 1px 0 #000; }
+    .dz-wr .dmg, .dz-wr .rng { color:#fff; } .dz-wr .note { color:#bdbdbd; }
+    .dz-count .ud button { background:linear-gradient(180deg,#ff9a14,#a85500); border:1px solid #000; color:#1a0c00; box-shadow:inset 1px 1px 0 #ffd79a; } .dz-count .ud button:hover { background:linear-gradient(180deg,#ffb23c,#c26500); }
+    .dz-count .n { color:#43d843; }
+    .dz-msg { background:#0a0a0a; box-shadow:inset 1px 1px 0 #000, inset -1px -1px 0 #3a3a3a; }
+    .dz-foot { border-top:0; box-shadow:0 -1px 0 #2a2a2a, 0 -2px 0 #797979; background:linear-gradient(180deg,#3d3d3d,#2c2c2c); margin:.3rem -.3rem -.3rem; padding:.5rem .6rem .5rem; }
+    .dz-hull { background:linear-gradient(180deg,#0e0e0e,#040404); border:0; color:#9a9a9a; box-shadow:0 0 0 1px #000, inset 1px 1px 0 #2a2a2a, inset -1px -1px 0 #6c6c6c; }
+    .dz-hull:hover { color:#fff; }
+    .dz-hull.on { background:linear-gradient(180deg,#ffb23c,#f38600); color:#fff; box-shadow:0 0 0 1px #000, inset 1px 1px 0 #ffd79a, inset -1px -1px 0 #7a3a00; text-shadow:0 1px 0 rgba(0,0,0,.6); }
+    .dz-hull .nm { text-transform:uppercase; }
+    .dz-look .pic { border:0; background:#000; box-shadow:inset 1px 1px 0 #000, inset -1px -1px 0 #797979; color:var(--o-orange); }
+    .dz-name label, .dz-read .l { color:#fff; font-weight:600; } .dz-read .v { color:#fff; } .dz-read .v.gold { color:var(--o-orange); }
+    .dz-name input { background:#000; color:#fff; border:0; box-shadow:inset 1px 1px 0 #000, inset -1px -1px 0 #797979; }
+    /* preview + readouts */
+    .dz-cvw { border:0; background:radial-gradient(ellipse at 50% 40%, #1c2430, #050608 75%); box-shadow:0 0 0 1px #000, inset 1px 1px 0 #000, inset -1px -1px 0 #797979; }
+    .dz-pvh .nm { color:var(--o-orange); text-transform:uppercase; letter-spacing:.06em; } .dz-auto .lb, .dz-spc .sec { color:var(--o-teal); }
+    .dz-sbar { background:#000; box-shadow:inset 1px 1px 0 #000, inset -1px -1px 0 #797979; }
+    .dz-pop { border:0; background:rgba(4,4,4,.97); box-shadow:0 0 0 1px #000, inset 0 0 0 2px #6c6c6c; }
+    .dz-pop-h { background:linear-gradient(180deg,#3d3d3d,#2c2c2c); border-bottom:1px solid #000; } .dz-pop-h .t { color:var(--o-green); text-transform:uppercase; letter-spacing:.14em; font-family:var(--font-display); text-shadow:1px 1px 0 #000; }
+    .dz-pt th { background:#000; color:var(--o-green); text-transform:uppercase; border-bottom:1px solid #4d4d4d; }
+    .dz-pt tr.pr:hover, .dz-pt tr.pr.hi { background:rgba(255,255,255,.08); box-shadow:none; }
+    .dz-pt tr.pr.cur { background:var(--o-sel); } .dz-pt tr.pr.cur td { color:#fff; } .dz-pt tr.pr.lock td, .dz-pt tr.pr.conf td { color:#707070; }
+    .dz-pt td.nm .ico { color:var(--o-teal); }
+    .dz-kf button { background:#1a1a1a; border:0; box-shadow:inset 1px 1px 0 #4d4d4d, inset -1px -1px 0 #000; color:#d2d2d2; } .dz-kf button.on { background:var(--o-sel); color:#fff; border:0; }
+  `);
+
   // ===================================================================================================================================================
   // model
   const st = {

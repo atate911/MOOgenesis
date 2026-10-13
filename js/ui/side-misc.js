@@ -19,6 +19,26 @@
     .sm-event p { color:var(--ivory); margin:.3rem 0; line-height:1.4; } .sm-event .flag { margin:.35rem 0; padding:.3rem .55rem; border-left:3px solid var(--ember); background:rgba(255,148,64,.08); font-size:.9rem; }
     .sm-event .flag.good { border-left-color:var(--leaf); background:rgba(95,220,143,.07); }
   `);
+  const bump = css => css.replace(/(^|[}])([^{}]*)[{]/g, (m, a, sel) => a + sel.replace(/[/][*][^]*?[*][/]/g, '').split(',').map(s => s.trim()).filter(Boolean).map(s => ':root:root ' + s).join(', ') + ' {');   // raise specificity over the theme-v2 .panel/.btn rules
+  // Restyle: black picture tiles with name plates, framed portrait, green hint text, bevelled steel steppers.
+  UI.css('side-misc-orig', bump(`
+    .sm-card { gap:.6rem; padding:.3rem; border:0; background:linear-gradient(180deg, #0b0e13, #05070a); box-shadow:0 0 0 1px #d04030, inset 0 0 0 1px rgba(0,0,0,.9); }
+    .sm-card.unexp { box-shadow:0 0 0 1px #d04030, inset 0 0 18px rgba(208,64,48,.18); } .sm-card .un { font:600 1.05rem var(--font-display); color:#50e050; letter-spacing:.14em; }
+    .sm-desc { color:#e4e8ee; font-size:.88rem; }
+    .sm-range { border-left:0; background:#12161b; color:#40e060; font:600 .78rem var(--font-display); letter-spacing:.1em; text-transform:uppercase; text-align:center; box-shadow:inset 1px 1px 2px rgba(0,0,0,.9), 0 1px 0 rgba(255,255,255,.12); }
+    .sm-range.out { color:#ff7a5a; background:#1a1210; }
+    .sm-fleet { grid-template-columns:3.8rem 1fr auto; gap:.4rem; padding:.2rem; border:0; background:linear-gradient(180deg, #59636f, #454d57); box-shadow:inset 1px 1px 0 rgba(255,255,255,.2), inset -1px -1px 0 rgba(0,0,0,.5), 0 0 0 1px rgba(0,0,0,.6); }
+    .sm-fleet canvas { background:#000; box-shadow:inset 0 0 0 1px rgba(0,0,0,.9), 0 0 0 1px rgba(255,255,255,.12); }
+    .sm-fleet .nm { display:inline-block; padding:.05rem .35rem; font:600 .8rem var(--font-display); letter-spacing:.12em; text-transform:uppercase; color:#f0d048; background:#3a2810; box-shadow:inset 1px 1px 2px rgba(0,0,0,.8); }
+    .sm-fleet .ct { margin-top:.15rem; color:#e4e8ee; font-size:.78rem; }
+    .sm-step .btn { clip-path:none; padding:.05em .4em; color:#0b0e13; font-weight:700; background:#000; box-shadow:none; }
+    .sm-step .btn::before { clip-path:none; background:linear-gradient(180deg, #8791a0, #5b646f); box-shadow:inset 1px 1px 0 rgba(255,255,255,.35), inset -1px -1px 0 rgba(0,0,0,.45); }
+    .sm-step .n { padding:.05rem .3rem; background:#12161b; color:#f0e060; font-family:var(--font-mono, monospace); box-shadow:inset 1px 1px 2px rgba(0,0,0,.9); }
+    .sm-route { border:0; background:#12161b; color:#40e060; box-shadow:inset 1px 1px 2px rgba(0,0,0,.9), 0 1px 0 rgba(255,255,255,.12); } .sm-route.bad { color:#ff7a5a; background:#1a1210; }
+    .sm-actions { justify-content:stretch; }
+    .sm-event h4 { font:600 .95rem var(--font-display); letter-spacing:.08em; color:#f0d8b0; text-shadow:0 1px 0 #000; }
+    .sm-event .flag { border-left:0; background:rgba(0,0,0,.35); color:#d8c8a8; font:600 .74rem/1.4 var(--font-display); letter-spacing:.07em; text-transform:uppercase; box-shadow:inset 1px 1px 2px rgba(0,0,0,.7); }
+  `));
 
   const STAR_TEXT = {
     yellow: 'A yellow star — the best odds of temperate, standard-habitable planets.', red: 'An old, dull star — worlds here are commonly poor in minerals.',

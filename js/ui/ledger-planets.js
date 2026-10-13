@@ -63,6 +63,39 @@
     .lp-q { display:flex; gap:.4rem; margin:.5rem 0 .2rem; }
     @media (max-width: 62rem) { .lp-foot { grid-template-columns:1fr 1fr; } .lp-btns { flex-direction:row; justify-content:flex-end; } }
   `);
+  const bump = css => css.replace(/(^|[}])([^{}]*)[{]/g, (m, a, sel) => a + sel.replace(/[/][*][^]*?[*][/]/g, '').split(',').map(s => s.trim()).filter(Boolean).map(s => ':root:root ' + s).join(', ') + ' {');   // raise specificity over the theme-v2 .panel/.btn rules
+  // Restyle: tool-screen family — bronze bevel frame, recessed dark-brown cells, gold embossed title, blue selected row, lime production.
+  UI.css('ledger-planets-orig', bump(`
+    .lp { --bz-hi:#b39677; --bz-md:#826551; --bz-lo:#3a2c21; --bz-slot:#3a2c21; --bz-gold:#f48201; --bz-pale:#f0dcc0;
+      background:radial-gradient(90% 70% at 50% 0%, #2f2218 0%, rgba(47,34,24,0) 70%), #120d09; }
+    .lp-sheet { padding:.7rem .9rem .8rem; background:linear-gradient(135deg, var(--bz-hi), var(--bz-md) 18%, #6d5645 60%, var(--bz-lo)); box-shadow:inset 1px 1px 0 rgba(255,235,200,.35), inset -1px -1px 0 rgba(0,0,0,.65), 0 0 0 1px #000, 0 10px 40px rgba(0,0,0,.6); }
+    .lp-sheet::before, .lp-sheet::after { display:none; }
+    .lp-head { border-bottom:0; padding-bottom:.4rem; }
+    .lp-title { color:#ffd36a; text-shadow:0 1px 0 #2f1a0c, 0 2px 0 rgba(0,0,0,.5), 0 0 22px rgba(232,200,80,.2); }
+    .lp-sub { color:#d9bf9c; } .lp-sub b { color:var(--bz-pale); }
+    .lp-tablewrap { background:#2f231a; box-shadow:inset 1px 1px 3px rgba(0,0,0,.9), 0 0 0 1px rgba(0,0,0,.7), 0 1px 0 1px rgba(255,235,200,.15); }
+    .lp-tbl { border-collapse:separate; border-spacing:0 2px; }
+    .lp-tbl th { background:#4a3a2c; color:var(--bz-pale); border-bottom:0; box-shadow:inset 1px 1px 0 rgba(255,235,200,.18), inset -1px -1px 0 rgba(0,0,0,.6); font-family:var(--font-display); }
+    .lp-tbl td { color:var(--bz-pale); background:var(--bz-slot); border-bottom:0; box-shadow:inset 0 1px 0 rgba(0,0,0,.6), inset 0 -1px 0 rgba(255,235,200,.07); }
+    .lp-tbl td.idx { color:var(--bz-gold); opacity:1; } .lp-tbl td.nm { color:var(--bz-gold); }
+    .lp-tbl td.dim, .lp-tbl .dim { color:#8d7a62; }
+    .lp-tbl tbody tr:hover td { background:#52402f; }
+    .lp-tbl tbody tr.sel td { background:#3858b0; color:#fff; box-shadow:inset 0 1px 0 rgba(255,255,255,.25), inset 0 -1px 0 rgba(0,0,0,.5); }
+    .lp-tbl tbody tr.sel { box-shadow:none; }
+    .lp-tbl tbody tr.rebel td { background:#3a1c17; }
+    .lp-tbl tfoot td { background:#4a3a2c; border-top:0; color:var(--bz-pale); }
+    .lp-tbl tfoot td.nm { color:var(--bz-gold); }
+    .lp-fill { background:linear-gradient(90deg, #4aa84a, var(--bz-lime, #70e060)); box-shadow:none; }
+    .lp-box { clip-path:none; padding:.45rem .7rem .55rem; background:linear-gradient(135deg, var(--bz-hi), var(--bz-md) 25%, var(--bz-lo)); box-shadow:inset 1px 1px 0 rgba(255,235,200,.3), inset -1px -1px 0 rgba(0,0,0,.6), 0 0 0 1px #000; }
+    .lp-box::before { inset:.2rem; clip-path:none; background:#3a2c21; box-shadow:inset 1px 1px 2px rgba(0,0,0,.9), 0 0 0 1px rgba(255,235,200,.12); }
+    .lp-bt { margin:0 0 .35rem; padding:0 0 .25rem; border-bottom:1px solid rgba(255,235,200,.14); font:600 .95rem var(--font-display); letter-spacing:.1em; color:#50d0b0; }
+    .lp-line .k { color:#e0a050; font-weight:600; font-size:.82rem; letter-spacing:.06em; text-transform:uppercase; } .lp-line .v { color:var(--bz-pale); }
+    .lp-reserve b { color:var(--bz-gold); text-shadow:0 1px 0 #6b4f12; } .lp-reserve span { color:var(--bz-gold); }
+    .lp-btns .btn { clip-path:none; background:rgba(0,0,0,.85); box-shadow:none; color:#fff; text-shadow:0 1px 0 #000; font:600 .85rem var(--font-display); letter-spacing:.12em; text-transform:uppercase; }
+    .lp-btns .btn::before { clip-path:none; inset:1px; background:linear-gradient(180deg, #8c8f9a, #5c606c); box-shadow:inset 1px 1px 0 rgba(255,255,255,.35), inset -1px -1px 0 rgba(0,0,0,.5); }
+    .lp-btns .btn:hover::before { background:linear-gradient(180deg, #a0a4b0, #6c707c); }
+    .lp-tag { border-radius:0; }
+  `));
 
   // ---- vocabulary -------------------------------------------------------------------------------------------------------------------------
   const TYPE_COL = { none: '#6e7ba6', radiated: '#ff5c6a', toxic: '#b6e04a', inferno: '#ff7a3a', dead: '#9a8f86', tundra: '#9fd6e8', barren: '#b49670', minimal: '#d6c27a', desert: '#e6b45a',

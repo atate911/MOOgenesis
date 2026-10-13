@@ -118,6 +118,17 @@
     e.u = _frame;
     return e;
   }
+  /* re-colour a finished layer canvas in place with a CSS filter chain (used to warm the navy halls into bronze / terracotta) */
+  let _tint = null;
+  const COUNCIL_TINT = 'hue-rotate(-205deg) saturate(1.55) brightness(1.2) contrast(1.05)';
+  function tintLayer(c, filter) {
+    try {
+      if (!_tint) _tint = document.createElement('canvas');
+      _tint.width = c.width; _tint.height = c.height;
+      const t = _tint.getContext('2d'); t.setTransform(1, 0, 0, 1, 0, 0); t.clearRect(0, 0, c.width, c.height); t.drawImage(c, 0, 0);
+      const g = c.getContext('2d'); g.save(); g.setTransform(1, 0, 0, 1, 0, 0); g.globalCompositeOperation = 'copy'; g.filter = filter; g.drawImage(_tint, 0, 0); g.filter = 'none'; g.restore();
+    } catch (e) { /* no canvas filter support: keep the original colours */ }
+  }
   function trim() {
     const arr = Array.from(CACHE.entries()).sort((a, b) => a[1].u - b[1].u);
     for (let i = 0; i < arr.length && _bytes > BUDGET * 0.75; i++) {
@@ -321,7 +332,7 @@
     for (let y = 0; y < h; y += 192) for (let x = 0; x < w; x += 192) g.drawImage(t, x, y, 192, 192);
     g.restore();
   }
-  const CONFIG = { filmGrain: false };
+  const CONFIG = { filmGrain: false, audienceDim: true };
   /* final grade: vignette (+ optional animated grain) */
   function finish(g, w, h, vig, grain, t) {
     if (vig > 0) {
@@ -1720,7 +1731,7 @@
       t = tm(t);
       o = o || {};
       const S = begin(ctx, w, h), seats = (Array.isArray(o.seats) ? o.seats : []).filter((x) => x && typeof x === 'object').slice(0, 6), n = max(1, seats.length || 1);
-      const e = layer('council|' + n, w, h, S, (g, ww, hh, c) => buildCouncil(g, ww, hh, c, n));
+      const e = layer('council|' + n, w, h, S, (g, ww, hh, c) => { const r = buildCouncil(g, ww, hh, c, n); tintLayer(c, COUNCIL_TINT); return r; });
       const geo = e.d, room = geo.room;
       ctx.drawImage(e.c, 0, 0, w, h);
       const ped = geo.ped, holo = o.hologram || 'galaxy';
@@ -1751,8 +1762,8 @@
       const order = geo.booths.slice().sort((a, b) => b.Z - a.Z), out = { seats: [] };
       for (const B of order) {
         const seat = seats[B.i] || null, d = boothDims(B.u), u = B.u, ru = Math.round(u);
-        const back = layer('council.booth.b|' + ru, d.W, d.H, S, (g) => paintBooth(g, 'back', ru)).c;
-        const front = layer('council.booth.f|' + ru, d.W, d.H, S, (g) => paintBooth(g, 'front', ru)).c;
+        const back = layer('council.booth.b|' + ru, d.W, d.H, S, (g, ww, hh, c) => { paintBooth(g, 'back', ru); tintLayer(c, COUNCIL_TINT); }).c;
+        const front = layer('council.booth.f|' + ru, d.W, d.H, S, (g, ww, hh, c) => { paintBooth(g, 'front', ru); tintLayer(c, COUNCIL_TINT); }).c;
         const x0 = B.cx - d.ox, y0 = B.by - (d.H - d.pad), k = u / ru;
         const dw = d.W * k, dh = d.H * k, ox = B.cx, oy = B.by;
         ctx.drawImage(back, B.cx - d.ox * k, B.by - (d.H - d.pad) * k, dw, dh);
@@ -2941,6 +2952,12 @@
       const race = HALLS[o.race] ? o.race : 'human', hall = HALLS[race], S = begin(ctx, w, h), G0 = audGeo(w, h);
       const e = layer('aud.' + race, w, h, S, (g, ww, hh, c) => { const d = hall.bg(g, ww, hh, c, G0); bakeGrain(g, ww, hh, 0.05); return d; });
       ctx.drawImage(e.c, 0, 0, w, h);
+      /* conference-deck lighting: the sunlit hall is multiplied down into a deep-navy dome, leaving a warm pool of light on the leader */
+      if (CONFIG.audienceDim !== false) {
+        const Lq = G0.L; ctx.save(); ctx.globalCompositeOperation = 'multiply';
+        ctx.fillStyle = rgr(ctx, Lq.x + Lq.w * 0.5, Lq.y + Lq.h * 0.42, Lq.w * 0.18, hypot(w, h) * 0.6, [0, 'rgb(255,244,226)', 0.38, 'rgb(150,160,205)', 1, 'rgb(36,46,98)']); ctx.fillRect(0, 0, w, h);
+        ctx.restore();
+      }
       if (hall.dyn) hall.dyn(ctx, w, h, t, G0, e.d, o);
       const mk = MOOD_ALIAS[String(o.mood || 'neutral').toLowerCase()] || 'neutral', fx = MOOD_FX[mk], L = G0.L;
       // backlight / rim for the leader

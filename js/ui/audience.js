@@ -60,6 +60,26 @@
     @media (max-width: 62rem) { .au-panel { width:92%; left:4%; } .au-top { flex-wrap:wrap; } }
   `);
 
+  // "original" restyle (research/ui-ref C 7c / B audience): teal-cyan text well, red-brown meander brackets either side, pale periwinkle copy, steel header plates.
+  UI.css('audience-orig', `
+    .au-who, .au-bar { background:linear-gradient(180deg,rgba(58,62,72,.9),rgba(26,28,34,.92)); clip-path:none; box-shadow:0 0 0 1px #000, inset 1px 1px 0 #9298a6, inset -1px -1px 0 #14161a; }
+    .au-fx .fx { background:rgba(8,16,22,.86); }
+    .au-panel { clip-path:none; background:linear-gradient(135deg,#7ec8c4,#2e7a80 24%,#1a4c58 60%,#0a2a34); padding-left:2.5rem; padding-right:2.5rem; }
+    .au-panel::before { clip-path:none; inset:2px; background:linear-gradient(180deg,rgba(8,58,66,.97),rgba(3,30,38,.98)); box-shadow:inset 1px 1px 0 #000, inset -1px -1px 0 rgba(126,200,196,.45), inset 0 0 2rem rgba(56,214,196,.12); }
+    .au-panel::after { clip-path:none; }
+    .au-cap { top:.35rem; bottom:.35rem; width:1.15rem; box-shadow:inset 0 0 0 1px #2a0e06, inset 2px 2px 0 rgba(255,200,140,.35);
+      background:repeating-linear-gradient(180deg,#b8582c 0 .3rem,#6a2c14 .3rem .42rem,#d88a48 .42rem .5rem,#6a2c14 .5rem .62rem); clip-path:none; }
+    .au-cap.l { left:.4rem; } .au-cap.r { right:.4rem; }
+    .au-cap::after { content:""; position:absolute; inset:.18rem .28rem; border:1px solid rgba(255,220,170,.55); border-left-color:rgba(80,30,10,.8); }
+    .au-speaker { color:#e0b040; text-shadow:1px 1px 0 #000; }
+    .au-text { color:#bcdcf8; font-family:var(--font-ui); font-size:1.18rem; line-height:1.4; text-shadow:1px 1px 0 #000; }
+    .au-text.dim { color:#8fb0c8; }
+    .au-terms .tm { background:rgba(0,0,0,.35); box-shadow:inset 1px 1px 0 #000, inset -1px -1px 0 rgba(126,200,196,.4); }
+    .au-menu { border-top:1px solid rgba(126,200,196,.35); }
+    .au-mh { color:#e0b040; } .au-item { color:#c8e4ff; text-transform:none; } .au-item kbd { color:#e0b040; box-shadow:inset 0 0 0 1px rgba(224,176,64,.5); }
+    .au-item:hover:not(:disabled), .au-item.focus:not(:disabled) { background:#620b03; border-left-color:#e0b040; color:#fff; }
+  `);
+
   // ================================================================ dialogue text
   const SAFE = { star: 'our border', tech: 'that technology', bc: '', treaty: 'treaty', race3: 'another empire', leader3: '' };
   const lastPick = {};

@@ -565,6 +565,42 @@
     ctx.fillRect(x, y, w, h);
   }
 
+
+  /* ---- baked "studio lighting" for every painted layer: the layer's own silhouette is blurred into a height field, normals are taken from it and a
+     key light (warm, upper-left), a cool rim (right) and a faint specular are applied with the layer's alpha preserved.  Built once per cache entry; gives the
+     flat painted shapes real volume (rounded forms, contact shadow at the edges) instead of the flat cartoon look.  Portraits.lighting = false turns it off. ---- */
+  const LIGHT = { on: !(typeof location !== 'undefined' && /[?&]lit=0/.test(location.search || '')), key: 0.44, rim: 0.9, spec: 0.1 };
+  function litLayer(c, w, h, amt) {
+    if (!LIGHT.on || !amt || w < 16 || h < 16) return;
+    const g = c.getContext('2d'); if (!('filter' in g)) return;
+    const t = document.createElement('canvas'); t.width = w; t.height = h; const tg = t.getContext('2d');
+    const rb = Math.max(3, Math.round(Math.min(w, h) * 0.075)), rs = Math.max(2, Math.round(rb * 0.35));
+    tg.filter = 'blur(' + rb + 'px)'; tg.drawImage(c, 0, 0); const A = tg.getImageData(0, 0, w, h).data;
+    tg.globalCompositeOperation = 'copy'; tg.filter = 'blur(' + rs + 'px)'; tg.drawImage(c, 0, 0); const B = tg.getImageData(0, 0, w, h).data;
+    const img = g.getImageData(0, 0, w, h), d = img.data;
+    const Lk = [-0.55, -0.62, 0.56], ln = Math.hypot(Lk[0], Lk[1], Lk[2]); Lk[0] /= ln; Lk[1] /= ln; Lk[2] /= ln;
+    const Hh = [Lk[0], Lk[1], Lk[2] + 1], hn = Math.hypot(Hh[0], Hh[1], Hh[2]); Hh[0] /= hn; Hh[1] /= hn; Hh[2] /= hn;
+    const d0 = Lk[2], K = rb * 1.25, K2 = rs * 0.9, key = LIGHT.key * amt, rimA = LIGHT.rim * amt, spA = LIGHT.spec * amt;
+    const H = (i) => A[i * 4 + 3] * 0.62 + B[i * 4 + 3] * 0.38;
+    for (let y = 1; y < h - 1; y++) {
+      for (let x = 1; x < w - 1; x++) {
+        const i = y * w + x, o = i * 4, al = d[o + 3]; if (al < 4) continue;
+        const gx = (H(i + 1) - H(i - 1)) / 255, gy = (H(i + w) - H(i - w)) / 255;
+        const fx = (B[(i + 1) * 4 + 3] - B[(i - 1) * 4 + 3]) / 255, fy = (B[(i + w) * 4 + 3] - B[(i - w) * 4 + 3]) / 255;
+        let nx = -(gx * K * 0.7 + fx * K2 * 0.5), ny = -(gy * K * 0.7 + fy * K2 * 0.5), nz = 1;
+        const nl = Math.sqrt(nx * nx + ny * ny + 1); nx /= nl; ny /= nl; nz /= nl;
+        const dif = Math.max(0, nx * Lk[0] + ny * Lk[1] + nz * Lk[2]);
+        let f = 1 + key * (dif - d0) / d0; f = f < 0.5 ? 0.5 : f > 1.34 ? 1.34 : f;
+        const edge = 1 - nz, rim = Math.pow(edge, 1.5) * Math.max(0, nx) * rimA;
+        const sp = Math.pow(Math.max(0, nx * Hh[0] + ny * Hh[1] + nz * Hh[2]), 30) * spA;
+        const r = d[o] * f + rim * 70 + sp * 255, gg = d[o + 1] * f + rim * 105 + sp * 245, b = d[o + 2] * f + rim * 150 + sp * 225;
+        d[o] = r > 255 ? 255 : r; d[o + 1] = gg > 255 ? 255 : gg; d[o + 2] = b > 255 ? 255 : b;
+      }
+    }
+    g.putImageData(img, 0, 0);
+  }
+  const LIT_AMT = { body: 1, head: 1, ears: 0.9, collar: 0.9, fore: 0.45, aux: 0.7, aux2: 0.7 };
+
   /* ======================================================================= cache + render */
   const BUCKETS = [0.25, 0.3, 0.37, 0.45, 0.55, 0.67, 0.8, 1, 1.2, 1.5, 2];
   const _ents = new Map();
@@ -597,7 +633,7 @@
       const c = document.createElement('canvas'); c.width = cw; c.height = ch;
       const g = c.getContext('2d'); g.setTransform(bucket, 0, 0, bucket, 0, 0);
       fn.call(pa, g, P, T);
-      if (name !== 'sheen') grain(g, cw, ch, pa.grain);
+      if (name !== 'sheen') { try { litLayer(c, cw, ch, pa.lit === false ? 0 : (LIT_AMT[name] || 0)); } catch (e) { LIGHT.on = false; } grain(g, cw, ch, pa.grain); }
       layers[name] = cropLayer(c, bucket);
     };
     mk('body', pa.body); mk('head', pa.head); mk('fore', pa.fore); mk('collar', pa.collar); mk('sheen', pa.sheen); mk('ears', pa.ears); mk('aux', pa.aux); mk('aux2', pa.aux2);
@@ -3423,7 +3459,7 @@
 
   const NAMES = { alkari: 'Alkari', bulrathi: 'Bulrathi', darlok: 'Darlok', human: 'Human', klackon: 'Klackon', meklar: 'Meklar', mrrshan: 'Mrrshan', psilon: 'Psilon', sakkra: 'Sakkra', silicoid: 'Silicoid' };
   M.Gfx.Portraits = {
-    RACES: RACES, MOODS: MOODS, NAMES: NAMES,
+    RACES: RACES, MOODS: MOODS, NAMES: NAMES, light: LIGHT,
     draw: draw, canvas: canvas, drawBadge: drawBadge,
     accent: function (race) { return PAINT[race] ? PAINT[race].accent : '#d6b36a'; },
     clearCache: function () { _ents.clear(); _cc.clear(); _states.clear(); }

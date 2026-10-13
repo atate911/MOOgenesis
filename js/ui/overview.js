@@ -28,6 +28,30 @@
     .ov-cv { position:absolute; inset:0; width:100%; height:100%; pointer-events:none; }
     .ov-ok { display:flex; gap:.5rem; } .ov-ok .btn { flex:1; }
   `);
+  const bump = css => css.replace(/(^|[}])([^{}]*)[{]/g, (m, a, sel) => a + sel.replace(/[/][*][^]*?[*][/]/g, '').split(',').map(s => s.trim()).filter(Boolean).map(s => ':root:root ' + s).join(', ') + ' {');   // raise specificity over the theme-v2 .panel/.btn rules
+  // Restyle: tool-screen family — bronze frame around the map, gold embossed plate, stacked steel mode buttons, brown "Map Key" box.
+  UI.css('map-overview-orig', bump(`
+    .ov { padding:.4rem; gap:.4rem; background:linear-gradient(135deg, #b39677, #826551 20%, #6d5645 60%, #3a2c21); box-shadow:inset 1px 1px 0 rgba(255,235,200,.35), inset -1px -1px 0 rgba(0,0,0,.65); }
+    .ov-main { background:#000; box-shadow:0 0 0 1px #000, 0 1px 0 1px rgba(255,235,200,.2); overflow:hidden; }
+    .ov-main::after { content:""; position:absolute; inset:0; pointer-events:none; box-shadow:inset 2px 2px 4px rgba(0,0,0,.7), inset -1px -1px 0 rgba(255,235,200,.1); }
+    .ov-side { padding:0; background:none; width:clamp(18rem, 21vw, 23rem); }
+    .ov-side .panel { clip-path:none; padding:.3rem; gap:.5rem; background:linear-gradient(180deg, #826551, #3a2c21); box-shadow:inset 1px 1px 0 rgba(255,235,200,.3), inset -1px -1px 0 rgba(0,0,0,.6), 0 0 0 1px #000; }
+    .ov-side .panel::before { inset:.2rem; clip-path:none; background:#4a3a2c; box-shadow:inset 1px 1px 2px rgba(0,0,0,.8); }
+    .ov-side .panel::after { display:none; }
+    .ov-side .panel > * { position:relative; margin-left:.45rem; margin-right:.45rem; } .ov-side .panel > :first-child { margin-top:.45rem; } .ov-side .panel > :last-child { margin-bottom:.45rem; }
+    .ov-title { text-align:center; padding:.35rem .4rem; font:400 1.6rem/1 var(--font-title); color:#ffd36a; text-shadow:0 1px 0 #2f1a0c, 0 2px 0 rgba(0,0,0,.5); border-bottom:0;
+      background:linear-gradient(180deg, #5b4533, #3a2c21); box-shadow:inset 1px 1px 0 rgba(255,235,200,.25), inset -1px -1px 0 rgba(0,0,0,.6); }
+    .ov-title small { color:#d9bf9c; font-size:.8rem; }
+    .ov-modes .btn { clip-path:none; justify-content:center; padding:.4em .6em; background:rgba(0,0,0,.85); box-shadow:none; color:#0b0e13; font:700 .85rem var(--font-display); letter-spacing:.12em; text-transform:uppercase; }
+    .ov-modes .btn::before { clip-path:none; inset:1px; background:linear-gradient(180deg, #a0a3ae, #6c707c); box-shadow:inset 1px 1px 0 rgba(255,255,255,.4), inset -1px -1px 0 rgba(0,0,0,.45); }
+    .ov-modes .btn.active { color:#0b0e13; } .ov-modes .btn.active::before { background:linear-gradient(180deg, #4a4e5a, #6c707c); box-shadow:inset 1px 1px 3px rgba(0,0,0,.7); }
+    .ov-modes .btn .kbd { display:none; }
+    .ov-key { background:#3a2c21; box-shadow:inset 1px 1px 3px rgba(0,0,0,.9), 0 0 0 1px rgba(255,235,200,.14); }
+    .ov-kt { color:#f48201; border-bottom-color:rgba(255,235,200,.14); font-size:1.05rem; text-shadow:0 1px 0 #000; }
+    .ov-kh { color:#e0a050; } .ov-kr { color:#f0dcc0; } .ov-note { color:#d9bf9c; border-top-color:rgba(255,235,200,.14); }
+    .ov-ok .btn { clip-path:none; background:rgba(0,0,0,.85); box-shadow:none; color:#0b0e13; font:700 .85rem var(--font-display); letter-spacing:.14em; text-transform:uppercase; }
+    .ov-ok .btn::before { clip-path:none; inset:1px; background:linear-gradient(180deg, #a0a3ae, #6c707c); box-shadow:inset 1px 1px 0 rgba(255,255,255,.4), inset -1px -1px 0 rgba(0,0,0,.45); }
+  `));
 
   // ---- vocabulary (letters match the map component's own) ---------------------------------------------------------------------------------------
   const LETTER = { gaia: 'G', terran: 'T', ocean: 'O', jungle: 'J', arid: 'A', steppe: 'S', desert: 'D', minimal: 'M', tundra: 'U', barren: 'B', dead: 'X', inferno: 'I', toxic: 'Y', radiated: 'R' };

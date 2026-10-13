@@ -24,6 +24,19 @@
     @keyframes menu-fade { from { opacity:0; transform:translateY(10px);} to { opacity:1; transform:none; } }
     @keyframes menu-sweep { from { background-position: 160% 0, 0 0; } to { background-position: -60% 0, 0 0; } }
   `);
+  const bump = css => css.replace(/(^|[}])([^{}]*)[{]/g, (m, a, sel) => a + sel.replace(/[/][*][^]*?[*][/]/g, '').split(',').map(s => s.trim()).filter(Boolean).map(s => ':root:root ' + s).join(', ') + ' {');   // raise specificity over the theme-v2 .panel/.btn rules
+  // Restyle: the original's title menu is plain gold text on the art — no boxes; hover brightens, keyboard focus gets a marker.
+  UI.css('menu-orig', bump(`
+    .menu-list { gap:.15rem; }
+    .menu-list .btn { clip-path:none; background:none; box-shadow:none; padding:.35em .2em; font:400 clamp(1.3rem, 2.2vh, 1.9rem)/1.1 var(--font-title); letter-spacing:.08em; text-transform:none;
+      color:#e8b830; text-shadow:0 2px 0 #4a3408, 0 0 18px rgba(232,184,48,.18); transition:color .15s, text-shadow .15s, padding-left .15s; }
+    .menu-list .btn::before { display:none; }
+    .menu-list .btn:hover, .menu-list .btn:focus-visible { background:none; color:#fff1a8; padding-left:.8em; text-shadow:0 2px 0 #4a3408, 0 0 22px rgba(255,226,120,.55); }
+    .menu-list .btn:hover::after, .menu-list .btn:focus-visible::after { content:""; position:absolute; left:.1em; top:50%; width:.45em; height:.45em; margin-top:-.22em; inset:auto; border:0; background:#fff1a8; clip-path:polygon(0 0, 100% 50%, 0 100%); transform:none; left:.1em; top:50%; }
+    .menu-list .btn.disabled, .menu-list .btn:disabled { opacity:.35; }
+    .menu-list .btn .kbd { display:none; }
+    .menu-foot { color:#7d6f9a; letter-spacing:.08em; text-transform:uppercase; font-size:.7rem; }
+  `));
 
   // ---------------------------------------------------------------- vortex renderer
   function makeSprite(r, g, b) {
