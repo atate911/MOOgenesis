@@ -64,7 +64,8 @@ moo_make_release() {
     mkdir -p "$dest"
     for p in "${MOO_DEPLOY_PATHS[@]}"; do
         [[ -e "${repo}/${p}" ]] || { rm -rf "$dest"; echo "missing ${p} in ${repo}" >&2; return 1; }
-        cp -a "${repo}/${p}" "${dest}/"
+        mkdir -p "${dest}/$(dirname "$p")"                    # keep nested paths (assets/art) where the game expects them
+        cp -a "${repo}/${p}" "${dest}/${p}"
     done
     printf '%s\n' "$name" > "${dest}/version.txt"
     printf '%s\n' "$ver" > "${dest}/VERSION"
