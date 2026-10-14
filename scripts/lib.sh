@@ -10,7 +10,7 @@ declare -F warn >/dev/null || warn() { echo "   !  $*" >&2; }
 
 # What gets published: the game is static, so this is the whole deployable
 # surface. research/, briefs/, tools/ and the *.md docs stay in the checkout.
-MOO_DEPLOY_PATHS=(index.html css js)
+MOO_DEPLOY_PATHS=(index.html css js assets/art assets/races)
 
 MOO_DEFAULT_ROOT="/opt/moogenesis"
 MOO_DEFAULT_DOMAIN="moo.dhlab.us"
