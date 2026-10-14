@@ -852,11 +852,11 @@
     const portrait = h('canvas.su-portrait');
     const pframe = h('div.cx.su-pframe', portrait);
     const dName = h('h2.su-d-name'), dTag = h('div.su-d-tag'), dDesc = h('p.su-d-desc'), dHome = h('b'), dLeaders = h('span');
-    const traits = h('div.su-traits');
+    const traits = h('div.su-traits'), dArt = h('div.su-homeart');                  // homeworld illustration (Gfx.WorldArt), absent until loaded
     const detail = h('div.panel.su-detail',
       h('div.su-d-top', pframe,
         h('div.su-d-info', dName, dTag, dDesc,
-          h('div.su-facts', h('div', h('small', 'Homeworld'), dHome), h('div', h('small', 'Emperors'), dLeaders)))),
+          h('div.su-facts', h('div', h('small', 'Homeworld'), dHome), h('div', h('small', 'Emperors'), dLeaders)), dArt)),
       h('div.panel-h.su-traits-h', h('span', 'Racial traits'), h('span.sub', h('i.su-key.good'), 'strength', h('i.su-key.bad'), 'weakness')),
       traits);
     const el = h('section.su-view.su-s2', roster, detail);
@@ -882,6 +882,9 @@
         dTag.textContent = r.tagline || '';
         dDesc.textContent = r.desc || 'No description available.';
         dHome.textContent = defaultHome(st.race);
+        UI.clear(dArt);
+        const WA = M.Gfx && M.Gfx.WorldArt, hp = WA && WA.enabled ? WA.race(st.race, 'homeworld') : null;
+        if (hp) { const cv = WA.canvas(hp, 480, 270, { fx: 0.5, fy: 0.5 }); dArt.appendChild(cv); }
         dLeaders.textContent = ((r.leaderNames || []).slice(0, 3).join(', ')) || '—';
         UI.clear(traits);
         const tl = r.traits || [];
@@ -1324,6 +1327,7 @@
     .su-pframe.swap { animation: su-swap .5s var(--ease) both; }
     @keyframes su-swap { from { opacity:.2; filter:brightness(1.8) blur(4px); transform:translateY(6px) scale(.985); } to { opacity:1; filter:none; transform:none; } }
     .su-portrait, .su-id-cv { display:block; width:100%; height:100%; background:#050818; }
+    .su-homeart { margin-top:.3rem; aspect-ratio:16/9; background:#050818; box-shadow:0 0 0 1px rgba(214,179,106,.45); } .su-homeart:empty { display:none; } .su-homeart canvas { display:block; width:100%; height:100%; }
     .su-d-info { display:flex; flex-direction:column; gap:.35rem; min-width:0; }
     .su-d-name { margin:0; font:400 clamp(1.7rem, 4vh, 2.3rem)/1 var(--font-title); color:var(--brass-hi); letter-spacing:.03em; overflow-wrap:anywhere; }
     .su-d-tag { color:var(--cyan); font-size:1.02rem; letter-spacing:.02em; }

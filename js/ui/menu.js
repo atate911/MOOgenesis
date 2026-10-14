@@ -122,6 +122,7 @@
       vortex = makeVortex(1);
     },
     enter() {
+      try { const WA = M.Gfx.WorldArt; if (WA) WA.get(WA.scene('galaxy')); } catch (e) { /* optional */ }
       t0 = performance.now() / 1000;
       buildMenu();
       try { if (M.Audio && M.Audio.Music) M.Audio.Music.play('title', { fade: 2.5 }); } catch (e) { /* audio optional */ }
@@ -133,12 +134,15 @@
       const w = f.w, hh = f.h;
       rebuildBackdrop(w, hh);
       ctx.globalCompositeOperation = 'source-over';
-      if (bg) ctx.drawImage(bg, 0, 0, w, hh); else { ctx.fillStyle = '#04061a'; ctx.fillRect(0, 0, w, hh); }
+      const WA = M.Gfx && M.Gfx.WorldArt, art = WA && WA.draw(ctx, WA.scene('galaxy'), 0, 0, w, hh, { fx: 0.62, fy: 0.46, zoom: 1.04 + 0.03 * Math.sin(t * 0.05) });   // photoreal galaxy replaces the painted sky + vortex
+      if (art) { ctx.fillStyle = 'rgba(2,4,14,.28)'; ctx.fillRect(0, 0, w, hh); }
+      else if (bg) ctx.drawImage(bg, 0, 0, w, hh); else { ctx.fillStyle = '#04061a'; ctx.fillRect(0, 0, w, hh); }
       const R = Math.min(w, hh) * 0.62, rot = -0.35 + Math.sin(t * .05) * .04;
       // GPU vortex (260k stars + bloom for < 1 ms) when WebGL2 is available and the tier allows it; the CPU vortex is the always-working fallback
       const GS = M.Gfx && M.Gfx.GLSpace;
       let drew = false;
-      if (GS && GS.supported && GS.supported()) { try { drew = GS.vortex(ctx, w * 0.66, hh * 0.46, R, t, { tilt: 0.42, rot }) !== false; } catch (e) { drew = false; } }
+      if (art) drew = true;
+      else if (GS && GS.supported && GS.supported()) { try { drew = GS.vortex(ctx, w * 0.66, hh * 0.46, R, t, { tilt: 0.42, rot }) !== false; } catch (e) { drew = false; } }
       if (!drew) vortex.draw(ctx, w * 0.66, hh * 0.46, R, t, 0.42, rot);
       // a big slow planet low-left of the vortex (GLPlanets falls back to the CPU renderer by itself)
       const P = M.Gfx && (M.Gfx.pick('planets'));

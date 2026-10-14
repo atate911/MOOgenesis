@@ -47,6 +47,8 @@
   };
   const emp = e => 'var(--emp' + e.color + ')';
   function planetPic(card, size, owner) {
+    const WA = M.Gfx.WorldArt, art = WA && WA.enabled ? WA.orbit(card, M.Game && M.Game.S) : null;   // photoreal orbit card, else the procedural sprite
+    if (art) return h('div.sm-pic', WA.canvas(art, size * 2, size * 2, { fit: 'contain' }));
     const c = h('canvas', { width: size * 2, height: size * 2 });
     try {
       const P = M.Gfx.pick('planets'); const look = card.type === 'none' ? 'asteroids' : card.growth === 'gaia' ? 'gaia' : card.type;

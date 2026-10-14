@@ -72,6 +72,7 @@ window.MOO_MANIFEST = {
     'js/gfx/planets.js',
     'js/gfx/ships.js',
     'js/gfx/portraits.js',
+    'js/gfx/worldart.js',
     'js/gfx/fx.js',
     'js/gfx/scenes.js',
     'js/gfx/gl-planets.js',

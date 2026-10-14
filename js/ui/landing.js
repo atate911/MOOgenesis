@@ -37,6 +37,8 @@
   const FIELD_ICON = ['computers', 'construction', 'forcefield', 'planetology', 'propulsion', 'weapons'];
   const rgba = (hex, a) => U.rgba(hex, a);
   const warned = {};
+  // world-art (Gfx.WorldArt) warm-up so the photo backdrop is ready before the first frame; harmless when the module/image is absent
+  function artWarm(kind, key) { const WA = gfx('WorldArt'); if (WA && WA[kind]) { try { WA.get(WA[kind](key)); } catch (e) { /* ignore */ } } }
   function warnOnce(k, e) { if (!warned[k]) { warned[k] = 1; console.warn('[landing] ' + k + ' failed — using fallback:', e && e.message || e); } }
 
   const gfx = n => (M.Gfx && M.Gfx[n]) || null;
@@ -288,6 +290,7 @@
   MAKERS.colony = function (H, d, run) {
     const S = G.S, P = d.planet, EI = d.emp, T = { fadeIn: 0.9, start: 0.45, descend: 6.0 };
     const look = lookOf(P), seed = (P.id * 7919 + (P.gfx | 0)) | 0, defName = (d.opts && d.opts.name) || planetName(S, P);
+    artWarm('surface', look);
     let tl = 0, touched = false, populated = false, flashT = -1, closing = -1, sfxDone = false, panelShown = false, panelAt = 1e9, result = null, ended = false;
 
     const text = M.Data && M.Data.text, flav = text && text.planetFlavor && text.planetFlavor[look];
@@ -417,6 +420,7 @@
     const S = G.S, R = d.result, rebel = !!R.rebellion;
     const AT = empInfo(R.attacker, R.attackerRace), DF = empInfo(R.defender, R.defenderRace), P = S.planets[R.planet] || { id: R.planet, type: 'terran', growth: 'normal' };
     const look = lookOf(P), seed = (P.id * 7919 + (P.gfx | 0)) | 0, pname = R.planetName || planetName(S, P);
+    artWarm('surface', look); artWarm('scene', 'ground-battle');
     const landed = max(0, R.landed | 0), nDef = max(0, R.defenders | 0);
     const sent = max(R.sent !== undefined ? R.sent | 0 : landed, landed), arrived = R.arrived !== undefined ? R.arrived | 0 : landed;
     const lostTotal = max(0, sent - arrived), gt = R.gauntlet || {};
@@ -728,7 +732,9 @@
         const t = tl, fx = H.fx;
         ctx.save(); if (shake[0] || shake[1]) ctx.translate(shake[0], shake[1]);
         const Sc = gfx('Scenes'); let ok = false;
-        if (Sc && Sc.surface) { try { Sc.surface.draw(ctx, w, hh, t, { look, seed, populated: true, color: DF.color }); ok = true; } catch (e) { warnOnce('surface', e); } }
+        const WA = gfx('WorldArt');
+        if (WA && WA.draw(ctx, WA.scene('ground-battle'), 0, 0, w, hh, { fx: 0.5, fy: 0.6 })) ok = true;   // purpose-made ground-battle art, else the planet's surface scene
+        else if (Sc && Sc.surface) { try { Sc.surface.draw(ctx, w, hh, t, { look, seed, populated: true, color: DF.color }); ok = true; } catch (e) { warnOnce('surface', e); } }
         if (!ok) { const g = ctx.createLinearGradient(0, 0, 0, hh); g.addColorStop(0, '#0a1030'); g.addColorStop(1, '#2a1a1a'); ctx.fillStyle = g; ctx.fillRect(-20, -20, w + 40, hh + 40); }
         if (dimA > 0) { ctx.fillStyle = 'rgba(2,4,14,' + 0.76 * dimA + ')'; ctx.fillRect(-20, -20, w + 40, hh + 40); }
         if (phase === 'approach' || phase === 'land' || phase === 'intro') drawApproach(ctx);

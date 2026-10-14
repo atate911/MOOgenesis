@@ -2,7 +2,7 @@
 const { chromium } = require('/opt/node-tools/node_modules/playwright');
 const http = require('http'), fs = require('fs'), path = require('path');
 const ROOT = path.resolve(__dirname, '../..');
-const MIME = { '.html': 'text/html', '.js': 'text/javascript', '.css': 'text/css', '.json': 'application/json', '.png': 'image/png', '.svg': 'image/svg+xml', '.woff2': 'font/woff2' };
+const MIME = { '.html': 'text/html', '.js': 'text/javascript', '.css': 'text/css', '.json': 'application/json', '.png': 'image/png', '.webp': 'image/webp', '.svg': 'image/svg+xml', '.woff2': 'font/woff2' };
 function serve(port = 8765) {
   return new Promise(res => {
     const s = http.createServer((q, r) => {

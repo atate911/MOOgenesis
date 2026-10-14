@@ -1,5 +1,7 @@
 # MOOgenesis — cinematic world art
 
+> **Integration:** the game loads compressed webp copies from `assets/art/` (same sub-paths, `.webp`) through `js/gfx/worldart.js`. The PNGs and JSON sidecars here are the masters; regenerate with ImageMagick (`convert x.png -quality 80 -define webp:method=4 ../art/<dir>/x.webp`). Unused so far: `system/*` (the images contain their own planet and star, which clash with the live system view), race `figure`, `council` and `homeworld-square` images, and the colony `fortress`/`industrial`/`polluted` variants.
+
 ## GNN studio
 
 The [GNN studio backdrop](gnn/README.md) provides an empty race-neutral broadcast set, with room for a live anchor, story graphics, and headlines. Its [asset manifest](gnn/asset-manifest.json) records composition and integration guidance, including the baked-in desk. The image has embedded metadata and a matching JSON sidecar; it is not yet connected to the game renderer.

@@ -334,6 +334,8 @@
   }
   const CONFIG = { filmGrain: false, audienceDim: true };
   /* final grade: vignette (+ optional animated grain) */
+  /* photoreal world-art backdrop (Gfx.WorldArt); returns false until the image is loaded, so callers keep the procedural art */
+  function artBG(ctx, path, w, h, o) { const WA = G.WorldArt; return !!(WA && path && WA.draw(ctx, path, 0, 0, w, h, o)); }
   function finish(g, w, h, vig, grain, t) {
     if (vig > 0) {
       g.fillStyle = rgr(g, w / 2, h * 0.5, min(w, h) * 0.38, hypot(w, h) * 0.62, [0, 'rgba(2,3,12,0)', 1, 'rgba(2,3,12,' + vig + ')'], w / 2, h * 0.48);
@@ -2950,23 +2952,23 @@
       t = tm(t);
       o = o || {};
       const race = HALLS[o.race] ? o.race : 'human', hall = HALLS[race], S = begin(ctx, w, h), G0 = audGeo(w, h);
-      const e = layer('aud.' + race, w, h, S, (g, ww, hh, c) => { const d = hall.bg(g, ww, hh, c, G0); bakeGrain(g, ww, hh, 0.05); return d; });
-      ctx.drawImage(e.c, 0, 0, w, h);
+      const photo = artBG(ctx, G.WorldArt && G.WorldArt.race(race, 'audience'), w, h, { fx: 0.62, fy: 0.5 });
+      const e = photo ? { d: {} } : layer('aud.' + race, w, h, S, (g, ww, hh, c) => { const d = hall.bg(g, ww, hh, c, G0); bakeGrain(g, ww, hh, 0.05); return d; });
+      if (!photo) ctx.drawImage(e.c, 0, 0, w, h);
       /* conference-deck lighting: the sunlit hall is multiplied down into a deep-navy dome, leaving a warm pool of light on the leader */
-      if (CONFIG.audienceDim !== false) {
+      if (!photo && CONFIG.audienceDim !== false) {
         const Lq = G0.L; ctx.save(); ctx.globalCompositeOperation = 'multiply';
         ctx.fillStyle = rgr(ctx, Lq.x + Lq.w * 0.5, Lq.y + Lq.h * 0.42, Lq.w * 0.18, hypot(w, h) * 0.6, [0, 'rgb(255,244,226)', 0.38, 'rgb(150,160,205)', 1, 'rgb(36,46,98)']); ctx.fillRect(0, 0, w, h);
         ctx.restore();
       }
-      if (hall.dyn) hall.dyn(ctx, w, h, t, G0, e.d, o);
+      if (!photo && hall.dyn) hall.dyn(ctx, w, h, t, G0, e.d, o);
       const mk = MOOD_ALIAS[String(o.mood || 'neutral').toLowerCase()] || 'neutral', fx = MOOD_FX[mk], L = G0.L;
       // backlight / rim for the leader
       glow(ctx, hall.rim, L.x + L.w * 0.5, L.y + L.h * 0.38, L.w * 0.9, 0.18);
       featheredPortrait(ctx, race, L.x, L.y, L.w, L.h, { t: t, mood: mk, talking: !!o.talking, color: o.color, bg: false, key: 'aud' }, 0.06, 0, 0);
-      if (hall.fgDyn) hall.fgDyn(ctx, w, h, t, G0, e.d, o);
+      if (!photo && hall.fgDyn) hall.fgDyn(ctx, w, h, t, G0, e.d, o);
       // foreground rail
-      const fr = layer('aud.fg.' + race, w, h, S, (g, ww, hh) => (RAIL[race] ? RAIL[race](g, ww, hh) : buildAudFG(g, ww, hh)));
-      ctx.drawImage(fr.c, 0, 0, w, h);
+      if (!photo) { const fr = layer('aud.fg.' + race, w, h, S, (g, ww, hh) => (RAIL[race] ? RAIL[race](g, ww, hh) : buildAudFG(g, ww, hh))); ctx.drawImage(fr.c, 0, 0, w, h); }
       let tab = null;
       if (o.table) tab = audTable(ctx, w, h, t, hall);
       // mood grade: colour the whole room, light the leader from the mood's side
@@ -3310,19 +3312,21 @@
       const S = begin(ctx, w, h), look = surfLook(o), L = LOOKS[look];
       const key = 'surf|' + look + '|' + (o.seed | 0) + '|' + (o.rings ? 1 : 0) + '|' + (o.populated === undefined ? (o.inhabited ? 1 : 0) : (o.populated ? 1 : 0)) + '|' + (o.color || '');
       const e = layer(key, w, h, S, (g, ww, hh, c) => surfaceBG(g, ww, hh, c, o, c.width / ww)), I = e.d, hz = I.hz;
-      ctx.drawImage(e.c, 0, 0, w, h);
+      const photo = artBG(ctx, G.WorldArt && G.WorldArt.surface(look), w, h, { fx: 0.5, fy: 0.55 });   // photo backdrop replaces the painted world; I keeps the layout (landing site, ground line)
+      if (!photo) ctx.drawImage(e.c, 0, 0, w, h);
       // live sky: clouds
-      const cl = L.cloud;
+      const cl = photo ? 0 : L.cloud;
       if (cl > 0.05) {
         const tone = look === 'inferno' ? '#3a1008' : look === 'dead' ? '#6a665c' : look === 'toxic' ? '#c8e060' : look === 'radiated' ? '#8a5aa8' : look === 'gasgiant' ? '#f4dcb0' : '#ffffff';
         const ct = fogTile(40 + look.length, 256, tone, 0.45, 0.82, 0.85, 5, 3);
         scrollTile(ctx, ct, 0, hz * 0.05, w, hz * 0.42, 2.6, t * 7, 0.55 * cl); scrollTile(ctx, ct, 0, hz * 0.38, w, hz * 0.4, 3.4, t * 12 + 70, 0.5 * cl);
       }
-      for (const s of I.suns) glow(ctx, L.sun, s.x, s.y, s.r * (6 + sin(t * 0.7)), 0.18);
+      if (!photo) for (const s of I.suns) glow(ctx, L.sun, s.x, s.y, s.r * (6 + sin(t * 0.7)), 0.18);
       // look-specific life
-      surfLive(ctx, w, h, t, o, I, L, look);
+      if (!photo) surfLive(ctx, w, h, t, o, I, L, look);
       // settlement life
       if (I.pop) {
+        if (photo) { /* the photo carries its own sky and settlement */ } else {
         if (I.city) for (const l of I.city.lights) { const on = sin(t * 2 + l.x) > -0.2; if (on) glow(ctx, l.c, l.x, l.y, 9, 0.9); }
         ctx.save(); ctx.globalCompositeOperation = 'lighter';
         for (let i = 0; i < 4; i++) { const u = fract(t * (0.04 + i * 0.01) + i * 0.27), x = lerp(-20, w + 20, i % 2 ? 1 - u : u), y = hz - h * (0.05 + 0.1 * h2(i, 3)) + sin(t + i) * 4; glowL(ctx, i % 2 ? '#ffd890' : '#8fd8ff', x, y, 7, 0.9); ctx.fillStyle = '#fff'; ctx.globalAlpha = 0.9; ctx.fillRect(x - 1, y - 1, 2, 2); }
@@ -3330,6 +3334,7 @@
         const gc = o.color || '#ffd890';
         for (const [dx, dr] of (I.city ? I.city.doms : [])) glowL(ctx, gc, dx, I.gy - dr * 0.2, dr * 1.3, 0.12 + 0.04 * sin(t * 1.3 + dx));
         ctx.restore();
+        }
       } else {
         // colony ship descends; outpost beacon on the ground
         const landing = o.landing != null ? clamp(o.landing, 0, 1) : sstep(0, 1, (t % 16) / 11);
@@ -3342,6 +3347,7 @@
         ctx.restore();
         drawShip(ctx, { race: o.race || 'human', hull: 'cruiser', x: gx, y: sy, size: shs, angle: -PI / 2 + 0, color: o.color || '#8fb4ff', t: t, thrust: 1 - touch, flags: { colony: true } });
         // landing guide lights + beacon mast
+        if (!photo) {
         const bx = gx - I.S0 * 1.8;
         ctx.fillStyle = '#10163e'; ctx.fillRect(bx - 1.5, gy - I.S0 * 0.9, 3, I.S0 * 0.9); ctx.fillStyle = '#c8d4ff'; ctx.fillRect(bx - 5, gy - I.S0 * 0.95, 10, 2);
         const blink = 0.5 + 0.5 * sin(t * 3);
@@ -3349,6 +3355,7 @@
         for (let i = -3; i <= 3; i++) { if (i === 0) continue; const lx = gx + i * I.S0 * 0.62, p = 0.4 + 0.6 * max(0, sin(t * 4 - abs(i) * 0.8)); glowL(ctx, '#7affc8', lx, gy + I.S0 * 0.06, 8, 0.3 + 0.5 * p); }
         ctx.restore();
         ctx.strokeStyle = rgba('#7affc8', 0.35); ctx.lineWidth = 1; ctx.beginPath(); ctx.ellipse(gx, gy + I.S0 * 0.06, I.S0 * 1.9, I.S0 * 0.18, 0, 0, TAU); ctx.stroke();
+        }
       }
       finish(ctx, w, h, 0.38, 0.035, t);
       end(ctx);

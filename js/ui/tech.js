@@ -1199,8 +1199,11 @@
     const f = UI.fitCanvas(SC.cv, { maxDpr: PQ().dpr }), g = f.ctx, w = f.w, hh = f.h;
     if (w < 40 || hh < 40) return;
     let rects = null;
-    const Sc = M.Gfx && M.Gfx.Scenes;
-    if (Sc && Sc.lab && Sc.lab.draw && !R.labFailed) {
+    const Sc = M.Gfx && M.Gfx.Scenes, WA = M.Gfx && M.Gfx.WorldArt;
+    if (WA && WA.draw(g, WA.race(R.race, 'scientist'), 0, 0, w, hh, { fx: 0.3, fy: 0.5 })) {          // photoreal scientist scene; its right 40% is left clear for the panel
+      glow(g, w * 0.34, hh * 0.78, hh * 0.55, R.F.col, 0.07 + 0.03 * Math.sin(R.t * 1.4));              // research-field tint on the console
+      rects = { panel: { x: w * 0.6, y: hh * 0.12, w: w * 0.37, h: hh * 0.7 } };
+    } else if (Sc && Sc.lab && Sc.lab.draw && !R.labFailed) {
       try { rects = Sc.lab.draw(g, w, hh, R.rm ? 1.2 : R.t, { race: R.race, field: R.F.lab, mood: R.mood, talking: R.talking, color: R.banner, planet: R.planet }); }
       catch (e) { R.labFailed = true; console.warn('[techscene] lab scene failed, using the plain backdrop', e); }
     }
@@ -1243,6 +1246,7 @@
     const home = S.planets[E.capital];
     const R = SC.run = { kind: spec.kind, spec, it, E, f, F, t: 0, acc: 0, dirty: true, rm: reduced(), race: E.race, banner: bannerCss(E), mood: 'neutral', talking: false, talkTail: 0, finishing: false, hi: 0,
       planet: home ? { look: home.type && home.type !== 'none' ? home.type : 'terran', seed: (home.id | 0) + 5, rings: false } : null, art: null, tech: null, capT: new Typer(SC.cap), descT: null };
+    try { const WA = M.Gfx && M.Gfx.WorldArt; if (WA) WA.get(WA.race(E.race, 'scientist')); } catch (e) { /* optional */ }
     SC.layKey = ''; SC.root.classList.remove('out'); UI.clear(SC.panel); UI.clear(SC.cap); UI.hideTip();
     SC.root.style.setProperty('--fc', F.col);
     if (spec.kind === 'choose') buildChoose(R); else buildBreak(R);

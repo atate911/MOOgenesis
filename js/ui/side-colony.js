@@ -85,6 +85,8 @@
   const LABELS =[['Ship', 'ship', 'var(--c-ship)'], ['Def', 'def', 'var(--c-def)'], ['Ind', 'ind', 'var(--c-ind)'], ['Eco', 'eco', 'var(--c-eco)'], ['Tech', 'tech', 'var(--c-res)']];
 
   function planetCanvas(card, size) {
+    const WA = M.Gfx && M.Gfx.WorldArt, art = WA && WA.enabled ? WA.orbit(card, M.Game && M.Game.S) : null;   // photoreal orbit card, else the procedural sprite
+    if (art) return WA.canvas(art, size * 2, size * 2, { fit: 'contain' });
     const c = h('canvas', { width: size * 2, height: size * 2 });
     const look = card.type === 'none' ? 'asteroids' : (card.growth === 'gaia' ? 'gaia' : card.type);
     const P = M.Gfx && M.Gfx.pick('planets');

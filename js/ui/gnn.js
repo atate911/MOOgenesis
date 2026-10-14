@@ -204,6 +204,12 @@
     spyCaught: ['ticker', 'redact'], techStolen: ['ticker', 'redact'], sabotage: ['ticker', 'redact'],
   };
   const GFX_KINDS = { planet: 1, battle: 1, map: 1, chart: 1, ticker: 1 };
+  // categories with a photoreal illustration (Gfx.WorldArt event art): shown on the video wall instead of the procedural graphic once loaded
+  const CAT_ART = {
+    planetDestroyed: 'planet-destroyed', genocide: 'planet-destroyed', systemNova: 'nova', novaWarning: 'nova', novaProgress: 'nova',
+    plague: 'plague', virus: 'plague', plagueProgress: 'plague', planetRebels: 'rebellion', coup: 'rebellion',
+    bombardment: 'bombarded', invasionSuccess: 'bombarded', comet: 'comet', cometProgress: 'comet', piracy: 'pirates', piracyProgress: 'pirates', colonyLost: 'devastated', colonyFounded: 'colony',
+  };
 
   function normalizeItem(it) {
     const cat = it.cat || 'flavor', grp = groupOf(cat), ov = CAT_GFX[cat] || [];
@@ -211,7 +217,7 @@
     return {
       cat: cat, grp: grp, headline: String(it.headline).trim(), sub: it.sub ? String(it.sub).trim() : '', graphic: gfx, fx: ov[1] || '',
       planet: it.planet && typeof it.planet === 'object' ? it.planet : null, star: it.star && typeof it.star === 'object' ? it.star : null,
-      race: it.race || '', race2: it.race2 || '', importance: clamp(round(+it.importance || 0), 0, 2),
+      art: CAT_ART[cat] || '', race: it.race || '', race2: it.race2 || '', importance: clamp(round(+it.importance || 0), 0, 2),
     };
   }
 
@@ -690,9 +696,39 @@
     return R;
   }
 
+  // ---- photoreal studio (Gfx.WorldArt 'gnn' backdrop): empty set with a curved desk (top ~y .54) and a blank video wall. The anchor is painted
+  //      between the photo and a re-draw of its desk strip, so the desk occludes the anchor's lower body. Rects map from image-normalised coords.
+  function photoStudio(g, w, hh, t, o) {
+    const WA = M.Gfx && M.Gfx.WorldArt; if (!WA || !WA.enabled) return null;
+    const im = WA.get(WA.gnn); if (!im) return null;
+    const sc = max(w / im.naturalWidth, hh / im.naturalHeight), dw = im.naturalWidth * sc, dh = im.naturalHeight * sc, ox = (w - dw) / 2, oy = (hh - dh) / 2;
+    const R = defaultRects(w, hh);
+    R.wall = { x: ox + dw * 0.47, y: oy + dh * 0.108, w: dw * 0.46, h: dh * 0.385 };
+    const ah = dh * 0.52, aw = ah * 0.8;
+    R.anchor = { x: ox + dw * 0.325 - aw / 2, y: oy + dh * 0.09, w: aw, h: ah };
+    g.drawImage(im, ox, oy, dw, dh);
+    const wl = R.wall;
+    g.save(); g.beginPath(); g.rect(wl.x, wl.y, wl.w, wl.h); g.clip();                  // faint scan-lines + a slow sweep across the blank wall
+    g.fillStyle = scanPattern(g); g.globalAlpha = 0.18; g.fillRect(wl.x, wl.y, wl.w, wl.h); g.globalAlpha = 1;
+    const sweep = fract(t * 0.12);
+    g.fillStyle = lgr(g, 0, wl.y + sweep * wl.h * 1.4 - wl.h * 0.2, 0, wl.y + sweep * wl.h * 1.4, [0, 'rgba(160,200,255,0)', 1, 'rgba(160,200,255,.06)']); g.fillRect(wl.x, wl.y, wl.w, wl.h);
+    g.restore();
+    const a = R.anchor;
+    glow(g, '#6e96ff', a.x + a.w / 2, a.y + a.h * 0.4, a.w * 0.8, 0.2);
+    drawAnchor(g, o.anchorRace, a.x, a.y, a.w, a.h, t, o.talking, o.mood);
+    const dy = oy + dh * 0.545, sy = (dy - oy) / sc;                                      // desk strip over the anchor's feet
+    g.drawImage(im, 0, sy, im.naturalWidth, im.naturalHeight - sy, ox, dy, dw, oy + dh - dy);
+    drawLogo(g, w * 0.925, hh * 0.075, hh * 0.026, t, 0.95);
+    text(g, 'GNN', w * 0.925 - hh * 0.1, hh * 0.087, hh * 0.04, rgba('#ece6d3', 0.92), 'right', FONT_D, 400, 1.5);
+    g.fillStyle = rgba('#ff5c6a', sin(t * 4) > -0.2 ? 0.95 : 0.2); g.beginPath(); g.arc(w * 0.925 + hh * 0.06, hh * 0.075, hh * 0.008, 0, TAU); g.fill();
+    g.fillStyle = rgr(g, w / 2, hh * 0.48, min(w, hh) * 0.38, hypot(w, hh) * 0.62, [0, 'rgba(2,3,12,0)', 1, 'rgba(2,3,12,.4)']); g.fillRect(0, 0, w, hh);
+    return R;
+  }
+
   // Scenes.newsroom when present (its layout rects drive every DOM overlay), otherwise the built-in set. Returns {L, scene, cam}.
   let sceneBroken = false;
   function paintBackdrop(g, w, hh, t, o, S) {
+    try { const PL = photoStudio(g, w, hh, t, o); if (PL) return { L: sanitizeRects(PL, w, hh), scene: false, cam: { z: 1, dx: 0, dy: 0 } }; } catch (e) { warnOnce('WorldArt.gnn', e); }
     const SC = M.Gfx && M.Gfx.Scenes, ns = SC && SC.newsroom;
     if (!sceneBroken && ns && typeof ns.draw === 'function') {
       try {
@@ -833,6 +869,7 @@
   // ---- per-segment graphic state
   const NEB_BASE = ['#2b2a86', '#14357a', '#3b1d86', '#0d4f7a'];
   function makeGfx(it, t0) {
+    try { const WA = it.art && M.Gfx && M.Gfx.WorldArt; if (WA) WA.get(artPath(WA, it)); } catch (e) { /* optional */ }
     const seed = hashStr(it.cat + '|' + it.headline), rnd = rng32(seed), gc = cssHex(GROUPS[it.grp].css);
     return { item: it, kind: it.graphic, fx: it.fx, seed: seed, rnd: rnd, t0: t0, planet: it.planet, star: it.star, grp: it.grp, init: false, fxs: null,
       next: 0.5, pend: [], pal: [dark(gc, 0.6), NEB_BASE[seed % 4], NEB_BASE[(seed >>> 3) % 4], mix(gc, '#3b1d86', 0.55)], cyc: -1, lastK: [-1, -1, -1, -1] };
@@ -1158,8 +1195,15 @@
   }
 
   // ---- window dispatcher
+  function artPath(WA, it) { return it.art === 'colony' ? WA.colony({ type: it.planet && it.planet.look }) : WA.event(it.art); }
   function drawGfx(g, w, hh, t, dt, s, S, lines) {
     const lt = t - s.t0;
+    const WA = s.item && s.item.art && M.Gfx && M.Gfx.WorldArt, apath = WA && artPath(WA, s.item);
+    if (apath && WA.draw(g, apath, 0, 0, w, hh, { fx: 0.5, fy: 0.5, zoom: 1.02 + 0.03 * min(1, lt / 12) })) {   // photoreal event still, slow push-in
+      g.fillStyle = scanPattern(g); g.globalAlpha = 0.2; g.fillRect(0, 0, w, hh); g.globalAlpha = 1;
+      g.fillStyle = rgr(g, w / 2, hh / 2, min(w, hh) * 0.55, hypot(w, hh) * 0.62, [0, 'rgba(2,3,12,0)', 1, 'rgba(2,3,12,.4)']); g.fillRect(0, 0, w, hh);
+      return;
+    }
     g.drawImage(gfxBg(w, hh, S, s.seed % 9973, s.pal), 0, 0, w, hh);
     switch (s.kind) {
       case 'planet': gPlanet(g, w, hh, t, lt, dt, s, S); break;
@@ -1614,6 +1658,7 @@
   function startRun(pend) {
     const intr = pend.intr || {};
     layKey = '';
+    try { const WA = M.Gfx && M.Gfx.WorldArt; if (WA) WA.get(WA.gnn); } catch (e) { /* optional */ }
     root.classList.remove('out');
     root.classList.toggle('rm', reduced());
     stopWipe();
