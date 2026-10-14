@@ -1,0 +1,80 @@
+{
+  "schema_version": 1,
+  "base_path": "assets/world-art/gnn/",
+  "assets": [
+    {
+      "schema_version": 1,
+      "asset_id": "race-neutral-gnn-studio-background",
+      "filename": "race-neutral-gnn-studio-background.png",
+      "race_id": "neutral",
+      "race_scope": "All ten playable races; no anchor baked into image",
+      "game": "Master of Orion — Reborn",
+      "network_name": "Galactic News Network",
+      "user_network_alias": "Global News Network",
+      "purpose_id": "gnn-studio-background",
+      "intended_screens": [
+        "gnn"
+      ],
+      "asset_role": "static broadcast studio backdrop with baked-in desk",
+      "repository_path": "assets/world-art/gnn/race-neutral-gnn-studio-background.png",
+      "description": "An empty orbital broadcast studio with indigo panels, worn brass trim, a dark glass desk, and a blank video wall for live news graphics.",
+      "actual_dimensions": {
+        "width": 1672,
+        "height": 941
+      },
+      "requested_dimensions": {
+        "width": 1920,
+        "height": 1080
+      },
+      "native_resolution_preserved": true,
+      "background_transparency": "opaque",
+      "generation_method": "built-in image_gen",
+      "prompt": "Use case: stylized-concept. Create one polished cinematic photorealistic hard science-fiction news studio BACKGROUND for the Galactic News Network (GNN) in Master of Orion — Reborn. Landscape 16:9, requested 1920x1080. Original game art in an imperial observatory aesthetic: deep indigo, dark graphite, worn brushed brass hairline trims, ivory softbox illumination and restrained cyan accents. Camera straight on at seated presenter eye level, sophisticated broadcast set with chamfered architectural panels, subtly curved dark glass anchor desk stretching from left edge to x=62%, desk top at y=69% of image, a subdued orbital starfield sliver at far left, overhead practical studio lights, physically plausible material details and gentle reflections. No people: the game adds a race-specific anchor at x=16–45%, y=8–71%; leave this region visually quiet with dark simple paneling behind the anchor. Large unlit dark blue-black flat video wall at upper right x=46–94%, y=14–57%, minimal thin brass frame; the game inserts event footage there, keep the entire wall blank and clean. Bottom 22% dark and low contrast for headline, ticker and controls. Important architectural accents at top and outer edges only. Impressive restrained professional interstellar public broadcaster, believable spatial depth, soft volumetric key light, rich shadows, filmic color grade, subtle film grain, no blown lights. No lettering, no GNN logo baked in, no readable text, no captions, no graphics or charts on video wall, no UI, no characters, no flags, no watermark, no border. A final usable environment illustration, not a screen mockup.",
+      "palette": [
+        "deep indigo",
+        "graphite",
+        "brushed brass",
+        "ivory",
+        "restrained cyan"
+      ],
+      "integration_status": "uploaded art asset only; not wired into game renderer",
+      "candidate_modules": [
+        "js/ui/gnn.js",
+        "js/gfx/scenes.js"
+      ],
+      "composition": {
+        "anchor_region": {
+          "x": 0.23,
+          "y": 0.12,
+          "width": 0.21,
+          "height": 0.42
+        },
+        "video_wall_region": {
+          "x": 0.48,
+          "y": 0.16,
+          "width": 0.45,
+          "height": 0.33
+        },
+        "headline_and_ticker_region": {
+          "x": 0,
+          "y": 0.8,
+          "width": 1,
+          "height": 0.2
+        },
+        "desk_top_y": 0.55,
+        "units": "Normalized fractions of full image, visually estimated."
+      },
+      "compositing_notes": [
+        "Composite a race-specific anchor separately on the left, with the lower body occluded by the desk. The desk is baked into this opaque image; use a foreground mask or crop/layer strategy.",
+        "The generated desk is around y=0.55, higher than the current procedural desk at y=0.69. Adjust anchor framing or scene composition during integration.",
+        "Place live story imagery inside the blank upper-right wall. Match its visible inner border rather than assuming exact current newsWall() coordinates.",
+        "Render the existing GNN logo, headlines, rankings, ticker, and controls as separate live UI. No text is baked into this image.",
+        "Use the full landscape aspect ratio; validate cropping and text contrast at each supported screen size. Keep the existing procedural fallback."
+      ],
+      "repository_reference": "https://github.com/atate911/MOOgenesis",
+      "reference_commit": "057711a36496926c4b3bf1ef9325dbcf38a462f8",
+      "approval_status": "generated; awaiting user visual review",
+      "exact_requested_dimensions": false
+    }
+  ]
+}

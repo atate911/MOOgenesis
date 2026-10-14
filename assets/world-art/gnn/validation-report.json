@@ -1,0 +1,13 @@
+{
+  "filename": "race-neutral-gnn-studio-background.png",
+  "sha256": "f59e7a1090d66d2fc557b06df51edd69257793374abacdea18ffa3c0c974d244",
+  "checks": [
+    "All PNG chunk CRCs valid",
+    "Original compressed pixel bytes preserved",
+    "Embedded metadata equals sidecar and manifest"
+  ],
+  "dimensions": {
+    "width": 1672,
+    "height": 941
+  }
+}

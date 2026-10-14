@@ -1,5 +1,9 @@
 # MOOgenesis — cinematic world art
 
+## GNN studio
+
+The [GNN studio backdrop](gnn/README.md) provides an empty race-neutral broadcast set, with room for a live anchor, story graphics, and headlines. Its [asset manifest](gnn/asset-manifest.json) records composition and integration guidance, including the baked-in desk. The image has embedded metadata and a matching JSON sidecar; it is not yet connected to the game renderer.
+
 ## Race artwork collection
 
 The [races collection](races/README.md) adds 60 images across all ten races: audience halls, scientists, full-body leaders, homeworlds, council delegates, and square homeworld companions. Browse its [gallery](races/index.html) or use its [AI asset manifest](races/asset-manifest.json). Each PNG retains race/purpose filenames, embedded metadata, and a matching JSON sidecar. Paths in that manifest are relative to `assets/world-art/races/`. This collection uses the case-sensitive PNG metadata key `MOOgenesis.asset`; the original world collection below uses `MOOgenesis.Asset`.
