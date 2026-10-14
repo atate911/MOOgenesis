@@ -1,0 +1,61 @@
+{
+  "schema_version": 1,
+  "asset_id": "colony-barren-mining",
+  "filename": "colony-barren-mining.png",
+  "category": "colony",
+  "game": "Master of Orion — Reborn",
+  "repository": "https://github.com/atate911/MOOgenesis",
+  "description": "Barren/dead: strip mines, tailings, massive industrial complexes, refinery glows, thin smog.",
+  "alt_text": "Barren/dead: strip mines, tailings, massive industrial complexes, refinery glows, thin smog.",
+  "intended_uses": [
+    "colony screen",
+    "GNN colony news"
+  ],
+  "selection_hints": {},
+  "integration_candidates": [
+    "js/ui/side-colony.js",
+    "js/ui/gnn.js"
+  ],
+  "integration_status": "not wired into game; candidate modules verified in repository",
+  "dimensions": {
+    "width": 1254,
+    "height": 1254,
+    "requested_width": 1536,
+    "requested_height": 1536
+  },
+  "format": "PNG",
+  "alpha_background": false,
+  "composition": {
+    "aspect_ratio": "1:1",
+    "focal_point_normalized": [
+      0.5,
+      0.5
+    ],
+    "light_direction": "upper-left",
+    "fit": "contain",
+    "overlay_guidance": "Keep labels outside the globe; do not crop the limb."
+  },
+  "usage_constraints": [
+    "Pre-rendered illustration, not an equirectangular texture or a rotatable planet map.",
+    "Keep game rules and selection logic separate from visual details.",
+    "Preserve procedural fallback and offline file:// image loading when integrating.",
+    "Colony-state hint is semantic guidance, not a verified field name or numeric threshold in the game."
+  ],
+  "generation": {
+    "method": "built-in image_gen",
+    "date": "2026-10-13",
+    "prompt": "Use case: stylized-concept. Create a single original finished game asset named colony-barren-mining.png for Master of Orion — Reborn. 1536x1536 PNG. Subject and essential details: Barren/dead: strip mines, tailings, massive industrial complexes, refinery glows, thin smog.. Barren/dead: strip mines, tailings, massive industrial complexes, refinery glows, thin smog.. Style: cinematic PHOTOREAL hard science fiction, real space photography crossed with film concept art, physically believable materials, lighting and atmospheres, restrained filmic color, subtle film grain, deep black shadows, highlights with no pure white clipping. SQUARE ORBIT CARD: distant camera shows entire globe, centered. Planet diameter exactly about 70% of canvas width; leave at least 15% empty black margin on EVERY side. Do not crop or fill the whole canvas with the planet. Single light source from upper left, thin atmosphere limb only if atmosphere exists. Black background, very sparse faint stars, dark corners. Readable at 200px. Entirely original geology and design, no recognizable franchise world or existing artwork. No visible text, labels, logos, watermark, borders or UI. No cartoon, anime, cel shading, outlines, painterly fantasy, toy, glossy game icon, rainbow saturation, excessive lens flare. No people or spacecraft except those explicitly required by this asset description. \n\nFinal revision instruction applied to generated image:\nCorrect the unrealistic toy-like scale in this original mining-world orbit card. Keep square format, complete centered gray-brown barren globe, upper-left light, black starfield and mineral mining identity. Remove the enormous single pit and all oversized visible factory towers and conveyors. Show many SMALL dispersed strip-mine terraces and tailings patches, each at most 1% of the globe diameter; tiny clustered amber refinery lights near the terminator; diffuse very thin industrial haze locally. At a global scale buildings have no visible silhouettes or height. Planetary terrain is mostly undisturbed barren rock, with industrial zones readable as fine geometric scars and light patterns. Orbital photographic realism, fine natural craters, restrained muted minerals, physically realistic global scale. No gigantic structures, toy planet, UI, text, logos or ships. Request 1536x1536 PNG."
+  },
+  "semantic_subject": "barren-mining",
+  "keywords": [
+    "colony",
+    "barren-mining",
+    "photoreal",
+    "cinematic",
+    "space-strategy"
+  ],
+  "source_file_sha256": "955672e6d5702ddd53aaf153d4dd94a15133cedcaaf9185e73b6ce38029de7a7",
+  "dimension_status": "native_generator_dimensions_differ_from_brief",
+  "colony_state_hint": "mining development on barren or dead",
+  "file": "colony/colony-barren-mining.png"
+}

@@ -1,0 +1,66 @@
+{
+  "schema_version": 1,
+  "asset_id": "surface-inferno",
+  "filename": "surface-inferno.png",
+  "category": "surface",
+  "game": "Master of Orion — Reborn",
+  "repository": "https://github.com/atate911/MOOgenesis",
+  "description": "Lava river across black rock, burning horizon, heat distortion, ash fall, huge swollen sun.",
+  "alt_text": "Lava river across black rock, burning horizon, heat distortion, ash fall, huge swollen sun.",
+  "intended_uses": [
+    "colony landing background",
+    "invasion background",
+    "bombardment background"
+  ],
+  "selection_hints": {
+    "planet.type": "inferno"
+  },
+  "integration_candidates": [
+    "js/gfx/scenes.js",
+    "js/ui/landing.js"
+  ],
+  "integration_status": "not wired into game; candidate modules verified in repository",
+  "dimensions": {
+    "width": 1672,
+    "height": 941,
+    "requested_width": 1920,
+    "requested_height": 1080
+  },
+  "format": "PNG",
+  "alpha_background": false,
+  "composition": {
+    "aspect_ratio": "16:9",
+    "focal_point_normalized": [
+      0.5,
+      0.5
+    ],
+    "light_direction": "scene dependent",
+    "fit": "cover",
+    "overlay_guidance": "Keep foreground lower third available for interface text; verify contrast."
+  },
+  "usage_constraints": [
+    "Pre-rendered illustration, not an equirectangular texture or a rotatable planet map.",
+    "Keep game rules and selection logic separate from visual details.",
+    "Preserve procedural fallback and offline file:// image loading when integrating."
+  ],
+  "generation": {
+    "method": "built-in image_gen",
+    "date": "2026-10-13",
+    "prompt": "Use case: stylized-concept. Create a single original finished game asset named surface-inferno.png for Master of Orion — Reborn. 1920x1080 PNG. Subject and essential details: Inferno. Lava river across black rock, burning horizon, heat distortion, ash fall, huge swollen sun.. Style: cinematic PHOTOREAL hard science fiction, real space photography crossed with film concept art, physically believable materials, lighting and atmospheres, restrained filmic color, subtle film grain, deep black shadows, highlights with no pure white clipping. WIDESCREEN 16:9 ground-level arrival landscape, 24-35mm cinematic lens, atmospheric perspective. Keep entire lower third visually calm, open ground for future text overlays. World-specific sky and star. Entirely original geology and design, no recognizable franchise world or existing artwork. No visible text, labels, logos, watermark, borders or UI. No cartoon, anime, cel shading, outlines, painterly fantasy, toy, glossy game icon, rainbow saturation, excessive lens flare. No people or spacecraft except those explicitly required by this asset description. "
+  },
+  "semantic_subject": "inferno",
+  "keywords": [
+    "surface",
+    "inferno",
+    "photoreal",
+    "cinematic",
+    "space-strategy"
+  ],
+  "source_file_sha256": "db3314e059db85259f58331ddb80d3cf90cd056ba4152a425e31d4c7614534ef",
+  "dimension_status": "native_generator_dimensions_differ_from_brief",
+  "related_asset_ids": [
+    "orbit-inferno"
+  ],
+  "relationship_note": "Same world category and art direction; not an exact geographic match.",
+  "file": "surface/surface-inferno.png"
+}

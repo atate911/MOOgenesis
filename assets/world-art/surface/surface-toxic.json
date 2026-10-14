@@ -1,0 +1,66 @@
+{
+  "schema_version": 1,
+  "asset_id": "surface-toxic",
+  "filename": "surface-toxic.png",
+  "category": "surface",
+  "game": "Master of Orion — Reborn",
+  "repository": "https://github.com/atate911/MOOgenesis",
+  "description": "Yellow-green sky, chemical lake shore with steaming vents, crusted salt formations, orange sun a smear in the haze.",
+  "alt_text": "Yellow-green sky, chemical lake shore with steaming vents, crusted salt formations, orange sun a smear in the haze.",
+  "intended_uses": [
+    "colony landing background",
+    "invasion background",
+    "bombardment background"
+  ],
+  "selection_hints": {
+    "planet.type": "toxic"
+  },
+  "integration_candidates": [
+    "js/gfx/scenes.js",
+    "js/ui/landing.js"
+  ],
+  "integration_status": "not wired into game; candidate modules verified in repository",
+  "dimensions": {
+    "width": 1672,
+    "height": 941,
+    "requested_width": 1920,
+    "requested_height": 1080
+  },
+  "format": "PNG",
+  "alpha_background": false,
+  "composition": {
+    "aspect_ratio": "16:9",
+    "focal_point_normalized": [
+      0.5,
+      0.5
+    ],
+    "light_direction": "scene dependent",
+    "fit": "cover",
+    "overlay_guidance": "Keep foreground lower third available for interface text; verify contrast."
+  },
+  "usage_constraints": [
+    "Pre-rendered illustration, not an equirectangular texture or a rotatable planet map.",
+    "Keep game rules and selection logic separate from visual details.",
+    "Preserve procedural fallback and offline file:// image loading when integrating."
+  ],
+  "generation": {
+    "method": "built-in image_gen",
+    "date": "2026-10-13",
+    "prompt": "Use case: stylized-concept. Create a single original finished game asset named surface-toxic.png for Master of Orion — Reborn. 1920x1080 PNG. Subject and essential details: Toxic. Yellow-green sky, chemical lake shore with steaming vents, crusted salt formations, orange sun a smear in the haze.. Style: cinematic PHOTOREAL hard science fiction, real space photography crossed with film concept art, physically believable materials, lighting and atmospheres, restrained filmic color, subtle film grain, deep black shadows, highlights with no pure white clipping. WIDESCREEN 16:9 ground-level arrival landscape, 24-35mm cinematic lens, atmospheric perspective. Keep entire lower third visually calm, open ground for future text overlays. World-specific sky and star. Entirely original geology and design, no recognizable franchise world or existing artwork. No visible text, labels, logos, watermark, borders or UI. No cartoon, anime, cel shading, outlines, painterly fantasy, toy, glossy game icon, rainbow saturation, excessive lens flare. No people or spacecraft except those explicitly required by this asset description. "
+  },
+  "semantic_subject": "toxic",
+  "keywords": [
+    "surface",
+    "toxic",
+    "photoreal",
+    "cinematic",
+    "space-strategy"
+  ],
+  "source_file_sha256": "0324327833cd3342e40b834e1cf5ffdc8dbf6804ee683945bdc614bdec3889cb",
+  "dimension_status": "native_generator_dimensions_differ_from_brief",
+  "related_asset_ids": [
+    "orbit-toxic"
+  ],
+  "relationship_note": "Same world category and art direction; not an exact geographic match.",
+  "file": "surface/surface-toxic.png"
+}

@@ -1,0 +1,67 @@
+{
+  "schema_version": 1,
+  "asset_id": "orbit-orion",
+  "filename": "orbit-orion.png",
+  "category": "orbit",
+  "game": "Master of Orion — Reborn",
+  "repository": "https://github.com/atate911/MOOgenesis",
+  "description": "The most dramatic image: a majestic, slightly unnatural world crowned by a vast artificial ring or lattice, gold-white light from within, defended by a looming alien automated sentinel silhouette in orbit (the Guardian). Awe and menace.",
+  "alt_text": "The most dramatic image: a majestic, slightly unnatural world crowned by a vast artificial ring or lattice, gold-white light from within, defended by a looming alien automated sentinel silhouette in orbit (the Guardian). Awe and menace.",
+  "intended_uses": [
+    "scout exploration card",
+    "colonisation confirmation card",
+    "planet list thumbnail",
+    "GNN planet illustration"
+  ],
+  "selection_hints": {
+    "planet.special": "orion",
+    "guardian.alive": true
+  },
+  "integration_candidates": [
+    "js/gfx/planets.js",
+    "js/ui/landing.js",
+    "js/ui/ledger-planets.js",
+    "js/ui/gnn.js"
+  ],
+  "integration_status": "not wired into game; candidate modules verified in repository",
+  "dimensions": {
+    "width": 1254,
+    "height": 1254,
+    "requested_width": 1536,
+    "requested_height": 1536
+  },
+  "format": "PNG",
+  "alpha_background": false,
+  "composition": {
+    "aspect_ratio": "1:1",
+    "focal_point_normalized": [
+      0.5,
+      0.5
+    ],
+    "light_direction": "upper-left",
+    "fit": "contain",
+    "overlay_guidance": "Keep labels outside the globe; do not crop the limb."
+  },
+  "usage_constraints": [
+    "Pre-rendered illustration, not an equirectangular texture or a rotatable planet map.",
+    "Keep game rules and selection logic separate from visual details.",
+    "Preserve procedural fallback and offline file:// image loading when integrating.",
+    "Guardian silhouette is baked in: do not use after Guardian defeat without an alternate illustration."
+  ],
+  "generation": {
+    "method": "built-in image_gen",
+    "date": "2026-10-13",
+    "prompt": "Use case: stylized-concept. Create a single original finished game asset named orbit-orion.png for Master of Orion — Reborn. 1536x1536 PNG. Subject and essential details: Orion, throne-world of the Ancients. The most dramatic image: a majestic, slightly unnatural world crowned by a vast artificial ring or lattice, gold-white light from within, defended by a looming alien automated sentinel silhouette in orbit (the Guardian). Awe and menace.. Style: cinematic PHOTOREAL hard science fiction, real space photography crossed with film concept art, physically believable materials, lighting and atmospheres, restrained filmic color, subtle film grain, deep black shadows, highlights with no pure white clipping. SQUARE ORBIT CARD: distant camera shows entire globe, centered. Planet diameter exactly about 70% of canvas width; leave at least 15% empty black margin on EVERY side. Do not crop or fill the whole canvas with the planet. Single light source from upper left, thin atmosphere limb only if atmosphere exists. Black background, very sparse faint stars, dark corners. Readable at 200px. Entirely original geology and design, no recognizable franchise world or existing artwork. No visible text, labels, logos, watermark, borders or UI. No cartoon, anime, cel shading, outlines, painterly fantasy, toy, glossy game icon, rainbow saturation, excessive lens flare. No people or spacecraft except those explicitly required by this asset description. Guardian sentinel silhouette and artificial ring are explicitly required; the globe and ring should fit completely inside the card."
+  },
+  "semantic_subject": "orion",
+  "keywords": [
+    "orbit",
+    "orion",
+    "photoreal",
+    "cinematic",
+    "space-strategy"
+  ],
+  "source_file_sha256": "eb3acdd3cb130e2c653d780d65d95d0cfb8324382dc68c19cd88badfc5207fc3",
+  "dimension_status": "native_generator_dimensions_differ_from_brief",
+  "file": "orbit/orbit-orion.png"
+}

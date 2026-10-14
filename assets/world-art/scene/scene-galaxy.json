@@ -1,0 +1,60 @@
+{
+  "schema_version": 1,
+  "asset_id": "scene-galaxy",
+  "filename": "scene-galaxy.png",
+  "category": "scene",
+  "game": "Master of Orion — Reborn",
+  "repository": "https://github.com/atate911/MOOgenesis",
+  "description": "16:9 — a majestic spiral galaxy seen from outside with thousands of stars and dust lanes, one empire's territory suggested by a faint glow. Used as a menu/news backdrop.",
+  "alt_text": "16:9 — a majestic spiral galaxy seen from outside with thousands of stars and dust lanes, one empire's territory suggested by a faint glow. Used as a menu/news backdrop.",
+  "intended_uses": [
+    "main menu background",
+    "galaxy-scale news backdrop"
+  ],
+  "selection_hints": {},
+  "integration_candidates": [
+    "js/gfx/scenes.js",
+    "js/ui/landing.js",
+    "js/ui/menu.js"
+  ],
+  "integration_status": "not wired into game; candidate modules verified in repository",
+  "dimensions": {
+    "width": 1672,
+    "height": 941,
+    "requested_width": 1920,
+    "requested_height": 1080
+  },
+  "format": "PNG",
+  "alpha_background": false,
+  "composition": {
+    "aspect_ratio": "16:9",
+    "focal_point_normalized": [
+      0.5,
+      0.5
+    ],
+    "light_direction": "scene dependent",
+    "fit": "cover",
+    "overlay_guidance": "Keep foreground lower third available for interface text; verify contrast."
+  },
+  "usage_constraints": [
+    "Pre-rendered illustration, not an equirectangular texture or a rotatable planet map.",
+    "Keep game rules and selection logic separate from visual details.",
+    "Preserve procedural fallback and offline file:// image loading when integrating."
+  ],
+  "generation": {
+    "method": "built-in image_gen",
+    "date": "2026-10-13",
+    "prompt": "Use case: stylized-concept. Create a single original finished game asset named scene-galaxy.png for Master of Orion — Reborn. 1920x1080 PNG. Subject and essential details: 16:9 — a majestic spiral galaxy seen from outside with thousands of stars and dust lanes, one empire's territory suggested by a faint glow. Used as a menu/news backdrop.. 16:9 — a majestic spiral galaxy seen from outside with thousands of stars and dust lanes, one empire's territory suggested by a faint glow. Used as a menu/news backdrop.. Style: cinematic PHOTOREAL hard science fiction, real space photography crossed with film concept art, physically believable materials, lighting and atmospheres, restrained filmic color, subtle film grain, deep black shadows, highlights with no pure white clipping. WIDESCREEN 16:9 news or scene background. Sparse readable composition, dark negative space for interface. Entirely original geology and design, no recognizable franchise world or existing artwork. No visible text, labels, logos, watermark, borders or UI. No cartoon, anime, cel shading, outlines, painterly fantasy, toy, glossy game icon, rainbow saturation, excessive lens flare. No people or spacecraft except those explicitly required by this asset description. "
+  },
+  "semantic_subject": "galaxy",
+  "keywords": [
+    "scene",
+    "galaxy",
+    "photoreal",
+    "cinematic",
+    "space-strategy"
+  ],
+  "source_file_sha256": "58419bc806f863bfc4917e106eb4afe9c7162e409d4aa5f458bd17ffbf485e12",
+  "dimension_status": "native_generator_dimensions_differ_from_brief",
+  "file": "scene/scene-galaxy.png"
+}

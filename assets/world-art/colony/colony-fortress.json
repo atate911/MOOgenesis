@@ -1,0 +1,61 @@
+{
+  "schema_version": 1,
+  "asset_id": "colony-fortress",
+  "filename": "colony-fortress.png",
+  "category": "colony",
+  "game": "Master of Orion — Reborn",
+  "repository": "https://github.com/atate911/MOOgenesis",
+  "description": "A world fortified with missile bases and defence satellites; glints of orbital weapons; wary.",
+  "alt_text": "A world fortified with missile bases and defence satellites; glints of orbital weapons; wary.",
+  "intended_uses": [
+    "colony screen",
+    "GNN colony news"
+  ],
+  "selection_hints": {},
+  "integration_candidates": [
+    "js/ui/side-colony.js",
+    "js/ui/gnn.js"
+  ],
+  "integration_status": "not wired into game; candidate modules verified in repository",
+  "dimensions": {
+    "width": 1254,
+    "height": 1254,
+    "requested_width": 1536,
+    "requested_height": 1536
+  },
+  "format": "PNG",
+  "alpha_background": false,
+  "composition": {
+    "aspect_ratio": "1:1",
+    "focal_point_normalized": [
+      0.5,
+      0.5
+    ],
+    "light_direction": "upper-left",
+    "fit": "contain",
+    "overlay_guidance": "Keep labels outside the globe; do not crop the limb."
+  },
+  "usage_constraints": [
+    "Pre-rendered illustration, not an equirectangular texture or a rotatable planet map.",
+    "Keep game rules and selection logic separate from visual details.",
+    "Preserve procedural fallback and offline file:// image loading when integrating.",
+    "Colony-state hint is semantic guidance, not a verified field name or numeric threshold in the game."
+  ],
+  "generation": {
+    "method": "built-in image_gen",
+    "date": "2026-10-13",
+    "prompt": "Use case: stylized-concept. Create a single original finished game asset named colony-fortress.png for Master of Orion — Reborn. 1536x1536 PNG. Subject and essential details: A world fortified with missile bases and defence satellites; glints of orbital weapons; wary.. A world fortified with missile bases and defence satellites; glints of orbital weapons; wary.. Style: cinematic PHOTOREAL hard science fiction, real space photography crossed with film concept art, physically believable materials, lighting and atmospheres, restrained filmic color, subtle film grain, deep black shadows, highlights with no pure white clipping. SQUARE ORBIT CARD: distant camera shows entire globe, centered. Planet diameter exactly about 70% of canvas width; leave at least 15% empty black margin on EVERY side. Do not crop or fill the whole canvas with the planet. Single light source from upper left, thin atmosphere limb only if atmosphere exists. Black background, very sparse faint stars, dark corners. Readable at 200px. Entirely original geology and design, no recognizable franchise world or existing artwork. No visible text, labels, logos, watermark, borders or UI. No cartoon, anime, cel shading, outlines, painterly fantasy, toy, glossy game icon, rainbow saturation, excessive lens flare. No people or spacecraft except those explicitly required by this asset description. \n\nFinal revision instruction applied to generated image:\nEdit this colony-fortress orbit card to correct the miniature/toy scale. Keep the centered planet, invented blue-green continents, dark space, upper-left light and square format. Remove ALL gigantic easily recognizable towers and missiles from the surface: replace with believable tiny distant defense installations visible chiefly as pinpricks and clustered glints, fine angular land scars, small local light networks. Surface bases should be much smaller than cloud systems, with absolutely no tall towers visible at global scale. Remove the necklace of large evenly spaced satellites and connecting wire; replace with just three tiny isolated angular defense satellites, each under 0.8 percent canvas width, against dark space outside the planet. Photoreal orbital spacecraft photography, subdued filmic grade, real atmosphere and ocean optics. Wary defended world, still readable from subtle glints and dispersed small fortified regions. No text, UI, border or logo. Requested 1536x1536."
+  },
+  "semantic_subject": "fortress",
+  "keywords": [
+    "colony",
+    "fortress",
+    "photoreal",
+    "cinematic",
+    "space-strategy"
+  ],
+  "source_file_sha256": "83561328d8dfaccf3233258faaccfb03d4af5e44dcc4605c5f951a6cce2e1214",
+  "dimension_status": "native_generator_dimensions_differ_from_brief",
+  "colony_state_hint": "fortified world with defenses",
+  "file": "colony/colony-fortress.png"
+}

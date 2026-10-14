@@ -1,0 +1,60 @@
+{
+  "schema_version": 1,
+  "asset_id": "event-pirates",
+  "filename": "event-pirates.png",
+  "category": "event",
+  "game": "Master of Orion — Reborn",
+  "repository": "https://github.com/atate911/MOOgenesis",
+  "description": "A raided orbital freight lane: wrecked cargo ships drifting past a planet, a few sinister raider silhouettes (small).",
+  "alt_text": "A raided orbital freight lane: wrecked cargo ships drifting past a planet, a few sinister raider silhouettes (small).",
+  "intended_uses": [
+    "GNN event still",
+    "event card"
+  ],
+  "selection_hints": {},
+  "integration_candidates": [
+    "js/ui/gnn.js",
+    "js/ui/landing.js"
+  ],
+  "integration_status": "not wired into game; candidate modules verified in repository",
+  "dimensions": {
+    "width": 1672,
+    "height": 941,
+    "requested_width": 1920,
+    "requested_height": 1080
+  },
+  "format": "PNG",
+  "alpha_background": false,
+  "composition": {
+    "aspect_ratio": "16:9",
+    "focal_point_normalized": [
+      0.5,
+      0.5
+    ],
+    "light_direction": "scene dependent",
+    "fit": "cover",
+    "overlay_guidance": "Keep foreground lower third available for interface text; verify contrast."
+  },
+  "usage_constraints": [
+    "Pre-rendered illustration, not an equirectangular texture or a rotatable planet map.",
+    "Keep game rules and selection logic separate from visual details.",
+    "Preserve procedural fallback and offline file:// image loading when integrating.",
+    "Select only for the named event; this is illustrative news art and does not represent current terrain by itself."
+  ],
+  "generation": {
+    "method": "built-in image_gen",
+    "date": "2026-10-13",
+    "prompt": "Use case: stylized-concept. Create a single original finished game asset named event-pirates.png for Master of Orion — Reborn. 1920x1080 PNG. Subject and essential details: A raided orbital freight lane: wrecked cargo ships drifting past a planet, a few sinister raider silhouettes (small).. A raided orbital freight lane: wrecked cargo ships drifting past a planet, a few sinister raider silhouettes (small).. Style: cinematic PHOTOREAL hard science fiction, real space photography crossed with film concept art, physically believable materials, lighting and atmospheres, restrained filmic color, subtle film grain, deep black shadows, highlights with no pure white clipping. WIDESCREEN 16:9 news or scene background. Sparse readable composition, dark negative space for interface. Entirely original geology and design, no recognizable franchise world or existing artwork. No visible text, labels, logos, watermark, borders or UI. No cartoon, anime, cel shading, outlines, painterly fantasy, toy, glossy game icon, rainbow saturation, excessive lens flare. No people or spacecraft except those explicitly required by this asset description. "
+  },
+  "semantic_subject": "pirates",
+  "keywords": [
+    "event",
+    "pirates",
+    "photoreal",
+    "cinematic",
+    "space-strategy"
+  ],
+  "source_file_sha256": "b379d46f5be9510594f26097a6d5dbe2ecb3f28a238e367f3d15490ace247f68",
+  "dimension_status": "native_generator_dimensions_differ_from_brief",
+  "file": "event/event-pirates.png"
+}

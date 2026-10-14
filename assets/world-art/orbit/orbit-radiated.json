@@ -1,0 +1,69 @@
+{
+  "schema_version": 1,
+  "asset_id": "orbit-radiated",
+  "filename": "orbit-radiated.png",
+  "category": "orbit",
+  "game": "Master of Orion — Reborn",
+  "repository": "https://github.com/atate911/MOOgenesis",
+  "description": "A world blasted by its star or ancient war: glass-fused plains, ghostly green-white radiation glow along the terminator, aurora-like ionised haze. Eerie, lethal.",
+  "alt_text": "A world blasted by its star or ancient war: glass-fused plains, ghostly green-white radiation glow along the terminator, aurora-like ionised haze. Eerie, lethal.",
+  "intended_uses": [
+    "scout exploration card",
+    "colonisation confirmation card",
+    "planet list thumbnail",
+    "GNN planet illustration"
+  ],
+  "selection_hints": {
+    "planet.type": "radiated"
+  },
+  "integration_candidates": [
+    "js/gfx/planets.js",
+    "js/ui/landing.js",
+    "js/ui/ledger-planets.js",
+    "js/ui/gnn.js"
+  ],
+  "integration_status": "not wired into game; candidate modules verified in repository",
+  "dimensions": {
+    "width": 1254,
+    "height": 1254,
+    "requested_width": 1536,
+    "requested_height": 1536
+  },
+  "format": "PNG",
+  "alpha_background": false,
+  "composition": {
+    "aspect_ratio": "1:1",
+    "focal_point_normalized": [
+      0.5,
+      0.5
+    ],
+    "light_direction": "upper-left",
+    "fit": "contain",
+    "overlay_guidance": "Keep labels outside the globe; do not crop the limb."
+  },
+  "usage_constraints": [
+    "Pre-rendered illustration, not an equirectangular texture or a rotatable planet map.",
+    "Keep game rules and selection logic separate from visual details.",
+    "Preserve procedural fallback and offline file:// image loading when integrating."
+  ],
+  "generation": {
+    "method": "built-in image_gen",
+    "date": "2026-10-13",
+    "prompt": "Create orbit-radiated.png, an original game orbit card for Master of Orion — Reborn. Square 1536x1536 PNG. Cinematic photoreal science-fiction still, grounded and restrained, filmic colour grade, subtle film grain, physically believable lighting and atmosphere. Single radiated world blasted by its star or ancient war: glass-fused plains, ghostly green-white ionised glow along the terminator, subtle aurora-like haze. Eerie and lethal. Planet centered with diameter 70 percent of frame, fully visible circular silhouette, directional starlight from upper left, thin atmospheric limb; dark unlit lower-right hemisphere still faintly readable. Black space background with sparse faint stars, dark corners. Palette ghost green-white over desaturated fused grey terrain; restrained highlights never pure-white blowouts. Must read clearly at 200px. Serious space photography and cinematic hard science fiction consistent with realistic race portrait artwork. No text, logo, watermark, borders, UI, ships, people, cartoon, cel shading, outlines, painterly fantasy, glossy game icon, rainbow saturation or excessive lens flare."
+  },
+  "semantic_subject": "radiated",
+  "keywords": [
+    "orbit",
+    "radiated",
+    "photoreal",
+    "cinematic",
+    "space-strategy"
+  ],
+  "source_file_sha256": "0f8fb7a1a151ae6cbec0dda392f28230113cbd9c34f2eccfd3d31fd680c71838",
+  "dimension_status": "native_generator_dimensions_differ_from_brief",
+  "related_asset_ids": [
+    "surface-radiated"
+  ],
+  "relationship_note": "Same world category and art direction; not an exact geographic match.",
+  "file": "orbit/orbit-radiated.png"
+}

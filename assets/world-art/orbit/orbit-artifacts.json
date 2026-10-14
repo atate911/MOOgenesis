@@ -1,0 +1,66 @@
+{
+  "schema_version": 1,
+  "asset_id": "orbit-artifacts",
+  "filename": "orbit-artifacts.png",
+  "category": "orbit",
+  "game": "Master of Orion — Reborn",
+  "repository": "https://github.com/atate911/MOOgenesis",
+  "description": "A planet with unmistakably artificial ancient structures visible from orbit: long straight geometric scars, ring-like constructs, a faint warm glow from buried installations. Ancient, mysterious.",
+  "alt_text": "A planet with unmistakably artificial ancient structures visible from orbit: long straight geometric scars, ring-like constructs, a faint warm glow from buried installations. Ancient, mysterious.",
+  "intended_uses": [
+    "scout exploration card",
+    "colonisation confirmation card",
+    "planet list thumbnail",
+    "GNN planet illustration"
+  ],
+  "selection_hints": {
+    "planet.special": "artifacts"
+  },
+  "integration_candidates": [
+    "js/gfx/planets.js",
+    "js/ui/landing.js",
+    "js/ui/ledger-planets.js",
+    "js/ui/gnn.js"
+  ],
+  "integration_status": "not wired into game; candidate modules verified in repository",
+  "dimensions": {
+    "width": 1254,
+    "height": 1254,
+    "requested_width": 1536,
+    "requested_height": 1536
+  },
+  "format": "PNG",
+  "alpha_background": false,
+  "composition": {
+    "aspect_ratio": "1:1",
+    "focal_point_normalized": [
+      0.5,
+      0.5
+    ],
+    "light_direction": "upper-left",
+    "fit": "contain",
+    "overlay_guidance": "Keep labels outside the globe; do not crop the limb."
+  },
+  "usage_constraints": [
+    "Pre-rendered illustration, not an equirectangular texture or a rotatable planet map.",
+    "Keep game rules and selection logic separate from visual details.",
+    "Preserve procedural fallback and offline file:// image loading when integrating.",
+    "Special overrides the depicted terrain; artifacts can occur on multiple base planet types."
+  ],
+  "generation": {
+    "method": "built-in image_gen",
+    "date": "2026-10-13",
+    "prompt": "Use case: stylized-concept. Create a single original finished game asset named orbit-artifacts.png for Master of Orion — Reborn. 1536x1536 PNG. Subject and essential details: Artifacts world. A planet with unmistakably artificial ancient structures visible from orbit: long straight geometric scars, ring-like constructs, a faint warm glow from buried installations. Ancient, mysterious.. Style: cinematic PHOTOREAL hard science fiction, real space photography crossed with film concept art, physically believable materials, lighting and atmospheres, restrained filmic color, subtle film grain, deep black shadows, highlights with no pure white clipping. SQUARE ORBIT CARD: distant camera shows entire globe, centered. Planet diameter exactly about 70% of canvas width; leave at least 15% empty black margin on EVERY side. Do not crop or fill the whole canvas with the planet. Single light source from upper left, thin atmosphere limb only if atmosphere exists. Black background, very sparse faint stars, dark corners. Readable at 200px. Entirely original geology and design, no recognizable franchise world or existing artwork. No visible text, labels, logos, watermark, borders or UI. No cartoon, anime, cel shading, outlines, painterly fantasy, toy, glossy game icon, rainbow saturation, excessive lens flare. No people or spacecraft except those explicitly required by this asset description. "
+  },
+  "semantic_subject": "artifacts",
+  "keywords": [
+    "orbit",
+    "artifacts",
+    "photoreal",
+    "cinematic",
+    "space-strategy"
+  ],
+  "source_file_sha256": "5636c7338bc83116e2dc1319f110e972147021e66fa0e1f0b45b1583d026d6e0",
+  "dimension_status": "native_generator_dimensions_differ_from_brief",
+  "file": "orbit/orbit-artifacts.png"
+}
