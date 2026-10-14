@@ -1,0 +1,361 @@
+{
+  "asset_count": 60,
+  "expected_asset_count": 60,
+  "races": [
+    {
+      "race": "human",
+      "assets": 6
+    },
+    {
+      "race": "mrrshan",
+      "assets": 6
+    },
+    {
+      "race": "silicoid",
+      "assets": 6
+    },
+    {
+      "race": "sakkra",
+      "assets": 6
+    },
+    {
+      "race": "psilon",
+      "assets": 6
+    },
+    {
+      "race": "alkari",
+      "assets": 6
+    },
+    {
+      "race": "klackon",
+      "assets": 6
+    },
+    {
+      "race": "bulrathi",
+      "assets": 6
+    },
+    {
+      "race": "meklar",
+      "assets": 6
+    },
+    {
+      "race": "darlok",
+      "assets": 6
+    }
+  ],
+  "checks": [
+    "60 unique images: 6 for each of 10 races",
+    "All PNG chunk CRCs valid",
+    "Embedded PNG metadata equals JSON sidecar and manifest",
+    "Original compressed pixel data preserved",
+    "Actual image dimensions recorded"
+  ],
+  "dimensions": {
+    "1672x941": 29,
+    "1254x1254": 20,
+    "1024x1536": 10,
+    "1672x940": 1
+  },
+  "files": [
+    {
+      "filename": "race-alkari-audience.png",
+      "sha256": "815168b55d376bf83ed13ed1c6edffa016b315725a94b5a05b2e04d6208f6423",
+      "bytes": 2358076
+    },
+    {
+      "filename": "race-alkari-council.png",
+      "sha256": "646b31006cee9f27609eb545b44cce9ca3632c732e354cd42a5c83bacb0a9d37",
+      "bytes": 2569323
+    },
+    {
+      "filename": "race-alkari-figure.png",
+      "sha256": "e33833776b0c208af0cc823b6153f42b47c1d289e44147add9deb89aea9edd10",
+      "bytes": 2228454
+    },
+    {
+      "filename": "race-alkari-homeworld-square.png",
+      "sha256": "5c8bae469b63969d1b9e24ca904e3581ac8d60b2cd11f80b0a1e574966e7b194",
+      "bytes": 2748549
+    },
+    {
+      "filename": "race-alkari-homeworld.png",
+      "sha256": "308f00cf0c05b46485676d2c99869e0a99146db7f41d53e5bdb01fbcf86d7f9a",
+      "bytes": 2507514
+    },
+    {
+      "filename": "race-alkari-scientist.png",
+      "sha256": "fbf65c98bb500b2d75ac1ace3c995fad60bc724326914a618a7393c193aa3d84",
+      "bytes": 2261780
+    },
+    {
+      "filename": "race-bulrathi-audience.png",
+      "sha256": "1e53c3ee4ebdda356f8f249b63c6b252b3b05c5e54535b45ffa34ae98c506937",
+      "bytes": 2622675
+    },
+    {
+      "filename": "race-bulrathi-council.png",
+      "sha256": "be2032745a650dae811736f325548d41e784bbad026b7e00249be9337cd817ee",
+      "bytes": 2553069
+    },
+    {
+      "filename": "race-bulrathi-figure.png",
+      "sha256": "ba564ae1c86468cc0c86edd9e4e398d10ef6c20bd7ab0deccab42263e3c50ed0",
+      "bytes": 2469077
+    },
+    {
+      "filename": "race-bulrathi-homeworld-square.png",
+      "sha256": "5bd7f57b7b9d0b2816397b1ff38b55feb38e0cb47b8604b140367807d7b413c5",
+      "bytes": 3037233
+    },
+    {
+      "filename": "race-bulrathi-homeworld.png",
+      "sha256": "2a01a5f6aee50fed7030d458eb35bf6679b020e4476937af2e005b52a0878cf9",
+      "bytes": 2730756
+    },
+    {
+      "filename": "race-bulrathi-scientist.png",
+      "sha256": "93f7761263f8f55c2febe318a8df57423fdebe599ad2ca94b8c44499b57e6fb9",
+      "bytes": 2221683
+    },
+    {
+      "filename": "race-darlok-audience.png",
+      "sha256": "0116c862a896bf1beacda85d6cf20e91d8998e29828618eaae1f3e30d8aec139",
+      "bytes": 2089732
+    },
+    {
+      "filename": "race-darlok-council.png",
+      "sha256": "e97f848e374d70eadb638f525066e0074dd550eabd2452752cce703a2968a9b3",
+      "bytes": 2157046
+    },
+    {
+      "filename": "race-darlok-figure.png",
+      "sha256": "f4fc42f7ec39cfbe208e3c1c903db2fec1c399e6ced3ab46a33674abf9fad944",
+      "bytes": 2047387
+    },
+    {
+      "filename": "race-darlok-homeworld-square.png",
+      "sha256": "775d4b74923633a40ae7babda404f0ba95c0abb5f1470f1b7667d6b314d9bec8",
+      "bytes": 2530586
+    },
+    {
+      "filename": "race-darlok-homeworld.png",
+      "sha256": "a79d0c3c375328b1828743016f0de7c880f1fa344782823ed5ee4f61b46b8da8",
+      "bytes": 2162946
+    },
+    {
+      "filename": "race-darlok-scientist.png",
+      "sha256": "33dc8f989f5dcb90b0c69edfcf929a9c304579f755c5743e83dc76d91fe64056",
+      "bytes": 2069557
+    },
+    {
+      "filename": "race-human-audience.png",
+      "sha256": "5a42007f64dbafce7b6a410b0b8647c9a5493be1c2acd707718b708d5847c6dd",
+      "bytes": 2137621
+    },
+    {
+      "filename": "race-human-council.png",
+      "sha256": "49bdf6470ce426f166b0ed677a6bb456990e0666b6b9b50db0f30df423225387",
+      "bytes": 2525202
+    },
+    {
+      "filename": "race-human-figure.png",
+      "sha256": "d9efb95790c8717c36fa3ab6de54c9d10dc7bcaf3ea3fe5c93609e58ced35958",
+      "bytes": 1993976
+    },
+    {
+      "filename": "race-human-homeworld-square.png",
+      "sha256": "2fb1794948c1990625ad44800e06bf7e2248c7488cdacb47ec20704f237072d4",
+      "bytes": 2965484
+    },
+    {
+      "filename": "race-human-homeworld.png",
+      "sha256": "9398895b7f69a10c600762849e9b1c560021a82c6fa1feba9c5bab75fa2792a3",
+      "bytes": 2685029
+    },
+    {
+      "filename": "race-human-scientist.png",
+      "sha256": "7efba2f52506491d970102f90ce6615519d4f41b945d91fe8e7145fd79966da3",
+      "bytes": 2072951
+    },
+    {
+      "filename": "race-klackon-audience.png",
+      "sha256": "2aa6381fdf3ee095084f5b9a78e84fa107a22b986cb9b2e21a399b01eeea59ac",
+      "bytes": 2367248
+    },
+    {
+      "filename": "race-klackon-council.png",
+      "sha256": "909e7e2b715cb1a51d8f2678e3c41b319e532dbeb8749d6adf138aeeb5d5a430",
+      "bytes": 2450104
+    },
+    {
+      "filename": "race-klackon-figure.png",
+      "sha256": "affe5c5551253b467cfb433d05e58d2fcc0e498e6c6ea165f75cbf24b841c249",
+      "bytes": 2169256
+    },
+    {
+      "filename": "race-klackon-homeworld-square.png",
+      "sha256": "07a426e3d03cbebeb5c16dbb0aa8bd54ac1b1599c412be0c56ecfa058860f4c1",
+      "bytes": 2849845
+    },
+    {
+      "filename": "race-klackon-homeworld.png",
+      "sha256": "edc125f3884afad3e1cec06221772ca01bd6a4b89078b68d3a6f7dd02049ca59",
+      "bytes": 2495935
+    },
+    {
+      "filename": "race-klackon-scientist.png",
+      "sha256": "46cbfbd1d28cf18ab53134bc254dcd9218e3e225f5c1e8d708a6df61a609b757",
+      "bytes": 2210227
+    },
+    {
+      "filename": "race-meklar-audience.png",
+      "sha256": "f38e3539b8b9bf6ec024352eac67ff0dbb3496c1bd96acd5bc12c0566eee3923",
+      "bytes": 2375241
+    },
+    {
+      "filename": "race-meklar-council.png",
+      "sha256": "e8f7d9a6ae1a05fa8953a44cf5558b22aa153b30b1c34a1f2b19bc0488612512",
+      "bytes": 2338472
+    },
+    {
+      "filename": "race-meklar-figure.png",
+      "sha256": "2a4741678ce7f00c6ab203a2baacac5350b92ea07bf94f2d2f4b1f53537d1a3e",
+      "bytes": 2137275
+    },
+    {
+      "filename": "race-meklar-homeworld-square.png",
+      "sha256": "cf707b3287c76487bdf580d41449d13f7df3ac79ab989de679bb28ec4300cedf",
+      "bytes": 3145959
+    },
+    {
+      "filename": "race-meklar-homeworld.png",
+      "sha256": "48ae4f9d6cc42fc988dcfeacbfb800dda9ee2aaf22955abd62693f5fc17083d4",
+      "bytes": 2742833
+    },
+    {
+      "filename": "race-meklar-scientist.png",
+      "sha256": "088c0710ab8d3585a1e4b81883e4372b5b394ed183324dfb86bcfca1ac9a9e5a",
+      "bytes": 2225202
+    },
+    {
+      "filename": "race-mrrshan-audience.png",
+      "sha256": "6fc181bf72ee30eda218ea5f7356a5fd348ae9f635ea0b269b76957bcae8324e",
+      "bytes": 2270076
+    },
+    {
+      "filename": "race-mrrshan-council.png",
+      "sha256": "ecdcefd3572d35c4e1b95d56f6ecd0ee696e8a71c186532c558b8aa48f4e0cbc",
+      "bytes": 2503532
+    },
+    {
+      "filename": "race-mrrshan-figure.png",
+      "sha256": "2e4a1364db7d8d3af816e4e1bd9c04e09aa55e502faf3e77a70b828c844b235f",
+      "bytes": 2224435
+    },
+    {
+      "filename": "race-mrrshan-homeworld-square.png",
+      "sha256": "7c0713c920d933aa1ab0ea8eaf81d089791cd9588be2b57f77872356aab42824",
+      "bytes": 2680533
+    },
+    {
+      "filename": "race-mrrshan-homeworld.png",
+      "sha256": "baee3d7248eb3b63f8207594e9685524ba3824c01089051deec6ced1282df84a",
+      "bytes": 2485475
+    },
+    {
+      "filename": "race-mrrshan-scientist.png",
+      "sha256": "a6b704b092ce05e778791a99baee14278b2d23dcfe37c8230dff8e39d8f9308d",
+      "bytes": 2199772
+    },
+    {
+      "filename": "race-psilon-audience.png",
+      "sha256": "81f5fc6b8b67944f5dd2f0dfe559922db3ca723ff522572bb021a69b4078cfe8",
+      "bytes": 2344462
+    },
+    {
+      "filename": "race-psilon-council.png",
+      "sha256": "d0d3f6d45e202596a1ba318bcf6477268620c7618afd56cc289609f73a331ec8",
+      "bytes": 2385032
+    },
+    {
+      "filename": "race-psilon-figure.png",
+      "sha256": "9056be4d53baa18be04a095c350b7551387517c3a22ce2e376afa6ab56a6337f",
+      "bytes": 2198660
+    },
+    {
+      "filename": "race-psilon-homeworld-square.png",
+      "sha256": "d5ac5aea275568376868034eb8f400fccc6e139689719a9425dd826697eccf4c",
+      "bytes": 2922904
+    },
+    {
+      "filename": "race-psilon-homeworld.png",
+      "sha256": "6c8f5add29294f7695bea628386b55811ee494ef7553cbbe9cbb6f638b297389",
+      "bytes": 2551192
+    },
+    {
+      "filename": "race-psilon-scientist.png",
+      "sha256": "0405dfa269b8c2300b897c2eb7483e72bcd51f6fe8d75a26f2e4822b194ae9a1",
+      "bytes": 2200791
+    },
+    {
+      "filename": "race-sakkra-audience.png",
+      "sha256": "aa060d487a3ecda8deb4460eaf59a8f6cd4fd136d5e4a796907a4d49827122e7",
+      "bytes": 2686468
+    },
+    {
+      "filename": "race-sakkra-council.png",
+      "sha256": "ce4b5131d9b253e9c4dfaa55639086335d3a7a5265af809bbe8dd65155480d01",
+      "bytes": 2582770
+    },
+    {
+      "filename": "race-sakkra-figure.png",
+      "sha256": "e22917161cb02e6efb9acfc570c90f33f73c2e1ec96a639662d133b5e712800e",
+      "bytes": 2306547
+    },
+    {
+      "filename": "race-sakkra-homeworld-square.png",
+      "sha256": "5d03908008814d310666be0e7fa92689a94e904129c48dc6621798d3ef2d2653",
+      "bytes": 2926653
+    },
+    {
+      "filename": "race-sakkra-homeworld.png",
+      "sha256": "a48168b2f5a6d40d2735e8020b3fd1485425825b915cc41677894c32b9278b97",
+      "bytes": 2581378
+    },
+    {
+      "filename": "race-sakkra-scientist.png",
+      "sha256": "9a0d7b2061f5d3533b73b78c85ca277c4a60a585e8d409b2d394a0476cce34f1",
+      "bytes": 2321676
+    },
+    {
+      "filename": "race-silicoid-audience.png",
+      "sha256": "7a1ca76cf136a12d0bb01d8903ef0343297513ca8aad0297f143275465918013",
+      "bytes": 2346916
+    },
+    {
+      "filename": "race-silicoid-council.png",
+      "sha256": "8c16cac82be044bf6e9dd906ef03c17bb2884bae48c4422f1f01c8664a912685",
+      "bytes": 2478814
+    },
+    {
+      "filename": "race-silicoid-figure.png",
+      "sha256": "b3901755f3bb5f8ff44b371d98d120e24e8a2d2957eccd0aa8ddf4c50c846953",
+      "bytes": 2474094
+    },
+    {
+      "filename": "race-silicoid-homeworld-square.png",
+      "sha256": "4c22bb64a2f5924e088106d9dcce2dde80d5ea18526e089a5f0afe33117bf18c",
+      "bytes": 2751187
+    },
+    {
+      "filename": "race-silicoid-homeworld.png",
+      "sha256": "77e905b9f1774c3d0aa3838657ed933b5cfd5e93f8e3f8df2a44e682365c8500",
+      "bytes": 2569437
+    },
+    {
+      "filename": "race-silicoid-scientist.png",
+      "sha256": "966d09228544d626561a77364553174d06caffcd0b1cddf6782bf9ba5e012f70",
+      "bytes": 2274184
+    }
+  ]
+}

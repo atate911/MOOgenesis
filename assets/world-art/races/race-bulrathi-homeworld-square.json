@@ -1,0 +1,49 @@
+{
+  "asset_id": "race-bulrathi-homeworld-square",
+  "filename": "race-bulrathi-homeworld-square.png",
+  "race_id": "bulrathi",
+  "purpose": "Square homeworld card",
+  "intended_screens": [
+    "race selection",
+    "colony",
+    "system"
+  ],
+  "asset_role": "background",
+  "composition": "Square homeworld view, focal surface and orbital features retained; dark upper-right space.",
+  "overlay_safe_fractions": {
+    "bottom": 0.15
+  },
+  "requested_dimensions": {
+    "width": 1024,
+    "height": 1024
+  },
+  "reference_portrait": "https://github.com/atate911/MOOgenesis/blob/main/Race%20photos/Bulrathi.png",
+  "prompt": "Edit target: supplied finished bulrathi homeworld orbital scene from Master of Orion Reborn. Produce ONE standalone square 1:1 PNG, 1024x1024, filename race-bulrathi-homeworld-square.png. Reframe for a compact race-selection or colony card. Preserve this exact planet's surface type, palette, city or industrial patterns and recognizable orbital architecture. Keep the planet as main visual, space in upper-right, controlled filmic highlights, lower 15% calm. Maintain photorealistic cinematic original hard sci-fi style. No labels, text, borders, logos, interface or characters. This is the square companion to the landscape asset, not a collage. World identity: Ursa: cold forest and tundra, snow caps, dark conifer belts.",
+  "approval_status": "generated; awaiting user review",
+  "variant_of": "race-bulrathi-homeworld",
+  "variant_type": "AI-reframed square companion",
+  "actual_dimensions": {
+    "width": 1254,
+    "height": 1254
+  },
+  "exact_requested_dimensions": false,
+  "schema_version": 1,
+  "game": "Master of Orion — Reborn",
+  "purpose_id": "homeworld-square",
+  "generation_method": "built-in image_gen",
+  "file_format": "image/png",
+  "native_resolution_preserved": true,
+  "overlay_safe_fractions_are": "Intended layout guides, visually estimated; validate text contrast in the final game UI.",
+  "background_transparency": "opaque",
+  "subject_role": "environment",
+  "recommended_fit": "cover; preserve focal subject and overlay-safe regions",
+  "suggested_repository_directory": "assets/races/",
+  "integration_status": "asset delivered; not wired into game code",
+  "suggested_integration_entry_points": [
+    "js/ui/setup.js",
+    "js/ui/system.js",
+    "js/ui/side-colony.js"
+  ],
+  "integration_entry_points_are": "Candidate modules from repository file inventory; inspect their current rendering APIs before wiring.",
+  "compositing_notes": "Homeworld illustration. Use the square companion for square cards rather than stretching the landscape."
+}

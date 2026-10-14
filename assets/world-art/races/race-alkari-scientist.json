@@ -1,0 +1,46 @@
+{
+  "asset_id": "race-alkari-scientist",
+  "filename": "race-alkari-scientist.png",
+  "race_id": "alkari",
+  "purpose": "Research laboratory and technology breakthrough scene",
+  "intended_screens": [
+    "research",
+    "technology breakthrough",
+    "research choice"
+  ],
+  "asset_role": "scene",
+  "composition": "Scientist and console left-centre, entire right 40% dark and uncluttered for technology descriptions.",
+  "overlay_safe_fractions": {
+    "right": 0.4
+  },
+  "requested_dimensions": {
+    "width": 1920,
+    "height": 1080
+  },
+  "reference_portrait": "https://github.com/atate911/MOOgenesis/blob/main/Race%20photos/Alkari.png",
+  "prompt": "Use case: stylized-concept. Produce ONE finished standalone PNG game asset for Master of Orion — Reborn. Filename: race-alkari-scientist.png. Requested dimensions 1920x1080, 16:9. Input image: approved race leader portrait, visual reference for original species design, believable materials, costume identity and lighting.\nRace lore and art direction:\n6 · Alkari — Altair — sky blue / white\r\nGame role: ace pilots. Strengths: ships are much harder to hit and act earlier; cheap propulsion research. Weaknesses: weak force-field science; blood feud with the Mrrshan and wary of several others.\r\nBody & dress: raptor-people: hawk/eagle head with hooked beak, layered brown-cream plumage, sharp golden eyes, folded wings or wing-joints at the shoulders (can glide). Elegant flight-officer uniforms tailored around the wings; blue-and-white colours, clan crests, talon-guard bracers, flight goggles pushed up.\r\nSurroundings: high-altitude aeries: cliff-top spires, open-air landing platforms, wind-stirred banners, vaulted windows over cloud seas, perches and rafters inside halls, hangars full of sleek fighters.\r\nPersonality: proud, clan-minded, quick, honour-sensitive. Moods: alert/precise → proud contempt → blazing feud-rage (Mrrshan).\r\nHooks: clan banners of fallen pilots, feathers kept as honours, a wind-tunnel training hall.\nAsset purpose: Research laboratory and technology breakthrough scene. ONE scientist, a DIFFERENT individual from the reference leader, same species and biological design, lab version of dress language. At a working laboratory console, species-appropriate research apparatus, geometric holograms without readable text. Focused discovery, subtle triumph or unease. Warm key and screen glow.\nComposition: Scientist and console left-centre, entire right 40% dark and uncluttered for technology descriptions.\nVisual treatment: photorealistic cinematic hard sci-fi concept still, serious prestige drama, worn lived-in industrial materials, 85mm portrait lens language where appropriate, strong key from left, restrained race-colored rim, deep shadows, subtle film grain, muted filmic grade. Match reference realism and species identity. ONE dominant race accent color. No text, captions, readable glyphs or equations, numbers, watermark, logos, borders, interface, real-world flags or symbols. Small non-text original costume insignia from reference may remain. Avoid cartoon, anime, cel shading, toy, plastic, waxy skin, cute mascot, oversized eyes, rainbow saturation, fantasy armor, medieval costume, malformed hands or duplicated limbs. Full frame is one coherent scene, never a collage.",
+  "approval_status": "generated; awaiting user review",
+  "actual_dimensions": {
+    "width": 1672,
+    "height": 941
+  },
+  "exact_requested_dimensions": false,
+  "schema_version": 1,
+  "game": "Master of Orion — Reborn",
+  "purpose_id": "scientist",
+  "generation_method": "built-in image_gen",
+  "file_format": "image/png",
+  "native_resolution_preserved": true,
+  "overlay_safe_fractions_are": "Intended layout guides, visually estimated; validate text contrast in the final game UI.",
+  "background_transparency": "opaque",
+  "subject_role": "scientist, not leader",
+  "recommended_fit": "cover; preserve focal subject and overlay-safe regions",
+  "suggested_repository_directory": "assets/races/",
+  "integration_status": "asset delivered; not wired into game code",
+  "suggested_integration_entry_points": [
+    "js/ui/tech.js",
+    "js/gfx/scenes.js"
+  ],
+  "integration_entry_points_are": "Candidate modules from repository file inventory; inspect their current rendering APIs before wiring.",
+  "compositing_notes": "Complete scene with scientist already present. Place research descriptions on the right."
+}

@@ -1,0 +1,48 @@
+{
+  "asset_id": "race-human-homeworld",
+  "filename": "race-human-homeworld.png",
+  "race_id": "human",
+  "purpose": "Homeworld orbital view",
+  "intended_screens": [
+    "race selection",
+    "colony",
+    "system"
+  ],
+  "asset_role": "background",
+  "composition": "Full planet disc lower-left, contained within a centred square crop region as much as possible. Dark empty space top and right. Planet, star glint on limb, subtle atmosphere where appropriate, few small race-specific ships/stations.",
+  "overlay_safe_fractions": {
+    "top": 0.2,
+    "right": 0.35
+  },
+  "requested_dimensions": {
+    "width": 1920,
+    "height": 1080
+  },
+  "reference_portrait": "https://github.com/atate911/MOOgenesis/blob/main/Race%20photos/human.png",
+  "prompt": "Use case: stylized-concept. Produce ONE finished standalone PNG game asset for Master of Orion — Reborn. Filename: race-human-homeworld.png. Requested dimensions 1920x1080, 16:9. Input image: approved race leader portrait, visual reference for original species design, believable materials, costume identity and lighting.\nRace lore and art direction:\n1 · Human — homeworld Sol — accent steel-blue\r\nGame role: the diplomats and traders; the \"friendly\" default. Strengths: expert traders (trade treaties pay more), magnificent diplomats (everyone starts friendly, Council votes count extra), cheap force-field science. Weakness: no martial, production, growth or spy edge — they win by deals and shields.\r\nBody & dress: ordinary human variety; the approved leader is a weathered 50-something admiral-diplomat. Deep navy naval-style uniform, silver braid, discreet insignia; civilian formal wear for audiences (dark tailored coats, a small comm-pin). Never overtly militaristic.\r\nSurroundings: an orbital capital: warm-lit wood-and-steel offices, trade-hall mezzanines, big windows onto Earth-blue planetlight, commodity tickers, ship models, treaty tables with brass fittings. Pragmatic, comfortable, a little worn.\r\nPersonality: charming, shrewd, amused, quietly tough. Moods: warm-genial → polite-wary → cold-courteous.\r\nHooks: a diplomat's pouch of gifts, mismatched souvenirs from many alien courts, a chess-like board game left mid-play.\nAsset purpose: Homeworld orbital view. Photorealistic planetary orbital view using the race homeworld description. Original believable space infrastructure reflecting culture. No people. No giant decorative emblems. Astronomical camera rather than shallow portrait focus.\nComposition: Full planet disc lower-left, contained within a centred square crop region as much as possible. Dark empty space top and right. Planet, star glint on limb, subtle atmosphere where appropriate, few small race-specific ships/stations.\nWorld: Sol: blue oceans, human city-light webs, orbital shipyards.\nVisual treatment: photorealistic cinematic hard sci-fi concept still, serious prestige drama, worn lived-in industrial materials, 85mm portrait lens language where appropriate, strong key from left, restrained race-colored rim, deep shadows, subtle film grain, muted filmic grade. Match reference realism and species identity. ONE dominant race accent color. No text, captions, readable glyphs or equations, numbers, watermark, logos, borders, interface, real-world flags or symbols. Small non-text original costume insignia from reference may remain. Avoid cartoon, anime, cel shading, toy, plastic, waxy skin, cute mascot, oversized eyes, rainbow saturation, fantasy armor, medieval costume, malformed hands or duplicated limbs. Full frame is one coherent scene, never a collage.",
+  "approval_status": "generated; awaiting user review",
+  "actual_dimensions": {
+    "width": 1672,
+    "height": 941
+  },
+  "exact_requested_dimensions": false,
+  "schema_version": 1,
+  "game": "Master of Orion — Reborn",
+  "purpose_id": "homeworld",
+  "generation_method": "built-in image_gen",
+  "file_format": "image/png",
+  "native_resolution_preserved": true,
+  "overlay_safe_fractions_are": "Intended layout guides, visually estimated; validate text contrast in the final game UI.",
+  "background_transparency": "opaque",
+  "subject_role": "environment",
+  "recommended_fit": "cover; preserve focal subject and overlay-safe regions",
+  "suggested_repository_directory": "assets/races/",
+  "integration_status": "asset delivered; not wired into game code",
+  "suggested_integration_entry_points": [
+    "js/ui/setup.js",
+    "js/ui/system.js",
+    "js/ui/side-colony.js"
+  ],
+  "integration_entry_points_are": "Candidate modules from repository file inventory; inspect their current rendering APIs before wiring.",
+  "compositing_notes": "Homeworld illustration. Use the square companion for square cards rather than stretching the landscape."
+}

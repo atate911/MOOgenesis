@@ -1,5 +1,11 @@
 # MOOgenesis — cinematic world art
 
+## Race artwork collection
+
+The [races collection](races/README.md) adds 60 images across all ten races: audience halls, scientists, full-body leaders, homeworlds, council delegates, and square homeworld companions. Browse its [gallery](races/index.html) or use its [AI asset manifest](races/asset-manifest.json). Each PNG retains race/purpose filenames, embedded metadata, and a matching JSON sidecar. Paths in that manifest are relative to `assets/world-art/races/`. This collection uses the case-sensitive PNG metadata key `MOOgenesis.asset`; the original world collection below uses `MOOgenesis.Asset`.
+
+## Original world artwork collection
+
 54 original PNG illustrations generated with the built-in image generation tool, using the supplied brief and the local MOOgenesis repository for context.
 
 Open `index.html` to browse the collection. For AI-assisted integration, start with `asset-manifest.json`. Each PNG has both a same-name JSON sidecar and embedded PNG iTXt metadata under the key `MOOgenesis.Asset`. The sidecar additionally supplies the collection-relative `file` path. Full generation and revision prompts are in `generation-prompts.json`.

@@ -1,0 +1,43 @@
+{
+  "asset_id": "race-psilon-council",
+  "filename": "race-psilon-council.png",
+  "race_id": "psilon",
+  "purpose": "Seated Galactic Council delegate portrait",
+  "intended_screens": [
+    "galactic council voting"
+  ],
+  "asset_role": "portrait",
+  "composition": "Square medium seated portrait, seen slightly above and to side, readable face and silhouette at 200px thumbnail, hands visible, lower 15% calm for vote overlay.",
+  "overlay_safe_fractions": {
+    "bottom": 0.15
+  },
+  "requested_dimensions": {
+    "width": 1024,
+    "height": 1024
+  },
+  "reference_portrait": "https://github.com/atate911/MOOgenesis/blob/main/Race%20photos/Psilon.png",
+  "prompt": "Use case: stylized-concept. Produce ONE finished standalone PNG game asset for Master of Orion — Reborn. Filename: race-psilon-council.png. Requested dimensions 1024x1024, 1:1. Input image: approved race leader portrait, visual reference for original species design, believable materials, costume identity and lighting.\nRace lore and art direction:\n5 · Psilon — Mentar — pale gold / cream\r\nGame role: the scholars. Strengths: superior researchers (×1.5 output, cheaper fields, a wider tech tree). Weakness: no military or production edge — the galaxy would rather out-shoot them.\r\nBody & dress: hairless, enormous smooth cranium with fine vein tracery, small mouth/nose, large dark calm eyes, a small jewel set in the forehead (a mark of scholarly rank). Simple high-collared scholar's robes in cream and bronze, thin gold edging, small data-jewel pendants. Elegant, understated.\r\nSurroundings: vast quiet libraries and laboratories: white-gold stone and bronze lattice, floating holographic star-charts and equations, long shelves of data crystals, still pools reflecting light; clean but intensely used.\r\nPersonality: serene, curious, faintly condescending, unsettlingly analytical. Moods: absorbed calm → polite impatience → pained disappointment.\r\nHooks: unsolved-problem walls (equations on glass), a half-built orrery, tea-like ritual drinks.\nAsset purpose: Seated Galactic Council delegate portrait. EXACT SAME leader individual, anatomy, face and uniform identity as reference. Seated in race-specific alcove within a dim domed Galactic Council chamber, ceremonial sash or chain of office consistent with species, hands resting or holding an unmarked ballot token. Controlled pool of race accent light. Do not include other identifiable species; any distant delegates are indistinct shadows.\nComposition: Square medium seated portrait, seen slightly above and to side, readable face and silhouette at 200px thumbnail, hands visible, lower 15% calm for vote overlay.\nVisual treatment: photorealistic cinematic hard sci-fi concept still, serious prestige drama, worn lived-in industrial materials, 85mm portrait lens language where appropriate, strong key from left, restrained race-colored rim, deep shadows, subtle film grain, muted filmic grade. Match reference realism and species identity. ONE dominant race accent color. No text, captions, readable glyphs or equations, numbers, watermark, logos, borders, interface, real-world flags or symbols. Small non-text original costume insignia from reference may remain. Avoid cartoon, anime, cel shading, toy, plastic, waxy skin, cute mascot, oversized eyes, rainbow saturation, fantasy armor, medieval costume, malformed hands or duplicated limbs. Full frame is one coherent scene, never a collage.",
+  "approval_status": "generated; awaiting user review",
+  "actual_dimensions": {
+    "width": 1254,
+    "height": 1254
+  },
+  "exact_requested_dimensions": false,
+  "schema_version": 1,
+  "game": "Master of Orion — Reborn",
+  "purpose_id": "council",
+  "generation_method": "built-in image_gen",
+  "file_format": "image/png",
+  "native_resolution_preserved": true,
+  "overlay_safe_fractions_are": "Intended layout guides, visually estimated; validate text contrast in the final game UI.",
+  "background_transparency": "opaque",
+  "subject_role": "same approved leader",
+  "recommended_fit": "cover; preserve focal subject and overlay-safe regions",
+  "suggested_repository_directory": "assets/races/",
+  "integration_status": "asset delivered; not wired into game code",
+  "suggested_integration_entry_points": [
+    "js/ui/council.js"
+  ],
+  "integration_entry_points_are": "Candidate modules from repository file inventory; inspect their current rendering APIs before wiring.",
+  "compositing_notes": "Complete seated delegate portrait. Use around 200 px beside vote tally."
+}

@@ -1,0 +1,45 @@
+{
+  "asset_id": "race-human-audience",
+  "filename": "race-human-audience.png",
+  "race_id": "human",
+  "purpose": "Diplomacy audience background",
+  "intended_screens": [
+    "diplomacy audience"
+  ],
+  "asset_role": "background",
+  "composition": "No foreground characters: the game composites its existing leader portrait separately. Keep left 45% and bottom 30% dark and calm; architecture, windows, light and visual interest at centre-right.",
+  "overlay_safe_fractions": {
+    "left": 0.45,
+    "bottom": 0.3
+  },
+  "requested_dimensions": {
+    "width": 1920,
+    "height": 1080
+  },
+  "reference_portrait": "https://github.com/atate911/MOOgenesis/blob/main/Race%20photos/human.png",
+  "prompt": "Create ONE final game background asset, race-human-audience.png, 1920x1080 landscape 16:9. Reference image is approved Human leader portrait, use only its cinematic realism, navy/steel-blue palette, worn silver and dignified culture; DO NOT include the person. Master of Orion Reborn original hard sci-fi: imposing orbital diplomatic capital audience office, warm dark wood and brushed steel, worn brass treaty-table fittings, mezzanine trade hall architecture, broad window with blue Earth-like planetlight on centre-right, small alien diplomatic souvenirs and ship models. No characters. LEFT 45 percent and BOTTOM 30 percent calm, dark and unobstructed for separately composited leader and interface; architectural detail and controlled light concentrated centre-right. Cinematic photorealistic materials, key light left, blue rim light, deep shadows, subtle film grain, muted filmic grade. No text, numbers, logos, watermark, borders, UI, real world symbols, cartoon, anime, plastic, fantasy armor, oversaturation or blown highlights. Entire image one continuous scene.",
+  "approval_status": "generated; awaiting user review",
+  "actual_dimensions": {
+    "width": 1672,
+    "height": 941
+  },
+  "exact_requested_dimensions": false,
+  "schema_version": 1,
+  "game": "Master of Orion — Reborn",
+  "purpose_id": "audience",
+  "generation_method": "built-in image_gen",
+  "file_format": "image/png",
+  "native_resolution_preserved": true,
+  "overlay_safe_fractions_are": "Intended layout guides, visually estimated; validate text contrast in the final game UI.",
+  "background_transparency": "opaque",
+  "subject_role": "environment",
+  "recommended_fit": "cover; preserve focal subject and overlay-safe regions",
+  "suggested_repository_directory": "assets/races/",
+  "integration_status": "asset delivered; not wired into game code",
+  "suggested_integration_entry_points": [
+    "js/ui/audience.js",
+    "js/gfx/scenes.js"
+  ],
+  "integration_entry_points_are": "Candidate modules from repository file inventory; inspect their current rendering APIs before wiring.",
+  "compositing_notes": "Place the existing leader portrait separately over the left side. Place dialogue/menu UI over the lower area."
+}

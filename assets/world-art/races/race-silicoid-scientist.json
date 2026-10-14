@@ -1,0 +1,46 @@
+{
+  "asset_id": "race-silicoid-scientist",
+  "filename": "race-silicoid-scientist.png",
+  "race_id": "silicoid",
+  "purpose": "Research laboratory and technology breakthrough scene",
+  "intended_screens": [
+    "research",
+    "technology breakthrough",
+    "research choice"
+  ],
+  "asset_role": "scene",
+  "composition": "Scientist and console left-centre, entire right 40% dark and uncluttered for technology descriptions.",
+  "overlay_safe_fractions": {
+    "right": 0.4
+  },
+  "requested_dimensions": {
+    "width": 1920,
+    "height": 1080
+  },
+  "reference_portrait": "https://github.com/atate911/MOOgenesis/blob/main/Race%20photos/silicoid.png",
+  "prompt": "Use case: stylized-concept. Produce ONE finished standalone PNG game asset for Master of Orion — Reborn. Filename: race-silicoid-scientist.png. Requested dimensions 1920x1080, 16:9. Input image: approved race leader portrait, visual reference for original species design, believable materials, costume identity and lighting.\nRace lore and art direction:\n3 · Silicoid — Cryslon — molten orange (on obsidian/quartz)\r\nGame role: the \"settle anywhere\" race. Strengths: immune to every environment (colonise any world), no pollution, no plague. Weaknesses: very slow breeders, narrow science (no environment techs, most fields costlier). They speak rarely and strike early.\r\nBody & dress: living crystal and cooling basalt; faceted obsidian plates, quartz spines, glowing magma fissures that brighten with emotion (dim = calm, white-hot = anger). No mouth, or a narrow glowing fissure. Wears mineral-plated regalia: heavy collars of forged metal ringed with heat-shimmer, almost no cloth.\r\nSurroundings: warm, dim, volcanic architecture: black glass galleries, slow-flowing lava channels cut into floors, steam vents, heat haze, crystal-lit halls with extreme stillness. Equipment scorched.\r\nPersonality: glacial patience, ancient, rare words. Moods: dormant-ember calm → sudden incandescent anger.\r\nHooks: a crack that slowly glows during conversation, a \"calendar\" of mineral growth rings, silence as a threat.\nAsset purpose: Research laboratory and technology breakthrough scene. ONE scientist, a DIFFERENT individual from the reference leader, same species and biological design, lab version of dress language. At a working laboratory console, species-appropriate research apparatus, geometric holograms without readable text. Focused discovery, subtle triumph or unease. Warm key and screen glow.\nComposition: Scientist and console left-centre, entire right 40% dark and uncluttered for technology descriptions.\nVisual treatment: photorealistic cinematic hard sci-fi concept still, serious prestige drama, worn lived-in industrial materials, 85mm portrait lens language where appropriate, strong key from left, restrained race-colored rim, deep shadows, subtle film grain, muted filmic grade. Match reference realism and species identity. ONE dominant race accent color. No text, captions, readable glyphs or equations, numbers, watermark, logos, borders, interface, real-world flags or symbols. Small non-text original costume insignia from reference may remain. Avoid cartoon, anime, cel shading, toy, plastic, waxy skin, cute mascot, oversized eyes, rainbow saturation, fantasy armor, medieval costume, malformed hands or duplicated limbs. Full frame is one coherent scene, never a collage.",
+  "approval_status": "generated; awaiting user review",
+  "actual_dimensions": {
+    "width": 1672,
+    "height": 941
+  },
+  "exact_requested_dimensions": false,
+  "schema_version": 1,
+  "game": "Master of Orion — Reborn",
+  "purpose_id": "scientist",
+  "generation_method": "built-in image_gen",
+  "file_format": "image/png",
+  "native_resolution_preserved": true,
+  "overlay_safe_fractions_are": "Intended layout guides, visually estimated; validate text contrast in the final game UI.",
+  "background_transparency": "opaque",
+  "subject_role": "scientist, not leader",
+  "recommended_fit": "cover; preserve focal subject and overlay-safe regions",
+  "suggested_repository_directory": "assets/races/",
+  "integration_status": "asset delivered; not wired into game code",
+  "suggested_integration_entry_points": [
+    "js/ui/tech.js",
+    "js/gfx/scenes.js"
+  ],
+  "integration_entry_points_are": "Candidate modules from repository file inventory; inspect their current rendering APIs before wiring.",
+  "compositing_notes": "Complete scene with scientist already present. Place research descriptions on the right."
+}

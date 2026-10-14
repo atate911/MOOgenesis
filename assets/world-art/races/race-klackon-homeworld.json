@@ -1,0 +1,48 @@
+{
+  "asset_id": "race-klackon-homeworld",
+  "filename": "race-klackon-homeworld.png",
+  "race_id": "klackon",
+  "purpose": "Homeworld orbital view",
+  "intended_screens": [
+    "race selection",
+    "colony",
+    "system"
+  ],
+  "asset_role": "background",
+  "composition": "Planet occupies lower-left half; right 35% and top 20% remain predominantly dark space, sparse stars only, for overlays. Keep focal surface features crop-safe. Small orbital stations and ships close to the limb; no large ships on right.",
+  "overlay_safe_fractions": {
+    "top": 0.2,
+    "right": 0.35
+  },
+  "requested_dimensions": {
+    "width": 1920,
+    "height": 1080
+  },
+  "reference_portrait": "https://github.com/atate911/MOOgenesis/blob/main/Race%20photos/Klackon.png",
+  "prompt": "Use case: stylized-concept. Produce ONE finished standalone PNG game asset for Master of Orion — Reborn. Filename: race-klackon-homeworld.png. Requested dimensions 1920x1080, 16:9. Input image: approved race leader portrait, visual reference for original species design, believable materials, costume identity and lighting.\nRace lore and art direction:\n7 · Klackon — Kholdan — rust red / olive\r\nGame role: the hive workforce. Strengths: every colonist produces double, cheap construction, nearly no rebellion. Weaknesses: short-range drives, insular and mistrusted.\r\nBody & dress: large ant-like insectoids: glossy dark-brown/rust chitin, big compound eyes, mandibles, segmented antennae, fine bristles, multiple limbs (keep a humanoid-ish upright bust). Plain uniform worker-caste collars, caste glyph plates, tool-belts; almost no personal ornament — individuality is rare and suspicious.\r\nSurroundings: an orderly hive-city: honeycomb corridors lit amber, ranks of identical stations, pheromone-vent glows, conveyor \"trails\" along walls, vast factory floors; clean, repetitive, efficient; clay/resin textures mixed with industrial steel.\r\nPersonality: orderly, impersonal, courteous in a mechanical way. Moods: flat neutrality → antennae-twitching alarm.\r\nHooks: a queen-caste chamber glimpsed beyond, rank shown by antenna rings, identical figures behind the speaker.\nAsset purpose: Homeworld orbital view. Photorealistic planetary orbital view using the race homeworld description. Original believable space infrastructure reflecting culture. No people. No giant decorative emblems. Astronomical camera rather than shallow portrait focus.\nComposition: Planet occupies lower-left half; right 35% and top 20% remain predominantly dark space, sparse stars only, for overlays. Keep focal surface features crop-safe. Small orbital stations and ships close to the limb; no large ships on right.\nWorld: Kholdan: rust-colored planet, vast orderly hive lattices visible from orbit.\nVisual treatment: photorealistic cinematic hard sci-fi concept still, serious prestige drama, worn lived-in industrial materials, 85mm portrait lens language where appropriate, strong key from left, restrained race-colored rim, deep shadows, subtle film grain, muted filmic grade. Match reference realism and species identity. ONE dominant race accent color. No text, captions, readable glyphs or equations, numbers, watermark, logos, borders, interface, real-world flags or symbols. Small non-text original costume insignia from reference may remain. Avoid cartoon, anime, cel shading, toy, plastic, waxy skin, cute mascot, oversized eyes, rainbow saturation, fantasy armor, medieval costume, malformed hands or duplicated limbs. Full frame is one coherent scene, never a collage.",
+  "approval_status": "generated; awaiting user review",
+  "actual_dimensions": {
+    "width": 1672,
+    "height": 941
+  },
+  "exact_requested_dimensions": false,
+  "schema_version": 1,
+  "game": "Master of Orion — Reborn",
+  "purpose_id": "homeworld",
+  "generation_method": "built-in image_gen",
+  "file_format": "image/png",
+  "native_resolution_preserved": true,
+  "overlay_safe_fractions_are": "Intended layout guides, visually estimated; validate text contrast in the final game UI.",
+  "background_transparency": "opaque",
+  "subject_role": "environment",
+  "recommended_fit": "cover; preserve focal subject and overlay-safe regions",
+  "suggested_repository_directory": "assets/races/",
+  "integration_status": "asset delivered; not wired into game code",
+  "suggested_integration_entry_points": [
+    "js/ui/setup.js",
+    "js/ui/system.js",
+    "js/ui/side-colony.js"
+  ],
+  "integration_entry_points_are": "Candidate modules from repository file inventory; inspect their current rendering APIs before wiring.",
+  "compositing_notes": "Homeworld illustration. Use the square companion for square cards rather than stretching the landscape."
+}

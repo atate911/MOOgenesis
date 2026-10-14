@@ -1,0 +1,49 @@
+{
+  "asset_id": "race-alkari-figure",
+  "filename": "race-alkari-figure.png",
+  "race_id": "alkari",
+  "purpose": "Full-body race leader",
+  "intended_screens": [
+    "race selection",
+    "council",
+    "encyclopedia",
+    "ending"
+  ],
+  "asset_role": "character",
+  "composition": "CRITICAL: use a plain nearly black studio background with only a faint dim floor, NO detailed room, NO planet window, NO furniture. Entire leader standing three-quarter view, head to feet fully visible uncropped with generous margin. Lower 15% quiet. Soft subtle floor reflection. Easy silhouette for later cutout; not transparent.",
+  "overlay_safe_fractions": {
+    "bottom": 0.15
+  },
+  "requested_dimensions": {
+    "width": 2048,
+    "height": 3072
+  },
+  "reference_portrait": "https://github.com/atate911/MOOgenesis/blob/main/Race%20photos/Alkari.png",
+  "prompt": "Use case: stylized-concept. Produce ONE finished standalone PNG game asset for Master of Orion — Reborn. Filename: race-alkari-figure.png. Requested dimensions 2048x3072, 2:3. Input image: approved race leader portrait, visual reference for original species design, believable materials, costume identity and lighting.\nRace lore and art direction:\n6 · Alkari — Altair — sky blue / white\r\nGame role: ace pilots. Strengths: ships are much harder to hit and act earlier; cheap propulsion research. Weaknesses: weak force-field science; blood feud with the Mrrshan and wary of several others.\r\nBody & dress: raptor-people: hawk/eagle head with hooked beak, layered brown-cream plumage, sharp golden eyes, folded wings or wing-joints at the shoulders (can glide). Elegant flight-officer uniforms tailored around the wings; blue-and-white colours, clan crests, talon-guard bracers, flight goggles pushed up.\r\nSurroundings: high-altitude aeries: cliff-top spires, open-air landing platforms, wind-stirred banners, vaulted windows over cloud seas, perches and rafters inside halls, hangars full of sleek fighters.\r\nPersonality: proud, clan-minded, quick, honour-sensitive. Moods: alert/precise → proud contempt → blazing feud-rage (Mrrshan).\r\nHooks: clan banners of fallen pilots, feathers kept as honours, a wind-tunnel training hall.\nAsset purpose: Full-body race leader. EXACT SAME individual, face, species, coloring, collar insignia and uniform design as reference, extended into full formal dress with accurate species anatomy including wings or tail where applicable. Dignified iconic pose, 2-3 small culturally telling props.\nComposition: CRITICAL: use a plain nearly black studio background with only a faint dim floor, NO detailed room, NO planet window, NO furniture. Entire leader standing three-quarter view, head to feet fully visible uncropped with generous margin. Lower 15% quiet. Soft subtle floor reflection. Easy silhouette for later cutout; not transparent.\nVisual treatment: photorealistic cinematic hard sci-fi concept still, serious prestige drama, worn lived-in industrial materials, 85mm portrait lens language where appropriate, strong key from left, restrained race-colored rim, deep shadows, subtle film grain, muted filmic grade. Match reference realism and species identity. ONE dominant race accent color. No text, captions, readable glyphs or equations, numbers, watermark, logos, borders, interface, real-world flags or symbols. Small non-text original costume insignia from reference may remain. Avoid cartoon, anime, cel shading, toy, plastic, waxy skin, cute mascot, oversized eyes, rainbow saturation, fantasy armor, medieval costume, malformed hands or duplicated limbs. Full frame is one coherent scene, never a collage.",
+  "approval_status": "generated; awaiting user review",
+  "actual_dimensions": {
+    "width": 1024,
+    "height": 1536
+  },
+  "exact_requested_dimensions": false,
+  "schema_version": 1,
+  "game": "Master of Orion — Reborn",
+  "purpose_id": "figure",
+  "generation_method": "built-in image_gen",
+  "file_format": "image/png",
+  "native_resolution_preserved": true,
+  "overlay_safe_fractions_are": "Intended layout guides, visually estimated; validate text contrast in the final game UI.",
+  "background_transparency": "opaque",
+  "subject_role": "same approved leader",
+  "recommended_fit": "contain; preserve entire body",
+  "suggested_repository_directory": "assets/races/",
+  "integration_status": "asset delivered; not wired into game code",
+  "suggested_integration_entry_points": [
+    "js/ui/setup.js",
+    "js/ui/council.js",
+    "js/ui/help.js",
+    "js/ui/endings.js"
+  ],
+  "integration_entry_points_are": "Candidate modules from repository file inventory; inspect their current rendering APIs before wiring.",
+  "compositing_notes": "Opaque dark-background full figure. Requires a separate cutout if true alpha compositing is desired."
+}
