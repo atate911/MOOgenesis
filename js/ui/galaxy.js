@@ -151,7 +151,13 @@
     if (UI.Galaxy.pendingSend && UI.Galaxy.pendingSend() === false) return;      // a queued fleet move is accepted automatically (an invalid one stops the turn with its message)
     if (M.Settings.get('confirmEndTurn')) { const ok = await UI.confirm('End the turn?'); if (!ok) return; }
     UI.Galaxy.busy(true, 'Year ' + Q.year(G.S) + ' …');
-    const off = M.Bus.on('turn:waiting', type => { if (!(UI.Screens.current && UI.Screens.current.id === 'galaxy' && !UI.modalOpen())) { UI.Galaxy.floatSkip(); return; } UI.Galaxy.busy(true, 'Year ' + Q.year(G.S) + ' … waiting on “' + type + '”'); UI.Galaxy.skipBtn(true); });
+    // 10 s without an answer is normal while the player reads a scene (combat, GNN, council, audience, landing), a modal or a held side-panel prompt:
+    // those all carry their own controls, so the Skip escape is offered ONLY when nothing visible can answer the pending step (a genuinely stuck turn).
+    const off = M.Bus.on('turn:waiting', type => {
+      const onGalaxy = UI.Screens.current && UI.Screens.current.id === 'galaxy';
+      if (!onGalaxy || UI.modalOpen() || UI.Side.held) return;
+      UI.Galaxy.busy(true, 'Year ' + Q.year(G.S) + ' … waiting on “' + type + '”'); UI.Galaxy.skipBtn(true);
+    });
     try { await G.endTurn(); }
     catch (e) { UI.toast('The turn could not be completed: ' + (e && e.message || e) + '. Load a save or report this.', 'bad', 12000); }
     finally { if (typeof off === 'function') off(); UI.Galaxy.busy(false); }

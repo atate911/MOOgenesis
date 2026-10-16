@@ -492,7 +492,7 @@
     k('a', () => ui.b.auto.click()); k('p', () => ui.b.planet.click()); k('s', () => ui.b.scan.click()); k('m', () => ui.b.missile.click()); k('x', () => ui.b.special.click());
     k('r', e => { if (e && e.shiftKey) doRetreat(true); else ui.b.retreat.click(); });
     k('w', () => ui.b.wait.click()); k('d', () => ui.b.done.click());
-    k('escape', () => { if (st.overlay) closeOverlay(); else if (st.special) cancelSpecial(); else ui.b.done.click(); });
+    k('escape', () => { if (st.summary) { if (st.summaryBtn) st.summaryBtn.click(); return; } if (st.overlay) closeOverlay(); else if (st.special) cancelSpecial(); else ui.b.done.click(); });   // the summary is the battle's last answer: Esc continues, never strands the screen
     k('space', () => { if (st.view && st.view.busy()) st.view.skip(); else if (st.summary) { if (st.summaryBtn) st.summaryBtn.click(); } else if (st.overlay) closeOverlay(); else ui.b.done.click(); });
     k('enter', () => { if (st.summary && st.summaryBtn) st.summaryBtn.click(); });
     k('l', () => toggleLog());
@@ -791,7 +791,7 @@
       UI.sfx('error', { vol: 0.35 });
     }
   }
-  function onRight() { if (st.overlay) closeOverlay(); else if (st.special) cancelSpecial(); }
+  function onRight() { if (st.summary) { if (st.summaryBtn) st.summaryBtn.click(); return; } if (st.overlay) closeOverlay(); else if (st.special) cancelSpecial(); }
   function onHover(cell) {
     st.hover = cell;
     const B = st.B; if (!B || !st.view) return;

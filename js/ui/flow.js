@@ -58,7 +58,11 @@
     };
 
     H.techChoice = async it => {
-      if (UI.TechScenes && UI.TechScenes.choose) return UI.TechScenes.choose(it);
+      if (UI.TechScenes && UI.TechScenes.choose) {
+        const v = await UI.TechScenes.choose(it);
+        if (!v && it.choices[0]) { const c = it.choices[0]; UI.Galaxy.message('No ' + Q.FIELD_NAMES[it.field].toLowerCase() + ' project chosen: the scientists start on ' + (c.tech ? c.tech.name : 'level ' + c.level) + '.'); }
+        return v;
+      }
       return new Promise(res => {
         const rows = it.choices.map(c => UI.button((c.tech ? c.tech.name : 'Level ' + c.level) + ' — ' + M.Util.fmt(c.cost) + ' RP', () => pr.close(c.level), { block: true }));
         const pr = UI.modal({ title: 'Choose the next ' + Q.FIELD_NAMES[it.field] + ' research', body: h('div.col', rows), buttons: [], closable: false, width: '28rem' });

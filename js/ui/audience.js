@@ -149,6 +149,7 @@
     return new Promise((res, rej) => {
       A.typeRes = () => { if (!alive(tk)) rej(new Abort()); else res(); };
       A.textEl.textContent = '';
+      if (M.Settings.get('animSpeed') === 0 || M.Settings.get('reduceMotion')) finishTyping();       // instant text, like the other scenes honour the setting
     }).then(() => { if (o.hold) return pause(o.hold, tk); });
   }
   function finishTyping() {
@@ -732,6 +733,9 @@
         if (!begin({ empire: it.from, mode: 'ai', from: undefined })) return undefined;
         const v = await guarded(() => runAI(it));
         leaveScreen();
+        // an aborted audience (screen left, state gone, another audience begun) must not count as "accept" (Diplo.yes treats undefined as yes:
+        // a call to arms would declare war, a demand would break an alliance): answer the explicit negative option when the audience has one
+        if (v === undefined && it.options) { const neg = it.options.find(o => /^(reject|refuse|forget|goodbye)$/.test(o.id)); if (neg) return neg.id; }
         return v;
       };
       const p = chain.then(run, run); chain = p.catch(() => {}); return p;

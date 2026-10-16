@@ -99,8 +99,12 @@
   // What a SKIPPED step answers. The generator's own fallback for `undefined` is not always the harmless choice: an unanswered audience counts as
   // "accept" (which can declare war on a third empire or break an alliance) and an unanswered bombard prompt bombs. A skip must never change the game
   // in a way the player did not choose, so the skip answers are the explicit no-op choices.
-  const SKIP_ANSWERS = { diplomacy: 'reject', bombardPrompt: false, colonize: false, councilResult: true };
-  const skipAnswer = it => (Object.prototype.hasOwnProperty.call(SKIP_ANSWERS, it.type) ? SKIP_ANSWERS[it.type] : undefined);
+  // Skipped battles are auto-resolved (never silently discarded: the fleets would sit together and fight again next turn); skipped spy choices abort the mission.
+  const SKIP_ANSWERS = {
+    diplomacy: 'reject', bombardPrompt: false, colonize: false, councilResult: true, spyStealChoice: null, spySabotageChoice: null,
+    battles: (it, S) => ({ results: it.battles.map(b => Sim.Combat.resolve(b, M.RNG.create(S.seed + ':' + S.turn + ':' + b.star))) }),
+  };
+  const skipAnswer = (it, S) => { if (!Object.prototype.hasOwnProperty.call(SKIP_ANSWERS, it.type)) return undefined; const v = SKIP_ANSWERS[it.type]; return typeof v === 'function' ? v(it, S) : v; };
   G.skipWait = null;
   G.pending = null;                 // {type, it, answer(v)} while the turn waits on an interrupt (the UI shows what is being waited for)
   let runToken = 0, abortWait = null;
@@ -134,11 +138,11 @@
           abortWait = res;                                                                            // load / quit / new game while waiting
           G.pending = { type: it.type, it, answer: v => res(v === undefined ? SKIPPED : v) };          // a scene that lost its UI can still be answered (default = skip)
         });
-        try { ans = h ? await Promise.race([h(it, S), escP]) : undefined; } catch (e) { console.error('[interrupt ' + it.type + ']', e); ans = undefined; }
+        try { ans = h ? await Promise.race([h(it, S), escP]) : undefined; } catch (e) { console.error('[interrupt ' + it.type + ']', e); ans = SKIPPED; }      // a broken scene answers like a skip: the harmless choice
         clearTimeout(wd);
         G.skipWait = null; abortWait = null; G.pending = null;
         if (ans === ABORTED || !live()) { try { gen.return(); } catch (e) { /* ignore */ } return null; }
-        if (ans === SKIPPED) { ans = skipAnswer(it); console.warn('[turn] interrupt "' + it.type + '" skipped by the player'); M.Bus.emit('turn:skipped', it.type); }
+        if (ans === SKIPPED) { ans = skipAnswer(it, S); console.warn('[turn] interrupt "' + it.type + '" skipped by the player'); M.Bus.emit('turn:skipped', it.type); }
         seen.push(it.type);
         r = gen.next(ans);
       }
