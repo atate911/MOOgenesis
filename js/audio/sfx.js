@@ -239,8 +239,8 @@
     S.tone({ f: 70, f1: 120, dur: 1.2, att: 0.15, vel: 0.35, sus: true, rel: 0.4 });
     S.smp('bassDrum', { at: 0.3, vel: 0.5, dyn: 0.35 });
     [196, 246.9, 293.7].forEach(f => S.v('pad', { at: 0.35, f, dur: 0.9, att: 0.25, rel: 0.7, vel: 1.2, send: 0.3 }));
-    S.smp('choirOh', { at: 0.3, f: 196, dur: 1.2, vel: 1.1, dyn: 0.6, oneShot: false, att: 0.35, rel: 0.7, send: 0.35 });
-    S.smp('choirOh', { at: 0.32, f: 293.7, dur: 1.2, vel: 0.9, dyn: 0.55, oneShot: false, att: 0.4, rel: 0.7, send: 0.35 });
+    S.smp('chorusMen', { at: 0.3, f: 196, dur: 1.2, vel: 1.1, dyn: 0.6, oneShot: false, att: 0.35, rel: 0.7, send: 0.35 });
+    S.smp('chorusMen', { at: 0.32, f: 293.7, dur: 1.2, vel: 0.9, dyn: 0.55, oneShot: false, att: 0.4, rel: 0.7, send: 0.35 });
     S.v('chime', { at: 0.75, f: 784, dur: 1.4, vel: 0.7, send: 0.35 });
     S.v('chime', { at: 0.95, f: 1046.5, dur: 1.6, vel: 0.7, send: 0.35 });
   });
@@ -264,7 +264,7 @@
     S.v('bell', { at: 0.4, f: 784, dur: 1.6, vel: 0.9, ratio: 2, idx: 1.0, send: 0.3 });
     S.smp('harp', { at: 0.4, f: 523.25, vel: 1.2, dyn: 0.6, send: 0.3 }); S.smp('harp', { at: 0.47, f: 784, vel: 1.0, dyn: 0.6, send: 0.3 });
     [261.63, 329.63, 392].forEach(f => S.v('pad', { at: 0.4, f, dur: 0.8, att: 0.12, rel: 0.7, vel: 1.1, send: 0.3 }));
-    S.smp('choirHiOo', { at: 0.45, f: 523.25, dur: 0.9, vel: 0.9, dyn: 0.5, oneShot: false, att: 0.3, rel: 0.6, send: 0.35 });
+    S.smp('chorusWomen', { at: 0.45, f: 523.25, dur: 0.9, vel: 0.9, dyn: 0.5, oneShot: false, att: 0.3, rel: 0.6, send: 0.35 });
   });
   def('war', 'War declared: low brass stab, bass drum, gong, dissonant sting', 1.9, 500, 0.3, S => {
     [87.3, 130.8, 185].forEach(f => S.v('brass', { f, dur: 0.9, att: 0.04, rel: 0.4, vel: 1.1, bright: 5, vib: 5, send: 0.25 }));

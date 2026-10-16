@@ -5,6 +5,19 @@ Versions follow `MAJOR.MINOR.PATCH`; the live version is the `VERSION` file.
 
 ## Unreleased
 
+- Better building blocks for the score. The instrument set is rebuilt from **Sonatina Symphonic Orchestra 2.0** (CC Sampling Plus 1.0;
+  see `assets/audio/README.md`): real string sections in their stage seats (sustain, tremolo, staccato, pizzicato), section horns in two
+  recorded dynamic layers, trumpets, trombones, tuba, solo horn and trumpet, flutes and solo winds (flute, alto flute, oboe, cor anglais,
+  clarinet, bassoon), a recorded mixed chorus (men and women) in place of the synthesized choir, concert harp, glockenspiel, celeste,
+  crotales, tubular chimes, timpani with hits in two layers and looped rolls that swell into the downbeat, bass drum, snare, piatti,
+  cymbal rolls, tam-tams, triangle, tambourine, bell tree, sleigh bells, wood blocks, shakers and two pipe-organ stops. The build reads
+  the library's own SFZ definitions (`tools/samples/sfz.py`) for ranges, tuning, loops, round robins and layers instead of guessing. The
+  sampler now crossfades between recorded dynamic layers with the written dynamic (and swells through them over long notes that follow a
+  crescendo), plays legato notes past the attack transient when a line moves without a gap, spreads note onsets by a few milliseconds and a
+  few cents (nobody in an orchestra starts on the same sample), seats every section on the stage, and lets looped sustains hold for any
+  written length. The analogue pads are re-synthesized as a nine-voice stereo unison with a breathing filter and tape saturation; the
+  music bus gains a slow glue compressor; reverb and chorus sends are moderated because the recordings already carry a hall. Rebuild with
+  `python3 tools/samples/build.py --sso "<sso>/Sonatina Symphonic Orchestra" --vsco <VSCO-2-CE> --out assets/audio`.
 - Symphonic re-orchestration and film-style flow. Every synth pluck, FM bell, pad, bass and drum-machine part in the score is now a
   recorded instrument: pizzicato string sections, marimba, glockenspiel, harp, oboe / clarinet / bassoon, contrabass, bass drum,
   snare, field drums, tambourine, claves, anvil, stick taps (the two machine races keep a little sequencer colour). The bell

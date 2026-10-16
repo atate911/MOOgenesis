@@ -7,7 +7,8 @@ few semitones and encoded by build.py like the recorded instruments.  Pure numpy
 
 Choir: every singer is an additive glottal source (harmonics falling 12 dB/oct above 800 Hz) shaped by five vowel formants, with its own
 vibrato rate / depth / onset, pitch drift, breath noise and stereo position; 14 (bass) .. 18 (upper) singers per note.
-Pads: seven detuned saws through a warm 4-pole lowpass with slow filter breathing and a three-tap chorus, Jonn Serrie style.
+Pads: a nine-voice stereo unison (each voice with its own drift and seat in the field) through a slowly breathing 4-pole lowpass, tape-like
+saturation and a wide three-tap chorus, Jonn Serrie style. The choir renderers are kept for reference; the game now uses the recorded chorus.
 """
 import json, math, os, sys
 import numpy as np
@@ -77,51 +78,83 @@ def choir(midi, vowel, voices, secs, spread=1.0, bright=1.0):
     return np.stack([L, R], axis=1) / voices
 
 # ---- pads --------------------------------------------------------------------------------------------------------------------
-def saw_bank(f0, secs, voices=7, det_cents=11.0):
-    n = int(secs * SR); t = np.arange(n) / SR; out = np.zeros(n)
-    nh = int(min(120, 11000 / f0)); h = np.arange(1, nh + 1)
+# A good analogue ensemble pad is mostly about what is *not* there: no aliasing, no static spectrum, no two oscillators locked in phase.
+# Each voice of the unison has its own slow pitch drift, its own position in the stereo field and its own filter breathing; the bank goes
+# through a 4-pole lowpass whose cutoff moves slowly, a touch of tape-like saturation and a wide three-tap chorus.
+def saw_bank(f0, secs, voices=7, det_cents=11.0, stereo=True, drift=0.0006, wave='saw'):
+    n = int(secs * SR); t = np.arange(n) / SR
+    L = np.zeros(n); R = np.zeros(n)
+    nh = int(min(160, 15000 / f0)); h = np.arange(1, nh + 1)
+    if wave == 'saw': amp = 1 / h
+    elif wave == 'square': amp = np.where(h % 2 == 1, 1 / h, 0.0)
+    else: amp = np.where(h % 2 == 1, 1 / h ** 2, 0.0)                               # triangle
+    amp = amp * np.minimum(1, (9000 / (h * f0)) ** 3)                              # gentle anti-alias roll-off well below Nyquist
     for i in range(voices):
         d = (i - (voices - 1) / 2) / max(1, (voices - 1) / 2) * det_cents
-        f = f0 * 2 ** (d / 1200) * (1 + 0.0004 * np.sin(2 * np.pi * rng.uniform(0.05, 0.15) * t + rng.uniform(0, 6.28)))
+        f = f0 * 2 ** (d / 1200) * (1 + drift * np.sin(2 * np.pi * rng.uniform(0.04, 0.13) * t + rng.uniform(0, 6.28)))
         ph = 2 * np.pi * np.cumsum(f) / SR
-        amp = 1 / h * np.minimum(1, (6000 / (h * f0)) ** 2)          # saw with a gentle anti-alias roll-off
-        for k in range(nh): out += amp[k] * np.sin(h[k] * ph + rng.uniform(0, 6.28)) / voices
-    return out
+        v = np.zeros(n)
+        for k in range(nh): v += amp[k] * np.sin(h[k] * ph + rng.uniform(0, 6.28))
+        pan = (i - (voices - 1) / 2) / max(1, (voices - 1) / 2) * 0.85 if stereo else 0.0
+        gl = math.cos((pan + 1) * math.pi / 4); gr = math.sin((pan + 1) * math.pi / 4)
+        L += v * gl / voices; R += v * gr / voices
+    return np.stack([L, R], axis=1)
 
-def lowpass_fft(x, cutoff, reso=1.6, slope=4):
-    spec = np.fft.rfft(x); fr = np.fft.rfftfreq(len(x), 1 / SR)
-    g = 1 / np.sqrt(1 + (fr / cutoff) ** (2 * slope)) * (1 + (reso - 1) * np.exp(-((fr - cutoff * 0.85) / (cutoff * 0.18)) ** 2))
-    return np.fft.irfft(spec * g, len(x))
+def lowpass_moving(x, cut0, cut1, rate=0.09, reso=1.5, slope=4):
+    """4-pole lowpass whose cutoff breathes slowly between cut0 and cut1 (short-time FFT, overlapping Hann windows)."""
+    n = len(x); W = 4096; H = W // 4
+    out = np.zeros_like(x); win = np.hanning(W); norm = np.zeros(n)
+    fr = np.fft.rfftfreq(W, 1 / SR)
+    for s0 in range(0, n - W, H):
+        tt = (s0 + W / 2) / SR
+        cut = cut0 + (cut1 - cut0) * (0.5 + 0.5 * math.sin(2 * math.pi * rate * tt - math.pi / 2))
+        g = 1 / np.sqrt(1 + (fr / cut) ** (2 * slope)) * (1 + (reso - 1) * np.exp(-((fr - cut * 0.85) / (cut * 0.18)) ** 2))
+        for c in range(x.shape[1]):
+            seg = x[s0:s0 + W, c] * win
+            out[s0:s0 + W, c] += np.fft.irfft(np.fft.rfft(seg) * g, W) * win
+        norm[s0:s0 + W] += win * win
+    norm[norm < 1e-6] = 1
+    return out / norm[:, None]
+
+def saturate(x, drive=1.6):
+    """soft tape-like saturation, level-compensated."""
+    y = np.tanh(drive * x) / math.tanh(drive)
+    return y * (np.sqrt(np.mean(x * x)) / (np.sqrt(np.mean(y * y)) + 1e-9))
 
 def chorus(x, rate=0.35, depth_ms=3.5, base_ms=14.0, taps=3, mix=0.6):
+    """stereo in, stereo out: each tap is a modulated delay panned across the field."""
     n = len(x); t = np.arange(n) / SR; out = np.zeros((n, 2))
+    mono = x.mean(axis=1) if x.ndim == 2 else x
     for k in range(taps):
         lfo = np.sin(2 * np.pi * (rate * (1 + 0.23 * k)) * t + k * 2.1)
         delay = (base_ms + depth_ms * lfo + 2.5 * k) / 1000 * SR
         idx = np.arange(n) - delay
-        y = np.interp(idx, np.arange(n), x, left=0.0)
+        y = np.interp(idx, np.arange(n), mono, left=0.0)
         pan = -0.8 + 1.6 * k / max(1, taps - 1); gl = math.cos((pan + 1) * math.pi / 4); gr = math.sin((pan + 1) * math.pi / 4)
         out[:, 0] += y * gl / taps; out[:, 1] += y * gr / taps
-    dry = np.stack([x, x], axis=1) * 0.7
-    return dry * (1 - mix) + out * mix * 1.4
+    dry = x if x.ndim == 2 else np.stack([x, x], axis=1)
+    return dry * (1 - mix * 0.5) + out * mix * 1.2
 
 def pad(midi, secs, kind):
     f0 = midi_f(midi); t = np.arange(int(secs * SR)) / SR
-    if kind == 'serrie':                       # warm analogue strings-pad: saws, 4-pole lowpass, slow breathing, lush chorus
-        x = saw_bank(f0, secs, 7, 12.0)
-        x = lowpass_fft(x, min(11000, f0 * 7 + 1200), 1.4)
-        x += 0.35 * np.sin(2 * np.pi * f0 * 0.5 * t) * np.minimum(1, t / 0.5)      # sub octave
-        y = chorus(x, 0.31, 3.0, 15.0, 3, 0.65)
-    elif kind == 'glass':                      # glassy, airy: triangle-ish bank with a high cutoff and slow shimmer
-        x = saw_bank(f0, secs, 5, 7.0)
-        x = lowpass_fft(x, min(12000, f0 * 9 + 1500), 1.2, 3)
-        x *= 1 + 0.12 * np.sin(2 * np.pi * 0.17 * t)
-        y = chorus(x, 0.45, 2.0, 11.0, 3, 0.5)
+    if kind == 'serrie':                       # warm analogue strings-pad: 9 saws spread across the field, breathing 4-pole lowpass
+        x = saw_bank(f0, secs, 9, 13.0)
+        hi = min(12000, f0 * 8 + 1500); x = lowpass_moving(x, hi * 0.55, hi, 0.08, 1.4)
+        subo = 0.3 * np.sin(2 * np.pi * f0 * 0.5 * t) * np.minimum(1, t / 0.5); x[:, 0] += subo; x[:, 1] += subo
+        x = saturate(x, 1.5)
+        y = chorus(x, 0.29, 2.6, 15.0, 3, 0.55)
+    elif kind == 'glass':                      # glassy, airy: triangle + saw mix, high cutoff, slow shimmer
+        x = 0.6 * saw_bank(f0, secs, 7, 8.0, wave='tri') + 0.5 * saw_bank(f0 * 2, secs, 5, 6.0)
+        hi = min(14000, f0 * 12 + 2000); x = lowpass_moving(x, hi * 0.6, hi, 0.13, 1.2, 3)
+        x *= (1 + 0.1 * np.sin(2 * np.pi * 0.17 * t))[:, None]
+        x = saturate(x, 1.2)
+        y = chorus(x, 0.41, 2.0, 11.0, 3, 0.45)
     else:                                      # 'dark': low, filtered, ominous
-        x = saw_bank(f0, secs, 7, 9.0)
-        x = lowpass_fft(x, min(6500, f0 * 3.2 + 500), 2.0)
-        x += 0.5 * np.sin(2 * np.pi * f0 * 0.5 * t) * np.minimum(1, t / 0.5)
-        y = chorus(x, 0.22, 4.0, 18.0, 3, 0.55)
+        x = saw_bank(f0, secs, 9, 9.0)
+        hi = min(6500, f0 * 3.5 + 500); x = lowpass_moving(x, hi * 0.5, hi, 0.06, 2.0)
+        subo = 0.45 * np.sin(2 * np.pi * f0 * 0.5 * t) * np.minimum(1, t / 0.5); x[:, 0] += subo; x[:, 1] += subo
+        x = saturate(x, 1.8)
+        y = chorus(x, 0.22, 4.0, 18.0, 3, 0.5)
     env = np.minimum(1, t / 0.25)[:, None] * np.minimum(1, (secs - t) / 0.2)[:, None]
     return y * env
 

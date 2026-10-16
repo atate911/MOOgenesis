@@ -3,7 +3,7 @@
 // createEngine, offline, renderWindowed, Voices, playVoice, kit}. Music lives in music.js, effects in sfx.js.
 //
 // Architecture: an "engine" (createEngine) wraps one AudioContext (real or Offline) with
-//   voices -> layer/sfx buses -> musicBus (-> eq -> duck) / sfxBus -> master -> highpass -> compressor -> soft-clip limiter -> outGain -> destination
+//   voices -> layer/sfx buses -> musicBus (-> eq -> glue compressor -> duck) / sfxBus -> master -> highpass -> compressor -> soft-clip limiter -> outGain -> destination
 // plus two convolution reverbs (music hall, sfx plate). Every voice is a small graph that is stopped + disconnected when it ends.
 // The duck stage dips the music for a moment under big sound effects (eng.duckMusic, driven by sfx.js) so stingers read without being loud.
 (function (M) {
@@ -275,9 +275,15 @@
     // gentle mastering tilt for music only: tighter lows, a little air
     const eqL = mk(ctx.createBiquadFilter()), eqH = mk(ctx.createBiquadFilter());
     eqL.type = 'lowshelf'; eqL.frequency.value = 120; eqL.gain.value = -2.5;
-    eqH.type = 'highshelf'; eqH.frequency.value = 3200; eqH.gain.value = 2.5;
+    eqH.type = 'highshelf'; eqH.frequency.value = 3200; eqH.gain.value = 1.5;
+    // glue: a slow, shallow compressor on the whole orchestra (2:1 above -20 dB, 40 ms in, 400 ms out) so tutti swells sit together
+    // and the master limiter is left with transients only
+    const glue = mk(ctx.createDynamicsCompressor());
+    glue.threshold.value = -20; glue.knee.value = 14; glue.ratio.value = 2; glue.attack.value = 0.04; glue.release.value = 0.4;
+    const glueMake = mk(ctx.createGain()); glueMake.gain.value = dbtoa(2);
     const duck = mk(ctx.createGain());
-    eng.musicBus.connect(eqL); eqL.connect(eqH); eqH.connect(duck); duck.connect(master);
+    eng.musicBus.connect(eqL); eqL.connect(eqH); eqH.connect(glue); glue.connect(glueMake); glueMake.connect(duck); duck.connect(master);
+    eng.glue = glue;
     eng.duck = duck; eng.duckUntil = 0; eng.duckLevel = 1;
     // dip the music by `depthDb` for `hold` seconds (15 ms in, ~250 ms release). While an earlier duck is still holding, the depth
     // never decreases (the deeper one is kept, the hold is extended); a shorter + shallower request inside a running duck is ignored.

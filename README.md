@@ -6,7 +6,7 @@ AI leaders that have personalities and objectives, spies, the Galactic Council, 
 
 > All art, music, text and code are original. The original game was used only as a reference for rules, layout and feel (public strategy guides and the open-source
 > *1oom* rules documentation informed the *numbers and behaviours*; no code or assets were copied). The orchestral instrument recordings the music engine plays
-> come from the public-domain (CC0) VSCO 2 Community Edition — see `assets/audio/README.md`.
+> come from the freely licensed Sonatina Symphonic Orchestra (CC Sampling Plus 1.0) and VSCO 2 Community Edition (CC0) — see `assets/audio/README.md`.
 
 ## Status
 **Playable, in active development.** The whole loop works end to end (new game → galaxy → turns against 1–5 AI empires → research, ship design, tactical/ground combat, diplomacy, spies, council, events, endings, save/load). What remains — QA click-through, balance audit, GPU wiring, a second "serious sci-fi" graphics pass — is tracked in **`HANDOFF.md`** (start there) and `PROGRESS.md`.
