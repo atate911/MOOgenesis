@@ -98,6 +98,7 @@
 
   // ------------------------------------------------------------------ shared buffers (cached per sample rate)
   const cache = Object.create(null);
+  A._cache = cache;                             // (debug / measurement hook: generated impulse responses, noise buffers, curves)
 
   function makeNoise(ctx, kind, seconds, seed) {
     const sr = ctx.sampleRate, n = Math.floor(sr * seconds), buf = ctx.createBuffer(1, n, sr), d = buf.getChannelData(0), rng = makeRng(seed);
