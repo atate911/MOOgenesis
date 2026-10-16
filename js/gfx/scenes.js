@@ -1780,7 +1780,7 @@
       const hsc = ped.s * 0.215, hcy = ped.top - ped.s * 0.22;
       ctx.fillStyle = rgr(ctx, ped.cx, hcy, hsc * 0.2, hsc * 1.5, [0, 'rgba(2,4,22,0.62)', 0.6, 'rgba(2,4,22,0.34)', 1, 'rgba(2,4,22,0)']); ctx.fillRect(ped.cx - hsc * 1.6, hcy - hsc * 1.6, hsc * 3.2, hsc * 3.2);
       if (holo === 'galaxy') holoGalaxy(ctx, ped.cx, hcy, hsc * 1.05, t, fl, seats);
-      else if (holo === 'crown') { holoDraw(ctx, holoModel('crown'), ped.cx, hcy + hsc * 0.15, hsc * 0.82, '#ffd54f', { yaw: t * 0.5, pitch: -0.42, a: fl, lw: max(1, hsc * 0.012) }); holoCrownFx(ctx, ped.cx, hcy, hsc, t, fl); }
+      else if (holo === 'crown' && false) { holoDraw(ctx, holoModel('crown'), ped.cx, hcy + hsc * 0.15, hsc * 0.82, '#ffd54f', { yaw: t * 0.5, pitch: -0.42, a: fl, lw: max(1, hsc * 0.012) }); holoCrownFx(ctx, ped.cx, hcy, hsc, t, fl); }
       else holoBallotFx(ctx, ped.cx, hcy, hsc * 0.9, t, fl, hcol);
       holoScan(ctx, ped.cx, hcy, hsc * 0.95, hsc * 1.0, hcol, t, fl * 0.8);
 
@@ -1853,7 +1853,7 @@
           ctx.restore(); ctx.fillStyle = C.ivory; ctx.fillRect(bx - u * 0.035, by - u * 0.022, u * 0.07, u * 0.044); ctx.fillStyle = col; ctx.fillRect(bx - u * 0.035, by - u * 0.022, u * 0.07, u * 0.01);
         }
         if (winner) {
-          crownIcon(ctx, ox, oy - BH * u - u * 0.035 + sin(t * 2) * u * 0.012, u * 0.2, 1, t);
+          glow(ctx, '#ffd870', ox, oy - BH * u - u * 0.02, u * 0.5, 0.35 + 0.15 * sin(t * 2));       // the elected seat glows; no drawn crown over the portrait
           ctx.save(); ctx.globalCompositeOperation = 'lighter'; ctx.fillStyle = '#ffe08a';
           for (let i = 0; i < 14; i++) { const q = fract(t * 0.4 + i / 14), sx = ox + (h2(i, B.i) - 0.5) * u * 0.5, sy = oy - deskH - q * u * 0.85; ctx.globalAlpha = (1 - q) * 0.8; ctx.fillRect(sx, sy, 2, 2); }
           ctx.restore();

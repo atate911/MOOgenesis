@@ -4660,13 +4660,19 @@
     const c = document.createElement('canvas'); c.width = dw; c.height = dh;
     const g = c.getContext('2d'); g.imageSmoothingQuality = 'high';
     g.drawImage(src, sx, sy, sw, sh, 0, 0, dw, dh);
-    if (feather) {   // soft edges so the photo melts into the scene behind it
+    if (feather) {
+      // A photo placed on a scene must not read as a pasted square: the mask is a soft bust-shaped ellipse (no straight edge anywhere), full over
+      // the face and shoulders, running off the bottom of the box, fading out well inside the left/right/top edges; the photo's own studio
+      // background is keyed down towards the edges so only the figure stays.
       const m = document.createElement('canvas'); m.width = dw; m.height = dh;
       const mg = m.getContext('2d');
-      mg.fillStyle = '#fff'; mg.fillRect(dw * 0.1, dh * 0.04, dw * 0.8, dh * 0.92);
+      const cx = dw * 0.5, cy = dh * 0.62, rx = dw * 0.36, ry = dh * 0.66;
+      const gr = mg.createRadialGradient(0, 0, 0, 0, 0, 1);
+      gr.addColorStop(0, 'rgba(255,255,255,1)'); gr.addColorStop(0.72, 'rgba(255,255,255,1)'); gr.addColorStop(1, 'rgba(255,255,255,0)');
+      mg.save(); mg.translate(cx, cy); mg.scale(rx * 1.35, ry * 1.25); mg.fillStyle = gr; mg.fillRect(-1, -1, 2, 2); mg.restore();
       const b = document.createElement('canvas'); b.width = dw; b.height = dh;
       const bg = b.getContext('2d');
-      try { bg.filter = 'blur(' + Math.max(1, Math.min(dw, dh) * 0.07).toFixed(1) + 'px)'; } catch (er) { /* ignore */ }
+      try { bg.filter = 'blur(' + Math.max(1, Math.min(dw, dh) * 0.05).toFixed(1) + 'px)'; } catch (er) { /* ignore */ }
       bg.drawImage(m, 0, 0);
       g.globalCompositeOperation = 'destination-in'; g.drawImage(b, 0, 0); g.globalCompositeOperation = 'source-over';
     }
@@ -4683,13 +4689,13 @@
     worried: ['#6f8fbf', 0.28, 0.1, -0.08],
     scheming: ['#8ee0a8', 0.2, 0.16, -0.05]
   };
-  function phGrade(g, x, y, w, h, o, t, talk) {
-    const md = PH_MOOD[o.mood];
+  function phGrade(g, x, y, w, h, o, t, talk, atop) {
+    const md = PH_MOOD[o.mood], over = atop ? 'source-atop' : 'source-over';   // atop: only the photo's own (masked) pixels are graded, never the box around it
     g.save();
     g.beginPath(); g.rect(x, y, w, h); g.clip();
     if (md) {
-      g.globalCompositeOperation = 'soft-light'; g.globalAlpha = md[1]; g.fillStyle = md[0]; g.fillRect(x, y, w, h);
-      g.globalCompositeOperation = 'source-over';
+      g.globalCompositeOperation = atop ? 'source-atop' : 'soft-light'; g.globalAlpha = md[1] * (atop ? 0.6 : 1); g.fillStyle = md[0]; g.fillRect(x, y, w, h);
+      g.globalCompositeOperation = over;
       g.globalAlpha = Math.abs(md[3]); g.fillStyle = md[3] > 0 ? '#fff' : '#000'; g.fillRect(x, y, w, h);
       g.globalAlpha = 1;
     }
@@ -4697,14 +4703,15 @@
       const cx = x + w / 2, cy = y + h * 0.42, rr = Math.hypot(w, h) * 0.6;
       const gr = g.createRadialGradient(cx, cy, rr * 0.45, cx, cy, rr);
       gr.addColorStop(0, 'rgba(0,0,0,0)'); gr.addColorStop(1, 'rgba(0,0,6,' + clamp(0.38 + (md ? md[2] : 0), 0, 0.7).toFixed(3) + ')');
-      g.fillStyle = gr; g.fillRect(x, y, w, h);
+      g.globalCompositeOperation = over; g.fillStyle = gr; g.fillRect(x, y, w, h);
     }
     if (talk > 0.01) {   // faint screen flicker while someone is speaking
       const f = 0.5 + 0.5 * Math.sin(t * 31) * Math.sin(t * 13.7);
-      g.globalAlpha = 0.035 * talk * f; g.fillStyle = '#bfe0ff'; g.fillRect(x, y, w, h); g.globalAlpha = 1;
+      g.globalCompositeOperation = over; g.globalAlpha = 0.035 * talk * f; g.fillStyle = '#bfe0ff'; g.fillRect(x, y, w, h); g.globalAlpha = 1;
     }
     g.restore();
   }
+  let _phTmp = null;
   /* paint the photo into the box (x,y,w,h); z = crop tightness.  Returns false when the image is not ready. */
   function phPaint(ctx, race, x, y, w, h, o, z, shape) {
     const im = phReady(race); if (!im) return false;
@@ -4721,9 +4728,22 @@
     const ph = st.seed * 0.001, ta = st.pa;
     const zoom = 1 + 0.012 * (0.5 + 0.5 * Math.sin(t * 0.55 + ph)) + (0.004 + 0.008 * ta) * Math.sin(t * (1.1 + 1.7 * ta) + ph * 3);
     const iw = dw / zoom, ih = dh / zoom, ix = (dw - iw) * 0.5 + Math.sin(t * 0.31 + ph) * dw * 0.004, iy = (dh - ih) * 0.3;
+    const feathered = o.bg === false && !shape;
     ctx.save();
     if (o.flip) { ctx.translate(x + w / 2, 0); ctx.scale(-1, 1); ctx.translate(-(x + w / 2), 0); }
     ctx.imageSmoothingEnabled = true; ctx.imageSmoothingQuality = 'high';
+    if (feathered) {
+      // grade on a scratch layer with source-atop so the mood tint, vignette and flicker touch only the figure, then composite the layer
+      if (!_phTmp) _phTmp = document.createElement('canvas');
+      if (_phTmp.width < dw || _phTmp.height < dh) { _phTmp.width = Math.max(_phTmp.width, dw); _phTmp.height = Math.max(_phTmp.height, dh); }
+      const tg = _phTmp.getContext('2d');
+      tg.setTransform(1, 0, 0, 1, 0, 0); tg.globalCompositeOperation = 'source-over'; tg.globalAlpha = 1; tg.clearRect(0, 0, dw, dh);
+      tg.drawImage(e.c, ix, iy, iw, ih, 0, 0, dw, dh);
+      phGrade(tg, 0, 0, dw, dh, o, t, ta, true);
+      ctx.drawImage(_phTmp, 0, 0, dw, dh, x, y, w, h);
+      ctx.restore();
+      return true;
+    }
     ctx.drawImage(e.c, ix, iy, iw, ih, x, y, w, h);
     ctx.restore();
     phGrade(ctx, x, y, w, h, o, t, ta);
@@ -4738,7 +4758,8 @@
         ctx.save(); ctx.beginPath(); ctx.rect(x, y, w, h); ctx.clip();
         const ok = phPaint(ctx, race, x, y, w, h, o, zFor(px, false), false);
         const GR = M.Gfx.Grade;
-        if (ok && GR && !GR.depth && o.grade !== false && GR.on()) { ctx.translate(x, y); GR.apply(ctx, w, h, o.t == null ? performance.now() / 1000 : +o.t, 'portrait'); }
+        // a feathered photo (bg:false, placed on a scene) is never post-graded here: the grade's vignette would fill the whole box and draw the square back in
+        if (ok && GR && !GR.depth && o.grade !== false && o.bg !== false && GR.on()) { ctx.translate(x, y); GR.apply(ctx, w, h, o.t == null ? performance.now() / 1000 : +o.t, 'portrait'); }
         ctx.restore();
         if (ok) return;
       } catch (e) { PH.state[race] = 'bad'; console.warn('[portraits photo] ' + race, e); }
