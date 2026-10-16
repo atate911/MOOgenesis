@@ -42,6 +42,12 @@ Versions follow `MAJOR.MINOR.PATCH`; the live version is the `VERSION` file.
   The split is per family, by measurement: VSCO for strings, trumpet, trombone, flute, bassoon, drums and cymbals; Sonatina for horns,
   tuba, oboe, cor anglais, clarinet and harp (VSCO's horn and harp are the dull ones). The synth pads' filters open further (a low
   pad used to close at 2 kHz).
+  The production mix: every music layer now runs through its own channel strip (high-pass per register so the bass owns the lows and
+  the beds stay out of it, low-mid cuts where the beds stack up, presence where a line has to read, bus compression on bass and lead,
+  parallel compression on the drums, a short cross-fed spread for width), the pad and choir beds dip 2 dB under every melody note,
+  a sine sub-octave sits under the basses and timpani, and the 2-bus has weight, a mud cut, a little presence and air, true mid/side
+  width with the bass kept centred and the sides opened above 6 kHz, a glue stage and a peak limiter. Levels are set by meter (a
+  master fader `MIX_TRIM`): underscore around -17 LUFS, tutti around -14, 13-16 dB of crest, stereo correlation 0.3-0.45.
 - Symphonic re-orchestration and film-style flow. Every synth pluck, FM bell, pad, bass and drum-machine part in the score is now a
   recorded instrument: pizzicato string sections, marimba, glockenspiel, harp, oboe / clarinet / bassoon, contrabass, bass drum,
   snare, field drums, tambourine, claves, anvil, stick taps (the two machine races keep a little sequencer colour). The bell

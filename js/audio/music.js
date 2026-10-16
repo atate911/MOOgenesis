@@ -220,29 +220,29 @@
   const INST = Object.assign({}, SYN, {
     // sustains: the string sections carry the harmony (Sonatina: 1st violins / violas / celli / basses, each in its seat on the stage;
     // no detuned copies — a recorded section is already a section). The analogue pad survives as 'analog' for the Zimmer beds.
-    warm: smp('strEns', 0.14, { att: 0.25, rel: 1.0 }, 'warm'),
-    strings: smp('strEns', 0.14, { att: 0.2, rel: 0.9 }, 'strings'),
+    warm: smp('strEns', 0.14, { att: 0.25, rel: 1.0, hp: 90 }, 'warm'),
+    strings: smp('strEns', 0.14, { att: 0.2, rel: 0.9, hp: 90 }, 'strings'),
     strTrem: smp('strEnsTrem', 0.15, { att: 0.12 }, 'strings'),
     airPad: smp('strEns', 0.12, { att: 0.45, rel: 1.3, cut: 5000 }, 'airPad'),
     glassPad: smp('padGlass', 0.14, { ens: 0.35, att: 0.7, rel: 1.6 }, 'glassPad'),
     dark: smp('strEns', 0.14, { att: 0.35, rel: 1.1, cut: 2200 }, 'dark'),
     drone: smp('strEns', 0.13, { att: 0.7, rel: 1.5, cut: 1800 }, 'drone'),
-    analog: smp('padSerrie', 0.17, { ens: 0.4, att: 0.9, rel: 2.0 }, 'warm'), air: smp('padAir', 0.14, { ens: 0.3, att: 1.4, rel: 2.6 }, 'airPad'),
+    analog: smp('padSerrie', 0.17, { ens: 0.4, att: 0.9, rel: 2.0, hp: 80 }, 'warm'), air: smp('padAir', 0.14, { ens: 0.3, att: 1.4, rel: 2.6, hp: 300 }, 'airPad'),
     padGlass: smp('padGlass', 0.14, { ens: 0.35, att: 0.7, rel: 1.6 }, 'glassPad'),
     organ: smp('organ', 0.13, {}, 'organ'), organSoft: smp('organSoft', 0.14, { att: 0.12 }, 'organ'),
     flutes: smp('fluteSus', 0.3, { att: 0.08 }, 'flute'),
     // basses: the bass section
-    deep: smp('cbSus', 0.3, { att: 0.1, sub: 0.55 }, 'deep'), sub: smp('cbSus', 0.3, { att: 0.1, sub: 0.7 }, 'sub'),
+    deep: smp('cbSus', 0.3, { att: 0.1, sub: 0.35 }, 'deep'), sub: smp('cbSus', 0.3, { att: 0.1, sub: 0.45 }, 'sub'),
     moog: smp('cbPizz', 0.55, {}, 'moog'), pulse: smp('cbPizz', 0.5, {}, 'pulse'),
     // brass and winds (the horns crossfade between their mp and ff recordings with the written dynamic)
-    horn: smp('hornSus', 0.34, { vib: 0, att: 0.09 }, 'horn'),
+    horn: smp('hornSus', 0.34, { vib: 0, att: 0.09, hp: 70 }, 'horn'),
     hornSolo: smp('hornSolo', 0.31, {}, 'horn'),
     brass: smp('brassEns', 0.33, { att: 0.08 }, 'brass'),
     synth: smp('brassEns', 0.33, { att: 0.06 }, 'synth'),
     tpt: smp('tptSus', 0.3, {}, 'brass'), tptSolo: smp('tptSolo', 0.28, {}, 'brass'),
     lowBrass: smp('lowBrass', 0.36, { att: 0.08 }, 'horn'),
     brassStab: smp('brassStac', 1.5, { ring: true }, 'brassStab'),
-    flute: smp('flute', 0.42, { att: 0.07 }, 'flute'), altoFlute: smp('altoFlute', 0.42, { att: 0.08 }, 'flute'),
+    flute: smp('flute', 0.42, { att: 0.07, hp: 200 }, 'flute'), altoFlute: smp('altoFlute', 0.42, { att: 0.08 }, 'flute'),
     oboe: smp('oboe', 0.4, { att: 0.06 }, 'flute'), reed: smp('corAnglais', 0.4, { att: 0.07 }, 'reed'),
     clarinet: smp('clarinet', 0.42, { att: 0.07 }, 'flute'), bassoon: smp('bassoon', 0.42, { att: 0.07 }, 'horn'),
     // plucked and struck: pizzicato sections, marimba, harp (no synth plucks in the symphonic palette)
@@ -250,14 +250,14 @@
     pizz: smp('strEnsPizz', 0.5, { rel: 0.4 }, 'pizz'), kora: smp('strEnsPizz', 0.45, { rel: 0.5 }, 'kora'), stab: smp('brassStac', 1.3, { ring: true }, 'stab'),
     strOst: smp('strEnsSpic', 0.5, { ring: true }, 'pizz'),
     marimba: smp('marimba', 0.45, { rel: 0.6, hold: 0.1 }, 'marimba'),
-    harp: smp('harp', 0.8, { rel: 1.3, hold: 0.3 }, 'harp'), glassHarm: smp('harp', 0.7, { rel: 1.3, hold: 0.3 }, 'harp'),
+    harp: smp('harp', 0.8, { rel: 1.3, hold: 0.3, hp: 70 }, 'harp'), glassHarm: smp('harp', 0.7, { rel: 1.3, hold: 0.3 }, 'harp'),
     // bells: celeste (glass), glockenspiel (bell), crotales (crystal, shimmer), tubular chimes (chime)
-    glass: smp('celeste', 0.5, { rel: 1.4, hold: 0.4 }, 'glass'), bell: smp('glock', 0.5, { rel: 1.6, hold: 0.4 }, 'bell'), crystal: smp('crotales', 0.42, { rel: 2.0, hold: 0.5 }, 'crystal'),
+    glass: smp('celeste', 0.5, { rel: 1.4, hold: 0.4, hp: 300 }, 'glass'), bell: smp('glock', 0.5, { rel: 1.6, hold: 0.4 }, 'bell'), crystal: smp('crotales', 0.42, { rel: 2.0, hold: 0.5 }, 'crystal'),
     shimmer: smp('crotales', 0.38, { rel: 1.4, hold: 0.3 }, 'shimmer'), vibes: smp('celeste', 0.42, { rel: 1.2, hold: 0.3 }, 'vibes'), chime: smp('chimes', 0.42, { rel: 2.2, hold: 0.5 }, 'chime'),
     // the recorded chorus: men + women; every vowel preset maps onto it (the recording is one sustained vowel)
-    ooh: smp('chorus', 0.17, { att: 0.5, rel: 1.4 }, 'ooh'), aah: smp('chorus', 0.17, { att: 0.45, rel: 1.4 }, 'aah'),
-    uuh: smp('chorus', 0.16, { att: 0.5, rel: 1.4 }, 'uuh'), eeh: smp('chorus', 0.16, { att: 0.45, rel: 1.4 }, 'eeh'),
-    choirMen: smp('chorusMen', 0.2, { att: 0.5, rel: 1.5 }, 'uuh'), choirMenAh: smp('chorusMen', 0.19, { att: 0.45, rel: 1.5 }, 'aah'), choirWomen: smp('chorusWomen', 0.16, { att: 0.6, rel: 1.6 }, 'aah'),
+    ooh: smp('chorus', 0.17, { att: 0.5, rel: 1.4, hp: 150, cut: 9000 }, 'ooh'), aah: smp('chorus', 0.17, { att: 0.45, rel: 1.4, hp: 150, cut: 9000 }, 'aah'),
+    uuh: smp('chorus', 0.16, { att: 0.5, rel: 1.4, hp: 150, cut: 9000 }, 'uuh'), eeh: smp('chorus', 0.16, { att: 0.45, rel: 1.4, hp: 150, cut: 9000 }, 'eeh'),
+    choirMen: smp('chorusMen', 0.2, { att: 0.5, rel: 1.5, hp: 110 }, 'uuh'), choirMenAh: smp('chorusMen', 0.19, { att: 0.45, rel: 1.5, hp: 110 }, 'aah'), choirWomen: smp('chorusWomen', 0.16, { att: 0.6, rel: 1.6, hp: 220 }, 'aah'),
     // the two machine races keep a little of their electronic character
     seqSyn: SYN.seq, arpSawSyn: SYN.arpSaw, moogSyn: SYN.moog, pulseSyn: SYN.pulse, synthSyn: SYN.synth,
   });
@@ -265,9 +265,9 @@
   const LAYERS = {
     // (the Sonatina recordings carry their own hall, so the sends are moderate; the bus chorus is off the recorded sections and kept
     //  for the synthesized pads only, where it belongs)
-    pad: { lvl: 0.9, verb: 0.42, dly: 0, chorus: 0.12 }, bass: { lvl: 0.7, verb: 0.12, dly: 0 }, arp: { lvl: 0.5, verb: 0.36, dly: 0.12 },
-    lead: { lvl: 0.95, verb: 0.38, dly: 0.08 }, bell: { lvl: 0.5, verb: 0.55, dly: 0.1 }, choir: { lvl: 0.8, verb: 0.5, dly: 0, chorus: 0.1 },
-    drums: { lvl: 0.62, verb: 0.3, dly: 0 }, fx: { lvl: 0.6, verb: 0.6, dly: 0 },
+    pad: { lvl: 0.82, verb: 0.36, dly: 0, chorus: 0.12 }, bass: { lvl: 0.8, verb: 0.08, dly: 0 }, arp: { lvl: 0.5, verb: 0.3, dly: 0.12 },
+    lead: { lvl: 1.0, verb: 0.3, dly: 0.08 }, bell: { lvl: 0.45, verb: 0.5, dly: 0.1 }, choir: { lvl: 0.72, verb: 0.42, dly: 0, chorus: 0.1 },
+    drums: { lvl: 0.68, verb: 0.22, dly: 0 }, fx: { lvl: 0.6, verb: 0.6, dly: 0 },
     x1: { lvl: 0.8, verb: 0.12, dly: 0, i0: 0.12 }, x2: { lvl: 0.7, verb: 0.2, dly: 0.3, i0: 0.38 }, x3: { lvl: 0.9, verb: 0.3, dly: 0, i0: 0.62 },
   };
   const BUS = { pad: 'pad', pad2: 'pad', bass: 'bass', arp: 'arp', arp2: 'arp', drums: 'drums', perc: 'drums', timp: 'drums', lead: 'lead', lead2: 'lead', bell: 'bell', bell2: 'bell', choir: 'choir', choir2: 'choir' };
@@ -323,7 +323,7 @@
 
   // ================================================================== track registry
   function Track(id, def) { def.id = id; TRACKS[id] = def; return def; }
-  const DEFAULT_TRIM = 1;
+  const DEFAULT_TRIM = 1, MIX_TRIM = 0.62;   // MIX_TRIM: the producer's master fader, set from the headless loudness report
 
   // ---------------------------------------------------------------- prepare (parse + validate once per track)
   function resolveInst(spec, fallback) {
@@ -532,7 +532,7 @@
         if (ramp) v *= ramp[0] + (ramp[1] - ramp[0]) * (hits > 1 ? hi / (hits - 1) : 1);
         hi++;
         const m = nearestPc(sg.ch.bassPc, num(P.center, 40));
-        emitDrum(C, 'drums', { v: 'sample', smp: 'timpani', fb: 'timp', fbo: { f: mtof(m), dur: num(P.dur, 1.8) }, f: mtof(m), lvl: 1.0, sub: 0.3, dur: 1.6 }, s.start + beat, v);
+        emitDrum(C, 'drums', { v: 'sample', smp: 'timpani', fb: 'timp', fbo: { f: mtof(m), dur: num(P.dur, 1.8) }, f: mtof(m), lvl: 1.0, sub: 0.18, dur: 1.6 }, s.start + beat, v);
         if (v > 0.6) emitDrum(C, 'drums', { v: 'sample', smp: 'bassDrum', fb: 'kick', fbo: { f: 44, f0: 120, dur: 0.4 }, lvl: 0.4 }, s.start + beat, v);
       }
     }
@@ -763,11 +763,13 @@
       for (const name in LAYERS) {
         const L = LAYERS[name], inG = mk(ctx.createGain()), sv = mk(ctx.createGain()), sd = mk(ctx.createGain());
         sv.gain.value = L.verb * num(fx.verb, 1); sd.gain.value = L.dly * num(fx.dly, 1);
-        inG.connect(this.bus); inG.connect(sv); sv.connect(this.verb); inG.connect(sd); sd.connect(this.delay.in);
+        const strip = eng.makeStrip ? eng.makeStrip(name) : null, post = strip ? strip.out : inG;
+        if (strip) { inG.connect(strip.in); this.choruses.push(strip); }
+        post.connect(this.bus); post.connect(sv); sv.connect(this.verb); post.connect(sd); sd.connect(this.delay.in);
         const chAmt = num(L.chorus, 0) * num(fx.chorus, 1);
         if (chAmt > 0 && eng.makeChorus) {              // ensemble chorus: wet copy beside the dry signal (also feeds the hall a little)
           const ch = eng.makeChorus(), cg = mk(ctx.createGain()); cg.gain.value = chAmt;
-          inG.connect(ch.in); ch.out.connect(cg); cg.connect(this.bus); cg.connect(sv);
+          post.connect(ch.in); ch.out.connect(cg); cg.connect(this.bus); cg.connect(sv);
           this.choruses.push(ch);
         }
         this.layers[name] = { in: inG, level: L.lvl * num(mix[name], 1), i0: L.i0 };
@@ -775,7 +777,7 @@
       }
       const gate = def.gate || {};
       for (const name in gate) { const L = this.layers[name]; if (L && L.i0 === undefined && gate[name] > 0) { L.i0 = gate[name]; L.in.gain.value = 0; } }
-      this.trim = num(def.trim, DEFAULT_TRIM);
+      this.trim = num(def.trim, DEFAULT_TRIM) * MIX_TRIM;
       this.applyIntensity(this.intensity, true);
       this.pass = null; this.passNo = -1; this.idx = 0; this.t0 = 0; this.skipBefore = -1e9; this.shift = 0;
       this.form0 = def.forms && def.forms.length ? Math.floor((eng.offline ? eng.rand() : Math.random()) * def.forms.length) : 0;   // which long block opens this performance
@@ -824,6 +826,15 @@
       if (L.i0 !== undefined && this.intensity < L.i0 - 0.02) return;
       const v = V[ev.v](this.eng, L.in, T, ev.o);
       if (v) this.live.add(v);
+      if (ev.ly === 'lead' && ev.o && ev.o.dur > 0.2) this.duckBeds(T, ev.o.dur);
+    }
+    // the mixer's hand on the faders: while the melody sounds, the pad and choir beds sit 2 dB back and come up again after it
+    duckBeds(T, dur) {
+      for (const name of ['pad', 'pad2', 'choir', 'choir2']) {
+        const L = this.layers[name]; if (!L || L.i0 !== undefined) continue;
+        const g = L.in.gain, lv = L.level;
+        try { g.setTargetAtTime(lv * 0.79, T, 0.06); g.setTargetAtTime(lv, T + dur, 0.3); } catch (e) { /* ignore */ }
+      }
     }
     // schedule every event whose (shifted) time is < wEnd
     scheduleUntil(wEnd) {
@@ -1040,7 +1051,7 @@
     return A.renderWindowed(seconds, { sampleRate: opts.sampleRate || 44100, window: 1.5, seed: opts.seed || 1, teardown: eng => { stats = eng.stats; } }, function (eng, t0, t1) {
       if (!pl) {
         pl = new Player(eng, def, { loop: true, intensity: num(opts.intensity, S.intensity) });
-        pl.trim = num(def.trim, DEFAULT_TRIM) * num(opts.gain, 1);
+        pl.trim = num(def.trim, DEFAULT_TRIM) * MIX_TRIM * num(opts.gain, 1);
         pl.bus.gain.value = pl.trim; pl.verb.gain.value = 1;
         pl.shift = num(opts.from, 0); pl.skipBefore = 0;
         if (opts.only) { pl.only = {}; for (const k of [].concat(opts.only)) pl.only[k] = 1; }
@@ -1130,7 +1141,7 @@
 
   Track('galaxy4', {
     desc: 'Deep field — slow analogue pads under a high air pad, distant women’s voices, high strings that swell and fade, a celeste and harp as single points of light, a lone flute: the planetarium, in the Serrie manner',
-    bpm: 60, trim: 2.1, root: 'A', mode: 'lydian', loopFrom: 'A1', tens: false,
+    bpm: 60, trim: 2.5, root: 'A', mode: 'lydian', loopFrom: 'A1', tens: false, mix: { bass: 0.6 },
     inst: { pad: 'analog', pad2: 'air', bass: 'deep', lead: 'flute', lead2: 'glass', bell: 'glass', arp: 'harp', choir: 'choirWomen', choir2: 'ooh' },
     ph: {
       S1: '5:4 | 8:4 | 7:4 | 5:4', S2: '6:4 | 8:2 9:2 | 8:4 | 5:4', S3: '10:4 | 9:4 | 8:2 7:2 | 5:4', S4: '5:2 8:2 | 7:3 6:1 | 5:4 | 3:4',
