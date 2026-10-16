@@ -87,7 +87,7 @@ def find_loop(x, ls_sec, lmin_sec, lmax_sec, win=8192):
     """best loop [ls, le] inside a sustain (le-ls in [lmin, lmax]): several candidate start points, the seam with the highest
     normalized cross-correlation between the window at ls and the window at le wins."""
     best = None
-    for ls_try in (ls_sec, ls_sec + 0.2, ls_sec + 0.45, ls_sec + 0.7, ls_sec - 0.2):
+    for ls_try in (ls_sec, ls_sec + 0.2, ls_sec + 0.45, ls_sec + 0.7, ls_sec - 0.2, ls_sec + 1.0, ls_sec + 1.4):
         if ls_try < 0.3: continue
         r = find_loop_at(x, ls_try, lmin_sec, lmax_sec, win)
         if r and (best is None or r[2] > best[2]): best = r
@@ -169,14 +169,14 @@ def encode_mp3(y, path, stereo):
 R_STD = r'_(?P<note>[A-G]#?\d)_v(?P<dyn>\d)(?:_rr(?P<rr>\d)|_RR(?P<rr2>\d)|_(?P<rr3>\d))?'
 SPECS = {
     # ---- strings: VSCO sections (stereo, two dynamic layers crossfaded), solo contrabass thickened to a section by the engine
-    'vln1Sus':  dict(src='Strings/Violin Section/susVib', re=r'VlnEns_susVib' + R_STD, dyn=[1, 2], rr=1, step=0, kind='sustain', attack=0.1, release=0.6, ls=1.1, lmin=1.1, lmax=1.6, stereo=True, xf=True, pan=-0.6),
-    'vlaSus':   dict(src='Strings/Viola Section/susvib', re=r'ViolaEns_susvib' + R_STD, dyn=[1, 2], rr=1, step=0, kind='sustain', attack=0.1, release=0.6, ls=1.1, lmin=1.1, lmax=1.6, stereo=True, xf=True, pan=0.18),
-    'vcSus':    dict(src='Strings/Cello Section/susvib', re=r'susvib' + R_STD, dyn=[1, 3], rr=1, step=0, kind='sustain', attack=0.1, release=0.6, ls=1.1, lmin=1.1, lmax=1.6, stereo=True, xf=True, pan=0.45),
-    'cbSus':    dict(src='Strings/Solo Contrabass/SusVib', re=r'BKCtbss_SusVib' + R_STD, dyn=[1, 3], rr=1, step=0, kind='sustain', attack=0.1, release=0.7, ls=1.1, lmin=1.1, lmax=1.6, stereo=True, xf=True, pan=0.6),
-    'vln1Trem': dict(src='Strings/Violin Section/Trem', re=R_STD, dyn=[-1], rr=1, step=0, kind='sustain', attack=0.08, release=0.4, ls=1.1, lmin=1.1, lmax=1.6, stereo=True, pan=-0.6),
-    'vlaTrem':  dict(src='Strings/Viola Section/trem', re=R_STD, dyn=[-1], rr=1, step=0, kind='sustain', attack=0.08, release=0.4, ls=1.1, lmin=1.1, lmax=1.6, stereo=True, pan=0.18),
-    'vcTrem':   dict(src='Strings/Cello Section/trem', re=R_STD, dyn=[-1], rr=1, step=0, kind='sustain', attack=0.08, release=0.4, ls=1.1, lmin=1.1, lmax=1.6, stereo=True, pan=0.45),
-    'cbTrem':   dict(src='Strings/Solo Contrabass/Trem', re=R_STD, dyn=[-1], rr=1, step=0, kind='sustain', attack=0.08, release=0.45, ls=1.1, lmin=1.1, lmax=1.6, stereo=True, pan=0.6),
+    'vln1Sus':  dict(src='Strings/Violin Section/susVib', re=r'VlnEns_susVib' + R_STD, dyn=[1, 2], rr=1, step=0, kind='sustain', attack=0.1, release=0.6, ls=1.0, lmin=1.8, lmax=3.6, stereo=True, xf=True, pan=-0.6, xf_sec=0.7),
+    'vlaSus':   dict(src='Strings/Viola Section/susvib', re=r'ViolaEns_susvib' + R_STD, dyn=[1, 2], rr=1, step=0, kind='sustain', attack=0.1, release=0.6, ls=1.0, lmin=1.8, lmax=3.6, stereo=True, xf=True, pan=0.18, xf_sec=0.7),
+    'vcSus':    dict(src='Strings/Cello Section/susvib', re=r'susvib' + R_STD, dyn=[1, 3], rr=1, step=0, kind='sustain', attack=0.1, release=0.6, ls=1.0, lmin=1.8, lmax=3.6, stereo=True, xf=True, pan=0.45, xf_sec=0.7),
+    'cbSus':    dict(src='Strings/Solo Contrabass/SusVib', re=r'BKCtbss_SusVib' + R_STD, dyn=[1, 3], rr=1, step=0, kind='sustain', attack=0.1, release=0.7, ls=1.0, lmin=1.8, lmax=3.6, stereo=True, xf=True, pan=0.6, xf_sec=0.7),
+    'vln1Trem': dict(src='Strings/Violin Section/Trem', re=R_STD, dyn=[-1], rr=1, step=0, kind='sustain', attack=0.08, release=0.4, ls=0.8, lmin=1.5, lmax=3.0, stereo=True, pan=-0.6, xf_sec=0.5),
+    'vlaTrem':  dict(src='Strings/Viola Section/trem', re=R_STD, dyn=[-1], rr=1, step=0, kind='sustain', attack=0.08, release=0.4, ls=0.8, lmin=1.5, lmax=3.0, stereo=True, pan=0.18, xf_sec=0.5),
+    'vcTrem':   dict(src='Strings/Cello Section/trem', re=R_STD, dyn=[-1], rr=1, step=0, kind='sustain', attack=0.08, release=0.4, ls=0.8, lmin=1.5, lmax=3.0, stereo=True, pan=0.45, xf_sec=0.5),
+    'cbTrem':   dict(src='Strings/Solo Contrabass/Trem', re=R_STD, dyn=[-1], rr=1, step=0, kind='sustain', attack=0.08, release=0.45, ls=0.8, lmin=1.5, lmax=3.0, stereo=True, pan=0.6, xf_sec=0.5),
     'vln1Stac': dict(src='Strings/Violin Section/Spic', re=r'VlnEns_Spic' + R_STD, dyn=[1, 2], rr=1, step=0, kind='short', attack=0.002, release=0.12, stereo=False, keep=1.2, pan=-0.6),
     'vlaStac':  dict(src='Strings/Viola Section/spic', re=r'Violas_spic' + R_STD, dyn=[1, 2], rr=1, step=0, kind='short', attack=0.002, release=0.12, stereo=False, keep=1.2, pan=0.18),
     'vcStac':   dict(src='Strings/Cello Section/spic', re=r'spic' + R_STD, dyn=[1, 2], rr=1, step=0, kind='short', attack=0.002, release=0.12, stereo=False, keep=1.2, pan=0.45),
@@ -189,13 +189,12 @@ SPECS = {
     'hornSus':  dict(src='Brass/F Horn/sus', re=r'MOHorn_sus' + R_STD, dyn=[1, 3], rr=1, step=0, kind='sustain', attack=0.06, release=0.4, ls=1.2, lmin=1.1, lmax=1.6, stereo=True, xf=True, pan=-0.42),
     'hornSolo': dict(src='Brass/F Horn/sus', re=r'MOHorn_sus' + R_STD, dyn=[2], rr=1, step=0, kind='sustain', attack=0.06, release=0.4, ls=1.2, lmin=1.1, lmax=1.6, stereo=False, pan=-0.35),
     'hornStac': dict(src='Brass/F Horn/stac', re=r'MOHorn_stac' + R_STD, dyn=[2, 3], rr=1, step=0, kind='short', attack=0.002, release=0.18, stereo=False, keep=1.6, pan=-0.42),
-    'tptSus':   dict(src='Brass/Trumpet/susvib', re=r'Sum_SHTrumpet_susvib' + R_STD, dyn=[1, 2], rr=1, step=0, kind='sustain', attack=0.05, release=0.35, ls=1.2, lmin=1.1, lmax=1.6, stereo=False, xf=True, pan=0.4),
-    'tptSolo':  dict(src='Brass/Trumpet/susvib', re=r'Sum_SHTrumpet_susvib' + R_STD, dyn=[2], rr=1, step=0, kind='sustain', attack=0.05, release=0.35, ls=1.2, lmin=1.1, lmax=1.6, stereo=False, pan=0.35),
+    'tptSus':   dict(src='Brass/Trumpet/susvib', re=r'Sum_SHTrumpet_susvib' + R_STD, dyn=[1, 2], rr=1, step=0, kind='sustain', attack=0.05, release=0.35, ls=1.2, lmin=1.4, lmax=2.6, stereo=False, xf=True, pan=0.4, xf_sec=0.4),
+    'tptSolo':  dict(src='Brass/Trumpet/susvib', re=r'Sum_SHTrumpet_susvib' + R_STD, dyn=[2], rr=1, step=0, kind='sustain', attack=0.05, release=0.35, ls=1.2, lmin=1.4, lmax=2.6, stereo=False, pan=0.35, xf_sec=0.4),
     'tptStac':  dict(src='Brass/Trumpet/stac', re=r'stac' + R_STD, dyn=[2, 3], rr=1, step=0, kind='short', attack=0.002, release=0.16, stereo=False, keep=1.4, pan=0.4),
     'tbnSus':   dict(src='Brass/Tenor Trombone/sus', re=r'tenortbn_sus' + R_STD, dyn=[1, 3], rr=1, step=0, kind='sustain', attack=0.06, release=0.4, ls=1.2, lmin=1.1, lmax=1.6, stereo=False, xf=True, pan=0.52),
     'tbnStac':  dict(src='Brass/Tenor Trombone/stac', re=r'stac' + R_STD, dyn=[2, 3], rr=1, step=0, kind='short', attack=0.002, release=0.18, stereo=False, keep=1.5, pan=0.52),
-    'tubaSus':  dict(src='Brass/Tuba/sus', re=r'Tuba3_sus' + R_STD, dyn=[1, 3], rr=1, step=0, kind='sustain', attack=0.07, release=0.45, ls=1.2, lmin=1.1, lmax=1.6, stereo=False, xf=True, pan=0.55),
-    # ---- winds
+    'tubaSus':  dict(src='Brass/Tuba/sus', re=r'Tuba3_sus' + R_STD, dyn=[1, 3], rr=1, step=0, kind='sustain', attack=0.07, release=0.45, ls=1.2, lmin=1.4, lmax=2.6, stereo=False, xf=True, pan=0.55, xf_sec=0.4), # ---- winds
     'fluteSus': dict(src='Woodwinds/Flute/susNV', re=r'susNV' + R_STD, dyn=[1, 3], rr=1, step=0, kind='sustain', attack=0.06, release=0.3, ls=1.0, lmin=1.1, lmax=1.6, stereo=False, xf=True, pan=-0.15),
     'flute':    dict(src='Woodwinds/Flute/susvib', re=r'LDFlute_susvib' + R_STD, dyn=[-1], rr=1, step=0, kind='sustain', attack=0.05, release=0.3, ls=1.0, lmin=1.1, lmax=1.6, stereo=False, pan=-0.15),
     'altoFlute': dict(src='Woodwinds/Flute/susNV', re=r'susNV' + R_STD, dyn=[1], rr=1, step=0, kind='sustain', attack=0.06, release=0.3, ls=1.0, lmin=1.1, lmax=1.6, stereo=False, pan=-0.12),
@@ -205,7 +204,6 @@ SPECS = {
     'bassoon':  dict(src='Woodwinds/Bassoon/vib', re=r'(?P<note>[A-G]#?\d)_v(?P<dyn>\d)', dyn=[1, 2], rr=1, step=0, kind='sustain', attack=0.05, release=0.3, ls=1.0, lmin=1.1, lmax=1.6, stereo=False, xf=True, pan=0.3),
     # ---- harp, keyboard percussion, drums, metals (VSCO percussion files are summed mono recordings)
     'harp':     dict(src='Strings/Harp', re=r'KSHarp_(?P<note>[A-G]#?\d)_(?P<dyn>mf|f|mp)', dyn=['*'], rr=1, step=0, kind='short', attack=0.002, release=0.5, octave=0, keep=3.0, stereo=False, pan=-0.6),
-    'glock':    dict(src='Percussion/Glock', re=r'glock_medium_(?P<note>[A-G]#?\d)', dyn=['*'], rr=1, step=0, kind='short', attack=0.001, release=0.6, pitch='detect', range=(300.0, 5000.0), keep=3.0, stereo=False, pan=-0.45),
     'marimba':  dict(src='Percussion/Marimba', re=r'Marimba_hit_Outrigger_(?P<note>[A-G]#?\d)_loud', dyn=['*'], rr=1, step=0, kind='short', attack=0.001, release=0.3, pitch='detect', range=(60.0, 2500.0), keep=2.0, stereo=False, pan=-0.3),
     'bassDrum': dict(src='Percussion', re=r'BDrumNewhit_v(?P<dyn>\d)_rr(?P<rr>\d)', dyn=[3, 5, 7], rr=2, step=0, kind='short', attack=0.001, release=0.3, pitched=False, top=True, keep=2.5, stereo=False, pan=0.25),
     'snare':    dict(src='Percussion', re=r'Snare2-HitSN_v(?P<dyn>\d)_rr(?P<rr>\d)', dyn=[3, 7], rr=2, step=0, kind='short', attack=0.001, release=0.2, pitched=False, top=True, keep=1.6, stereo=False, pan=-0.28),
@@ -220,7 +218,7 @@ SPECS = {
     'taps':     dict(src='Percussion', re=r'Snare2-taps_v(?P<dyn>\d)_rr(?P<rr>\d)', dyn=[1, 3], rr=2, step=0, kind='short', attack=0.001, release=0.15, pitched=False, top=True, keep=0.8, stereo=False, pan=-0.28),
     'tenorHi':  dict(src='VSCO 1 Percussion/drums/tenor/tenor_higher', re=r'tenorH_(?P<dyn>p{1,3}|mp|mf|f{1,3})_(?P<rr>\d)', dyn=['f', 'fff'], rr=2, step=0, kind='short', attack=0.001, release=0.3, pitched=False, keep=1.5, stereo=False, pan=0.2),
     'tenorLo':  dict(src='VSCO 1 Percussion/drums/tenor/tenor_lower', re=r'tenor_(?P<dyn>p{1,3}|mp|mf|f{1,3})_(?P<rr>\d)', dyn=['f', 'fff'], rr=2, step=0, kind='short', attack=0.001, release=0.3, pitched=False, keep=1.5, stereo=False, pan=0.2),
-    'organ':    dict(src='Keys/Organ/Loud', re=r'Rode_Man3Open_(?P<key>\d\d)', dyn=['*'], rr=1, step=6, kind='sustain', attack=0.03, release=0.25, ls=1.0, lmin=1.0, lmax=1.8, pitch='detect', range=(30.0, 2500.0), stereo=False, pan=0),
+    'organ':    dict(src='Keys/Organ/Loud', re=r'Rode_Man3Open_(?P<key>\d\d)', dyn=['*'], rr=1, step=6, kind='sustain', attack=0.03, release=0.25, ls=1.0, lmin=1.4, lmax=2.6, pitch='detect', range=(30.0, 2500.0), stereo=False, pan=0, xf_sec=0.4),
 }
 SYNTH = {   # name -> (kind, attack, release); zones come from synth.py (stereo)
     'padSerrie': dict(kind='sustain', attack=0.3, release=0.9, cutK=0, ls=0.9, lmin=1.2, lmax=1.8, stereo=True),
@@ -329,7 +327,7 @@ SSO = {
     'organ':    dict(SSO_STR, sfz='Organ/Great - Open Diapason 8ft.sfz', step=4, attack=0.05, release=0.35, keep=4.0),
 }
 
-SSO_KEEP = ['chorusMen', 'chorusWomen', 'celeste', 'crotales', 'chimes', 'bellTree', 'sleigh', 'woodBlock', 'shaker', 'triangle', 'organSoft', 'timpRoll', 'timpani']   # Sonatina covers only what VSCO has not recorded
+SSO_KEEP = ['chorusMen', 'chorusWomen', 'celeste', 'crotales', 'chimes', 'glock', 'bellTree', 'sleigh', 'woodBlock', 'shaker', 'triangle', 'organSoft', 'timpRoll', 'timpani']   # Sonatina covers only what VSCO has not recorded
 SSO = {k: v for k, v in SSO.items() if k in SSO_KEEP}
 SSO_REPLACES = set()
 
@@ -556,7 +554,7 @@ def build_recorded(vsco, name, spec, out, log):
                 if spec['kind'] == 'sustain':
                     lp = find_loop(x, spec['ls'], spec['lmin'], spec['lmax'])
                     if not lp: log(f'  !! {name} {midi_name(root)}: no loop found'); continue
-                    ls, le, q = lp; x = bake_loop(x, ls, le); loop = [ls / SR, le / SR]
+                    ls, le, q = lp; x = bake_loop(x, ls, le, xf_sec=spec.get('xf_sec', 0.25)); loop = [ls / SR, le / SR]
                 else:
                     x = trim_tail(x); loop = None
                     if keep and len(x) > keep * SR: x = x[:int(keep * SR)]; x[-int(0.05 * SR):] *= np.linspace(1, 0, int(0.05 * SR))
