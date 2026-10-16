@@ -25,5 +25,5 @@ Provenance
 
 Rebuild: `python3 tools/samples/build.py --sso "/path/to/sso/Sonatina Symphonic Orchestra" --vsco /path/to/VSCO-2-CE --out assets/audio`
 (needs ffmpeg + numpy; about 6 minutes). `calib.mp3` carries one impulse at 0.100 s so the browser can measure its MP3 decoder delay
-and correct the loop points. The whole set (about 28 MB of MP3 at LAME VBR q0) decodes to roughly 380 MB of PCM in the browser; `?samples=0` plays the
+and correct the loop points. The whole set (about 32 MB of MP3 at LAME VBR q0) decodes to roughly 380 MB of PCM in the browser; `?samples=0` plays the
 procedural fallback instead.
