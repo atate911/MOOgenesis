@@ -5,6 +5,16 @@ Versions follow `MAJOR.MINOR.PATCH`; the live version is the `VERSION` file.
 
 ## Unreleased
 
+- Deploy/release fixes from the October review: re-running `install.sh` after certbot no longer fails on the http→https
+  redirect or resets `tls=no` (it reads domain/email/web from `install.conf`, reuses an unchanged release, and only adds
+  `python3-certbot-nginx` for apt certbot, not the snap); `upgrade.sh` refreshes scripts/templates/units/VERSION even
+  when the game is unchanged and no longer overwrites itself while running (files are renamed into place; unit files
+  via `mktemp`); releases are ordered version-aware (`sort -V`: `v1.0.10` > `v1.0.9`) for prune and rollback; each
+  release is stamped with a build id (`window.MOO_BUILD` in `js/manifest.js`, `M.VERSION` from `VERSION`) and
+  `js/loader.js` busts with `?v=<build>` instead of a per-load timestamp, so nginx/Caddy now cache fingerprinted css/js
+  for a year while `index.html`/`manifest.js` stay `no-cache` (nginx also gets `image/webp` and keeps the security
+  headers on `/version.txt`); `backup.sh` saves all of `/etc/letsencrypt` (certificate restorable) and skips the
+  release tree; the doctor unit waits for the network and web server; CI checks `VERSION` against `js/core/ns.js`.
 - Turn flow: prompts the turn waits on (explore/colonise cards, pre-battle choice, battle result) are held on screen and
   re-shown when the galaxy screen is re-entered, so a turn can no longer freeze on a panel nobody can see; the control
   that answers the pending step is highlighted and focused (Enter/Space); load / quit / new game abort a running turn;
