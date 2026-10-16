@@ -20,6 +20,22 @@
   const nm = id => { const e = emp(id); return e ? e.name : 'Unknown'; };
   const who = (e, text) => h('b', { style: { color: bannerHex(e) } }, text);
   let opened = 0;
+  // music: the panels play the 'spy' track (if the soundtrack has it) and hand back whatever was playing afterwards
+  function spyMusicStart() {
+    try {
+      const Mu = M.Audio && M.Audio.Music; if (!Mu || !Mu.play || !Mu.has || !Mu.has('spy')) return null;
+      const snap = Mu.snapshot ? Mu.snapshot() : { id: Mu.current ? Mu.current() : null };
+      if (snap && snap.id === 'spy') return null;
+      Mu.play('spy', { fade: 0.8 });
+      return snap || { id: null };
+    } catch (e) { return null; }
+  }
+  function spyMusicEnd(snap) {
+    try {
+      const Mu = M.Audio && M.Audio.Music; if (!Mu || !snap || !Mu.current || Mu.current() !== 'spy') return;
+      if (Mu.restore) Mu.restore(snap, { fade: 1.2 }); else if (snap.id) Mu.play(snap.id, { fade: 1.2 }); else if (Mu.stop) Mu.stop({ fade: 1.2 });
+    } catch (e) { /* audio is optional */ }
+  }
 
   UI.css('spyscenes', `
     .spy-hd { display:flex; align-items:center; gap:.8rem; margin-bottom:.7rem; }
@@ -72,6 +88,7 @@
   Spy.steal = async function (it) {
     const T = emp(it.target), cands = it.candidates || [];
     opened++;
+    const snap = spyMusicStart();
     let pick = null;
     try {
       const idx = await new Promise(resolve => {
@@ -97,6 +114,7 @@
       if (g && UI.TechScenes && UI.TechScenes.breakthrough) { for (const ev of techEventsOf(it, g)) { try { await UI.TechScenes.breakthrough(ev); } catch (e) { console.error(e); } } }
       if (res && !res.aborted && (res.blamed >= 0 || res.framed >= 0)) UI.toast(res.framed >= 0 ? nm(res.framed) + ' will be blamed for the theft.' : nm(it.target) + ' knows your agents were behind it.', 'warn', 5200);
     } catch (e) { console.error('[spy] steal failed', e); }
+    spyMusicEnd(snap);
     return pick;
   };
 
@@ -104,6 +122,7 @@
   Spy.sabotage = async function (it) {
     const T = emp(it.target), planets = it.planets || [];
     opened++;
+    const snap = spyMusicStart();
     let pick = null;
     try {
       const choice = await new Promise(resolve => {
@@ -131,6 +150,7 @@
       if (typeof it.answer === 'function') { try { res = it.answer(pick); } catch (e) { console.error('[spy] answer failed', e); } } else res = it.result || null;
       if (res && !res.aborted) await resultCard(it, res);
     } catch (e) { console.error('[spy] sabotage failed', e); }
+    spyMusicEnd(snap);
     return pick;
   };
   function resultCard(it, r) {

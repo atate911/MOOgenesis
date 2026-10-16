@@ -2,6 +2,8 @@
 // MOO.Audio.SFX.play(id, {vol, pan, rate}) — silently does nothing until audio is unlocked; never throws.
 // Every effect is built from a few primitives (tone / noise / voice) that scale pitch + speed with `rate`,
 // get a tiny random pitch variation per call, start from silence and end on an exponential decay (click-free).
+// Levels (measured with tools/audio-report.js, unity gain): interface sounds sit around -30 LUFS, stingers and big combat sounds
+// around -14, frequent weapon sounds around -22; the music loops are -16..-21, so stingers also dip the music a few dB (DUCK below).
 (function (M) {
   'use strict';
 
@@ -154,7 +156,7 @@
     S.tone({ type: 'sawtooth', f: 196, f1: 784, at: 0.05, dur: 0.55, att: 0.02, vel: 0.28, lp: [500, 4500, 2], send: 0.2 });
     S.tone({ type: 'triangle', f: 1318.5, at: 0.52, dur: 0.38, vel: 0.35, send: 0.3 });
   });
-  def('newturn', 'New turn: bright bell arpeggio', 1.3, 200, 0.738, S => {
+  def('newturn', 'New turn: bright bell arpeggio', 1.3, 200, 0.55, S => {
     [523.25, 659.25, 783.99, 1046.5].forEach((f, i) => S.v('bell', { at: i * 0.1, f, dur: 1.0, vel: 0.9, ratio: 3.5, idx: 1.5, send: 0.25 }));
     S.v('bell', { at: 0.42, f: 2093, dur: 0.9, vel: 0.5, ratio: 2, idx: 0.8, send: 0.3 });
   });
@@ -183,9 +185,9 @@
     };
     hit(0, 0.7); hit(0.26, 0.95);
   });
-  def('typing', 'Keyboard typing burst', 1.0, 150, 0.864, S => {
+  def('typing', 'Keyboard typing burst', 0.5, 260, 0.864, S => {
     let t = 0;
-    for (let i = 0; i < 9; i++) {
+    for (let i = 0; i < 6; i++) {
       const r = S.rnd(), f = 2200 + r * 2600;
       S.noise({ at: t, dur: 0.014, att: 0.0005, vel: 0.6 + r * 0.3, bp: [f, f, 3] });
       S.tone({ f: 800 + r * 500, f1: 500 + r * 200, at: t, dur: 0.02, att: 0.001, vel: 0.2 });
@@ -194,13 +196,13 @@
   });
 
   // ---- empire / economy
-  def('tech', 'Research complete: ascending bells, brass chord and sparkle', 2.2, 400, 0.567, S => {
+  def('tech', 'Research complete: ascending bells, brass chord and sparkle', 2.2, 400, 0.36, S => {
     [523.25, 659.25, 783.99, 1046.5, 1318.5].forEach((f, i) => S.v('bell', { at: i * 0.11, f, dur: 1.4, vel: 0.9, ratio: 3.5, idx: 1.6, send: 0.3 }));
     [261.63, 329.63, 392, 523.25].forEach(f => S.v('brass', { at: 0.5, f, dur: 1.1, att: 0.1, rel: 0.5, vel: 0.9, vib: 7, bright: 4.5, send: 0.3 }));
     S.v('bell', { at: 0.6, f: 2093, dur: 2.0, vel: 0.7, ratio: 2, idx: 1.0, send: 0.4 });
     S.noise({ at: 0.45, dur: 1.2, att: 0.05, vel: 0.15, hp: [5000, 9000], env: 'swell', pk: 0.3, send: 0.3 });
   });
-  def('colonize', 'Colony founded: landing swell, warm chord, chimes', 2.0, 400, 0.522, S => {
+  def('colonize', 'Colony founded: landing swell, warm chord, chimes', 2.0, 400, 0.21, S => {
     S.noise({ kind: 'pink', dur: 0.9, att: 0.05, vel: 0.3, lp: [1400, 300, 1], env: 'swell', pk: 0.25 });
     S.tone({ f: 70, f1: 120, dur: 1.2, att: 0.15, vel: 0.35, sus: true, rel: 0.4 });
     [196, 246.9, 293.7].forEach(f => S.v('pad', { at: 0.35, f, dur: 0.9, att: 0.25, rel: 0.7, vel: 1.2, send: 0.3 }));
@@ -212,33 +214,33 @@
     for (let i = 0; i < 8; i++) S.v('click', { at: 0.5 + i * 0.035, f: 3000 + i * 150, vel: 0.9, dur: 0.01 });
     S.tone({ type: 'sawtooth', f: 300, f1: 640, at: 0.45, dur: 0.5, att: 0.05, vel: 0.12, lp: [900, 2200, 2] });
   });
-  def('shipbuilt', 'Ship completed: hum, clank, ping', 1.4, 300, 1.168, S => {
+  def('shipbuilt', 'Ship completed: hum, clank, ping', 1.4, 300, 1.1, S => {
     S.tone({ type: 'sawtooth', f: 110, f1: 220, dur: 0.6, att: 0.05, vel: 0.25, lp: [600, 2000, 2], send: 0.1 });
     S.v('metal', { at: 0.55, f: 420, dur: 0.5, vel: 0.8, send: 0.15 });
     S.v('bell', { at: 0.62, f: 1318.5, dur: 1.2, vel: 0.8, ratio: 3.5, idx: 1.4, send: 0.3 });
     S.noise({ kind: 'pink', dur: 0.4, att: 0.05, vel: 0.2, bp: [400, 3000, 1], env: 'swell', pk: 0.6 });
   });
-  def('treaty', 'Treaty signed: two bells and a warm chord', 1.8, 400, 0.54, S => {
+  def('treaty', 'Treaty signed: two bells and a warm chord', 1.8, 400, 0.22, S => {
     S.v('bell', { f: 392, dur: 1.4, vel: 0.9, ratio: 2, idx: 1.0, send: 0.3 });
     S.v('bell', { at: 0.04, f: 587.3, dur: 1.4, vel: 0.9, ratio: 2, idx: 1.0, send: 0.3 });
     S.v('bell', { at: 0.4, f: 523.25, dur: 1.6, vel: 0.9, ratio: 2, idx: 1.0, send: 0.3 });
     S.v('bell', { at: 0.4, f: 784, dur: 1.6, vel: 0.9, ratio: 2, idx: 1.0, send: 0.3 });
     [261.63, 329.63, 392].forEach(f => S.v('pad', { at: 0.4, f, dur: 0.8, att: 0.12, rel: 0.7, vel: 1.1, send: 0.3 }));
   });
-  def('war', 'War declared: low brass stab, timpani, dissonant sting', 1.9, 500, 0.558, S => {
+  def('war', 'War declared: low brass stab, timpani, dissonant sting', 1.9, 500, 0.38, S => {
     [87.3, 130.8, 185].forEach(f => S.v('brass', { f, dur: 0.9, att: 0.04, rel: 0.4, vel: 1.1, bright: 5, vib: 5, send: 0.25 }));
     S.v('timp', { f: 55, dur: 1.6, vel: 1.0, send: 0.2 });
     S.v('timp', { at: 0.36, f: 49, dur: 1.8, vel: 1.0, send: 0.2 });
     S.v('metal', { at: 0.02, f: 233, dur: 1.4, vel: 0.9, send: 0.25 });
     S.noise({ dur: 0.7, att: 0.02, vel: 0.2, lp: [900, 200, 1], env: 'swell', pk: 0.3 });
   });
-  def('insult', 'Insult: sliding wah-wah trombone and rimshot', 1.4, 500, 0.635, S => {
+  def('insult', 'Insult: sliding wah-wah trombone and rimshot', 1.4, 500, 0.45, S => {
     S.tone({ type: 'sawtooth', f: 330, f1: 185, dur: 0.38, att: 0.03, vel: 0.35, lp: [1500, 700, 2], sus: true, rel: 0.05, det2: 6 });
     S.tone({ type: 'sawtooth', f: 262, f1: 131, at: 0.45, dur: 0.55, att: 0.03, vel: 0.35, lp: [1400, 500, 2], sus: true, rel: 0.08, det2: 6 });
     S.v('snare', { at: 1.05, vel: 0.8, send: 0.1 });
     S.v('click', { at: 1.05, f: 1900, q: 3, dur: 0.03, vel: 0.6 });
   });
-  def('coins', 'Coins and cash register jingle', 1.0, 150, 0.82, S => {
+  def('coins', 'Coins and cash register jingle', 1.0, 150, 0.62, S => {
     for (let i = 0; i < 6; i++) S.v('chime', { at: i * 0.045 + S.rnd() * 0.02, f: 2000 + S.rnd() * 1600, dur: 0.5, vel: 0.7, ratios: [1, 2.4, 4.1], amps: [1, 0.5, 0.25], decs: [1, 0.5, 0.3], send: 0.2 });
     S.v('bell', { at: 0.26, f: 1760, dur: 0.8, vel: 0.6, ratio: 3.8, idx: 0.9, send: 0.25 });
     S.v('bell', { at: 0.34, f: 2349.3, dur: 0.9, vel: 0.6, ratio: 3.8, idx: 0.9, send: 0.25 });
@@ -271,7 +273,7 @@
     S.tone({ f: 1200, f1: 200, dur: 0.16, att: 0.001, vel: 0.3 });
     S.noise({ dur: 0.02, att: 0.0005, vel: 0.3, hp: [4000, 4000] });
   });
-  def('beam_heavy', 'Heavy beam weapon burst', 1.2, 120, 0.567, S => {
+  def('beam_heavy', 'Heavy beam weapon burst', 1.2, 120, 0.47, S => {
     S.tone({ type: 'sawtooth', f: 110, f1: 130, dur: 0.85, att: 0.08, vel: 0.35, lp: [400, 2600, 3], sus: true, rel: 0.25, det2: 9, am: [38, 0.6], send: 0.15 });
     S.tone({ type: 'square', f: 55, dur: 0.85, att: 0.08, vel: 0.25, lp: [300, 300], sus: true, rel: 0.25 });
     S.noise({ dur: 0.85, att: 0.08, vel: 0.2, hp: [4500, 4500], sus: true, rel: 0.25, am: [31, 0.5] });
@@ -293,7 +295,7 @@
     S.tone({ f: 95, f1: 40, dur: 0.4, att: 0.002, vel: 0.8 });
     S.noise({ at: 0.03, dur: 0.14, att: 0.001, vel: 0.35, hp: [3000, 3000] });
   });
-  def('explosion_big', 'Big explosion with rumble and debris', 3.2, 150, 1.06, S => {
+  def('explosion_big', 'Big explosion with rumble and debris', 3.2, 150, 0.79, S => {
     S.v('boom', { f: 46, dur: 2.9, vel: 1.0, send: 0.3 });
     S.noise({ dur: 1.9, att: 0.003, vel: 1.0, lp: [1900, 80, 1], send: 0.3 });
     S.noise({ kind: 'brown', dur: 2.5, att: 0.01, vel: 0.9, lp: [150, 150] });
@@ -320,13 +322,13 @@
     S.v('boom', { at: 0.8, f: 50, dur: 1.5, vel: 1.0, send: 0.3 });
     S.noise({ at: 0.8, dur: 0.9, att: 0.002, vel: 0.8, lp: [2200, 120, 1], send: 0.2 });
   });
-  def('deathray', 'Death ray: ominous swarm, rising whine and crackle', 3.0, 400, 0.837, S => {
+  def('deathray', 'Death ray: ominous swarm, rising whine and crackle', 3.0, 400, 0.71, S => {
     [55, 55.8, 82.4, 110.5].forEach((f, i) => S.tone({ type: 'sawtooth', f, f1: f * 1.05, dur: 1.9, att: 0.4, vel: 0.2, lp: [200, 3200, 5], sus: true, rel: 0.3, am: [22, 0.5], send: 0.15 }));
     S.tone({ f: 200, f1: 1600, dur: 1.7, att: 0.2, vel: 0.18, env: 'swell', pk: 0.95, send: 0.2 });
     S.noise({ dur: 1.9, att: 0.3, vel: 0.2, bp: [5000, 5000, 3], am: [28, 1], sus: true, rel: 0.2 });
     S.v('boom', { at: 1.7, f: 44, dur: 1.4, vel: 0.8, send: 0.3 });
   });
-  def('planet_hit', 'Planet struck: heavy impact and rolling rumble', 3.2, 300, 1.142, S => {
+  def('planet_hit', 'Planet struck: heavy impact and rolling rumble', 3.2, 300, 0.9, S => {
     S.v('boom', { f: 40, dur: 2.9, vel: 1.0, send: 0.4 });
     S.noise({ kind: 'brown', dur: 2.6, att: 0.01, vel: 0.9, lp: [140, 140], send: 0.2 });
     S.noise({ dur: 0.1, att: 0.001, vel: 0.5, hp: [1800, 1800] });
@@ -347,14 +349,14 @@
     [0.9, 1.05, 1.2].forEach((at, i) => { S.v('metal', { at, f: 300, dur: 0.2, vel: 0.5 }); S.v('tom', { at, f: 90, dur: 0.25, vel: 0.9 }); });
     S.v('brass', { at: 1.35, f: 261.6, dur: 0.3, vel: 0.8, att: 0.03, send: 0.2 });
   });
-  def('planet_destroyed', 'Planet destroyed: enormous boom, falling sweep and cracking', 4.8, 800, 0.999, S => {
+  def('planet_destroyed', 'Planet destroyed: enormous boom, falling sweep and cracking', 4.8, 800, 0.6, S => {
     S.v('boom', { f: 36, dur: 4.0, vel: 1.0, send: 0.45 });
     S.noise({ dur: 3.0, att: 0.004, vel: 1.0, lp: [2600, 60, 1], send: 0.35 });
     S.tone({ type: 'sawtooth', f: 900, f1: 30, dur: 2.6, att: 0.01, vel: 0.3, lp: [1800, 100, 2], send: 0.3 });
     S.noise({ kind: 'brown', dur: 3.6, att: 0.01, vel: 1.0, lp: [110, 110] });
     for (let i = 0; i < 14; i++) S.noise({ at: 0.1 + S.rnd() * 2.4, dur: 0.05 + S.rnd() * 0.1, att: 0.001, vel: 0.2 + S.rnd() * 0.2, hp: [1500 + S.rnd() * 2500, 1500], send: 0.3 });
   });
-  def('nova', 'Star goes nova: rising whine, white swell, then a huge blast', 5.2, 800, 0.982, S => {
+  def('nova', 'Star goes nova: rising whine, white swell, then a huge blast', 5.2, 800, 0.76, S => {
     S.tone({ type: 'sawtooth', f: 120, f1: 3000, dur: 1.7, att: 0.1, vel: 0.22, lp: [400, 6000, 2], env: 'swell', pk: 0.95, send: 0.3 });
     S.noise({ dur: 1.8, att: 0.1, vel: 0.5, bp: [200, 9000, 1], env: 'swell', pk: 0.95, send: 0.25 });
     S.v('boom', { at: 1.8, f: 38, dur: 3.0, vel: 1.0, send: 0.4 });
@@ -366,6 +368,13 @@
   SFX.list = () => ORDER.map(id => ({ id, desc: FX[id].desc, dur: FX[id].dur }));
   SFX.has = id => !!FX[id];
   SFX.info = id => (FX[id] ? { id, desc: FX[id].desc, dur: FX[id].dur, gap: FX[id].gap, gain: FX[id].gain } : null);
+
+  // music duck in dB while the effect plays (stingers and big combat sounds only; interface and frequent weapon sounds never duck)
+  const DUCK = {
+    tech: 4, colonize: 4, treaty: 4, war: 4, insult: 3, coins: 2, newturn: 2.5, shipbuilt: 3, arrive: 2, warp: 2, turn: 2, gavel: 2,
+    explosion_big: 4, planet_hit: 4, planet_destroyed: 5, nova: 5, deathray: 4, bomb: 4, beam_heavy: 3, missile_hit: 2.5, troops_land: 3, hull_breach: 3,
+  };
+  SFX.duck = DUCK;
 
   const last = Object.create(null);
   SFX.play = function (id, o) {
@@ -379,6 +388,8 @@
       const eng = A.engine;
       eng.sweep();
       fx.fn(new Sess(eng, { t0: eng.ctx.currentTime + 0.006, vol: o.vol, pan: o.pan, rate: o.rate, gain: fx.gain }));
+      const dk = DUCK[id];
+      if (dk && eng.duckMusic && A.settings.music > 0) eng.duckMusic(dk * clamp(o.vol === undefined ? 1 : o.vol, 0, 1), Math.min(2, fx.dur * 0.7 / (o.rate > 0 ? clamp(o.rate, 0.25, 4) : 1)));
       return true;
     } catch (e) {
       if (!warned[id]) { warned[id] = 1; console.warn('[sfx] ' + id + ' failed', e); }

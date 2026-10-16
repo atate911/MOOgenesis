@@ -517,6 +517,7 @@
     st.token++; st.waiter = null; st.busy = true;
     if (st.view) st.view.dispose();
     closeOverlay(true); hideTip();
+    setIntensity(0);                                            // the music's tension level belongs to this battle only
   }
 
   function start(sess) {

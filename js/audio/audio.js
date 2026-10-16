@@ -3,8 +3,9 @@
 // createEngine, offline, renderWindowed, Voices, playVoice, kit}. Music lives in music.js, effects in sfx.js.
 //
 // Architecture: an "engine" (createEngine) wraps one AudioContext (real or Offline) with
-//   voices -> layer/sfx buses -> musicBus / sfxBus -> master -> highpass -> compressor -> soft-clip limiter -> outGain -> destination
+//   voices -> layer/sfx buses -> musicBus (-> eq -> duck) / sfxBus -> master -> highpass -> compressor -> soft-clip limiter -> outGain -> destination
 // plus two convolution reverbs (music hall, sfx plate). Every voice is a small graph that is stopped + disconnected when it ends.
+// The duck stage dips the music for a moment under big sound effects (eng.duckMusic, driven by sfx.js) so stingers read without being loud.
 (function (M) {
   'use strict';
 
@@ -49,6 +50,18 @@
     p.linearRampToValueAtTime(Math.max(peak, 2e-4), t + a);
     p.exponentialRampToValueAtTime(1e-4, t + a + d);
     return t + a + d;
+  }
+  // equal-power fade of an AudioParam from `from` to `to` over `sec` seconds ('in' = sine, 'out' = cosine shape). Never throws:
+  // when a curve cannot be scheduled (WebKit refuses a new event inside a running setValueCurveAtTime) it falls back to a linear ramp.
+  function fadeParam(p, from, to, t, sec, shape) {
+    if (!(sec > 0.01)) { try { p.cancelScheduledValues(t); p.setValueAtTime(to, t); } catch (e) { try { p.value = to; } catch (e2) { /* ignore */ } } return; }
+    const n = 48, c = new Float32Array(n);
+    for (let i = 0; i < n; i++) { const x = i / (n - 1) * Math.PI / 2; c[i] = shape === 'out' ? to + (from - to) * Math.cos(x) : from + (to - from) * Math.sin(x); }
+    try { p.cancelScheduledValues(t); p.setValueAtTime(from, t); p.setValueCurveAtTime(c, t, sec); }
+    catch (e) {
+      try { p.cancelScheduledValues(t); p.setValueAtTime(p.value, t); p.linearRampToValueAtTime(to, t + sec); }
+      catch (e2) { try { p.value = to; } catch (e3) { /* ignore */ } }
+    }
   }
   function envAdsr(p, t, peak, a, d, sus, dur, r) { // returns the time the envelope reaches silence
     peak = Math.max(peak, 2e-4);
@@ -237,7 +250,7 @@
     opts = opts || {};
     const sr = ctx.sampleRate;
     const eng = {
-      ctx, sr, offline: !!opts.offline, unity: !!opts.unity, maxVoices: opts.maxVoices || 32,
+      ctx, sr, offline: !!opts.offline, unity: !!opts.unity, maxVoices: opts.maxVoices || 64,
       voices: new Set(), nodeCount: 0, vnow: 0, baseNodes: 0,
       stats: { created: 0, disposed: 0, stolen: 0, refused: 0, peak: 0 },
     };
@@ -263,7 +276,19 @@
     const eqL = mk(ctx.createBiquadFilter()), eqH = mk(ctx.createBiquadFilter());
     eqL.type = 'lowshelf'; eqL.frequency.value = 120; eqL.gain.value = -2.5;
     eqH.type = 'highshelf'; eqH.frequency.value = 3200; eqH.gain.value = 4;
-    eng.musicBus.connect(eqL); eqL.connect(eqH); eqH.connect(master);
+    const duck = mk(ctx.createGain());
+    eng.musicBus.connect(eqL); eqL.connect(eqH); eqH.connect(duck); duck.connect(master);
+    eng.duck = duck; eng.duckUntil = 0; eng.duckLevel = 1;
+    // dip the music by `depthDb` for `hold` seconds (15 ms in, ~250 ms release). While an earlier duck is still holding, the depth
+    // never decreases (the deeper one is kept, the hold is extended); a shorter + shallower request inside a running duck is ignored.
+    eng.duckMusic = function (depthDb, hold) {
+      if (eng.offline || eng.unity) return;
+      const t = ctx.currentTime, until = t + Math.max(0.05, hold || 0.3), p = duck.gain;
+      let g = dbtoa(-Math.abs(depthDb || 3));
+      if (eng.duckUntil > t) { if (eng.duckUntil >= until && eng.duckLevel <= g) return; g = Math.min(g, eng.duckLevel); }
+      try { p.cancelScheduledValues(t); p.setTargetAtTime(g, t, 0.015); p.setTargetAtTime(1, until, 0.25); } catch (e) { /* ignore */ }
+      eng.duckUntil = until; eng.duckLevel = g;
+    };
     eng.sfxBus = mk(ctx.createGain()); eng.sfxBus.connect(master);
     eng.sfxIn = eng.sfxBus;
 
@@ -719,7 +744,7 @@
   A.Voices = V;
   A.playVoice = function (name, eng, dest, t, o) { return V[name](eng, dest, t, o || {}); };
   A.createEngine = createEngine;
-  A.kit = { clamp, num, mtof, ftom, dbtoa, hashStr, makeRng, envPerc, envAdsr, volToGain };
+  A.kit = { clamp, num, mtof, ftom, dbtoa, hashStr, makeRng, envPerc, envAdsr, fadeParam, volToGain };
 
   const readyHooks = [];
   function fireReady() { const h = readyHooks.splice(0); for (const fn of h) { try { fn(); } catch (e) { console.warn('[audio] ready hook failed', e); } } }

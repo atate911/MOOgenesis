@@ -5,8 +5,11 @@
 // (25 ms timer, ~160 ms ahead) or an offline window renderer plays the events through the voice factories in audio.js.
 //
 // Public API (MOO.Audio.Music):
-//   play(id,{fade,loop}) stop({fade}) current() list() playlist(ids,{shuffle,gap,fade}) setIntensity(0..1) renderOffline(id,seconds,opts)
-//   analyze(id) (composition lint, used by tools/test-audio.html)
+//   play(id,{fade,loop}) stop({fade}) current() has(id) list() playlist(ids,{shuffle,gap,fade,start}) setIntensity(0..1)
+//   setMood(name,{fade}) snapshot() / restore(snap,{fade}) (hand the music back after a scene: track OR running playlist)
+//   renderOffline(id,seconds,opts) analyze(id) (composition lint, used by tools/test-audio.html and tools/audio-report.js)
+// Intensity: layers x1..x3 are tension overlays that fade in above 0.12 / 0.38 / 0.62; a track may also *gate* its own layers
+// (def.gate = {drums: 0.2, lead: 0.4, ...}) so a battle starts sparse and fills in as the fight escalates (combat1/combat2).
 (function (M) {
   'use strict';
 
@@ -659,6 +662,8 @@
         this.layers[name] = { in: inG, level: L.lvl * num(mix[name], 1), i0: L.i0 };
         inG.gain.value = this.layers[name].i0 !== undefined ? 0 : this.layers[name].level;
       }
+      const gate = def.gate || {};
+      for (const name in gate) { const L = this.layers[name]; if (L && L.i0 === undefined && gate[name] > 0) { L.i0 = gate[name]; L.in.gain.value = 0; } }
       this.trim = num(def.trim, DEFAULT_TRIM);
       this.applyIntensity(this.intensity, true);
       this.pass = null; this.passNo = -1; this.idx = 0; this.t0 = 0; this.skipBefore = -1e9; this.shift = 0;
@@ -675,24 +680,17 @@
       }
     }
     fadeIn(sec) {
-      const g = this.bus.gain, t = this.eng.ctx.currentTime;
-      this.verb.gain.cancelScheduledValues(t);
-      if (sec > 0.01) {
-        const cv = new Float32Array(48), cw = new Float32Array(48);
-        for (let i = 0; i < 48; i++) { cv[i] = Math.sin(i / 47 * Math.PI / 2) * this.trim; cw[i] = Math.sin(i / 47 * Math.PI / 2); }
-        g.cancelScheduledValues(t); g.setValueAtTime(0, t); g.setValueCurveAtTime(cv, t, sec);
-        this.verb.gain.setValueAtTime(0, t); this.verb.gain.setValueCurveAtTime(cw, t, sec);
-      } else { g.setValueAtTime(this.trim, t); this.verb.gain.setValueAtTime(1, t); }
+      const t = this.eng.ctx.currentTime;
+      K.fadeParam(this.bus.gain, 0, this.trim, t, sec, 'in');
+      K.fadeParam(this.verb.gain, 0, 1, t, sec, 'in');
     }
     fadeOut(sec) {
       if (this.stopped) return;
       this.stopped = true;
-      const t = this.eng.ctx.currentTime, g = this.bus.gain, cur = g.value, vcur = this.verb.gain.value;
+      const t = this.eng.ctx.currentTime;
       sec = Math.max(0.03, sec);
-      const cv = new Float32Array(48), cw = new Float32Array(48);
-      for (let i = 0; i < 48; i++) { const c = Math.cos(i / 47 * Math.PI / 2); cv[i] = cur * c; cw[i] = vcur * c; }
-      g.cancelScheduledValues(t); g.setValueAtTime(cur, t); g.setValueCurveAtTime(cv, t, sec);
-      this.verb.gain.cancelScheduledValues(t); this.verb.gain.setValueAtTime(vcur, t); this.verb.gain.setValueCurveAtTime(cw, t, sec);
+      K.fadeParam(this.bus.gain, this.bus.gain.value, 0, t, sec, 'out');
+      K.fadeParam(this.verb.gain, this.verb.gain.value, 0, t, sec, 'out');
       this.killAt = t + sec + 0.15;
     }
     begin(t0) { this.t0 = t0; this.nextPass(); }
@@ -745,12 +743,22 @@
   }
 
   // ================================================================== scheduler + public API
-  function ensureTimer() { if (!S.timer) S.timer = setInterval(tickAll, 25); }
+  // Lookahead: 180 ms while the tab is visible (25 ms timer). Hidden tabs get their timers throttled to >= 1 Hz (and to one
+  // wake-up a minute after five minutes in Chrome), so we schedule 2.5 s ahead while hidden, re-tick at once on visibilitychange,
+  // and after any late tick keep a bigger window for a while (the gap we just saw, times 1.5).
+  const LOOK_VISIBLE = 0.18, LOOK_HIDDEN = 2.5;
+  let lastTickMs = 0, lookBoost = 0, lookBoostUntil = 0;
+  function ensureTimer() { if (!S.timer) { S.timer = setInterval(tickAll, 25); lastTickMs = 0; } }
+  if (typeof document !== 'undefined') document.addEventListener('visibilitychange', () => { if (S.timer) tickAll(); });
   function tickAll() {
     try {
       const eng = A.engine;
       if (!eng) return;
-      const now = eng.ctx.currentTime, look = (typeof document !== 'undefined' && document.hidden) ? 1.5 : 0.16;
+      const ms = Date.now();
+      if (lastTickMs && ms - lastTickMs > 400) { lookBoost = Math.min(3, (ms - lastTickMs) / 1000 * 1.5); lookBoostUntil = ms + 10000; }
+      else if (ms > lookBoostUntil) lookBoost = 0;
+      lastTickMs = ms;
+      const now = eng.ctx.currentTime, look = Math.max((typeof document !== 'undefined' && document.hidden) ? LOOK_HIDDEN : LOOK_VISIBLE, lookBoost);
       S.ticks++;
       if (S.cur) {
         S.cur.tick(now, look);
@@ -825,6 +833,10 @@
       ids = (ids || Object.keys(TRACKS)).filter(id => TRACKS[id]);
       if (!ids.length) return false;
       const pl = { ids, shuffle: !!opts.shuffle, gap: num(opts.gap, 1.5), fade: num(opts.fade, 3), order: opts.shuffle ? shuffled(ids) : ids.slice(), i: 0, advancing: false };
+      if (opts.start && pl.order.indexOf(opts.start) >= 0) {           // begin with a given track (the rest keeps its order / shuffle)
+        const k = pl.order.indexOf(opts.start);
+        pl.order = pl.shuffle ? [opts.start].concat(pl.order.filter(id => id !== opts.start)) : pl.order.slice(k).concat(pl.order.slice(0, k));
+      }
       const first = pl.order[0];
       if (!A.isReady()) { S.pending = { id: first, opts: { loop: false } }; S.playlist = pl; A.onReady(() => { const p = S.pending; if (p) { S.pending = null; startTrack(p.id, { fade: 1, loop: false, keepPlaylist: true }); } }); return 'pending'; }
       S.playlist = pl;
@@ -838,14 +850,35 @@
     for (const p of S.old) p.applyIntensity(x, false);
   };
   Music.getIntensity = () => S.intensity;
+  Music.has = id => !!TRACKS[id];
+
+  // A scene that borrows the music (GNN, lab, spy panels) takes a snapshot first and restores it afterwards: a running playlist
+  // (the galaxy rotation) comes back as a playlist, a single looping track as that track, silence as silence.
+  Music.snapshot = function () {
+    const pl = S.playlist;
+    return { id: Music.current(), playlist: pl ? { ids: pl.ids.slice(), shuffle: pl.shuffle, gap: pl.gap, fade: pl.fade, start: (S.plWait && S.plWait.id) || pl.order[pl.i] } : null };
+  };
+  Music.restore = function (snap, opts) {
+    try {
+      opts = opts || {};
+      const fade = num(opts.fade, 1.5);
+      if (!snap) return Music.stop({ fade });
+      if (snap.playlist) { const pl = snap.playlist; return Music.playlist(pl.ids, { shuffle: pl.shuffle, gap: pl.gap, fade: pl.fade, start: pl.start, firstFade: fade }); }
+      if (snap.id) return Music.play(snap.id, { fade });
+      return Music.stop({ fade });
+    } catch (e) { console.warn('[music] restore failed', e); return false; }
+  };
 
   // Moods: game-level names -> tracks (lists rotate so repeated requests do not replay the same piece)
   const MOODS = {
     title: 'title', menu: 'title', explore: ['galaxy1', 'galaxy2', 'galaxy3'], galaxy: ['galaxy1', 'galaxy2', 'galaxy3'], map: ['galaxy1', 'galaxy2', 'galaxy3'],
     calm: ['galaxy1', 'galaxy2', 'galaxy3'], wonder: 'galaxy1', patient: 'galaxy2', determined: 'galaxy3', design: 'design', research: 'research', tech: 'research',
     combat: ['combat1', 'combat2'], battle: ['combat1', 'combat2'], tension: 'ground', ground: 'ground', news: 'gnn', gnn: 'gnn', council: 'council',
-    orion: 'orion', antarans: 'antarans', victory: 'victory', defeat: 'defeat',
+    orion: 'orion', antarans: 'antarans', victory: 'victory', defeat: 'defeat', spy: 'spy', espionage: 'spy', intrigue: 'spy',
   };
+  // array moods listed here play as a shuffled playlist with a pause between pieces (the original's map was silent; a breath between
+  // tracks keeps the exploration music from looping one piece for an hour). Others pick the next track of the list on each request.
+  const MOOD_ROTATE = { explore: { gap: 5, fade: 3 }, galaxy: { gap: 5, fade: 3 }, map: { gap: 5, fade: 3 }, calm: { gap: 5, fade: 3 } };
   let moodTick = 0;
   Music.moods = () => Object.keys(MOODS).concat(Object.keys(TRACKS).filter(id => id.indexOf('race:') === 0));
   // setMood('combat' | 'explore' | 'council' | 'human' | 'race:human' | any track id, {fade, loop}) -> id of the track chosen (or false)
@@ -853,7 +886,11 @@
     try {
       let pick = MOODS[mood] || (TRACKS[mood] ? mood : (TRACKS['race:' + mood] ? 'race:' + mood : null));
       if (!pick) { console.warn('[music] unknown mood "' + mood + '"'); return false; }
-      if (Array.isArray(pick)) { const cur = pick.indexOf(Music.current()); pick = pick[cur >= 0 ? (cur + 1) % pick.length : (moodTick++) % pick.length]; }
+      if (Array.isArray(pick)) {
+        const cur = pick.indexOf(Music.current()), next = pick[cur >= 0 ? (cur + 1) % pick.length : (moodTick++) % pick.length], rot = MOOD_ROTATE[mood];
+        if (rot) { const r = Music.playlist(pick, { shuffle: true, gap: rot.gap, fade: rot.fade, start: next, firstFade: num(opts && opts.fade, 2) }); return r === false ? false : next; }
+        pick = next;
+      }
       const r = Music.play(pick, opts);
       return r === false ? false : pick;
     } catch (e) { console.warn('[music] setMood failed', e); return false; }
@@ -937,7 +974,7 @@
       Cb: '8:2 10:2 | 9:2 7:2 | 6:2 7:2 | 7#:3 5:1',
     },
     sec: [
-      { n: 'intro', bars: 8, lv: 0.42, prog: 'i:4 bVI:2 bVII:2', hit: true, pad: { p: 'swell', vel: 0.8 }, choir: { n: 3, vel: 0.55 }, bell: { dens: 0.2, res: 1, vel: 0.5 }, timp: { p: 'hits', vel: 0.6, roll: 1 } },
+      { n: 'intro', bars: 8, cres: [0.5, 0.6], prog: 'i:4 bVI:2 bVII:2', hit: true, pad: { p: 'swell', vel: 0.8 }, choir: { n: 3, vel: 0.55 }, bell: { dens: 0.2, res: 1, vel: 0.5 }, timp: { p: 'hits', vel: 0.6, roll: 1 } },
       { n: 'A1', bars: 8, lv: 0.62, prog: 'i bVI bIII bVII | i bVI iv V', pad: 'sus', bass: 'half', lead: 'A Ab', timp: 'two', bell: { dens: 0.22, res: 2, vel: 0.5 } },
       { n: 'A2', bars: 8, cres: [0.7, 0.86], prog: 'i bVI bIII bVII | i bVI iv V', pad: { p: 'sus', inst: 'strings' }, bass: 'half', lead: { ph: 'A Ab', inst: 'brass', harm: -2 }, timp: 'beats', arp: { p: 'up', vel: 0.32, reg: [57, 79] }, choir: { vel: 0.7 }, bell: { dens: 0.28, res: 2, vel: 0.5 } },
       { n: 'B', bars: 8, lv: 0.9, prog: 'bIII bVII i v | bVI bIII iv V', pad: { p: 'sus', inst: 'strings' }, bass: 'walk', lead: 'B Bb', bell: { ph: 'B Bb', inst: 'glass', oct: 1, vel: 0.45 }, timp: 'beats', choir: { v1: 'a', v2: 'a', vel: 0.8 }, fill: 'tom', drums: { kick: 'x.......x.......', snare: '....x.......x...' } },
@@ -1062,7 +1099,7 @@
   });
   Track('combat1', {
     desc: 'Driving percussive tension: galloping bass, fast saw arps, timpani and a brass riff',
-    bpm: 142, trim: 0.7, root: 'E', mode: 'minor', loopFrom: 'A1', tens: false,
+    bpm: 142, trim: 0.7, root: 'E', mode: 'minor', loopFrom: 'A1', tens: false, gate: { drums: 0.2, lead: 0.4, bell: 0.55 },
     inst: { pad: 'dark', bass: 'moog', lead: 'synth', lead2: 'brass', arp: 'arpSaw', bell: 'bell' },
     ph: {
       M1: '1:.5 1:.5 3:.5 1:.5 5:1 4:.5 3:.5 | 1:.5 1:.5 3:.5 1:.5 5:1 6:.5 5:.5',
@@ -1082,7 +1119,7 @@
 
   Track('combat2', {
     desc: 'Heavy half-time assault: syncopated stabs, chromatic phrygian bass, metal hits and a rapid pulse arp',
-    bpm: 152, trim: 0.7, root: 'C#', mode: 'minor', loopFrom: 'A1', tens: false,
+    bpm: 152, trim: 0.7, root: 'C#', mode: 'minor', loopFrom: 'A1', tens: false, gate: { drums: 0.2, lead: 0.4, bell: 0.55 },
     inst: { pad: 'dark', bass: 'pulse', lead: 'brass', lead2: 'horn', arp: 'seq', bell: 'bell' },
     ph: {
       N1: '1:1.5 1:1.5 3:1 | 2b:1.5 2b:1.5 4:1 | 5:1.5 3:1.5 1:1 | 7:1.5 5:1.5 4:1',
@@ -1403,5 +1440,101 @@
     ],
   });
   // @@TRACKS-END
+
+  // ================================================================== espionage (spy panels borrow the music, see js/ui/spyscenes.js)
+  Track('spy', {
+    desc: 'Espionage: noir intrigue — walking sub-bass, clock ticks and rim clicks, muted horn phrases, hushed pads in harmonic minor',
+    bpm: 94, trim: 1.1, root: 'C', mode: 'harmonic', loopFrom: 'A1', tens: false,
+    inst: { pad: 'dark', bass: 'deep', lead: 'horn', lead2: 'vibes', arp: 'pizz', bell: 'vibes', choir: 'uuh' },
+    ph: {
+      Y1: '5:1.5 6:.5 5:1 3:1 | 1:2 2:1 1:1 | 4:1.5 3:.5 2:1 7:1 | 1:3 r:1',
+      Y2: '3:1.5 5:.5 6:1 5:1 | 8:2 10:2 | 6:1.5 5:.5 4:1 3:1 | 2:2 7:2',
+      Y3: '8:1 7:1 6:2 | 6:1 5:1 4:2 | 3:2 8:2 | 10:4',
+      Y4: '6:4 | 4:2 2:2 | 7:4 | 2:2 7:2',
+    },
+    sec: [
+      { n: 'intro', bars: 4, lv: 0.5, prog: 'i:2 iv:2', pad: { p: 'swell', n: 3, reg: [48, 67] }, bass: 'half', drums: { click3: 'x...x...x...x...', hat: 'o...o...o...o...' } },
+      { n: 'A1', bars: 8, lv: 0.68, prog: 'i iv i V7 | i bVI iiø V7', pad: { p: 'sus', n: 3, reg: [48, 67] }, bass: 'walk', lead: 'Y1 Y2', drums: { click3: 'x...x...x...x...', hat: 'o.o.o.o.o.o.o.o.', rim: '....x.......x...' } },
+      { n: 'A2', bars: 8, lv: 0.76, prog: 'i iv i V7 | i bVI iiø V7', pad: { p: 'sus', n: 3, reg: [48, 67] }, bass: 'walk', lead: 'Y1 Y2', lead2: { ph: 'Y1 Y2', inst: 'vibes', oct: 1, vel: 0.35 }, arp: { pat: '0.2.', res: 2, vel: 0.3, reg: [55, 76] }, drums: { click3: 'x...x...x...x...', hat: 'o.o.o.o.o.o.o.o.', rim: '....x.......x...', shk: '..o...o...o...o.' } },
+      { n: 'B', bars: 8, lv: 0.85, prog: 'iv:2 bVI:2 iiø:2 V7:2', pad: { p: 'sus', inst: 'strings', n: 3, reg: [50, 69] }, bass: 'walk', lead: { ph: 'Y3 Y4', inst: 'brass', vel: 0.75 }, choir: { v1: 'u', v2: 'o', vel: 0.45 }, bell: { dens: 0.2, res: 2, reg: [72, 91], vel: 0.45 }, drums: { click3: 'x...x...x...x...', hat: 'o.o.o.o.o.o.o.o.', rim: '....x.......x...', kick: 'x.......x.......' } },
+      { n: 'C', bars: 8, lv: 0.5, prog: 'i:2 bVI:2 iv:2 V7:2', pad: { p: 'swell', n: 3, reg: [48, 67] }, bass: 'whole', lead: false, bell: { dens: 0.25, res: 1, reg: [67, 88], vel: 0.5 }, choir: { v1: 'u', v2: 'o', vel: 0.5 }, drums: { click3: 'x...x...x...x...', whisper2: ['................', '........x.......'] } },
+      { n: 'A3', bars: 8, lv: 0.82, prog: 'i iv i V7 | i bVI iiø V7', pad: { p: 'sus', inst: 'strings', n: 3, reg: [50, 69] }, bass: 'walk', lead: { ph: 'Y2 Y1', harm: -2 }, arp: { pat: '0.2.', res: 2, vel: 0.3, reg: [55, 76] }, drums: { click3: 'x...x...x...x...', hat: 'o.o.o.o.o.o.o.o.', rim: '....x.......x...', kick: 'x.......x.......', shk: '..o...o...o...o.' } },
+      { n: 'E', bars: 8, lv: 0.6, prog: 'i iv i V7 | i bVI iiø V7', pad: { p: 'sus', n: 3, reg: [48, 67] }, bass: 'half', lead: 'Y1 Y4', drums: { click3: 'x...x...x...x...', hat: 'o...o...o...o...' } },
+    ],
+  });
+
+  // ================================================================== hostile race themes (derived)
+  // The angry-ambassador variant of each race theme (research/06 §12.5: "same motif, lower register, faster, harsher timbre") keeps the
+  // motifs and the form but turns the mode dark, drops the key a few semitones, speeds up, swaps the timbres for brass / saws and adds
+  // martial drums. Chords are re-spelled diatonically in the new mode so the harmony keeps following the melody. js/ui/audience.js
+  // plays 'race:<id>:war' whenever the ambassador is angry.
+  const PC_NAMES = ['C', 'Db', 'D', 'Eb', 'E', 'F', 'Gb', 'G', 'Ab', 'A', 'Bb', 'B'];
+  const DEG_NAME = ['I', 'bII', 'II', 'bIII', 'III', 'IV', 'bV', 'V', 'bVI', 'VI', 'bVII', 'VII'];
+  const DARK_MODE = {
+    major: 'minor', lydian: 'phrygian', mixolydian: 'minor', dorian: 'phrygian', minor: 'phrygian', melodic: 'harmonic', harmonic: 'dblHarm',
+    phrygian: 'locrian', phrygDom: 'dblHarm', dblHarm: 'octaH', wholetone: 'octatonic', octatonic: 'octaH', octaH: 'octaH', locrian: 'locrian',
+    majPent: 'minPent', minPent: 'hirajoshi', dorPent: 'minPent', hirajoshi: 'hirajoshi',
+  };
+  // re-spell one progression token ('IM7:2', 'vi', 'bVII') as the diatonic chord on the same scale degree of the new scale
+  function respell(tok, oldScale, newScale) {
+    const parts = tok.split(':'), m = CHORD_RE.exec(parts[0]);
+    if (!m) return tok;
+    const has = x => newScale.indexOf(mod12(x)) >= 0;
+    let root = romanRoot(m[1] + m[2]);
+    const di = oldScale.indexOf(root);
+    if (di >= 0 && di < newScale.length) root = newScale[di];
+    const third = has(root + 3) ? 3 : has(root + 4) ? 4 : has(root + 2) ? 2 : 5;
+    const fifth = has(root + 7) ? 7 : has(root + 6) ? 6 : has(root + 8) ? 8 : 7;
+    let q = third === 2 ? 'sus2' : third === 5 ? 'sus4' : third === 3 ? (fifth === 6 ? 'o' : 'm') : (fifth === 8 ? '+' : '');
+    let suf = '';
+    if (/7|9|ø/.test(m[3]) && (q === 'm' || q === '' || q === 'o')) {
+      if (q === 'o') suf = has(root + 9) ? 'o7' : has(root + 10) ? 'ø' : '';
+      else if (has(root + 10)) suf = '7'; else if (has(root + 11)) suf = 'M7';
+    }
+    const lower = q === 'm' || q === 'o';
+    let name = DEG_NAME[mod12(root)]; if (lower) name = name.toLowerCase();
+    const qs = suf === 'ø' || suf === 'o7' ? suf : (q === 'm' ? '' : q) + suf;
+    return name + qs + (parts[1] ? ':' + parts[1] : '');
+  }
+  const SOFT_LEADS = { flute: 1, reed: 1, kora: 1, pizz: 1, harp: 1, chime: 1, crystal: 1, glass: 1, seq: 1, marimba: 1, vibes: 1 };
+  function warVariant(baseId, o) {
+    const base = TRACKS[baseId]; if (!base) return null;
+    o = o || {};
+    const d = JSON.parse(JSON.stringify(base)); delete d._p; delete d.id;
+    const oldScale = SCALES[base.mode || 'major'], newMode = o.mode || DARK_MODE[base.mode || 'major'] || 'phrygian', newScale = SCALES[newMode];
+    const tpc = PCS[base.root], down = o.down === undefined ? 3 : o.down;
+    const baseTonic = base.tonic !== undefined ? base.tonic : 57 + mod12(tpc - 57) + 12 * (base.oct || 0);
+    d.root = PC_NAMES[mod12(tpc - down)]; d.mode = newMode; d.tonic = baseTonic - down; delete d.oct;
+    d.bpm = Math.round(base.bpm * (o.tempo || 1.12));
+    d.desc = String(base.desc || baseId).split(':')[0] + ', hostile: the same theme in ' + newMode + ', ' + Math.round((o.tempo || 1.12) * 100 - 100) + '% faster, a ' + (o.down === undefined ? 3 : o.down) + ' semitone lower key, brass leads and martial drums';
+    d.inst = Object.assign({}, base.inst || {}, { pad: 'dark', bass: 'moog', lead: 'brass', lead2: 'brassStab', bell: 'bell', choir: 'uuh' }, o.inst || {});
+    d.tens = false; d.lintMin = o.lintMin || 0.6; d.trim = num(base.trim, DEFAULT_TRIM) * 0.78;
+    const drums = o.drums || { kick: 'x.......x.......', snare: ['x..x.xx.x..x.xx.', 'x..x.xx.x..xxxxx'] };
+    for (const sct of d.sec) {
+      sct.prog = String(sct.prog).replace(/\|/g, ' ').trim().split(/\s+/).map(t => respell(t, oldScale, newScale)).join(' ');
+      const had = typeof sct.drums === 'string' ? DRUMS[sct.drums] : sct.drums;
+      sct.drums = Object.assign({}, had && typeof had === 'object' ? had : {}, drums);
+      if (!sct.timp) sct.timp = 'two';
+      if (typeof sct.lead === 'string') sct.lead = { ph: sct.lead, harm: -2 };
+      else if (sct.lead && typeof sct.lead === 'object') { if (SOFT_LEADS[sct.lead.inst]) delete sct.lead.inst; if (sct.lead.harm === undefined) sct.lead.harm = -2; }
+      if (sct.lead2 && typeof sct.lead2 === 'object' && sct.lead2.inst) sct.lead2.inst = 'brassStab';
+      if (sct.pad && typeof sct.pad === 'object' && sct.pad.inst) sct.pad.inst = 'dark';
+    }
+    return Track(baseId + ':war', d);
+  }
+  const WAR = {
+    alkari: { tempo: 1.2, inst: { lead: 'synth' } },                                                            // screeching, rapid
+    bulrathi: { tempo: 1.1, down: 2 },                                                                           // pounding, lower still
+    darlok: { tempo: 1.08, inst: { lead: 'horn' }, drums: { kick: 'x..x....x..x....', rim: '......o.......o.', hiss: '....x.......x...' } },   // heartbeat pulse
+    human: {},                                                                                                   // the march in minor, snare + brass
+    klackon: { tempo: 1.1, inst: { lead: 'synth', arp: 'arpSaw' } },                                             // buzzing saw swarms
+    meklar: { inst: { lead: 'synth' }, drums: { kick: 'x...x...x...x...', metal2: 'x.x.x.x.x.x.x.x.', click2: 'xx.xxx.x.xx.x.xx' } },   // harsh clock
+    mrrshan: { tempo: 1.15, down: 5 },                                                                           // growling low brass
+    psilon: { inst: { lead: 'crystal' }, drums: { t5: 'X.......x.......', click3: 'o.o.o.o.o.o.o.o.' } },         // cold clusters, tremolo bells
+    sakkra: { tempo: 1.18, drums: { t3: 'x..x..x.x..x..x.', t4: '....x.......x...', kick: 'x.......x.......', shk: 'x.x.x.x.x.x.x.x.' } },   // fast tribal toms
+    silicoid: { tempo: 1.15, down: 2, inst: { lead: 'horn' }, drums: { t5: 'X.......X.......', metal: 'x.......x.......', hiss: '....x.......x...' } },   // grinding pulses
+  };
+  for (const r in WAR) warVariant('race:' + r, WAR[r]);
+  Music._warVariant = warVariant; Music._respell = respell;
 
 })(window.MOO);

@@ -26,6 +26,7 @@
   const musicPlay = (id, o) => { try { const m = Mu(); if (m && m.play) return m.play(id, o); } catch (e) { /* audio is optional */ } return null; };
   const musicStop = o => { try { const m = Mu(); if (m && m.stop) m.stop(o); } catch (e) { /* audio is optional */ } };
   const musicCur = () => { try { const m = Mu(); return m && m.current ? m.current() : null; } catch (e) { return null; } };
+  const musicSnap = () => { try { const m = Mu(); return m && m.snapshot ? m.snapshot() : null; } catch (e) { return null; } };
   const bannerCss = E => { try { return getComputedStyle(doc.documentElement).getPropertyValue('--emp' + (E ? E.color : 0)).trim() || '#4a90e8'; } catch (e) { return '#4a90e8'; } };
 
   // ================================================================== field + type metadata
@@ -1179,7 +1180,7 @@
     .tsc-hint kbd { border-color:#8a8a92; color:#f0f0f0; }
   `);
 
-  const SC = { run: null, pending: 0, chain: Promise.resolve(), prev: null, prevParams: null, prevTrack: null, musicOn: false, cv: null, root: null };
+  const SC = { run: null, pending: 0, chain: Promise.resolve(), prev: null, prevParams: null, prevTrack: null, prevSnap: null, musicOn: false, cv: null, root: null };
 
   function Typer(el) { this.el = el; this.s = ''; this.n = 0; this.acc = 0; this.busy = false; }
   Typer.prototype.paint = function () { const a = this.s.slice(0, this.n), b = this.s.slice(this.n); this.el.textContent = ''; this.el.appendChild(doc.createTextNode(a)); if (b) this.el.appendChild(h('span.rest', b)); };
@@ -1250,7 +1251,7 @@
     SC.layKey = ''; SC.root.classList.remove('out'); UI.clear(SC.panel); UI.clear(SC.cap); UI.hideTip();
     SC.root.style.setProperty('--fc', F.col);
     if (spec.kind === 'choose') buildChoose(R); else buildBreak(R);
-    if (!SC.musicOn) { SC.prevTrack = musicCur(); SC.musicOn = true; if (SC.prevTrack !== 'research') musicPlay('research', { fade: 0.6 }); }
+    if (!SC.musicOn) { SC.prevTrack = musicCur(); SC.prevSnap = musicSnap(); SC.musicOn = true; if (SC.prevTrack !== 'research') musicPlay('research', { fade: 0.6 }); }
     R.capT.set(R.caption, R.rm);
     SC.root.focus && SC.root.setAttribute('tabindex', '-1');
     try { SC.root.focus({ preventScroll: true }); } catch (e) { /* not focusable yet */ }
@@ -1275,7 +1276,11 @@
     if (SC.pending > 0 || SC.run) return;                                          // another scene is already queued: keep the room
     if (SC.musicOn) {
       SC.musicOn = false;
-      if (musicCur() === 'research') { if (SC.prevTrack && SC.prevTrack !== 'research') musicPlay(SC.prevTrack, { fade: 1.2 }); else musicStop({ fade: 1.2 }); }
+      if (musicCur() === 'research') {
+        const m = Mu();
+        if (SC.prevSnap && SC.prevSnap.id !== 'research' && m && m.restore) { try { m.restore(SC.prevSnap, { fade: 1.2 }); } catch (e) { musicStop({ fade: 1.2 }); } }
+        else if (SC.prevTrack && SC.prevTrack !== 'research') musicPlay(SC.prevTrack, { fade: 1.2 }); else musicStop({ fade: 1.2 });
+      }
     }
     const cur = UI.Screens.current;
     if (cur && cur.id === 'techscene') {

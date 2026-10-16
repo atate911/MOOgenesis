@@ -107,6 +107,7 @@
   function musicPlay(id, o) { try { const m = Mu(); if (m && typeof m.play === 'function') return m.play(id, o); } catch (e) { /* audio is optional */ } return null; }
   function musicStop(o) { try { const m = Mu(); if (m && typeof m.stop === 'function') m.stop(o); } catch (e) { /* audio is optional */ } }
   function musicCur() { try { const m = Mu(); return m && typeof m.current === 'function' ? m.current() : null; } catch (e) { return null; } }
+  function musicSnap() { try { const m = Mu(); return m && typeof m.snapshot === 'function' ? m.snapshot() : null; } catch (e) { return null; } }
 
   // ---- races
   const RACE_IDS = ['alkari', 'bulrathi', 'darlok', 'human', 'klackon', 'meklar', 'mrrshan', 'psilon', 'sakkra', 'silicoid'];
@@ -1585,6 +1586,8 @@
     if (!run.musicStarted) return;
     run.musicStarted = false;
     if (musicCur() !== 'gnn') return;
+    const m = Mu();
+    if (run.prevSnap && run.prevSnap.id !== 'gnn' && m && typeof m.restore === 'function') { try { m.restore(run.prevSnap, { fade: 1.4 }); return; } catch (e) { /* fall back to the plain track */ } }
     if (run.prevTrack && run.prevTrack !== 'gnn') musicPlay(run.prevTrack, { fade: 1.4 }); else musicStop({ fade: 1.4 });
   }
   function finish(skipped) {
@@ -1666,7 +1669,7 @@
       pending: pend, intr: intr, segs: buildSegments(intr), idx: -1, t: 0, accDt: 0, segT: 0, phase: 'play', cut: null, paused: false, finishing: false, fadeT: 0, fadeDur: 0.5,
       speed: animSpeed(), rm: reduced(), anchor: pickAnchor(intr), mood: 'neutral', tone: 'normal', talkTail: 0, wasTyping: false, hold: 0, holdSet: false, titleDur: 2.5, titleK: 0,
       hl: new Typer(hlT, hlR, hlBox), sub: new Typer(subT, subR, subBox), gfx: null, rk: null, curPlanet: null, L: null, shown: 0, skipped: false, leaving: false,
-      tkLines: tickerLines(intr), tkIdx: 0, tkT: 0, tkU: 0, anims: null, prevTrack: musicCur(), musicStarted: false,
+      tkLines: tickerLines(intr), tkIdx: 0, tkT: 0, tkU: 0, anims: null, prevTrack: musicCur(), prevSnap: musicSnap(), musicStarted: false,
     };
     R.rm = root.classList.contains('rm');
     btnArch.style.display = M.Game && M.Game.S && Array.isArray(M.Game.S.newsLog) ? '' : 'none';
