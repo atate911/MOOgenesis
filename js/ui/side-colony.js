@@ -91,7 +91,7 @@
     const look = card.type === 'none' ? 'asteroids' : (card.growth === 'gaia' ? 'gaia' : card.type);
     const P = M.Gfx && M.Gfx.pick('planets');
     try {
-      if (P && P.sprite) { const sp = P.sprite({ look, seed: card.id * 7919 + (card.gfx | 0), inhabited: card.owner >= 0, color: card.owner >= 0 ? getComputedStyle(document.documentElement).getPropertyValue('--emp' + G.S.empires[card.owner].color) : undefined }, size * 2); c.getContext('2d').drawImage(sp, 0, 0, size * 2, size * 2); return c; }
+      if (P && P.sprite) { const sp = P.sprite({ look, seed: card.id * 7919 + (card.gfx | 0), inhabited: card.owner >= 0, color: card.owner >= 0 ? getComputedStyle(document.documentElement).getPropertyValue('--emp' + G.S.empires[card.owner].color) : undefined }, size * 2, { onReady: s2 => { if (c.isConnected) { const g = c.getContext('2d'); g.clearRect(0, 0, size * 2, size * 2); g.drawImage(s2, 0, 0, size * 2, size * 2); } } }); c.getContext('2d').drawImage(sp, 0, 0, size * 2, size * 2); return c; }
     } catch (e) { console.warn('planet sprite', e); }
     const x = c.getContext('2d'); x.fillStyle = '#556'; x.beginPath(); x.arc(size, size, size * 0.8, 0, 6.3); x.fill(); return c;
   }

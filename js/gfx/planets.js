@@ -1642,15 +1642,22 @@
   }
   // repaint a pending sprite in place from the best tier now available; final when the wanted tier is reached
   function upgradeSprite(key, pe) {
-    var fresh = renderSprite(pe.P, pe.Dd, pe.desc, pe.opts, pe.la, pe.le, pe), cv = pe.cv, c = cv.getContext('2d');
-    c.save(); c.setTransform(1, 0, 0, 1, 0, 0); c.globalCompositeOperation = 'copy'; c.drawImage(fresh, 0, 0); c.restore();
+    var fresh = renderSprite(pe.P, pe.Dd, pe.desc, pe.opts, pe.la, pe.le, pe), cv = pe.cv;
+    if (fresh !== cv) { var c = cv.getContext('2d'); c.save(); c.setTransform(1, 0, 0, 1, 0, 0); c.globalCompositeOperation = 'copy'; c.drawImage(fresh, 0, 0); c.restore(); }
     var final_ = pe.W >= pe.want;
     if (final_) { delete PENDING[key]; cv.pending = false; pe.inst = null; }
     try { if (M.Bus && M.Bus.emit) M.Bus.emit('planets:sprite', pe.desc, cv, final_); } catch (e) { /* listeners are optional */ }
     if (final_) for (var i = 0; i < pe.cbs.length; i++) { try { pe.cbs[i](cv); } catch (e2) { console.warn('[Planets] onReady', e2); } }
   }
+  // a big sprite's repaint is a full pixel loop (~100 ms at 500 px), so those only repaint for the first real tier and the final one
   function texLanded(P) {
-    for (var key in PENDING) { var pe = PENDING[key]; if (pe.P === P) upgradeSprite(key, pe); }
+    var best = bestTex(P); if (!best) return;
+    for (var key in PENDING) {
+      var pe = PENDING[key];
+      if (pe.P !== P || best.W <= pe.W) continue;
+      if (pe.Dd > 256 && best.W < pe.want && pe.W >= TIERS[0]) continue;
+      upgradeSprite(key, pe);
+    }
   }
 
   /* ================================================================ asteroids */
@@ -1865,7 +1872,7 @@
             if (!job || job.lazy) { var ph = job; job = P.jobs[tier] = makeJob(P, tier); if (ph) { var pi = QUEUE.indexOf(ph); if (pi >= 0) QUEUE.splice(pi, 1); } }
             if (!stepJob(job, Math.max(1, budget - (now() - t0)))) break;
             var qi = QUEUE.indexOf(job); if (qi >= 0) QUEUE.splice(qi, 1);
-            addTex(P, tier, job.tex); delete P.jobs[tier];
+            addTex(P, tier, job.tex); delete P.jobs[tier]; texLanded(P);
           }
         }
         for (var i = 0; i < sizes.length; i++) sprite(d, sizes[i], opts.spriteOpts);

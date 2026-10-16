@@ -100,7 +100,7 @@
   }
   function scheduleQueue() {
     if (queued) return; queued = true;
-    if (typeof requestIdleCallback === 'function') requestIdleCallback(pumpQueue, { timeout: 500 }); else setTimeout(pumpQueue, 40);
+    if (typeof requestIdleCallback === 'function') requestIdleCallback(pumpQueue, { timeout: 200 }); else setTimeout(pumpQueue, 40);
   }
   GL.precompile = function (name, vs, fs) {
     if (!ensure() || programs.has(name) || pending.has(name)) return;

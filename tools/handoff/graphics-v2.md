@@ -32,3 +32,26 @@ GL planets have real relief lighting, cloud shadows, city lights, atmosphere; 2D
 - Hard-coded indigo in canvas-drawn UI (council hall, design stage background) only gets cooled by the grade pass.
 - GL star sprites in the galaxy map were not reviewed on real hardware.
 - Software-GL perf: first GL draw in a page can take seconds (shader compile); `main.js` warms after first paint.
+  **Oct 2026 hitch pass** (review items 22–24, 27, 29, 30, 32): nothing in the gfx layer blocks a frame on shader
+  compiles or texture generation any more —
+  - `Gfx.Planets.sprite()` / `draw()` draw a 64 px placeholder texture on the first frame of a new planet and build the
+    real tiers in the sliced background queue; a sprite made before its tier exists is repainted IN PLACE when the tier
+    lands (`cv.pending`, `opts.onReady(cv)`, Bus `planets:sprite (desc, cv, final)`). UI code that copies a sprite into
+    its own canvas (side-colony `planetCanvas`, combat pre-battle card) only picks the sharp version up on its next
+    render; wire `onReady` or the bus event there if the soft first paint is noticeable. `opts.sync = true` restores the
+    blocking form (scenes.js `planetStatic` uses it: static layers are baked once).
+  - `Gfx.Space.drawStarSurface` builds the 512×256 surface texture row by row in the background and draws a graded
+    disc meanwhile (`opts.sync` blocks).
+  - `GLPlanets.supported()` never blocks: it starts `warm()` (noise volume in ~14 idle slices, one shader compile per
+    slice, two texture uploads, then polling) and returns false until ready; `supported(true)` is the blocking form for
+    tools/benchmarks (test-glplanets.html uses it).
+  - `GL.precompile(name, vs, fs)` + `GL.ready(name)`: background compiles, one program per idle slot, no status query
+    until `KHR_parallel_shader_compile` says it is done (or a 400 ms grace period without the extension). `GLSpace.warm()`
+    / `GLFx.warm({async:true})` use it; `GLFx.warm()` without options is still the blocking form `create()` relies on.
+    `GLSpace.warm({vortex:true})` is now opt-in (it builds a large CPU buffer).
+  - `GL.begin` caps each dimension at MAX_TEXTURE_SIZE and shrinks the shared canvas back to the recent peak.
+  - `Perf`: never raises above the heuristic cap on a software renderer; sets `<html data-fx>` for theme-v2.
+  - Measured on this sandbox (SwiftShader): low tier system screen long task 908 → 233 ms; GPU-off zoom 306 → 92 ms;
+    high-tier boot long tasks 6 (1.56 s) → 3 (0.85 s). Still open: the galaxy map's first frame (0.3–0.9 s: galaxymap.js
+    nebula + `Space.makeBackdrop` on the CPU, or GL backdrop/star sprites + blit on software GL) and the per-frame cost
+    of the CPU planet renderer at R ≥ 200 (system screen, ~100 ms per repaint).

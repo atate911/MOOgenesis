@@ -161,7 +161,10 @@
     looks.forEach(function (lk, idx) {
       var d = { look: lk, seed: seed + (q.get('vary') ? idx : ''), inhabited: inh, color: '#4a90e8', rings: rings, bands: bands };
       var cv = document.createElement('canvas'), W = Math.round(R * (rings ? 4.6 : 2.9)), c = cv.getContext('2d');
-      if (spr) { var sp = Planets.sprite(d, spr, { dpr: DPR, lightAngle: la, lightElev: le }); cv.width = sp.width; cv.height = sp.height; c.drawImage(sp, 0, 0); }
+      if (spr) {   // sprites never block: the canvas shows the best tier built so far and onReady repaints the copy once the final tier lands
+        var paint = function (sp) { cv.width = sp.width; cv.height = sp.height; c.drawImage(sp, 0, 0); };
+        paint(Planets.sprite(d, spr, { dpr: DPR, lightAngle: la, lightElev: le, onReady: paint }));
+      }
       else {
         cv.width = W * DPR; cv.height = W * DPR; cv.style.width = W + 'px'; cv.style.height = W + 'px'; c.scale(DPR, DPR);
         var pl = D.getPlanet(d); if (lk !== 'asteroids') D.requestTex(pl, q.get('tier') ? +q.get('tier') : 512, true);

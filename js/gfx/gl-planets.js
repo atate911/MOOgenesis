@@ -174,19 +174,22 @@
     return true;
   }
   function buildNoise() { while (!noiseStep()) { /* run every remaining slice */ } return NOISE; }
-  let noiseTex = null, noiseGl = null;
+  let noiseTex = null, noiseGl = null, noiseHalf = null;
+  function uploadHalf(g, data) { g.activeTexture(g.TEXTURE0 + 6); const t = mkNoiseTex(g, data); g.activeTexture(g.TEXTURE0); return t; }
+  function mkNoiseTex(g, data) {
+    const t = g.createTexture(); g.bindTexture(g.TEXTURE_3D, t);
+    g.texImage3D(g.TEXTURE_3D, 0, g.RGBA16F, NZ, NZ, NZ, 0, g.RGBA, g.HALF_FLOAT, data);
+    g.texParameteri(g.TEXTURE_3D, g.TEXTURE_MIN_FILTER, g.LINEAR); g.texParameteri(g.TEXTURE_3D, g.TEXTURE_MAG_FILTER, g.LINEAR);
+    g.texParameteri(g.TEXTURE_3D, g.TEXTURE_WRAP_S, g.REPEAT); g.texParameteri(g.TEXTURE_3D, g.TEXTURE_WRAP_T, g.REPEAT); g.texParameteri(g.TEXTURE_3D, g.TEXTURE_WRAP_R, g.REPEAT);
+    return t;
+  }
   function ensureNoiseTex(g) {
     if (noiseTex && noiseGl === g && !g.isContextLost()) return noiseTex;
     const nz = buildNoise();
-    const mk = data => {
-      const t = g.createTexture(); g.bindTexture(g.TEXTURE_3D, t);
-      g.texImage3D(g.TEXTURE_3D, 0, g.RGBA16F, NZ, NZ, NZ, 0, g.RGBA, g.HALF_FLOAT, data);
-      g.texParameteri(g.TEXTURE_3D, g.TEXTURE_MIN_FILTER, g.LINEAR); g.texParameteri(g.TEXTURE_3D, g.TEXTURE_MAG_FILTER, g.LINEAR);
-      g.texParameteri(g.TEXTURE_3D, g.TEXTURE_WRAP_S, g.REPEAT); g.texParameteri(g.TEXTURE_3D, g.TEXTURE_WRAP_T, g.REPEAT); g.texParameteri(g.TEXTURE_3D, g.TEXTURE_WRAP_R, g.REPEAT);
-      return t;
-    };
+    const mk = data => mkNoiseTex(g, data);
     g.activeTexture(g.TEXTURE0 + 6);
-    noiseTex = { t1: mk(nz.d1), t2: mk(nz.d2) };
+    if (noiseHalf && noiseGl === g && !g.isContextLost()) { noiseTex = { t1: noiseHalf, t2: mk(nz.d2) }; noiseHalf = null; }   // warm() uploaded the first volume in an earlier slot
+    else noiseTex = { t1: mk(nz.d1), t2: mk(nz.d2) };
     g.activeTexture(g.TEXTURE0);
     noiseGl = g;
     return noiseTex;
@@ -1124,7 +1127,7 @@ void main() {
     if (ctxHooked) return;
     const cv = GL.canvas && GL.canvas(); if (!cv) return;
     ctxHooked = true;
-    cv.addEventListener('webglcontextlost', () => { for (const k in progs) delete progs[k]; noiseTex = null; supportedCache = null; });
+    cv.addEventListener('webglcontextlost', () => { for (const k in progs) delete progs[k]; noiseTex = null; noiseHalf = null; supportedCache = null; });
   }
   function startCompile(name) {
     let e = progs[name]; if (e) return e;
@@ -1812,7 +1815,7 @@ void main() {
   // Every slice runs in an idle callback (setTimeout fallback): one shader compile per slice (the driver compiles them in order, and
   // flooding it would stall any frame that uses GL meanwhile), the noise volume in ~20 ms pieces, then polling until all are linked.
   const warmCbs = []; let warming = false;
-  const idle = fn => (typeof requestIdleCallback === 'function' ? requestIdleCallback(fn, { timeout: 250 }) : setTimeout(fn, 32));
+  const idle = fn => (typeof requestIdleCallback === 'function' ? requestIdleCallback(fn, { timeout: 120 }) : setTimeout(fn, 32));
   function warm(cb) {
     if (!GL || !GL.supported()) { if (cb) cb(false); return; }
     if (cb) warmCbs.push(cb);
@@ -1821,18 +1824,19 @@ void main() {
     const order = ['rocky'].concat(Object.keys(SRC).filter(k => k !== 'rocky'));
     let ci = 0, noiseUp = false;
     const finish = ok => { warming = false; if (supportedCache === null) supportedCache = ok; const cbs = warmCbs.splice(0); for (const f of cbs) { try { f(ok); } catch (e) { console.warn('[GLPlanets] warm callback', e); } } };
-    (function next() {
+    (function next(dl) {
       try {
         if (!GL.supported()) { finish(false); return; }
         if (ci < order.length) startCompile(order[ci++]);           // one program per slice
         else if (!NOISE) noiseStep();
-        else if (!noiseUp) { ensureNoiseTex(GL.gl()); noiseUp = true; }
+        else if (!noiseUp) { const g = GL.gl(); if (!noiseTex && !noiseHalf) { noiseHalf = uploadHalf(g, NOISE.d1); noiseGl = g; } else { ensureNoiseTex(g); noiseUp = true; } }
         else {
           let pending = 0;
           for (const k in SRC) { const e = progs[k]; if (e && e.state === 'pending' && !finishCompile(e, false)) pending++; }
           if (!pending) { finish(!!(progs.rocky && progs.rocky.state === 'ready')); return; }
         }
-        if (ci < order.length && !NOISE) noiseStep();                // overlap: a noise slice while the driver links the program just issued
+        // noise slices overlap the driver's link work; when the browser grants real idle time, use it (a busy page only gets the timeout)
+        if (!NOISE) { noiseStep(); while (dl && !dl.didTimeout && dl.timeRemaining() > 25 && !noiseStep()) { /* more slices in the same idle period */ } }
       } catch (e) { console.warn('[GLPlanets] warm failed', e); finish(false); return; }
       idle(next);
     })();

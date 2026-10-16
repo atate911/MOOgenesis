@@ -120,7 +120,9 @@ function start() {
     if (qs.has('anim')) $('anim').checked = qs.get('anim') === '1';
     if (qs.has('tier')) { $('tierSel').value = qs.get('tier'); M.Perf.setPreset(qs.get('tier')); }
     if (!CP) $('cpuWrap').style.display = 'none';
-    $('gpu').textContent = (GP.supported() ? 'GL ok' : 'GL UNSUPPORTED (' + (GP.fallback ? 'Canvas2D fallback active' : 'fallback off') + ')') + ' · ' + (M.HW.gpu || '');
+    // supported() never blocks any more: it starts the idle-sliced warm-up and reports false until the shaders are linked
+    var gpuLabel = function () { $('gpu').textContent = (GP.supported() ? 'GL ok' : M.Gfx.GL.supported() ? 'GL compiling…' : 'GL UNSUPPORTED (' + (GP.fallback ? 'Canvas2D fallback active' : 'fallback off') + ')') + ' · ' + (M.HW.gpu || ''); };
+    gpuLabel(); GP.warm(gpuLabel);
 
     var view = $('view'), vctx = view.getContext('2d'), cview = $('viewCpu'), cctx = cview.getContext('2d');
     var grid = $('grid'), gctx = grid.getContext('2d'), small = $('small'), sctx = small.getContext('2d');
@@ -225,7 +227,7 @@ function start() {
       return { label: label, ms: (performance.now() - t) / n };
     }
     window.__bench = function (dpr) {
-      dpr = dpr || 1;
+      dpr = dpr || 1; GP.supported(true);                       // block until every program is linked: the benchmark times draws, not compiles
       var c = document.createElement('canvas'); c.width = 1400 * dpr; c.height = 900 * dpr; var cx = c.getContext('2d'); cx.setTransform(dpr, 0, 0, dpr, 0, 0);
       var res = [];
       ['terran', 'gasgiant', 'inferno', 'barren'].forEach(function (lk) {
@@ -248,7 +250,7 @@ function start() {
       var looks12 = ['terran', 'jungle', 'ocean', 'arid', 'steppe', 'desert', 'tundra', 'gaia', 'inferno', 'toxic', 'barren', 'gasgiant'];
       var res = [], gl = M.Gfx.GL;
       (tiers || ['low', 'medium', 'high', 'ultra']).forEach(function (tier) {
-        M.Perf.setPreset(tier);
+        M.Perf.setPreset(tier); if (gl.supported()) GP.supported(true);
         var dpr = M.Perf.dpr(), c = document.createElement('canvas'); c.width = Math.round(1400 * dpr); c.height = Math.round(900 * dpr);
         var cx = c.getContext('2d'); cx.setTransform(dpr, 0, 0, dpr, 0, 0);
         function run(n, fn) { for (var i = 0; i < 4; i++) fn(i); if (gl.supported()) syncGL(); var t = performance.now(); for (var k = 0; k < n; k++) fn(k); if (gl.supported()) syncGL(); return (performance.now() - t) / n; }
