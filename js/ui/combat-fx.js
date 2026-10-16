@@ -996,7 +996,7 @@
         const orbit = R * 1.5, bs = min(grid.cw * 0.3, R * 0.9);
         for (let i = 0; i < nb; i++) {
           const a = t * 0.16 + i / nb * TAU + 0.6, bx = x + cos(a) * orbit * 1.0, by = y + sin(a) * orbit * 0.62;
-          try { S0.draw(ctx, { race: u.race, hull: 5, x: bx, y: by, size: bs, angle: a + PI / 2, color: u.color, t: t + i, seed: i * 11 + 3 }); } catch (err) { /* art optional */ break; }
+          try { S0.draw(ctx, { race: u.race, hull: 5, x: bx, y: by, size: bs, angle: a + PI / 2, color: u.color, t: t + i, seed: i * 11 + 3, vkey: B.planet ? 'planet|' + B.planet.id : '' }); } catch (err) { /* art optional */ break; }
         }
       }
       // label + base strength

@@ -25,7 +25,8 @@ silhouette per class at 48–64 px and a frigate→doomstar progression that rea
 | Stargate | `original--09-stargate.png` | Ring with a cyan lattice; the animated event horizon fits its aperture |
 
 **Pipeline:** `python3 -I tools/build-ship-art.py [DIR ...]` (needs Pillow and numpy) collects images per class by filename
-from `MOOg images/ship-variants/` (a class without new images falls back to its pick in the table above). It keys out flat green
+from `MOOg images/fleet-ai-evaluation/` and `MOOg images/ship-variants/`, skips near-duplicates, and makes the pick in the
+table above variant 1 (23 distinct variants today: 2–3 per class). Combat orbital bases vary per planet (`vkey: 'planet|<id>'`). It keys out flat green
 backgrounds, re-crops, downscales (1024 px long side) and splits
 each variant into `ship-<class>-<n>.webp` (neutral grey; the magenta replaced by its own brightness) and `ship-<class>-<n>-team.webp`
 (white, alpha = livery weight). It also detects engine nozzles and samples hardpoints, damage sites and nav lights. It writes

@@ -3,10 +3,11 @@
 
     python3 -I tools/build-ship-art.py [SOURCE_DIR ...]          (run from the repo root)
 
-Sources: every .png/.webp in the given folders (default: "MOOg images/ship-variants" when it exists) whose filename names a
-hull class (frigate, destroyer, cruiser, battleship, doomstar, starbase, battlestation, star-fortress, stargate) becomes one
-variant of that class, in filename order.  A class with no new images keeps its Fleet AI pick (DEFAULT_PICKS).  Pass
---with-defaults to keep the Fleet AI pick as an extra variant even when new images exist.
+Sources: every .png/.webp in the given folders (default: "MOOg images/fleet-ai-evaluation" + "MOOg images/ship-variants")
+whose filename names a hull class (frigate, destroyer, cruiser, battleship, doomstar, starbase, battlestation, star-fortress,
+stargate) becomes one variant of that class, in filename order; near-duplicates are skipped.  The class's DEFAULT_PICKS
+image is always variant 1 when present (structures and screens without a design use variant 1).  With explicit folders,
+a class with no images there keeps its DEFAULT_PICKS image; --with-defaults adds it even when it has images.
 In-game, each ship design gets a stable pseudo-random variant of its class (hash of empire + slot + name).
 
 Each variant is
@@ -227,8 +228,18 @@ def build(key, path, stem, structure):
     }
 
 
+def thumb(path):
+    """small grey silhouette+shading fingerprint of the visible ship (catches re-uploads and re-framed copies)"""
+    im = key_green(Image.open(path).convert('RGBA'))
+    bb = im.getchannel('A').point(lambda a: 255 if a > 128 else 0).getbbox()
+    g = im.crop(bb).convert('LA').resize((48, 24), Image.BILINEAR)
+    return np.asarray(g).astype(np.float32) / 255.0
+
+
 def sources(argv):
-    dirs = [a for a in argv if not a.startswith('--')] or ([VARIANTS] if os.path.isdir(VARIANTS) else [])
+    """class -> image paths.  Default folders: the Fleet AI set + MOOg images/ship-variants.  Near-identical images (the
+    Fleet AI 'revised' set reuses four originals) are kept once; the class's DEFAULT_PICK comes first, so it is variant 1."""
+    dirs = [a for a in argv if not a.startswith('--')] or [FLEET_AI] + ([VARIANTS] if os.path.isdir(VARIANTS) else [])
     found = {k: [] for k in CLASSES}
     for d in dirs:
         for f in sorted(glob.glob(os.path.join(d, '**', '*'), recursive=True)):
@@ -242,7 +253,20 @@ def sources(argv):
     out = {}
     for k in CLASSES:
         dflt = os.path.join(FLEET_AI, DEFAULT_PICKS[k])
-        out[k] = found[k] + ([dflt] if not found[k] or '--with-defaults' in argv else [])
+        cand = found[k][:]
+        if dflt in cand:
+            cand.remove(dflt)
+            cand.insert(0, dflt)
+        elif not cand or '--with-defaults' in argv:
+            cand.insert(0, dflt)
+        keep, prints = [], []
+        for f in cand:
+            t = thumb(f)
+            if any(np.abs(t - q).mean() < 0.035 for q in prints):
+                print('  skip duplicate %s' % os.path.relpath(f, ROOT))
+                continue
+            keep.append(f); prints.append(t)
+        out[k] = keep
     return out
 
 
