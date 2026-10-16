@@ -279,8 +279,9 @@
     const eqL = mk(ctx.createBiquadFilter()), eqH = mk(ctx.createBiquadFilter());
     eqL.type = 'lowshelf'; eqL.frequency.value = 55; eqL.gain.value = 2.0;      // deep bass: the weight lives under 60 Hz, not at 150      // weight
     const eqM = mk(ctx.createBiquadFilter()); eqM.type = 'peaking'; eqM.frequency.value = 220; eqM.gain.value = -2.5; eqM.Q.value = 0.9;   // (static part of the mud control; the dynamic part is the multiband stage below)
-    eqH.type = 'highshelf'; eqH.frequency.value = 3200; eqH.gain.value = 1.5;    // presence, mastering-mild
-    const eqA = mk(ctx.createBiquadFilter()); eqA.type = 'highshelf'; eqA.frequency.value = 9000; eqA.gain.value = 3.0;   // air, mastering-mild
+    eqH.type = 'highshelf'; eqH.frequency.value = 3200; eqH.gain.value = 0.5;    // presence, mastering-mild
+    const eqA = mk(ctx.createBiquadFilter()); eqA.type = 'highshelf'; eqA.frequency.value = 9000; eqA.gain.value = 1.5;
+    const eqS = mk(ctx.createBiquadFilter()); eqS.type = 'peaking'; eqS.frequency.value = 3600; eqS.gain.value = -1.5; eqS.Q.value = 1.2;   // where shrillness lives   // air, mastering-mild
     // glue: a slow, shallow compressor on the whole orchestra (2:1 above -20 dB, 40 ms in, 400 ms out) so tutti swells sit together
     // and the master limiter is left with transients only
     const glue = mk(ctx.createDynamicsCompressor());
@@ -296,7 +297,7 @@
       inG.connect(split); split.connect(lToM, 0); split.connect(rToM, 1); split.connect(lToS, 0); split.connect(rToS, 1);
       lToM.connect(mid); rToM.connect(mid); lToS.connect(side); rToS.connect(side);
       const sHp = mk(ctx.createBiquadFilter()); sHp.type = 'highpass'; sHp.frequency.value = 120; sHp.Q.value = 0.7;
-      const sAir = mk(ctx.createBiquadFilter()); sAir.type = 'highshelf'; sAir.frequency.value = 6000; sAir.gain.value = 2.5;
+      const sAir = mk(ctx.createBiquadFilter()); sAir.type = 'highshelf'; sAir.frequency.value = 6000; sAir.gain.value = 1.0;
       const sW = mk(ctx.createGain()); sW.gain.value = w; const sNeg = mk(ctx.createGain()); sNeg.gain.value = -1;
       side.connect(sHp); sHp.connect(sAir); sAir.connect(sW);
       mid.connect(merge, 0, 0); sW.connect(merge, 0, 0);            // L' = M + S'
@@ -318,7 +319,7 @@
       lo.out.disconnect(); lo.out.connect(lc); lc.connect(lg); lg.connect(out);
       return { in: inG, out };
     })();
-    eng.musicBus.connect(eqL); eqL.connect(eqM); eqM.connect(mb.in); mb.out.connect(eqH); eqH.connect(eqA); eqA.connect(width.in); width.out.connect(glue); glue.connect(glueMake); glueMake.connect(sat); sat.connect(duck); duck.connect(master);
+    eng.musicBus.connect(eqL); eqL.connect(eqM); eqM.connect(mb.in); mb.out.connect(eqH); eqH.connect(eqS); eqS.connect(eqA); eqA.connect(width.in); width.out.connect(glue); glue.connect(glueMake); glueMake.connect(sat); sat.connect(duck); duck.connect(master);
     eng.glue = glue;
     eng.duck = duck; eng.duckUntil = 0; eng.duckLevel = 1;
     // dip the music by `depthDb` for `hold` seconds (15 ms in, ~250 ms release). While an earlier duck is still holding, the depth
@@ -404,11 +405,11 @@
     // Nothing here adds what a recording lacks; it clears the space between the recordings.
     const STRIPS = {
       bass:  { hp: 30, cuts: [[200, -3.5, 1.0]], comp: [-22, 3, 0.01, 0.2] },   // (no spread: the bass stays centred and solid)
-      pad:   { hp: 150, hp2: true, cuts: [[260, -3.5, 0.9], [3200, 1, 0.8], [9000, 1.5, 'hs']], spread: [0.014, 0.22] },
+      pad:   { hp: 150, hp2: true, cuts: [[260, -3.5, 0.9], [3200, 0.5, 0.8]], spread: [0.014, 0.22] },
       arp:   { hp: 140, cuts: [[250, -1.5, 1.0]], spread: [0.011, 0.12] },
-      lead:  { hp: 100, cuts: [[250, -2.5, 1.0], [2800, 2, 0.9]], comp: [-20, 2, 0.02, 0.25] },
+      lead:  { hp: 100, cuts: [[250, -2.5, 1.0], [2800, 1, 0.9]], comp: [-20, 2, 0.02, 0.25] },
       bell:  { hp: 300, cuts: [[8000, 1, 'hs']], spread: [0.016, 0.25] },
-      choir: { hp: 170, hp2: true, cuts: [[300, -2, 1.0], [6000, 2, 'hs']], spread: [0.018, 0.25], excite: [2600, 0.18] },   // the far choir gets a little sheen of its own making
+      choir: { hp: 170, hp2: true, cuts: [[300, -2, 1.0], [6000, 1, 'hs']], spread: [0.018, 0.25], excite: [2600, 0.12] },   // the far choir gets a little sheen of its own making
       drums: { hp: 30, cuts: [[220, -2, 1.2]], par: [-24, 4, 0.003, 0.12, 0.35], trans: 0.55 },   // weight (parallel) and hit (transient)
       fx:    { hp: 60 },
     };
