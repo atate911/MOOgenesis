@@ -6,7 +6,8 @@ where `fetch` is blocked) and plays them through the same voice graph as the syn
 so the score sounds the way it always did until the files arrive, and on a machine without them.
 
 Provenance
-- Orchestra, chorus and percussion: **Sonatina Symphonic Orchestra 2.0** (SSO), created by Mattias Westlund (2011) and developed
+- Chorus, celeste, crotales, tubular chimes, bell tree, triangle, tambourine, sleigh bells, wood blocks, shakers, timpani and the
+  Swell Gamba organ stop: **Sonatina Symphonic Orchestra 2.0** (SSO), created by Mattias Westlund (2011) and developed
   further by Peter Eastman and contributors, released under the **Creative Commons Sampling Plus 1.0** licence
   (https://creativecommons.org/licenses/sampling+/1.0/ — sampling, transforming and redistributing the samples inside another work is
   allowed, commercially or not; the samples may not be used in advertising). Source: https://github.com/peastman/sso.
@@ -20,7 +21,9 @@ Provenance
   shortens the loops to a memory budget and encodes each sample. Mono instruments are one microphone channel of the stereo recording
   (the side of the stage the section sits on), never the left+right sum: these recordings are wide and nearly uncorrelated, and a sum
   comb-filters them.
-- Marimba, claves, anvil, snare taps and field drums: **VSCO 2 Community Edition** by Versilian Studios (Sam Gossner, Simon Dalzell;
+- The orchestra core (violin, viola and cello sections, solo contrabass, horn, trumpet, trombone, tuba, flute, oboe, clarinet, bassoon,
+  harp, glockenspiel, marimba, bass drum, snare, cymbals, gong, tambourine, claves, anvil, snare taps, field drums, pipe organ):
+  **VSCO 2 Community Edition** by Versilian Studios (Sam Gossner, Simon Dalzell;
   sample cutting Elan Hickler), **CC0 1.0** (public domain). Source: https://github.com/sgossner/VSCO-2-CE.
 - Analogue ensemble pads and the sub bass: synthesized for this game by `tools/samples/synth.py` (nine-voice stereo unison with
   per-voice drift, a slowly breathing four-pole lowpass, tape-like saturation and a wide three-tap chorus).

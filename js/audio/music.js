@@ -232,7 +232,7 @@
     organ: smp('organ', 0.13, {}, 'organ'), organSoft: smp('organSoft', 0.14, { att: 0.12 }, 'organ'),
     flutes: smp('fluteSus', 0.3, { att: 0.08 }, 'flute'),
     // basses: the bass section
-    deep: smp('cbSus', 0.3, { att: 0.1 }, 'deep'), sub: smp('cbSus', 0.3, { att: 0.1 }, 'sub'),
+    deep: smp('cbSus', 0.3, { att: 0.1, sub: 0.55 }, 'deep'), sub: smp('cbSus', 0.3, { att: 0.1, sub: 0.7 }, 'sub'),
     moog: smp('cbPizz', 0.55, {}, 'moog'), pulse: smp('cbPizz', 0.5, {}, 'pulse'),
     // brass and winds (the horns crossfade between their mp and ff recordings with the written dynamic)
     horn: smp('hornSus', 0.34, { vib: 0, att: 0.09 }, 'horn'),
@@ -532,7 +532,7 @@
         if (ramp) v *= ramp[0] + (ramp[1] - ramp[0]) * (hits > 1 ? hi / (hits - 1) : 1);
         hi++;
         const m = nearestPc(sg.ch.bassPc, num(P.center, 40));
-        emitDrum(C, 'drums', { v: 'sample', smp: 'timpani', fb: 'timp', fbo: { f: mtof(m), dur: num(P.dur, 1.8) }, f: mtof(m), lvl: 1.0 }, s.start + beat, v);
+        emitDrum(C, 'drums', { v: 'sample', smp: 'timpani', fb: 'timp', fbo: { f: mtof(m), dur: num(P.dur, 1.8) }, f: mtof(m), lvl: 1.0, sub: 0.3, dur: 1.6 }, s.start + beat, v);
         if (v > 0.6) emitDrum(C, 'drums', { v: 'sample', smp: 'bassDrum', fb: 'kick', fbo: { f: 44, f0: 120, dur: 0.4 }, lvl: 0.4 }, s.start + beat, v);
       }
     }

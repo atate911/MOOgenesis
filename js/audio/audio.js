@@ -3,7 +3,7 @@
 // createEngine, offline, renderWindowed, Voices, playVoice, kit}. Music lives in music.js, effects in sfx.js.
 //
 // Architecture: an "engine" (createEngine) wraps one AudioContext (real or Offline) with
-//   voices -> layer/sfx buses -> musicBus (-> eq -> glue compressor -> duck) / sfxBus -> master -> highpass -> compressor -> soft-clip limiter -> outGain -> destination
+//   voices -> layer/sfx buses -> musicBus (-> eq -> M/S width -> glue compressor -> duck) / sfxBus -> master -> highpass -> compressor -> soft-clip limiter -> outGain -> destination
 // plus two convolution reverbs (music hall, sfx plate). Every voice is a small graph that is stopped + disconnected when it ends.
 // The duck stage dips the music for a moment under big sound effects (eng.duckMusic, driven by sfx.js) so stingers read without being loud.
 (function (M) {
@@ -162,7 +162,7 @@
     return true;
   };
   function makeIR(ctx, o) { const b = new IRBuilder(ctx, o); b.run(Infinity); return b.buf; }
-  const IR_HALL = { seconds: 3.8, rt60: 3.3, pre: 0.036, diff: 0.05, hiStart: 0.44, hiEnd: 0.06, damp: 1.45, er: 8, seed: 11 };   // a large, open hall: long dark tail, a little more pre-delay
+  const IR_HALL = { seconds: 3.8, rt60: 3.3, pre: 0.036, diff: 0.05, hiStart: 0.6, hiEnd: 0.14, damp: 1.3, er: 8, seed: 11 };   // a large, open hall: long dark tail, a little more pre-delay
   const IR_PLATE = { seconds: 1.2, rt60: 1.0, pre: 0.003, diff: 0.008, hiStart: 0.85, hiEnd: 0.25, damp: 0.7, er: 0, seed: 23 };
 
   function softClipCurve() {                      // |x|<=0.6 linear, then tanh knee toward 0.97 (input pre-scaled by 0.5)
@@ -272,17 +272,27 @@
     master.connect(hp); hp.connect(comp); comp.connect(pre); pre.connect(shaper); shaper.connect(outGain); outGain.connect(ctx.destination);
     eng.master = master; eng.outGain = outGain;
     eng.musicBus = mk(ctx.createGain());
-    // gentle mastering tilt for music only: tighter lows, a little air
+    // music-only tone stage, left flat on purpose (the shelves are kept as hooks for a listening pass)
     const eqL = mk(ctx.createBiquadFilter()), eqH = mk(ctx.createBiquadFilter());
-    eqL.type = 'lowshelf'; eqL.frequency.value = 120; eqL.gain.value = -1.5;
-    eqH.type = 'highshelf'; eqH.frequency.value = 3200; eqH.gain.value = 2.0;
+    eqL.type = 'lowshelf'; eqL.frequency.value = 70; eqL.gain.value = 0;        // neutral: the sub layers and the recordings carry the weight
+    eqH.type = 'highshelf'; eqH.frequency.value = 3200; eqH.gain.value = 0;      // neutral: nothing is invented above what the recordings carry
+    const eqA = mk(ctx.createBiquadFilter()); eqA.type = 'highshelf'; eqA.frequency.value = 9000; eqA.gain.value = 0;
     // glue: a slow, shallow compressor on the whole orchestra (2:1 above -20 dB, 40 ms in, 400 ms out) so tutti swells sit together
     // and the master limiter is left with transients only
     const glue = mk(ctx.createDynamicsCompressor());
     glue.threshold.value = -24; glue.knee.value = 18; glue.ratio.value = 1.6; glue.attack.value = 0.06; glue.release.value = 0.5;
     const glueMake = mk(ctx.createGain()); glueMake.gain.value = dbtoa(1);
     const duck = mk(ctx.createGain());
-    eng.musicBus.connect(eqL); eqL.connect(eqH); eqH.connect(glue); glue.connect(glueMake); glueMake.connect(duck); duck.connect(master);
+    const width = (function () {                   // M/S width: L' = M + w*S, R' = M - w*S  (w = 1.5 -> side +3.5 dB)
+      const w = 1.5, inG = mk(ctx.createGain()), split = mk(ctx.createChannelSplitter(2)), merge = mk(ctx.createChannelMerger(2));
+      const a = (1 + w) / 2, b = (1 - w) / 2;      // L' = a*L + b*R ; R' = b*L + a*R
+      const ll = mk(ctx.createGain()), lr = mk(ctx.createGain()), rl = mk(ctx.createGain()), rr = mk(ctx.createGain());
+      ll.gain.value = a; lr.gain.value = b; rl.gain.value = b; rr.gain.value = a;
+      inG.connect(split); split.connect(ll, 0); split.connect(lr, 1); split.connect(rl, 0); split.connect(rr, 1);
+      ll.connect(merge, 0, 0); lr.connect(merge, 0, 0); rl.connect(merge, 0, 1); rr.connect(merge, 0, 1);
+      return { in: inG, out: merge };
+    })();
+    eng.musicBus.connect(eqL); eqL.connect(eqH); eqH.connect(eqA); eqA.connect(width.in); width.out.connect(glue); glue.connect(glueMake); glueMake.connect(duck); duck.connect(master);
     eng.glue = glue;
     eng.duck = duck; eng.duckUntil = 0; eng.duckLevel = 1;
     // dip the music by `depthDb` for `hold` seconds (15 ms in, ~250 ms release). While an earlier duck is still holding, the depth

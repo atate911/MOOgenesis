@@ -33,6 +33,12 @@ Versions follow `MAJOR.MINOR.PATCH`; the live version is the `VERSION` file.
   partly anti-phase), and folding them to mono by averaging comb-filtered every section with 4-8 dB notches across 1-8 kHz. Mono
   instruments now take one microphone channel (the one on their side of the stage) instead of the sum; the string and brass sections
   keep the library's own loops instead of shortened ones.
+  Natural top end instead of equalised darkness: the orchestra core (string sections, horn, trumpet, trombone, tuba, winds, harp, glock,
+  drums, cymbals, gong) is built from VSCO 2 Community Edition again, this time correctly (stereo sections in their stage seats, one
+  microphone channel where mono, two recorded dynamic layers crossfaded, no left+right summing); measured at 5 kHz the VSCO recordings
+  carry 10-15 dB more than Sonatina's distant perspective. Sonatina stays only for what VSCO never recorded: the chorus, celeste, crotales,
+  tubular chimes, bell tree, small percussion, timpani and the soft organ stop. The master tone shelves are flat; a sine sub-octave layer
+  sits under the basses and timpani (a deliberate Zimmer layer, not a correction), and a mid/side stage widens the image.
 - Symphonic re-orchestration and film-style flow. Every synth pluck, FM bell, pad, bass and drum-machine part in the score is now a
   recorded instrument: pizzicato string sections, marimba, glockenspiel, harp, oboe / clarinet / bassoon, contrabass, bass drum,
   snare, field drums, tambourine, claves, anvil, stick taps (the two machine races keep a little sequencer colour). The bell
