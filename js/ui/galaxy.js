@@ -22,6 +22,7 @@
     .gx-msg { pointer-events:auto; margin-left:auto; max-width:28rem; display:flex; flex-direction:column; gap:.3rem; }
     .gx-msg .m { padding:.3rem .7rem; background:rgba(8,12,34,.78); border-left:3px solid var(--brass); font-size:.9rem; }
     .gx-msg .m.bad { border-left-color:var(--rose); } .gx-msg .m.ok { border-left-color:var(--leaf); }
+    .gx-wait { margin-right:.8rem; font:500 .85rem var(--font-display); letter-spacing:.06em; color:var(--brass-hi); opacity:.9; white-space:nowrap; }
     .gx-busy { position:absolute; inset:0; z-index:20; display:none; align-items:center; justify-content:center; background:rgba(3,5,16,.45); backdrop-filter:blur(1.5px); }
     .gx-busy.on { display:flex; } .gx-busy .box { padding:1rem 2rem; font:400 1.4rem var(--font-display); color:var(--brass-hi); background:rgba(8,12,34,.9); border:1px solid var(--brass-lo); }
     .gx-busy .spin { display:inline-block; width:1.1rem; height:1.1rem; margin-right:.7rem; vertical-align:-.15rem; border:2px solid var(--brass-lo); border-top-color:var(--brass-hi); border-radius:50%; animation:gx-spin 1s linear infinite; }
@@ -149,7 +150,12 @@
     if (!G.S || G.busy) return;
     if (UI.modalOpen()) return;
     if (UI.Galaxy.pendingSend && UI.Galaxy.pendingSend() === false) return;      // a queued fleet move is accepted automatically (an invalid one stops the turn with its message)
-    if (M.Settings.get('confirmEndTurn')) { const ok = await UI.confirm('End the turn?'); if (!ok) return; }
+    if (M.Settings.get('confirmEndTurn')) {
+      const S = G.S, E = G.player(), issues = [];
+      for (const p of S.planets) if (p.owner === E.id && p.sliders[0] > 0 && !(p.build === -1 || (p.build >= 0 && E.designs[p.build]))) issues.push(p.name + ' spends on ships with no design to build');
+      if (E.research && E.research.slider.every(v => !v) && (E.research.total | 0) > 0) issues.push('no research field is funded');
+      if (issues.length) { const ok = await UI.confirm(h('div', h('p', 'End the turn anyway?'), h('ul', issues.slice(0, 6).map(t => h('li', t)))), { title: 'Before you end the turn' }); if (!ok) return; }
+    }
     UI.Galaxy.busy(true, 'Year ' + Q.year(G.S) + ' …');
     // 10 s without an answer is normal while the player reads a scene (combat, GNN, council, audience, landing), a modal or a held side-panel prompt:
     // those all carry their own controls, so the Skip escape is offered ONLY when nothing visible can answer the pending step (a genuinely stuck turn).
@@ -199,7 +205,15 @@
       const navBtns = NAV.map(([name, key, fn]) => UI.button(name, fn, { kbd: key.toUpperCase() }));
     const nextBtn = UI.button('Next turn', () => endTurn(), { primary: true, big: true, kbd: 'N' });
     const bar = h('nav.gx-bar', navBtns, h('span.gx-spacer'), nextBtn);
-    M.Bus.on('turn:processing', on => { navBtns.slice(1).forEach(b => b.classList.toggle('turn-locked', !!on)); nextBtn.classList.toggle('turn-locked', !!on); });   // "Game" (menu) stays usable; its Save/Load/Quit are gated separately
+    const waitEl = h('span.gx-wait');
+    bar.insertBefore(waitEl, nextBtn);
+    let waitTimer = 0;
+    const WAIT_LABEL = { explore: 'a scout report', colonize: 'the colony decision', battles: 'a battle', techChoice: 'a research choice', tech: 'a breakthrough', gnn: 'the news', council: 'the Council vote', councilResult: 'the Council ruling', diplomacy: 'an audience', ground: 'a ground battle', bombardPrompt: 'the bombard decision', bombard: 'the bombardment', event: 'an event', spyStealChoice: 'the spy choice', spySabotageChoice: 'the sabotage choice', aiPlan: 'the other empires', built: 'the shipyards', notice: 'a report' };
+    const paintWait = () => { const p = G.pending; waitEl.textContent = !G.busy ? '' : p ? 'Waiting for ' + (WAIT_LABEL[p.type] || p.type) + '…' : 'Turn in progress…'; };
+    M.Bus.on('turn:processing', on => {
+      navBtns.slice(1).forEach(b => b.classList.toggle('turn-locked', !!on)); nextBtn.classList.toggle('turn-locked', !!on);     // "Game" (menu) stays usable; its Save/Load/Quit are gated separately
+      clearInterval(waitTimer); waitTimer = on ? setInterval(paintWait, 250) : 0; paintWait();
+    });
       el = h('div.gx', mapWrap, side, bar);
       root.appendChild(el);
       mapWrap.appendChild(h('div.gx-top', hudEl, msgEl)); mapWrap.appendChild(busyEl);
@@ -217,7 +231,11 @@
         map.on('selectStar', id => { if (UI.Galaxy.pick) UI.Galaxy.pick(id); else UI.Galaxy.selectStar(id); });
         map.on('dblStar', id => { G.sel.star = id; if (UI.Screens.has('system')) UI.Screens.go('system', { star: id, from: 'galaxy' }); });
         map.on('selectFleet', fid => { G.sel.fleet = fid; const f = G.S.fleets.find(x => x.id === fid); if (f && f.owner === G.S.playerId) UI.Side.show(f.star >= 0 ? 'fleetDeploy' : 'fleetInfo', { star: f.star, fleet: fid }); else if (f) UI.Side.show('fleetInfo', { fleet: fid }); });
-        map.on('moveOrder', o => { const f = G.S.fleets.find(x => x.id === o.fleetId); if (!f || f.star < 0 || f.owner !== G.S.playerId) return; UI.Side.show('fleetDeploy', { star: f.star, dest: o.toStar }); });
+        map.on('moveOrder', o => {
+          const f = G.S.fleets.find(x => x.id === o.fleetId); if (!f || f.star < 0 || f.owner !== G.S.playerId) return;
+          if (UI.Side.current() === 'fleetDeploy' && UI.Galaxy.pick) { UI.Galaxy.pick(o.toStar); return; }      // the panel is open with the player's own counts: just set the destination
+          UI.Side.show('fleetDeploy', { star: f.star, dest: o.toStar, send: true });                              // otherwise a right-click is "send the fleet there"
+        });
       }
       UI.Galaxy.refresh();
       if (UI.Side.held) { UI.Side.showHeld(); return; }                                    // back from another screen while the turn waits on a prompt: the prompt, not the default panel

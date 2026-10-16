@@ -174,10 +174,11 @@ MOO.def(function (M) {
   };
   // conquest victory: only one empire left (or the human is dead)
   T.victory = function (S) {
-    if (Sim.Victory && Sim.Victory.check) { const v = Sim.Victory.check(S); if (v) return v; }      // council verdict, last empire standing, funeral (research/05 §8)
+    const playOn = !!(S.settings && S.settings.options && S.settings.options.playOn);          // the player chose "Keep playing" after winning: only a defeat ends the game now
+    if (Sim.Victory && Sim.Victory.check) { const v = Sim.Victory.check(S); if (v && !(playOn && v.reason !== 'defeat')) return v; }      // council verdict, last empire standing, funeral (research/05 §8)
     const live = S.empires.filter(e => e.alive);
     if (!S.empires[S.playerId].alive && !S.settings.playerAI) return { reason: 'defeat', winner: live.length ? live[0].id : -1 };
-    if (live.length === 1) return { reason: 'conquest', winner: live[0].id };
+    if (live.length === 1 && !playOn) return { reason: 'conquest', winner: live[0].id };
     return null;
   };
   const Sim_ = M.Sim; void Sim_;

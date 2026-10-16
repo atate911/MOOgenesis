@@ -277,6 +277,10 @@
     }), { danger: false, kbd: 'R', disabled: !canRetreat, tip: canRetreat ? 'Withdraw the whole fleet without a fight (R)' : 'You have no ships to withdraw' });
     acts.appendChild(bRet); acts.appendChild(bAuto); acts.appendChild(bFight);
     root.appendChild(acts);
+    // "select and move on": one tick and no further battle this game asks — Auto is applied straight away (Options › Gameplay turns it off again)
+    const autoAll = h('label.pb-autoall', h('input', { type: 'checkbox' }), ' Auto-resolve every battle this game');
+    autoAll.querySelector('input').addEventListener('change', e => { if (!e.target.checked) return; try { S.settings.options = S.settings.options || {}; S.settings.options.autoBattle = true; } catch (x) { /* ignore */ } UI.toast('Battles will be auto-resolved for the rest of this game (Options › Gameplay to change).', 'ok', 4000); finish('auto'); });
+    root.appendChild(autoAll);
     host.appendChild(root);
     UI.attention(tacticalDefault ? bFight : bAuto);                                                  // the turn waits on this choice: highlight + focus it
 
@@ -312,6 +316,7 @@
     Promise.all(jobs).then(() => { if (!token.dead && res.n) onUpdate(res); });
   }
 
+  UI.css('combat-autoall', `.pb-autoall { display:flex; align-items:center; gap:.4rem; margin:.5rem 0 0; font-size:.85rem; color:var(--mist); cursor:pointer; } .pb-autoall input { accent-color:var(--brass-hi); }`);
   UI.Side.register('prebattle', {
     render(host, ctx) {
       this.off = buildPreBattle(ctx.params, host, v => { if (this.off) { this.off(); this.off = null; } if (ctx.params.resolve) ctx.params.resolve(v); });
@@ -415,7 +420,8 @@
     S = S || G.S;
     const Cb = E(), me = mySide(battle), seed = String(battle.seed) + ':ui';
     if (!battle.sides.some(s => s.human)) return Cb.resolve(battle, M.RNG.create(seed));          // nobody to ask: pure auto-resolve
-    let choice = opts.skipCard ? 'fight' : await showOnGalaxy('prebattle', { battle, S });
+    const autoAll = !!(S && S.settings && S.settings.options && S.settings.options.autoBattle);
+    let choice = opts.skipCard ? 'fight' : autoAll ? 'auto' : await showOnGalaxy('prebattle', { battle, S });
     if (choice === 'retreat') {
       const res = Cb.retreatBeforeBattle(battle, me);
       await showOnGalaxy('combatResult', { battle, S, result: res }, true);

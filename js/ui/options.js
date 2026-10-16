@@ -112,10 +112,18 @@
     sync.push(() => anim.set(S.get('animSpeed')));
     const battle = ctl.segmented([{ id: 'manual', label: 'Manual' }, { id: 'auto', label: 'Auto-resolve' }], S.get('tactical') !== false ? 'manual' : 'auto', v => S.set('tactical', v === 'manual'), { block: true, label: 'Default battle mode' });
     sync.push(() => battle.set(S.get('tactical') !== false ? 'manual' : 'auto'));
+    const G = M.Game, live = !!(G && G.S);
+    const gameAuto = live ? ctl.toggle(!!(G.S.settings.options && G.S.settings.options.autoBattle), v => { G.S.settings.options = G.S.settings.options || {}; G.S.settings.options.autoBattle = !!v; }, { label: 'Auto-resolve battles in this game' }) : null;
+    if (gameAuto) sync.push(() => gameAuto.set(!!(G.S && G.S.settings.options && G.S.settings.options.autoBattle)));
+    const news = ctl.segmented([{ id: 'broadcast', label: 'Broadcast' }, { id: 'brief', label: 'Brief' }], S.get('newsMode') || 'broadcast', v => S.set('newsMode', v), { block: true, label: 'News' });
+    sync.push(() => news.set(S.get('newsMode') || 'broadcast'));
     const gameplay = section('Gameplay', 'compass', [
       row('Default battle mode', 'Manual: you command each ship battle. Auto-resolve: battles play out on their own.', battle, 'stack'),
-      bool('autosave', 'Autosave each turn', 'Writes the Auto slot at the start of every turn.', true),
-      bool('confirmEndTurn', 'Confirm end of turn', 'Ask first when colonies sit idle or research is unassigned.', false)]);
+      gameAuto ? row('Auto-resolve battles in this game', 'Set from the pre-battle card ("Auto-resolve every battle this game"); turn it off here.', gameAuto) : null,
+      bool('landingScenes', 'Colony landing scene', 'Play the landing vignette when a colony is founded. Off: the card\'s Yes founds it at once.', true),
+      row('News', 'Broadcast: the GNN studio scene. Brief: one list of the turn\'s headlines with a single Continue.', news, 'stack'),
+      bool('autosave', 'Autosave each turn', 'Writes the Auto slot at the end of every turn.', true),
+      bool('confirmEndTurn', 'Confirm end of turn', 'Ask first when a colony builds ships with no design, research has no funding, or a fleet order is still unaccepted.', false)]);
 
     // ---- interface
     const labels = ctl.segmented([{ id: 'auto', label: 'Auto' }, { id: 'all', label: 'All' }, { id: 'owned', label: 'Owned' }], S.get('mapLabels'), v => S.set('mapLabels', v), { block: true, label: 'Map labels' });

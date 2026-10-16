@@ -115,6 +115,10 @@
       this.reach();
       UI.Galaxy.pendingSend = () => { if (this.dest < 0 || this.acc.disabled) return true; return this.accept(ctx, true); };   // Next turn auto-accepts the queued move
       this.update(ctx);
+      // "select and move on": a right-click on the destination (or a click in route mode) is an explicit send — accept at once when the whole group can go;
+      // an invalid route stays on the panel with its reason so the player can change ships or destination
+      if (ctx.params.send && this.dest >= 0 && !this.acc.disabled) { setTimeout(() => { if (UI.Side.current() === 'fleetDeploy' && this.dest >= 0 && !this.acc.disabled) this.accept(ctx); }, 0); }
+      else if (this.dest >= 0) UI.attention(this.acc);
     },
     // dim every star the selected ships cannot reach (fuel range; Reserve Fuel Tanks only count when every selected design has them, as Q.route does)
     reach() {

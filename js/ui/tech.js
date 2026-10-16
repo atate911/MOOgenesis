@@ -1313,7 +1313,7 @@
     });
     R.listEl = h('div.tsc-list', R.items);
     R.infoEl = h('div.tsc-info');
-    R.okBtn = UI.button('Research', () => pick(R.hi), { primary: true, kbd: 'Space' });
+    R.okBtn = UI.button('Research', () => pick(R.hi), { primary: true, kbd: 'Space' }); UI.attention(R.okBtn);
     R.skipBtn = UI.button(R.manual ? 'Cancel' : 'Decide for me', () => act('skip'), { kbd: 'Esc', tip: R.manual ? 'Keep things as they are' : 'Let the scientists take the cheapest technology' });
     const box = h('div.tsc-box.ch', h('div.tsc-box-h', UI.icon(F.icon), h('span', F.name + ' Technology'), h('small', list.length + (list.length === 1 ? ' choice' : ' choices'))), R.listEl, R.infoEl,
       h('div.tsc-acts', R.skipBtn, h('span.grow'), R.okBtn));
@@ -1361,7 +1361,7 @@
       h('div.tsc-chips', UI.chip(ti.label, 'cy'), UI.chip(F.name), UI.chip('Level ' + (t ? t.level : it.level)), UI.chip(SRC[src], src === 'spy' ? 'vi' : 'ok'), E.research ? UI.chip(F.name + ' tech level ' + E.research.tl[f]) : null),
       R.descEl,
       fx.length ? h('ul.tch-fx', fx.map(l => h('li', h('span.k', l.k), h('span.v', String(l.v))))) : null);
-    R.okBtn = UI.button('Continue', () => act('ok'), { primary: true, kbd: 'Space' });
+    R.okBtn = UI.button('Continue', () => act('ok'), { primary: true, kbd: 'Space' }); UI.attention(R.okBtn);
     SC.panel.appendChild(h('div.tsc-box.ch', R.art, body, h('div.tsc-acts', h('span.grow'), R.okBtn)));
     R.fu = t ? followSpec(t, E) : null;
     SC.hint.innerHTML = '<kbd>Space</kbd> continue';

@@ -158,7 +158,8 @@
     const T = R.T, spec = R.spec, canKeep = !!(spec.it && spec.it.canContinue) && T.win;
     const finish = action => { if (R.done) return; R.done = true; spec.resolve({ action }); if (action === 'title') setTimeout(() => { if (G.quitToMenu) G.quitToMenu(); else if (UI.Screens.has('menu')) UI.Screens.go('menu'); }, 0); };
     const buttons = [UI.button('Return to title', () => finish('title'), { primary: true, big: true })];
-    if (canKeep) buttons.unshift(UI.button('Keep playing', () => { finish('continue'); if (UI.Screens.has('galaxy')) UI.Screens.go('galaxy'); }, { big: true }));
+    setTimeout(() => UI.attention(buttons[buttons.length - 1]), 0);
+    if (canKeep) buttons.unshift(UI.button('Keep playing', () => { try { if (G.S) { G.S.settings.options = G.S.settings.options || {}; G.S.settings.options.playOn = true; if (G.S.gameOver) G.S.gameOver = null; } } catch (e) { /* ignore */ } finish('continue'); if (UI.Screens.has('galaxy')) UI.Screens.go('galaxy'); }, { big: true }));
     UI.clear(EN.cap); EN.cap.classList.remove('in'); void EN.cap.offsetWidth; EN.cap.classList.add('in');
     EN.cap.appendChild(h('div.hd', T.win ? (T.kind === 'good' ? 'Victory' : 'Conquest') : 'Defeat'));
     EN.cap.appendChild(h('p', T.beats[T.beats.length - 1].text));

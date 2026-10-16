@@ -10,6 +10,11 @@ Versions follow `MAJOR.MINOR.PATCH`; the live version is the `VERSION` file.
   that answers the pending step is highlighted and focused (Enter/Space); load / quit / new game abort a running turn;
   an engine error no longer overwrites the autosave; the "Skip this step" escape appears only when nothing visible can
   answer, and skipped steps take the harmless choice (battles auto-resolve, audiences reject, no bombardment).
+- Smoother play: right-click a destination to send the selected fleet at once; "Auto-resolve every battle this game"
+  on the pre-battle card; Options for the colony landing scene and a brief one-page news mode; "Waiting for …" in the
+  bottom bar during a turn; the control that advances each scene is highlighted and focused; arrow keys work on the
+  colony sliders; "Confirm end of turn" checks ships-without-design and unfunded research; "Keep playing" after a
+  victory; the Council ruling re-opens instead of auto-accepting if its screen is lost.
 - Sim fixes from the October review: an unanswered audience is no longer an acceptance (it could declare war or break an
   alliance); bombardment needs an explicit yes; locking the Tech slider while the Eco floor rises no longer breaks the
   100 % slider sum; dead empires take their fleets with them; bombs hit a planet whose bases are gone; order values are

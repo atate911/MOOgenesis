@@ -282,6 +282,7 @@ MOO.def(function (M) {
       ending: ENDING[over.reason] || over.reason, year: M.Data.Config.displayYear(S), turn: S.turn,
       winnerName: W ? W.leader : '', winnerRace: W ? W.race : '', winnerPlural: W ? W.plural : '', player: S.playerId, playerWon: !!W && over.winner === S.playerId,
       playerLeader: me ? me.leader : '',
+      canContinue: !!W && over.winner === S.playerId && (over.reason === 'council' || over.reason === 'conquest'),     // "Keep playing": settings.options.playOn then mutes further victory checks (Turn.victory)
     });
   };
   V.check = function (S) {

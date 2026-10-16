@@ -10,6 +10,8 @@
     autosave: true,         // autosave at the start of every turn
     tactical: true,         // default for new games: play out battles tactically (false = auto-resolve)
     confirmEndTurn: false,  // ask before ending a turn with idle colonies / unassigned research
+    landingScenes: true,    // play the colony-ship landing vignette when founding a colony (false: the card's Yes founds it at once)
+    newsMode: 'broadcast',  // 'broadcast' = the GNN studio scene; 'brief' = one list of the turn's headlines with a single Continue
     showTips: true,         // tooltips
     reduceMotion: false,    // less screen motion/particles
     mapLabels: 'auto',      // 'auto' | 'all' | 'owned'
