@@ -51,18 +51,31 @@
       return !!ans;
     };
 
+    // End-of-turn planet notices (research/05 §11.5): the original showed each as a box on the map with the colony's sliders live underneath, so the
+    // ratios could be re-adjusted at once. Here they are turn reports that stay until the next turn and select the colony when clicked.
+    const ROMAN = { 5: 'V', 10: 'X', 15: 'XV', 20: 'XX' };
     H.notice = async it => {
-      const S = G.S, e = it; let text = null;
-      const name = e.planet !== undefined ? S.planets[e.planet].name : '';
-      if (e.kind === 'industryMax') text = name + ' has reached its industry maximum of ' + e.factories + ' factories. The extra spending went to the planetary reserve.';
+      const S = G.S, e = it; let text = null, kind = 'bad';
+      const p = e.planet !== undefined && e.planet >= 0 ? S.planets[e.planet] : null, name = p ? (p.name || S.stars[p.starId].name) : '';
+      if (e.kind === 'industryMax') { text = name + ' has reached its industry maximum of ' + e.factories + ' factories. The surplus went to the reserve; its Ind share moves to Tech — the spending ratios may be changed now.'; kind = 'ok'; }
+      else if (e.kind === 'popMax') { text = name + ' has reached its population maximum of ' + e.pop + ' million. Its Eco surplus moves to Tech — the spending ratios may be changed now.'; kind = 'ok'; }
+      else if (e.kind === 'ecoDone') { text = name + ' has terraformed to a ' + (e.growth === 'gaia' ? 'Gaia' : 'fertile') + ' environment with ' + (e.growth === 'gaia' ? 'double' : 'half again') + ' the standard growth.'; kind = 'ok'; }
+      else if (e.kind === 'atmosDone') { text = name + ' has terraformed to a standard atmosphere: its environment is no longer hostile.'; kind = 'ok'; }
+      else if (e.kind === 'shieldDone') { text = name + ' has finished a Class ' + (ROMAN[e.shield] || e.shield) + ' planetary shield.'; kind = 'ok'; }
+      else if (e.kind === 'stargate') { text = name + ' has finished a stargate. Ships sent between stargates arrive the next turn.'; kind = 'ok'; }
       else if (e.kind === 'outOfFuel') text = 'Ships ran out of fuel at ' + S.stars[e.star].name + ' and were lost.';
       else if (e.kind === 'transportLost') text = 'Transports with ' + e.n + ' million colonists were lost at ' + name + '.';
-      if (text) UI.Galaxy.message(text, 'bad');
+      else if (e.kind === 'contactLost') text = 'Contact with the ' + (e.other !== undefined && S.empires[e.other] ? S.empires[e.other].plural : 'other empire') + ' has been lost: no colony of theirs is within range any more.';
+      if (text) UI.Galaxy.message(text, kind, { star: p ? p.starId : (e.star !== undefined ? e.star : -1), sticky: true });
     };
 
+    // the original's "Fleet Production" report: one line per planet that finished ships this year (click = that colony)
     H.built = async it => {
-      const S = G.S, E = G.player();
-      for (const b of it.items.slice(0, 5)) UI.Galaxy.message(b.count + ' × ' + (E.designs[b.design] ? E.designs[b.design].name : 'ship') + ' completed at ' + S.planets[b.planet].name, 'ok');
+      const S = G.S, E = G.player(), by = {};
+      for (const b of it.items) { const k = b.planet; (by[k] = by[k] || []).push(b.count + ' × ' + (E.designs[b.design] ? E.designs[b.design].name : 'ship')); }
+      const planets = Object.keys(by);
+      for (const k of planets.slice(0, 5)) UI.Galaxy.message(by[k].join(', ') + ' completed at ' + (S.planets[k].name || S.stars[S.planets[k].starId].name), 'ok', { star: S.planets[k].starId, sticky: true });
+      if (planets.length > 5) UI.Galaxy.message('… and ships at ' + (planets.length - 5) + ' more ' + (planets.length - 5 === 1 ? 'colony' : 'colonies') + ' (see Fleet)', 'ok', { sticky: true });
       UI.sfx('shipbuilt');
     };
 

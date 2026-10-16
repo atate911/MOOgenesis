@@ -2,6 +2,7 @@
 const { sleep } = require('./lib');
 // returns a controller { stop(), stats }
 function start(page, o = {}) {
+  const sopts = Object.fromEntries(Object.entries(o).filter(([k, v]) => typeof v !== 'function'));     // page.evaluate cannot serialise callbacks (onTick)
   const stats = { clicks: 0, screens: {}, seen: [] }; let on = true;
   const rnd = (() => { let s = o.seed || 1; return () => (s = (s * 1664525 + 1013904223) >>> 0) / 4294967296; })();
   (async () => {
@@ -42,7 +43,7 @@ function start(page, o = {}) {
           if (cur === 'endings') { const b = [...document.querySelectorAll('.end-act button')].filter(vis); if (b.length) { const k = b.find(x => /keep/i.test(x.textContent)); (k || b[b.length - 1]).click(); out.did = 'ending-btn'; } else press('Space'); return out; }
           if (cur !== 'galaxy') { press(cur === 'landing' ? 'Enter' : 'Space'); out.did = 'space@' + cur; return out; }
           return out;
-        }, { rv: rnd(), opts: o });
+        }, { rv: rnd(), opts: sopts });
         if (r.key) await page.keyboard.press(r.key);
         stats.screens[r.screen] = (stats.screens[r.screen] || 0) + 1;
         if (r.did) { stats.clicks++; if (o.verbose) console.log('   bot:', r.did); stats.seen.push(r.did); }

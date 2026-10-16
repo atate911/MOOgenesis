@@ -22,6 +22,7 @@
     .gx-msg { pointer-events:auto; margin-left:auto; max-width:28rem; display:flex; flex-direction:column; gap:.3rem; }
     .gx-msg .m { padding:.3rem .7rem; background:rgba(8,12,34,.78); border-left:3px solid var(--brass); font-size:.9rem; }
     .gx-msg .m.bad { border-left-color:var(--rose); } .gx-msg .m.ok { border-left-color:var(--leaf); }
+    .gx-msg .m { cursor:pointer; } .gx-msg .m.link:hover { background:rgba(214,179,106,.18); } .gx-msg .m.link::after { content:' ›'; color:var(--brass-hi); }
     .gx-wait { margin-right:.8rem; font:500 .85rem var(--font-display); letter-spacing:.06em; color:var(--brass-hi); opacity:.9; white-space:nowrap; }
     .gx-busy { position:absolute; inset:0; z-index:20; display:none; align-items:center; justify-content:center; background:rgba(3,5,16,.45); backdrop-filter:blur(1.5px); }
     .gx-busy.on { display:flex; } .gx-busy .box { padding:1rem 2rem; font:400 1.4rem var(--font-display); color:var(--brass-hi); background:rgba(8,12,34,.9); border:1px solid var(--brass-lo); }
@@ -130,7 +131,18 @@
       const p = S.planets[id];
       UI.Side.show(p.owner === S.playerId ? 'colony' : 'star', { star: id });
     },
-    message(text, kind) { if (!msgEl) return; const m = h('div.m' + (kind ? '.' + kind : ''), text); msgEl.appendChild(m); setTimeout(() => m.remove(), 7000); while (msgEl.children.length > 4) msgEl.firstChild.remove(); },
+    // opts.sticky: a turn report — stays until the next turn starts (or is clicked away); opts.star: clicking the line selects that star (the original's
+    // notices sat over the map with the colony's sliders live underneath, so the ratios could be changed at once)
+    message(text, kind, opts) {
+      if (!msgEl) return; const o = opts || {};
+      const m = h('div.m' + (kind ? '.' + kind : '') + (o.sticky ? '.sticky' : '') + (o.star >= 0 ? '.link' : ''), text);
+      if (o.star >= 0) { m.title = 'Click to view'; m.addEventListener('click', () => { if (G.busy) return; UI.Galaxy.selectStar(o.star); if (map) map.centerOn(o.star, { animate: true }); m.remove(); }); }
+      else m.addEventListener('click', () => m.remove());
+      msgEl.appendChild(m);
+      if (!o.sticky) setTimeout(() => m.remove(), 9000);
+      while (msgEl.children.length > 6) msgEl.firstChild.remove();
+    },
+    clearMessages(all) { if (!msgEl) return; for (const m of [...msgEl.children]) if (all || m.classList.contains('sticky')) m.remove(); },
     floatSkip() { if (document.getElementById('gx-float-skip')) return; const b = UI.button('Skip this step', () => { if (G.skipWait) G.skipWait(); b.remove(); if (UI.Screens.current && UI.Screens.current.id !== 'galaxy') UI.Screens.go('galaxy'); }, { primary: true }); b.id = 'gx-float-skip'; b.style.cssText = 'position:fixed;right:1rem;bottom:1rem;z-index:99999'; document.body.appendChild(b); M.Bus.once('turn:end', () => b.remove()); },
     skipBtn(on) { if (!busyEl) return; let b = busyEl.querySelector('.skip'); if (!b) { b = h('div.skip', { style: { marginTop: '.8rem' } }, UI.button('Skip this step', () => { if (G.skipWait) G.skipWait(); UI.Galaxy.skipBtn(false); if (UI.Screens.current && UI.Screens.current.id !== 'galaxy') UI.Screens.go('galaxy'); }, { primary: true })); busyEl.firstChild.appendChild(b); } b.style.display = on ? '' : 'none'; },
     busy(on, text) { if (!on) UI.Galaxy.skipBtn(false); if (!busyEl) return; busyEl.classList.toggle('on', !!on); if (text) { const sk = busyEl.querySelector('.skip'); UI.mount(busyEl.firstChild, h('span.spin'), text); if (sk) busyEl.firstChild.appendChild(sk); } },
@@ -221,6 +233,7 @@
     const WAIT_LABEL = { explore: 'a scout report', colonize: 'the colony decision', battles: 'a battle', techChoice: 'a research choice', tech: 'a breakthrough', gnn: 'the news', council: 'the Council vote', councilResult: 'the Council ruling', diplomacy: 'an audience', ground: 'a ground battle', bombardPrompt: 'the bombard decision', bombard: 'the bombardment', event: 'an event', spyStealChoice: 'the spy choice', spySabotageChoice: 'the sabotage choice', aiPlan: 'the other empires', built: 'the shipyards', notice: 'a report' };
     const paintWait = () => { const p = G.pending; waitEl.textContent = !G.busy ? '' : p ? 'Waiting for ' + (WAIT_LABEL[p.type] || p.type) + '…' : 'Turn in progress…'; };
     M.Bus.on('turn:processing', on => {
+      if (on) UI.Galaxy.clearMessages(false);                                                           // last turn's reports make way for this turn's
       navBtns.slice(1).forEach(b => b.classList.toggle('turn-locked', !!on)); nextBtn.classList.toggle('turn-locked', !!on);     // "Game" (menu) stays usable; its Save/Load/Quit are gated separately
       clearInterval(waitTimer); waitTimer = on ? setInterval(paintWait, 250) : 0; paintWait();
     });

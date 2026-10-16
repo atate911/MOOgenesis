@@ -18,6 +18,11 @@
     .sm-event h4 { font:400 1.15rem var(--font-display); color:var(--brass-hi); margin:.2rem 0 .4rem; line-height:1.2; }
     .sm-event p { color:var(--ivory); margin:.3rem 0; line-height:1.4; } .sm-event .flag { margin:.35rem 0; padding:.3rem .55rem; border-left:3px solid var(--ember); background:rgba(255,148,64,.08); font-size:.9rem; }
     .sm-event .flag.good { border-left-color:var(--leaf); background:rgba(95,220,143,.07); }
+    .sm-card.wide { display:block; padding:0; position:relative; overflow:hidden; aspect-ratio:16 / 7; }
+    .sm-card.wide .sm-pic { width:100%; height:100%; } .sm-card.wide .sm-pic canvas { display:block; width:100%; height:100%; object-fit:cover; }
+    .sm-card.wide .sc-info { position:absolute; right:.6rem; bottom:.45rem; z-index:1; text-align:right; text-shadow:0 1px 2px #000, 0 0 10px rgba(0,0,0,.9); }
+    .sm-card.wide::after { content:''; position:absolute; inset:0; pointer-events:none; background:linear-gradient(180deg, rgba(0,0,0,0) 45%, rgba(0,0,0,.55) 100%); }
+    .sm-flavor { margin:.35rem 0 .1rem; color:var(--mist); font-size:.88rem; line-height:1.4; font-style:italic; }
   `);
   const bump = css => css.replace(/(^|[}])([^{}]*)[{]/g, (m, a, sel) => a + sel.replace(/[/][*][^]*?[*][/]/g, '').split(',').map(s => s.trim()).filter(Boolean).map(s => ':root:root ' + s).join(', ') + ' {');   // raise specificity over the theme-v2 .panel/.btn rules
   // Restyle: black picture tiles with name plates, framed portrait, green hint text, bevelled steel steppers.
@@ -46,6 +51,13 @@
     white: 'A white star burning very hot — its planets are generally hostile.', purple: 'A neutron star — rare, and the likeliest home of rich planets.',
   };
   const emp = e => 'var(--emp' + e.color + ')';
+  // one line of scout's-eye flavour per planet (Data.text.planetFlavor), fixed per planet so a card re-shown reads the same
+  function planetFlavor(card) {
+    const T = M.Data && M.Data.text && M.Data.text.planetFlavor; if (!T) return null;
+    const look = card.type === 'none' ? 'asteroids' : card.growth === 'gaia' ? 'gaia' : card.type, pool = T[look];
+    if (!pool || !pool.length) return null;
+    return pool[((card.id | 0) * 31 + (card.gfx | 0)) % pool.length];
+  }
   function planetPic(card, size, owner) {
     const WA = M.Gfx.WorldArt, art = WA && WA.enabled ? WA.orbit(card, M.Game && M.Game.S) : null;   // photoreal orbit card, else the procedural sprite
     if (art) return h('div.sm-pic', WA.canvas(art, size * 2, size * 2, { fit: 'contain' }));
@@ -169,8 +181,15 @@
       cardOffs.splice(0).forEach(off => off());
       host.appendChild(p.star !== undefined ? UI.Side.title(p.star, p.ownerId) : h('div.side-title', h('span.nm', p.heading || '')));
       const body = h('div.sm-event');
-      if (p.planetCard) body.appendChild(h('div.sm-card', planetPic(p.planetCard, 44, p.ownerId), h('div.sc-info', h('div', h('span.cls', { style: { font: '400 1.2rem var(--font-display)', color: 'var(--brass-hi)' } }, p.planetCard.typeLabel), p.planetCard.growthLabel ? h('span.chip' + (p.planetCard.growth === 'hostile' ? '.warn' : '.ok'), { style: { marginLeft: '.4rem' } }, p.planetCard.growthLabel) : null), p.planetCard.type !== 'none' ? h('div', 'POP ', h('b.t-leaf', p.planetCard.maxPop), ' max') : null)));
+      if (p.planetCard) {
+        const c = p.planetCard, WA = M.Gfx && M.Gfx.WorldArt, art = WA && WA.enabled ? WA.orbit(c, G.S) : null;     // the original's wide planet box: the orbit plate, else the sprite
+        body.appendChild(h('div.sm-card' + (art ? '.wide' : ''), art ? h('div.sm-pic', WA.canvas(art, 560, 245, { fx: 0.5, fy: 0.5 })) : planetPic(c, 44, p.ownerId),
+          h('div.sc-info', h('div', h('span.cls', { style: { font: '400 1.2rem var(--font-display)', color: 'var(--brass-hi)' } }, c.typeLabel), c.growthLabel ? h('span.chip' + (c.growth === 'hostile' ? '.warn' : '.ok'), { style: { marginLeft: '.4rem' } }, c.growthLabel) : null),
+            c.type !== 'none' ? h('div', 'POP ', h('b.t-leaf', c.maxPop), ' max') : h('div.dim', 'No habitable planet'), c.specialLabel ? h('div.t-cyan.small', c.specialLabel) : null)));
+      }
       if (p.title) body.appendChild(h('h4', p.title));
+      if (p.planetCard && p.flavor !== false) { const line = planetFlavor(p.planetCard); if (line) body.appendChild(h('p.sm-flavor', line)); }
+      if (p.star !== undefined && p.star >= 0 && UI.Galaxy.map && G.sel.star !== p.star) { G.sel.star = p.star; try { UI.Galaxy.map.select(p.star); } catch (e) { /* optional */ } }   // the brackets show WHICH star the card is about
       for (const b of (p.body || [])) body.appendChild(typeof b === 'string' ? h('p', b) : b);
       for (const f of (p.flags || [])) body.appendChild(h('div.flag' + (f.good ? '.good' : ''), h('b', f.head || ''), ' ', f.text));
       host.appendChild(body);

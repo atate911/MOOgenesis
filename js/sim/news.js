@@ -4,7 +4,16 @@
 MOO.def(function (M) {
   'use strict';
   const N = M.Sim.News = {};
-  const IMPORTANT = { empireDestroyed: 2, warDeclared: 2, guardianSlain: 2, planetDestroyed: 2, systemNova: 2, emperorElected: 2, councilRefused: 2, invasionSuccess: 1, battleWon: 1, battleLost: 1, fleetDestroyed: 1, allianceFormed: 1, allianceBroken: 1, peaceTreaty: 1, antaranRaid: 2, plague: 1, monsterAttack: 1, firstContact: 1 };
+  // What interrupts the player with a newscast (importance >= 1) and what only goes to the archive (0). The original's GNN has 22 news types
+  // (research/05 §11.2): random events, monsters, the stars report, the rankings filler, genocide, the Guardian, coups, Orion — never a fleet
+  // skirmish, a first contact (that is the audience), a colony founded or a treaty signed. Reporting every AI-vs-AI fleet kill made the
+  // broadcast worthless (83 newscasts in 200 turns, half of a session's clicks); battles are archived, the human's own are shown as battles.
+  // Kept beyond the original because they change the political map and the player would otherwise only see them in the Races screen:
+  // wars, peace, alliances formed/broken, an emperor elected or refused, a planet changing hands by invasion when the human is not a party.
+  const IMPORTANT = { empireDestroyed: 2, warDeclared: 2, guardianSlain: 2, planetDestroyed: 2, systemNova: 2, emperorElected: 2, councilRefused: 2, allianceFormed: 1, allianceBroken: 1, peaceTreaty: 1,
+    antaranRaid: 2, plague: 1, monsterAttack: 1, monsterSpawn: 1, monsterKilled: 1, planetRebels: 1, piracy: 1, orionColonised: 1, coup: 1, starsReport: 1, rankings: 1 };
+  // AI-vs-AI conquests are news (importance 1) only while the human is not a party: the human's own invasions have their ground-combat scene
+  const PARTY_ARCHIVED = { invasionSuccess: 1 };
   const GRAPHIC = { battleWon: 'battle', battleLost: 'battle', fleetDestroyed: 'battle', invasionSuccess: 'battle', invasionRepelled: 'battle', bombardment: 'battle', guardianSlain: 'battle', monsterAttack: 'battle',
     colonyFounded: 'planet', colonyLost: 'planet', planetDestroyed: 'planet', systemNova: 'planet', terraform: 'planet', plague: 'planet', planetStarving: 'planet', planetRebels: 'planet',
     warDeclared: 'map', firstContact: 'map', peaceTreaty: 'map', allianceFormed: 'map', napSigned: 'map', empireDestroyed: 'map', economicBoom: 'chart', starsReport: 'map' };
@@ -25,9 +34,16 @@ MOO.def(function (M) {
   }
 
   N.line = function (S, R, cat, ev) {
-    const T = text()[cat]; if (!T || !T.length) return null;
+    const T = text()[cat];
+    if (!T || !T.length) return ev && ev.headline ? String(ev.headline) : null;          // events carry ready-made English for categories without a template
     return fmt(pick(R, T), vars(S, ev || {}));
   };
+  const isHuman = (S, id) => id !== undefined && id >= 0 && !!(S.empires[id] && S.empires[id].human);
+  function importanceOf(S, ev) {
+    if (ev.importance !== undefined) return ev.importance;
+    if (PARTY_ARCHIVED[ev.cat]) return isHuman(S, ev.empire) || isHuman(S, ev.empire2) ? 0 : 1;
+    return IMPORTANT[ev.cat] || 0;
+  }
 
   N.rankings = function (S) {
     const st = M.Sim.stats(S).filter(r => r.alive), W = [1, 5, 25, 125];
@@ -45,7 +61,7 @@ MOO.def(function (M) {
       const key = ev.cat + '|' + line; if (seen.has(key)) continue; seen.add(key);
       items.push({ cat: ev.cat, headline: line, sub: ev.sub || null, graphic: ev.graphic || GRAPHIC[ev.cat] || 'ticker', planet: ev.planet !== undefined ? planetArt(S, ev.planet) : (ev.star !== undefined ? planetArt(S, ev.star) : null),
         star: ev.star !== undefined && ev.star >= 0 ? { name: S.stars[ev.star].name, kind: S.stars[ev.star].color } : null, race: ev.empire !== undefined && ev.empire >= 0 ? S.empires[ev.empire].race : null,
-        race2: ev.empire2 !== undefined && ev.empire2 >= 0 ? S.empires[ev.empire2].race : null, importance: ev.importance !== undefined ? ev.importance : (IMPORTANT[ev.cat] || 0) });
+        race2: ev.empire2 !== undefined && ev.empire2 >= 0 ? S.empires[ev.empire2].race : null, importance: importanceOf(S, ev) });
     }
     // empires destroyed this turn (event from Turn.checkDeaths)
     for (const ev of M.Sim.Ev.take(S, e => e.type === 'empireDestroyed')) {
@@ -73,11 +89,13 @@ MOO.def(function (M) {
     S.newsLog = S.newsLog || [];
     for (const it of items) S.newsLog.push({ year: M.Data.Config.displayYear(S), cat: it.cat, headline: it.headline, race: it.race || null, race2: it.race2 || null });
     if (S.newsLog.length > 600) S.newsLog.splice(0, S.newsLog.length - 600);
-    // minor items (importance 0) are archived but do not interrupt the player with a full broadcast
-    if (!items.some(it => it.importance >= 1)) return null;
+    // minor items (importance 0) are archived but never broadcast — not even as "also in the news" riders of a real bulletin (AI breakthroughs,
+    // skirmishes and the like would otherwise pad every newscast)
+    const bulletin = items.filter(it => it.importance >= 1);
+    if (!bulletin.length) return null;
     const tick = (M.Data.text && M.Data.text.tickers) || [], ticker = [];
     for (let i = 0; i < 5 && tick.length; i++) ticker.push(pick(R, tick));
-    return { type: 'gnn', year: M.Data.Config.displayYear(S), turn: S.turn, items, rankings, ticker };
+    return { type: 'gnn', year: M.Data.Config.displayYear(S), turn: S.turn, items: bulletin, rankings, ticker };
   };
 
   function planetArt(S, id) {
