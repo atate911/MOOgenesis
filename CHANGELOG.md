@@ -58,6 +58,12 @@ Versions follow `MAJOR.MINOR.PATCH`; the live version is the `VERSION` file.
   a slow sub floor under the planetarium pieces, the men's choir as the bed of the battle, council and war cues; the balance opened
   (upper bass and low mids cut on the bus, bass, strings, pads and drums; the reverbs no longer carry low mids; air on top and on the
   sides). `tools/audio-trims.js` turns a report into per-cue trims.
+  Arrangement revisions on the exploration pieces: slower (54-78 bpm), no kit and no crash or riser at section changes (`gentle`),
+  the string sections carry the harmony with the analogue pad a fifth of the weight underneath (about 80/20 symphony to synth), a
+  cello voice for lines and a cello bed, instrumentation that changes from block to block and from one play to the next (`alts` start
+  at a random block), the men's choir surfacing low in one section and one alternation, a four-note Shine On motif answered by the
+  delay, deeper bass (a 55 Hz shelf, more sub, the low band held even), and each family carved its own place (pads and choir dip
+  where the lines speak, no Haas spread on the melody). Per-cue loudness pass on every cue, battle cues measured at battle intensity.
 - Symphonic re-orchestration and film-style flow. Every synth pluck, FM bell, pad, bass and drum-machine part in the score is now a
   recorded instrument: pizzicato string sections, marimba, glockenspiel, harp, oboe / clarinet / bassoon, contrabass, bass drum,
   snare, field drums, tambourine, claves, anvil, stick taps (the two machine races keep a little sequencer colour). The bell

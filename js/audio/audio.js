@@ -277,7 +277,7 @@
     eng.musicBus = mk(ctx.createGain());
     // music-only tone stage, left flat on purpose (the shelves are kept as hooks for a listening pass)
     const eqL = mk(ctx.createBiquadFilter()), eqH = mk(ctx.createBiquadFilter());
-    eqL.type = 'lowshelf'; eqL.frequency.value = 60; eqL.gain.value = 0;      // weight
+    eqL.type = 'lowshelf'; eqL.frequency.value = 55; eqL.gain.value = 2.0;      // deep bass: the weight lives under 60 Hz, not at 150      // weight
     const eqM = mk(ctx.createBiquadFilter()); eqM.type = 'peaking'; eqM.frequency.value = 220; eqM.gain.value = -2.5; eqM.Q.value = 0.9;   // (static part of the mud control; the dynamic part is the multiband stage below)
     eqH.type = 'highshelf'; eqH.frequency.value = 3200; eqH.gain.value = 1.5;    // presence, mastering-mild
     const eqA = mk(ctx.createBiquadFilter()); eqA.type = 'highshelf'; eqA.frequency.value = 9000; eqA.gain.value = 3.0;   // air, mastering-mild
@@ -313,8 +313,8 @@
       const cg = mk(ctx.createGain()); cg.gain.value = dbtoa(-makeupDb(-30, 3) - 1.5);   // makeup taken back: the band only ever ducks
       mid.out.connect(cp); cp.connect(cg); cg.connect(out);
       // the low band (under 160 Hz) is held even: a slow 2.5:1 so the bass and the sub sit at one weight whatever the register
-      const lc = mk(ctx.createDynamicsCompressor()); lc.threshold.value = -24; lc.ratio.value = 2.5; lc.attack.value = 0.03; lc.release.value = 0.3; lc.knee.value = 8;
-      const lg = mk(ctx.createGain()); lg.gain.value = dbtoa(-makeupDb(-24, 2.5) + 0.5);
+      const lc = mk(ctx.createDynamicsCompressor()); lc.threshold.value = -22; lc.ratio.value = 2; lc.attack.value = 0.03; lc.release.value = 0.3; lc.knee.value = 8;
+      const lg = mk(ctx.createGain()); lg.gain.value = dbtoa(-makeupDb(-22, 2) + 1.0);
       lo.out.disconnect(); lo.out.connect(lc); lc.connect(lg); lg.connect(out);
       return { in: inG, out };
     })();
@@ -405,8 +405,8 @@
     const STRIPS = {
       bass:  { hp: 30, cuts: [[200, -3.5, 1.0]], comp: [-22, 3, 0.01, 0.2] },   // (no spread: the bass stays centred and solid)
       pad:   { hp: 150, hp2: true, cuts: [[260, -3.5, 0.9], [3200, 1, 0.8], [9000, 1.5, 'hs']], spread: [0.014, 0.22] },
-      arp:   { hp: 140, cuts: [[250, -1.5, 1.0]], spread: [0.011, 0.2] },
-      lead:  { hp: 100, cuts: [[250, -2.5, 1.0], [2800, 2, 0.9]], comp: [-20, 2, 0.02, 0.25], spread: [0.009, 0.14] },
+      arp:   { hp: 140, cuts: [[250, -1.5, 1.0]], spread: [0.011, 0.12] },
+      lead:  { hp: 100, cuts: [[250, -2.5, 1.0], [2800, 2, 0.9]], comp: [-20, 2, 0.02, 0.25] },
       bell:  { hp: 300, cuts: [[8000, 1, 'hs']], spread: [0.016, 0.25] },
       choir: { hp: 170, hp2: true, cuts: [[300, -2, 1.0], [6000, 2, 'hs']], spread: [0.018, 0.25], excite: [2600, 0.18] },   // the far choir gets a little sheen of its own making
       drums: { hp: 30, cuts: [[220, -2, 1.2]], par: [-24, 4, 0.003, 0.12, 0.35], trans: 0.55 },   // weight (parallel) and hit (transient)

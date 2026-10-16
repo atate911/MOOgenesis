@@ -15,7 +15,7 @@ const trimOf = id => { const i = src.indexOf("Track('" + id + "'"); if (i < 0) r
 const rows = [];
 for (const key of Object.keys(music)) {
   const [id, part] = key.split(':').length > 2 ? [key.slice(0, key.lastIndexOf(':')), key.slice(key.lastIndexOf(':') + 1)] : key.split(':');
-  if (part !== 'loop') continue;
+  if (part.replace(/@.*$/, '') !== 'loop') continue;
   if (onlyRe && !new RegExp(onlyRe).test(id)) continue;
   if (skipRe && new RegExp(skipRe).test(id)) continue;
   const it = music[key], lufs = it.lufs !== undefined ? it.lufs : it.lufsI !== undefined ? it.lufsI : it.loudness;
