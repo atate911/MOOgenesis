@@ -536,7 +536,8 @@
       const from = muzzle(a, tp);
       const to0 = targetPoint(from, t), dx = to0.x - from.x, dy = to0.y - from.y, L = hypot(dx, dy) || 1, nx = -dy / L, ny = dx / L;
       const heavy = info[1] >= 1.4;
-      const sid = e.weapon === 'death-ray' ? 'deathray' : kind === 'laser' || kind === 'mass' ? 'laser' : 'beam_heavy';
+      const rapid = /gatling|autocannon|auto-blaster|pulse-phasor|pellet/.test(String(e.weapon));
+      const sid = e.weapon === 'death-ray' ? 'deathray' : rapid ? 'gatling' : kind === 'laser' ? 'laser' : kind === 'mass' ? 'mass' : kind === 'phasor' ? 'beam_phasor' : kind === 'plasma' ? 'beam_plasma' : kind === 'disruptor' ? 'beam_disruptor' : 'beam_heavy';
       sfx(sid, { pan: panOf(from.x), vol: 0.7, rate: heavy ? 0.9 : 1 });
       const dur = kind === 'deathray' ? 1.5 : null;
       for (let i = 0; i < lines; i++) {

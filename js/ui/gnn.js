@@ -1401,7 +1401,7 @@
     R.mood = 'neutral'; R.gfx = null; R.rk = null;
     R.hl.set('', 0); R.sub.set('', 0);
     srLive.textContent = 'Galactic News Network' + (y !== undefined && y !== null ? ', year ' + y : '');
-    sfx('news');
+    sfx('gnn_ident', 'news');
   }
   function applyItem(seg) {
     const it = seg.item, g = GROUPS[it.grp];
