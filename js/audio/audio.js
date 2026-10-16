@@ -409,7 +409,7 @@
       arp:   { hp: 140, cuts: [[250, -1.5, 1.0]], spread: [0.011, 0.12] },
       lead:  { hp: 100, cuts: [[250, -2.5, 1.0], [2800, 1, 0.9]], comp: [-20, 2, 0.02, 0.25] },
       bell:  { hp: 300, cuts: [[8000, 1, 'hs']], spread: [0.016, 0.25] },
-      choir: { hp: 170, hp2: true, cuts: [[300, -2, 1.0], [6000, 1, 'hs']], spread: [0.018, 0.25], excite: [2600, 0.12] },   // the far choir gets a little sheen of its own making
+      choir: { hp: 170, hp2: true, cuts: [[300, -2, 1.0]] },   // a recorded choir: nothing synthetic on its strip   // the far choir gets a little sheen of its own making
       drums: { hp: 30, cuts: [[220, -2, 1.2]], par: [-24, 4, 0.003, 0.12, 0.35], trans: 0.55 },   // weight (parallel) and hit (transient)
       fx:    { hp: 60 },
     };

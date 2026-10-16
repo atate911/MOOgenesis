@@ -17,8 +17,8 @@
     {
      "file": "chorusMen-G2-l0-r0.mp3",
      "root": 42.99,
-     "lo": 40,
-     "hi": 44,
+     "lo": 42,
+     "hi": 43,
      "vel": [
       0,
       1
@@ -30,10 +30,40 @@
      ]
     },
     {
+     "file": "chorusMen-Gs2-l0-r0.mp3",
+     "root": 44.03,
+     "lo": 44,
+     "hi": 44,
+     "vel": [
+      0,
+      1
+     ],
+     "rr": 0,
+     "loop": [
+      3.3587,
+      7.1118
+     ]
+    },
+    {
+     "file": "chorusMen-A2-l0-r0.mp3",
+     "root": 45.01,
+     "lo": 45,
+     "hi": 45,
+     "vel": [
+      0,
+      1
+     ],
+     "rr": 0,
+     "loop": [
+      2.4671,
+      5.5
+     ]
+    },
+    {
      "file": "chorusMen-As2-l0-r0.mp3",
      "root": 45.85,
-     "lo": 45,
-     "hi": 47,
+     "lo": 46,
+     "hi": 46,
      "vel": [
       0,
       1
@@ -45,10 +75,40 @@
      ]
     },
     {
+     "file": "chorusMen-B2-l0-r0.mp3",
+     "root": 47.04,
+     "lo": 47,
+     "hi": 47,
+     "vel": [
+      0,
+      1
+     ],
+     "rr": 0,
+     "loop": [
+      2.3692,
+      5.5
+     ]
+    },
+    {
+     "file": "chorusMen-C3-l0-r0.mp3",
+     "root": 47.99,
+     "lo": 48,
+     "hi": 48,
+     "vel": [
+      0,
+      1
+     ],
+     "rr": 0,
+     "loop": [
+      3.3544,
+      7.1045
+     ]
+    },
+    {
      "file": "chorusMen-Cs3-l0-r0.mp3",
      "root": 49.15,
-     "lo": 48,
-     "hi": 50,
+     "lo": 49,
+     "hi": 49,
      "vel": [
       0,
       1
@@ -60,10 +120,40 @@
      ]
     },
     {
+     "file": "chorusMen-D3-l0-r0.mp3",
+     "root": 50.01,
+     "lo": 50,
+     "hi": 50,
+     "vel": [
+      0,
+      1
+     ],
+     "rr": 0,
+     "loop": [
+      4.0188,
+      5.1114
+     ]
+    },
+    {
+     "file": "chorusMen-Ds3-l0-r0.mp3",
+     "root": 51.08,
+     "lo": 51,
+     "hi": 51,
+     "vel": [
+      0,
+      1
+     ],
+     "rr": 0,
+     "loop": [
+      3.1095,
+      4.14
+     ]
+    },
+    {
      "file": "chorusMen-E3-l0-r0.mp3",
      "root": 51.98,
-     "lo": 51,
-     "hi": 53,
+     "lo": 52,
+     "hi": 52,
      "vel": [
       0,
       1
@@ -75,10 +165,40 @@
      ]
     },
     {
+     "file": "chorusMen-F3-l0-r0.mp3",
+     "root": 52.99,
+     "lo": 53,
+     "hi": 53,
+     "vel": [
+      0,
+      1
+     ],
+     "rr": 0,
+     "loop": [
+      3.3267,
+      7.0533
+     ]
+    },
+    {
+     "file": "chorusMen-Fs3-l0-r0.mp3",
+     "root": 54.0,
+     "lo": 54,
+     "hi": 54,
+     "vel": [
+      0,
+      1
+     ],
+     "rr": 0,
+     "loop": [
+      3.3477,
+      7.0932
+     ]
+    },
+    {
      "file": "chorusMen-G3-l0-r0.mp3",
      "root": 54.89,
-     "lo": 54,
-     "hi": 56,
+     "lo": 55,
+     "hi": 55,
      "vel": [
       0,
       1
@@ -90,10 +210,40 @@
      ]
     },
     {
+     "file": "chorusMen-Gs3-l0-r0.mp3",
+     "root": 56.05,
+     "lo": 56,
+     "hi": 56,
+     "vel": [
+      0,
+      1
+     ],
+     "rr": 0,
+     "loop": [
+      1.6558,
+      5.5
+     ]
+    },
+    {
+     "file": "chorusMen-A3-l0-r0.mp3",
+     "root": 57.0,
+     "lo": 57,
+     "hi": 57,
+     "vel": [
+      0,
+      1
+     ],
+     "rr": 0,
+     "loop": [
+      3.3546,
+      7.1047
+     ]
+    },
+    {
      "file": "chorusMen-As3-l0-r0.mp3",
      "root": 57.94,
-     "lo": 57,
-     "hi": 59,
+     "lo": 58,
+     "hi": 58,
      "vel": [
       0,
       1
@@ -105,10 +255,40 @@
      ]
     },
     {
+     "file": "chorusMen-B3-l0-r0.mp3",
+     "root": 59.0,
+     "lo": 59,
+     "hi": 59,
+     "vel": [
+      0,
+      1
+     ],
+     "rr": 0,
+     "loop": [
+      3.339,
+      4.9537
+     ]
+    },
+    {
+     "file": "chorusMen-C4-l0-r0.mp3",
+     "root": 60.0,
+     "lo": 60,
+     "hi": 60,
+     "vel": [
+      0,
+      1
+     ],
+     "rr": 0,
+     "loop": [
+      3.3657,
+      7.1252
+     ]
+    },
+    {
      "file": "chorusMen-Cs4-l0-r0.mp3",
      "root": 61.03,
-     "lo": 60,
-     "hi": 62,
+     "lo": 61,
+     "hi": 61,
      "vel": [
       0,
       1
@@ -120,10 +300,40 @@
      ]
     },
     {
+     "file": "chorusMen-D4-l0-r0.mp3",
+     "root": 61.97,
+     "lo": 62,
+     "hi": 62,
+     "vel": [
+      0,
+      1
+     ],
+     "rr": 0,
+     "loop": [
+      3.3203,
+      5.5
+     ]
+    },
+    {
+     "file": "chorusMen-Ds4-l0-r0.mp3",
+     "root": 63.03,
+     "lo": 63,
+     "hi": 63,
+     "vel": [
+      0,
+      1
+     ],
+     "rr": 0,
+     "loop": [
+      3.3032,
+      7.0088
+     ]
+    },
+    {
      "file": "chorusMen-E4-l0-r0.mp3",
      "root": 63.92,
-     "lo": 63,
-     "hi": 65,
+     "lo": 64,
+     "hi": 64,
      "vel": [
       0,
       1
@@ -135,10 +345,25 @@
      ]
     },
     {
+     "file": "chorusMen-F4-l0-r0.mp3",
+     "root": 64.92,
+     "lo": 65,
+     "hi": 65,
+     "vel": [
+      0,
+      1
+     ],
+     "rr": 0,
+     "loop": [
+      3.7916,
+      5.093
+     ]
+    },
+    {
      "file": "chorusMen-Fs4-l0-r0.mp3",
      "root": 65.91,
      "lo": 66,
-     "hi": 69,
+     "hi": 67,
      "vel": [
       0,
       1
@@ -163,8 +388,8 @@
     {
      "file": "chorusWomen-G4-l0-r0.mp3",
      "root": 66.84,
-     "lo": 64,
-     "hi": 68,
+     "lo": 66,
+     "hi": 67,
      "vel": [
       0,
       1
@@ -172,14 +397,44 @@
      "rr": 0,
      "loop": [
       3.327,
-      4.3539
+      7.0537
+     ]
+    },
+    {
+     "file": "chorusWomen-Gs4-l0-r0.mp3",
+     "root": 67.97,
+     "lo": 68,
+     "hi": 68,
+     "vel": [
+      0,
+      1
+     ],
+     "rr": 0,
+     "loop": [
+      1.3281,
+      5.5
+     ]
+    },
+    {
+     "file": "chorusWomen-A4-l0-r0.mp3",
+     "root": 69.02,
+     "lo": 69,
+     "hi": 69,
+     "vel": [
+      0,
+      1
+     ],
+     "rr": 0,
+     "loop": [
+      1.8554,
+      5.5
      ]
     },
     {
      "file": "chorusWomen-As4-l0-r0.mp3",
      "root": 69.99,
-     "lo": 69,
-     "hi": 71,
+     "lo": 70,
+     "hi": 70,
      "vel": [
       0,
       1
@@ -191,10 +446,40 @@
      ]
     },
     {
+     "file": "chorusWomen-B4-l0-r0.mp3",
+     "root": 71.04,
+     "lo": 71,
+     "hi": 71,
+     "vel": [
+      0,
+      1
+     ],
+     "rr": 0,
+     "loop": [
+      1.6622,
+      5.5
+     ]
+    },
+    {
+     "file": "chorusWomen-C5-l0-r0.mp3",
+     "root": 72.09,
+     "lo": 72,
+     "hi": 72,
+     "vel": [
+      0,
+      1
+     ],
+     "rr": 0,
+     "loop": [
+      3.0702,
+      4.325
+     ]
+    },
+    {
      "file": "chorusWomen-Cs5-l0-r0.mp3",
      "root": 73.07,
-     "lo": 72,
-     "hi": 74,
+     "lo": 73,
+     "hi": 73,
      "vel": [
       0,
       1
@@ -206,10 +491,40 @@
      ]
     },
     {
+     "file": "chorusWomen-D5-l0-r0.mp3",
+     "root": 74.0,
+     "lo": 74,
+     "hi": 74,
+     "vel": [
+      0,
+      1
+     ],
+     "rr": 0,
+     "loop": [
+      2.7167,
+      5.5
+     ]
+    },
+    {
+     "file": "chorusWomen-Ds5-l0-r0.mp3",
+     "root": 75.02,
+     "lo": 75,
+     "hi": 75,
+     "vel": [
+      0,
+      1
+     ],
+     "rr": 0,
+     "loop": [
+      1.1258,
+      5.5
+     ]
+    },
+    {
      "file": "chorusWomen-E5-l0-r0.mp3",
      "root": 75.93,
-     "lo": 75,
-     "hi": 77,
+     "lo": 76,
+     "hi": 76,
      "vel": [
       0,
       1
@@ -221,10 +536,40 @@
      ]
     },
     {
+     "file": "chorusWomen-F5-l0-r0.mp3",
+     "root": 76.93,
+     "lo": 77,
+     "hi": 77,
+     "vel": [
+      0,
+      1
+     ],
+     "rr": 0,
+     "loop": [
+      3.3206,
+      7.041
+     ]
+    },
+    {
+     "file": "chorusWomen-Fs5-l0-r0.mp3",
+     "root": 77.93,
+     "lo": 78,
+     "hi": 78,
+     "vel": [
+      0,
+      1
+     ],
+     "rr": 0,
+     "loop": [
+      1.7951,
+      5.5
+     ]
+    },
+    {
      "file": "chorusWomen-G5-l0-r0.mp3",
      "root": 78.89,
-     "lo": 78,
-     "hi": 80,
+     "lo": 79,
+     "hi": 79,
      "vel": [
       0,
       1
@@ -236,10 +581,40 @@
      ]
     },
     {
+     "file": "chorusWomen-Gs5-l0-r0.mp3",
+     "root": 79.89,
+     "lo": 80,
+     "hi": 80,
+     "vel": [
+      0,
+      1
+     ],
+     "rr": 0,
+     "loop": [
+      3.2692,
+      6.9441
+     ]
+    },
+    {
+     "file": "chorusWomen-A5-l0-r0.mp3",
+     "root": 80.9,
+     "lo": 81,
+     "hi": 81,
+     "vel": [
+      0,
+      1
+     ],
+     "rr": 0,
+     "loop": [
+      1.2279,
+      5.5
+     ]
+    },
+    {
      "file": "chorusWomen-As5-l0-r0.mp3",
      "root": 81.89,
-     "lo": 81,
-     "hi": 83,
+     "lo": 82,
+     "hi": 82,
      "vel": [
       0,
       1
@@ -251,10 +626,25 @@
      ]
     },
     {
+     "file": "chorusWomen-B5-l0-r0.mp3",
+     "root": 82.91,
+     "lo": 83,
+     "hi": 83,
+     "vel": [
+      0,
+      1
+     ],
+     "rr": 0,
+     "loop": [
+      3.274,
+      4.3193
+     ]
+    },
+    {
      "file": "chorusWomen-C6-l0-r0.mp3",
      "root": 83.86,
      "lo": 84,
-     "hi": 87,
+     "hi": 85,
      "vel": [
       0,
       1
@@ -14962,8 +15352,8 @@
     {
      "file": "chorusMen-G2-l0-r0.mp3",
      "root": 42.99,
-     "lo": 40,
-     "hi": 44,
+     "lo": 42,
+     "hi": 43,
      "vel": [
       0,
       1
@@ -14975,10 +15365,40 @@
      ]
     },
     {
+     "file": "chorusMen-Gs2-l0-r0.mp3",
+     "root": 44.03,
+     "lo": 44,
+     "hi": 44,
+     "vel": [
+      0,
+      1
+     ],
+     "rr": 0,
+     "loop": [
+      3.3587,
+      7.1118
+     ]
+    },
+    {
+     "file": "chorusMen-A2-l0-r0.mp3",
+     "root": 45.01,
+     "lo": 45,
+     "hi": 45,
+     "vel": [
+      0,
+      1
+     ],
+     "rr": 0,
+     "loop": [
+      2.4671,
+      5.5
+     ]
+    },
+    {
      "file": "chorusMen-As2-l0-r0.mp3",
      "root": 45.85,
-     "lo": 45,
-     "hi": 47,
+     "lo": 46,
+     "hi": 46,
      "vel": [
       0,
       1
@@ -14990,10 +15410,40 @@
      ]
     },
     {
+     "file": "chorusMen-B2-l0-r0.mp3",
+     "root": 47.04,
+     "lo": 47,
+     "hi": 47,
+     "vel": [
+      0,
+      1
+     ],
+     "rr": 0,
+     "loop": [
+      2.3692,
+      5.5
+     ]
+    },
+    {
+     "file": "chorusMen-C3-l0-r0.mp3",
+     "root": 47.99,
+     "lo": 48,
+     "hi": 48,
+     "vel": [
+      0,
+      1
+     ],
+     "rr": 0,
+     "loop": [
+      3.3544,
+      7.1045
+     ]
+    },
+    {
      "file": "chorusMen-Cs3-l0-r0.mp3",
      "root": 49.15,
-     "lo": 48,
-     "hi": 50,
+     "lo": 49,
+     "hi": 49,
      "vel": [
       0,
       1
@@ -15005,10 +15455,40 @@
      ]
     },
     {
+     "file": "chorusMen-D3-l0-r0.mp3",
+     "root": 50.01,
+     "lo": 50,
+     "hi": 50,
+     "vel": [
+      0,
+      1
+     ],
+     "rr": 0,
+     "loop": [
+      4.0188,
+      5.1114
+     ]
+    },
+    {
+     "file": "chorusMen-Ds3-l0-r0.mp3",
+     "root": 51.08,
+     "lo": 51,
+     "hi": 51,
+     "vel": [
+      0,
+      1
+     ],
+     "rr": 0,
+     "loop": [
+      3.1095,
+      4.14
+     ]
+    },
+    {
      "file": "chorusMen-E3-l0-r0.mp3",
      "root": 51.98,
-     "lo": 51,
-     "hi": 53,
+     "lo": 52,
+     "hi": 52,
      "vel": [
       0,
       1
@@ -15020,10 +15500,40 @@
      ]
     },
     {
+     "file": "chorusMen-F3-l0-r0.mp3",
+     "root": 52.99,
+     "lo": 53,
+     "hi": 53,
+     "vel": [
+      0,
+      1
+     ],
+     "rr": 0,
+     "loop": [
+      3.3267,
+      7.0533
+     ]
+    },
+    {
+     "file": "chorusMen-Fs3-l0-r0.mp3",
+     "root": 54.0,
+     "lo": 54,
+     "hi": 54,
+     "vel": [
+      0,
+      1
+     ],
+     "rr": 0,
+     "loop": [
+      3.3477,
+      7.0932
+     ]
+    },
+    {
      "file": "chorusMen-G3-l0-r0.mp3",
      "root": 54.89,
-     "lo": 54,
-     "hi": 56,
+     "lo": 55,
+     "hi": 55,
      "vel": [
       0,
       1
@@ -15035,10 +15545,40 @@
      ]
     },
     {
+     "file": "chorusMen-Gs3-l0-r0.mp3",
+     "root": 56.05,
+     "lo": 56,
+     "hi": 56,
+     "vel": [
+      0,
+      1
+     ],
+     "rr": 0,
+     "loop": [
+      1.6558,
+      5.5
+     ]
+    },
+    {
+     "file": "chorusMen-A3-l0-r0.mp3",
+     "root": 57.0,
+     "lo": 57,
+     "hi": 57,
+     "vel": [
+      0,
+      1
+     ],
+     "rr": 0,
+     "loop": [
+      3.3546,
+      7.1047
+     ]
+    },
+    {
      "file": "chorusMen-As3-l0-r0.mp3",
      "root": 57.94,
-     "lo": 57,
-     "hi": 59,
+     "lo": 58,
+     "hi": 58,
      "vel": [
       0,
       1
@@ -15050,10 +15590,40 @@
      ]
     },
     {
+     "file": "chorusMen-B3-l0-r0.mp3",
+     "root": 59.0,
+     "lo": 59,
+     "hi": 59,
+     "vel": [
+      0,
+      1
+     ],
+     "rr": 0,
+     "loop": [
+      3.339,
+      4.9537
+     ]
+    },
+    {
+     "file": "chorusMen-C4-l0-r0.mp3",
+     "root": 60.0,
+     "lo": 60,
+     "hi": 60,
+     "vel": [
+      0,
+      1
+     ],
+     "rr": 0,
+     "loop": [
+      3.3657,
+      7.1252
+     ]
+    },
+    {
      "file": "chorusMen-Cs4-l0-r0.mp3",
      "root": 61.03,
-     "lo": 60,
-     "hi": 62,
+     "lo": 61,
+     "hi": 61,
      "vel": [
       0,
       1
@@ -15065,8 +15635,23 @@
      ]
     },
     {
-     "file": "chorusMen-E4-l0-r0.mp3",
-     "root": 63.92,
+     "file": "chorusMen-D4-l0-r0.mp3",
+     "root": 61.97,
+     "lo": 62,
+     "hi": 62,
+     "vel": [
+      0,
+      1
+     ],
+     "rr": 0,
+     "loop": [
+      3.3203,
+      5.5
+     ]
+    },
+    {
+     "file": "chorusMen-Ds4-l0-r0.mp3",
+     "root": 63.03,
      "lo": 63,
      "hi": 63,
      "vel": [
@@ -15075,15 +15660,15 @@
      ],
      "rr": 0,
      "loop": [
-      3.3087,
-      7.0188
+      3.3032,
+      7.0088
      ]
     },
     {
      "file": "chorusWomen-G4-l0-r0.mp3",
      "root": 66.84,
-     "lo": 64,
-     "hi": 68,
+     "lo": 66,
+     "hi": 67,
      "vel": [
       0,
       1
@@ -15091,14 +15676,44 @@
      "rr": 0,
      "loop": [
       3.327,
-      4.3539
+      7.0537
+     ]
+    },
+    {
+     "file": "chorusWomen-Gs4-l0-r0.mp3",
+     "root": 67.97,
+     "lo": 68,
+     "hi": 68,
+     "vel": [
+      0,
+      1
+     ],
+     "rr": 0,
+     "loop": [
+      1.3281,
+      5.5
+     ]
+    },
+    {
+     "file": "chorusWomen-A4-l0-r0.mp3",
+     "root": 69.02,
+     "lo": 69,
+     "hi": 69,
+     "vel": [
+      0,
+      1
+     ],
+     "rr": 0,
+     "loop": [
+      1.8554,
+      5.5
      ]
     },
     {
      "file": "chorusWomen-As4-l0-r0.mp3",
      "root": 69.99,
-     "lo": 69,
-     "hi": 71,
+     "lo": 70,
+     "hi": 70,
      "vel": [
       0,
       1
@@ -15110,10 +15725,40 @@
      ]
     },
     {
+     "file": "chorusWomen-B4-l0-r0.mp3",
+     "root": 71.04,
+     "lo": 71,
+     "hi": 71,
+     "vel": [
+      0,
+      1
+     ],
+     "rr": 0,
+     "loop": [
+      1.6622,
+      5.5
+     ]
+    },
+    {
+     "file": "chorusWomen-C5-l0-r0.mp3",
+     "root": 72.09,
+     "lo": 72,
+     "hi": 72,
+     "vel": [
+      0,
+      1
+     ],
+     "rr": 0,
+     "loop": [
+      3.0702,
+      4.325
+     ]
+    },
+    {
      "file": "chorusWomen-Cs5-l0-r0.mp3",
      "root": 73.07,
-     "lo": 72,
-     "hi": 74,
+     "lo": 73,
+     "hi": 73,
      "vel": [
       0,
       1
@@ -15125,10 +15770,40 @@
      ]
     },
     {
+     "file": "chorusWomen-D5-l0-r0.mp3",
+     "root": 74.0,
+     "lo": 74,
+     "hi": 74,
+     "vel": [
+      0,
+      1
+     ],
+     "rr": 0,
+     "loop": [
+      2.7167,
+      5.5
+     ]
+    },
+    {
+     "file": "chorusWomen-Ds5-l0-r0.mp3",
+     "root": 75.02,
+     "lo": 75,
+     "hi": 75,
+     "vel": [
+      0,
+      1
+     ],
+     "rr": 0,
+     "loop": [
+      1.1258,
+      5.5
+     ]
+    },
+    {
      "file": "chorusWomen-E5-l0-r0.mp3",
      "root": 75.93,
-     "lo": 75,
-     "hi": 77,
+     "lo": 76,
+     "hi": 76,
      "vel": [
       0,
       1
@@ -15140,10 +15815,40 @@
      ]
     },
     {
+     "file": "chorusWomen-F5-l0-r0.mp3",
+     "root": 76.93,
+     "lo": 77,
+     "hi": 77,
+     "vel": [
+      0,
+      1
+     ],
+     "rr": 0,
+     "loop": [
+      3.3206,
+      7.041
+     ]
+    },
+    {
+     "file": "chorusWomen-Fs5-l0-r0.mp3",
+     "root": 77.93,
+     "lo": 78,
+     "hi": 78,
+     "vel": [
+      0,
+      1
+     ],
+     "rr": 0,
+     "loop": [
+      1.7951,
+      5.5
+     ]
+    },
+    {
      "file": "chorusWomen-G5-l0-r0.mp3",
      "root": 78.89,
-     "lo": 78,
-     "hi": 80,
+     "lo": 79,
+     "hi": 79,
      "vel": [
       0,
       1
@@ -15155,10 +15860,40 @@
      ]
     },
     {
+     "file": "chorusWomen-Gs5-l0-r0.mp3",
+     "root": 79.89,
+     "lo": 80,
+     "hi": 80,
+     "vel": [
+      0,
+      1
+     ],
+     "rr": 0,
+     "loop": [
+      3.2692,
+      6.9441
+     ]
+    },
+    {
+     "file": "chorusWomen-A5-l0-r0.mp3",
+     "root": 80.9,
+     "lo": 81,
+     "hi": 81,
+     "vel": [
+      0,
+      1
+     ],
+     "rr": 0,
+     "loop": [
+      1.2279,
+      5.5
+     ]
+    },
+    {
      "file": "chorusWomen-As5-l0-r0.mp3",
      "root": 81.89,
-     "lo": 81,
-     "hi": 83,
+     "lo": 82,
+     "hi": 82,
      "vel": [
       0,
       1
@@ -15170,10 +15905,25 @@
      ]
     },
     {
+     "file": "chorusWomen-B5-l0-r0.mp3",
+     "root": 82.91,
+     "lo": 83,
+     "hi": 83,
+     "vel": [
+      0,
+      1
+     ],
+     "rr": 0,
+     "loop": [
+      3.274,
+      4.3193
+     ]
+    },
+    {
      "file": "chorusWomen-C6-l0-r0.mp3",
      "root": 83.86,
      "lo": 84,
-     "hi": 87,
+     "hi": 85,
      "vel": [
       0,
       1

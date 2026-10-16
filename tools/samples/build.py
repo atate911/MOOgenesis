@@ -291,8 +291,8 @@ SSO = {
     'clarinet': dict(SSO_STR, pan=-0.24, sfz='Woodwinds - Performance/Clarinet Solo Sustain (looped).sfz', stereo=False, attack=0.05, release=0.3, keep=4.0),
     'bassoon':  dict(SSO_STR, pan=0.3, sfz='Woodwinds - Performance/Bassoon Solo Sustain (looped).sfz', stereo=False, attack=0.05, release=0.3, keep=4.0),
     # ---- the recorded chorus (men + women, every semitone; thinned to minor thirds)
-    'chorusMen':   dict(SSO_STR, sfz='Chorus - Performance/Mixed Chorus.sfz', only=r'chorus-male', step=3, attack=0.35, release=1.1, keep=5.5, bright=6.0, stereo=True),
-    'chorusWomen': dict(SSO_STR, sfz='Chorus - Performance/Mixed Chorus.sfz', only=r'chorus-female', step=3, attack=0.35, release=1.1, keep=5.5, bright=6.0, stereo=True), # ---- harp, keyboard percussion, bells
+    'chorusMen':   dict(SSO_STR, sfz='Chorus - Performance/Mixed Chorus.sfz', only=r'chorus-male', step=1, attack=0.35, release=1.1, keep=5.5, bright=6.0, stereo=True),
+    'chorusWomen': dict(SSO_STR, sfz='Chorus - Performance/Mixed Chorus.sfz', only=r'chorus-female', step=1, attack=0.35, release=1.1, keep=5.5, bright=6.0, stereo=True), # ---- harp, keyboard percussion, bells
     'harp':     dict(SSO_SHORT, pan=-0.62, sfz='Concert Harp.sfz', release=0.6, keep=3.5, stereo=True),
     'glock':    dict(SSO_SHORT, pan=-0.45, sfz='Percussion/Glockenspiel.sfz', release=0.6, keep=3.0, stereo=True),
     'celeste':  dict(SSO_SHORT, pan=-0.4, sfz='Percussion/Celeste.sfz', only=r'celeste-.*-hard', step=3, release=0.6, keep=2.6),

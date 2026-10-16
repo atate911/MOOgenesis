@@ -257,9 +257,9 @@
     glass: smp('celeste', 0.5, { rel: 1.4, hold: 0.4, hp: 300, eq: [[8000, 1.5, 'hs']] }, 'glass'), bell: smp('glock', 0.5, { rel: 1.6, hold: 0.4, hp: 400, eq: [[8000, 1.5, 'hs']] }, 'bell'), crystal: smp('crotales', 0.42, { rel: 2.0, hold: 0.5, hp: 600, eq: [[8000, 2, 'hs']] }, 'crystal'),
     shimmer: smp('crotales', 0.38, { rel: 1.4, hold: 0.3 }, 'shimmer'), vibes: smp('celeste', 0.42, { rel: 1.2, hold: 0.3 }, 'vibes'), chime: smp('chimes', 0.42, { rel: 2.2, hold: 0.5, hp: 150, eq: [[8000, 1.5, 'hs']] }, 'chime'),
     // the recorded chorus: men + women; every vowel preset maps onto it (the recording is one sustained vowel)
-    ooh: smp('chorus', 0.17, { att: 0.5, rel: 1.4, hp: 150, eq: [[700, -2, 1.2], [3000, -2, 1.0], [5000, 3, 'hs']] }, 'ooh'), aah: smp('chorus', 0.17, { att: 0.45, rel: 1.4, hp: 150, eq: [[700, -2, 1.2], [3000, -2, 1.0], [5000, 3, 'hs']] }, 'aah'),
-    uuh: smp('chorus', 0.16, { att: 0.5, rel: 1.4, hp: 150, eq: [[700, -2, 1.2], [3000, -2, 1.0], [5000, 3, 'hs']] }, 'uuh'), eeh: smp('chorus', 0.16, { att: 0.45, rel: 1.4, hp: 150, eq: [[700, -2, 1.2], [3000, -2, 1.0], [5000, 3, 'hs']] }, 'eeh'),
-    choirMen: smp('chorusMen', 0.23, { att: 0.5, rel: 1.5, hp: 110, eq: [[600, -2, 1.2], [5000, 3, 'hs']] }, 'uuh'), choirMenAh: smp('chorusMen', 0.19, { att: 0.45, rel: 1.5, hp: 110, eq: [[600, -2, 1.2], [5000, 3, 'hs']] }, 'aah'), choirWomen: smp('chorusWomen', 0.16, { att: 0.6, rel: 1.6, hp: 220, eq: [[900, -2, 1.2], [5000, 3, 'hs']] }, 'aah'),
+    ooh: smp('chorus', 0.17, { att: 0.12, rel: 1.2, hp: 150, hum: 1.5, alt: true, eq: [[5000, 2.5, 'hs']] }, 'ooh'), aah: smp('chorus', 0.17, { att: 0.12, rel: 1.2, hp: 150, hum: 1.5, alt: true, eq: [[5000, 2.5, 'hs']] }, 'aah'),
+    uuh: smp('chorus', 0.16, { att: 0.12, rel: 1.2, hp: 150, hum: 1.5, alt: true, eq: [[5000, 2.5, 'hs']] }, 'uuh'), eeh: smp('chorus', 0.16, { att: 0.12, rel: 1.2, hp: 150, hum: 1.5, alt: true, eq: [[5000, 2.5, 'hs']] }, 'eeh'),
+    choirMen: smp('chorusMen', 0.23, { att: 0.12, rel: 1.3, hp: 100, hum: 1.5, alt: true, eq: [[5000, 2.5, 'hs']] }, 'uuh'), choirMenAh: smp('chorusMen', 0.19, { att: 0.12, rel: 1.3, hp: 100, hum: 1.5, alt: true, eq: [[5000, 2.5, 'hs']] }, 'aah'), choirWomen: smp('chorusWomen', 0.16, { att: 0.15, rel: 1.4, hp: 220, hum: 1.5, alt: true, eq: [[5000, 2, 'hs']] }, 'aah'),
     // the two machine races keep a little of their electronic character
     seqSyn: SYN.seq, arpSawSyn: SYN.arpSaw, moogSyn: SYN.moog, pulseSyn: SYN.pulse, synthSyn: SYN.synth,
   });
@@ -270,7 +270,7 @@
     // verb = the hall (far plane), stage = the short bright stage (close plane): pads and choir live far back, the melody, plucks,
     // bells and drums stand at the front of the stage with the hall only behind them
     pad: { lvl: 0.82, verb: 0.36, stage: 0.0, dly: 0, chorus: 0.12 }, bass: { lvl: 0.8, verb: 0.06, stage: 0.08, dly: 0 }, arp: { lvl: 0.5, verb: 0.18, stage: 0.22, dly: 0.12 },
-    lead: { lvl: 1.0, verb: 0.16, stage: 0.26, dly: 0.08 }, bell: { lvl: 0.45, verb: 0.3, stage: 0.24, dly: 0.1 }, choir: { lvl: 0.72, verb: 0.42, stage: 0.0, dly: 0, chorus: 0.1 },
+    lead: { lvl: 1.0, verb: 0.16, stage: 0.26, dly: 0.08 }, bell: { lvl: 0.45, verb: 0.3, stage: 0.24, dly: 0.1 }, choir: { lvl: 0.72, verb: 0.42, stage: 0.0, dly: 0, chorus: 0 },
     drums: { lvl: 0.68, verb: 0.08, stage: 0.32, dly: 0 }, fx: { lvl: 0.6, verb: 0.5, stage: 0.2, dly: 0 },
     x1: { lvl: 0.8, verb: 0.12, dly: 0, i0: 0.12 }, x2: { lvl: 0.7, verb: 0.2, dly: 0.3, i0: 0.38 }, x3: { lvl: 0.9, verb: 0.3, dly: 0, i0: 0.62 },
   };
@@ -552,7 +552,18 @@
       prev = notes;
       let L = sg.b1 - sg.b0;
       while (i + 1 < segs.length && segs[i + 1].ch.sym === sg.ch.sym) { i++; L = segs[i].b1 - sg.b0; }
-      notes.forEach(function (m, j) { emit(C, 'choir', inst, s.start + sg.b0, m, L, vel, { pan: (j - (notes.length - 1) / 2) * 0.35, v1: cfg.v1 || inst.v1, v2: cfg.v2 || inst.v2, att: cfg.att, rel: cfg.rel }); });
+      const breathBeats = Math.max(2, Math.round(5.2 / C.spb)), rng = C.vrng;
+      notes.forEach(function (m, j) {
+        const ex = { pan: (j - (notes.length - 1) / 2) * 0.35, v1: cfg.v1 || inst.v1, v2: cfg.v2 || inst.v2, att: cfg.att, rel: cfg.rel };
+        if (inst.v !== 'sample' || L <= breathBeats * 1.5) { emit(C, 'choir', inst, s.start + sg.b0, m, L, vel, ex); return; }
+        let b = 0, k = 0;
+        while (b < L) {                                 // phrases of roughly a breath, singers not quite together, each phrase swelling a little
+          const len = Math.min(L - b, breathBeats + Math.round((rng() - 0.5) * 2)), gap = b + len < L ? 0.35 : 0;
+          const dyn0 = 0.55 + 0.2 * (k % 2), dt = (j * 0.05 + rng() * 0.06);
+          emit(C, 'choir', inst, s.start + sg.b0 + b, m, Math.max(0.5, len - gap), vel * (0.9 + 0.1 * (k % 2)), Object.assign({}, ex, { dt, dyn: dyn0, swell: dyn0 + 0.18 }));
+          b += len; k++;
+        }
+      });
     }
     C.prevChoir[key] = prev;
   }

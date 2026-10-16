@@ -69,6 +69,9 @@ Versions follow `MAJOR.MINOR.PATCH`; the live version is the `VERSION` file.
   men's-choir phrase written into each and more hall; the battle cues more dramatic (brighter and heavier tone, tam-tam and bass-drum
   hits at the section entrances, timpani gallops, the men's choir at full voice with the mixed choir above, a wider span between
   ostinato and climax); the title a little faster with the men's choir as its bed throughout and battle drums under the march and tutti.
+  The choir sings instead of pads: the recorded onsets come through (short attacks), chords longer than a breath are sung as phrases of
+  four to seven seconds with a small gap and a swell in each, singers spread by a few tens of milliseconds, every recorded semitone is
+  kept so a repeated note alternates between takes (`alt`), and the exciter, Haas spread and bus chorus come off the choir strip.
 - Symphonic re-orchestration and film-style flow. Every synth pluck, FM bell, pad, bass and drum-machine part in the score is now a
   recorded instrument: pizzicato string sections, marimba, glockenspiel, harp, oboe / clarinet / bassoon, contrabass, bass drum,
   snare, field drums, tambourine, claves, anvil, stick taps (the two machine races keep a little sequencer colour). The bell

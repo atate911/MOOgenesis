@@ -2,7 +2,7 @@
 // Loads assets/audio/instruments.json + the MP3 multisamples it lists (lazily, after the first user gesture; never from file://, where
 // fetch is blocked: everything then stays on the procedural voices). Exposes
 //   MOO.Audio.Samples.{enabled, base, load(), preload(), ready(name), has(name), status(), zones(name)}
-//   MOO.Audio.Voices.sample(eng, dest, t, o)   o = {smp, f, dur, vel, dyn, swell, att, rel, pan, prio, send, vib, ens, cut, hp, eq, sub, leg, hum, fb, fbo, oneShot}
+//   MOO.Audio.Voices.sample(eng, dest, t, o)   o = {smp, f, dur, vel, dyn, swell, att, rel, pan, prio, send, vib, ens, cut, hp, eq, sub, leg, hum, alt, fb, fbo, oneShot}
 // A sample voice is one AudioBufferSourceNode per sounding dynamic layer (pitched by playbackRate, looped on the library's loop points,
 // vibrato on `detune`; instruments recorded in layers crossfade between them with the asked dynamic, and a `swell` moves through them
 // over the note), an optional second detuned copy ("ens" — ensemble thickening), a velocity-tracked lowpass and an ADSR gain. Legato
@@ -91,9 +91,14 @@
   // ------------------------------------------------------------------ zone choice
   // the zones that should sound for (midi, dyn): one zone, or — for instruments recorded in dynamic layers (inst.xf) — the two layers
   // around the asked dynamic with equal-power weights, so a swell moves through the real timbres (mp -> ff) instead of a lowpass.
-  function layersAt(inst, midi) {
+  const altCount = Object.create(null);
+  function layersAt(inst, midi, alt) {
     const zs = inst.zones; if (!zs.length) return [];
     let cands = inst.pitched ? zs.filter(z => midi >= z.lo && midi <= z.hi) : zs;
+    if (alt && inst.pitched && cands.length) {          // alternate between this note's take and a neighbour's (if the neighbour was recorded)
+      const k = inst.name + ':' + midi, n = (altCount[k] = ((altCount[k] || 0) + 1) % 3);
+      if (n) { const near = zs.filter(z => Math.abs(z.root - midi) >= 0.5 && Math.abs(z.root - midi) <= 1.5 && z.vel[0] === cands[0].vel[0]); if (near.length) cands = [near[(n - 1) % near.length]]; }
+    }
     if (!cands.length) { let best = zs[0], bd = 1e9; for (const z of zs) { const d = Math.abs(z.root - midi); if (d < bd) { bd = d; best = z; } } cands = zs.filter(z => z.root === best.root); }
     const byLayer = new Map();
     for (const z of cands) { const k = z.vel[0]; if (!byLayer.has(k)) byLayer.set(k, []); byLayer.get(k).push(z); }
@@ -105,8 +110,8 @@
     return list[i];
   }
   // -> [{ z, g0, g1 }] : zones with their gain at the start (dyn0) and the end (dyn1) of the note
-  function pickZones(inst, midi, dyn0, dyn1) {
-    const L = layersAt(inst, midi); if (!L.length) return [];
+  function pickZones(inst, midi, dyn0, dyn1, alt) {
+    const L = layersAt(inst, midi, alt); if (!L.length) return [];
     if (L.length === 1 || !inst.xf) {
       // single layer, or hard-switched layers: the layer whose velocity window holds the dynamic
       const at = d => { let best = L[0], bd = 1e9; for (const l of L) { const dd = Math.abs(l.c - d); if (dd < bd) { bd = dd; best = l; } } return best; };
@@ -148,7 +153,7 @@
       while (midi < lo - 2 && midi + 12 <= hi) midi += 12;
       while (midi > hi + 2 && midi - 12 >= lo) midi -= 12;
     }
-    const picks = pickZones(inst, midi, dyn, dyn1); if (!picks.length) return null;
+    const picks = pickZones(inst, midi, dyn, dyn1, !!o.alt); if (!picks.length) return null;
     const z0 = picks[0].z;
     const pan = o.pan !== undefined ? o.pan : (z0.pan !== undefined ? z0.pan : inst.pan);
     const v = eng.voice(dest, t, o.prio || (inst.kind === 'sustain' ? 1 : 2), pan, o.send); if (!v) return null;
