@@ -2,11 +2,15 @@
 //   if (MOO.Gfx.GL.supported()) { …draw with GL… } else { …2D path… }        (supported() also honours Settings 'gpu' and Perf tier)
 // Design: ONE shared offscreen WebGL canvas serves every renderer (browsers cap live contexts; planets/backdrops/particles all share it).
 // A renderer does:   const g = GL.begin(w, h);  …draw with g.gl…;  GL.blit(ctx2d, dx, dy, dw, dh);   (blit in the SAME task as the draw)
+// Programs: GL.program(name, vs, fs) compiles on demand (blocking until linked). GL.precompile(name, vs, fs) queues a background compile
+// (one per idle slot, no status query) and GL.ready(name) polls it, so warm-up never stalls a frame; GL.program picks the result up.
 (function (M) {
   'use strict';
   const GL = M.Gfx.GL = {};
   let canvas = null, gl = null, failed = false, curW = 0, curH = 0, quadVao = null;
-  const programs = new Map();
+  const programs = new Map(), pending = new Map();     // pending: name -> {prog, v, f, t0} compiled/linked but status not yet queried
+  let parExt = null, parChecked = false;
+  let peakW = 1, peakH = 1, peakT = 0;                 // largest region requested since the last shrink check (the shared canvas never shrank before)
 
   GL.supported = function () {
     if (failed) return false;
@@ -22,8 +26,8 @@
       canvas = document.createElement('canvas'); canvas.width = canvas.height = 2;
       gl = canvas.getContext('webgl2', { alpha: true, premultipliedAlpha: true, antialias: false, depth: false, stencil: false, preserveDrawingBuffer: false, powerPreference: 'high-performance' });
       if (!gl) { failed = true; return null; }
-      canvas.addEventListener('webglcontextlost', e => { e.preventDefault(); programs.clear(); quadVao = null; });
-      canvas.addEventListener('webglcontextrestored', () => { programs.clear(); quadVao = null; });
+      canvas.addEventListener('webglcontextlost', e => { e.preventDefault(); programs.clear(); pending.clear(); quadVao = null; });
+      canvas.addEventListener('webglcontextrestored', () => { programs.clear(); pending.clear(); quadVao = null; parChecked = false; });
       gl.getExtension('EXT_color_buffer_float'); gl.getExtension('OES_texture_float_linear');
       const e = gl.getExtension('WEBGL_debug_renderer_info');
       GL.info = { renderer: e ? gl.getParameter(e.UNMASKED_RENDERER_WEBGL) : gl.getParameter(gl.RENDERER), maxTex: gl.getParameter(gl.MAX_TEXTURE_SIZE), floatRT: !!gl.getExtension('EXT_color_buffer_float') };
@@ -34,11 +38,20 @@
   GL.gl = () => ensure();
   GL.canvas = () => (ensure() ? canvas : null);
 
-  // size the shared canvas (grows only; viewport = requested size) and clear it transparent
+  // size the shared canvas (viewport = requested size) and clear it transparent. It grows on demand (each dimension capped at the
+  // GPU's texture limit) and shrinks back to the peak size of the last ~4 s when that is well below the current allocation, so a
+  // one-off large request (or a screen/dpr change) does not pin a huge backing store for the rest of the session.
   GL.begin = function (w, h) {
     const g = ensure(); if (!g) return null;
-    w = Math.max(1, Math.ceil(w)); h = Math.max(1, Math.ceil(h));
+    const cap = (GL.info && GL.info.maxTex) || 4096;
+    w = Math.min(cap, Math.max(1, Math.ceil(w))); h = Math.min(cap, Math.max(1, Math.ceil(h)));
     if (canvas.width < w || canvas.height < h) { canvas.width = Math.max(canvas.width, w); canvas.height = Math.max(canvas.height, h); }
+    if (w > peakW) peakW = w; if (h > peakH) peakH = h;
+    const tnow = (typeof performance !== 'undefined' ? performance.now() : Date.now());
+    if (tnow - peakT > 4000) {
+      if (canvas.width * canvas.height > peakW * peakH * 1.6 + 262144) { canvas.width = peakW; canvas.height = peakH; }
+      peakW = w; peakH = h; peakT = tnow;
+    }
     curW = w; curH = h;
     g.bindFramebuffer(g.FRAMEBUFFER, null);
     g.viewport(0, 0, w, h); g.disable(g.BLEND); g.disable(g.DEPTH_TEST);
@@ -52,32 +65,83 @@
   };
 
   // ---- shader programs -------------------------------------------------------------------------
-  function compile(g, type, src, name) {
-    const s = g.createShader(type); g.shaderSource(s, src); g.compileShader(s);
-    if (!g.getShaderParameter(s, g.COMPILE_STATUS)) {
-      const log = g.getShaderInfoLog(s) || '', lines = src.split('\n');
-      const m = /ERROR:\s*\d+:(\d+)/.exec(log), ln = m ? +m[1] : 0;
-      console.error('[GL] shader "' + name + '" failed:\n' + log + (ln ? '\n>> ' + (lines[ln - 1] || '').trim() : ''));
-      g.deleteShader(s); return null;
-    }
-    return s;
+  function parallel(g) { if (!parChecked) { parChecked = true; parExt = g.getExtension('KHR_parallel_shader_compile'); } return parExt; }
+  // issue compile + link WITHOUT querying any status (the queries are what block the main thread until the driver has finished)
+  function issue(g, name, vs, fs) {
+    const v = g.createShader(g.VERTEX_SHADER), f = g.createShader(g.FRAGMENT_SHADER);
+    g.shaderSource(v, vs || GL.quadVS); g.compileShader(v); g.shaderSource(f, fs); g.compileShader(f);
+    const prog = g.createProgram(); g.attachShader(prog, v); g.attachShader(prog, f); g.linkProgram(prog);
+    const e = { prog, v, f, t0: performance.now() };
+    pending.set(name, e); return e;
   }
+  function finish(g, name, e) {
+    pending.delete(name);
+    if (!g.getProgramParameter(e.prog, g.LINK_STATUS)) {
+      const bad = [[e.v, '.vs'], [e.f, '.fs']].filter(x => !g.getShaderParameter(x[0], g.COMPILE_STATUS));
+      for (const b of bad) console.error('[GL] shader "' + name + b[1] + '" failed:\n' + (g.getShaderInfoLog(b[0]) || ''));
+      if (!bad.length) console.error('[GL] link "' + name + '": ' + g.getProgramInfoLog(e.prog));
+      g.deleteProgram(e.prog); g.deleteShader(e.v); g.deleteShader(e.f); programs.set(name, null); return null;
+    }
+    return wrap(g, name, e.prog);
+  }
+  // GL.precompile(name, vs, fs): start compiling in the background (one program per idle slot so the GPU process is not flooded and
+  // frames that use GL keep flowing). Never blocks; GL.program(name) later picks the result up, GL.ready(name) polls it.
+  const queue = []; let queued = false;
+  function pumpQueue() {
+    queued = false;
+    const g = ensure(); if (!g) { queue.length = 0; return; }
+    while (queue.length) {
+      const q = queue.shift();
+      if (programs.has(q.name) || pending.has(q.name)) continue;
+      issue(g, q.name, q.vs, q.fs);
+      break;                                                   // one per slot
+    }
+    if (queue.length) scheduleQueue();
+  }
+  function scheduleQueue() {
+    if (queued) return; queued = true;
+    if (typeof requestIdleCallback === 'function') requestIdleCallback(pumpQueue, { timeout: 500 }); else setTimeout(pumpQueue, 40);
+  }
+  GL.precompile = function (name, vs, fs) {
+    if (!ensure() || programs.has(name) || pending.has(name)) return;
+    for (let i = 0; i < queue.length; i++) if (queue[i].name === name) return;
+    queue.push({ name, vs, fs }); scheduleQueue();
+  };
+  // true once `name` is linked (polled through KHR_parallel_shader_compile when the driver has it; without it, a pending program is
+  // reported ready after a grace period, so the first blocking status query lands when the compile has most likely finished)
+  GL.ready = function (name) {
+    const g = ensure(); if (!g) return false;
+    if (programs.has(name)) return !!programs.get(name);
+    const e = pending.get(name); if (!e) return false;
+    const ext = parallel(g);
+    if (ext) { if (!g.getProgramParameter(e.prog, ext.COMPLETION_STATUS_KHR)) return false; }
+    else if (performance.now() - e.t0 < 400) return false;
+    return !!finish(g, name, e);
+  };
+  GL.pending = name => pending.has(name) || queue.some(q => q.name === name);
+  GL.parallel = () => { const g = ensure(); return !!(g && parallel(g)); };
   // GL.program('planet', vs, fs) → {prog, u(name) → location (cached), use()} ; vs may be omitted to use the fullscreen-quad vertex shader
   GL.program = function (name, vs, fs) {
     const g = ensure(); if (!g) return null;
     let p = programs.get(name);
-    if (p) return p;
-    const v = compile(g, g.VERTEX_SHADER, vs || GL.quadVS, name + '.vs'), f = compile(g, g.FRAGMENT_SHADER, fs, name + '.fs');
-    if (!v || !f) { programs.set(name, null); return null; }
-    const prog = g.createProgram(); g.attachShader(prog, v); g.attachShader(prog, f); g.linkProgram(prog);
-    if (!g.getProgramParameter(prog, g.LINK_STATUS)) { console.error('[GL] link "' + name + '": ' + g.getProgramInfoLog(prog)); programs.set(name, null); return null; }
+    if (p !== undefined) return p;
+    for (let i = 0; i < queue.length; i++) if (queue[i].name === name) { queue.splice(i, 1); break; }
+    let e = pending.get(name);
+    if (!e) {
+      if (!fs) return null;
+      e = issue(g, name, vs, fs);
+    }
+    return finish(g, name, e);
+  };
+  function wrap(g, name, prog) {
+    let p;
     const locs = {};
     p = { name, prog, use() { g.useProgram(prog); return p; }, u(n) { return n in locs ? locs[n] : (locs[n] = g.getUniformLocation(prog, n)); },
       f1(n, a) { g.uniform1f(p.u(n), a); return p; }, f2(n, a, b) { g.uniform2f(p.u(n), a, b); return p; }, f3(n, a, b, c) { g.uniform3f(p.u(n), a, b, c); return p; },
       f4(n, a, b, c, d) { g.uniform4f(p.u(n), a, b, c, d); return p; }, i1(n, a) { g.uniform1i(p.u(n), a); return p; } };
     programs.set(name, p);
     return p;
-  };
+  }
   GL.quadVS = '#version 300 es\nprecision highp float;\nout vec2 vUv;\nvoid main(){ vec2 p = vec2((gl_VertexID<<1)&2, gl_VertexID&2); vUv = p; gl_Position = vec4(p*2.0-1.0, 0.0, 1.0); }\n';
   // draw the fullscreen triangle (3 vertices, no buffers needed; vertex shader derives positions from gl_VertexID)
   GL.drawQuad = function () { const g = ensure(); if (!quadVao) quadVao = g.createVertexArray(); g.bindVertexArray(quadVao); g.drawArrays(g.TRIANGLES, 0, 3); };
@@ -118,5 +182,5 @@
     `,
   };
 
-  GL.dispose = function () { programs.clear(); };
+  GL.dispose = function () { programs.clear(); pending.clear(); queue.length = 0; };
 })(window.MOO);

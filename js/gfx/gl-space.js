@@ -12,7 +12,8 @@
 //   GLSpace.starSprite(kind, sizePx, opts)       cached glow sprite canvas (sizePx = canvas side); kinds yellow orange red blue white green
 //                                                  purple blackhole; opts: spikes(0..1) glow(1) seed
 //   GLSpace.makeStarfield(w, h, seed, opts)      transparent canvas with the baked multi-layer stars only
-//   GLSpace.warm({vortexSeed, arms})             compile every shader + pre-build the vortex star buffer (call from a loading screen: ~0.6 s cold, ~0.1 s warm)
+//   GLSpace.warm({vortex, vortexSeed, arms, sync}) queue every shader for background compilation (never blocks; sync:true = old blocking form);
+//                                                 vortex:true also pre-builds the vortex star buffer (~0.3 s CPU).  GLSpace.ready() = all linked
 //   GLSpace.stats                                last CPU-side submit times in ms {backdrop, live, vortex, sprite}
 // Effort scales from MOO.Perf.q (dpr, nebula, bloom, particles); never hard-codes counts. Returns false (and draws nothing) when GL is
 // unavailable so callers can fall back; makeBackdrop/starSprite/makeStarfield instead delegate to MOO.Gfx.Space when GL is missing.
@@ -831,15 +832,21 @@
   };
 
   // ------------------------------------------------------------------ lifecycle
-  // compile every shader and pre-build the default vortex star set (o.vortexSeed / o.arms match the vortex() opts you intend to use)
+  // Pre-compile every shader in the background (GL.precompile: one program per idle slot, no blocking status query; a draw that
+  // needs one before it is linked waits for just that one). o.vortex = true also pre-builds the default vortex star set
+  // (a large CPU buffer: ~0.3 s; only worth it right before the menu shows it; o.vortexSeed / o.arms match the vortex() opts).
+  const WARM_PROGS = [['nebula', NEB_FS], ['backdrop', BACK_FS], ['stars', STAR_FS, STAR_VS], ['vxStars', VX_FS, VX_VS], ['vxDisc', VX_DISC_FS], ['vxOut', VX_OUT_FS],
+    ['copy', COPY_FS], ['bloomDown', BLOOM_DOWN_FS], ['bloomUp', BLOOM_UP_FS], ['sprite', SPR_FS]];
   S.warm = function (o) {
     const g = ensure(); if (!g) return false;
     o = o || {};
-    [['nebula', NEB_FS], ['backdrop', BACK_FS], ['stars', STAR_FS, STAR_VS], ['vxStars', VX_FS, VX_VS], ['vxDisc', VX_DISC_FS], ['vxOut', VX_OUT_FS],
-      ['copy', COPY_FS], ['bloomDown', BLOOM_DOWN_FS], ['bloomUp', BLOOM_UP_FS], ['sprite', SPR_FS]].forEach(a => prog(a[0], a[1], a[2]));
-    if (o.vortex !== false) vortexStars(g, hashStr(o.vortexSeed === undefined ? 'vortex' : o.vortexSeed), clamp(Math.round(VX_BASE_COUNT * Q().particles), 2000, 700000), Math.max(1, Math.round(o.arms || 3)));
+    if (o.sync) WARM_PROGS.forEach(a => prog(a[0], a[1], a[2]));
+    else if (GL.precompile) WARM_PROGS.forEach(a => { if (!bad[a[0]] && !(progs[a[0]] && progs[a[0]].epoch === epoch)) GL.precompile('gls.' + a[0], a[2] || null, a[1]); });
+    else WARM_PROGS.forEach(a => prog(a[0], a[1], a[2]));
+    if (o.vortex === true) vortexStars(g, hashStr(o.vortexSeed === undefined ? 'vortex' : o.vortexSeed), clamp(Math.round(VX_BASE_COUNT * Q().particles), 2000, 700000), Math.max(1, Math.round(o.arms || 3)));
     return true;
   };
+  S.ready = function () { return WARM_PROGS.every(a => bad[a[0]] || (progs[a[0]] && progs[a[0]].epoch === epoch) || (GL.ready && GL.ready('gls.' + a[0]))); };
   S.dispose = function () {
     const g = GL && GL.gl && GL.gl();
     if (g) {

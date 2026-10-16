@@ -321,7 +321,11 @@ module.exports = function (M, t) {
     for (let i = 0; i < 700; i++) { E.ai.p2 = 1; const o = AI.plan(S, 1, 50 + i).find(x => x.t === 'aiState' && x.patch.p2Done); if (o) seen[o.patch.p2] = 1; }
     t.deep(Object.keys(seen).map(Number).sort((a, b) => a - b), Array.from({ length: 12 }, (_, i) => i + 9));
   });
-  t.test('aging: designs older than 50 turns go while year < 100 (older than 100 afterwards), only while more than one design holds ships; forced removal takes the oldest with > 4 loaded designs', () => {
+  t.test('aging (original rule, AI.FIXES.designKeepFleet off): designs older than 50 turns go while year < 100 (older than 100 afterwards), only while more than one design holds ships; forced removal takes the oldest with > 4 loaded designs', () => {
+    const fx = AI.FIXES.designKeepFleet; AI.FIXES.designKeepFleet = false;
+    try { agingOriginal(); } finally { AI.FIXES.designKeepFleet = fx; }
+  });
+  function agingOriginal() {
     const S = fresh('age'); const E = S.empires[1]; E.ai.p2 = 1; E.ai.dyear = [0, 0, 0, 0, 0, 0];
     const give = (slot, n) => { Sim.Fleet.addShips(S, 1, S.planets[E.capital].starId, slot, n); };
     give(1, 1); give(2, 1);                                                                       // three designs hold ships (0 scouts, 1, 2) + colony design 4 has one
@@ -329,7 +333,7 @@ module.exports = function (M, t) {
     S.year = 60; const o60 = AI.plan(S, 1, 1).filter(o => o.t === 'scrapDesign').map(o => o.slot); t.ok(o60.includes(0) && o60.includes(1), JSON.stringify(o60));
     S.year = 120; E.ai.dyear = [30, 30, 30, 30, 30, 30]; t.eq(AI.plan(S, 1, 1).filter(o => o.t === 'scrapDesign').length >= 1, true);   // T ≥ 100: threshold 100 — 90 turns old is kept, only the empty one is removed
     t.eq(AI.plan(S, 1, 1).filter(o => o.t === 'scrapDesign').length, 1);
-  });
+  }
   t.test('build assignment: every owned planet gets one of the three newest designs (colony design never), Stargate 50 % when the tech is owned and the planet has none', () => {
     const { S, E, mine, foe } = warScene('bld'); E.ai.p2 = 1; const hits = {}; let gates = 0, n = 0;
     E.mods.stargate = true;

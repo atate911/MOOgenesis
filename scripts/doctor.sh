@@ -25,7 +25,7 @@ $QUIET || echo "Master of Orion — Reborn — doctor"
 
 if [[ ! -d "${INSTALL_ROOT}/releases" ]]; then fail "not installed at ${INSTALL_ROOT}"; hint "sudo bash scripts/install.sh"; exit 2; fi
 DOMAIN="$(moo_conf_get "$INSTALL_ROOT" domain)"; DOMAIN="${DOMAIN:-$MOO_DEFAULT_DOMAIN}"
-TLS="$(moo_conf_get "$INSTALL_ROOT" tls)"
+TLS="$(moo_tls_live "$INSTALL_ROOT" "$DOMAIN")"
 CUR="$(moo_current "$INSTALL_ROOT" || true)"
 
 if [[ -n "$CUR" && -f "${INSTALL_ROOT}/current/index.html" && -f "${INSTALL_ROOT}/current/js/manifest.js" ]]; then
@@ -37,6 +37,8 @@ if [[ -f "${INSTALL_ROOT}/current/js/manifest.js" ]]; then
     MISSING=$(grep -o "'js/[^']*\.js'" "${INSTALL_ROOT}/current/js/manifest.js" | tr -d "'" | sort -u | while read -r f; do [[ -f "${INSTALL_ROOT}/current/$f" ]] || echo "$f"; done)
     if [[ -z "$MISSING" ]]; then pass "every file listed in js/manifest.js is present"
     else fail "files missing from the live release: $(echo $MISSING | tr '\n' ' ')"; hint "sudo bash ${INSTALL_ROOT}/scripts/upgrade.sh --force"; fi
+    if grep -q '^window.MOO_BUILD = ' "${INSTALL_ROOT}/current/js/manifest.js"; then pass "release carries a build id (css/js URLs are cache-busted per release)"
+    else note "live release has no build id (built before release stamping)"; hint "sudo bash ${INSTALL_ROOT}/scripts/upgrade.sh --force"; fi
 fi
 
 WEB="$(moo_conf_get "$INSTALL_ROOT" web)"; WEB="${WEB:-nginx}"
@@ -76,6 +78,7 @@ elif [[ "$TLS" == "yes" ]]; then
         else note "certificate expires within 14 days (or is expired)"; hint "sudo certbot renew; systemctl list-timers | grep certbot"; fi
     else fail "TLS is enabled but ${CERT} is missing"; hint "sudo certbot --nginx -d ${DOMAIN}"; fi
 else note "TLS is not enabled — traffic is plain HTTP"; hint "sudo bash scripts/install.sh --domain ${DOMAIN} --email you@example.com"; fi
+if [[ "$TLS" == yes && "$(moo_conf_get "$INSTALL_ROOT" tls)" != yes ]]; then note "install.conf says tls=no but the site serves https"; hint "re-run install.sh (it records tls=yes), or: sudo sed -i 's/^tls=.*/tls=yes/' ${INSTALL_ROOT}/install.conf"; fi
 
 FREE=$(df -Pm "$INSTALL_ROOT" | awk 'NR==2 {print $4}')
 if [[ "${FREE:-0}" -lt 200 ]]; then note "only ${FREE} MB free on the install volume"; else pass "disk: ${FREE} MB free"; fi

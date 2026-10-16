@@ -141,7 +141,7 @@ function playGame(env, job, hooks) {
 
   const wall = new Float32Array(maxTurns), phase = {}, initColonies = {}, elimTurn = [];
   let S = null, played = 0, where = 'newGame', worst = { ms: 0, turn: 0, timings: null };
-  let prevSimTurn = 0, alive = [], lastSnap = null;
+  let prevSimTurn = 0, alive = [], lastSnap = null, aiErrSeen = 0;
   const gameStart = performance.now();
   probe.armed = true;
   probe.rand = 0; probe.randStack = '';
@@ -181,6 +181,14 @@ function playGame(env, job, hooks) {
       }
       alive[k] = a;
       for (const f in e) if (typeof e[f] === 'number' && !Number.isFinite(e[f])) warnOnce('NAN', 'error', played, 'S.empires[' + k + '].' + f + ' is ' + e[f], { empire: k });
+    }
+    // AI planner steps that threw (the `aiLog` order keeps S.aiLog = {n, last[]}): every new entry is an AI_ERRORS hit (details of the first 3, counts of all)
+    const log = S.aiLog;
+    if (log && typeof log.n === 'number' && Array.isArray(log.last) && log.n > aiErrSeen) {
+      for (const x of log.last.slice(Math.max(0, log.last.length - (log.n - aiErrSeen)))) {
+        warn('AI_ERRORS', 'warn', played, 'AI planner step "' + x.step + '" of empire ' + x.empire + ' threw: ' + String(x.msg).split('\n')[0], { empire: x.empire });
+      }
+      aiErrSeen = log.n;
     }
   };
 

@@ -30,7 +30,7 @@ done
 CUR="$(moo_current "${INSTALL_ROOT}" || true)"
 
 if $LIST; then
-    ls -1 "${INSTALL_ROOT}/releases" | sort -r | while read -r r; do
+    moo_releases "${INSTALL_ROOT}" | while read -r r; do
         [[ "$r" == "$CUR" ]] && echo "  * $r   (live)" || echo "    $r"
     done
     exit 0
@@ -38,7 +38,8 @@ fi
 
 [[ $EUID -eq 0 ]] || die "Run with sudo:  sudo bash $0"
 if [[ -z "$TARGET" ]]; then
-    TARGET=$(ls -1 "${INSTALL_ROOT}/releases" | sort -r | grep -v -x -- "$CUR" | head -1 || true)
+    # newest release other than the live one (moo_releases: version-aware order)
+    TARGET=$(moo_releases "${INSTALL_ROOT}" | grep -v -x -- "$CUR" | head -1 || true)
     [[ -n "$TARGET" ]] || die "There is no earlier release to go back to."
 fi
 [[ -d "${INSTALL_ROOT}/releases/${TARGET}" ]] || die "No such release: ${TARGET}  (see --list)"

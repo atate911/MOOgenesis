@@ -27,6 +27,9 @@
 //   transNoWarRequired   TRUE   §4.7: invasion transports need NO war — any non-allied planet with one of my ships (a lingering scout!) over it is a target.  Kept (original feel); false = also require
 //                               war / need_conquer / game ended, which stops 'conquest by scout' between peaceful empires.
 //   threat16             false  §4.1: Classic stores a design's threat in 16 bits (wraps at 65536); fixed = exact.   (32-bit masks of force/D are never reachable and not reproduced.)
+// FIXES (AI.FIXES.<name>; true = fixed (default), false = original; aiClassic turns them off — outside the quirk table because tools/rules/83-balance pins that one to REPORT.md)
+//   defendStaging        TRUE   §5.1/§4.5: Classic only sees ships IN ORBIT, so two unguarded colonies trade the same stack back and forth forever.  Fixed: own stacks in flight count as
+//                               force at their destination and the exact reverse of a defend/idle move made < Mil.MOVE_MEMORY (8) turns ago is refused (memory: E.ai.milMoves).
 //   Not reproduced (documented, no flag): the idle-fleet clean-up that writes the wrong index (the spec does not say what it clears); Classic deleting ships that could not be sent (never replicate).
 //
 // ctx.shared INPUT (js/ai/intel.js): orbit (planned stationary ships), fronts, needConquer, ended/refusers, contact, bestSpeed, inFlight/galaxyMoving, colonyFor.  Ships are sent through AI.Intel.send
@@ -43,6 +46,8 @@ MOO.def(function (M) {
   const reg = (name, v) => { if (Q[name] === undefined) Q[name] = v; };
   reg('attackPhaseBDead', true); reg('attackDesignBound', false); reg('targetSortEarlyStop', false); reg('transFromRebellion', false);
   reg('threatCountsAllies', false); reg('threat16', false); reg('transNoWarRequired', true);
+  AI.FIXES = AI.FIXES || {}; if (AI.FIXES.defendStaging === undefined) AI.FIXES.defendStaging = true;   // see the staging memory below
+  if (AI.FIXES.strikeRange === undefined) AI.FIXES.strikeRange = true;                                    // see Mil.attack (experiment flag, decided by measurement)
 
   const EXPANSIONIST = 2;
   const SPECIAL = { ultrapoor: 0, poor: 1, normal: 2, artifacts: 3, rich: 4, ultrarich: 5, orion: 6 };   // the original's planet-special enum
@@ -138,6 +143,7 @@ MOO.def(function (M) {
       ctx, S, E, me, n, sh, mine: ctx.mine(), flags: { held: !!(S.council && S.council.held), ended: !!(sh.ended !== undefined ? sh.ended : Mil.gameEnded(S)), mask16: !!ctx.quirk('threat16') },
       bs: sh.bestSpeed || Mil.bestSpeed(E), range: (((E.range | 0) || 3) * 15), orbit: new Array(n), threats: {}, force: {}, forceSum: 0, forceOwnSum: 0,
       used: {}, targets: [], fronts: sh.fronts || [], out: { attacks: [], breaks: [], defends: [], idles: [], transports: [], skipped: {} },
+      noMemory: !ctx.fix('defendStaging'), newMoves: {}, strikeAny: ctx.fix('strikeRange'), nearest: {},                                            // staging memory of this plan (Mil.isReverse / Mil.memoryPatch)
     };
     for (const f of S.fleets) if (f.star >= 0 && total(f.ships) > 0) (plan.orbit[f.star] || (plan.orbit[f.star] = [])).push(f);       // every empire's stationary stacks by star
     const mt = Mil.threatOf(plan, me);
@@ -156,6 +162,13 @@ MOO.def(function (M) {
     plan.forceOwnSum = own;
     plan.targets = Mil.buildTargets(plan);
     return plan;
+  };
+  // map units from `star` to the nearest planet of mine (cached per plan)
+  Mil.nearestOwn = function (plan, star) {
+    if (plan.nearest[star] !== undefined) return plan.nearest[star];
+    let bd = 1e9;
+    for (const p of plan.mine) { const d = Geo.unitDist(plan.S, p.starId, star); if (d < bd) bd = d; }
+    return (plan.nearest[star] = bd);
   };
   Mil.threatOf = function (plan, e) {
     let t = plan.threats[e];
@@ -261,7 +274,7 @@ MOO.def(function (M) {
       for (let k = 0; k < targets.length; k++) {
         const t = targets[k];
         if (plan.used[t.planet]) continue;                                                               // marked used (weight −1000) this turn
-        if (!(Geo.unitDist(S, ps, t.star) < plan.range)) continue;                                       // strictly closer than fuel × 15 units
+        if (!(Geo.unitDist(S, ps, t.star) < plan.range) && !(plan.strikeAny && Mil.nearestOwn(plan, t.star) < plan.range)) continue;   // strictly closer than fuel × 15 units (fix: from ANY planet of mine)
         if (targets.length >= 2 && !(R.int(1, 100) < 40)) continue;                                     // the 40 % gate (39 of 100 rolls), skipped for a lone target
         const D = Mil.defenderWeight(plan, t.star), force = plan.force[ps] | 0;
         if (!(force > D)) continue;                                                                      // strictly greater, else the walk goes on
@@ -300,10 +313,45 @@ MOO.def(function (M) {
     }
   }
 
+  // ---- staging memory (fix of the defend/idle ping-pong; AI.FIXES.defendStaging = false restores the original) -------------------------------------------------------------
+  // The original rates every colony with < 5 bases and no ship IN ORBIT as "unguarded" (threat 50), so star A ships its whole stack to B, next turn A is unguarded and B ships it back
+  // (measured: 162 A→B→A reversals in 120 turns on a large map, the stacks never garrison anything).  Fixed variant: (1) own stacks already in flight count as force at their destination
+  // (unguarded / defend-list tests), (2) every defend/idle move is remembered in E.ai.milMoves {"from>to": turn} and the exact reverse move is refused for Mil.MOVE_MEMORY turns.
+  Mil.MOVE_MEMORY = 8;
+  const moveKey = (from, to) => from + '>' + to;
+  // my stacks in flight (snapshot + everything this plan has already dispatched) as design-threat force per destination star
+  Mil.inboundForce = function (plan) {
+    const mt = Mil.threatOf(plan, plan.me), out = {};
+    for (const m of (plan.sh.moving || [])) {
+      if (!m || !(m.to >= 0) || !m.counts) continue;
+      let v = 0;
+      for (let i = 0; i < 6; i++) if (m.counts[i] > 0) v += m.counts[i] * mt[i];
+      if (v > 0) out[m.to] = (out[m.to] || 0) + v;
+    }
+    return out;
+  };
+  // the move from → to would undo a defend/idle move made within the last MOVE_MEMORY turns
+  Mil.isReverse = function (plan, from, to) {
+    if (plan.noMemory) return false;
+    const mem = plan.ctx.state.milMoves, k = moveKey(to, from);
+    return !!(mem && typeof mem[k] === 'number' && mem[k] > plan.S.turn - Mil.MOVE_MEMORY);
+  };
+  function remember(plan, from, to) { if (!plan.noMemory) plan.newMoves[moveKey(from, to)] = plan.S.turn; }
+  // E.ai.milMoves after this plan: the old entries still inside the window plus this plan's moves (patched only when something changed, so the aiState patch stays small)
+  Mil.memoryPatch = function (plan) {
+    if (plan.noMemory) return null;
+    const old = plan.ctx.state.milMoves || {}, next = {}, cut = plan.S.turn - Mil.MOVE_MEMORY;
+    let changed = false;
+    for (const k of Object.keys(old).sort()) { if (typeof old[k] === 'number' && old[k] > cut) next[k] = old[k]; else changed = true; }
+    for (const k of Object.keys(plan.newMoves).sort()) { if (next[k] !== plan.newMoves[k]) changed = true; next[k] = plan.newMoves[k]; }
+    return changed ? next : null;
+  };
+
   // ---- send_defend --------------------------------------------------------------------------------------------------------------------------------------------------------
   Mil.defend = function (plan) {
     const ctx = plan.ctx, S = plan.S, me = plan.me, allies = ctx.quirk('threatCountsAllies');
-    const threat = {};
+    const threat = {}, inbound = plan.noMemory ? {} : Mil.inboundForce(plan);
+    const guard = star => (plan.force[star] | 0) + (inbound[star] | 0);                                   // force in orbit + my stacks already on their way
     const hostile = e => e !== me && (allies || !ctx.allied(e));
     for (const f of S.fleets) {                                                                          // en-route fleets of other empires aimed at one of my planets: Σ ships × hull weight
       if (f.star >= 0 || f.owner === me || !hostile(f.owner) || !(f.to >= 0) || S.planets[f.to].owner !== me) continue;
@@ -315,20 +363,20 @@ MOO.def(function (M) {
       if (t.owner === me || !hostile(t.owner) || !(t.to >= 0) || S.planets[t.to].owner !== me) continue;
       threat[t.to] = (threat[t.to] || 0) + (t.n | 0) * 5;
     }
-    for (const p of plan.mine) if ((p.bases | 0) < 5 && !((plan.force[p.starId] | 0) > 0)) threat[p.starId] = 50;   // every unguarded colony counts as threatened (this overwrites)
+    for (const p of plan.mine) if ((p.bases | 0) < 5 && !(guard(p.starId) > 0)) threat[p.starId] = 50;   // every unguarded colony counts as threatened (this overwrites)
     const list = [];
-    for (const p of plan.mine) { const th = threat[p.starId] | 0; if (Math.floor((plan.force[p.starId] | 0) * 4 / 3) < th) list.push(p.starId); }
+    for (const p of plan.mine) { const th = threat[p.starId] | 0; if (Math.floor(guard(p.starId) * 4 / 3) < th) list.push(p.starId); }
     if (!list.length) return;
     const reach = plan.bs * 30 + 20;
     for (let s = 0; s < plan.n; s++) {                                                                   // every star with force and no threat is a candidate sender
       const force = plan.force[s] | 0;
       if (!(force > 0) || (threat[s] | 0) > 0) continue;
       let dest = -1;
-      for (const d of list) if (Geo.unitDist(S, s, d) < reach) { dest = d; break; }                      // the FIRST list planet in range, not the nearest, and no second try
+      for (const d of list) if (Geo.unitDist(S, s, d) < reach && !Mil.isReverse(plan, s, d)) { dest = d; break; }   // the FIRST list planet in range, not the nearest, and no second try
       if (dest < 0) continue;
       const th = threat[dest];
       if (Math.floor(th * 5 / 3) < force) {
-        if (send(plan, s, dest)) plan.out.defends.push({ from: s, to: dest, threat: th, force });
+        if (send(plan, s, dest)) { plan.out.defends.push({ from: s, to: dest, threat: th, force }); remember(plan, s, dest); }
         threat[dest] = HUGE;                                                                             // nobody else goes there
       }
     }
@@ -347,10 +395,11 @@ MOO.def(function (M) {
       if ((plan.force[s] | 0) < plan.forceOwnSum) continue;                                              // small stacks stay where they are
       let best = -1, bv = 1e18;
       for (let i = 0; i < fronts.length; i++) {
+        if (Mil.isReverse(plan, s, fronts[i].star)) continue;                                            // (fixed) a front the stack just came from is not staged again for a while
         const v = Math.floor(Geo.unitDist(S, s, fronts[i].star) * 10 / div) + fronts[i].value;
         if (v < bv) { bv = v; best = i; }                                                                // the first minimum wins ties
       }
-      if (best >= 0 && send(plan, s, fronts[best].star)) plan.out.idles.push({ from: s, to: fronts[best].star, front: best });
+      if (best >= 0 && send(plan, s, fronts[best].star)) { plan.out.idles.push({ from: s, to: fronts[best].star, front: best }); remember(plan, s, fronts[best].star); }
     }
   };
 
@@ -398,6 +447,8 @@ MOO.def(function (M) {
     Mil.defend(plan);
     Mil.idle(plan);
     Mil.invade(plan);
+    const mem = Mil.memoryPatch(plan);
+    if (mem) ctx.patch({ milMoves: mem });
     ctx.shared.mil = Object.assign({ targets: plan.targets, used: plan.used, forceSum: plan.forceSum, forceOwnSum: plan.forceOwnSum, threat: Mil.threatOf(plan, plan.me).slice() }, plan.out);
   });
 });

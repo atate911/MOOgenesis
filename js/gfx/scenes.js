@@ -444,7 +444,7 @@
     if (P && P.sprite) {
       try {
         const dia = Math.round(r * 2 * (d.rings ? 2.15 : 1.16));
-        const o = { dpr: S * min(1, 640 / (dia * S)) };     // cap the sprite at ~640 device px (generation cost / memory)
+        const o = { dpr: S * min(1, 640 / (dia * S)), sync: true };     // cap the sprite at ~640 device px (generation cost / memory); sync: a static layer is baked once, so it needs the final tier now
         if (opt) for (const k in opt) o[k] = opt[k];
         const spr = P.sprite(d, dia, o);
         if (spr && spr.width) { g.drawImage(spr, cx - dia / 2, cy - dia / 2, dia, dia); return; }

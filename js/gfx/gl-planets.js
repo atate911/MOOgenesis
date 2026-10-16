@@ -9,14 +9,15 @@
    veins, night-side city lights, Fresnel atmosphere + halo, rings with front/back occlusion and mutual shadows.  Gas giants use
    sheared latitude bands + vortices.  Octave counts scale with MOO.Perf.q.planetDetail and with the on-screen radius.
 
-     GLPlanets.supported()                                  -> bool (GL.supported() && the main planet shader compiled; first call waits for it, the other
-                                                               programs compile in parallel via KHR_parallel_shader_compile when available)
+     GLPlanets.supported()                                  -> bool (GL.supported() && noise volume built && the main planet shader linked). NEVER blocks: the
+                                                               first call starts warm() and returns false, so the CPU fallback draws until it flips to true.
+                                                               supported(true) = blocking form for tools.
      GLPlanets.draw(ctx, desc, cx, cy, radius, t, opts)     -> bool (true = drawn).  Same contract as MOO.Gfx.Planets.draw.
      GLPlanets.sprite(desc, diameterPx, opts)               -> canvas (cached static sphere incl. atmosphere / rings; opts.phase = rotation in revs)
      GLPlanets.drawStar(ctx, kind, cx, cy, r, t, opts)      -> bool   animated star surface / corona / prominences / black hole (r = photosphere radius;
                                                                black hole: r = shadow radius, the lensed disc extends to ~3.5 r)
      GLPlanets.drawAsteroids(ctx, desc, cx, cy, w, h, t, opts) -> bool   lit tumbling rock field with parallax (centre cx,cy)
-     GLPlanets.warm(cb) / ready()                           build the noise textures + compile every program without stalling; ready() = all compiled
+     GLPlanets.warm(cb) / ready()                           idle-sliced: noise volume in ~20 ms pieces, one shader compile per slice, polled; ready() = all compiled
    Canvas2D parity: when WebGL2 is unavailable (or Perf tier 'low' / Settings gpu=false, or a program is still compiling) every entry point hands the
    call to MOO.Gfx.Planets / MOO.Gfx.Space.drawStarSurface with the same arguments (GLPlanets.fallback = false disables that; GLPlanets.path tells
    which path served the last call: 'gl' | 'cpu').  opts: lightAngle (-2.3) lightElev (.55) spin (.015) clouds atmosphere lights cloudShadows dpr lightColor.
@@ -93,20 +94,6 @@
       }
     }
   }
-  function ifft3d(re, im) {
-    const N = NZ, tr = new Float64Array(N), ti = new Float64Array(N);
-    for (let axis = 0; axis < 3; axis++) {
-      const stride = axis === 0 ? 1 : axis === 1 ? N : N * N;
-      for (let a = 0; a < N; a++) {
-        for (let b = 0; b < N; b++) {
-          const base = axis === 0 ? (a * N + b) * N : axis === 1 ? a * N * N + b : a * N + b;
-          for (let i = 0; i < N; i++) { tr[i] = re[base + i * stride]; ti[i] = im[base + i * stride]; }
-          fft64(tr, ti);
-          for (let i = 0; i < N; i++) { re[base + i * stride] = tr[i]; im[base + i * stride] = ti[i]; }
-        }
-      }
-    }
-  }
   const _f32 = new Float32Array(1), _u32 = new Uint32Array(_f32.buffer);
   function toHalf(v) {
     _f32[0] = v; const x = _u32[0];
@@ -116,40 +103,64 @@
     return sign | (exp << 10) | ((mant + 0x1000) >> 13);
   }
   let NOISE = null;      // {d1, d2: Uint16Array} half-float RGBA, kept so a restored context can re-upload instantly
-  function buildNoise() {
-    if (NOISE) return NOISE;
-    const N = NZ, N3 = N * N * N, rnd = rng32(0xC0FFEE);
-    const gauss = () => Math.sqrt(-2 * Math.log(Math.max(1e-12, rnd()))) * Math.cos(TAU * rnd());
-    const K0 = 2.6, BW = 0.62;
-    // random-phase Hermitian spectrum with a log-gaussian band around K0 cycles per tile (=> features about one noise unit wide)
-    function fill(R, I) {
-      for (let kz = 0; kz <= 8; kz++) for (let ky = -8; ky <= 8; ky++) for (let kx = -8; kx <= 8; kx++) {
-        if (!(kz > 0 || (ky > 0 || (ky === 0 && kx > 0)))) continue;
-        const k = Math.sqrt(kx * kx + ky * ky + kz * kz);
-        if (k < 1 || k > 8) continue;
-        const amp = Math.exp(-0.5 * Math.pow(Math.log(k / K0) / BW, 2));
-        const cr = amp * gauss(), ci = amp * gauss();
-        const i1 = ((kz & 63) * N + (ky & 63)) * N + (kx & 63), i2 = (((-kz) & 63) * N + ((-ky) & 63)) * N + ((-kx) & 63);
-        R[i1] = cr; I[i1] = ci; R[i2] = cr; I[i2] = -ci;
+  // The noise volume (~200 ms of pure JS) is built in slices of ~20-30 ms: noiseStep() runs one slice and returns true when done,
+  // buildNoise() runs every remaining slice at once (first GL draw before warm() finished, test pages).
+  let NZ_ST = null;
+  function ifftAxis(re, im, axis) {
+    const N = NZ, tr = new Float64Array(N), ti = new Float64Array(N), stride = axis === 0 ? 1 : axis === 1 ? N : N * N;
+    for (let a = 0; a < N; a++) {
+      for (let b = 0; b < N; b++) {
+        const base = axis === 0 ? (a * N + b) * N : axis === 1 ? a * N * N + b : a * N + b;
+        for (let i = 0; i < N; i++) { tr[i] = re[base + i * stride]; ti[i] = im[base + i * stride]; }
+        fft64(tr, ti);
+        for (let i = 0; i < N; i++) { re[base + i * stride] = tr[i]; im[base + i * stride] = ti[i]; }
       }
     }
-    const fields = [];
-    for (let pass = 0; pass < 3; pass++) {
-      const R1 = new Float64Array(N3), I1 = new Float64Array(N3), R2 = new Float64Array(N3), I2 = new Float64Array(N3);
-      fill(R1, I1); fill(R2, I2);
-      for (let i = 0; i < N3; i++) { const a = R1[i] - I2[i], b = I1[i] + R2[i]; R1[i] = a; I1[i] = b; }
-      ifft3d(R1, I1);
-      fields.push(R1, I1);
+  }
+  function noiseStep() {
+    if (NOISE) return true;
+    const N = NZ, N3 = N * N * N;
+    if (!NZ_ST) {
+      const rnd = rng32(0xC0FFEE), gauss = () => Math.sqrt(-2 * Math.log(Math.max(1e-12, rnd()))) * Math.cos(TAU * rnd());
+      const K0 = 2.6, BW = 0.62;
+      // random-phase Hermitian spectrum with a log-gaussian band around K0 cycles per tile (=> features about one noise unit wide)
+      const fill = (R, I) => {
+        for (let kz = 0; kz <= 8; kz++) for (let ky = -8; ky <= 8; ky++) for (let kx = -8; kx <= 8; kx++) {
+          if (!(kz > 0 || (ky > 0 || (ky === 0 && kx > 0)))) continue;
+          const k = Math.sqrt(kx * kx + ky * ky + kz * kz);
+          if (k < 1 || k > 8) continue;
+          const amp = Math.exp(-0.5 * Math.pow(Math.log(k / K0) / BW, 2));
+          const cr = amp * gauss(), ci = amp * gauss();
+          const i1 = ((kz & 63) * N + (ky & 63)) * N + (kx & 63), i2 = (((-kz) & 63) * N + ((-ky) & 63)) * N + ((-kx) & 63);
+          R[i1] = cr; I[i1] = ci; R[i2] = cr; I[i2] = -ci;
+        }
+      };
+      NZ_ST = { fill, fields: [], pass: 0, axis: -1, step: 0 };
     }
-    // normalise every field to std 0.38 (matches simplex noise statistics so thresholds carry over)
-    fields.forEach(f => {
-      let s2 = 0; for (let i = 0; i < N3; i++) s2 += f[i] * f[i];
-      const k = 0.38 / Math.sqrt(s2 / N3); for (let i = 0; i < N3; i++) f[i] *= k;
-    });
-    const A = fields[0], B = [fields[1], fields[2], fields[3], fields[4]];
-    const d1 = new Uint16Array(N3 * 4), d2 = new Uint16Array(N3 * 4);
+    const st = NZ_ST;
+    if (st.pass < 3) {                                   // 3 passes x (spectrum, ifft x, ifft y, ifft z) = 12 slices
+      if (st.axis < 0) {
+        const R1 = new Float64Array(N3), I1 = new Float64Array(N3), R2 = new Float64Array(N3), I2 = new Float64Array(N3);
+        st.fill(R1, I1); st.fill(R2, I2);
+        for (let i = 0; i < N3; i++) { const a = R1[i] - I2[i], b = I1[i] + R2[i]; R1[i] = a; I1[i] = b; }
+        st.cur = [R1, I1]; st.axis = 0;
+      } else {
+        ifftAxis(st.cur[0], st.cur[1], st.axis++);
+        if (st.axis === 3) { st.fields.push(st.cur[0], st.cur[1]); st.cur = null; st.axis = -1; st.pass++; }
+      }
+      return false;
+    }
+    if (st.step === 0) {                                 // normalise every field to std 0.38 (matches simplex noise statistics so thresholds carry over)
+      st.fields.forEach(f => {
+        let s2 = 0; for (let i = 0; i < N3; i++) s2 += f[i] * f[i];
+        const k = 0.38 / Math.sqrt(s2 / N3); for (let i = 0; i < N3; i++) f[i] *= k;
+      });
+      st.d1 = new Uint16Array(N3 * 4); st.d2 = new Uint16Array(N3 * 4); st.z = 0; st.step = 1;
+      return false;
+    }
+    const A = st.fields[0], B = [st.fields[1], st.fields[2], st.fields[3], st.fields[4]], d1 = st.d1, d2 = st.d2;
     const idx = (x, y, z) => ((z & 63) * N + (y & 63)) * N + (x & 63);
-    for (let z = 0; z < N; z++) for (let y = 0; y < N; y++) for (let x = 0; x < N; x++) {
+    for (let z = st.z, ze = Math.min(N, st.z + 16); z < ze; z++) for (let y = 0; y < N; y++) for (let x = 0; x < N; x++) {
       const i = idx(x, y, z), o = i * 4;
       d1[o] = toHalf(A[i]);
       d1[o + 1] = toHalf((A[idx(x + 1, y, z)] - A[idx(x - 1, y, z)]) * 8);
@@ -157,9 +168,12 @@
       d1[o + 3] = toHalf((A[idx(x, y, z + 1)] - A[idx(x, y, z - 1)]) * 8);
       d2[o] = toHalf(B[0][i]); d2[o + 1] = toHalf(B[1][i]); d2[o + 2] = toHalf(B[2][i]); d2[o + 3] = toHalf(B[3][i]);
     }
-    NOISE = { d1, d2 };
-    return NOISE;
+    st.z += 16;
+    if (st.z < N) return false;
+    NOISE = { d1, d2 }; NZ_ST = null;
+    return true;
   }
+  function buildNoise() { while (!noiseStep()) { /* run every remaining slice */ } return NOISE; }
   let noiseTex = null, noiseGl = null;
   function ensureNoiseTex(g) {
     if (noiseTex && noiseGl === g && !g.isContextLost()) return noiseTex;
@@ -1126,7 +1140,10 @@ void main() {
   function finishCompile(e, block) {
     if (e.state !== 'pending') return e.state === 'ready';
     const g = GL.gl();
-    if (!block && parExt && !g.getProgramParameter(e.pg, parExt.COMPLETION_STATUS_KHR)) return false;
+    if (!block) {
+      if (parExt) { if (!g.getProgramParameter(e.pg, parExt.COMPLETION_STATUS_KHR)) return false; }
+      else if (performance.now() - e.t0 < 400) return false;    // no parallel-compile extension: the status query itself blocks, so give the driver time first
+    }
     if (!g.getProgramParameter(e.pg, g.LINK_STATUS)) {
       console.error('[GLPlanets] shader "' + e.name + '" failed:\n' + (g.getShaderInfoLog(e.fs) || '') + '\n' + (g.getProgramInfoLog(e.pg) || ''));
       e.state = 'failed'; failed[e.name] = true; return false;
@@ -1148,14 +1165,20 @@ void main() {
     const e = startCompile(name); if (!e) return null;
     return finishCompile(e, !!block) ? e.h : null;
   }
+  // supported(): true once the GL core is usable, the noise volume is built and the main planet shader is linked. It never blocks:
+  // the first call starts warm() (idle-sliced noise build + staggered compiles) and reports false, so callers draw the Canvas2D
+  // fallback until everything is ready. supported(true) is the old blocking form (tools / benchmarks only).
   let supportedCache = null;
-  function supported() {
+  function supported(block) {
     if (!GL || !GL.supported()) return false;
-    if (supportedCache === null) {
-      for (const k in SRC) startCompile(k);                 // everything compiles in parallel...
-      supportedCache = !!prog('rocky', true);               // ...and we only wait for the main planet shader
-    }
-    return supportedCache;
+    if (supportedCache === false) return false;
+    if (supportedCache === true) return true;
+    if (block) { buildNoise(); for (const k in SRC) startCompile(k); supportedCache = !!prog('rocky', true); return supportedCache; }
+    warm();
+    const e = progs.rocky;
+    if (e && e.state === 'failed') { supportedCache = false; return false; }
+    if (NOISE && e && (e.state === 'ready' || finishCompile(e, false))) { supportedCache = true; return true; }
+    return false;
   }
 
   /* ---------------------------------------------------------------- matrices (row-major 3x3 as flat arrays) */
@@ -1786,21 +1809,32 @@ void main() {
   }
 
   /* ---------------------------------------------------------------- background compilation */
+  // Every slice runs in an idle callback (setTimeout fallback): one shader compile per slice (the driver compiles them in order, and
+  // flooding it would stall any frame that uses GL meanwhile), the noise volume in ~20 ms pieces, then polling until all are linked.
+  const warmCbs = []; let warming = false;
+  const idle = fn => (typeof requestIdleCallback === 'function' ? requestIdleCallback(fn, { timeout: 250 }) : setTimeout(fn, 32));
   function warm(cb) {
     if (!GL || !GL.supported()) { if (cb) cb(false); return; }
-    let step = 0;
+    if (cb) warmCbs.push(cb);
+    if (warming) return;
+    warming = true;
+    const order = ['rocky'].concat(Object.keys(SRC).filter(k => k !== 'rocky'));
+    let ci = 0, noiseUp = false;
+    const finish = ok => { warming = false; if (supportedCache === null) supportedCache = ok; const cbs = warmCbs.splice(0); for (const f of cbs) { try { f(ok); } catch (e) { console.warn('[GLPlanets] warm callback', e); } } };
     (function next() {
       try {
-        if (step === 0) { for (const k in SRC) startCompile(k); step = 1; }
-        else if (step === 1) { buildNoise(); step = 2; }
-        else if (step === 2) { ensureNoiseTex(GL.gl()); step = 3; }
+        if (!GL.supported()) { finish(false); return; }
+        if (ci < order.length) startCompile(order[ci++]);           // one program per slice
+        else if (!NOISE) noiseStep();
+        else if (!noiseUp) { ensureNoiseTex(GL.gl()); noiseUp = true; }
         else {
           let pending = 0;
           for (const k in SRC) { const e = progs[k]; if (e && e.state === 'pending' && !finishCompile(e, false)) pending++; }
-          if (!pending) { if (supportedCache === null) supportedCache = !!(progs.rocky && progs.rocky.state === 'ready'); if (cb) cb(supportedCache); return; }
+          if (!pending) { finish(!!(progs.rocky && progs.rocky.state === 'ready')); return; }
         }
-      } catch (e) { console.warn('[GLPlanets] warm failed', e); if (cb) cb(false); return; }
-      setTimeout(next, 16);
+        if (ci < order.length && !NOISE) noiseStep();                // overlap: a noise slice while the driver links the program just issued
+      } catch (e) { console.warn('[GLPlanets] warm failed', e); finish(false); return; }
+      idle(next);
     })();
   }
   function ready() { for (const k in SRC) { const e = progs[k]; if (!e) return false; if (e.state === 'pending' && !finishCompile(e, false)) return false; } return true; }
@@ -1815,7 +1849,7 @@ void main() {
   const API = {
     LOOKS: LOOK_NAMES, BANDS, STAR_KINDS, supported, ready, draw, sprite, drawStar, drawAsteroids, warm, stats, fallback: true, path: 'gl',
     extent(desc) { return extentOf(planetData(desc)); },
-    _dbg: { SRC, prog, planetData, PCACHE, failed, HEAD: GLSL_HEAD, LIB: GLSL_LIB, buildNoise }
+    _dbg: { SRC, prog, planetData, PCACHE, failed, HEAD: GLSL_HEAD, LIB: GLSL_LIB, buildNoise, noiseStep }
   };
   Gfx.GLPlanets = API;
 })(window.MOO);
