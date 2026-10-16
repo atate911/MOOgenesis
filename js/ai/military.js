@@ -7,6 +7,8 @@
 //     (then it first BREAKS a NAP/alliance with the owner: `diplomacy breakTreaty` order, Expansionist odds) — that lie inside fuel range, have type ≥ my colonisable threshold, and are
 //     not the Orion planet before year 120.  Unowned planets with a foreign fleet over them count as owned by the lowest-index such empire.  Weight = pop − 10·bases + 30·special − 20.
 //   * per front (Intel.fronts, in order) the WHOLE stack at the anchor planet goes to the first target (weight order) that is closer than fuel·15 units, passes d100 < 40 (always when the list has
+//     [measured 2026-10, 8 large games × 200 turns: also accepting targets within fuel·15 of ANY own planet doubled the dispatches (60 → 132) but lowered captures (31 → 19) and produced no conquest
+//      ending either way (0 eliminations in both runs) — the anchor-only radius is kept.]
 //     < 2 entries) and whose defender weight D is strictly below my force there: D = Σ other empires' ships × design threat + (weaponTech%·5 + (planetShield+10)·10) · missile bases.
 //     The target is "used" for this turn whether or not a fleet really leaves.  No retreat, no escorts, no coordination, no re-routing (research/08 §4.11).
 //   * send_defend: every planet with < 5 bases and no ship over it has a flat threat of 50; planets whose force·4/3 < threat are on the defend list; each star that has force and no threat sends
@@ -47,7 +49,6 @@ MOO.def(function (M) {
   reg('attackPhaseBDead', true); reg('attackDesignBound', false); reg('targetSortEarlyStop', false); reg('transFromRebellion', false);
   reg('threatCountsAllies', false); reg('threat16', false); reg('transNoWarRequired', true);
   AI.FIXES = AI.FIXES || {}; if (AI.FIXES.defendStaging === undefined) AI.FIXES.defendStaging = true;   // see the staging memory below
-  if (AI.FIXES.strikeRange === undefined) AI.FIXES.strikeRange = true;                                    // see Mil.attack (experiment flag, decided by measurement)
 
   const EXPANSIONIST = 2;
   const SPECIAL = { ultrapoor: 0, poor: 1, normal: 2, artifacts: 3, rich: 4, ultrarich: 5, orion: 6 };   // the original's planet-special enum
@@ -143,7 +144,7 @@ MOO.def(function (M) {
       ctx, S, E, me, n, sh, mine: ctx.mine(), flags: { held: !!(S.council && S.council.held), ended: !!(sh.ended !== undefined ? sh.ended : Mil.gameEnded(S)), mask16: !!ctx.quirk('threat16') },
       bs: sh.bestSpeed || Mil.bestSpeed(E), range: (((E.range | 0) || 3) * 15), orbit: new Array(n), threats: {}, force: {}, forceSum: 0, forceOwnSum: 0,
       used: {}, targets: [], fronts: sh.fronts || [], out: { attacks: [], breaks: [], defends: [], idles: [], transports: [], skipped: {} },
-      noMemory: !ctx.fix('defendStaging'), newMoves: {}, strikeAny: ctx.fix('strikeRange'), nearest: {},                                            // staging memory of this plan (Mil.isReverse / Mil.memoryPatch)
+      noMemory: !ctx.fix('defendStaging'), newMoves: {},                                            // staging memory of this plan (Mil.isReverse / Mil.memoryPatch)
     };
     for (const f of S.fleets) if (f.star >= 0 && total(f.ships) > 0) (plan.orbit[f.star] || (plan.orbit[f.star] = [])).push(f);       // every empire's stationary stacks by star
     const mt = Mil.threatOf(plan, me);
@@ -162,13 +163,6 @@ MOO.def(function (M) {
     plan.forceOwnSum = own;
     plan.targets = Mil.buildTargets(plan);
     return plan;
-  };
-  // map units from `star` to the nearest planet of mine (cached per plan)
-  Mil.nearestOwn = function (plan, star) {
-    if (plan.nearest[star] !== undefined) return plan.nearest[star];
-    let bd = 1e9;
-    for (const p of plan.mine) { const d = Geo.unitDist(plan.S, p.starId, star); if (d < bd) bd = d; }
-    return (plan.nearest[star] = bd);
   };
   Mil.threatOf = function (plan, e) {
     let t = plan.threats[e];
@@ -274,7 +268,7 @@ MOO.def(function (M) {
       for (let k = 0; k < targets.length; k++) {
         const t = targets[k];
         if (plan.used[t.planet]) continue;                                                               // marked used (weight −1000) this turn
-        if (!(Geo.unitDist(S, ps, t.star) < plan.range) && !(plan.strikeAny && Mil.nearestOwn(plan, t.star) < plan.range)) continue;   // strictly closer than fuel × 15 units (fix: from ANY planet of mine)
+        if (!(Geo.unitDist(S, ps, t.star) < plan.range)) continue;                                       // strictly closer than fuel × 15 units
         if (targets.length >= 2 && !(R.int(1, 100) < 40)) continue;                                     // the 40 % gate (39 of 100 rolls), skipped for a lone target
         const D = Mil.defenderWeight(plan, t.star), force = plan.force[ps] | 0;
         if (!(force > D)) continue;                                                                      // strictly greater, else the walk goes on
