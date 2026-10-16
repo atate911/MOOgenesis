@@ -1,0 +1,1050 @@
+{
+  "schema_version": "1.0",
+  "assets": [
+    {
+      "schema_version": "1.0",
+      "asset_id": "fleet.original.frigate",
+      "display_name": "Frigate",
+      "collection": "original",
+      "asset_class": "frigate",
+      "asset_kind": "mobile_ship",
+      "design_status": "concept_candidate_not_selected",
+      "intended_purpose": "Small agile escort with light weapons; candidate for escort-unit art.",
+      "silhouette": "slender escort",
+      "suggested_placements": [
+        "top-down system map",
+        "fleet or unit selection UI",
+        "shipyard build menu",
+        "technology preview",
+        "encyclopedia entry"
+      ],
+      "not_intended_for": [
+        "background imagery",
+        "3D mesh or material",
+        "animation sprite sheet",
+        "collision geometry",
+        "final balanced gameplay statistics"
+      ],
+      "rendering": {
+        "format": "PNG",
+        "dimensions_px": [
+          1774,
+          887
+        ],
+        "has_alpha": true,
+        "alpha_range": [
+          0,
+          255
+        ],
+        "visible_bounds_alpha_128_xyxy": [
+          557,
+          321,
+          1244,
+          583
+        ],
+        "bounds_convention": "left/top inclusive; right/bottom exclusive",
+        "pixel_rgba_sha256": "ad398e84fbba7f974e0b21b70024aa334554cfc8e94573ef23e9f501d3654833",
+        "camera_intent": "flat top-down orthographic",
+        "facing": "+X / right",
+        "rotation_policy": "may rotate around visual center to match heading",
+        "suggested_pivot_normalized": [
+          0.5,
+          0.5
+        ],
+        "pivot_status": "starting value; refine against visible bounds before import",
+        "canvas_aspect_ratio_intent": "2:1"
+      },
+      "style_intent": {
+        "genre": "serious industrial hard science fiction",
+        "lighting": "upper-left neutral key, soft fill, thin rim",
+        "hull_palette": "neutral grayscale",
+        "team_color": {
+          "source_hex": "#FF00FF",
+          "coverage_target_percent": [
+            15,
+            20
+          ],
+          "purpose": "player/faction recoloring",
+          "mask_included": false,
+          "implementation_note": "Generated shades and edge pixels vary; do not rely on exact RGB equality. Create and inspect a magenta livery mask before recoloring; preserve neutral hull and white-cyan emission."
+        },
+        "emission": "white-cyan engines"
+      },
+      "scale": {
+        "relative_length_target": 1.0,
+        "unit": "frigate length",
+        "applied_to_pixels": false,
+        "note": "Canvas sizes and visible lengths are concept framing, not gameplay or physical scale. Normalize chosen assets at import; retain aspect ratio."
+      },
+      "integration": {
+        "alpha_blending": "straight-alpha source; convert only if engine requires it",
+        "ui_icon_sizes_to_review_px": [
+          48,
+          64
+        ],
+        "icon_guidance": "Fit using visible alpha bounds plus consistent padding for selection icons. Use target relative lengths separately for world-map sprites. Review thin features at final display size.",
+        "mipmap_guidance": "Test downsampling and transparent-edge halos against actual game backgrounds.",
+        "gameplay_contract": "Class and roles are intended art uses only; weapons, damage, costs, technology, and movement rules must come from game design."
+      },
+      "validation_status": {
+        "png_decodable": true,
+        "metadata_roundtrip_checked": true,
+        "visual_pixels_preserved": true,
+        "production_ready": false,
+        "remaining_checks": [
+          "exact relative scale",
+          "clean edges and transparent margins",
+          "strict grayscale and magenta-only hull colors",
+          "orthographic consistency",
+          "radial symmetry for structures",
+          "small-icon readability"
+        ]
+      },
+      "provenance": {
+        "generator": "OpenAI built-in imagegen",
+        "created_for": "user-requested 4X fleet concept exploration",
+        "rights_note": "No license terms assigned by this metadata."
+      },
+      "relationships": {
+        "same_class_candidates": [
+          "fleet.revised.frigate",
+          "fleet.alternatives.frigate"
+        ],
+        "reuses_asset_id": null
+      },
+      "file": "original--01-frigate.png",
+      "sidecar": "original--01-frigate.png.asset.json",
+      "catalog_path": "original--01-frigate.png",
+      "sidecar_path": "original--01-frigate.png.asset.json"
+    },
+    {
+      "schema_version": "1.0",
+      "asset_id": "fleet.original.destroyer",
+      "display_name": "Destroyer",
+      "collection": "original",
+      "asset_class": "destroyer",
+      "asset_kind": "mobile_ship",
+      "design_status": "concept_candidate_not_selected",
+      "intended_purpose": "Elongated gun-focused warship; candidate for destroyer-unit art.",
+      "silhouette": "elongated conventional hull",
+      "suggested_placements": [
+        "top-down system map",
+        "fleet or unit selection UI",
+        "shipyard build menu",
+        "technology preview",
+        "encyclopedia entry"
+      ],
+      "not_intended_for": [
+        "background imagery",
+        "3D mesh or material",
+        "animation sprite sheet",
+        "collision geometry",
+        "final balanced gameplay statistics"
+      ],
+      "rendering": {
+        "format": "PNG",
+        "dimensions_px": [
+          1774,
+          887
+        ],
+        "has_alpha": true,
+        "alpha_range": [
+          0,
+          255
+        ],
+        "visible_bounds_alpha_128_xyxy": [
+          165,
+          229,
+          1626,
+          657
+        ],
+        "bounds_convention": "left/top inclusive; right/bottom exclusive",
+        "pixel_rgba_sha256": "e9773575281268601ddf157f024082050528ea06c11e0f318dd3d63dffb7f4a0",
+        "camera_intent": "flat top-down orthographic",
+        "facing": "+X / right",
+        "rotation_policy": "may rotate around visual center to match heading",
+        "suggested_pivot_normalized": [
+          0.5,
+          0.5
+        ],
+        "pivot_status": "starting value; refine against visible bounds before import",
+        "canvas_aspect_ratio_intent": "2:1"
+      },
+      "style_intent": {
+        "genre": "serious industrial hard science fiction",
+        "lighting": "upper-left neutral key, soft fill, thin rim",
+        "hull_palette": "neutral grayscale",
+        "team_color": {
+          "source_hex": "#FF00FF",
+          "coverage_target_percent": [
+            15,
+            20
+          ],
+          "purpose": "player/faction recoloring",
+          "mask_included": false,
+          "implementation_note": "Generated shades and edge pixels vary; do not rely on exact RGB equality. Create and inspect a magenta livery mask before recoloring; preserve neutral hull and white-cyan emission."
+        },
+        "emission": "white-cyan engines"
+      },
+      "scale": {
+        "relative_length_target": 1.45,
+        "unit": "frigate length",
+        "applied_to_pixels": false,
+        "note": "Canvas sizes and visible lengths are concept framing, not gameplay or physical scale. Normalize chosen assets at import; retain aspect ratio."
+      },
+      "integration": {
+        "alpha_blending": "straight-alpha source; convert only if engine requires it",
+        "ui_icon_sizes_to_review_px": [
+          48,
+          64
+        ],
+        "icon_guidance": "Fit using visible alpha bounds plus consistent padding for selection icons. Use target relative lengths separately for world-map sprites. Review thin features at final display size.",
+        "mipmap_guidance": "Test downsampling and transparent-edge halos against actual game backgrounds.",
+        "gameplay_contract": "Class and roles are intended art uses only; weapons, damage, costs, technology, and movement rules must come from game design."
+      },
+      "validation_status": {
+        "png_decodable": true,
+        "metadata_roundtrip_checked": true,
+        "visual_pixels_preserved": true,
+        "production_ready": false,
+        "remaining_checks": [
+          "exact relative scale",
+          "clean edges and transparent margins",
+          "strict grayscale and magenta-only hull colors",
+          "orthographic consistency",
+          "radial symmetry for structures",
+          "small-icon readability"
+        ]
+      },
+      "provenance": {
+        "generator": "OpenAI built-in imagegen",
+        "created_for": "user-requested 4X fleet concept exploration",
+        "rights_note": "No license terms assigned by this metadata."
+      },
+      "relationships": {
+        "same_class_candidates": [
+          "fleet.revised.destroyer",
+          "fleet.alternatives.destroyer"
+        ],
+        "reuses_asset_id": null
+      },
+      "file": "original--02-destroyer.png",
+      "sidecar": "original--02-destroyer.png.asset.json",
+      "catalog_path": "original--02-destroyer.png",
+      "sidecar_path": "original--02-destroyer.png.asset.json"
+    },
+    {
+      "schema_version": "1.0",
+      "asset_id": "fleet.original.cruiser",
+      "display_name": "Cruiser",
+      "collection": "original",
+      "asset_class": "cruiser",
+      "asset_kind": "mobile_ship",
+      "design_status": "concept_candidate_not_selected",
+      "intended_purpose": "Heavy cruiser with turret batteries and missile pods; candidate for cruiser-unit art.",
+      "silhouette": "layered elongated hull",
+      "suggested_placements": [
+        "top-down system map",
+        "fleet or unit selection UI",
+        "shipyard build menu",
+        "technology preview",
+        "encyclopedia entry"
+      ],
+      "not_intended_for": [
+        "background imagery",
+        "3D mesh or material",
+        "animation sprite sheet",
+        "collision geometry",
+        "final balanced gameplay statistics"
+      ],
+      "rendering": {
+        "format": "PNG",
+        "dimensions_px": [
+          1774,
+          887
+        ],
+        "has_alpha": true,
+        "alpha_range": [
+          0,
+          255
+        ],
+        "visible_bounds_alpha_128_xyxy": [
+          304,
+          269,
+          1487,
+          618
+        ],
+        "bounds_convention": "left/top inclusive; right/bottom exclusive",
+        "pixel_rgba_sha256": "0ff2a2d4f1801397a55f0059df95f2ce03d4136431d739a3ff03f1b5eaac74a6",
+        "camera_intent": "flat top-down orthographic",
+        "facing": "+X / right",
+        "rotation_policy": "may rotate around visual center to match heading",
+        "suggested_pivot_normalized": [
+          0.5,
+          0.5
+        ],
+        "pivot_status": "starting value; refine against visible bounds before import",
+        "canvas_aspect_ratio_intent": "2:1"
+      },
+      "style_intent": {
+        "genre": "serious industrial hard science fiction",
+        "lighting": "upper-left neutral key, soft fill, thin rim",
+        "hull_palette": "neutral grayscale",
+        "team_color": {
+          "source_hex": "#FF00FF",
+          "coverage_target_percent": [
+            15,
+            20
+          ],
+          "purpose": "player/faction recoloring",
+          "mask_included": false,
+          "implementation_note": "Generated shades and edge pixels vary; do not rely on exact RGB equality. Create and inspect a magenta livery mask before recoloring; preserve neutral hull and white-cyan emission."
+        },
+        "emission": "white-cyan engines"
+      },
+      "scale": {
+        "relative_length_target": 2.1,
+        "unit": "frigate length",
+        "applied_to_pixels": false,
+        "note": "Canvas sizes and visible lengths are concept framing, not gameplay or physical scale. Normalize chosen assets at import; retain aspect ratio."
+      },
+      "integration": {
+        "alpha_blending": "straight-alpha source; convert only if engine requires it",
+        "ui_icon_sizes_to_review_px": [
+          48,
+          64
+        ],
+        "icon_guidance": "Fit using visible alpha bounds plus consistent padding for selection icons. Use target relative lengths separately for world-map sprites. Review thin features at final display size.",
+        "mipmap_guidance": "Test downsampling and transparent-edge halos against actual game backgrounds.",
+        "gameplay_contract": "Class and roles are intended art uses only; weapons, damage, costs, technology, and movement rules must come from game design."
+      },
+      "validation_status": {
+        "png_decodable": true,
+        "metadata_roundtrip_checked": true,
+        "visual_pixels_preserved": true,
+        "production_ready": false,
+        "remaining_checks": [
+          "exact relative scale",
+          "clean edges and transparent margins",
+          "strict grayscale and magenta-only hull colors",
+          "orthographic consistency",
+          "radial symmetry for structures",
+          "small-icon readability"
+        ]
+      },
+      "provenance": {
+        "generator": "OpenAI built-in imagegen",
+        "created_for": "user-requested 4X fleet concept exploration",
+        "rights_note": "No license terms assigned by this metadata."
+      },
+      "relationships": {
+        "same_class_candidates": [
+          "fleet.revised.cruiser",
+          "fleet.alternatives.cruiser"
+        ],
+        "reuses_asset_id": null
+      },
+      "file": "original--03-cruiser.png",
+      "sidecar": "original--03-cruiser.png.asset.json",
+      "catalog_path": "original--03-cruiser.png",
+      "sidecar_path": "original--03-cruiser.png.asset.json"
+    },
+    {
+      "schema_version": "1.0",
+      "asset_id": "fleet.original.battleship",
+      "display_name": "Battleship",
+      "collection": "original",
+      "asset_class": "battleship",
+      "asset_kind": "mobile_ship",
+      "design_status": "concept_candidate_not_selected",
+      "intended_purpose": "Heavy capital combat ship with main guns and layered armor; candidate for battleship-unit art.",
+      "silhouette": "broad armored hull",
+      "suggested_placements": [
+        "top-down system map",
+        "fleet or unit selection UI",
+        "shipyard build menu",
+        "technology preview",
+        "encyclopedia entry"
+      ],
+      "not_intended_for": [
+        "background imagery",
+        "3D mesh or material",
+        "animation sprite sheet",
+        "collision geometry",
+        "final balanced gameplay statistics"
+      ],
+      "rendering": {
+        "format": "PNG",
+        "dimensions_px": [
+          1774,
+          887
+        ],
+        "has_alpha": true,
+        "alpha_range": [
+          0,
+          255
+        ],
+        "visible_bounds_alpha_128_xyxy": [
+          37,
+          167,
+          1746,
+          713
+        ],
+        "bounds_convention": "left/top inclusive; right/bottom exclusive",
+        "pixel_rgba_sha256": "74ba5e0705d02a89d762ef263adb0f72db94fe0319af596976a69f14b75269d3",
+        "camera_intent": "flat top-down orthographic",
+        "facing": "+X / right",
+        "rotation_policy": "may rotate around visual center to match heading",
+        "suggested_pivot_normalized": [
+          0.5,
+          0.5
+        ],
+        "pivot_status": "starting value; refine against visible bounds before import",
+        "canvas_aspect_ratio_intent": "2:1"
+      },
+      "style_intent": {
+        "genre": "serious industrial hard science fiction",
+        "lighting": "upper-left neutral key, soft fill, thin rim",
+        "hull_palette": "neutral grayscale",
+        "team_color": {
+          "source_hex": "#FF00FF",
+          "coverage_target_percent": [
+            15,
+            20
+          ],
+          "purpose": "player/faction recoloring",
+          "mask_included": false,
+          "implementation_note": "Generated shades and edge pixels vary; do not rely on exact RGB equality. Create and inspect a magenta livery mask before recoloring; preserve neutral hull and white-cyan emission."
+        },
+        "emission": "white-cyan engines"
+      },
+      "scale": {
+        "relative_length_target": 3.0,
+        "unit": "frigate length",
+        "applied_to_pixels": false,
+        "note": "Canvas sizes and visible lengths are concept framing, not gameplay or physical scale. Normalize chosen assets at import; retain aspect ratio."
+      },
+      "integration": {
+        "alpha_blending": "straight-alpha source; convert only if engine requires it",
+        "ui_icon_sizes_to_review_px": [
+          48,
+          64
+        ],
+        "icon_guidance": "Fit using visible alpha bounds plus consistent padding for selection icons. Use target relative lengths separately for world-map sprites. Review thin features at final display size.",
+        "mipmap_guidance": "Test downsampling and transparent-edge halos against actual game backgrounds.",
+        "gameplay_contract": "Class and roles are intended art uses only; weapons, damage, costs, technology, and movement rules must come from game design."
+      },
+      "validation_status": {
+        "png_decodable": true,
+        "metadata_roundtrip_checked": true,
+        "visual_pixels_preserved": true,
+        "production_ready": false,
+        "remaining_checks": [
+          "exact relative scale",
+          "clean edges and transparent margins",
+          "strict grayscale and magenta-only hull colors",
+          "orthographic consistency",
+          "radial symmetry for structures",
+          "small-icon readability"
+        ]
+      },
+      "provenance": {
+        "generator": "OpenAI built-in imagegen",
+        "created_for": "user-requested 4X fleet concept exploration",
+        "rights_note": "No license terms assigned by this metadata."
+      },
+      "relationships": {
+        "same_class_candidates": [
+          "fleet.revised.battleship",
+          "fleet.alternatives.battleship"
+        ],
+        "reuses_asset_id": null
+      },
+      "file": "original--04-battleship.png",
+      "sidecar": "original--04-battleship.png.asset.json",
+      "catalog_path": "original--04-battleship.png",
+      "sidecar_path": "original--04-battleship.png.asset.json"
+    },
+    {
+      "schema_version": "1.0",
+      "asset_id": "fleet.original.doomstar",
+      "display_name": "Doomstar",
+      "collection": "original",
+      "asset_class": "doomstar",
+      "asset_kind": "mobile_ship",
+      "design_status": "concept_candidate_not_selected",
+      "intended_purpose": "Colossal planet-killer superweapon ship with forward emitter dish; candidate for endgame superweapon-unit art.",
+      "silhouette": "long spine and concave dish",
+      "suggested_placements": [
+        "top-down system map",
+        "fleet or unit selection UI",
+        "shipyard build menu",
+        "technology preview",
+        "encyclopedia entry"
+      ],
+      "not_intended_for": [
+        "background imagery",
+        "3D mesh or material",
+        "animation sprite sheet",
+        "collision geometry",
+        "final balanced gameplay statistics"
+      ],
+      "rendering": {
+        "format": "PNG",
+        "dimensions_px": [
+          1774,
+          887
+        ],
+        "has_alpha": true,
+        "alpha_range": [
+          0,
+          255
+        ],
+        "visible_bounds_alpha_128_xyxy": [
+          188,
+          162,
+          1607,
+          725
+        ],
+        "bounds_convention": "left/top inclusive; right/bottom exclusive",
+        "pixel_rgba_sha256": "6a7a60227e2ee6d4ee3dd11ec5da9844fff117779a7b86ecaeb6efe4baca3171",
+        "camera_intent": "flat top-down orthographic",
+        "facing": "+X / right",
+        "rotation_policy": "may rotate around visual center to match heading",
+        "suggested_pivot_normalized": [
+          0.5,
+          0.5
+        ],
+        "pivot_status": "starting value; refine against visible bounds before import",
+        "canvas_aspect_ratio_intent": "2:1"
+      },
+      "style_intent": {
+        "genre": "serious industrial hard science fiction",
+        "lighting": "upper-left neutral key, soft fill, thin rim",
+        "hull_palette": "neutral grayscale",
+        "team_color": {
+          "source_hex": "#FF00FF",
+          "coverage_target_percent": [
+            15,
+            20
+          ],
+          "purpose": "player/faction recoloring",
+          "mask_included": false,
+          "implementation_note": "Generated shades and edge pixels vary; do not rely on exact RGB equality. Create and inspect a magenta livery mask before recoloring; preserve neutral hull and white-cyan emission."
+        },
+        "emission": "white-cyan engines"
+      },
+      "scale": {
+        "relative_length_target": 4.4,
+        "unit": "frigate length",
+        "applied_to_pixels": false,
+        "note": "Canvas sizes and visible lengths are concept framing, not gameplay or physical scale. Normalize chosen assets at import; retain aspect ratio."
+      },
+      "integration": {
+        "alpha_blending": "straight-alpha source; convert only if engine requires it",
+        "ui_icon_sizes_to_review_px": [
+          48,
+          64
+        ],
+        "icon_guidance": "Fit using visible alpha bounds plus consistent padding for selection icons. Use target relative lengths separately for world-map sprites. Review thin features at final display size.",
+        "mipmap_guidance": "Test downsampling and transparent-edge halos against actual game backgrounds.",
+        "gameplay_contract": "Class and roles are intended art uses only; weapons, damage, costs, technology, and movement rules must come from game design."
+      },
+      "validation_status": {
+        "png_decodable": true,
+        "metadata_roundtrip_checked": true,
+        "visual_pixels_preserved": true,
+        "production_ready": false,
+        "remaining_checks": [
+          "exact relative scale",
+          "clean edges and transparent margins",
+          "strict grayscale and magenta-only hull colors",
+          "orthographic consistency",
+          "radial symmetry for structures",
+          "small-icon readability"
+        ]
+      },
+      "provenance": {
+        "generator": "OpenAI built-in imagegen",
+        "created_for": "user-requested 4X fleet concept exploration",
+        "rights_note": "No license terms assigned by this metadata."
+      },
+      "relationships": {
+        "same_class_candidates": [
+          "fleet.revised.doomstar",
+          "fleet.alternatives.doomstar"
+        ],
+        "reuses_asset_id": null
+      },
+      "file": "original--05-doomstar.png",
+      "sidecar": "original--05-doomstar.png.asset.json",
+      "catalog_path": "original--05-doomstar.png",
+      "sidecar_path": "original--05-doomstar.png.asset.json"
+    },
+    {
+      "schema_version": "1.0",
+      "asset_id": "fleet.original.starbase",
+      "display_name": "Starbase",
+      "collection": "original",
+      "asset_class": "starbase",
+      "asset_kind": "orbital_structure",
+      "design_status": "concept_candidate_not_selected",
+      "intended_purpose": "Modular orbital docking and logistics hub; candidate for orbital support infrastructure art.",
+      "silhouette": "eight docking arms",
+      "suggested_placements": [
+        "top-down system map",
+        "orbital infrastructure selection UI",
+        "construction menu",
+        "technology preview",
+        "encyclopedia entry"
+      ],
+      "not_intended_for": [
+        "background imagery",
+        "3D mesh or material",
+        "animation sprite sheet",
+        "collision geometry",
+        "final balanced gameplay statistics"
+      ],
+      "rendering": {
+        "format": "PNG",
+        "dimensions_px": [
+          1254,
+          1254
+        ],
+        "has_alpha": true,
+        "alpha_range": [
+          0,
+          255
+        ],
+        "visible_bounds_alpha_128_xyxy": [
+          16,
+          11,
+          1238,
+          1236
+        ],
+        "bounds_convention": "left/top inclusive; right/bottom exclusive",
+        "pixel_rgba_sha256": "8354b121a0989ffebb0473d0fa9191cddfbbf15a924c39a84e590fad9ef64c4d",
+        "camera_intent": "flat top-down orthographic",
+        "facing": "none",
+        "rotation_policy": "stationary; no directional heading",
+        "suggested_pivot_normalized": [
+          0.5,
+          0.5
+        ],
+        "pivot_status": "starting value; refine against visible bounds before import",
+        "canvas_aspect_ratio_intent": "1:1"
+      },
+      "style_intent": {
+        "genre": "serious industrial hard science fiction",
+        "lighting": "upper-left neutral key, soft fill, thin rim",
+        "hull_palette": "neutral grayscale",
+        "team_color": {
+          "source_hex": "#FF00FF",
+          "coverage_target_percent": [
+            15,
+            20
+          ],
+          "purpose": "player/faction recoloring",
+          "mask_included": false,
+          "implementation_note": "Generated shades and edge pixels vary; do not rely on exact RGB equality. Create and inspect a magenta livery mask before recoloring; preserve neutral hull and white-cyan emission."
+        },
+        "emission": "no engine emission"
+      },
+      "scale": {
+        "relative_length_target": null,
+        "unit": null,
+        "applied_to_pixels": false,
+        "note": "Canvas sizes and visible lengths are concept framing, not gameplay or physical scale. Normalize chosen assets at import; retain aspect ratio."
+      },
+      "integration": {
+        "alpha_blending": "straight-alpha source; convert only if engine requires it",
+        "ui_icon_sizes_to_review_px": [
+          48,
+          64
+        ],
+        "icon_guidance": "Fit using visible alpha bounds plus consistent padding for selection icons. Use target relative lengths separately for world-map sprites. Review thin features at final display size.",
+        "mipmap_guidance": "Test downsampling and transparent-edge halos against actual game backgrounds.",
+        "gameplay_contract": "Class and roles are intended art uses only; weapons, damage, costs, technology, and movement rules must come from game design."
+      },
+      "validation_status": {
+        "png_decodable": true,
+        "metadata_roundtrip_checked": true,
+        "visual_pixels_preserved": true,
+        "production_ready": false,
+        "remaining_checks": [
+          "exact relative scale",
+          "clean edges and transparent margins",
+          "strict grayscale and magenta-only hull colors",
+          "orthographic consistency",
+          "radial symmetry for structures",
+          "small-icon readability"
+        ]
+      },
+      "provenance": {
+        "generator": "OpenAI built-in imagegen",
+        "created_for": "user-requested 4X fleet concept exploration",
+        "rights_note": "No license terms assigned by this metadata."
+      },
+      "relationships": {
+        "same_class_candidates": [
+          "fleet.revised.starbase",
+          "fleet.alternatives.starbase"
+        ],
+        "reuses_asset_id": null
+      },
+      "file": "original--06-starbase.png",
+      "sidecar": "original--06-starbase.png.asset.json",
+      "catalog_path": "original--06-starbase.png",
+      "sidecar_path": "original--06-starbase.png.asset.json"
+    },
+    {
+      "schema_version": "1.0",
+      "asset_id": "fleet.original.battlestation",
+      "display_name": "Battlestation",
+      "collection": "original",
+      "asset_class": "battlestation",
+      "asset_kind": "orbital_structure",
+      "design_status": "concept_candidate_not_selected",
+      "intended_purpose": "Armed orbital defense platform; candidate for stationary defense installation art.",
+      "silhouette": "eight armed radial arms",
+      "suggested_placements": [
+        "top-down system map",
+        "orbital infrastructure selection UI",
+        "construction menu",
+        "technology preview",
+        "encyclopedia entry"
+      ],
+      "not_intended_for": [
+        "background imagery",
+        "3D mesh or material",
+        "animation sprite sheet",
+        "collision geometry",
+        "final balanced gameplay statistics"
+      ],
+      "rendering": {
+        "format": "PNG",
+        "dimensions_px": [
+          1254,
+          1254
+        ],
+        "has_alpha": true,
+        "alpha_range": [
+          0,
+          255
+        ],
+        "visible_bounds_alpha_128_xyxy": [
+          30,
+          38,
+          1225,
+          1212
+        ],
+        "bounds_convention": "left/top inclusive; right/bottom exclusive",
+        "pixel_rgba_sha256": "6719d3a504c407e5b7e005b64efde514a4353c686f0a4a996b4bd7a319aa23c6",
+        "camera_intent": "flat top-down orthographic",
+        "facing": "none",
+        "rotation_policy": "stationary; no directional heading",
+        "suggested_pivot_normalized": [
+          0.5,
+          0.5
+        ],
+        "pivot_status": "starting value; refine against visible bounds before import",
+        "canvas_aspect_ratio_intent": "1:1"
+      },
+      "style_intent": {
+        "genre": "serious industrial hard science fiction",
+        "lighting": "upper-left neutral key, soft fill, thin rim",
+        "hull_palette": "neutral grayscale",
+        "team_color": {
+          "source_hex": "#FF00FF",
+          "coverage_target_percent": [
+            15,
+            20
+          ],
+          "purpose": "player/faction recoloring",
+          "mask_included": false,
+          "implementation_note": "Generated shades and edge pixels vary; do not rely on exact RGB equality. Create and inspect a magenta livery mask before recoloring; preserve neutral hull and white-cyan emission."
+        },
+        "emission": "no engine emission"
+      },
+      "scale": {
+        "relative_length_target": null,
+        "unit": null,
+        "applied_to_pixels": false,
+        "note": "Canvas sizes and visible lengths are concept framing, not gameplay or physical scale. Normalize chosen assets at import; retain aspect ratio."
+      },
+      "integration": {
+        "alpha_blending": "straight-alpha source; convert only if engine requires it",
+        "ui_icon_sizes_to_review_px": [
+          48,
+          64
+        ],
+        "icon_guidance": "Fit using visible alpha bounds plus consistent padding for selection icons. Use target relative lengths separately for world-map sprites. Review thin features at final display size.",
+        "mipmap_guidance": "Test downsampling and transparent-edge halos against actual game backgrounds.",
+        "gameplay_contract": "Class and roles are intended art uses only; weapons, damage, costs, technology, and movement rules must come from game design."
+      },
+      "validation_status": {
+        "png_decodable": true,
+        "metadata_roundtrip_checked": true,
+        "visual_pixels_preserved": true,
+        "production_ready": false,
+        "remaining_checks": [
+          "exact relative scale",
+          "clean edges and transparent margins",
+          "strict grayscale and magenta-only hull colors",
+          "orthographic consistency",
+          "radial symmetry for structures",
+          "small-icon readability"
+        ]
+      },
+      "provenance": {
+        "generator": "OpenAI built-in imagegen",
+        "created_for": "user-requested 4X fleet concept exploration",
+        "rights_note": "No license terms assigned by this metadata."
+      },
+      "relationships": {
+        "same_class_candidates": [
+          "fleet.revised.battlestation",
+          "fleet.alternatives.battlestation"
+        ],
+        "reuses_asset_id": null
+      },
+      "file": "original--07-battlestation.png",
+      "sidecar": "original--07-battlestation.png.asset.json",
+      "catalog_path": "original--07-battlestation.png",
+      "sidecar_path": "original--07-battlestation.png.asset.json"
+    },
+    {
+      "schema_version": "1.0",
+      "asset_id": "fleet.original.star-fortress",
+      "display_name": "Star Fortress",
+      "collection": "original",
+      "asset_class": "star-fortress",
+      "asset_kind": "orbital_structure",
+      "design_status": "concept_candidate_not_selected",
+      "intended_purpose": "Large fortified orbital defense ring; candidate for advanced defensive infrastructure art.",
+      "silhouette": "circular fortified ring",
+      "suggested_placements": [
+        "top-down system map",
+        "orbital infrastructure selection UI",
+        "construction menu",
+        "technology preview",
+        "encyclopedia entry"
+      ],
+      "not_intended_for": [
+        "background imagery",
+        "3D mesh or material",
+        "animation sprite sheet",
+        "collision geometry",
+        "final balanced gameplay statistics"
+      ],
+      "rendering": {
+        "format": "PNG",
+        "dimensions_px": [
+          1254,
+          1254
+        ],
+        "has_alpha": true,
+        "alpha_range": [
+          0,
+          255
+        ],
+        "visible_bounds_alpha_128_xyxy": [
+          16,
+          16,
+          1239,
+          1235
+        ],
+        "bounds_convention": "left/top inclusive; right/bottom exclusive",
+        "pixel_rgba_sha256": "5df5c381802f0cf94c329e17fcc0401861483890f4cc1933e73be3f587e6a879",
+        "camera_intent": "flat top-down orthographic",
+        "facing": "none",
+        "rotation_policy": "stationary; no directional heading",
+        "suggested_pivot_normalized": [
+          0.5,
+          0.5
+        ],
+        "pivot_status": "starting value; refine against visible bounds before import",
+        "canvas_aspect_ratio_intent": "1:1"
+      },
+      "style_intent": {
+        "genre": "serious industrial hard science fiction",
+        "lighting": "upper-left neutral key, soft fill, thin rim",
+        "hull_palette": "neutral grayscale",
+        "team_color": {
+          "source_hex": "#FF00FF",
+          "coverage_target_percent": [
+            15,
+            20
+          ],
+          "purpose": "player/faction recoloring",
+          "mask_included": false,
+          "implementation_note": "Generated shades and edge pixels vary; do not rely on exact RGB equality. Create and inspect a magenta livery mask before recoloring; preserve neutral hull and white-cyan emission."
+        },
+        "emission": "no engine emission"
+      },
+      "scale": {
+        "relative_length_target": null,
+        "unit": null,
+        "applied_to_pixels": false,
+        "note": "Canvas sizes and visible lengths are concept framing, not gameplay or physical scale. Normalize chosen assets at import; retain aspect ratio."
+      },
+      "integration": {
+        "alpha_blending": "straight-alpha source; convert only if engine requires it",
+        "ui_icon_sizes_to_review_px": [
+          48,
+          64
+        ],
+        "icon_guidance": "Fit using visible alpha bounds plus consistent padding for selection icons. Use target relative lengths separately for world-map sprites. Review thin features at final display size.",
+        "mipmap_guidance": "Test downsampling and transparent-edge halos against actual game backgrounds.",
+        "gameplay_contract": "Class and roles are intended art uses only; weapons, damage, costs, technology, and movement rules must come from game design."
+      },
+      "validation_status": {
+        "png_decodable": true,
+        "metadata_roundtrip_checked": true,
+        "visual_pixels_preserved": true,
+        "production_ready": false,
+        "remaining_checks": [
+          "exact relative scale",
+          "clean edges and transparent margins",
+          "strict grayscale and magenta-only hull colors",
+          "orthographic consistency",
+          "radial symmetry for structures",
+          "small-icon readability"
+        ]
+      },
+      "provenance": {
+        "generator": "OpenAI built-in imagegen",
+        "created_for": "user-requested 4X fleet concept exploration",
+        "rights_note": "No license terms assigned by this metadata."
+      },
+      "relationships": {
+        "same_class_candidates": [
+          "fleet.revised.star-fortress",
+          "fleet.alternatives.star-fortress"
+        ],
+        "reuses_asset_id": null
+      },
+      "file": "original--08-star-fortress.png",
+      "sidecar": "original--08-star-fortress.png.asset.json",
+      "catalog_path": "original--08-star-fortress.png",
+      "sidecar_path": "original--08-star-fortress.png.asset.json"
+    },
+    {
+      "schema_version": "1.0",
+      "asset_id": "fleet.original.stargate",
+      "display_name": "Stargate",
+      "collection": "original",
+      "asset_class": "stargate",
+      "asset_kind": "orbital_structure",
+      "design_status": "concept_candidate_not_selected",
+      "intended_purpose": "Circular transit gate with energy arcs; candidate for interstellar travel infrastructure art.",
+      "silhouette": "circular energy ring",
+      "suggested_placements": [
+        "top-down system map",
+        "orbital infrastructure selection UI",
+        "construction menu",
+        "technology preview",
+        "encyclopedia entry"
+      ],
+      "not_intended_for": [
+        "background imagery",
+        "3D mesh or material",
+        "animation sprite sheet",
+        "collision geometry",
+        "final balanced gameplay statistics"
+      ],
+      "rendering": {
+        "format": "PNG",
+        "dimensions_px": [
+          1254,
+          1254
+        ],
+        "has_alpha": true,
+        "alpha_range": [
+          0,
+          255
+        ],
+        "visible_bounds_alpha_128_xyxy": [
+          25,
+          0,
+          1229,
+          1234
+        ],
+        "bounds_convention": "left/top inclusive; right/bottom exclusive",
+        "pixel_rgba_sha256": "09d3030ae39316554b5386e126394cc9e9955bab3580281f6209593a921fac07",
+        "camera_intent": "flat top-down orthographic",
+        "facing": "none",
+        "rotation_policy": "stationary; no directional heading",
+        "suggested_pivot_normalized": [
+          0.5,
+          0.5
+        ],
+        "pivot_status": "starting value; refine against visible bounds before import",
+        "canvas_aspect_ratio_intent": "1:1"
+      },
+      "style_intent": {
+        "genre": "serious industrial hard science fiction",
+        "lighting": "upper-left neutral key, soft fill, thin rim",
+        "hull_palette": "neutral grayscale",
+        "team_color": {
+          "source_hex": "#FF00FF",
+          "coverage_target_percent": [
+            15,
+            20
+          ],
+          "purpose": "player/faction recoloring",
+          "mask_included": false,
+          "implementation_note": "Generated shades and edge pixels vary; do not rely on exact RGB equality. Create and inspect a magenta livery mask before recoloring; preserve neutral hull and white-cyan emission."
+        },
+        "emission": "white-cyan gate energy arcs"
+      },
+      "scale": {
+        "relative_length_target": null,
+        "unit": null,
+        "applied_to_pixels": false,
+        "note": "Canvas sizes and visible lengths are concept framing, not gameplay or physical scale. Normalize chosen assets at import; retain aspect ratio."
+      },
+      "integration": {
+        "alpha_blending": "straight-alpha source; convert only if engine requires it",
+        "ui_icon_sizes_to_review_px": [
+          48,
+          64
+        ],
+        "icon_guidance": "Fit using visible alpha bounds plus consistent padding for selection icons. Use target relative lengths separately for world-map sprites. Review thin features at final display size.",
+        "mipmap_guidance": "Test downsampling and transparent-edge halos against actual game backgrounds.",
+        "gameplay_contract": "Class and roles are intended art uses only; weapons, damage, costs, technology, and movement rules must come from game design."
+      },
+      "validation_status": {
+        "png_decodable": true,
+        "metadata_roundtrip_checked": true,
+        "visual_pixels_preserved": true,
+        "production_ready": false,
+        "remaining_checks": [
+          "exact relative scale",
+          "clean edges and transparent margins",
+          "strict grayscale and magenta-only hull colors",
+          "orthographic consistency",
+          "radial symmetry for structures",
+          "small-icon readability"
+        ]
+      },
+      "provenance": {
+        "generator": "OpenAI built-in imagegen",
+        "created_for": "user-requested 4X fleet concept exploration",
+        "rights_note": "No license terms assigned by this metadata."
+      },
+      "relationships": {
+        "same_class_candidates": [
+          "fleet.revised.stargate",
+          "fleet.alternatives.stargate"
+        ],
+        "reuses_asset_id": null
+      },
+      "file": "original--09-stargate.png",
+      "sidecar": "original--09-stargate.png.asset.json",
+      "catalog_path": "original--09-stargate.png",
+      "sidecar_path": "original--09-stargate.png.asset.json"
+    }
+  ],
+  "path_base": "this folder; all paths are flat filenames"
+}

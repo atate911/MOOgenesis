@@ -1,0 +1,114 @@
+{
+  "schema_version": "1.0",
+  "asset_id": "fleet.alternatives.starbase",
+  "display_name": "Starbase — Clover",
+  "collection": "alternatives",
+  "asset_class": "starbase",
+  "asset_kind": "orbital_structure",
+  "design_status": "concept_candidate_not_selected",
+  "intended_purpose": "Modular orbital docking and logistics hub; candidate for orbital support infrastructure art.",
+  "silhouette": "four cargo lobes",
+  "suggested_placements": [
+    "top-down system map",
+    "orbital infrastructure selection UI",
+    "construction menu",
+    "technology preview",
+    "encyclopedia entry"
+  ],
+  "not_intended_for": [
+    "background imagery",
+    "3D mesh or material",
+    "animation sprite sheet",
+    "collision geometry",
+    "final balanced gameplay statistics"
+  ],
+  "rendering": {
+    "format": "PNG",
+    "dimensions_px": [
+      1254,
+      1254
+    ],
+    "has_alpha": true,
+    "alpha_range": [
+      0,
+      255
+    ],
+    "visible_bounds_alpha_128_xyxy": [
+      31,
+      31,
+      1223,
+      1223
+    ],
+    "bounds_convention": "left/top inclusive; right/bottom exclusive",
+    "pixel_rgba_sha256": "cd280591d13c1ce45fa7d663a182a83e247a0fee24e8e7eb56337085c11faae2",
+    "camera_intent": "flat top-down orthographic",
+    "facing": "none",
+    "rotation_policy": "stationary; no directional heading",
+    "suggested_pivot_normalized": [
+      0.5,
+      0.5
+    ],
+    "pivot_status": "starting value; refine against visible bounds before import",
+    "canvas_aspect_ratio_intent": "1:1"
+  },
+  "style_intent": {
+    "genre": "serious industrial hard science fiction",
+    "lighting": "upper-left neutral key, soft fill, thin rim",
+    "hull_palette": "neutral grayscale",
+    "team_color": {
+      "source_hex": "#FF00FF",
+      "coverage_target_percent": [
+        15,
+        20
+      ],
+      "purpose": "player/faction recoloring",
+      "mask_included": false,
+      "implementation_note": "Generated shades and edge pixels vary; do not rely on exact RGB equality. Create and inspect a magenta livery mask before recoloring; preserve neutral hull and white-cyan emission."
+    },
+    "emission": "no engine emission"
+  },
+  "scale": {
+    "relative_length_target": null,
+    "unit": null,
+    "applied_to_pixels": false,
+    "note": "Canvas sizes and visible lengths are concept framing, not gameplay or physical scale. Normalize chosen assets at import; retain aspect ratio."
+  },
+  "integration": {
+    "alpha_blending": "straight-alpha source; convert only if engine requires it",
+    "ui_icon_sizes_to_review_px": [
+      48,
+      64
+    ],
+    "icon_guidance": "Fit using visible alpha bounds plus consistent padding for selection icons. Use target relative lengths separately for world-map sprites. Review thin features at final display size.",
+    "mipmap_guidance": "Test downsampling and transparent-edge halos against actual game backgrounds.",
+    "gameplay_contract": "Class and roles are intended art uses only; weapons, damage, costs, technology, and movement rules must come from game design."
+  },
+  "validation_status": {
+    "png_decodable": true,
+    "metadata_roundtrip_checked": true,
+    "visual_pixels_preserved": true,
+    "production_ready": false,
+    "remaining_checks": [
+      "exact relative scale",
+      "clean edges and transparent margins",
+      "strict grayscale and magenta-only hull colors",
+      "orthographic consistency",
+      "radial symmetry for structures",
+      "small-icon readability"
+    ]
+  },
+  "provenance": {
+    "generator": "OpenAI built-in imagegen",
+    "created_for": "user-requested 4X fleet concept exploration",
+    "rights_note": "No license terms assigned by this metadata."
+  },
+  "relationships": {
+    "same_class_candidates": [
+      "fleet.original.starbase",
+      "fleet.revised.starbase"
+    ],
+    "reuses_asset_id": null
+  },
+  "file": "alternatives--06-starbase-clover.png",
+  "sidecar": "alternatives--06-starbase-clover.png.asset.json"
+}

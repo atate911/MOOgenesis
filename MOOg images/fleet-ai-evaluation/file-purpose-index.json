@@ -1,0 +1,269 @@
+{
+  "path_base": "this folder",
+  "files": [
+    {
+      "file": "alternatives--01-frigate-hammerhead.png",
+      "purpose": "sprite image"
+    },
+    {
+      "file": "alternatives--01-frigate-hammerhead.png.asset.json",
+      "purpose": "per-image metadata"
+    },
+    {
+      "file": "alternatives--02-destroyer-needle.png",
+      "purpose": "sprite image"
+    },
+    {
+      "file": "alternatives--02-destroyer-needle.png.asset.json",
+      "purpose": "per-image metadata"
+    },
+    {
+      "file": "alternatives--03-cruiser-nautilus.png",
+      "purpose": "sprite image"
+    },
+    {
+      "file": "alternatives--03-cruiser-nautilus.png.asset.json",
+      "purpose": "per-image metadata"
+    },
+    {
+      "file": "alternatives--04-battleship-trident.png",
+      "purpose": "sprite image"
+    },
+    {
+      "file": "alternatives--04-battleship-trident.png.asset.json",
+      "purpose": "per-image metadata"
+    },
+    {
+      "file": "alternatives--05-doomstar-eclipse.png",
+      "purpose": "sprite image"
+    },
+    {
+      "file": "alternatives--05-doomstar-eclipse.png.asset.json",
+      "purpose": "per-image metadata"
+    },
+    {
+      "file": "alternatives--06-starbase-clover.png",
+      "purpose": "sprite image"
+    },
+    {
+      "file": "alternatives--06-starbase-clover.png.asset.json",
+      "purpose": "per-image metadata"
+    },
+    {
+      "file": "alternatives--07-battlestation-triad.png",
+      "purpose": "sprite image"
+    },
+    {
+      "file": "alternatives--07-battlestation-triad.png.asset.json",
+      "purpose": "per-image metadata"
+    },
+    {
+      "file": "alternatives--08-star-fortress-crown.png",
+      "purpose": "sprite image"
+    },
+    {
+      "file": "alternatives--08-star-fortress-crown.png.asset.json",
+      "purpose": "per-image metadata"
+    },
+    {
+      "file": "alternatives--09-stargate-halo.png",
+      "purpose": "sprite image"
+    },
+    {
+      "file": "alternatives--09-stargate-halo.png.asset.json",
+      "purpose": "per-image metadata"
+    },
+    {
+      "file": "alternatives--collection-catalog.json",
+      "purpose": "catalog, generation provenance or evaluation documentation"
+    },
+    {
+      "file": "alternatives.txt",
+      "purpose": "catalog, generation provenance or evaluation documentation"
+    },
+    {
+      "file": "asset-catalog.json",
+      "purpose": "catalog, generation provenance or evaluation documentation"
+    },
+    {
+      "file": "ASSET-HANDOFF.md",
+      "purpose": "catalog, generation provenance or evaluation documentation"
+    },
+    {
+      "file": "design-menu.html",
+      "purpose": "review preview"
+    },
+    {
+      "file": "gallery.html",
+      "purpose": "review preview"
+    },
+    {
+      "file": "icon-preview.html",
+      "purpose": "review preview"
+    },
+    {
+      "file": "original--01-frigate.png",
+      "purpose": "sprite image"
+    },
+    {
+      "file": "original--01-frigate.png.asset.json",
+      "purpose": "per-image metadata"
+    },
+    {
+      "file": "original--02-destroyer.png",
+      "purpose": "sprite image"
+    },
+    {
+      "file": "original--02-destroyer.png.asset.json",
+      "purpose": "per-image metadata"
+    },
+    {
+      "file": "original--03-cruiser.png",
+      "purpose": "sprite image"
+    },
+    {
+      "file": "original--03-cruiser.png.asset.json",
+      "purpose": "per-image metadata"
+    },
+    {
+      "file": "original--04-battleship.png",
+      "purpose": "sprite image"
+    },
+    {
+      "file": "original--04-battleship.png.asset.json",
+      "purpose": "per-image metadata"
+    },
+    {
+      "file": "original--05-doomstar.png",
+      "purpose": "sprite image"
+    },
+    {
+      "file": "original--05-doomstar.png.asset.json",
+      "purpose": "per-image metadata"
+    },
+    {
+      "file": "original--06-starbase.png",
+      "purpose": "sprite image"
+    },
+    {
+      "file": "original--06-starbase.png.asset.json",
+      "purpose": "per-image metadata"
+    },
+    {
+      "file": "original--07-battlestation.png",
+      "purpose": "sprite image"
+    },
+    {
+      "file": "original--07-battlestation.png.asset.json",
+      "purpose": "per-image metadata"
+    },
+    {
+      "file": "original--08-star-fortress.png",
+      "purpose": "sprite image"
+    },
+    {
+      "file": "original--08-star-fortress.png.asset.json",
+      "purpose": "per-image metadata"
+    },
+    {
+      "file": "original--09-stargate.png",
+      "purpose": "sprite image"
+    },
+    {
+      "file": "original--09-stargate.png.asset.json",
+      "purpose": "per-image metadata"
+    },
+    {
+      "file": "original--collection-catalog.json",
+      "purpose": "catalog, generation provenance or evaluation documentation"
+    },
+    {
+      "file": "original.txt",
+      "purpose": "catalog, generation provenance or evaluation documentation"
+    },
+    {
+      "file": "revised--01-frigate.png",
+      "purpose": "sprite image"
+    },
+    {
+      "file": "revised--01-frigate.png.asset.json",
+      "purpose": "per-image metadata"
+    },
+    {
+      "file": "revised--02-destroyer.png",
+      "purpose": "sprite image"
+    },
+    {
+      "file": "revised--02-destroyer.png.asset.json",
+      "purpose": "per-image metadata"
+    },
+    {
+      "file": "revised--03-cruiser.png",
+      "purpose": "sprite image"
+    },
+    {
+      "file": "revised--03-cruiser.png.asset.json",
+      "purpose": "per-image metadata"
+    },
+    {
+      "file": "revised--04-battleship.png",
+      "purpose": "sprite image"
+    },
+    {
+      "file": "revised--04-battleship.png.asset.json",
+      "purpose": "per-image metadata"
+    },
+    {
+      "file": "revised--05-doomstar.png",
+      "purpose": "sprite image"
+    },
+    {
+      "file": "revised--05-doomstar.png.asset.json",
+      "purpose": "per-image metadata"
+    },
+    {
+      "file": "revised--06-starbase.png",
+      "purpose": "sprite image"
+    },
+    {
+      "file": "revised--06-starbase.png.asset.json",
+      "purpose": "per-image metadata"
+    },
+    {
+      "file": "revised--07-battlestation.png",
+      "purpose": "sprite image"
+    },
+    {
+      "file": "revised--07-battlestation.png.asset.json",
+      "purpose": "per-image metadata"
+    },
+    {
+      "file": "revised--08-star-fortress.png",
+      "purpose": "sprite image"
+    },
+    {
+      "file": "revised--08-star-fortress.png.asset.json",
+      "purpose": "per-image metadata"
+    },
+    {
+      "file": "revised--09-stargate.png",
+      "purpose": "sprite image"
+    },
+    {
+      "file": "revised--09-stargate.png.asset.json",
+      "purpose": "per-image metadata"
+    },
+    {
+      "file": "revised--collection-catalog.json",
+      "purpose": "catalog, generation provenance or evaluation documentation"
+    },
+    {
+      "file": "revised.txt",
+      "purpose": "catalog, generation provenance or evaluation documentation"
+    },
+    {
+      "file": "START-HERE.md",
+      "purpose": "catalog, generation provenance or evaluation documentation"
+    }
+  ]
+}
