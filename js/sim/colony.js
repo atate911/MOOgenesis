@@ -183,9 +183,12 @@ MOO.def(function (M) {
     if (v > 0 && natural < 1) natural = 1;
     const total = natural + (boughtTenths | 0) + (p.popFrac | 0);
     const dp = Math.floor(total / 10);                       // floor keeps the carried tenths in 0..9 even when shrinking
+    const before = p.pop;
     p.pop += dp; p.popFrac = total - dp * 10;
     p.pop = clamp(p.pop, 0, p.mp3);
     if (p.pop === p.mp3) p.popFrac = 0;
+    // the original's "population maximum" notice: the turn the colony fills up (Econ.autoSwitch then moves its surplus ECO share to TECH at the end of the turn)
+    if (p.pop === p.mp3 && before < p.mp3 && E.human && M.Sim.Ev) M.Sim.Ev.push(S, { type: 'notice', kind: 'popMax', empire: E.id, planet: p.id, pop: p.pop });
   };
 
   C.soilInc = function (mp1, kind) {
@@ -202,13 +205,13 @@ MOO.def(function (M) {
     p.mp2 = p.mp1 + inc; p.mp3 += (p.mp2 - oldMp2);
     p.mp3 = Math.min(p.mp3, (E.mods.terraform || 0) + p.mp2, MAX_POP);
     p.growth = kind;
-    if (M.Sim.Ev) M.Sim.Ev.push(S, { type: 'planet', kind: 'soil', empire: E.id, planet: p.id, growth: kind });
+    if (M.Sim.Ev) M.Sim.Ev.push(S, { type: 'notice', kind: 'ecoDone', empire: E.id, planet: p.id, growth: kind });       // "<planet> has terraformed to a fertile / Gaia environment" (research/05 §11.5)
   };
   C.atmosTerraform = function (S, E, p) {
     const inc = p.typeIdx <= 3 ? 20 : p.typeIdx <= 5 ? 10 : 0;
     p.type = 'minimal'; p.typeIdx = 7; p.growth = 'normal';
     p.mp1 += inc; p.mp2 += inc; p.mp3 += inc;
-    if (M.Sim.Ev) M.Sim.Ev.push(S, { type: 'planet', kind: 'atmos', empire: E.id, planet: p.id });
+    if (M.Sim.Ev) M.Sim.Ev.push(S, { type: 'notice', kind: 'atmosDone', empire: E.id, planet: p.id });
   };
 
   // ---- defence: upgrade existing bases → planetary shield → new bases (§3.4/3.10) -----------------------------------
@@ -230,7 +233,7 @@ MOO.def(function (M) {
       const put = Math.min(bc, need); bc -= put; p.acc.shield += put;
       const paidTotal = shieldCostFor(E, p.shield) + p.acc.shield;       // cumulative cost: 500 / 1000 / 1500 / 2000 for Class V / X / XV / XX
       let lvl = p.shield; for (const L of [5, 10, 15, 20]) if (L <= maxShield && L > p.shield && paidTotal >= shieldCostFor(E, L)) lvl = L;
-      if (lvl > p.shield) { p.acc.shield = paidTotal - shieldCostFor(E, lvl); p.shield = lvl; }
+      if (lvl > p.shield) { p.acc.shield = paidTotal - shieldCostFor(E, lvl); p.shield = lvl; if (M.Sim.Ev) M.Sim.Ev.push(S, { type: 'notice', kind: 'shieldDone', empire: E.id, planet: p.id, shield: lvl }); }     // "<planet> has finished a planetary shield <n>"
     }
     // 3. new missile bases
     if (bc > 0 && baseCost > 0) {
@@ -253,7 +256,7 @@ MOO.def(function (M) {
     if (p.sliders[SHIP] === 0 && bc <= 0) return;
     if (p.build === -1) {                                            // stargate (original: excess BC carry, build item resets to design 0, a human's SHIP percentage moves to TECH)
       if (p.stargate) { C.shipToTech(E, p); p.build = 0; return; }
-      if (p.acc.ship >= 3000) { p.stargate = true; p.acc.ship -= 3000; p.build = 0; C.shipToTech(E, p); M.Sim.Ev && M.Sim.Ev.push(S, { type: 'planet', kind: 'stargate', empire: E.id, planet: p.id }); }
+      if (p.acc.ship >= 3000) { p.stargate = true; p.acc.ship -= 3000; p.build = 0; C.shipToTech(E, p); M.Sim.Ev && M.Sim.Ev.push(S, { type: 'notice', kind: 'stargate', empire: E.id, planet: p.id }); }
       return;
     }
     const d = E.designs[p.build]; if (!d) return;

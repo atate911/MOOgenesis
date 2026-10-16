@@ -732,11 +732,19 @@
       fitZ = Math.max(0.02, Math.min((W - mx * 2) / gw, (H - mt - mb) / gh));
       minZ = fitZ * 0.72; maxZ = Math.max(fitZ * 4.5, 14);
     }
-    function clampTo(c) { c.z = clamp(c.z, minZ, maxZ); c.x = clamp(c.x, 0, gw); c.y = clamp(c.y, 0, gh); }
+    // the camera centre may sit anywhere over the galaxy, but the VIEW stays over it: centring on an edge star no longer leaves half the screen empty
+    // (when the view is wider than the galaxy at this zoom, the galaxy is centred on that axis instead)
+    function clampTo(c) {
+      c.z = clamp(c.z, minZ, maxZ);
+      if (!W || !H) { c.x = clamp(c.x, 0, gw); c.y = clamp(c.y, 0, gh); return; }
+      const hw = W / (2 * c.z), hh = H / (2 * c.z), m = 56 / c.z;
+      c.x = hw * 2 >= gw + 2 * m ? gw / 2 : clamp(c.x, hw - m, gw - hw + m);
+      c.y = hh * 2 >= gh + 2 * m ? gh / 2 : clamp(c.y, hh - m, gh - hh + m);
+    }
     function setCamNow(x, y, z) { camSet = true; cam.x = tgt.x = x; cam.y = tgt.y = y; cam.z = tgt.z = z; clampTo(cam); clampTo(tgt); flight = null; anchor = null; vel.x = vel.y = 0; }
     function cancelFlight() { if (flight) { tgt.x = cam.x; tgt.y = cam.y; tgt.z = cam.z; flight = null; } }
     function flyTo(x, y, z, animate, dur) {
-      z = clamp(z, minZ, maxZ); x = clamp(x, 0, gw); y = clamp(y, 0, gh);
+      const dest = { x, y, z }; clampTo(dest); x = dest.x; y = dest.y; z = dest.z;                       // fly to where the camera may actually rest (no snap at the end of the flight)
       if (!animate || Q.reduce || !W) { setCamNow(x, y, z); return; }
       const distPx = Math.hypot(x - cam.x, y - cam.y) * Math.min(cam.z, z), span = Math.hypot(W, H);
       if (distPx < 1 && Math.abs(Math.log(z / cam.z)) < 0.002) { setCamNow(x, y, z); return; }

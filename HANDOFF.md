@@ -7,6 +7,11 @@ Docs: `PROGRESS.md` (plan/status/25-feature acceptance checklist) · `CONVENTION
 Commands: `node tools/check.js` (syntax of every manifest file) · `node tools/rules-test.js [area]` · `node tools/soak.js` (24-thread AI-vs-AI soak/balance; `tools/SOAK.md`) · `node tools/headless.js`.
 Browser-pane tip: animations use requestAnimationFrame, so in the built-in browser pane a tab must be fronted (`tabs_select`) for anything animated (GNN, audiences, scenes, combat) to advance.
 
+## Session 5 (October 2026) — fun audit, branch `claude/optimistic-franklin-bvqmi3`
+`tools/handoff/fun-audit-2026-10.md`: what the original's fun is, how the remake was measured (player's-eye headless transcript +
+Playwright click-through), what changed (GNN news policy, end-of-turn planet reports, discovery cards, combat card layout, map camera)
+and what is still open (ship art, one-press GNN, tutor pop-ups, report sounds, tech adjust dialogs).
+
 ## Session 4 (October 2026) — branch `fix/turn-flow-robustness`
 Full review in `tools/handoff/review-2026-10.md` (50 items, priorities, what is fixed) and the UI/immersion review in
 `tools/handoff/ui-immersion-review-2026-10.md`. Fixed on the branch: the stuck-turn class (held side-panel prompts,

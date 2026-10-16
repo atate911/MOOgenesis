@@ -86,6 +86,9 @@
     .cb-sum .pl { margin-top:.6rem; padding:.4rem .6rem; border:1px solid rgba(214,179,106,.24); background:rgba(0,0,0,.25); font-size:.92rem; line-height:1.5; } .cb-sum .pl b { color:var(--ivory); }
     .cb-sum .notes { margin-top:.55rem; color:var(--mist); font-size:.9rem; line-height:1.45; } .cb-sum .notes li { margin-left:1.1rem; }
     .cb-sum .foot { display:flex; justify-content:space-between; align-items:center; margin-top:.8rem; gap:1rem; } .cb-sum .foot .rd { color:var(--mist); font-size:.85rem; }
+    /* the same card in the galaxy side panel (Auto / Retreat results): one column per side, stacked, nothing clipped */
+    .gx-side .cb-sum { width:auto; max-width:100%; } .gx-side .cb-sum .ttl { font-size:2rem; } .gx-side .cb-sum .cols { grid-template-columns:1fr; gap:.5rem; }
+    .gx-side .cb-sum .row { grid-template-columns:2.2rem 1fr 2.5rem 2.3rem 2.3rem; font-size:.88rem; } .gx-side .cb-sum .row.hd { font-size:.6rem; letter-spacing:.04em; } .gx-side .cb-sum .foot { flex-wrap:wrap; }
     /* ---- pre-battle card (galaxy side panel) ------------------------------------------------------------------------------------------------ */
     .pb-head { display:flex; align-items:baseline; gap:.5rem; padding-bottom:.35rem; margin-bottom:.45rem; border-bottom:1px solid rgba(255,92,106,.5); }
     .pb-head .ti { font:400 1.55rem/1 var(--font-title); letter-spacing:.06em; color:var(--rose); text-shadow:0 0 14px rgba(255,92,106,.4); text-transform:uppercase; } .pb-head .st { margin-left:auto; color:var(--mist); font-size:.9rem; }

@@ -102,8 +102,11 @@ MOO.def(function (M) {
     if (o.n !== undefined) item.n = o.n;
     if (o.field !== undefined) item.field = o.field;
     if (o.importance !== undefined) item.importance = o.importance;
+    const shown = !!(o.show || (E && E.human));
+    if (shown && !o.show) item.importance = 0;                 // the human victim sees the event card this turn: the newscast only archives it (other empires' events ARE the news, as in the original)
+    else if (item.importance === undefined) item.importance = 1;
     push(S, item);
-    if (o.show || (E && E.human)) out.push({ type: 'event', kind: o.kind, stage: o.stage, empire: o.empire, empire2: o.empire2, planet: o.planet, star: o.star, text: o.text, cat: o.cat, vars: o.vars || {} });
+    if (shown) out.push({ type: 'event', kind: o.kind, stage: o.stage, empire: o.empire, empire2: o.empire2, planet: o.planet, star: o.star, text: o.text, cat: o.cat, vars: o.vars || {} });
   }
 
   // ---- the yearly roll (§7.1) ---------------------------------------------------------------------------------------------------------------------

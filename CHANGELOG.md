@@ -5,6 +5,13 @@ Versions follow `MAJOR.MINOR.PATCH`; the live version is the `VERSION` file.
 
 ## Unreleased
 
+- Fun audit (`tools/handoff/fun-audit-2026-10.md`): the GNN now broadcasts only what the original treats as news (events, wars,
+  peace, alliances, eliminations, council, stars reports, rankings) — battles, fleet losses, first contacts and treaties go to the
+  archive only (83 → 21 newscasts in a 200-turn game); AI empires' random events reach the news (their headlines were dropped);
+  the original's end-of-turn reports are back (population maximum, soil / Gaia / atmosphere projects, planetary shield, stargate,
+  grouped fleet production) and stay on the map until the next turn, clicking one selects the colony; exploration and colonise
+  cards show the wide planet plate, the planet's special, a line of flavour and mark the star on the map; the battle result card
+  no longer clips in the side panel; the map camera keeps the view over the galaxy.
 - Deploy/release fixes from the October review: re-running `install.sh` after certbot no longer fails on the http→https
   redirect or resets `tls=no` (it reads domain/email/web from `install.conf`, reuses an unchanged release, and only adds
   `python3-certbot-nginx` for apt certbot, not the snap); `upgrade.sh` refreshes scripts/templates/units/VERSION even

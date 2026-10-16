@@ -1334,7 +1334,7 @@
     UI.clear(R.infoEl);
     R.infoEl.appendChild(h('div.tn', h('b', t ? t.name : 'Level ' + c.level), h('span.cost', '(' + fmt(c.cost) + ' RP)')));
     R.infoEl.appendChild(h('p', t ? t.desc : ''));
-    R.infoEl.appendChild(h('div.eta', fc ? (fc.never ? 'No research share is assigned to ' + R.F.name + ' yet.' : 'At ' + fmt(fc.rp) + ' RP per turn: ' + etaText(fc)) : ''));
+    R.infoEl.appendChild(h('div.eta', fc ? (fc.never ? 'No research points reach ' + R.F.name + ' yet: raise a colony\'s Tech slider, or this field\'s share on the Tech screen.' : 'At ' + fmt(fc.rp) + ' RP per turn: ' + etaText(fc)) : ''));
     if (scroll === true) { const row = R.items[i]; if (row && row.scrollIntoView) row.scrollIntoView({ block: 'nearest' }); }      // keys scroll the list; the pointer never does
     if (R.hiSfx) UI.sfx('hover');
     R.hiSfx = true;
