@@ -336,30 +336,6 @@
   /* final grade: vignette (+ optional animated grain) */
   /* photoreal world-art backdrop (Gfx.WorldArt); returns false until the image is loaded, so callers keep the procedural art */
   function artBG(ctx, path, w, h, o) { const WA = G.WorldArt; return !!(WA && path && WA.draw(ctx, path, 0, 0, w, h, o)); }
-  // an illustration (studio-black plate) composited with soft elliptical edges so it sits in a scene; cached per size
-  const FEATHER = new Map();
-  function featheredArt(ctx, path, x, y, w, h, o) {
-    const WA = G.WorldArt; if (!WA || !path) return false;
-    const im = WA.get(path); if (!im) return false;
-    o = o || {};
-    const key = path + '|' + (w | 0) + 'x' + (h | 0) + '|' + (o.fx || 0) + '|' + (o.fy || 0);
-    let c = FEATHER.get(key);
-    if (!c) {
-      c = document.createElement('canvas'); c.width = max(2, w | 0); c.height = max(2, h | 0);
-      const g = c.getContext('2d');
-      WA.draw(g, path, 0, 0, c.width, c.height, { fit: o.fit || 'cover', fx: o.fx == null ? 0.5 : o.fx, fy: o.fy == null ? 0.5 : o.fy, zoom: o.zoom });
-      g.globalCompositeOperation = 'destination-in';
-      const cx = c.width / 2, cy = c.height * (o.cy == null ? 0.5 : o.cy);
-      const m = g.createRadialGradient(cx, cy, 0, cx, cy, 1);
-      m.addColorStop(0, 'rgba(0,0,0,1)'); m.addColorStop(o.inner == null ? 0.55 : o.inner, 'rgba(0,0,0,1)'); m.addColorStop(1, 'rgba(0,0,0,0)');
-      g.save(); g.translate(cx, cy); g.scale(c.width * 0.5 * (o.rx || 1), c.height * 0.5 * (o.ry || 1)); g.translate(-cx, -cy);
-      g.fillStyle = m; g.fillRect(cx - c.width, cy - c.height, c.width * 2, c.height * 2); g.restore();
-      if (FEATHER.size > 24) FEATHER.delete(FEATHER.keys().next().value);
-      FEATHER.set(key, c);
-    }
-    ctx.drawImage(c, x, y, w, h);
-    return true;
-  }
   function finish(g, w, h, vig, grain, t) {
     if (vig > 0) {
       g.fillStyle = rgr(g, w / 2, h * 0.5, min(w, h) * 0.38, hypot(w, h) * 0.62, [0, 'rgba(2,3,12,0)', 1, 'rgba(2,3,12,' + vig + ')'], w / 2, h * 0.48);
@@ -1715,15 +1691,6 @@
     }
     g.restore();
   }
-  function holoCrownFx(g, cx, cy, sc, t, a) {
-    g.save(); g.globalCompositeOperation = 'lighter';
-    glow(g, '#ffd54f', cx, cy - sc * 0.15, sc * 1.5, 0.28 * a);
-    for (let i = 0; i < 5; i++) { // glints at the jewels
-      const th = i * TAU / 5 + t * 0.5, gx = cx + cos(th) * sc * 0.92 * 0.92, gy = cy - sc * 0.78 * 0.9 + sin(th) * sc * 0.22, q = 0.5 + 0.5 * sin(t * 3 + i * 1.7);
-      glow(g, '#fff4c0', gx, gy, sc * 0.16 * q, 0.9 * a * q);
-    }
-    g.restore();
-  }
   function holoBallotFx(g, cx, cy, sc, t, a, col) {
     // ballots drop into the slot (dynamic segments) + glow pulse when one lands
     let n = 0;
@@ -1780,7 +1747,6 @@
       const hsc = ped.s * 0.215, hcy = ped.top - ped.s * 0.22;
       ctx.fillStyle = rgr(ctx, ped.cx, hcy, hsc * 0.2, hsc * 1.5, [0, 'rgba(2,4,22,0.62)', 0.6, 'rgba(2,4,22,0.34)', 1, 'rgba(2,4,22,0)']); ctx.fillRect(ped.cx - hsc * 1.6, hcy - hsc * 1.6, hsc * 3.2, hsc * 3.2);
       if (holo === 'galaxy') holoGalaxy(ctx, ped.cx, hcy, hsc * 1.05, t, fl, seats);
-      else if (holo === 'crown' && false) { holoDraw(ctx, holoModel('crown'), ped.cx, hcy + hsc * 0.15, hsc * 0.82, '#ffd54f', { yaw: t * 0.5, pitch: -0.42, a: fl, lw: max(1, hsc * 0.012) }); holoCrownFx(ctx, ped.cx, hcy, hsc, t, fl); }
       else holoBallotFx(ctx, ped.cx, hcy, hsc * 0.9, t, fl, hcol);
       holoScan(ctx, ped.cx, hcy, hsc * 0.95, hsc * 1.0, hcol, t, fl * 0.8);
 
@@ -3645,7 +3611,7 @@
       o = o || {};
       const S = begin(ctx, w, h), col = o.color || '#4a90e8', race = o.race || 'human';
       // photoreal ending: the winner's own council hall with the sovereign standing in it (race council + figure illustrations); the drawn throne room is the fallback
-      const WA = G.WorldArt, hallPath = WA ? WA.race(race, 'council') : null, figPath = WA ? WA.race(race, 'figure') : null;
+      const WA = G.WorldArt, hallPath = WA ? WA.race(race, 'council') : null;
       if (hallPath && WA.get(hallPath)) {
         // the council plate already shows the sovereign enthroned among the delegates: a slow push-in, a warm wash for a victory, a cold red one for conquest
         artBG(ctx, hallPath, w, h, { fx: 0.5, fy: 0.42, zoom: 1 + 0.05 * sstep(0, 40, t) });
@@ -3659,7 +3625,6 @@
         return { sovereign: L, crown: { x: w * 0.44, y: h * 0.02, w: w * 0.12, h: h * 0.08 }, text: { x: w * 0.1, y: h * 0.04, w: w * 0.8, h: h * 0.14 }, bottom: { x: w * 0.1, y: h * 0.8, w: w * 0.8, h: h * 0.15 } };
       }
       if (WA && hallPath) WA.get(hallPath);                                                                  // start loading for the next frame
-      void figPath;
       const e = layer('victory|' + col, w, h, S, (g, ww, hh, c) => throneBG(g, ww, hh, c, { color: col })), I = e.d;
       ctx.drawImage(e.c, 0, 0, w, h);
       fireworks(ctx, w, h, t, { x: w * 0.04, y: h * 0.05, w: w * 0.92, h: h * 0.4 }, 4, 3);

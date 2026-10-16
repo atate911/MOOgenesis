@@ -99,9 +99,10 @@
   // What a SKIPPED step answers. The generator's own fallback for `undefined` is not always the harmless choice: an unanswered audience counts as
   // "accept" (which can declare war on a third empire or break an alliance) and an unanswered bombard prompt bombs. A skip must never change the game
   // in a way the player did not choose, so the skip answers are the explicit no-op choices.
-  // Skipped battles are auto-resolved (never silently discarded: the fleets would sit together and fight again next turn); skipped spy choices abort the mission.
+  // Skipped battles are auto-resolved (never silently discarded: the fleets would sit together and fight again next turn); skipped spy choices abort the mission;
+  // a skipped audience is left unanswered ('skip' — rejecting a call to arms or a demand would itself break an alliance or cost relations).
   const SKIP_ANSWERS = {
-    diplomacy: 'reject', bombardPrompt: false, colonize: false, councilResult: true, spyStealChoice: null, spySabotageChoice: null,
+    diplomacy: 'skip', bombardPrompt: false, colonize: false, councilResult: true, spyStealChoice: null, spySabotageChoice: null,     // 'skip': the audience is left unanswered (Turn.run does not call its answer), so nothing is signed, broken or declared
     battles: (it, S) => ({ results: it.battles.map(b => Sim.Combat.resolve(b, M.RNG.create(S.seed + ':' + S.turn + ':' + b.star))) }),
   };
   const skipAnswer = (it, S) => { if (!Object.prototype.hasOwnProperty.call(SKIP_ANSWERS, it.type)) return undefined; const v = SKIP_ANSWERS[it.type]; return typeof v === 'function' ? v(it, S) : v; };

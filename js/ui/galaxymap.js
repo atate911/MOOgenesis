@@ -902,7 +902,7 @@
       if (!opts.keys || !isActive() || e.ctrlKey || e.metaKey || e.altKey) return;
       const t = e.target, tag = t && t.tagName;
       if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT' || (t && t.isContentEditable)) return;
-      if (t && t !== document.body && t !== document.documentElement && !root.contains(t) && t.closest && t.closest('.s-track, .slider, [role="slider"], button, [tabindex]')) return;   // a focused side-panel control (colony slider…) gets the arrows
+      if (t && t !== document.body && t !== document.documentElement && !root.contains(t) && t.closest && t.closest('.s-track, .slider, [role="slider"]')) return;   // a focused side-panel slider gets the arrows (a focused button does not need them)
       const k = e.key; let used = true;
       if (k === 'ArrowLeft' || k === 'ArrowRight' || k === 'ArrowUp' || k === 'ArrowDown') { keys[k] = true; keys.shift = e.shiftKey; cancelFlight(); }
       else if (k === '+' || k === '=' || k === 'Add') zoomStep(1.4);

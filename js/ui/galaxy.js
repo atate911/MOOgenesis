@@ -78,7 +78,10 @@
     // A HELD panel is the turn's pending question (exploration/colonise card, pre-battle choice, battle result). While one is held nothing can replace it
     // and the galaxy screen re-shows it on enter(): a replaced prompt is a turn that waits forever on a panel nobody can see (the "Year … spinner" freeze).
     held: null,
-    hold(name, params, onDrop) { const hd = { name, params, onDrop }; UI.Side.held = hd; UI.Side.showHeld(); return hd; },
+    hold(name, params, onDrop) {
+      if (UI.Side.held) { if (onDrop) { try { onDrop(); } catch (e) { console.error(e); } } return null; }     // the pipeline waits on ONE prompt: a second hold is a stale scene finishing late — settle it, keep the live one
+      const hd = { name, params, onDrop }; UI.Side.held = hd; UI.Side.showHeld(); return hd;
+    },
     release(hd) { if (UI.Side.held === hd) UI.Side.held = null; },
     showHeld() {
       const hd = UI.Side.held; if (!hd) return false;
@@ -90,7 +93,7 @@
     drop() { const hd = UI.Side.held; UI.Side.held = null; if (hd && hd.onDrop) { try { hd.onDrop(); } catch (e) { console.error(e); } } },
     show(name, params, _hd) {
       if (!host) return;
-      if (UI.Side.held && _hd !== UI.Side.held) { UI.Side.showHeld(); return; }
+      if (UI.Side.held && _hd !== UI.Side.held) return;                      // the prompt stays; the player may still click around the map (selection highlights, no panel change)
       const def = panels[name]; if (!def) { console.warn('no side panel', name); return; }
       if (cur && cur.def.dispose) { try { cur.def.dispose(); } catch (e) { console.error(e); } }
       UI.clear(host);
@@ -159,14 +162,21 @@
     UI.Galaxy.busy(true, 'Year ' + Q.year(G.S) + ' …');
     // 10 s without an answer is normal while the player reads a scene (combat, GNN, council, audience, landing), a modal or a held side-panel prompt:
     // those all carry their own controls, so the Skip escape is offered ONLY when nothing visible can answer the pending step (a genuinely stuck turn).
+    let lateSkip = 0;
     const off = M.Bus.on('turn:waiting', type => {
       const onGalaxy = UI.Screens.current && UI.Screens.current.id === 'galaxy';
-      if (!onGalaxy || UI.modalOpen() || UI.Side.held) return;
+      if (!onGalaxy || UI.modalOpen() || UI.Side.held) {
+        // a scene or a prompt is up and carries its own controls; only if the SAME step is still pending much later is the floating Skip offered there (a hung scene must not be a dead end)
+        clearTimeout(lateSkip);
+        const p = G.pending;
+        lateSkip = setTimeout(() => { if (G.busy && G.pending === p) UI.Galaxy.floatSkip(); }, 45000);
+        return;
+      }
       UI.Galaxy.busy(true, 'Year ' + Q.year(G.S) + ' … waiting on “' + type + '”'); UI.Galaxy.skipBtn(true);
     });
     try { await G.endTurn(); }
     catch (e) { UI.toast('The turn could not be completed: ' + (e && e.message || e) + '. Load a save or report this.', 'bad', 12000); }
-    finally { if (typeof off === 'function') off(); UI.Galaxy.busy(false); }
+    finally { if (typeof off === 'function') off(); clearTimeout(lateSkip); UI.Galaxy.busy(false); }
     if (UI.Screens.current && UI.Screens.current.id !== 'galaxy' && G.S && !(G.last && G.last.over)) UI.Screens.go('galaxy');
     UI.Galaxy.refresh();
     if (G.S) { const me = G.player(); if (me.alive) UI.Galaxy.selectStar(G.sel.star >= 0 ? G.sel.star : me.capital, { keepPanel: false }); }

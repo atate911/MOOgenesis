@@ -132,7 +132,7 @@ MOO.def(function (M) {
       if (out && out.needsAnswer && out.accepted === null && typeof out.finish === 'function') out.finish(!(ruling === false || ruling === 'defy'));
       if (out && out.gameOver) councilOver = { reason: out.reason, winner: out.winner };      // the turn still finishes (year advances); the verdict is announced at its end
     }
-    if (has('Diplo') && Sim.Diplo.turn) { const ds = Sim.Diplo.turn(S, R); for (const d of (ds || [])) { const ans = yield d; if (d.answer) d.answer(ans); } }
+    if (has('Diplo') && Sim.Diplo.turn) { const ds = Sim.Diplo.turn(S, R); for (const d of (ds || [])) { const ans = yield d; if (d.answer && ans !== 'skip') d.answer(ans); } }   // 'skip' = unanswered: no deal, no refusal
     // (29) fuel check
     const lost = Sim.Fleet.fuelCheck(S);
     for (const l of lost) if (S.empires[l.empire].human) Sim.Ev.push(S, { type: 'notice', kind: 'outOfFuel', ...l });

@@ -20,6 +20,16 @@ Versions follow `MAJOR.MINOR.PATCH`; the live version is the `VERSION` file.
   that answers the pending step is highlighted and focused (Enter/Space); load / quit / new game abort a running turn;
   an engine error no longer overwrites the autosave; the "Skip this step" escape appears only when nothing visible can
   answer, and skipped steps take the harmless choice (battles auto-resolve, audiences reject, no bombardment).
+- Immersion: the player's envoy in audiences, the GNN anchor and every photo placed on a scene use a bust-shaped soft
+  mask (no square plate edges) and are graded only on their own pixels; the drawn hooded envoy, the throne-room victory
+  set with its crown, banners and confetti, and the funeral procession are now fallbacks behind the race council,
+  figure and devastated-world illustrations; the colony side panel shows the orbit illustration as the original's
+  wide planet box; the galaxy map uses bracket-only selection, glint-style unexplored stars and a soft territory tint.
+- Graphics: no synchronous planet or star texture generation on the main thread; shader warm-up never blocks a frame.
+- AI: fleets no longer commute between unguarded colonies; the AI stops scrapping live fleets wholesale; planner
+  errors are logged (`aiLog`).
+- Deployment: installer re-runs keep TLS and read install.conf; atomic script updates; numeric release ordering;
+  build-id cache busting with immutable caching for fingerprinted URLs; full certificate directory in backups.
 - Smoother play: right-click a destination to send the selected fleet at once; "Auto-resolve every battle this game"
   on the pre-battle card; Options for the colony landing scene and a brief one-page news mode; "Waiting for …" in the
   bottom bar during a turn; the control that advances each scene is highlighted and focused; arrow keys work on the

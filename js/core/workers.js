@@ -72,6 +72,11 @@
   }
 
   function pump() {
+    if (!workers.length && queue.length) {                                    // every worker died / was terminated: the queue runs inline rather than waiting forever
+      const jobs = queue.splice(0);
+      for (const j of jobs) inline(j.op, j.payload, j.snap).then(j.res, j.rej);
+      return;
+    }
     while (queue.length) {
       const rec = workers.find(r => !r.busy);
       if (!rec) return;
@@ -140,6 +145,7 @@
             stat.errors++;
             const p = pending.get(id); if (p && p.rec) { pending.delete(id); try { p.rec.w.terminate(); } catch (e) { /* ignore */ } const i = workers.indexOf(p.rec); if (i >= 0) { try { workers[i] = spawn(); } catch (e) { workers.splice(i, 1); } } }
             inline(op, payload, o.snap).then(fin(res), fin(rej));
+            pump();                                                             // the jobs queued behind the dead worker get the respawned one
           }, JOB_TIMEOUT_MS);
         };
         queue.push({ id, op, payload, snap: !!o.snap, transfer: o.transfer, res: fin(res), rej: fin(rej), arm });

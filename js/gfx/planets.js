@@ -1611,7 +1611,7 @@
     }
     SPR[key] = cv; SPRKEYS.push(key);
     if (pend) PENDING[key] = pend;
-    if (SPRKEYS.length > 700) { var old = SPRKEYS.shift(); delete SPR[old]; delete PENDING[old]; }
+    while (SPRKEYS.length > 700) { var old = SPRKEYS.shift(); if (PENDING[old]) { SPRKEYS.push(old); if (SPRKEYS[0] === old) break; continue; } delete SPR[old]; }   // pending sprites stay until their tier lands
     return cv;
   }
   // st (optional) receives {W: tier drawn, want: tier wanted}; without st the wanted tier is generated synchronously (old behaviour)

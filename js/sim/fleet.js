@@ -225,7 +225,8 @@ MOO.def(function (M) {
   O.register('trans', function (S, E, o) {
     const p = S.planets[o.planet];
     if (!p || p.owner !== E.id) return O.fail('not your planet');
-    const n = O.num(o.n, 0, 1e6); if (n === null || n <= 0) { p.trans = null; return O.ok(); }
+    const n = O.num(o.n, 0, 1e6); if (n === null && o.n !== undefined && o.n !== null) return O.fail('bad count');
+    if (n === null || n <= 0) { p.trans = null; return O.ok(); }
     const chk = F.canTransportTo(S, E, p, o.to); if (!chk.ok) return O.fail(chk.msg);
     p.trans = { to: o.to, n: Math.min(Math.floor(n), Math.floor(p.pop / 2)) };
     return O.ok();

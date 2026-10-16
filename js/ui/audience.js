@@ -763,9 +763,9 @@
         if (!begin({ empire: it.from, mode: 'ai', from: undefined })) return undefined;
         const v = await guarded(() => runAI(it));
         leaveScreen();
-        // an aborted audience (screen left, state gone, another audience begun) must not count as "accept" (Diplo.yes treats undefined as yes:
-        // a call to arms would declare war, a demand would break an alliance): answer the explicit negative option when the audience has one
-        if (v === undefined && it.options) { const neg = it.options.find(o => /^(reject|refuse|forget|goodbye)$/.test(o.id)); if (neg) return neg.id; }
+        // an aborted audience (screen left, state gone, another audience begun) is left UNANSWERED: 'skip' makes Turn.run not call the answer,
+        // so nothing is accepted (a call to arms would declare war) and nothing is refused either (refusing it would break the alliance)
+        if (v === undefined) return 'skip';
         return v;
       };
       const p = chain.then(run, run); chain = p.catch(() => {}); return p;

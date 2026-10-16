@@ -1823,10 +1823,10 @@ void main() {
     warming = true;
     const order = ['rocky'].concat(Object.keys(SRC).filter(k => k !== 'rocky'));
     let ci = 0, noiseUp = false;
-    const finish = ok => { warming = false; if (supportedCache === null) supportedCache = ok; const cbs = warmCbs.splice(0); for (const f of cbs) { try { f(ok); } catch (e) { console.warn('[GLPlanets] warm callback', e); } } };
+    const finish = (ok, transient) => { warming = false; if (supportedCache === null && !transient) supportedCache = ok; const cbs = warmCbs.splice(0); for (const f of cbs) { try { f(ok); } catch (e) { console.warn('[GLPlanets] warm callback', e); } } };
     (function next(dl) {
       try {
-        if (!GL.supported()) { finish(false); return; }
+        if (!GL.supported()) { finish(false, true); return; }       // GL is off for now (tier dip): report false but leave the cache open so a later warm() can succeed
         if (ci < order.length) startCompile(order[ci++]);           // one program per slice
         else if (!NOISE) noiseStep();
         else if (!noiseUp) { const g = GL.gl(); if (!noiseTex && !noiseHalf) { noiseHalf = uploadHalf(g, NOISE.d1); noiseGl = g; } else { ensureNoiseTex(g); noiseUp = true; } }
@@ -1837,7 +1837,7 @@ void main() {
         }
         // noise slices overlap the driver's link work; when the browser grants real idle time, use it (a busy page only gets the timeout)
         if (!NOISE) { noiseStep(); while (dl && !dl.didTimeout && dl.timeRemaining() > 25 && !noiseStep()) { /* more slices in the same idle period */ } }
-      } catch (e) { console.warn('[GLPlanets] warm failed', e); finish(false); return; }
+      } catch (e) { console.warn('[GLPlanets] warm failed', e); finish(false, true); return; }
       idle(next);
     })();
   }

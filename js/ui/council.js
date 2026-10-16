@@ -602,7 +602,8 @@
     // the Accept / Defy ruling is irreversible (accept after losing = exile = game over): while the turn is still running, a chamber that lost its screen
     // re-opens with the same prompt instead of answering for the player; only an abandoned turn (load / quit) settles it
     const G = M.Game;
-    if (R.kind === 'result' && wasVerdict && G && G.busy) { setTimeout(() => { if (G.busy) begin('result', { res: R.res, resolve: R.spec.resolve }); else { try { R.spec.resolve(); } catch (e) { /* ignore */ } } }, 0); return; }
+    const stillAsked = () => !!(G && G.busy && G.pending && G.pending.type === 'councilResult');
+    if (R.kind === 'result' && wasVerdict && stillAsked()) { setTimeout(() => { if (stillAsked()) begin('result', { res: R.res, resolve: R.spec.resolve }); else { try { R.spec.resolve(); } catch (e) { /* ignore */ } } }, 0); return; }
     try { if (R.kind === 'vote' && !R.awaiting) R.spec.resolve(-1); else if (R.kind === 'result') R.spec.resolve(); } catch (e) { /* ignore */ }
   }
   function begin(kind, payload) {
