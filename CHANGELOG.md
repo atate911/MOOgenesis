@@ -64,6 +64,11 @@ Versions follow `MAJOR.MINOR.PATCH`; the live version is the `VERSION` file.
   at a random block), the men's choir surfacing low in one section and one alternation, a four-note Shine On motif answered by the
   delay, deeper bass (a 55 Hz shelf, more sub, the low band held even), and each family carved its own place (pads and choir dip
   where the lines speak, no Haas spread on the melody). Per-cue loudness pass on every cue, battle cues measured at battle intensity.
+  Listening round: the top end tamed everywhere (air shelves halved, a 3.6 kHz dip); the four exploration pieces darker still (a
+  per-track tone shelf), slower (50-72 bpm), meditative (sparser plucks, whole-note basses, lower climaxes, no timpani) with a sung
+  men's-choir phrase written into each and more hall; the battle cues more dramatic (brighter and heavier tone, tam-tam and bass-drum
+  hits at the section entrances, timpani gallops, the men's choir at full voice with the mixed choir above, a wider span between
+  ostinato and climax); the title a little faster with the men's choir as its bed throughout and battle drums under the march and tutti.
 - Symphonic re-orchestration and film-style flow. Every synth pluck, FM bell, pad, bass and drum-machine part in the score is now a
   recorded instrument: pizzicato string sections, marimba, glockenspiel, harp, oboe / clarinet / bassoon, contrabass, bass drum,
   snare, field drums, tambourine, claves, anvil, stick taps (the two machine races keep a little sequencer colour). The bell
