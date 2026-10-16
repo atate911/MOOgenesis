@@ -23,13 +23,14 @@
   // music: the panels play the 'spy' track (if the soundtrack has it) and hand back whatever was playing afterwards
   function spyMusicStart() {
     try {
-      const Mu = M.Audio && M.Audio.Music; if (!Mu || !Mu.play || !Mu.has || !Mu.has('spy')) return null;
+      const Mu = M.Audio && M.Audio.Music; if (!Mu || !Mu.play || !Mu.has || !Mu.has('spy') || !spyMusicStart.enabled) return null;
       const snap = Mu.snapshot ? Mu.snapshot() : { id: Mu.current ? Mu.current() : null };
       if (snap && snap.id === 'spy') return null;
       Mu.play('spy', { fade: 0.8 });
       return snap || { id: null };
     } catch (e) { return null; }
   }
+  spyMusicStart.enabled = false;        // off: the panels play their stingers over the underscore (set true to borrow the 'spy' cue again)
   function spyMusicEnd(snap) {
     try {
       const Mu = M.Audio && M.Audio.Music; if (!Mu || !snap || !Mu.current || Mu.current() !== 'spy') return;

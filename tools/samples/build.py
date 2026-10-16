@@ -169,6 +169,23 @@ SPECS = {
     'crash':    dict(src='Percussion', re=r'cymbal-crash1_(?P<dyn>pp|mp|mf|ff)_rr(?P<rr>\d)', dyn=['mf', 'ff'], rr=1, step=0, kind='short', attack=0.001, release=0.6, pitched=False, top=True, keep=4.0),
     'cymSwell': dict(src='Percussion', re=r'susCymb1-cresc-(?P<dyn>Short|Median|Long)_v1', dyn=['Short', 'Median', 'Long'], rr=1, step=0, kind='short', attack=0.01, release=0.6, pitched=False, top=True, keep=5.5),
     'gong':     dict(src='Percussion', re=r'gongHit_(?P<dyn>p|mf|f|fff)', dyn=['mf', 'fff'], rr=1, step=0, kind='short', attack=0.001, release=0.8, pitched=False, top=True, keep=5.0),
+    # ---- the symphonic replacements for the synth plucks, bells and kit (recorded)
+    'glock':    dict(src='Percussion/Glock', re=r'glock_medium_(?P<note>[A-G]#?\d)', dyn=['*'], rr=1, step=0, kind='short', attack=0.001, release=0.6, pitch='detect', range=(300.0, 5000.0), keep=3.0),
+    'marimba':  dict(src='Percussion/Marimba', re=r'Marimba_hit_Outrigger_(?P<note>[A-G]#?\d)_loud', dyn=['*'], rr=1, step=0, kind='short', attack=0.001, release=0.3, pitch='detect', range=(60.0, 2500.0), keep=2.0),
+    'vlnPizz':  dict(src='Strings/Violin Section/Pizz', re=r'VlnEns_Pizz' + R_STD, dyn=[2], rr=1, step=5, kind='short', attack=0.001, release=0.25, keep=2.0),
+    'vlaPizz':  dict(src='Strings/Viola Section/pizz', re=r'ViolaEns_pizz' + R_STD, dyn=[2], rr=1, step=5, kind='short', attack=0.001, release=0.25, keep=2.0),
+    'vcPizz':   dict(src='Strings/Cello Section/pizzT', re=r'pizzT' + R_STD, dyn=[2], rr=1, step=5, kind='short', attack=0.001, release=0.3, keep=2.2),
+    'cbPizz':   dict(src='Strings/Solo Contrabass/Pizz', re=r'BKCtbss_Pizz' + R_STD, dyn=[3], rr=1, step=5, kind='short', attack=0.001, release=0.35, keep=2.5),
+    'oboe':     dict(src='Woodwinds/Oboe/Sus', re=r'Oboe_Sus' + R_STD, dyn=[1, 3], rr=1, step=5, kind='sustain', attack=0.06, release=0.3, cutK=0, ls=1.0, lmin=1.0, lmax=1.5),
+    'clarinet': dict(src='Woodwinds/Clarinet/susLong', re=r'DCClar_susLong' + R_STD, dyn=[2], rr=1, step=5, kind='sustain', attack=0.06, release=0.3, cutK=0, ls=1.0, lmin=1.0, lmax=1.5),
+    'bassoon':  dict(src='Woodwinds/Bassoon/sus', re=r'PSBassoon_(?P<note>[A-G]#?\d)_v(?P<dyn>\d)', dyn=[2], rr=1, step=5, kind='sustain', attack=0.06, release=0.3, cutK=0, ls=1.0, lmin=1.0, lmax=1.5),
+    'tamb':     dict(src='Percussion', re=r'Tamb1-Hit_v(?P<dyn>\d)_rr(?P<rr>\d)', dyn=[1, 2], rr=2, step=0, kind='short', attack=0.001, release=0.2, pitched=False, top=True, keep=1.2),
+    'tambShake': dict(src='Percussion', re=r'Tamb1-Shake_v(?P<dyn>\d)_rr(?P<rr>\d)', dyn=[1], rr=2, step=0, kind='short', attack=0.005, release=0.2, pitched=False, top=True, keep=1.0),
+    'claves':   dict(src='Percussion', re=r'Claves1_Hit_v(?P<dyn>\d)_rr(?P<rr>\d)', dyn=[2, 3], rr=2, step=0, kind='short', attack=0.001, release=0.15, pitched=False, top=True, keep=0.8),
+    'anvil':    dict(src='Percussion', re=r'Anvil_Hit1_v(?P<dyn>\d)_Sum', dyn=[2, 3], rr=1, step=0, kind='short', attack=0.001, release=0.5, pitched=False, top=True, keep=2.5),
+    'taps':     dict(src='Percussion', re=r'Snare2-taps_v(?P<dyn>\d)_rr(?P<rr>\d)', dyn=[1, 3], rr=2, step=0, kind='short', attack=0.001, release=0.15, pitched=False, top=True, keep=0.8),
+    'tenorHi':  dict(src='VSCO 1 Percussion/drums/tenor/tenor_higher', re=r'tenorH_(?P<dyn>p{1,3}|mp|mf|f{1,3})_(?P<rr>\d)', dyn=['f', 'fff'], rr=2, step=0, kind='short', attack=0.001, release=0.3, pitched=False, keep=1.5),
+    'tenorLo':  dict(src='VSCO 1 Percussion/drums/tenor/tenor_lower', re=r'tenor_(?P<dyn>p{1,3}|mp|mf|f{1,3})_(?P<rr>\d)', dyn=['f', 'fff'], rr=2, step=0, kind='short', attack=0.001, release=0.3, pitched=False, keep=1.5),
     'organ':    dict(src='Keys/Organ/Loud', re=r'Rode_Man3Open_(?P<key>\d\d)', dyn=['*'], rr=1, step=6, kind='sustain', attack=0.03, release=0.25, cutK=0, ls=1.0, lmin=1.0, lmax=1.8, pitch='detect', range=(30.0, 2500.0)),
 }
 SYNTH = {   # name -> (kind, attack, release); zones come from synth.py (stereo)
@@ -188,6 +205,7 @@ COMPOSITES = {
     'strEnsTrem': dict(kind='sustain', attack=0.08, release=0.4, cutK=8000, members=[('vcTrem', 0, 62), ('strTrem', 63, 127)]),
     'brassEns':   dict(kind='sustain', attack=0.07, release=0.35, members=[('tubaSus', 0, 46), ('tbnSus', 47, 58), ('hornSus', 59, 74), ('tptSus', 75, 127)]),
     'lowBrass':   dict(kind='sustain', attack=0.08, release=0.4, members=[('tubaSus', 0, 48), ('tbnSus', 49, 127)]),
+    'strEnsPizz': dict(kind='short', attack=0.001, release=0.3, members=[('cbPizz', 0, 43), ('vcPizz', 44, 59), ('vlaPizz', 60, 66), ('vlnPizz', 67, 127)]),
     'choirOhAll': dict(kind='sustain', attack=0.12, release=0.7, members=[('choirOh', 0, 61), ('choirHiOo', 62, 127)]),
     'choirAhAll': dict(kind='sustain', attack=0.12, release=0.7, members=[('choirAh', 0, 61), ('choirHiAh', 62, 127)]),
 }
@@ -221,7 +239,8 @@ def collect(vsco, spec):
 
 def pick_dyn_layers(files, spec):
     """map the spec's dyn list to actual layer values present; -1 = the loudest present, '*' = all"""
-    present = sorted({f['dyn'] for f in files}, key=lambda d: (len(d), d))
+    DYN_ORDER = ['ppp', 'pp', 'p', 'mp', 'mf', 'f', 'ff', 'fff']
+    present = sorted({f['dyn'] for f in files}, key=lambda d: (0, int(d)) if d.isdigit() else (1, DYN_ORDER.index(d.lower()) if d.lower() in DYN_ORDER else 99))
     want = spec['dyn']
     if want == ['*']: return [present]
     out = []

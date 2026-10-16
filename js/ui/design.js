@@ -1381,7 +1381,7 @@
       }
       closePopup(true);
       refreshAll();
-      try { if (M.Audio && M.Audio.Music && M.Audio.Music.play) M.Audio.Music.play('design', { fade: 1.0 }); } catch (e) { /* audio is optional */ }
+      /* the designer keeps whatever underscore is playing (soundscape.js): a menu is not a scene change */
       flash('hull');
     },
     leave() {

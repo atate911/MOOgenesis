@@ -218,36 +218,51 @@
   const fbOf = name => { const o = Object.assign({}, SYN[name]); const fb = o.v; delete o.v; delete o.lvl; return { fb, fbo: o }; };
   const smp = (inst, lvl, extra, fbName) => Object.assign({ lvl, v: 'sample', smp: inst }, fbOf(fbName), extra || {});
   const INST = Object.assign({}, SYN, {
-    // pads and sustains (the "ensemble" presets get a second detuned copy inside the voice and the layer chorus on the bus)
-    warm: smp('padSerrie', 0.18, { ens: 0.5 }, 'warm'),
-    strings: smp('strEns', 0.135, { ens: 0.55 }, 'strings'),
-    strTrem: smp('strEnsTrem', 0.14, { ens: 0.5 }, 'strings'),
-    glassPad: smp('padGlass', 0.17, { ens: 0.4 }, 'glassPad'),
-    airPad: smp('padGlass', 0.17, { ens: 0.7 }, 'airPad'),
-    dark: smp('padDark', 0.19, { ens: 0.5 }, 'dark'),
-    organ: smp('organ', 0.13, { ens: 0.3 }, 'organ'),
-    deep: smp('subBass', 0.3, {}, 'deep'),
-    // brass
-    horn: smp('hornSus', 0.34, { ens: 0.45, vib: 0 }, 'horn'),
+    // sustains: string sections carry the harmony (the analogue pad survives as 'analog' for the cues that want a Zimmer bed)
+    warm: smp('strEns', 0.135, { ens: 0.45, att: 0.22, rel: 0.9 }, 'warm'),
+    strings: smp('strEns', 0.135, { ens: 0.45, att: 0.18, rel: 0.8 }, 'strings'),
+    strTrem: smp('strEnsTrem', 0.14, { ens: 0.4, att: 0.12 }, 'strings'),
+    airPad: smp('strEns', 0.12, { ens: 0.6, att: 0.4, rel: 1.2, cut: 5000 }, 'airPad'),
+    glassPad: smp('strEns', 0.12, { ens: 0.5, att: 0.35, rel: 1.0, cut: 6000 }, 'glassPad'),
+    dark: smp('strEns', 0.14, { ens: 0.45, att: 0.3, rel: 1.0, cut: 2200 }, 'dark'),
+    drone: smp('strEns', 0.13, { ens: 0.5, att: 0.6, rel: 1.4, cut: 1800 }, 'drone'),
+    analog: smp('padSerrie', 0.16, { ens: 0.5 }, 'warm'),
+    padGlass: smp('padGlass', 0.15, { ens: 0.4 }, 'glassPad'),
+    organ: smp('organ', 0.13, { ens: 0.2 }, 'organ'),
+    // basses: contrabass section
+    deep: smp('cbSus', 0.3, { ens: 0.15, att: 0.08 }, 'deep'), sub: smp('cbSus', 0.3, { ens: 0.15, att: 0.08 }, 'sub'),
+    moog: smp('cbPizz', 0.55, {}, 'moog'), pulse: smp('cbPizz', 0.5, {}, 'pulse'),
+    // brass and winds
+    horn: smp('hornSus', 0.34, { ens: 0.2, vib: 0, att: 0.09 }, 'horn'),
     hornSolo: smp('hornSus', 0.31, { ens: 0 }, 'horn'),
-    brass: smp('brassEns', 0.33, { ens: 0.5 }, 'brass'),
-    tpt: smp('tptSus', 0.3, { ens: 0.35 }, 'brass'),
-    lowBrass: smp('lowBrass', 0.36, { ens: 0.4 }, 'horn'),
-    brassStab: smp('hornStac', 1.6, {}, 'brassStab'),
-    // winds, harp, choir
-    flute: smp('fluteSus', 0.42, {}, 'flute'),
-    harp: smp('harp', 0.8, {}, 'harp'),
-    ooh: smp('choirOhAll', 0.21, { ens: 0.3 }, 'ooh'), aah: smp('choirAhAll', 0.2, { ens: 0.3 }, 'aah'),
-    uuh: smp('choirOhAll', 0.2, { ens: 0.3 }, 'uuh'), eeh: smp('choirAhAll', 0.19, { ens: 0.3 }, 'eeh'),
-    choirMen: smp('choirOh', 0.22, { ens: 0.3 }, 'uuh'), choirMenAh: smp('choirAh', 0.21, { ens: 0.3 }, 'aah'),
-    // short strings for ostinati
-    strOst: smp('strEnsSpic', 0.5, {}, 'pizz'),
+    brass: smp('brassEns', 0.33, { ens: 0.25, att: 0.08 }, 'brass'),
+    synth: smp('brassEns', 0.33, { ens: 0.25, att: 0.06 }, 'synth'),
+    tpt: smp('tptSus', 0.3, { ens: 0.2 }, 'brass'),
+    lowBrass: smp('lowBrass', 0.36, { ens: 0.25, att: 0.08 }, 'horn'),
+    brassStab: smp('hornStac', 1.6, { ring: true }, 'brassStab'),
+    flute: smp('fluteSus', 0.42, { att: 0.08 }, 'flute'),
+    oboe: smp('oboe', 0.4, { att: 0.07 }, 'flute'), reed: smp('oboe', 0.4, { att: 0.07 }, 'reed'),
+    clarinet: smp('clarinet', 0.42, { att: 0.07 }, 'flute'), bassoon: smp('bassoon', 0.42, { att: 0.07 }, 'horn'),
+    // plucked and struck: pizzicato sections, marimba, glockenspiel, harp (no synth plucks or FM bells in the symphonic palette)
+    arp: smp('strEnsPizz', 0.42, { rel: 0.35 }, 'arp'), arpSaw: smp('strEnsPizz', 0.42, { rel: 0.35 }, 'arpSaw'), seq: smp('strEnsPizz', 0.42, { rel: 0.3 }, 'seq'),
+    pizz: smp('strEnsPizz', 0.5, { rel: 0.4 }, 'pizz'), kora: smp('strEnsPizz', 0.45, { rel: 0.5 }, 'kora'), stab: smp('hornStac', 1.4, { ring: true }, 'stab'),
+    strOst: smp('strEnsSpic', 0.5, { ring: true }, 'pizz'),
+    marimba: smp('marimba', 0.45, { rel: 0.6, hold: 0.1 }, 'marimba'),
+    harp: smp('harp', 0.8, { rel: 1.3, hold: 0.3 }, 'harp'), glassHarm: smp('harp', 0.7, { rel: 1.3, hold: 0.3 }, 'harp'),
+    glass: smp('glock', 0.45, { rel: 1.6, hold: 0.4 }, 'glass'), bell: smp('glock', 0.5, { rel: 1.6, hold: 0.4 }, 'bell'), crystal: smp('glock', 0.42, { rel: 1.8, hold: 0.4 }, 'crystal'),
+    shimmer: smp('glock', 0.4, { rel: 1.2, hold: 0.3 }, 'shimmer'), vibes: smp('glock', 0.42, { rel: 1.4, hold: 0.3 }, 'vibes'), chime: smp('glock', 0.42, { rel: 1.8, hold: 0.4 }, 'chime'),
+    // choir
+    ooh: smp('choirOhAll', 0.21, { ens: 0.2, att: 0.3 }, 'ooh'), aah: smp('choirAhAll', 0.2, { ens: 0.2, att: 0.3 }, 'aah'),
+    uuh: smp('choirOhAll', 0.2, { ens: 0.2, att: 0.3 }, 'uuh'), eeh: smp('choirAhAll', 0.19, { ens: 0.2, att: 0.3 }, 'eeh'),
+    choirMen: smp('choirOh', 0.22, { ens: 0.2, att: 0.3 }, 'uuh'), choirMenAh: smp('choirAh', 0.21, { ens: 0.2, att: 0.3 }, 'aah'),
+    // the two machine races keep a little of their electronic character
+    seqSyn: SYN.seq, arpSawSyn: SYN.arpSaw, moogSyn: SYN.moog, pulseSyn: SYN.pulse, synthSyn: SYN.synth,
   });
   Music._SYN = SYN;
   const LAYERS = {
-    pad: { lvl: 0.85, verb: 0.34, dly: 0, chorus: 0.45 }, bass: { lvl: 0.75, verb: 0, dly: 0 }, arp: { lvl: 0.75, verb: 0.22, dly: 0.38 },
-    lead: { lvl: 1, verb: 0.3, dly: 0.24 }, bell: { lvl: 0.8, verb: 0.45, dly: 0.34 }, choir: { lvl: 0.8, verb: 0.5, dly: 0, chorus: 0.5 },
-    drums: { lvl: 0.85, verb: 0.14, dly: 0 }, fx: { lvl: 0.8, verb: 0.55, dly: 0 },
+    pad: { lvl: 0.9, verb: 0.4, dly: 0, chorus: 0.3 }, bass: { lvl: 0.7, verb: 0.1, dly: 0 }, arp: { lvl: 0.5, verb: 0.35, dly: 0.12 },
+    lead: { lvl: 0.95, verb: 0.38, dly: 0.08 }, bell: { lvl: 0.5, verb: 0.5, dly: 0.1 }, choir: { lvl: 0.8, verb: 0.55, dly: 0, chorus: 0.35 },
+    drums: { lvl: 0.62, verb: 0.3, dly: 0 }, fx: { lvl: 0.6, verb: 0.6, dly: 0 },
     x1: { lvl: 0.8, verb: 0.12, dly: 0, i0: 0.12 }, x2: { lvl: 0.7, verb: 0.2, dly: 0.3, i0: 0.38 }, x3: { lvl: 0.9, verb: 0.3, dly: 0, i0: 0.62 },
   };
   const BUS = { pad: 'pad', pad2: 'pad', bass: 'bass', arp: 'arp', arp2: 'arp', drums: 'drums', perc: 'drums', timp: 'drums', lead: 'lead', lead2: 'lead', bell: 'bell', bell2: 'bell', choir: 'choir', choir2: 'choir' };
@@ -255,11 +270,15 @@
   const LINES = { lead: 1, lead2: 1, bell: 1, bell2: 1 };
 
   const DRUMV = {
-    kick: { v: 'kick' }, snare: { v: 'snare' }, hat: { v: 'hat' }, ohat: { v: 'hat', open: true }, clap: { v: 'clap' }, crash: { v: 'crash' },
-    t1: { v: 'tom', f: 196 }, t2: { v: 'tom', f: 147 }, t3: { v: 'tom', f: 110 }, t4: { v: 'tom', f: 82 }, t5: { v: 'tom', f: 62, dur: 0.6 },
-    metal: { v: 'metal' }, metal2: { v: 'metal', f: 520, dur: 0.5 }, click: { v: 'click' }, click2: { v: 'click', f: 3600 }, click3: { v: 'click', f: 1500, q: 4 },
+    kick: { v: 'sample', smp: 'bassDrum', fb: 'kick', fbo: { f: 48, f0: 135, dur: 0.36 }, lvl: 0.85 }, snare: { v: 'sample', smp: 'snare', fb: 'snare', fbo: {}, lvl: 0.7 },
+    hat: { v: 'sample', smp: 'taps', fb: 'hat', fbo: {}, lvl: 0.5 }, ohat: { v: 'sample', smp: 'taps', fb: 'hat', fbo: { open: true }, lvl: 0.55 }, clap: { v: 'sample', smp: 'tamb', fb: 'clap', fbo: {}, lvl: 0.6 },
+    crash: { v: 'sample', smp: 'crash', fb: 'crash', fbo: {}, lvl: 0.7 },
+    t1: { v: 'sample', smp: 'tenorHi', fb: 'tom', fbo: { f: 196 }, lvl: 0.7 }, t2: { v: 'sample', smp: 'tenorHi', fb: 'tom', fbo: { f: 147 }, lvl: 0.7 }, t3: { v: 'sample', smp: 'tenorLo', fb: 'tom', fbo: { f: 110 }, lvl: 0.75 },
+    t4: { v: 'sample', smp: 'tenorLo', fb: 'tom', fbo: { f: 82 }, lvl: 0.8 }, t5: { v: 'sample', smp: 'bassDrum', fb: 'tom', fbo: { f: 62, dur: 0.6 }, lvl: 0.7 },
+    metal: { v: 'sample', smp: 'anvil', fb: 'metal', fbo: {}, lvl: 0.6 }, metal2: { v: 'sample', smp: 'anvil', fb: 'metal', fbo: { f: 520, dur: 0.5 }, lvl: 0.45 },
+    click: { v: 'sample', smp: 'claves', fb: 'click', fbo: {}, lvl: 0.5 }, click2: { v: 'sample', smp: 'claves', fb: 'click', fbo: { f: 3600 }, lvl: 0.45 }, click3: { v: 'sample', smp: 'claves', fb: 'click', fbo: { f: 1500, q: 4 }, lvl: 0.4 },
     whisper: { v: 'whisper', dur: 2.6 }, whisper2: { v: 'whisper', dur: 1.3, f0: 2800, f1: 1500 },
-    shk: { v: 'shaker' }, hiss: { v: 'shaker', dur: 0.22, hp: 3500, f: 7000, att: 0.03 }, rim: { v: 'click', f: 1900, q: 3, dur: 0.03, gain: 6 },
+    shk: { v: 'sample', smp: 'tambShake', fb: 'shaker', fbo: {}, lvl: 0.45 }, hiss: { v: 'sample', smp: 'tambShake', fb: 'shaker', fbo: { dur: 0.22, hp: 3500, f: 7000, att: 0.03 }, lvl: 0.4 }, rim: { v: 'sample', smp: 'taps', fb: 'click', fbo: { f: 1900, q: 3, dur: 0.03, gain: 6 }, lvl: 0.55 },
     // sampled orchestral percussion (assets/audio) with synth fallbacks
     bd: { v: 'sample', smp: 'bassDrum', fb: 'kick', fbo: { f: 44, f0: 120, dur: 0.5 }, lvl: 0.9 }, bdSoft: { v: 'sample', smp: 'bassDrum', fb: 'kick', fbo: { f: 44, f0: 120, dur: 0.5 }, lvl: 0.55 },
     sn: { v: 'sample', smp: 'snare', fb: 'snare', fbo: {}, lvl: 0.75 }, snRoll: { v: 'sample', smp: 'snareRoll', fb: 'snare', fbo: { dur: 0.6 }, lvl: 0.7 },
@@ -564,7 +583,7 @@
   // generative bell sparkle (seeded by the composition RNG: identical every loop, a few notes dropped per pass)
   function genSparkle(C, s, cfg, key) {
     const ly = BUS[key], inst = resolveInst(cfg.inst, C.def.inst && C.def.inst[key] || DEF_INST[key]);
-    const reg = cfg.reg || [72, 91], res = cfg.res || 2, dens = num(cfg.dens, 0.5), vel = num(cfg.vel, 0.55), rng = C.crng, vr = C.vrng;
+    const reg = cfg.reg || [72, 91], res = cfg.res || 2, dens = num(cfg.dens, 0.5) * 0.5, vel = num(cfg.vel, 0.55) * 0.7, rng = C.crng, vr = C.vrng;
     const pent = cfg.pent !== false, scaleIdx = pent ? [0, 1, 2, 4, 5] : [0, 1, 2, 3, 4, 5, 6];
     const pool = [];
     for (let o = -1; o <= 3; o++) for (const i of scaleIdx) { if (i >= C.scale.length) continue; const m = C.tonic + C.scale[i] + 12 * o; if (m >= reg[0] && m <= reg[1]) pool.push(m); }
@@ -632,7 +651,7 @@
     for (let i = 0; i < wraps.length; i++) {
       const cur = wraps[i], prev = i > 0 ? wraps[i - 1] : (C.pass > 0 ? wraps[wraps.length - 1] : null);
       C.curW = cur;
-      if (cur.R.hit) { emitDrum(C, 'fx', { v: 'boom' }, cur.start, 0.7); emitDrum(C, 'fx', { v: 'sample', smp: 'bassDrum', fb: 'kick', fbo: { f: 40, f0: 110, dur: 0.5 } }, cur.start, 0.95); if (cur.R.hit === 'tam') emitDrum(C, 'fx', { v: 'sample', smp: 'gong', fb: 'crash', fbo: { dur: 3 } }, cur.start, 0.8); }
+      if (cur.R.hit) { emitDrum(C, 'fx', { v: 'boom' }, cur.start, 0.3); emitDrum(C, 'fx', { v: 'sample', smp: 'bassDrum', fb: 'kick', fbo: { f: 40, f0: 110, dur: 0.5 } }, cur.start, 0.95); if (cur.R.hit === 'tam') emitDrum(C, 'fx', { v: 'sample', smp: 'gong', fb: 'crash', fbo: { dur: 3 } }, cur.start, 0.8); }
       if (!prev) continue;
       const up = cur.R.lv0 - prev.R.lv1;
       if (cur.R.cr === true || (cur.R.cr !== false && up >= 0.12)) emitDrum(C, 'fx', { v: 'sample', smp: 'crash', fb: 'crash', fbo: { dur: 2.8 } }, cur.start, 0.6);
@@ -640,7 +659,7 @@
       if (rise) {
         // the riser sits in the last bar(s) of the previous section; across the loop seam it lives at the end of this pass
         const st = i > 0 ? cur.start - rise * C.meter : C.totalBeats - rise * C.meter;
-        if (st >= 0) { C.curW = i > 0 ? prev : cur; const dur = rise * C.meter * C.spb; emitDrum(C, 'fx', { v: 'swell', dur }, st, 0.4); emitDrum(C, 'fx', { v: 'sample', smp: 'cymSwell', fb: 'swell', fbo: { dur }, alignEnd: true, dur, dyn: dur > 5 ? 0.9 : dur > 3 ? 0.5 : 0.15 }, st, 0.55); }
+        if (st >= 0) { C.curW = i > 0 ? prev : cur; const dur = rise * C.meter * C.spb; emitDrum(C, 'fx', { v: 'swell', dur }, st, 0.15); emitDrum(C, 'fx', { v: 'sample', smp: 'cymSwell', fb: 'swell', fbo: { dur }, alignEnd: true, dur, dyn: dur > 5 ? 0.9 : dur > 3 ? 0.5 : 0.15 }, st, 0.55); }
       }
     }
   }
@@ -719,13 +738,20 @@
       this.schedDone = false; this.endAt = Infinity;
     }
     now() { return this.eng.now(); }
+    // the next bar (or beat) boundary of this performance, capped so a switch never waits more than a few seconds
+    nextBoundary(kind) {
+      const now = this.eng.ctx.currentTime, unit = kind === 'beat' ? this.P.spb : this.P.meter * this.P.spb;
+      if (!this.pass || this.stopped) return now;
+      const base = this.pass.start - this.shift, k = Math.ceil((now - base + 0.06) / unit);
+      return Math.min(base + k * unit, now + (kind === 'beat' ? 1.5 : 4.5));
+    }
     applyIntensity(x, immediate) {
       this.intensity = x;
       const t = this.eng.ctx.currentTime;
       for (const name in this.layers) {
         const L = this.layers[name]; if (L.i0 === undefined) continue;
         const target = L.level * smooth((x - L.i0) / 0.25), g = L.in.gain;
-        try { g.cancelScheduledValues(t); if (immediate) g.setValueAtTime(target, t); else g.setTargetAtTime(target, t, 0.5); } catch (e) { g.value = target; }
+        try { g.cancelScheduledValues(t); if (immediate) g.setValueAtTime(target, t); else g.setTargetAtTime(target, t, 1.6); } catch (e) { g.value = target; }   // layers swell in over seconds, never per hit
       }
     }
     fadeIn(sec) {
@@ -817,8 +843,9 @@
       }
       for (let i = S.old.length - 1; i >= 0; i--) { const p = S.old[i]; p.tick(now, look); if (p.finished) { p.dispose(); S.old.splice(i, 1); } }
       if (S.ticks % 40 === 0) eng.sweep(now);
-      if (S.plWait && now >= S.plWait.at) { const w = S.plWait; S.plWait = null; startTrack(w.id, { fade: w.fade, loop: false, keepPlaylist: true }); }
-      if (!S.cur && !S.old.length && !S.plWait) { clearInterval(S.timer); S.timer = null; }
+      if (S.plWait && now >= S.plWait.at) { const w = S.plWait; S.plWait = null; startTrack(w.id, { fade: w.fade, loop: false, keepPlaylist: true, quantize: false }); }
+      if (S.switchAt && now >= S.switchAt.at - 0.03) { const w = S.switchAt; S.switchAt = null; startTrack(w.id, w.opts); }
+      if (!S.cur && !S.old.length && !S.plWait && !S.switchAt) { clearInterval(S.timer); S.timer = null; }
     } catch (e) { console.warn('[music] tick failed', e); }
   }
 
@@ -831,13 +858,20 @@
       if (pl.i === 0 && pl.shuffle) pl.order = shuffled(pl.ids);
       const id = pl.order[pl.i];
       if (pl.gap > 0) { p.fadeOut(Math.max(0.5, p.endAt - now)); S.old.push(p); S.cur = null; S.plWait = { at: p.endAt + pl.gap, id: id, fade: 0.4 }; }
-      else startTrack(id, { fade: pl.fade, loop: false, keepPlaylist: true });
+      else startTrack(id, { fade: pl.fade, loop: false, keepPlaylist: true, quantize: false });
     }
   }
   function shuffled(ids) { const a = ids.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); const t = a[i]; a[i] = a[j]; a[j] = t; } return a; }
 
+  // Switches happen on the bar (opts.quantize 'bar', the default; 'beat' for urgent cues; false = now) with long crossfades, so a
+  // change of scene reads as a phrase ending rather than a jump cut.
   function startTrack(id, opts) {
-    const def = TRACKS[id], eng = A.engine, fade = num(opts.fade, 2);
+    const def = TRACKS[id], eng = A.engine, fade = num(opts.fade, 3.5);
+    if (opts.quantize !== false && S.cur && !S.cur.stopped && S.cur.id !== id) {
+      const at = S.cur.nextBoundary(opts.quantize || 'bar');
+      if (at - eng.ctx.currentTime > 0.1) { S.switchAt = { id, opts: Object.assign({}, opts, { quantize: false }), at }; if (!opts.keepPlaylist) { S.playlist = null; S.plWait = null; } ensureTimer(); return true; }
+    }
+    S.switchAt = null;
     if (!opts.keepPlaylist) { S.playlist = null; S.plWait = null; }
     const p = new Player(eng, def, { loop: opts.loop !== false, intensity: S.intensity });
     if (S.cur) { S.cur.fadeOut(fade); S.old.push(S.cur); }
@@ -858,19 +892,19 @@
         A.onReady(() => { const p = S.pending; if (p) { S.pending = null; Music.play(p.id, p.opts); } });
         return 'pending';
       }
-      if (S.cur && S.cur.id === id && !S.cur.stopped && !opts.restart) return true;
+      if (S.cur && S.cur.id === id && !S.cur.stopped && !opts.restart) { S.switchAt = null; return true; }
       return startTrack(id, opts);
     } catch (e) { console.warn('[music] play failed', e); return false; }
   };
   Music.stop = function (opts) {
     try {
       opts = opts || {};
-      S.pending = null; S.playlist = null; S.plWait = null;
-      if (S.cur) { S.cur.fadeOut(num(opts.fade, 1.5)); S.old.push(S.cur); S.cur = null; }
+      S.pending = null; S.playlist = null; S.plWait = null; S.switchAt = null;
+      if (S.cur) { S.cur.fadeOut(num(opts.fade, 3)); S.old.push(S.cur); S.cur = null; }
       return true;
     } catch (e) { console.warn('[music] stop failed', e); return false; }
   };
-  Music.current = () => (S.cur && !S.cur.stopped ? S.cur.id : (S.pending ? S.pending.id : null));
+  Music.current = () => (S.switchAt ? S.switchAt.id : S.cur && !S.cur.stopped ? S.cur.id : (S.pending ? S.pending.id : null));
   Music.list = function () {
     return Object.keys(TRACKS).filter(id => !TRACKS[id].hidden).map(id => {
       const d = TRACKS[id], P = prepare(d), bars = P.secs.slice(P.loopIdx).reduce((a, s) => a + s.bars, 0), intro = P.secs.slice(0, P.loopIdx).reduce((a, s) => a + s.bars, 0);
@@ -904,7 +938,7 @@
   Music.onSamplesReady = function () {
     const p = S.cur; if (!p || p.stopped || !A.engine) return;
     const elapsed = A.engine.ctx.currentTime - p.t0;
-    if (elapsed >= 0 && elapsed < 14) startTrack(p.id, { fade: 2.5, loop: p.loop, keepPlaylist: true });
+    if (elapsed >= 0 && elapsed < 14) startTrack(p.id, { fade: 2.5, loop: p.loop, keepPlaylist: true, quantize: false });
   };
 
   // A scene that borrows the music (GNN, lab, spy panels) takes a snapshot first and restores it afterwards: a running playlist
@@ -933,7 +967,8 @@
   };
   // array moods listed here play as a shuffled playlist with a pause between pieces (the original's map was silent; a breath between
   // tracks keeps the exploration music from looping one piece for an hour). Others pick the next track of the list on each request.
-  const MOOD_ROTATE = { explore: { gap: 5, fade: 3 }, galaxy: { gap: 5, fade: 3 }, map: { gap: 5, fade: 3 }, calm: { gap: 5, fade: 3 } };
+  MOODS.galaxyWar = ['galaxy3', 'ground', 'galaxy2', 'spy'];        // at war: the determined and uneasy pieces carry the map
+  const MOOD_ROTATE = { explore: { gap: 14, fade: 4 }, galaxy: { gap: 14, fade: 4 }, galaxyWar: { gap: 10, fade: 4 }, map: { gap: 14, fade: 4 }, calm: { gap: 14, fade: 4 } };
   let moodTick = 0;
   Music.moods = () => Object.keys(MOODS).concat(Object.keys(TRACKS).filter(id => id.indexOf('race:') === 0));
   // setMood('combat' | 'explore' | 'council' | 'human' | 'race:human' | any track id, {fade, loop}) -> id of the track chosen (or false)
@@ -1017,8 +1052,8 @@
   // @@TRACKS-BEGIN
   Track('title', {
     desc: 'Main theme — a slow, noble hymn for horns, men’s choir and strings that gathers into a full orchestral tutti with snare, bass drum and cymbals; space-opera weight',
-    bpm: 64, root: 'D', mode: 'minor', loopFrom: 'A1', trim: 1.15, tens: false,
-    inst: { pad: 'strings', pad2: 'warm', bass: 'deep', lead: 'horn', lead2: 'strings', bell: 'glass', choir: 'ooh', choir2: 'aah', arp: 'strOst' },
+    bpm: 64, root: 'D', mode: 'minor', loopFrom: 'A1', trim: 1.4, tens: false,
+    inst: { pad: 'strings', pad2: 'analog', bass: 'deep', lead: 'horn', lead2: 'strings', bell: 'glass', choir: 'ooh', choir2: 'aah', arp: 'strOst' },
     ph: {
       H1: '5:3 8:1 | 7:2 6:2 | 5:3 3:1 | 4:2 5:2',             // the hymn: rising fourth, falling step (the game's leitmotif), noble descent, half cadence
       H2: '5:3 8:1 | 9:2 10:2 | 8:2 7:1 6:1 | 5:4',
@@ -1049,8 +1084,8 @@
 
   Track('galaxy4', {
     desc: 'Deep field — slow analogue pads and a distant choir, high strings that swell and fade, harp and glass bells, a lone flute: space ambience in the Serrie manner',
-    bpm: 66, trim: 2.1, root: 'A', mode: 'lydian', loopFrom: 'A1', tens: false,
-    inst: { pad: 'warm', pad2: 'strings', bass: 'deep', lead: 'flute', lead2: 'glass', bell: 'glass', arp: 'harp', choir: 'ooh', choir2: 'aah' },
+    bpm: 66, trim: 2.6, root: 'A', mode: 'lydian', loopFrom: 'A1', tens: false,
+    inst: { pad: 'analog', pad2: 'strings', bass: 'deep', lead: 'flute', lead2: 'glass', bell: 'glass', arp: 'harp', choir: 'ooh', choir2: 'aah' },
     ph: {
       S1: '5:4 | 8:4 | 7:4 | 5:4', S2: '6:4 | 8:2 9:2 | 8:4 | 5:4', S3: '10:4 | 9:4 | 8:2 7:2 | 5:4', S4: '5:2 8:2 | 7:3 6:1 | 5:4 | 3:4',
     },
@@ -1069,7 +1104,7 @@
   Track('combat3', {
     desc: 'Battle — driving spiccato string ostinato, low-brass stabs, bass drum and snare, men’s choir, and the main theme hammered out by horns and full brass as the fight escalates',
     bpm: 118, trim: 1.0, root: 'D', mode: 'minor', loopFrom: 'A1', tens: false, gate: { drums: 0.2, choir: 0.3, lead: 0.42, bell: 0.6 },
-    inst: { pad: 'lowBrass', pad2: 'dark', bass: 'deep', lead: 'horn', lead2: 'brass', arp: 'strOst', bell: 'bell', choir: 'ooh' },
+    inst: { pad: 'lowBrass', pad2: 'analog', bass: 'deep', lead: 'horn', lead2: 'brass', arp: 'strOst', bell: 'bell', choir: 'ooh' },
     ph: {
       B1: '5:1.5 8:.5 7:1 6:1 | 5:2 3:2 | 4:1.5 5:.5 6:1 4:1 | 5:4',
       B2: '5:1.5 8:.5 9:1 10:1 | 8:2 7:1 6:1 | 5:1.5 6:.5 5:1 4:1 | 3:2 5:2',
@@ -1118,7 +1153,7 @@
 
   Track('galaxy2', {
     desc: 'Calm exploration, patience: marimba ostinato, plucked reed melody, warm dorian pad',
-    bpm: 70, trim: 1.75, root: 'D', mode: 'dorian', loopFrom: 'A1',
+    bpm: 70, trim: 1.3, root: 'D', mode: 'dorian', loopFrom: 'A1',
     inst: { pad: 'warm', bass: 'deep', lead: 'reed', lead2: 'vibes', bell: 'vibes', arp: 'marimba' },
     ph: {
       P1: '5:1.5 6:.5 8:2 | 8:1.5 7:.5 6:2 | 5:2 3:2 | 4:1 5:1 6:2',
@@ -1165,7 +1200,7 @@
 
   Track('design', {
     desc: 'Technical, light: bubbling marimba and sequenced plucks over a springy bass',
-    bpm: 112, trim: 1.26, root: 'G', mode: 'major', loopFrom: 'A1',
+    bpm: 112, trim: 0.8, root: 'G', mode: 'major', loopFrom: 'A1',
     inst: { pad: 'glassPad', bass: 'pulse', lead: 'marimba', lead2: 'vibes', bell: 'vibes', arp: 'seq', choir: 'ooh' },
     ph: {
       T1: '5:.5 8:.5 5:.5 3:.5 5:1 r:1 | 6:.5 8:.5 6:.5 3:.5 6:1 r:1 | 4:.5 6:.5 4:.5 2:.5 4:1 r:1 | 5:.5 7:.5 5:.5 3:.5 2:1 r:1',
@@ -1458,7 +1493,7 @@
   Track('race:klackon', {
     desc: 'Klackon: chittering insect clicks in whole-tone buzzing ostinati and skittering rhythms',
     bpm: 132, trim: 0.96, root: 'C', mode: 'wholetone', tens: false,
-    inst: { pad: 'glassPad', bass: 'pulse', lead: 'seq', lead2: 'marimba', arp: 'seq', bell: 'vibes' },
+    inst: { pad: 'glassPad', bass: 'pulseSyn', lead: 'seqSyn', lead2: 'marimba', arp: 'seqSyn', bell: 'vibes' },
     ph: {
       KL1: '1:.25 2:.25 1:.25 2:.25 1:.25 2:.25 3:.5 r:2 | 3:.25 4:.25 3:.25 4:.25 3:.25 4:.25 5:.5 r:2 | 5:.25 6:.25 5:.25 6:.25 5:.25 6:.25 7:.5 r:.5 7:.5 6:.5 5:.5 | 5:1 3:1 1:2',
       KL2: '1:.5 7:.5 1:.5 7:.5 3:.5 9:.5 3:.5 9:.5 | 2:.5 8:.5 2:.5 8:.5 4:.5 10:.5 4:.5 10:.5 | 3:.5 9:.5 3:.5 9:.5 5:.5 11:.5 5:.5 11:.5 | 6:1 5:1 4:1 2:1',
@@ -1474,7 +1509,7 @@
   Track('race:meklar', {
     desc: 'Meklar: cold industrial sequencer arps, four-on-the-floor machine pulse and metal strikes',
     bpm: 128, trim: 0.8, root: 'B', mode: 'minor', tens: false,
-    inst: { pad: 'dark', bass: 'moog', lead: 'synth', lead2: 'seq', arp: 'arpSaw', bell: 'bell' },
+    inst: { pad: 'dark', bass: 'moogSyn', lead: 'synthSyn', lead2: 'seqSyn', arp: 'arpSawSyn', bell: 'bell' },
     ph: {
       MK1: '1:.5 5:.5 1:.5 4:.5 1:.5 3:.5 1:.5 2:.5',
       MK2: '1:.5 3:.5 5:.5 8:.5 5:.5 3:.5 1:.5 3:.5 | -1:.5 1:.5 3:.5 6:.5 3:.5 1:.5 -1:.5 1:.5 | 0:.5 2:.5 4:.5 7:.5 4:.5 2:.5 0:.5 2:.5 | 1:2 5:1 8:1',

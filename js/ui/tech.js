@@ -1251,7 +1251,7 @@
     SC.layKey = ''; SC.root.classList.remove('out'); UI.clear(SC.panel); UI.clear(SC.cap); UI.hideTip();
     SC.root.style.setProperty('--fc', F.col);
     if (spec.kind === 'choose') buildChoose(R); else buildBreak(R);
-    if (!SC.musicOn) { SC.prevTrack = musicCur(); SC.prevSnap = musicSnap(); SC.musicOn = true; if (SC.prevTrack !== 'research') musicPlay('research', { fade: 0.6 }); }
+    /* the lab scene plays over the current underscore (no cue switch for a 20-second scene) */
     R.capT.set(R.caption, R.rm);
     SC.root.focus && SC.root.setAttribute('tabindex', '-1');
     try { SC.root.focus({ preventScroll: true }); } catch (e) { /* not focusable yet */ }

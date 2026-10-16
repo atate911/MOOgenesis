@@ -121,12 +121,12 @@
     const v = eng.voice(dest, t, o.prio || (inst.kind === 'sustain' ? 1 : 2), o.pan, o.send); if (!v) return null;
     const ctx = eng.ctx, rate = Math.pow(2, (midi - z.root) / 12);
     const att = Math.max(0.002, num(o.att, inst.attack)), rel = Math.max(0.02, num(o.rel, inst.release));
-    const oneShot = o.oneShot || inst.kind !== 'sustain';
+    const oneShot = o.oneShot || (inst.kind !== 'sustain' && (o.dur === undefined || o.ring));
     if (oneShot && o.alignEnd && o.dur) {           // swells and rolls that must peak on the downbeat: start early so the sample ends there
       t = t + o.dur - z.buf.duration / rate;
       if (t < eng.now() - 0.05) return null;
     }
-    const dur = oneShot ? Math.max(0.05, z.buf.duration / rate - rel) : Math.max(0.03, num(o.dur, 1));
+    const dur = oneShot ? Math.max(0.05, z.buf.duration / rate - rel) : Math.min(Math.max(0.03, num(o.dur, 1)) + (inst.kind !== 'sustain' ? num(o.hold, 0.12) : 0), z.buf.duration / rate);
     const end = t + dur + rel + 0.12;
     const env = v.gain(0.0001), mix = v.gain(1);
     // velocity-tracked lowpass: soft notes are darker (the sample layers do most of the work; this is the glue between them)

@@ -77,7 +77,7 @@
   }
 
   // ------------------------------------------------------------------ settings
-  const settings = { music: 0.6, sfx: 0.8, muted: false };
+  const settings = { music: 0.5, sfx: 0.8, muted: false };   // the score sits in the background by default
   function loadSettings() {
     try {
       const raw = window.localStorage && window.localStorage.getItem(LS_KEY);
@@ -162,7 +162,7 @@
     return true;
   };
   function makeIR(ctx, o) { const b = new IRBuilder(ctx, o); b.run(Infinity); return b.buf; }
-  const IR_HALL = { seconds: 2.0, rt60: 1.8, pre: 0.02, diff: 0.04, hiStart: 0.5, hiEnd: 0.07, damp: 1.2, er: 7, seed: 11 };
+  const IR_HALL = { seconds: 2.9, rt60: 2.5, pre: 0.028, diff: 0.05, hiStart: 0.45, hiEnd: 0.06, damp: 1.4, er: 9, seed: 11 };   // concert hall: longer, softer tail
   const IR_PLATE = { seconds: 1.2, rt60: 1.0, pre: 0.003, diff: 0.008, hiStart: 0.85, hiEnd: 0.25, damp: 0.7, er: 0, seed: 23 };
 
   function softClipCurve() {                      // |x|<=0.6 linear, then tanh knee toward 0.97 (input pre-scaled by 0.5)
@@ -250,7 +250,7 @@
     opts = opts || {};
     const sr = ctx.sampleRate;
     const eng = {
-      ctx, sr, offline: !!opts.offline, unity: !!opts.unity, maxVoices: opts.maxVoices || 64,
+      ctx, sr, offline: !!opts.offline, unity: !!opts.unity, maxVoices: opts.maxVoices || 96,
       voices: new Set(), nodeCount: 0, vnow: 0, baseNodes: 0,
       stats: { created: 0, disposed: 0, stolen: 0, refused: 0, peak: 0 },
     };
@@ -275,7 +275,7 @@
     // gentle mastering tilt for music only: tighter lows, a little air
     const eqL = mk(ctx.createBiquadFilter()), eqH = mk(ctx.createBiquadFilter());
     eqL.type = 'lowshelf'; eqL.frequency.value = 120; eqL.gain.value = -2.5;
-    eqH.type = 'highshelf'; eqH.frequency.value = 3200; eqH.gain.value = 4;
+    eqH.type = 'highshelf'; eqH.frequency.value = 3200; eqH.gain.value = 2.5;
     const duck = mk(ctx.createGain());
     eng.musicBus.connect(eqL); eqL.connect(eqH); eqH.connect(duck); duck.connect(master);
     eng.duck = duck; eng.duckUntil = 0; eng.duckLevel = 1;
