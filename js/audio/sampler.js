@@ -2,7 +2,7 @@
 // Loads assets/audio/instruments.json + the MP3 multisamples it lists (lazily, after the first user gesture; never from file://, where
 // fetch is blocked: everything then stays on the procedural voices). Exposes
 //   MOO.Audio.Samples.{enabled, base, load(), preload(), ready(name), has(name), status(), zones(name)}
-//   MOO.Audio.Voices.sample(eng, dest, t, o)   o = {smp, f, dur, vel, dyn, swell, att, rel, pan, prio, send, vib, ens, cut, leg, hum, fb, fbo, oneShot}
+//   MOO.Audio.Voices.sample(eng, dest, t, o)   o = {smp, f, dur, vel, dyn, swell, att, rel, pan, prio, send, vib, ens, cut, hp, eq, sub, leg, hum, fb, fbo, oneShot}
 // A sample voice is one AudioBufferSourceNode per sounding dynamic layer (pitched by playbackRate, looped on the library's loop points,
 // vibrato on `detune`; instruments recorded in layers crossfade between them with the asked dynamic, and a `swell` moves through them
 // over the note), an optional second detuned copy ("ens" — ensemble thickening), a velocity-tracked lowpass and an ADSR gain. Legato
@@ -174,6 +174,11 @@
     const cut = o.cut !== undefined ? o.cut : (inst.cutK ? inst.cutK * (0.35 + 0.65 * dyn) : 0);
     if (cut > 0 && cut < 16000) { const lp = v.filter('lowpass', cut, 0.5); mix.connect(lp); node = lp; }
     if (num(o.hp, 0) > 20) { const hpf = v.filter('highpass', num(o.hp, 0), 0.7); node.connect(hpf); node = hpf; }
+    // per-instrument EQ (o.eq = [[Hz, dB, Q | 'hs' | 'ls'], ...]): the mixer's channel EQ on this voice
+    if (Array.isArray(o.eq)) for (const e of o.eq) {
+      const f = v.filter(e[2] === 'hs' ? 'highshelf' : e[2] === 'ls' ? 'lowshelf' : 'peaking', e[0], typeof e[2] === 'number' ? e[2] : undefined);
+      f.gain.value = e[1]; node.connect(f); node = f;
+    }
     node.connect(env); env.connect(v.out);
     const vib = o.vib !== undefined ? o.vib : inst.vib;
     const detHum = hum > 0 ? (eng.rand() * 2 - 1) * 3 * hum : 0;

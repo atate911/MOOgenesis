@@ -48,6 +48,10 @@ Versions follow `MAJOR.MINOR.PATCH`; the live version is the `VERSION` file.
   a sine sub-octave sits under the basses and timpani, and the 2-bus has weight, a mud cut, a little presence and air, true mid/side
   width with the bass kept centred and the sides opened above 6 kHz, a glue stage and a peak limiter. Levels are set by meter (a
   master fader `MIX_TRIM`): underscore around -17 LUFS, tutti around -14, 13-16 dB of crest, stereo correlation 0.3-0.45.
+  Channel EQ per instrument (the far recordings get their presence back, bells and strings their air, the bass its definition), a
+  second reverb plane (a short bright stage for the melody, plucks, bells and drums; the hall for the beds) that dries up as a battle
+  escalates, a whisper of tape saturation on the 2-bus, and on the exploration pieces long feeding-back dotted-eighth delays and a
+  Gamba organ swell: a little Division Bell.
 - Symphonic re-orchestration and film-style flow. Every synth pluck, FM bell, pad, bass and drum-machine part in the score is now a
   recorded instrument: pizzicato string sections, marimba, glockenspiel, harp, oboe / clarinet / bassoon, contrabass, bass drum,
   snare, field drums, tambourine, claves, anvil, stick taps (the two machine races keep a little sequencer colour). The bell

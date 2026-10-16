@@ -163,6 +163,7 @@
     return true;
   };
   function makeIR(ctx, o) { const b = new IRBuilder(ctx, o); b.run(Infinity); return b.buf; }
+  const IR_STAGE = { seconds: 0.9, rt60: 0.55, pre: 0.008, diff: 0.03, hiStart: 0.9, hiEnd: 0.45, damp: 0.6, er: 12, seed: 23 };   // a stage: short, bright, early reflections
   const IR_HALL = { seconds: 3.8, rt60: 3.3, pre: 0.036, diff: 0.05, hiStart: 0.6, hiEnd: 0.14, damp: 1.3, er: 8, seed: 11 };   // a large, open hall: long dark tail, a little more pre-delay
   const IR_PLATE = { seconds: 1.2, rt60: 1.0, pre: 0.003, diff: 0.008, hiStart: 0.85, hiEnd: 0.25, damp: 0.7, er: 0, seed: 23 };
 
@@ -284,6 +285,8 @@
     const glue = mk(ctx.createDynamicsCompressor());
     glue.threshold.value = -24; glue.knee.value = 18; glue.ratio.value = 1.6; glue.attack.value = 0.06; glue.release.value = 0.5;
     const glueMake = mk(ctx.createGain()); glueMake.gain.value = dbtoa(0);
+    const sat = mk(ctx.createWaveShaper());        // a whisper of tape-style saturation before the limiter: density, not distortion
+    (function () { const n = 2048, c = new Float32Array(n), d = 1.6; for (let i = 0; i < n; i++) { const x = (i / (n - 1)) * 2 - 1; c[i] = Math.tanh(d * x) / d; } sat.curve = c; try { sat.oversample = '2x'; } catch (e) { /* ignore */ } })();
     const duck = mk(ctx.createGain());
     const width = (function () {                   // M = (L+R)/2, S = (L-R)/2 ; S -> hp 120 -> +1.5 dB @ 6k -> x w ; L' = M + S', R' = M - S'
       const w = 1.15, inG = mk(ctx.createGain()), split = mk(ctx.createChannelSplitter(2)), merge = mk(ctx.createChannelMerger(2));
@@ -299,7 +302,7 @@
       mid.connect(merge, 0, 1); sW.connect(sNeg); sNeg.connect(merge, 0, 1);   // R' = M - S'
       return { in: inG, out: merge };
     })();
-    eng.musicBus.connect(eqL); eqL.connect(eqM); eqM.connect(eqH); eqH.connect(eqA); eqA.connect(width.in); width.out.connect(glue); glue.connect(glueMake); glueMake.connect(duck); duck.connect(master);
+    eng.musicBus.connect(eqL); eqL.connect(eqM); eqM.connect(eqH); eqH.connect(eqA); eqA.connect(width.in); width.out.connect(glue); glue.connect(glueMake); glueMake.connect(sat); sat.connect(duck); duck.connect(master);
     eng.glue = glue;
     eng.duck = duck; eng.duckUntil = 0; eng.duckLevel = 1;
     // dip the music by `depthDb` for `hold` seconds (15 ms in, ~250 ms release). While an earlier duck is still holding, the depth
@@ -338,6 +341,7 @@
       return inp;
     };
     eng.hallIn = verb('hall', IR_HALL, eng.musicBus, 170, 8800);
+    eng.stageIn = verb('stage', IR_STAGE, eng.musicBus, 140, 12000);   // the close plane: drums, lead, plucks, bells
     eng.sfxVerbIn = verb('plate', IR_PLATE, eng.sfxBus, 120, 11000);
     if (jobs.length) {                                  // keep every main-thread task well under a frame: <=2.5 ms slices, one buffer assignment per task
       const next = () => {
