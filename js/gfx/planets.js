@@ -1619,9 +1619,13 @@
     var ext = haloExtent(P), fit = 1 + ext + 0.02;
     if (P.ring) { var e = ringExtents(P); fit = max(fit, e.hx + 0.03, e.hy + 0.03); }
     var Rr = Math.max(3, Math.floor((Dd / 2 - 1.5) / fit));
-    var lay = { bw: Dd, bh: Dd, cx: Dd / 2, cy: Dd / 2 }, inst = makeInst(P, Rr, lay);
-    relight(inst, la, le);
-    setFlags(inst, desc, opts, Rr);
+    var inst = st && st.inst;                 // a pending sprite keeps its instance (geometry + lighting tables) so a repaint is only the pixel loop
+    if (!inst) {
+      inst = makeInst(P, Rr, { bw: Dd, bh: Dd, cx: Dd / 2, cy: Dd / 2 });
+      relight(inst, la, le);
+      setFlags(inst, desc, opts, Rr);
+      if (st) st.inst = inst;
+    }
     var want = tierFor(Rr, false), best = bestTex(P), tex;
     if (best && best.W >= want) tex = best;
     else if (!st || opts.sync) tex = requestTex(P, want, true);
@@ -1641,7 +1645,7 @@
     var fresh = renderSprite(pe.P, pe.Dd, pe.desc, pe.opts, pe.la, pe.le, pe), cv = pe.cv, c = cv.getContext('2d');
     c.save(); c.setTransform(1, 0, 0, 1, 0, 0); c.globalCompositeOperation = 'copy'; c.drawImage(fresh, 0, 0); c.restore();
     var final_ = pe.W >= pe.want;
-    if (final_) { delete PENDING[key]; cv.pending = false; }
+    if (final_) { delete PENDING[key]; cv.pending = false; pe.inst = null; }
     try { if (M.Bus && M.Bus.emit) M.Bus.emit('planets:sprite', pe.desc, cv, final_); } catch (e) { /* listeners are optional */ }
     if (final_) for (var i = 0; i < pe.cbs.length; i++) { try { pe.cbs[i](cv); } catch (e2) { console.warn('[Planets] onReady', e2); } }
   }
