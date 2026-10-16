@@ -1,0 +1,5708 @@
+{
+ "version": 1,
+ "license": "Recorded instruments: VSCO 2 Community Edition (CC0 1.0). Choir, pads, sub: synthesized for this game (tools/samples/synth.py).",
+ "calib": {
+  "file": "calib.mp3",
+  "at": 0.1
+ },
+ "instruments": {
+  "strSus": {
+   "kind": "sustain",
+   "pitched": true,
+   "attack": 0.09,
+   "release": 0.55,
+   "gain": 0,
+   "cutK": 9000,
+   "zones": [
+    {
+     "file": "strSus-G3-l0-r0.mp3",
+     "root": 55,
+     "lo": 50,
+     "hi": 57,
+     "vel": [
+      0,
+      1
+     ],
+     "rr": 0,
+     "loop": [
+      1.55,
+      2.7514
+     ]
+    },
+    {
+     "file": "strSus-B3-l0-r0.mp3",
+     "root": 59,
+     "lo": 58,
+     "hi": 62,
+     "vel": [
+      0,
+      1
+     ],
+     "rr": 0,
+     "loop": [
+      0.9,
+      2.4647
+     ]
+    },
+    {
+     "file": "strSus-Fs4-l0-r0.mp3",
+     "root": 66,
+     "lo": 63,
+     "hi": 67,
+     "vel": [
+      0,
+      1
+     ],
+     "rr": 0,
+     "loop": [
+      0.9,
+      2.163
+     ]
+    },
+    {
+     "file": "strSus-A4-l0-r0.mp3",
+     "root": 69,
+     "lo": 68,
+     "hi": 72,
+     "vel": [
+      0,
+      1
+     ],
+     "rr": 0,
+     "loop": [
+      1.8,
+      3.1927
+     ]
+    },
+    {
+     "file": "strSus-E5-l0-r0.mp3",
+     "root": 76,
+     "lo": 73,
+     "hi": 77,
+     "vel": [
+      0,
+      1
+     ],
+     "rr": 0,
+     "loop": [
+      1.1,
+      2.4566
+     ]
+    },
+    {
+     "file": "strSus-G5-l0-r0.mp3",
+     "root": 79,
+     "lo": 78,
+     "hi": 82,
+     "vel": [
+      0,
+      1
+     ],
+     "rr": 0,
+     "loop": [
+      1.1,
+      2.2592
+     ]
+    },
+    {
+     "file": "strSus-D6-l0-r0.mp3",
+     "root": 86,
+     "lo": 83,
+     "hi": 91,
+     "vel": [
+      0,
+      1
+     ],
+     "rr": 0,
+     "loop": [
+      1.3,
+      2.772
+     ]
+    }
+   ]
+  },
+  "vlaSus": {
+   "kind": "sustain",
+   "pitched": true,
+   "attack": 0.09,
+   "release": 0.55,
+   "gain": 0,
+   "cutK": 8000,
+   "zones": [
+    {
+     "file": "vlaSus-C3-l0-r0.mp3",
+     "root": 48,
+     "lo": 43,
+     "hi": 50,
+     "vel": [
+      0,
+      1
+     ],
+     "rr": 0,
+     "loop": [
+      1.55,
+      2.7641
+     ]
+    },
+    {
+     "file": "vlaSus-E3-l0-r0.mp3",
+     "root": 52,
+     "lo": 51,
+     "hi": 55,
+     "vel": [
+      0,
+      1
+     ],
+     "rr": 0,
+     "loop": [
+      1.55,
+      2.9319
+     ]
+    },
+    {
+     "file": "vlaSus-B3-l0-r0.mp3",
+     "root": 59,
+     "lo": 56,
+     "hi": 60,
+     "vel": [
+      0,
+      1
+     ],
+     "rr": 0,
+     "loop": [
+      0.9,
+      2.0402
+     ]
+    },
+    {
+     "file": "vlaSus-D4-l0-r0.mp3",
+     "root": 62,
+     "lo": 61,
+     "hi": 65,
+     "vel": [
+      0,
+      1
+     ],
+     "rr": 0,
+     "loop": [
+      1.1,
+      2.5353
+     ]
+    },
+    {
+     "file": "vlaSus-A4-l0-r0.mp3",
+     "root": 69,
+     "lo": 66,
+     "hi": 70,
+     "vel": [
+      0,
+      1
+     ],
+     "rr": 0,
+     "loop": [
+      0.9,
+      2.0549
+     ]
+    },
+    {
+     "file": "vlaSus-C5-l0-r0.mp3",
+     "root": 72,
+     "lo": 71,
+     "hi": 75,
+     "vel": [
+      0,
+      1
+     ],
+     "rr": 0,
+     "loop": [
+      1.1,
+      2.6929
+     ]
+    },
+    {
+     "file": "vlaSus-G5-l0-r0.mp3",
+     "root": 79,
+     "lo": 76,
+     "hi": 81,
+     "vel": [
+      0,
+      1
+     ],
+     "rr": 0,
+     "loop": [
+      1.8,
+      2.9426
+     ]
+    },
+    {
+     "file": "vlaSus-B5-l0-r0.mp3",
+     "root": 83,
+     "lo": 82,
+     "hi": 84,
+     "vel": [
+      0,
+      1
+     ],
+     "rr": 0,
+     "loop": [
+      1.8,
+      2.9207
+     ]
+    },
+    {
+     "file": "vlaSus-D6-l0-r0.mp3",
+     "root": 86,
+     "lo": 85,
+     "hi": 91,
+     "vel": [
+      0,
+      1
+     ],
+     "rr": 0,
+     "loop": [
+      1.3,
+      2.5771
+     ]
+    }
+   ]
+  },
+  "vcSus": {
+   "kind": "sustain",
+   "pitched": true,
+   "attack": 0.1,
+   "release": 0.6,
+   "gain": 0,
+   "cutK": 7000,
+   "zones": [
+    {
+     "file": "vcSus-C2-l0-r0.mp3",
+     "root": 36,
+     "lo": 31,
+     "hi": 38,
+     "vel": [
+      0,
+      1
+     ],
+     "rr": 0,
+     "loop": [
+      1.3,
+      2.4241
+     ]
+    },
+    {
+     "file": "vcSus-E2-l0-r0.mp3",
+     "root": 40,
+     "lo": 39,
+     "hi": 43,
+     "vel": [
+      0,
+      1
+     ],
+     "rr": 0,
+     "loop": [
+      1.8,
+      2.9358
+     ]
+    },
+    {
+     "file": "vcSus-B2-l0-r0.mp3",
+     "root": 47,
+     "lo": 44,
+     "hi": 48,
+     "vel": [
+      0,
+      1
+     ],
+     "rr": 0,
+     "loop": [
+      1.55,
+      2.7628
+     ]
+    },
+    {
+     "file": "vcSus-D3-l0-r0.mp3",
+     "root": 50,
+     "lo": 49,
+     "hi": 53,
+     "vel": [
+      0,
+      1
+     ],
+     "rr": 0,
+     "loop": [
+      1.1,
+      2.292
+     ]
+    },
+    {
+     "file": "vcSus-A3-l0-r0.mp3",
+     "root": 57,
+     "lo": 54,
+     "hi": 58,
+     "vel": [
+      0,
+      1
+     ],
+     "rr": 0,
+     "loop": [
+      1.1,
+      2.3641
+     ]
+    },
+    {
+     "file": "vcSus-C4-l0-r0.mp3",
+     "root": 60,
+     "lo": 59,
+     "hi": 63,
+     "vel": [
+      0,
+      1
+     ],
+     "rr": 0,
+     "loop": [
+      1.1,
+      2.2051
+     ]
+    },
+    {
+     "file": "vcSus-G4-l0-r0.mp3",
+     "root": 67,
+     "lo": 64,
+     "hi": 69,
+     "vel": [
+      0,
+      1
+     ],
+     "rr": 0,
+     "loop": [
+      1.8,
+      3.3351
+     ]
+    },
+    {
+     "file": "vcSus-B4-l0-r0.mp3",
+     "root": 71,
+     "lo": 70,
+     "hi": 74,
+     "vel": [
+      0,
+      1
+     ],
+     "rr": 0,
+     "loop": [
+      0.9,
+      2.439
+     ]
+    },
+    {
+     "file": "vcSus-F5-l0-r0.mp3",
+     "root": 77,
+     "lo": 75,
+     "hi": 82,
+     "vel": [
+      0,
+      1
+     ],
+     "rr": 0,
+     "loop": [
+      0.9,
+      2.4486
+     ]
+    }
+   ]
+  },
+  "cbSus": {
+   "kind": "sustain",
+   "pitched": true,
+   "attack": 0.1,
+   "release": 0.6,
+   "gain": 0,
+   "cutK": 4000,
+   "zones": [
+    {
+     "file": "cbSus-Fs1-l0-r0.mp3",
+     "root": 30,
+     "lo": 25,
+     "hi": 32,
+     "vel": [
+      0,
+      1
+     ],
+     "rr": 0,
+     "loop": [
+      0.8,
+      1.924
+     ]
+    },
+    {
+     "file": "cbSus-As1-l0-r0.mp3",
+     "root": 34,
+     "lo": 33,
+     "hi": 37,
+     "vel": [
+      0,
+      1
+     ],
+     "rr": 0,
+     "loop": [
+      1.45,
+      2.5477
+     ]
+    },
+    {
+     "file": "cbSus-E2-l0-r0.mp3",
+     "root": 40,
+     "lo": 38,
+     "hi": 42,
+     "vel": [
+      0,
+      1
+     ],
+     "rr": 0,
+     "loop": [
+      1.0,
+      2.0311
+     ]
+    },
+    {
+     "file": "cbSus-A2-l0-r0.mp3",
+     "root": 45,
+     "lo": 43,
+     "hi": 47,
+     "vel": [
+      0,
+      1
+     ],
+     "rr": 0,
+     "loop": [
+      1.0,
+      2.0725
+     ]
+    },
+    {
+     "file": "cbSus-Cs3-l0-r0.mp3",
+     "root": 49,
+     "lo": 48,
+     "hi": 52,
+     "vel": [
+      0,
+      1
+     ],
+     "rr": 0,
+     "loop": [
+      1.0,
+      2.0388
+     ]
+    },
+    {
+     "file": "cbSus-Gs3-l0-r0.mp3",
+     "root": 56,
+     "lo": 53,
+     "hi": 57,
+     "vel": [
+      0,
+      1
+     ],
+     "rr": 0,
+     "loop": [
+      0.8,
+      1.8888
+     ]
+    },
+    {
+     "file": "cbSus-B3-l0-r0.mp3",
+     "root": 59,
+     "lo": 58,
+     "hi": 64,
+     "vel": [
+      0,
+      1
+     ],
+     "rr": 0,
+     "loop": [
+      0.8,
+      1.8081
+     ]
+    }
+   ]
+  },
+  "strSpic": {
+   "kind": "short",
+   "pitched": true,
+   "attack": 0.002,
+   "release": 0.12,
+   "gain": 0,
+   "cutK": 0,
+   "zones": [
+    {
+     "file": "strSpic-G3-l0-r0.mp3",
+     "root": 55,
+     "lo": 50,
+     "hi": 57,
+     "vel": [
+      0.0,
+      0.5
+     ],
+     "rr": 0
+    },
+    {
+     "file": "strSpic-G3-l1-r0.mp3",
+     "root": 55,
+     "lo": 50,
+     "hi": 57,
+     "vel": [
+      0.5,
+      1.0
+     ],
+     "rr": 0
+    },
+    {
+     "file": "strSpic-B3-l0-r0.mp3",
+     "root": 59,
+     "lo": 58,
+     "hi": 62,
+     "vel": [
+      0.0,
+      0.5
+     ],
+     "rr": 0
+    },
+    {
+     "file": "strSpic-B3-l1-r0.mp3",
+     "root": 59,
+     "lo": 58,
+     "hi": 62,
+     "vel": [
+      0.5,
+      1.0
+     ],
+     "rr": 0
+    },
+    {
+     "file": "strSpic-Fs4-l0-r0.mp3",
+     "root": 66,
+     "lo": 63,
+     "hi": 67,
+     "vel": [
+      0.0,
+      0.5
+     ],
+     "rr": 0
+    },
+    {
+     "file": "strSpic-Fs4-l1-r0.mp3",
+     "root": 66,
+     "lo": 63,
+     "hi": 67,
+     "vel": [
+      0.5,
+      1.0
+     ],
+     "rr": 0
+    },
+    {
+     "file": "strSpic-A4-l0-r0.mp3",
+     "root": 69,
+     "lo": 68,
+     "hi": 72,
+     "vel": [
+      0.0,
+      0.5
+     ],
+     "rr": 0
+    },
+    {
+     "file": "strSpic-A4-l1-r0.mp3",
+     "root": 69,
+     "lo": 68,
+     "hi": 72,
+     "vel": [
+      0.5,
+      1.0
+     ],
+     "rr": 0
+    },
+    {
+     "file": "strSpic-E5-l0-r0.mp3",
+     "root": 76,
+     "lo": 73,
+     "hi": 77,
+     "vel": [
+      0.0,
+      0.5
+     ],
+     "rr": 0
+    },
+    {
+     "file": "strSpic-E5-l1-r0.mp3",
+     "root": 76,
+     "lo": 73,
+     "hi": 77,
+     "vel": [
+      0.5,
+      1.0
+     ],
+     "rr": 0
+    },
+    {
+     "file": "strSpic-G5-l0-r0.mp3",
+     "root": 79,
+     "lo": 78,
+     "hi": 82,
+     "vel": [
+      0.0,
+      0.5
+     ],
+     "rr": 0
+    },
+    {
+     "file": "strSpic-G5-l1-r0.mp3",
+     "root": 79,
+     "lo": 78,
+     "hi": 82,
+     "vel": [
+      0.5,
+      1.0
+     ],
+     "rr": 0
+    },
+    {
+     "file": "strSpic-D6-l0-r0.mp3",
+     "root": 86,
+     "lo": 83,
+     "hi": 91,
+     "vel": [
+      0.0,
+      0.5
+     ],
+     "rr": 0
+    },
+    {
+     "file": "strSpic-D6-l1-r0.mp3",
+     "root": 86,
+     "lo": 83,
+     "hi": 91,
+     "vel": [
+      0.5,
+      1.0
+     ],
+     "rr": 0
+    }
+   ]
+  },
+  "vlaSpic": {
+   "kind": "short",
+   "pitched": true,
+   "attack": 0.002,
+   "release": 0.12,
+   "gain": 0,
+   "cutK": 0,
+   "zones": [
+    {
+     "file": "vlaSpic-C3-l0-r0.mp3",
+     "root": 48,
+     "lo": 43,
+     "hi": 50,
+     "vel": [
+      0,
+      1
+     ],
+     "rr": 0
+    },
+    {
+     "file": "vlaSpic-E3-l0-r0.mp3",
+     "root": 52,
+     "lo": 51,
+     "hi": 55,
+     "vel": [
+      0,
+      1
+     ],
+     "rr": 0
+    },
+    {
+     "file": "vlaSpic-B3-l0-r0.mp3",
+     "root": 59,
+     "lo": 56,
+     "hi": 60,
+     "vel": [
+      0,
+      1
+     ],
+     "rr": 0
+    },
+    {
+     "file": "vlaSpic-D4-l0-r0.mp3",
+     "root": 62,
+     "lo": 61,
+     "hi": 65,
+     "vel": [
+      0,
+      1
+     ],
+     "rr": 0
+    },
+    {
+     "file": "vlaSpic-A4-l0-r0.mp3",
+     "root": 69,
+     "lo": 66,
+     "hi": 70,
+     "vel": [
+      0,
+      1
+     ],
+     "rr": 0
+    },
+    {
+     "file": "vlaSpic-C5-l0-r0.mp3",
+     "root": 72,
+     "lo": 71,
+     "hi": 75,
+     "vel": [
+      0,
+      1
+     ],
+     "rr": 0
+    },
+    {
+     "file": "vlaSpic-G5-l0-r0.mp3",
+     "root": 79,
+     "lo": 76,
+     "hi": 81,
+     "vel": [
+      0,
+      1
+     ],
+     "rr": 0
+    },
+    {
+     "file": "vlaSpic-B5-l0-r0.mp3",
+     "root": 83,
+     "lo": 82,
+     "hi": 84,
+     "vel": [
+      0,
+      1
+     ],
+     "rr": 0
+    },
+    {
+     "file": "vlaSpic-D6-l0-r0.mp3",
+     "root": 86,
+     "lo": 85,
+     "hi": 91,
+     "vel": [
+      0,
+      1
+     ],
+     "rr": 0
+    }
+   ]
+  },
+  "vcSpic": {
+   "kind": "short",
+   "pitched": true,
+   "attack": 0.002,
+   "release": 0.12,
+   "gain": 0,
+   "cutK": 0,
+   "zones": [
+    {
+     "file": "vcSpic-C2-l0-r0.mp3",
+     "root": 36,
+     "lo": 31,
+     "hi": 38,
+     "vel": [
+      0.0,
+      0.5
+     ],
+     "rr": 0
+    },
+    {
+     "file": "vcSpic-C2-l1-r0.mp3",
+     "root": 36,
+     "lo": 31,
+     "hi": 38,
+     "vel": [
+      0.5,
+      1.0
+     ],
+     "rr": 0
+    },
+    {
+     "file": "vcSpic-E2-l0-r0.mp3",
+     "root": 40,
+     "lo": 39,
+     "hi": 43,
+     "vel": [
+      0.0,
+      0.5
+     ],
+     "rr": 0
+    },
+    {
+     "file": "vcSpic-E2-l1-r0.mp3",
+     "root": 40,
+     "lo": 39,
+     "hi": 43,
+     "vel": [
+      0.5,
+      1.0
+     ],
+     "rr": 0
+    },
+    {
+     "file": "vcSpic-B2-l0-r0.mp3",
+     "root": 47,
+     "lo": 44,
+     "hi": 48,
+     "vel": [
+      0.0,
+      0.5
+     ],
+     "rr": 0
+    },
+    {
+     "file": "vcSpic-B2-l1-r0.mp3",
+     "root": 47,
+     "lo": 44,
+     "hi": 48,
+     "vel": [
+      0.5,
+      1.0
+     ],
+     "rr": 0
+    },
+    {
+     "file": "vcSpic-D3-l0-r0.mp3",
+     "root": 50,
+     "lo": 49,
+     "hi": 53,
+     "vel": [
+      0.0,
+      0.5
+     ],
+     "rr": 0
+    },
+    {
+     "file": "vcSpic-D3-l1-r0.mp3",
+     "root": 50,
+     "lo": 49,
+     "hi": 53,
+     "vel": [
+      0.5,
+      1.0
+     ],
+     "rr": 0
+    },
+    {
+     "file": "vcSpic-A3-l0-r0.mp3",
+     "root": 57,
+     "lo": 54,
+     "hi": 58,
+     "vel": [
+      0.0,
+      0.5
+     ],
+     "rr": 0
+    },
+    {
+     "file": "vcSpic-A3-l1-r0.mp3",
+     "root": 57,
+     "lo": 54,
+     "hi": 58,
+     "vel": [
+      0.5,
+      1.0
+     ],
+     "rr": 0
+    },
+    {
+     "file": "vcSpic-C4-l0-r0.mp3",
+     "root": 60,
+     "lo": 59,
+     "hi": 63,
+     "vel": [
+      0.0,
+      0.5
+     ],
+     "rr": 0
+    },
+    {
+     "file": "vcSpic-C4-l1-r0.mp3",
+     "root": 60,
+     "lo": 59,
+     "hi": 63,
+     "vel": [
+      0.5,
+      1.0
+     ],
+     "rr": 0
+    },
+    {
+     "file": "vcSpic-G4-l0-r0.mp3",
+     "root": 67,
+     "lo": 64,
+     "hi": 69,
+     "vel": [
+      0.0,
+      0.5
+     ],
+     "rr": 0
+    },
+    {
+     "file": "vcSpic-G4-l1-r0.mp3",
+     "root": 67,
+     "lo": 64,
+     "hi": 69,
+     "vel": [
+      0.5,
+      1.0
+     ],
+     "rr": 0
+    },
+    {
+     "file": "vcSpic-B4-l0-r0.mp3",
+     "root": 71,
+     "lo": 70,
+     "hi": 74,
+     "vel": [
+      0.0,
+      0.5
+     ],
+     "rr": 0
+    },
+    {
+     "file": "vcSpic-B4-l1-r0.mp3",
+     "root": 71,
+     "lo": 70,
+     "hi": 74,
+     "vel": [
+      0.5,
+      1.0
+     ],
+     "rr": 0
+    },
+    {
+     "file": "vcSpic-F5-l0-r0.mp3",
+     "root": 77,
+     "lo": 75,
+     "hi": 82,
+     "vel": [
+      0.0,
+      0.5
+     ],
+     "rr": 0
+    },
+    {
+     "file": "vcSpic-F5-l1-r0.mp3",
+     "root": 77,
+     "lo": 75,
+     "hi": 82,
+     "vel": [
+      0.5,
+      1.0
+     ],
+     "rr": 0
+    }
+   ]
+  },
+  "cbSpic": {
+   "kind": "short",
+   "pitched": true,
+   "attack": 0.002,
+   "release": 0.12,
+   "gain": 0,
+   "cutK": 0,
+   "zones": [
+    {
+     "file": "cbSpic-E1-l0-r0.mp3",
+     "root": 28,
+     "lo": 23,
+     "hi": 31,
+     "vel": [
+      0,
+      1
+     ],
+     "rr": 0
+    },
+    {
+     "file": "cbSpic-As1-l0-r0.mp3",
+     "root": 34,
+     "lo": 32,
+     "hi": 36,
+     "vel": [
+      0,
+      1
+     ],
+     "rr": 0
+    },
+    {
+     "file": "cbSpic-D2-l0-r0.mp3",
+     "root": 38,
+     "lo": 37,
+     "hi": 43,
+     "vel": [
+      0,
+      1
+     ],
+     "rr": 0
+    }
+   ]
+  },
+  "strTrem": {
+   "kind": "sustain",
+   "pitched": true,
+   "attack": 0.08,
+   "release": 0.4,
+   "gain": 0,
+   "cutK": 9000,
+   "zones": [
+    {
+     "file": "strTrem-G3-l0-r0.mp3",
+     "root": 55,
+     "lo": 50,
+     "hi": 57,
+     "vel": [
+      0,
+      1
+     ],
+     "rr": 0,
+     "loop": [
+      1.1,
+      2.3097
+     ]
+    },
+    {
+     "file": "strTrem-B3-l0-r0.mp3",
+     "root": 59,
+     "lo": 58,
+     "hi": 60,
+     "vel": [
+      0,
+      1
+     ],
+     "rr": 0,
+     "loop": [
+      0.7,
+      1.71
+     ]
+    },
+    {
+     "file": "strTrem-D4-l0-r0.mp3",
+     "root": 62,
+     "lo": 61,
+     "hi": 65,
+     "vel": [
+      0,
+      1
+     ],
+     "rr": 0,
+     "loop": [
+      1.35,
+      2.4744
+     ]
+    },
+    {
+     "file": "strTrem-A4-l0-r0.mp3",
+     "root": 69,
+     "lo": 66,
+     "hi": 72,
+     "vel": [
+      0,
+      1
+     ],
+     "rr": 0,
+     "loop": [
+      1.6,
+      2.9493
+     ]
+    },
+    {
+     "file": "strTrem-E5-l0-r0.mp3",
+     "root": 76,
+     "lo": 73,
+     "hi": 77,
+     "vel": [
+      0,
+      1
+     ],
+     "rr": 0,
+     "loop": [
+      0.7,
+      1.9235
+     ]
+    },
+    {
+     "file": "strTrem-G5-l0-r0.mp3",
+     "root": 79,
+     "lo": 78,
+     "hi": 82,
+     "vel": [
+      0,
+      1
+     ],
+     "rr": 0,
+     "loop": [
+      0.9,
+      2.2751
+     ]
+    },
+    {
+     "file": "strTrem-D6-l0-r0.mp3",
+     "root": 86,
+     "lo": 83,
+     "hi": 91,
+     "vel": [
+      0,
+      1
+     ],
+     "rr": 0,
+     "loop": [
+      0.9,
+      2.3938
+     ]
+    }
+   ]
+  },
+  "vcTrem": {
+   "kind": "sustain",
+   "pitched": true,
+   "attack": 0.08,
+   "release": 0.4,
+   "gain": 0,
+   "cutK": 7000,
+   "zones": [
+    {
+     "file": "vcTrem-C2-l0-r0.mp3",
+     "root": 36,
+     "lo": 31,
+     "hi": 38,
+     "vel": [
+      0,
+      1
+     ],
+     "rr": 0,
+     "loop": [
+      1.6,
+      2.6119
+     ]
+    },
+    {
+     "file": "vcTrem-E2-l0-r0.mp3",
+     "root": 40,
+     "lo": 39,
+     "hi": 41,
+     "vel": [
+      0,
+      1
+     ],
+     "rr": 0,
+     "loop": [
+      1.6,
+      3.0093
+     ]
+    },
+    {
+     "file": "vcTrem-G2-l0-r0.mp3",
+     "root": 43,
+     "lo": 42,
+     "hi": 46,
+     "vel": [
+      0,
+      1
+     ],
+     "rr": 0,
+     "loop": [
+      1.1,
+      2.5211
+     ]
+    },
+    {
+     "file": "vcTrem-D3-l0-r0.mp3",
+     "root": 50,
+     "lo": 47,
+     "hi": 53,
+     "vel": [
+      0,
+      1
+     ],
+     "rr": 0,
+     "loop": [
+      0.7,
+      2.0368
+     ]
+    },
+    {
+     "file": "vcTrem-A3-l0-r0.mp3",
+     "root": 57,
+     "lo": 54,
+     "hi": 58,
+     "vel": [
+      0,
+      1
+     ],
+     "rr": 0,
+     "loop": [
+      0.7,
+      1.9284
+     ]
+    },
+    {
+     "file": "vcTrem-C4-l0-r0.mp3",
+     "root": 60,
+     "lo": 59,
+     "hi": 63,
+     "vel": [
+      0,
+      1
+     ],
+     "rr": 0,
+     "loop": [
+      1.1,
+      2.5984
+     ]
+    },
+    {
+     "file": "vcTrem-G4-l0-r0.mp3",
+     "root": 67,
+     "lo": 64,
+     "hi": 69,
+     "vel": [
+      0,
+      1
+     ],
+     "rr": 0,
+     "loop": [
+      1.6,
+      3.0189
+     ]
+    },
+    {
+     "file": "vcTrem-B4-l0-r0.mp3",
+     "root": 71,
+     "lo": 70,
+     "hi": 74,
+     "vel": [
+      0,
+      1
+     ],
+     "rr": 0,
+     "loop": [
+      1.6,
+      3.0523
+     ]
+    },
+    {
+     "file": "vcTrem-F5-l0-r0.mp3",
+     "root": 77,
+     "lo": 75,
+     "hi": 82,
+     "vel": [
+      0,
+      1
+     ],
+     "rr": 0,
+     "loop": [
+      1.6,
+      2.9382
+     ]
+    }
+   ]
+  },
+  "hornSus": {
+   "kind": "sustain",
+   "pitched": true,
+   "attack": 0.07,
+   "release": 0.35,
+   "gain": 0,
+   "cutK": 0,
+   "zones": [
+    {
+     "file": "hornSus-A1-l0-r0.mp3",
+     "root": 33,
+     "lo": 28,
+     "hi": 36,
+     "vel": [
+      0.0,
+      0.5
+     ],
+     "rr": 0,
+     "loop": [
+      1.65,
+      2.7604
+     ]
+    },
+    {
+     "file": "hornSus-A1-l1-r0.mp3",
+     "root": 33,
+     "lo": 28,
+     "hi": 36,
+     "vel": [
+      0.5,
+      1.0
+     ],
+     "rr": 0,
+     "loop": [
+      1.65,
+      2.7604
+     ]
+    },
+    {
+     "file": "hornSus-Ds2-l0-r0.mp3",
+     "root": 39,
+     "lo": 37,
+     "hi": 41,
+     "vel": [
+      0.0,
+      0.5
+     ],
+     "rr": 0,
+     "loop": [
+      1.4,
+      2.9664
+     ]
+    },
+    {
+     "file": "hornSus-Ds2-l1-r0.mp3",
+     "root": 39,
+     "lo": 37,
+     "hi": 41,
+     "vel": [
+      0.5,
+      1.0
+     ],
+     "rr": 0,
+     "loop": [
+      1.0,
+      2.5934
+     ]
+    },
+    {
+     "file": "hornSus-G2-l0-r0.mp3",
+     "root": 43,
+     "lo": 42,
+     "hi": 44,
+     "vel": [
+      0.0,
+      0.5
+     ],
+     "rr": 0,
+     "loop": [
+      1.9,
+      3.3705
+     ]
+    },
+    {
+     "file": "hornSus-G2-l1-r0.mp3",
+     "root": 43,
+     "lo": 42,
+     "hi": 44,
+     "vel": [
+      0.5,
+      1.0
+     ],
+     "rr": 0,
+     "loop": [
+      1.4,
+      2.6047
+     ]
+    },
+    {
+     "file": "hornSus-As2-l0-r0.mp3",
+     "root": 46,
+     "lo": 45,
+     "hi": 49,
+     "vel": [
+      0.0,
+      0.5
+     ],
+     "rr": 0,
+     "loop": [
+      1.9,
+      3.1711
+     ]
+    },
+    {
+     "file": "hornSus-As2-l1-r0.mp3",
+     "root": 46,
+     "lo": 45,
+     "hi": 49,
+     "vel": [
+      0.5,
+      1.0
+     ],
+     "rr": 0,
+     "loop": [
+      1.65,
+      3.1872
+     ]
+    },
+    {
+     "file": "hornSus-F3-l0-r0.mp3",
+     "root": 53,
+     "lo": 50,
+     "hi": 55,
+     "vel": [
+      0.0,
+      0.5
+     ],
+     "rr": 0,
+     "loop": [
+      1.4,
+      2.9292
+     ]
+    },
+    {
+     "file": "hornSus-F3-l1-r0.mp3",
+     "root": 53,
+     "lo": 50,
+     "hi": 55,
+     "vel": [
+      0.5,
+      1.0
+     ],
+     "rr": 0,
+     "loop": [
+      1.65,
+      2.9034
+     ]
+    },
+    {
+     "file": "hornSus-A3-l0-r0.mp3",
+     "root": 57,
+     "lo": 56,
+     "hi": 58,
+     "vel": [
+      0.0,
+      0.5
+     ],
+     "rr": 0,
+     "loop": [
+      1.4,
+      2.5606
+     ]
+    },
+    {
+     "file": "hornSus-A3-l1-r0.mp3",
+     "root": 57,
+     "lo": 56,
+     "hi": 58,
+     "vel": [
+      0.5,
+      1.0
+     ],
+     "rr": 0,
+     "loop": [
+      1.65,
+      2.9445
+     ]
+    },
+    {
+     "file": "hornSus-C4-l0-r0.mp3",
+     "root": 60,
+     "lo": 59,
+     "hi": 67,
+     "vel": [
+      0.0,
+      0.5
+     ],
+     "rr": 0,
+     "loop": [
+      1.0,
+      2.4511
+     ]
+    },
+    {
+     "file": "hornSus-C4-l1-r0.mp3",
+     "root": 60,
+     "lo": 59,
+     "hi": 67,
+     "vel": [
+      0.5,
+      1.0
+     ],
+     "rr": 0,
+     "loop": [
+      1.4,
+      2.9986
+     ]
+    },
+    {
+     "file": "hornSus-D5-l0-r0.mp3",
+     "root": 74,
+     "lo": 68,
+     "hi": 75,
+     "vel": [
+      0.0,
+      0.5
+     ],
+     "rr": 0,
+     "loop": [
+      1.4,
+      2.8999
+     ]
+    },
+    {
+     "file": "hornSus-D5-l1-r0.mp3",
+     "root": 74,
+     "lo": 68,
+     "hi": 75,
+     "vel": [
+      0.5,
+      1.0
+     ],
+     "rr": 0,
+     "loop": [
+      1.4,
+      2.8999
+     ]
+    },
+    {
+     "file": "hornSus-F5-l0-r0.mp3",
+     "root": 77,
+     "lo": 76,
+     "hi": 82,
+     "vel": [
+      0.0,
+      0.5
+     ],
+     "rr": 0,
+     "loop": [
+      1.9,
+      3.1425
+     ]
+    },
+    {
+     "file": "hornSus-F5-l1-r0.mp3",
+     "root": 77,
+     "lo": 76,
+     "hi": 82,
+     "vel": [
+      0.5,
+      1.0
+     ],
+     "rr": 0,
+     "loop": [
+      1.9,
+      3.1425
+     ]
+    }
+   ]
+  },
+  "hornStac": {
+   "kind": "short",
+   "pitched": true,
+   "attack": 0.002,
+   "release": 0.15,
+   "gain": 0,
+   "cutK": 0,
+   "zones": [
+    {
+     "file": "hornStac-C2-l0-r0.mp3",
+     "root": 36,
+     "lo": 31,
+     "hi": 37,
+     "vel": [
+      0.0,
+      0.5
+     ],
+     "rr": 0
+    },
+    {
+     "file": "hornStac-C2-l1-r0.mp3",
+     "root": 36,
+     "lo": 31,
+     "hi": 37,
+     "vel": [
+      0.5,
+      1.0
+     ],
+     "rr": 0
+    },
+    {
+     "file": "hornStac-Ds2-l0-r0.mp3",
+     "root": 39,
+     "lo": 38,
+     "hi": 42,
+     "vel": [
+      0.0,
+      0.5
+     ],
+     "rr": 0
+    },
+    {
+     "file": "hornStac-Ds2-l1-r0.mp3",
+     "root": 39,
+     "lo": 38,
+     "hi": 42,
+     "vel": [
+      0.5,
+      1.0
+     ],
+     "rr": 0
+    },
+    {
+     "file": "hornStac-As2-l0-r0.mp3",
+     "root": 46,
+     "lo": 43,
+     "hi": 48,
+     "vel": [
+      0.0,
+      0.5
+     ],
+     "rr": 0
+    },
+    {
+     "file": "hornStac-As2-l1-r0.mp3",
+     "root": 46,
+     "lo": 43,
+     "hi": 48,
+     "vel": [
+      0.5,
+      1.0
+     ],
+     "rr": 0
+    },
+    {
+     "file": "hornStac-D3-l0-r0.mp3",
+     "root": 50,
+     "lo": 49,
+     "hi": 53,
+     "vel": [
+      0.0,
+      0.5
+     ],
+     "rr": 0
+    },
+    {
+     "file": "hornStac-D3-l1-r0.mp3",
+     "root": 50,
+     "lo": 49,
+     "hi": 53,
+     "vel": [
+      0.5,
+      1.0
+     ],
+     "rr": 0
+    },
+    {
+     "file": "hornStac-A3-l0-r0.mp3",
+     "root": 57,
+     "lo": 54,
+     "hi": 58,
+     "vel": [
+      0.0,
+      0.5
+     ],
+     "rr": 0
+    },
+    {
+     "file": "hornStac-A3-l1-r0.mp3",
+     "root": 57,
+     "lo": 54,
+     "hi": 58,
+     "vel": [
+      0.5,
+      1.0
+     ],
+     "rr": 0
+    },
+    {
+     "file": "hornStac-C4-l0-r0.mp3",
+     "root": 60,
+     "lo": 59,
+     "hi": 67,
+     "vel": [
+      0.0,
+      0.5
+     ],
+     "rr": 0
+    },
+    {
+     "file": "hornStac-C4-l1-r0.mp3",
+     "root": 60,
+     "lo": 59,
+     "hi": 67,
+     "vel": [
+      0.5,
+      1.0
+     ],
+     "rr": 0
+    },
+    {
+     "file": "hornStac-D5-l0-r0.mp3",
+     "root": 74,
+     "lo": 68,
+     "hi": 75,
+     "vel": [
+      0.0,
+      0.5
+     ],
+     "rr": 0
+    },
+    {
+     "file": "hornStac-D5-l1-r0.mp3",
+     "root": 74,
+     "lo": 68,
+     "hi": 75,
+     "vel": [
+      0.5,
+      1.0
+     ],
+     "rr": 0
+    },
+    {
+     "file": "hornStac-F5-l0-r0.mp3",
+     "root": 77,
+     "lo": 76,
+     "hi": 82,
+     "vel": [
+      0.0,
+      0.5
+     ],
+     "rr": 0
+    },
+    {
+     "file": "hornStac-F5-l1-r0.mp3",
+     "root": 77,
+     "lo": 76,
+     "hi": 82,
+     "vel": [
+      0.5,
+      1.0
+     ],
+     "rr": 0
+    }
+   ]
+  },
+  "tptSus": {
+   "kind": "sustain",
+   "pitched": true,
+   "attack": 0.06,
+   "release": 0.3,
+   "gain": 0,
+   "cutK": 0,
+   "zones": [
+    {
+     "file": "tptSus-F3-l0-r0.mp3",
+     "root": 53,
+     "lo": 48,
+     "hi": 55,
+     "vel": [
+      0,
+      1
+     ],
+     "rr": 0,
+     "loop": [
+      1.9,
+      3.2375
+     ]
+    },
+    {
+     "file": "tptSus-A3-l0-r0.mp3",
+     "root": 57,
+     "lo": 56,
+     "hi": 60,
+     "vel": [
+      0,
+      1
+     ],
+     "rr": 0,
+     "loop": [
+      1.65,
+      2.9839
+     ]
+    },
+    {
+     "file": "tptSus-Ds4-l0-r0.mp3",
+     "root": 63,
+     "lo": 61,
+     "hi": 65,
+     "vel": [
+      0,
+      1
+     ],
+     "rr": 0,
+     "loop": [
+      1.4,
+      2.8361
+     ]
+    },
+    {
+     "file": "tptSus-G4-l0-r0.mp3",
+     "root": 67,
+     "lo": 66,
+     "hi": 70,
+     "vel": [
+      0,
+      1
+     ],
+     "rr": 0,
+     "loop": [
+      1.4,
+      2.8773
+     ]
+    },
+    {
+     "file": "tptSus-D5-l0-r0.mp3",
+     "root": 74,
+     "lo": 71,
+     "hi": 75,
+     "vel": [
+      0,
+      1
+     ],
+     "rr": 0,
+     "loop": [
+      1.4,
+      2.8787
+     ]
+    },
+    {
+     "file": "tptSus-F5-l0-r0.mp3",
+     "root": 77,
+     "lo": 76,
+     "hi": 80,
+     "vel": [
+      0,
+      1
+     ],
+     "rr": 0,
+     "loop": [
+      1.65,
+      3.0576
+     ]
+    },
+    {
+     "file": "tptSus-C6-l0-r0.mp3",
+     "root": 84,
+     "lo": 81,
+     "hi": 89,
+     "vel": [
+      0,
+      1
+     ],
+     "rr": 0,
+     "loop": [
+      1.9,
+      3.2192
+     ]
+    }
+   ]
+  },
+  "tbnSus": {
+   "kind": "sustain",
+   "pitched": true,
+   "attack": 0.07,
+   "release": 0.35,
+   "gain": 0,
+   "cutK": 0,
+   "zones": [
+    {
+     "file": "tbnSus-As1-l0-r0.mp3",
+     "root": 34,
+     "lo": 29,
+     "hi": 36,
+     "vel": [
+      0.0,
+      0.5
+     ],
+     "rr": 0,
+     "loop": [
+      1.0,
+      2.1158
+     ]
+    },
+    {
+     "file": "tbnSus-As1-l1-r0.mp3",
+     "root": 34,
+     "lo": 29,
+     "hi": 36,
+     "vel": [
+      0.5,
+      1.0
+     ],
+     "rr": 0,
+     "loop": [
+      1.0,
+      2.1158
+     ]
+    },
+    {
+     "file": "tbnSus-Ds2-l0-r0.mp3",
+     "root": 39,
+     "lo": 37,
+     "hi": 42,
+     "vel": [
+      0.0,
+      0.5
+     ],
+     "rr": 0,
+     "loop": [
+      1.9,
+      3.1863
+     ]
+    },
+    {
+     "file": "tbnSus-Ds2-l1-r0.mp3",
+     "root": 39,
+     "lo": 37,
+     "hi": 42,
+     "vel": [
+      0.5,
+      1.0
+     ],
+     "rr": 0,
+     "loop": [
+      1.65,
+      3.2445
+     ]
+    },
+    {
+     "file": "tbnSus-As2-l0-r0.mp3",
+     "root": 46,
+     "lo": 43,
+     "hi": 48,
+     "vel": [
+      0.0,
+      0.5
+     ],
+     "rr": 0,
+     "loop": [
+      1.4,
+      2.6701
+     ]
+    },
+    {
+     "file": "tbnSus-As2-l1-r0.mp3",
+     "root": 46,
+     "lo": 43,
+     "hi": 48,
+     "vel": [
+      0.5,
+      1.0
+     ],
+     "rr": 0,
+     "loop": [
+      1.9,
+      3.0669
+     ]
+    },
+    {
+     "file": "tbnSus-D3-l0-r0.mp3",
+     "root": 50,
+     "lo": 49,
+     "hi": 51,
+     "vel": [
+      0.0,
+      0.5
+     ],
+     "rr": 0,
+     "loop": [
+      1.9,
+      3.2146
+     ]
+    },
+    {
+     "file": "tbnSus-D3-l1-r0.mp3",
+     "root": 50,
+     "lo": 49,
+     "hi": 51,
+     "vel": [
+      0.5,
+      1.0
+     ],
+     "rr": 0,
+     "loop": [
+      1.2,
+      2.46
+     ]
+    },
+    {
+     "file": "tbnSus-F3-l0-r0.mp3",
+     "root": 53,
+     "lo": 52,
+     "hi": 56,
+     "vel": [
+      0.0,
+      0.5
+     ],
+     "rr": 0,
+     "loop": [
+      1.4,
+      2.5053
+     ]
+    },
+    {
+     "file": "tbnSus-F3-l1-r0.mp3",
+     "root": 53,
+     "lo": 52,
+     "hi": 56,
+     "vel": [
+      0.5,
+      1.0
+     ],
+     "rr": 0,
+     "loop": [
+      1.9,
+      3.4291
+     ]
+    },
+    {
+     "file": "tbnSus-C4-l0-r0.mp3",
+     "root": 60,
+     "lo": 57,
+     "hi": 61,
+     "vel": [
+      0.0,
+      0.5
+     ],
+     "rr": 0,
+     "loop": [
+      1.9,
+      3.4863
+     ]
+    },
+    {
+     "file": "tbnSus-C4-l1-r0.mp3",
+     "root": 60,
+     "lo": 57,
+     "hi": 61,
+     "vel": [
+      0.5,
+      1.0
+     ],
+     "rr": 0,
+     "loop": [
+      1.65,
+      3.2439
+     ]
+    },
+    {
+     "file": "tbnSus-Ds4-l0-r0.mp3",
+     "root": 63,
+     "lo": 62,
+     "hi": 68,
+     "vel": [
+      0.0,
+      0.5
+     ],
+     "rr": 0,
+     "loop": [
+      1.9,
+      3.2885
+     ]
+    },
+    {
+     "file": "tbnSus-Ds4-l1-r0.mp3",
+     "root": 63,
+     "lo": 62,
+     "hi": 68,
+     "vel": [
+      0.5,
+      1.0
+     ],
+     "rr": 0,
+     "loop": [
+      1.9,
+      3.3914
+     ]
+    }
+   ]
+  },
+  "tubaSus": {
+   "kind": "sustain",
+   "pitched": true,
+   "attack": 0.08,
+   "release": 0.4,
+   "gain": 0,
+   "cutK": 0,
+   "zones": [
+    {
+     "file": "tubaSus-F1-l0-r0.mp3",
+     "root": 29,
+     "lo": 24,
+     "hi": 31,
+     "vel": [
+      0.0,
+      0.5
+     ],
+     "rr": 0,
+     "loop": [
+      1.2,
+      2.7905
+     ]
+    },
+    {
+     "file": "tubaSus-F1-l1-r0.mp3",
+     "root": 29,
+     "lo": 24,
+     "hi": 31,
+     "vel": [
+      0.5,
+      1.0
+     ],
+     "rr": 0,
+     "loop": [
+      1.2,
+      2.7905
+     ]
+    },
+    {
+     "file": "tubaSus-As1-l0-r0.mp3",
+     "root": 34,
+     "lo": 32,
+     "hi": 36,
+     "vel": [
+      0.0,
+      0.5
+     ],
+     "rr": 0,
+     "loop": [
+      1.9,
+      3.1014
+     ]
+    },
+    {
+     "file": "tubaSus-As1-l1-r0.mp3",
+     "root": 34,
+     "lo": 32,
+     "hi": 36,
+     "vel": [
+      0.5,
+      1.0
+     ],
+     "rr": 0,
+     "loop": [
+      1.0,
+      2.1849
+     ]
+    },
+    {
+     "file": "tubaSus-Ds2-l0-r0.mp3",
+     "root": 39,
+     "lo": 37,
+     "hi": 42,
+     "vel": [
+      0.0,
+      0.5
+     ],
+     "rr": 0,
+     "loop": [
+      1.4,
+      2.505
+     ]
+    },
+    {
+     "file": "tubaSus-Ds2-l1-r0.mp3",
+     "root": 39,
+     "lo": 37,
+     "hi": 42,
+     "vel": [
+      0.5,
+      1.0
+     ],
+     "rr": 0,
+     "loop": [
+      1.0,
+      2.1044
+     ]
+    },
+    {
+     "file": "tubaSus-As2-l0-r0.mp3",
+     "root": 46,
+     "lo": 43,
+     "hi": 48,
+     "vel": [
+      0.0,
+      0.5
+     ],
+     "rr": 0,
+     "loop": [
+      1.2,
+      2.7956
+     ]
+    },
+    {
+     "file": "tubaSus-As2-l1-r0.mp3",
+     "root": 46,
+     "lo": 43,
+     "hi": 48,
+     "vel": [
+      0.5,
+      1.0
+     ],
+     "rr": 0,
+     "loop": [
+      1.0,
+      2.2881
+     ]
+    },
+    {
+     "file": "tubaSus-D3-l0-r0.mp3",
+     "root": 50,
+     "lo": 49,
+     "hi": 51,
+     "vel": [
+      0.0,
+      0.5
+     ],
+     "rr": 0,
+     "loop": [
+      1.2,
+      2.7755
+     ]
+    },
+    {
+     "file": "tubaSus-D3-l1-r0.mp3",
+     "root": 50,
+     "lo": 49,
+     "hi": 51,
+     "vel": [
+      0.5,
+      1.0
+     ],
+     "rr": 0,
+     "loop": [
+      1.4,
+      2.7877
+     ]
+    },
+    {
+     "file": "tubaSus-F3-l0-r0.mp3",
+     "root": 53,
+     "lo": 52,
+     "hi": 55,
+     "vel": [
+      0.0,
+      0.5
+     ],
+     "rr": 0,
+     "loop": [
+      1.65,
+      2.801
+     ]
+    },
+    {
+     "file": "tubaSus-F3-l1-r0.mp3",
+     "root": 53,
+     "lo": 52,
+     "hi": 55,
+     "vel": [
+      0.5,
+      1.0
+     ],
+     "rr": 0,
+     "loop": [
+      1.0,
+      2.105
+     ]
+    },
+    {
+     "file": "tubaSus-As3-l0-r0.mp3",
+     "root": 58,
+     "lo": 56,
+     "hi": 60,
+     "vel": [
+      0.0,
+      0.5
+     ],
+     "rr": 0,
+     "loop": [
+      1.0,
+      2.3138
+     ]
+    },
+    {
+     "file": "tubaSus-As3-l1-r0.mp3",
+     "root": 58,
+     "lo": 56,
+     "hi": 60,
+     "vel": [
+      0.5,
+      1.0
+     ],
+     "rr": 0,
+     "loop": [
+      1.2,
+      2.3146
+     ]
+    },
+    {
+     "file": "tubaSus-D4-l0-r0.mp3",
+     "root": 62,
+     "lo": 61,
+     "hi": 67,
+     "vel": [
+      0.0,
+      0.5
+     ],
+     "rr": 0,
+     "loop": [
+      1.0,
+      2.152
+     ]
+    },
+    {
+     "file": "tubaSus-D4-l1-r0.mp3",
+     "root": 62,
+     "lo": 61,
+     "hi": 67,
+     "vel": [
+      0.5,
+      1.0
+     ],
+     "rr": 0,
+     "loop": [
+      1.0,
+      2.152
+     ]
+    }
+   ]
+  },
+  "fluteSus": {
+   "kind": "sustain",
+   "pitched": true,
+   "attack": 0.06,
+   "release": 0.3,
+   "gain": 0,
+   "cutK": 0,
+   "zones": [
+    {
+     "file": "fluteSus-C4-l0-r0.mp3",
+     "root": 60,
+     "lo": 55,
+     "hi": 62,
+     "vel": [
+      0,
+      1
+     ],
+     "rr": 0,
+     "loop": [
+      1.7,
+      3.0505
+     ]
+    },
+    {
+     "file": "fluteSus-E4-l0-r0.mp3",
+     "root": 64,
+     "lo": 63,
+     "hi": 66,
+     "vel": [
+      0,
+      1
+     ],
+     "rr": 0,
+     "loop": [
+      1.0,
+      2.4975
+     ]
+    },
+    {
+     "file": "fluteSus-A4-l0-r0.mp3",
+     "root": 69,
+     "lo": 67,
+     "hi": 72,
+     "vel": [
+      0,
+      1
+     ],
+     "rr": 0,
+     "loop": [
+      1.2,
+      2.3857
+     ]
+    },
+    {
+     "file": "fluteSus-E5-l0-r0.mp3",
+     "root": 76,
+     "lo": 73,
+     "hi": 78,
+     "vel": [
+      0,
+      1
+     ],
+     "rr": 0,
+     "loop": [
+      0.8,
+      2.2947
+     ]
+    },
+    {
+     "file": "fluteSus-A5-l0-r0.mp3",
+     "root": 81,
+     "lo": 79,
+     "hi": 82,
+     "vel": [
+      0,
+      1
+     ],
+     "rr": 0,
+     "loop": [
+      1.45,
+      2.5407
+     ]
+    },
+    {
+     "file": "fluteSus-C6-l0-r0.mp3",
+     "root": 84,
+     "lo": 83,
+     "hi": 86,
+     "vel": [
+      0,
+      1
+     ],
+     "rr": 0,
+     "loop": [
+      1.7,
+      3.087
+     ]
+    },
+    {
+     "file": "fluteSus-E6-l0-r0.mp3",
+     "root": 88,
+     "lo": 87,
+     "hi": 92,
+     "vel": [
+      0,
+      1
+     ],
+     "rr": 0,
+     "loop": [
+      1.0,
+      2.0101
+     ]
+    },
+    {
+     "file": "fluteSus-C7-l0-r0.mp3",
+     "root": 96,
+     "lo": 93,
+     "hi": 101,
+     "vel": [
+      0,
+      1
+     ],
+     "rr": 0,
+     "loop": [
+      1.7,
+      2.8332
+     ]
+    }
+   ]
+  },
+  "harp": {
+   "kind": "short",
+   "pitched": true,
+   "attack": 0.002,
+   "release": 0.5,
+   "gain": 0,
+   "cutK": 0,
+   "zones": [
+    {
+     "file": "harp-E1-l0-r0.mp3",
+     "root": 28,
+     "lo": 21,
+     "hi": 31,
+     "vel": [
+      0,
+      1
+     ],
+     "rr": 0
+    },
+    {
+     "file": "harp-B1-l0-r0.mp3",
+     "root": 35,
+     "lo": 32,
+     "hi": 38,
+     "vel": [
+      0,
+      1
+     ],
+     "rr": 0
+    },
+    {
+     "file": "harp-F2-l0-r0.mp3",
+     "root": 41,
+     "lo": 39,
+     "hi": 44,
+     "vel": [
+      0,
+      1
+     ],
+     "rr": 0
+    },
+    {
+     "file": "harp-C3-l0-r0.mp3",
+     "root": 48,
+     "lo": 45,
+     "hi": 51,
+     "vel": [
+      0,
+      1
+     ],
+     "rr": 0
+    },
+    {
+     "file": "harp-G3-l0-r0.mp3",
+     "root": 55,
+     "lo": 52,
+     "hi": 58,
+     "vel": [
+      0,
+      1
+     ],
+     "rr": 0
+    },
+    {
+     "file": "harp-D4-l0-r0.mp3",
+     "root": 62,
+     "lo": 59,
+     "hi": 65,
+     "vel": [
+      0,
+      1
+     ],
+     "rr": 0
+    },
+    {
+     "file": "harp-A4-l0-r0.mp3",
+     "root": 69,
+     "lo": 66,
+     "hi": 72,
+     "vel": [
+      0,
+      1
+     ],
+     "rr": 0
+    },
+    {
+     "file": "harp-E5-l0-r0.mp3",
+     "root": 76,
+     "lo": 73,
+     "hi": 79,
+     "vel": [
+      0,
+      1
+     ],
+     "rr": 0
+    },
+    {
+     "file": "harp-B5-l0-r0.mp3",
+     "root": 83,
+     "lo": 80,
+     "hi": 86,
+     "vel": [
+      0,
+      1
+     ],
+     "rr": 0
+    },
+    {
+     "file": "harp-F6-l0-r0.mp3",
+     "root": 89,
+     "lo": 87,
+     "hi": 93,
+     "vel": [
+      0,
+      1
+     ],
+     "rr": 0
+    },
+    {
+     "file": "harp-D7-l0-r0.mp3",
+     "root": 98,
+     "lo": 94,
+     "hi": 105,
+     "vel": [
+      0,
+      1
+     ],
+     "rr": 0
+    }
+   ]
+  },
+  "bassDrum": {
+   "kind": "short",
+   "pitched": false,
+   "attack": 0.001,
+   "release": 0.3,
+   "gain": 0,
+   "cutK": 0,
+   "zones": [
+    {
+     "file": "bassDrum-x-l0-r0.mp3",
+     "root": 60,
+     "lo": 56,
+     "hi": 64,
+     "vel": [
+      0.0,
+      0.333
+     ],
+     "rr": 0
+    },
+    {
+     "file": "bassDrum-x-l0-r1.mp3",
+     "root": 60,
+     "lo": 56,
+     "hi": 64,
+     "vel": [
+      0.0,
+      0.333
+     ],
+     "rr": 1
+    },
+    {
+     "file": "bassDrum-x-l1-r0.mp3",
+     "root": 60,
+     "lo": 56,
+     "hi": 64,
+     "vel": [
+      0.333,
+      0.667
+     ],
+     "rr": 0
+    },
+    {
+     "file": "bassDrum-x-l1-r1.mp3",
+     "root": 60,
+     "lo": 56,
+     "hi": 64,
+     "vel": [
+      0.333,
+      0.667
+     ],
+     "rr": 1
+    },
+    {
+     "file": "bassDrum-x-l2-r0.mp3",
+     "root": 60,
+     "lo": 56,
+     "hi": 64,
+     "vel": [
+      0.667,
+      1.0
+     ],
+     "rr": 0
+    },
+    {
+     "file": "bassDrum-x-l2-r1.mp3",
+     "root": 60,
+     "lo": 56,
+     "hi": 64,
+     "vel": [
+      0.667,
+      1.0
+     ],
+     "rr": 1
+    }
+   ]
+  },
+  "snare": {
+   "kind": "short",
+   "pitched": false,
+   "attack": 0.001,
+   "release": 0.2,
+   "gain": 0,
+   "cutK": 0,
+   "zones": [
+    {
+     "file": "snare-x-l0-r0.mp3",
+     "root": 60,
+     "lo": 56,
+     "hi": 64,
+     "vel": [
+      0.0,
+      0.5
+     ],
+     "rr": 0
+    },
+    {
+     "file": "snare-x-l0-r1.mp3",
+     "root": 60,
+     "lo": 56,
+     "hi": 64,
+     "vel": [
+      0.0,
+      0.5
+     ],
+     "rr": 1
+    },
+    {
+     "file": "snare-x-l1-r0.mp3",
+     "root": 60,
+     "lo": 56,
+     "hi": 64,
+     "vel": [
+      0.5,
+      1.0
+     ],
+     "rr": 0
+    },
+    {
+     "file": "snare-x-l1-r1.mp3",
+     "root": 60,
+     "lo": 56,
+     "hi": 64,
+     "vel": [
+      0.5,
+      1.0
+     ],
+     "rr": 1
+    }
+   ]
+  },
+  "snareRoll": {
+   "kind": "short",
+   "pitched": false,
+   "attack": 0.01,
+   "release": 0.3,
+   "gain": 0,
+   "cutK": 0,
+   "zones": [
+    {
+     "file": "snareRoll-x-l0-r0.mp3",
+     "root": 60,
+     "lo": 56,
+     "hi": 64,
+     "vel": [
+      0.0,
+      0.5
+     ],
+     "rr": 0
+    },
+    {
+     "file": "snareRoll-x-l1-r0.mp3",
+     "root": 60,
+     "lo": 56,
+     "hi": 64,
+     "vel": [
+      0.5,
+      1.0
+     ],
+     "rr": 0
+    }
+   ]
+  },
+  "crash": {
+   "kind": "short",
+   "pitched": false,
+   "attack": 0.001,
+   "release": 0.6,
+   "gain": 0,
+   "cutK": 0,
+   "zones": [
+    {
+     "file": "crash-x-l0-r0.mp3",
+     "root": 60,
+     "lo": 56,
+     "hi": 64,
+     "vel": [
+      0.0,
+      0.5
+     ],
+     "rr": 0
+    },
+    {
+     "file": "crash-x-l1-r0.mp3",
+     "root": 60,
+     "lo": 56,
+     "hi": 64,
+     "vel": [
+      0.5,
+      1.0
+     ],
+     "rr": 0
+    }
+   ]
+  },
+  "cymSwell": {
+   "kind": "short",
+   "pitched": false,
+   "attack": 0.01,
+   "release": 0.6,
+   "gain": 0,
+   "cutK": 0,
+   "zones": [
+    {
+     "file": "cymSwell-x-l0-r0.mp3",
+     "root": 60,
+     "lo": 56,
+     "hi": 64,
+     "vel": [
+      0.0,
+      0.333
+     ],
+     "rr": 0
+    },
+    {
+     "file": "cymSwell-x-l1-r0.mp3",
+     "root": 60,
+     "lo": 56,
+     "hi": 64,
+     "vel": [
+      0.333,
+      0.667
+     ],
+     "rr": 0
+    },
+    {
+     "file": "cymSwell-x-l2-r0.mp3",
+     "root": 60,
+     "lo": 56,
+     "hi": 64,
+     "vel": [
+      0.667,
+      1.0
+     ],
+     "rr": 0
+    }
+   ]
+  },
+  "gong": {
+   "kind": "short",
+   "pitched": false,
+   "attack": 0.001,
+   "release": 0.8,
+   "gain": 0,
+   "cutK": 0,
+   "zones": [
+    {
+     "file": "gong-x-l0-r0.mp3",
+     "root": 60,
+     "lo": 56,
+     "hi": 64,
+     "vel": [
+      0,
+      1
+     ],
+     "rr": 0
+    }
+   ]
+  },
+  "organ": {
+   "kind": "sustain",
+   "pitched": true,
+   "attack": 0.03,
+   "release": 0.25,
+   "gain": 0,
+   "cutK": 0,
+   "zones": [
+    {
+     "file": "organ-Fs1-l0-r0.mp3",
+     "root": 30,
+     "lo": 24,
+     "hi": 33,
+     "vel": [
+      0,
+      1
+     ],
+     "rr": 0,
+     "loop": [
+      1.0,
+      2.3775
+     ]
+    },
+    {
+     "file": "organ-C2-l0-r0.mp3",
+     "root": 36,
+     "lo": 34,
+     "hi": 39,
+     "vel": [
+      0,
+      1
+     ],
+     "rr": 0,
+     "loop": [
+      1.45,
+      2.8046
+     ]
+    },
+    {
+     "file": "organ-Fs2-l0-r0.mp3",
+     "root": 42,
+     "lo": 40,
+     "hi": 43,
+     "vel": [
+      0,
+      1
+     ],
+     "rr": 0,
+     "loop": [
+      1.45,
+      2.4599
+     ]
+    },
+    {
+     "file": "organ-A2-l0-r0.mp3",
+     "root": 45,
+     "lo": 44,
+     "hi": 49,
+     "vel": [
+      0,
+      1
+     ],
+     "rr": 0,
+     "loop": [
+      1.0,
+      2.3439
+     ]
+    },
+    {
+     "file": "organ-Fs3-l0-r0.mp3",
+     "root": 54,
+     "lo": 50,
+     "hi": 57,
+     "vel": [
+      0,
+      1
+     ],
+     "rr": 0,
+     "loop": [
+      0.8,
+      2.2842
+     ]
+    },
+    {
+     "file": "organ-C4-l0-r0.mp3",
+     "root": 60,
+     "lo": 58,
+     "hi": 61,
+     "vel": [
+      0,
+      1
+     ],
+     "rr": 0,
+     "loop": [
+      1.7,
+      3.1215
+     ]
+    },
+    {
+     "file": "organ-Ds4-l0-r0.mp3",
+     "root": 63,
+     "lo": 62,
+     "hi": 67,
+     "vel": [
+      0,
+      1
+     ],
+     "rr": 0,
+     "loop": [
+      1.7,
+      2.8648
+     ]
+    },
+    {
+     "file": "organ-C5-l0-r0.mp3",
+     "root": 72,
+     "lo": 68,
+     "hi": 75,
+     "vel": [
+      0,
+      1
+     ],
+     "rr": 0,
+     "loop": [
+      1.2,
+      2.8792
+     ]
+    },
+    {
+     "file": "organ-Fs5-l0-r0.mp3",
+     "root": 78,
+     "lo": 76,
+     "hi": 79,
+     "vel": [
+      0,
+      1
+     ],
+     "rr": 0,
+     "loop": [
+      1.0,
+      2.1784
+     ]
+    },
+    {
+     "file": "organ-A5-l0-r0.mp3",
+     "root": 81,
+     "lo": 80,
+     "hi": 85,
+     "vel": [
+      0,
+      1
+     ],
+     "rr": 0,
+     "loop": [
+      1.0,
+      2.2988
+     ]
+    },
+    {
+     "file": "organ-Fs6-l0-r0.mp3",
+     "root": 90,
+     "lo": 86,
+     "hi": 93,
+     "vel": [
+      0,
+      1
+     ],
+     "rr": 0,
+     "loop": [
+      1.45,
+      2.8129
+     ]
+    },
+    {
+     "file": "organ-C7-l0-r0.mp3",
+     "root": 96,
+     "lo": 94,
+     "hi": 102,
+     "vel": [
+      0,
+      1
+     ],
+     "rr": 0,
+     "loop": [
+      1.45,
+      3.1198
+     ]
+    }
+   ]
+  },
+  "choirOh": {
+   "kind": "sustain",
+   "pitched": true,
+   "attack": 0.12,
+   "release": 0.7,
+   "gain": 0,
+   "cutK": 0,
+   "zones": [
+    {
+     "file": "choirOh-E2-l0-r0.mp3",
+     "root": 40,
+     "lo": 36,
+     "hi": 42,
+     "vel": [
+      0,
+      1
+     ],
+     "rr": 0,
+     "loop": [
+      1.2,
+      2.5291
+     ]
+    },
+    {
+     "file": "choirOh-Gs2-l0-r0.mp3",
+     "root": 44,
+     "lo": 43,
+     "hi": 46,
+     "vel": [
+      0,
+      1
+     ],
+     "rr": 0,
+     "loop": [
+      1.2,
+      2.7604
+     ]
+    },
+    {
+     "file": "choirOh-C3-l0-r0.mp3",
+     "root": 48,
+     "lo": 47,
+     "hi": 50,
+     "vel": [
+      0,
+      1
+     ],
+     "rr": 0,
+     "loop": [
+      1.0,
+      2.2917
+     ]
+    },
+    {
+     "file": "choirOh-E3-l0-r0.mp3",
+     "root": 52,
+     "lo": 51,
+     "hi": 54,
+     "vel": [
+      0,
+      1
+     ],
+     "rr": 0,
+     "loop": [
+      1.2,
+      2.5745
+     ]
+    },
+    {
+     "file": "choirOh-Gs3-l0-r0.mp3",
+     "root": 56,
+     "lo": 55,
+     "hi": 58,
+     "vel": [
+      0,
+      1
+     ],
+     "rr": 0,
+     "loop": [
+      1.2,
+      2.712
+     ]
+    },
+    {
+     "file": "choirOh-C4-l0-r0.mp3",
+     "root": 60,
+     "lo": 59,
+     "hi": 62,
+     "vel": [
+      0,
+      1
+     ],
+     "rr": 0,
+     "loop": [
+      1.7,
+      3.0405
+     ]
+    },
+    {
+     "file": "choirOh-E4-l0-r0.mp3",
+     "root": 64,
+     "lo": 63,
+     "hi": 68,
+     "vel": [
+      0,
+      1
+     ],
+     "rr": 0,
+     "loop": [
+      1.2,
+      2.7975
+     ]
+    }
+   ]
+  },
+  "choirAh": {
+   "kind": "sustain",
+   "pitched": true,
+   "attack": 0.12,
+   "release": 0.7,
+   "gain": 0,
+   "cutK": 0,
+   "zones": [
+    {
+     "file": "choirAh-E2-l0-r0.mp3",
+     "root": 40,
+     "lo": 36,
+     "hi": 42,
+     "vel": [
+      0,
+      1
+     ],
+     "rr": 0,
+     "loop": [
+      0.8,
+      2.0183
+     ]
+    },
+    {
+     "file": "choirAh-Gs2-l0-r0.mp3",
+     "root": 44,
+     "lo": 43,
+     "hi": 46,
+     "vel": [
+      0,
+      1
+     ],
+     "rr": 0,
+     "loop": [
+      1.45,
+      3.04
+     ]
+    },
+    {
+     "file": "choirAh-C3-l0-r0.mp3",
+     "root": 48,
+     "lo": 47,
+     "hi": 50,
+     "vel": [
+      0,
+      1
+     ],
+     "rr": 0,
+     "loop": [
+      1.7,
+      3.0193
+     ]
+    },
+    {
+     "file": "choirAh-E3-l0-r0.mp3",
+     "root": 52,
+     "lo": 51,
+     "hi": 54,
+     "vel": [
+      0,
+      1
+     ],
+     "rr": 0,
+     "loop": [
+      0.8,
+      2.0924
+     ]
+    },
+    {
+     "file": "choirAh-Gs3-l0-r0.mp3",
+     "root": 56,
+     "lo": 55,
+     "hi": 58,
+     "vel": [
+      0,
+      1
+     ],
+     "rr": 0,
+     "loop": [
+      0.8,
+      2.3576
+     ]
+    },
+    {
+     "file": "choirAh-C4-l0-r0.mp3",
+     "root": 60,
+     "lo": 59,
+     "hi": 62,
+     "vel": [
+      0,
+      1
+     ],
+     "rr": 0,
+     "loop": [
+      1.7,
+      3.0575
+     ]
+    },
+    {
+     "file": "choirAh-E4-l0-r0.mp3",
+     "root": 64,
+     "lo": 63,
+     "hi": 68,
+     "vel": [
+      0,
+      1
+     ],
+     "rr": 0,
+     "loop": [
+      1.7,
+      3.0357
+     ]
+    }
+   ]
+  },
+  "choirHiAh": {
+   "kind": "sustain",
+   "pitched": true,
+   "attack": 0.12,
+   "release": 0.7,
+   "gain": 0,
+   "cutK": 0,
+   "zones": [
+    {
+     "file": "choirHiAh-C4-l0-r0.mp3",
+     "root": 60,
+     "lo": 56,
+     "hi": 62,
+     "vel": [
+      0,
+      1
+     ],
+     "rr": 0,
+     "loop": [
+      1.45,
+      2.9995
+     ]
+    },
+    {
+     "file": "choirHiAh-E4-l0-r0.mp3",
+     "root": 64,
+     "lo": 63,
+     "hi": 66,
+     "vel": [
+      0,
+      1
+     ],
+     "rr": 0,
+     "loop": [
+      0.8,
+      2.3271
+     ]
+    },
+    {
+     "file": "choirHiAh-Gs4-l0-r0.mp3",
+     "root": 68,
+     "lo": 67,
+     "hi": 70,
+     "vel": [
+      0,
+      1
+     ],
+     "rr": 0,
+     "loop": [
+      1.0,
+      2.5617
+     ]
+    },
+    {
+     "file": "choirHiAh-C5-l0-r0.mp3",
+     "root": 72,
+     "lo": 71,
+     "hi": 74,
+     "vel": [
+      0,
+      1
+     ],
+     "rr": 0,
+     "loop": [
+      1.0,
+      2.4685
+     ]
+    },
+    {
+     "file": "choirHiAh-E5-l0-r0.mp3",
+     "root": 76,
+     "lo": 75,
+     "hi": 78,
+     "vel": [
+      0,
+      1
+     ],
+     "rr": 0,
+     "loop": [
+      1.7,
+      2.9984
+     ]
+    },
+    {
+     "file": "choirHiAh-Gs5-l0-r0.mp3",
+     "root": 80,
+     "lo": 79,
+     "hi": 82,
+     "vel": [
+      0,
+      1
+     ],
+     "rr": 0,
+     "loop": [
+      1.0,
+      2.218
+     ]
+    },
+    {
+     "file": "choirHiAh-C6-l0-r0.mp3",
+     "root": 84,
+     "lo": 83,
+     "hi": 88,
+     "vel": [
+      0,
+      1
+     ],
+     "rr": 0,
+     "loop": [
+      1.7,
+      2.9533
+     ]
+    }
+   ]
+  },
+  "choirHiOo": {
+   "kind": "sustain",
+   "pitched": true,
+   "attack": 0.12,
+   "release": 0.7,
+   "gain": 0,
+   "cutK": 0,
+   "zones": [
+    {
+     "file": "choirHiOo-C4-l0-r0.mp3",
+     "root": 60,
+     "lo": 56,
+     "hi": 62,
+     "vel": [
+      0,
+      1
+     ],
+     "rr": 0,
+     "loop": [
+      1.7,
+      3.2767
+     ]
+    },
+    {
+     "file": "choirHiOo-E4-l0-r0.mp3",
+     "root": 64,
+     "lo": 63,
+     "hi": 66,
+     "vel": [
+      0,
+      1
+     ],
+     "rr": 0,
+     "loop": [
+      0.8,
+      2.1797
+     ]
+    },
+    {
+     "file": "choirHiOo-Gs4-l0-r0.mp3",
+     "root": 68,
+     "lo": 67,
+     "hi": 70,
+     "vel": [
+      0,
+      1
+     ],
+     "rr": 0,
+     "loop": [
+      0.8,
+      2.1636
+     ]
+    },
+    {
+     "file": "choirHiOo-C5-l0-r0.mp3",
+     "root": 72,
+     "lo": 71,
+     "hi": 74,
+     "vel": [
+      0,
+      1
+     ],
+     "rr": 0,
+     "loop": [
+      1.7,
+      3.1709
+     ]
+    },
+    {
+     "file": "choirHiOo-E5-l0-r0.mp3",
+     "root": 76,
+     "lo": 75,
+     "hi": 78,
+     "vel": [
+      0,
+      1
+     ],
+     "rr": 0,
+     "loop": [
+      1.45,
+      2.9695
+     ]
+    },
+    {
+     "file": "choirHiOo-Gs5-l0-r0.mp3",
+     "root": 80,
+     "lo": 79,
+     "hi": 82,
+     "vel": [
+      0,
+      1
+     ],
+     "rr": 0,
+     "loop": [
+      1.0,
+      2.2673
+     ]
+    },
+    {
+     "file": "choirHiOo-C6-l0-r0.mp3",
+     "root": 84,
+     "lo": 83,
+     "hi": 88,
+     "vel": [
+      0,
+      1
+     ],
+     "rr": 0,
+     "loop": [
+      1.0,
+      2.2841
+     ]
+    }
+   ]
+  },
+  "padSerrie": {
+   "kind": "sustain",
+   "pitched": true,
+   "attack": 0.3,
+   "release": 0.9,
+   "gain": 0,
+   "cutK": 0,
+   "zones": [
+    {
+     "file": "padSerrie-C2-l0-r0.mp3",
+     "root": 36,
+     "lo": 30,
+     "hi": 39,
+     "vel": [
+      0,
+      1
+     ],
+     "rr": 0,
+     "loop": [
+      1.6,
+      2.8213
+     ]
+    },
+    {
+     "file": "padSerrie-Fs2-l0-r0.mp3",
+     "root": 42,
+     "lo": 40,
+     "hi": 45,
+     "vel": [
+      0,
+      1
+     ],
+     "rr": 0,
+     "loop": [
+      1.1,
+      2.8728
+     ]
+    },
+    {
+     "file": "padSerrie-C3-l0-r0.mp3",
+     "root": 48,
+     "lo": 46,
+     "hi": 51,
+     "vel": [
+      0,
+      1
+     ],
+     "rr": 0,
+     "loop": [
+      1.6,
+      3.3878
+     ]
+    },
+    {
+     "file": "padSerrie-Fs3-l0-r0.mp3",
+     "root": 54,
+     "lo": 52,
+     "hi": 57,
+     "vel": [
+      0,
+      1
+     ],
+     "rr": 0,
+     "loop": [
+      1.6,
+      3.3757
+     ]
+    },
+    {
+     "file": "padSerrie-C4-l0-r0.mp3",
+     "root": 60,
+     "lo": 58,
+     "hi": 63,
+     "vel": [
+      0,
+      1
+     ],
+     "rr": 0,
+     "loop": [
+      1.35,
+      3.1232
+     ]
+    },
+    {
+     "file": "padSerrie-Fs4-l0-r0.mp3",
+     "root": 66,
+     "lo": 64,
+     "hi": 69,
+     "vel": [
+      0,
+      1
+     ],
+     "rr": 0,
+     "loop": [
+      1.1,
+      2.3002
+     ]
+    },
+    {
+     "file": "padSerrie-C5-l0-r0.mp3",
+     "root": 72,
+     "lo": 70,
+     "hi": 75,
+     "vel": [
+      0,
+      1
+     ],
+     "rr": 0,
+     "loop": [
+      1.1,
+      2.3434
+     ]
+    },
+    {
+     "file": "padSerrie-Fs5-l0-r0.mp3",
+     "root": 78,
+     "lo": 76,
+     "hi": 81,
+     "vel": [
+      0,
+      1
+     ],
+     "rr": 0,
+     "loop": [
+      0.9,
+      2.1223
+     ]
+    },
+    {
+     "file": "padSerrie-C6-l0-r0.mp3",
+     "root": 84,
+     "lo": 82,
+     "hi": 90,
+     "vel": [
+      0,
+      1
+     ],
+     "rr": 0,
+     "loop": [
+      1.1,
+      2.3345
+     ]
+    }
+   ]
+  },
+  "padGlass": {
+   "kind": "sustain",
+   "pitched": true,
+   "attack": 0.3,
+   "release": 0.9,
+   "gain": 0,
+   "cutK": 0,
+   "zones": [
+    {
+     "file": "padGlass-C3-l0-r0.mp3",
+     "root": 48,
+     "lo": 42,
+     "hi": 51,
+     "vel": [
+      0,
+      1
+     ],
+     "rr": 0,
+     "loop": [
+      1.6,
+      3.2468
+     ]
+    },
+    {
+     "file": "padGlass-Fs3-l0-r0.mp3",
+     "root": 54,
+     "lo": 52,
+     "hi": 57,
+     "vel": [
+      0,
+      1
+     ],
+     "rr": 0,
+     "loop": [
+      0.7,
+      2.373
+     ]
+    },
+    {
+     "file": "padGlass-C4-l0-r0.mp3",
+     "root": 60,
+     "lo": 58,
+     "hi": 63,
+     "vel": [
+      0,
+      1
+     ],
+     "rr": 0,
+     "loop": [
+      1.6,
+      3.2935
+     ]
+    },
+    {
+     "file": "padGlass-Fs4-l0-r0.mp3",
+     "root": 66,
+     "lo": 64,
+     "hi": 69,
+     "vel": [
+      0,
+      1
+     ],
+     "rr": 0,
+     "loop": [
+      1.1,
+      2.8447
+     ]
+    },
+    {
+     "file": "padGlass-C5-l0-r0.mp3",
+     "root": 72,
+     "lo": 70,
+     "hi": 75,
+     "vel": [
+      0,
+      1
+     ],
+     "rr": 0,
+     "loop": [
+      0.7,
+      2.0858
+     ]
+    },
+    {
+     "file": "padGlass-Fs5-l0-r0.mp3",
+     "root": 78,
+     "lo": 76,
+     "hi": 81,
+     "vel": [
+      0,
+      1
+     ],
+     "rr": 0,
+     "loop": [
+      0.9,
+      2.2207
+     ]
+    },
+    {
+     "file": "padGlass-C6-l0-r0.mp3",
+     "root": 84,
+     "lo": 82,
+     "hi": 87,
+     "vel": [
+      0,
+      1
+     ],
+     "rr": 0,
+     "loop": [
+      1.1,
+      2.4995
+     ]
+    },
+    {
+     "file": "padGlass-Fs6-l0-r0.mp3",
+     "root": 90,
+     "lo": 88,
+     "hi": 93,
+     "vel": [
+      0,
+      1
+     ],
+     "rr": 0,
+     "loop": [
+      0.9,
+      2.5325
+     ]
+    },
+    {
+     "file": "padGlass-C7-l0-r0.mp3",
+     "root": 96,
+     "lo": 94,
+     "hi": 102,
+     "vel": [
+      0,
+      1
+     ],
+     "rr": 0,
+     "loop": [
+      0.7,
+      2.4069
+     ]
+    }
+   ]
+  },
+  "padDark": {
+   "kind": "sustain",
+   "pitched": true,
+   "attack": 0.3,
+   "release": 0.9,
+   "gain": 0,
+   "cutK": 0,
+   "zones": [
+    {
+     "file": "padDark-G1-l0-r0.mp3",
+     "root": 31,
+     "lo": 25,
+     "hi": 34,
+     "vel": [
+      0,
+      1
+     ],
+     "rr": 0,
+     "loop": [
+      0.9,
+      2.1705
+     ]
+    },
+    {
+     "file": "padDark-Cs2-l0-r0.mp3",
+     "root": 37,
+     "lo": 35,
+     "hi": 40,
+     "vel": [
+      0,
+      1
+     ],
+     "rr": 0,
+     "loop": [
+      0.9,
+      2.2855
+     ]
+    },
+    {
+     "file": "padDark-G2-l0-r0.mp3",
+     "root": 43,
+     "lo": 41,
+     "hi": 46,
+     "vel": [
+      0,
+      1
+     ],
+     "rr": 0,
+     "loop": [
+      0.9,
+      2.4714
+     ]
+    },
+    {
+     "file": "padDark-Cs3-l0-r0.mp3",
+     "root": 49,
+     "lo": 47,
+     "hi": 52,
+     "vel": [
+      0,
+      1
+     ],
+     "rr": 0,
+     "loop": [
+      1.1,
+      2.6279
+     ]
+    },
+    {
+     "file": "padDark-G3-l0-r0.mp3",
+     "root": 55,
+     "lo": 53,
+     "hi": 58,
+     "vel": [
+      0,
+      1
+     ],
+     "rr": 0,
+     "loop": [
+      1.6,
+      2.8063
+     ]
+    },
+    {
+     "file": "padDark-Cs4-l0-r0.mp3",
+     "root": 61,
+     "lo": 59,
+     "hi": 64,
+     "vel": [
+      0,
+      1
+     ],
+     "rr": 0,
+     "loop": [
+      0.7,
+      2.4977
+     ]
+    },
+    {
+     "file": "padDark-G4-l0-r0.mp3",
+     "root": 67,
+     "lo": 65,
+     "hi": 73,
+     "vel": [
+      0,
+      1
+     ],
+     "rr": 0,
+     "loop": [
+      1.6,
+      3.2669
+     ]
+    }
+   ]
+  },
+  "subBass": {
+   "kind": "sustain",
+   "pitched": true,
+   "attack": 0.02,
+   "release": 0.25,
+   "gain": 0,
+   "cutK": 0,
+   "zones": [
+    {
+     "file": "subBass-F1-l0-r0.mp3",
+     "root": 29,
+     "lo": 22,
+     "hi": 32,
+     "vel": [
+      0,
+      1
+     ],
+     "rr": 0,
+     "loop": [
+      0.5,
+      1.5079
+     ]
+    },
+    {
+     "file": "subBass-C2-l0-r0.mp3",
+     "root": 36,
+     "lo": 33,
+     "hi": 39,
+     "vel": [
+      0,
+      1
+     ],
+     "rr": 0,
+     "loop": [
+      0.95,
+      1.9438
+     ]
+    },
+    {
+     "file": "subBass-G2-l0-r0.mp3",
+     "root": 43,
+     "lo": 40,
+     "hi": 50,
+     "vel": [
+      0,
+      1
+     ],
+     "rr": 0,
+     "loop": [
+      0.95,
+      2.348
+     ]
+    }
+   ]
+  },
+  "strEns": {
+   "kind": "sustain",
+   "pitched": true,
+   "attack": 0.09,
+   "release": 0.55,
+   "gain": 0,
+   "cutK": 8000,
+   "zones": [
+    {
+     "file": "cbSus-Fs1-l0-r0.mp3",
+     "root": 30,
+     "lo": 25,
+     "hi": 32,
+     "vel": [
+      0,
+      1
+     ],
+     "rr": 0,
+     "loop": [
+      0.8,
+      1.924
+     ]
+    },
+    {
+     "file": "cbSus-As1-l0-r0.mp3",
+     "root": 34,
+     "lo": 33,
+     "hi": 37,
+     "vel": [
+      0,
+      1
+     ],
+     "rr": 0,
+     "loop": [
+      1.45,
+      2.5477
+     ]
+    },
+    {
+     "file": "cbSus-E2-l0-r0.mp3",
+     "root": 40,
+     "lo": 38,
+     "hi": 42,
+     "vel": [
+      0,
+      1
+     ],
+     "rr": 0,
+     "loop": [
+      1.0,
+      2.0311
+     ]
+    },
+    {
+     "file": "cbSus-A2-l0-r0.mp3",
+     "root": 45,
+     "lo": 43,
+     "hi": 43,
+     "vel": [
+      0,
+      1
+     ],
+     "rr": 0,
+     "loop": [
+      1.0,
+      2.0725
+     ]
+    },
+    {
+     "file": "vcSus-B2-l0-r0.mp3",
+     "root": 47,
+     "lo": 44,
+     "hi": 48,
+     "vel": [
+      0,
+      1
+     ],
+     "rr": 0,
+     "loop": [
+      1.55,
+      2.7628
+     ]
+    },
+    {
+     "file": "vcSus-D3-l0-r0.mp3",
+     "root": 50,
+     "lo": 49,
+     "hi": 53,
+     "vel": [
+      0,
+      1
+     ],
+     "rr": 0,
+     "loop": [
+      1.1,
+      2.292
+     ]
+    },
+    {
+     "file": "vcSus-A3-l0-r0.mp3",
+     "root": 57,
+     "lo": 54,
+     "hi": 58,
+     "vel": [
+      0,
+      1
+     ],
+     "rr": 0,
+     "loop": [
+      1.1,
+      2.3641
+     ]
+    },
+    {
+     "file": "vlaSus-B3-l0-r0.mp3",
+     "root": 59,
+     "lo": 60,
+     "hi": 60,
+     "vel": [
+      0,
+      1
+     ],
+     "rr": 0,
+     "loop": [
+      0.9,
+      2.0402
+     ]
+    },
+    {
+     "file": "vcSus-C4-l0-r0.mp3",
+     "root": 60,
+     "lo": 59,
+     "hi": 59,
+     "vel": [
+      0,
+      1
+     ],
+     "rr": 0,
+     "loop": [
+      1.1,
+      2.2051
+     ]
+    },
+    {
+     "file": "vlaSus-D4-l0-r0.mp3",
+     "root": 62,
+     "lo": 61,
+     "hi": 65,
+     "vel": [
+      0,
+      1
+     ],
+     "rr": 0,
+     "loop": [
+      1.1,
+      2.5353
+     ]
+    },
+    {
+     "file": "strSus-Fs4-l0-r0.mp3",
+     "root": 66,
+     "lo": 67,
+     "hi": 67,
+     "vel": [
+      0,
+      1
+     ],
+     "rr": 0,
+     "loop": [
+      0.9,
+      2.163
+     ]
+    },
+    {
+     "file": "vlaSus-A4-l0-r0.mp3",
+     "root": 69,
+     "lo": 66,
+     "hi": 66,
+     "vel": [
+      0,
+      1
+     ],
+     "rr": 0,
+     "loop": [
+      0.9,
+      2.0549
+     ]
+    },
+    {
+     "file": "strSus-A4-l0-r0.mp3",
+     "root": 69,
+     "lo": 68,
+     "hi": 72,
+     "vel": [
+      0,
+      1
+     ],
+     "rr": 0,
+     "loop": [
+      1.8,
+      3.1927
+     ]
+    },
+    {
+     "file": "strSus-E5-l0-r0.mp3",
+     "root": 76,
+     "lo": 73,
+     "hi": 77,
+     "vel": [
+      0,
+      1
+     ],
+     "rr": 0,
+     "loop": [
+      1.1,
+      2.4566
+     ]
+    },
+    {
+     "file": "strSus-G5-l0-r0.mp3",
+     "root": 79,
+     "lo": 78,
+     "hi": 82,
+     "vel": [
+      0,
+      1
+     ],
+     "rr": 0,
+     "loop": [
+      1.1,
+      2.2592
+     ]
+    },
+    {
+     "file": "strSus-D6-l0-r0.mp3",
+     "root": 86,
+     "lo": 83,
+     "hi": 91,
+     "vel": [
+      0,
+      1
+     ],
+     "rr": 0,
+     "loop": [
+      1.3,
+      2.772
+     ]
+    }
+   ]
+  },
+  "strEnsSpic": {
+   "kind": "short",
+   "pitched": true,
+   "attack": 0.002,
+   "release": 0.12,
+   "gain": 0,
+   "cutK": 0,
+   "zones": [
+    {
+     "file": "cbSpic-E1-l0-r0.mp3",
+     "root": 28,
+     "lo": 23,
+     "hi": 31,
+     "vel": [
+      0,
+      1
+     ],
+     "rr": 0
+    },
+    {
+     "file": "cbSpic-As1-l0-r0.mp3",
+     "root": 34,
+     "lo": 32,
+     "hi": 36,
+     "vel": [
+      0,
+      1
+     ],
+     "rr": 0
+    },
+    {
+     "file": "cbSpic-D2-l0-r0.mp3",
+     "root": 38,
+     "lo": 37,
+     "hi": 43,
+     "vel": [
+      0,
+      1
+     ],
+     "rr": 0
+    },
+    {
+     "file": "vcSpic-B2-l0-r0.mp3",
+     "root": 47,
+     "lo": 44,
+     "hi": 48,
+     "vel": [
+      0.0,
+      0.5
+     ],
+     "rr": 0
+    },
+    {
+     "file": "vcSpic-B2-l1-r0.mp3",
+     "root": 47,
+     "lo": 44,
+     "hi": 48,
+     "vel": [
+      0.5,
+      1.0
+     ],
+     "rr": 0
+    },
+    {
+     "file": "vcSpic-D3-l0-r0.mp3",
+     "root": 50,
+     "lo": 49,
+     "hi": 53,
+     "vel": [
+      0.0,
+      0.5
+     ],
+     "rr": 0
+    },
+    {
+     "file": "vcSpic-D3-l1-r0.mp3",
+     "root": 50,
+     "lo": 49,
+     "hi": 53,
+     "vel": [
+      0.5,
+      1.0
+     ],
+     "rr": 0
+    },
+    {
+     "file": "vcSpic-A3-l0-r0.mp3",
+     "root": 57,
+     "lo": 54,
+     "hi": 58,
+     "vel": [
+      0.0,
+      0.5
+     ],
+     "rr": 0
+    },
+    {
+     "file": "vcSpic-A3-l1-r0.mp3",
+     "root": 57,
+     "lo": 54,
+     "hi": 58,
+     "vel": [
+      0.5,
+      1.0
+     ],
+     "rr": 0
+    },
+    {
+     "file": "vlaSpic-B3-l0-r0.mp3",
+     "root": 59,
+     "lo": 60,
+     "hi": 60,
+     "vel": [
+      0,
+      1
+     ],
+     "rr": 0
+    },
+    {
+     "file": "vcSpic-C4-l0-r0.mp3",
+     "root": 60,
+     "lo": 59,
+     "hi": 59,
+     "vel": [
+      0.0,
+      0.5
+     ],
+     "rr": 0
+    },
+    {
+     "file": "vcSpic-C4-l1-r0.mp3",
+     "root": 60,
+     "lo": 59,
+     "hi": 59,
+     "vel": [
+      0.5,
+      1.0
+     ],
+     "rr": 0
+    },
+    {
+     "file": "vlaSpic-D4-l0-r0.mp3",
+     "root": 62,
+     "lo": 61,
+     "hi": 65,
+     "vel": [
+      0,
+      1
+     ],
+     "rr": 0
+    },
+    {
+     "file": "strSpic-Fs4-l0-r0.mp3",
+     "root": 66,
+     "lo": 67,
+     "hi": 67,
+     "vel": [
+      0.0,
+      0.5
+     ],
+     "rr": 0
+    },
+    {
+     "file": "strSpic-Fs4-l1-r0.mp3",
+     "root": 66,
+     "lo": 67,
+     "hi": 67,
+     "vel": [
+      0.5,
+      1.0
+     ],
+     "rr": 0
+    },
+    {
+     "file": "vlaSpic-A4-l0-r0.mp3",
+     "root": 69,
+     "lo": 66,
+     "hi": 66,
+     "vel": [
+      0,
+      1
+     ],
+     "rr": 0
+    },
+    {
+     "file": "strSpic-A4-l0-r0.mp3",
+     "root": 69,
+     "lo": 68,
+     "hi": 72,
+     "vel": [
+      0.0,
+      0.5
+     ],
+     "rr": 0
+    },
+    {
+     "file": "strSpic-A4-l1-r0.mp3",
+     "root": 69,
+     "lo": 68,
+     "hi": 72,
+     "vel": [
+      0.5,
+      1.0
+     ],
+     "rr": 0
+    },
+    {
+     "file": "strSpic-E5-l0-r0.mp3",
+     "root": 76,
+     "lo": 73,
+     "hi": 77,
+     "vel": [
+      0.0,
+      0.5
+     ],
+     "rr": 0
+    },
+    {
+     "file": "strSpic-E5-l1-r0.mp3",
+     "root": 76,
+     "lo": 73,
+     "hi": 77,
+     "vel": [
+      0.5,
+      1.0
+     ],
+     "rr": 0
+    },
+    {
+     "file": "strSpic-G5-l0-r0.mp3",
+     "root": 79,
+     "lo": 78,
+     "hi": 82,
+     "vel": [
+      0.0,
+      0.5
+     ],
+     "rr": 0
+    },
+    {
+     "file": "strSpic-G5-l1-r0.mp3",
+     "root": 79,
+     "lo": 78,
+     "hi": 82,
+     "vel": [
+      0.5,
+      1.0
+     ],
+     "rr": 0
+    },
+    {
+     "file": "strSpic-D6-l0-r0.mp3",
+     "root": 86,
+     "lo": 83,
+     "hi": 91,
+     "vel": [
+      0.0,
+      0.5
+     ],
+     "rr": 0
+    },
+    {
+     "file": "strSpic-D6-l1-r0.mp3",
+     "root": 86,
+     "lo": 83,
+     "hi": 91,
+     "vel": [
+      0.5,
+      1.0
+     ],
+     "rr": 0
+    }
+   ]
+  },
+  "strEnsTrem": {
+   "kind": "sustain",
+   "pitched": true,
+   "attack": 0.08,
+   "release": 0.4,
+   "gain": 0,
+   "cutK": 8000,
+   "zones": [
+    {
+     "file": "vcTrem-C2-l0-r0.mp3",
+     "root": 36,
+     "lo": 31,
+     "hi": 38,
+     "vel": [
+      0,
+      1
+     ],
+     "rr": 0,
+     "loop": [
+      1.6,
+      2.6119
+     ]
+    },
+    {
+     "file": "vcTrem-E2-l0-r0.mp3",
+     "root": 40,
+     "lo": 39,
+     "hi": 41,
+     "vel": [
+      0,
+      1
+     ],
+     "rr": 0,
+     "loop": [
+      1.6,
+      3.0093
+     ]
+    },
+    {
+     "file": "vcTrem-G2-l0-r0.mp3",
+     "root": 43,
+     "lo": 42,
+     "hi": 46,
+     "vel": [
+      0,
+      1
+     ],
+     "rr": 0,
+     "loop": [
+      1.1,
+      2.5211
+     ]
+    },
+    {
+     "file": "vcTrem-D3-l0-r0.mp3",
+     "root": 50,
+     "lo": 47,
+     "hi": 53,
+     "vel": [
+      0,
+      1
+     ],
+     "rr": 0,
+     "loop": [
+      0.7,
+      2.0368
+     ]
+    },
+    {
+     "file": "vcTrem-A3-l0-r0.mp3",
+     "root": 57,
+     "lo": 54,
+     "hi": 58,
+     "vel": [
+      0,
+      1
+     ],
+     "rr": 0,
+     "loop": [
+      0.7,
+      1.9284
+     ]
+    },
+    {
+     "file": "vcTrem-C4-l0-r0.mp3",
+     "root": 60,
+     "lo": 59,
+     "hi": 62,
+     "vel": [
+      0,
+      1
+     ],
+     "rr": 0,
+     "loop": [
+      1.1,
+      2.5984
+     ]
+    },
+    {
+     "file": "strTrem-D4-l0-r0.mp3",
+     "root": 62,
+     "lo": 63,
+     "hi": 65,
+     "vel": [
+      0,
+      1
+     ],
+     "rr": 0,
+     "loop": [
+      1.35,
+      2.4744
+     ]
+    },
+    {
+     "file": "strTrem-A4-l0-r0.mp3",
+     "root": 69,
+     "lo": 66,
+     "hi": 72,
+     "vel": [
+      0,
+      1
+     ],
+     "rr": 0,
+     "loop": [
+      1.6,
+      2.9493
+     ]
+    },
+    {
+     "file": "strTrem-E5-l0-r0.mp3",
+     "root": 76,
+     "lo": 73,
+     "hi": 77,
+     "vel": [
+      0,
+      1
+     ],
+     "rr": 0,
+     "loop": [
+      0.7,
+      1.9235
+     ]
+    },
+    {
+     "file": "strTrem-G5-l0-r0.mp3",
+     "root": 79,
+     "lo": 78,
+     "hi": 82,
+     "vel": [
+      0,
+      1
+     ],
+     "rr": 0,
+     "loop": [
+      0.9,
+      2.2751
+     ]
+    },
+    {
+     "file": "strTrem-D6-l0-r0.mp3",
+     "root": 86,
+     "lo": 83,
+     "hi": 91,
+     "vel": [
+      0,
+      1
+     ],
+     "rr": 0,
+     "loop": [
+      0.9,
+      2.3938
+     ]
+    }
+   ]
+  },
+  "brassEns": {
+   "kind": "sustain",
+   "pitched": true,
+   "attack": 0.07,
+   "release": 0.35,
+   "gain": 0,
+   "cutK": 0,
+   "zones": [
+    {
+     "file": "tubaSus-F1-l0-r0.mp3",
+     "root": 29,
+     "lo": 24,
+     "hi": 31,
+     "vel": [
+      0.0,
+      0.5
+     ],
+     "rr": 0,
+     "loop": [
+      1.2,
+      2.7905
+     ]
+    },
+    {
+     "file": "tubaSus-F1-l1-r0.mp3",
+     "root": 29,
+     "lo": 24,
+     "hi": 31,
+     "vel": [
+      0.5,
+      1.0
+     ],
+     "rr": 0,
+     "loop": [
+      1.2,
+      2.7905
+     ]
+    },
+    {
+     "file": "tubaSus-As1-l0-r0.mp3",
+     "root": 34,
+     "lo": 32,
+     "hi": 36,
+     "vel": [
+      0.0,
+      0.5
+     ],
+     "rr": 0,
+     "loop": [
+      1.9,
+      3.1014
+     ]
+    },
+    {
+     "file": "tubaSus-As1-l1-r0.mp3",
+     "root": 34,
+     "lo": 32,
+     "hi": 36,
+     "vel": [
+      0.5,
+      1.0
+     ],
+     "rr": 0,
+     "loop": [
+      1.0,
+      2.1849
+     ]
+    },
+    {
+     "file": "tubaSus-Ds2-l0-r0.mp3",
+     "root": 39,
+     "lo": 37,
+     "hi": 42,
+     "vel": [
+      0.0,
+      0.5
+     ],
+     "rr": 0,
+     "loop": [
+      1.4,
+      2.505
+     ]
+    },
+    {
+     "file": "tubaSus-Ds2-l1-r0.mp3",
+     "root": 39,
+     "lo": 37,
+     "hi": 42,
+     "vel": [
+      0.5,
+      1.0
+     ],
+     "rr": 0,
+     "loop": [
+      1.0,
+      2.1044
+     ]
+    },
+    {
+     "file": "tubaSus-As2-l0-r0.mp3",
+     "root": 46,
+     "lo": 43,
+     "hi": 46,
+     "vel": [
+      0.0,
+      0.5
+     ],
+     "rr": 0,
+     "loop": [
+      1.2,
+      2.7956
+     ]
+    },
+    {
+     "file": "tbnSus-As2-l0-r0.mp3",
+     "root": 46,
+     "lo": 47,
+     "hi": 48,
+     "vel": [
+      0.0,
+      0.5
+     ],
+     "rr": 0,
+     "loop": [
+      1.4,
+      2.6701
+     ]
+    },
+    {
+     "file": "tubaSus-As2-l1-r0.mp3",
+     "root": 46,
+     "lo": 43,
+     "hi": 46,
+     "vel": [
+      0.5,
+      1.0
+     ],
+     "rr": 0,
+     "loop": [
+      1.0,
+      2.2881
+     ]
+    },
+    {
+     "file": "tbnSus-As2-l1-r0.mp3",
+     "root": 46,
+     "lo": 47,
+     "hi": 48,
+     "vel": [
+      0.5,
+      1.0
+     ],
+     "rr": 0,
+     "loop": [
+      1.9,
+      3.0669
+     ]
+    },
+    {
+     "file": "tbnSus-D3-l0-r0.mp3",
+     "root": 50,
+     "lo": 49,
+     "hi": 51,
+     "vel": [
+      0.0,
+      0.5
+     ],
+     "rr": 0,
+     "loop": [
+      1.9,
+      3.2146
+     ]
+    },
+    {
+     "file": "tbnSus-D3-l1-r0.mp3",
+     "root": 50,
+     "lo": 49,
+     "hi": 51,
+     "vel": [
+      0.5,
+      1.0
+     ],
+     "rr": 0,
+     "loop": [
+      1.2,
+      2.46
+     ]
+    },
+    {
+     "file": "tbnSus-F3-l0-r0.mp3",
+     "root": 53,
+     "lo": 52,
+     "hi": 56,
+     "vel": [
+      0.0,
+      0.5
+     ],
+     "rr": 0,
+     "loop": [
+      1.4,
+      2.5053
+     ]
+    },
+    {
+     "file": "tbnSus-F3-l1-r0.mp3",
+     "root": 53,
+     "lo": 52,
+     "hi": 56,
+     "vel": [
+      0.5,
+      1.0
+     ],
+     "rr": 0,
+     "loop": [
+      1.9,
+      3.4291
+     ]
+    },
+    {
+     "file": "tbnSus-C4-l0-r0.mp3",
+     "root": 60,
+     "lo": 57,
+     "hi": 58,
+     "vel": [
+      0.0,
+      0.5
+     ],
+     "rr": 0,
+     "loop": [
+      1.9,
+      3.4863
+     ]
+    },
+    {
+     "file": "hornSus-C4-l0-r0.mp3",
+     "root": 60,
+     "lo": 59,
+     "hi": 67,
+     "vel": [
+      0.0,
+      0.5
+     ],
+     "rr": 0,
+     "loop": [
+      1.0,
+      2.4511
+     ]
+    },
+    {
+     "file": "tbnSus-C4-l1-r0.mp3",
+     "root": 60,
+     "lo": 57,
+     "hi": 58,
+     "vel": [
+      0.5,
+      1.0
+     ],
+     "rr": 0,
+     "loop": [
+      1.65,
+      3.2439
+     ]
+    },
+    {
+     "file": "hornSus-C4-l1-r0.mp3",
+     "root": 60,
+     "lo": 59,
+     "hi": 67,
+     "vel": [
+      0.5,
+      1.0
+     ],
+     "rr": 0,
+     "loop": [
+      1.4,
+      2.9986
+     ]
+    },
+    {
+     "file": "hornSus-D5-l0-r0.mp3",
+     "root": 74,
+     "lo": 68,
+     "hi": 74,
+     "vel": [
+      0.0,
+      0.5
+     ],
+     "rr": 0,
+     "loop": [
+      1.4,
+      2.8999
+     ]
+    },
+    {
+     "file": "tptSus-D5-l0-r0.mp3",
+     "root": 74,
+     "lo": 75,
+     "hi": 75,
+     "vel": [
+      0,
+      1
+     ],
+     "rr": 0,
+     "loop": [
+      1.4,
+      2.8787
+     ]
+    },
+    {
+     "file": "hornSus-D5-l1-r0.mp3",
+     "root": 74,
+     "lo": 68,
+     "hi": 74,
+     "vel": [
+      0.5,
+      1.0
+     ],
+     "rr": 0,
+     "loop": [
+      1.4,
+      2.8999
+     ]
+    },
+    {
+     "file": "tptSus-F5-l0-r0.mp3",
+     "root": 77,
+     "lo": 76,
+     "hi": 80,
+     "vel": [
+      0,
+      1
+     ],
+     "rr": 0,
+     "loop": [
+      1.65,
+      3.0576
+     ]
+    },
+    {
+     "file": "tptSus-C6-l0-r0.mp3",
+     "root": 84,
+     "lo": 81,
+     "hi": 89,
+     "vel": [
+      0,
+      1
+     ],
+     "rr": 0,
+     "loop": [
+      1.9,
+      3.2192
+     ]
+    }
+   ]
+  },
+  "lowBrass": {
+   "kind": "sustain",
+   "pitched": true,
+   "attack": 0.08,
+   "release": 0.4,
+   "gain": 0,
+   "cutK": 0,
+   "zones": [
+    {
+     "file": "tubaSus-F1-l0-r0.mp3",
+     "root": 29,
+     "lo": 24,
+     "hi": 31,
+     "vel": [
+      0.0,
+      0.5
+     ],
+     "rr": 0,
+     "loop": [
+      1.2,
+      2.7905
+     ]
+    },
+    {
+     "file": "tubaSus-F1-l1-r0.mp3",
+     "root": 29,
+     "lo": 24,
+     "hi": 31,
+     "vel": [
+      0.5,
+      1.0
+     ],
+     "rr": 0,
+     "loop": [
+      1.2,
+      2.7905
+     ]
+    },
+    {
+     "file": "tubaSus-As1-l0-r0.mp3",
+     "root": 34,
+     "lo": 32,
+     "hi": 36,
+     "vel": [
+      0.0,
+      0.5
+     ],
+     "rr": 0,
+     "loop": [
+      1.9,
+      3.1014
+     ]
+    },
+    {
+     "file": "tubaSus-As1-l1-r0.mp3",
+     "root": 34,
+     "lo": 32,
+     "hi": 36,
+     "vel": [
+      0.5,
+      1.0
+     ],
+     "rr": 0,
+     "loop": [
+      1.0,
+      2.1849
+     ]
+    },
+    {
+     "file": "tubaSus-Ds2-l0-r0.mp3",
+     "root": 39,
+     "lo": 37,
+     "hi": 42,
+     "vel": [
+      0.0,
+      0.5
+     ],
+     "rr": 0,
+     "loop": [
+      1.4,
+      2.505
+     ]
+    },
+    {
+     "file": "tubaSus-Ds2-l1-r0.mp3",
+     "root": 39,
+     "lo": 37,
+     "hi": 42,
+     "vel": [
+      0.5,
+      1.0
+     ],
+     "rr": 0,
+     "loop": [
+      1.0,
+      2.1044
+     ]
+    },
+    {
+     "file": "tubaSus-As2-l0-r0.mp3",
+     "root": 46,
+     "lo": 43,
+     "hi": 48,
+     "vel": [
+      0.0,
+      0.5
+     ],
+     "rr": 0,
+     "loop": [
+      1.2,
+      2.7956
+     ]
+    },
+    {
+     "file": "tubaSus-As2-l1-r0.mp3",
+     "root": 46,
+     "lo": 43,
+     "hi": 48,
+     "vel": [
+      0.5,
+      1.0
+     ],
+     "rr": 0,
+     "loop": [
+      1.0,
+      2.2881
+     ]
+    },
+    {
+     "file": "tbnSus-D3-l0-r0.mp3",
+     "root": 50,
+     "lo": 49,
+     "hi": 51,
+     "vel": [
+      0.0,
+      0.5
+     ],
+     "rr": 0,
+     "loop": [
+      1.9,
+      3.2146
+     ]
+    },
+    {
+     "file": "tbnSus-D3-l1-r0.mp3",
+     "root": 50,
+     "lo": 49,
+     "hi": 51,
+     "vel": [
+      0.5,
+      1.0
+     ],
+     "rr": 0,
+     "loop": [
+      1.2,
+      2.46
+     ]
+    },
+    {
+     "file": "tbnSus-F3-l0-r0.mp3",
+     "root": 53,
+     "lo": 52,
+     "hi": 56,
+     "vel": [
+      0.0,
+      0.5
+     ],
+     "rr": 0,
+     "loop": [
+      1.4,
+      2.5053
+     ]
+    },
+    {
+     "file": "tbnSus-F3-l1-r0.mp3",
+     "root": 53,
+     "lo": 52,
+     "hi": 56,
+     "vel": [
+      0.5,
+      1.0
+     ],
+     "rr": 0,
+     "loop": [
+      1.9,
+      3.4291
+     ]
+    },
+    {
+     "file": "tbnSus-C4-l0-r0.mp3",
+     "root": 60,
+     "lo": 57,
+     "hi": 61,
+     "vel": [
+      0.0,
+      0.5
+     ],
+     "rr": 0,
+     "loop": [
+      1.9,
+      3.4863
+     ]
+    },
+    {
+     "file": "tbnSus-C4-l1-r0.mp3",
+     "root": 60,
+     "lo": 57,
+     "hi": 61,
+     "vel": [
+      0.5,
+      1.0
+     ],
+     "rr": 0,
+     "loop": [
+      1.65,
+      3.2439
+     ]
+    },
+    {
+     "file": "tbnSus-Ds4-l0-r0.mp3",
+     "root": 63,
+     "lo": 62,
+     "hi": 68,
+     "vel": [
+      0.0,
+      0.5
+     ],
+     "rr": 0,
+     "loop": [
+      1.9,
+      3.2885
+     ]
+    },
+    {
+     "file": "tbnSus-Ds4-l1-r0.mp3",
+     "root": 63,
+     "lo": 62,
+     "hi": 68,
+     "vel": [
+      0.5,
+      1.0
+     ],
+     "rr": 0,
+     "loop": [
+      1.9,
+      3.3914
+     ]
+    }
+   ]
+  },
+  "choirOhAll": {
+   "kind": "sustain",
+   "pitched": true,
+   "attack": 0.12,
+   "release": 0.7,
+   "gain": 0,
+   "cutK": 0,
+   "zones": [
+    {
+     "file": "choirOh-E2-l0-r0.mp3",
+     "root": 40,
+     "lo": 36,
+     "hi": 42,
+     "vel": [
+      0,
+      1
+     ],
+     "rr": 0,
+     "loop": [
+      1.2,
+      2.5291
+     ]
+    },
+    {
+     "file": "choirOh-Gs2-l0-r0.mp3",
+     "root": 44,
+     "lo": 43,
+     "hi": 46,
+     "vel": [
+      0,
+      1
+     ],
+     "rr": 0,
+     "loop": [
+      1.2,
+      2.7604
+     ]
+    },
+    {
+     "file": "choirOh-C3-l0-r0.mp3",
+     "root": 48,
+     "lo": 47,
+     "hi": 50,
+     "vel": [
+      0,
+      1
+     ],
+     "rr": 0,
+     "loop": [
+      1.0,
+      2.2917
+     ]
+    },
+    {
+     "file": "choirOh-E3-l0-r0.mp3",
+     "root": 52,
+     "lo": 51,
+     "hi": 54,
+     "vel": [
+      0,
+      1
+     ],
+     "rr": 0,
+     "loop": [
+      1.2,
+      2.5745
+     ]
+    },
+    {
+     "file": "choirOh-Gs3-l0-r0.mp3",
+     "root": 56,
+     "lo": 55,
+     "hi": 58,
+     "vel": [
+      0,
+      1
+     ],
+     "rr": 0,
+     "loop": [
+      1.2,
+      2.712
+     ]
+    },
+    {
+     "file": "choirOh-C4-l0-r0.mp3",
+     "root": 60,
+     "lo": 59,
+     "hi": 61,
+     "vel": [
+      0,
+      1
+     ],
+     "rr": 0,
+     "loop": [
+      1.7,
+      3.0405
+     ]
+    },
+    {
+     "file": "choirHiOo-C4-l0-r0.mp3",
+     "root": 60,
+     "lo": 62,
+     "hi": 62,
+     "vel": [
+      0,
+      1
+     ],
+     "rr": 0,
+     "loop": [
+      1.7,
+      3.2767
+     ]
+    },
+    {
+     "file": "choirHiOo-E4-l0-r0.mp3",
+     "root": 64,
+     "lo": 63,
+     "hi": 66,
+     "vel": [
+      0,
+      1
+     ],
+     "rr": 0,
+     "loop": [
+      0.8,
+      2.1797
+     ]
+    },
+    {
+     "file": "choirHiOo-Gs4-l0-r0.mp3",
+     "root": 68,
+     "lo": 67,
+     "hi": 70,
+     "vel": [
+      0,
+      1
+     ],
+     "rr": 0,
+     "loop": [
+      0.8,
+      2.1636
+     ]
+    },
+    {
+     "file": "choirHiOo-C5-l0-r0.mp3",
+     "root": 72,
+     "lo": 71,
+     "hi": 74,
+     "vel": [
+      0,
+      1
+     ],
+     "rr": 0,
+     "loop": [
+      1.7,
+      3.1709
+     ]
+    },
+    {
+     "file": "choirHiOo-E5-l0-r0.mp3",
+     "root": 76,
+     "lo": 75,
+     "hi": 78,
+     "vel": [
+      0,
+      1
+     ],
+     "rr": 0,
+     "loop": [
+      1.45,
+      2.9695
+     ]
+    },
+    {
+     "file": "choirHiOo-Gs5-l0-r0.mp3",
+     "root": 80,
+     "lo": 79,
+     "hi": 82,
+     "vel": [
+      0,
+      1
+     ],
+     "rr": 0,
+     "loop": [
+      1.0,
+      2.2673
+     ]
+    },
+    {
+     "file": "choirHiOo-C6-l0-r0.mp3",
+     "root": 84,
+     "lo": 83,
+     "hi": 88,
+     "vel": [
+      0,
+      1
+     ],
+     "rr": 0,
+     "loop": [
+      1.0,
+      2.2841
+     ]
+    }
+   ]
+  },
+  "choirAhAll": {
+   "kind": "sustain",
+   "pitched": true,
+   "attack": 0.12,
+   "release": 0.7,
+   "gain": 0,
+   "cutK": 0,
+   "zones": [
+    {
+     "file": "choirAh-E2-l0-r0.mp3",
+     "root": 40,
+     "lo": 36,
+     "hi": 42,
+     "vel": [
+      0,
+      1
+     ],
+     "rr": 0,
+     "loop": [
+      0.8,
+      2.0183
+     ]
+    },
+    {
+     "file": "choirAh-Gs2-l0-r0.mp3",
+     "root": 44,
+     "lo": 43,
+     "hi": 46,
+     "vel": [
+      0,
+      1
+     ],
+     "rr": 0,
+     "loop": [
+      1.45,
+      3.04
+     ]
+    },
+    {
+     "file": "choirAh-C3-l0-r0.mp3",
+     "root": 48,
+     "lo": 47,
+     "hi": 50,
+     "vel": [
+      0,
+      1
+     ],
+     "rr": 0,
+     "loop": [
+      1.7,
+      3.0193
+     ]
+    },
+    {
+     "file": "choirAh-E3-l0-r0.mp3",
+     "root": 52,
+     "lo": 51,
+     "hi": 54,
+     "vel": [
+      0,
+      1
+     ],
+     "rr": 0,
+     "loop": [
+      0.8,
+      2.0924
+     ]
+    },
+    {
+     "file": "choirAh-Gs3-l0-r0.mp3",
+     "root": 56,
+     "lo": 55,
+     "hi": 58,
+     "vel": [
+      0,
+      1
+     ],
+     "rr": 0,
+     "loop": [
+      0.8,
+      2.3576
+     ]
+    },
+    {
+     "file": "choirAh-C4-l0-r0.mp3",
+     "root": 60,
+     "lo": 59,
+     "hi": 61,
+     "vel": [
+      0,
+      1
+     ],
+     "rr": 0,
+     "loop": [
+      1.7,
+      3.0575
+     ]
+    },
+    {
+     "file": "choirHiAh-C4-l0-r0.mp3",
+     "root": 60,
+     "lo": 62,
+     "hi": 62,
+     "vel": [
+      0,
+      1
+     ],
+     "rr": 0,
+     "loop": [
+      1.45,
+      2.9995
+     ]
+    },
+    {
+     "file": "choirHiAh-E4-l0-r0.mp3",
+     "root": 64,
+     "lo": 63,
+     "hi": 66,
+     "vel": [
+      0,
+      1
+     ],
+     "rr": 0,
+     "loop": [
+      0.8,
+      2.3271
+     ]
+    },
+    {
+     "file": "choirHiAh-Gs4-l0-r0.mp3",
+     "root": 68,
+     "lo": 67,
+     "hi": 70,
+     "vel": [
+      0,
+      1
+     ],
+     "rr": 0,
+     "loop": [
+      1.0,
+      2.5617
+     ]
+    },
+    {
+     "file": "choirHiAh-C5-l0-r0.mp3",
+     "root": 72,
+     "lo": 71,
+     "hi": 74,
+     "vel": [
+      0,
+      1
+     ],
+     "rr": 0,
+     "loop": [
+      1.0,
+      2.4685
+     ]
+    },
+    {
+     "file": "choirHiAh-E5-l0-r0.mp3",
+     "root": 76,
+     "lo": 75,
+     "hi": 78,
+     "vel": [
+      0,
+      1
+     ],
+     "rr": 0,
+     "loop": [
+      1.7,
+      2.9984
+     ]
+    },
+    {
+     "file": "choirHiAh-Gs5-l0-r0.mp3",
+     "root": 80,
+     "lo": 79,
+     "hi": 82,
+     "vel": [
+      0,
+      1
+     ],
+     "rr": 0,
+     "loop": [
+      1.0,
+      2.218
+     ]
+    },
+    {
+     "file": "choirHiAh-C6-l0-r0.mp3",
+     "root": 84,
+     "lo": 83,
+     "hi": 88,
+     "vel": [
+      0,
+      1
+     ],
+     "rr": 0,
+     "loop": [
+      1.7,
+      2.9533
+     ]
+    }
+   ]
+  }
+ }
+}

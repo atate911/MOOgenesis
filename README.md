@@ -5,13 +5,15 @@ the five-slider colony economy, six-field research with per-game random tech tre
 AI leaders that have personalities and objectives, spies, the Galactic Council, the Orion Guardian, the GNN news network — with modern, entirely original graphics, music and sound.
 
 > All art, music, text and code are original. The original game was used only as a reference for rules, layout and feel (public strategy guides and the open-source
-> *1oom* rules documentation informed the *numbers and behaviours*; no code or assets were copied).
+> *1oom* rules documentation informed the *numbers and behaviours*; no code or assets were copied). The orchestral instrument recordings the music engine plays
+> come from the public-domain (CC0) VSCO 2 Community Edition — see `assets/audio/README.md`.
 
 ## Status
 **Playable, in active development.** The whole loop works end to end (new game → galaxy → turns against 1–5 AI empires → research, ship design, tactical/ground combat, diplomacy, spies, council, events, endings, save/load). What remains — QA click-through, balance audit, GPU wiring, a second "serious sci-fi" graphics pass — is tracked in **`HANDOFF.md`** (start there) and `PROGRESS.md`.
 
 ## Run it
 * Double-click `index.html` (works from `file://` — no build step, no dependencies), **or** serve the folder: `python -m http.server 8765` → http://localhost:8765/
+  (serve it to hear the sampled orchestra in `assets/audio/`; from `file://` the browser blocks those loads and the score plays on its built-in synth voices)
 * Chrome / Edge / Firefox (current). WebGL2 and Web Workers are used when available and are never required.
 
 ## Host it on your own server

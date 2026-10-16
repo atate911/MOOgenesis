@@ -77,6 +77,7 @@
 
 <script src="../js/core/ns.js"></script>
 <script src="../js/audio/audio.js"></script>
+<script src="../js/audio/sampler.js"></script>
 <script src="../js/audio/music.js"></script>
 <script src="../js/audio/sfx.js"></script>
 <script src="lib/audio-metrics.js"></script>
@@ -365,7 +366,11 @@
     // any click unlocks audio (autoplay policy)
     document.addEventListener('pointerdown', () => A.init(), { once: true });
   }
-  function refresh() { const s = A.stats(), m = Music.state(); $('stats').textContent = s ? ' ctx ' + s.state + ' · voices ' + s.voices + ' · nodes ' + s.nodes + ' (base ' + s.baseNodes + ') · music: ' + (m.cur || '-') + (m.old ? ' +' + m.old + ' fading' : '') : ' audio not initialised'; }
+  function refresh() {
+    const s = A.stats(), m = Music.state(), sm = A.Samples ? A.Samples.status() : null;
+    $('stats').textContent = (s ? ' ctx ' + s.state + ' · voices ' + s.voices + ' · nodes ' + s.nodes + ' (base ' + s.baseNodes + ') · music: ' + (m.cur || '-') + (m.old ? ' +' + m.old + ' fading' : '') : ' audio not initialised')
+      + (sm ? ' · samples: ' + sm.state + ' ' + sm.instruments + '/' + sm.total + ' (' + sm.mb + ' MB decoded, decoder offset ' + sm.offsetMs + ' ms)' : '');
+  }
   build();
   setInterval(refresh, 1000);
   console.log('test-audio ready:', Music.list().length, 'tracks,', SFX.list().length, 'sfx');

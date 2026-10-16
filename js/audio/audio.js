@@ -354,6 +354,20 @@
       return { in: inp, out, dispose() { for (const n of nodes) { try { n.disconnect(); } catch (e) { /* ignore */ } } eng.nodeCount -= nodes.length; nodes.length = 0; } };
     };
 
+    // ensemble chorus: three modulated delay taps spread across the stereo field (strings / choir / pad "ensemble" thickening)
+    eng.makeChorus = function (o) {
+      o = o || {};
+      const nodes = [], N = n => { nodes.push(n); eng.nodeCount++; return n; };
+      const inp = N(ctx.createGain()), out = N(ctx.createGain()), taps = [[0.0135, -0.75, 0.29], [0.0185, 0, 0.37], [0.0235, 0.75, 0.43]];
+      for (const tp of taps) {
+        const d = N(ctx.createDelay(0.1)), lfo = N(ctx.createOscillator()), lg = N(ctx.createGain()), pn = N(ctx.createStereoPanner()), g = N(ctx.createGain());
+        d.delayTime.value = tp[0]; lfo.type = 'sine'; lfo.frequency.value = tp[2] * num(o.rate, 1); lg.gain.value = num(o.depth, 0.0026); pn.pan.value = tp[1]; g.gain.value = 0.55;
+        lfo.connect(lg); lg.connect(d.delayTime); lfo.start();
+        inp.connect(d); d.connect(g); g.connect(pn); pn.connect(out);
+      }
+      return { in: inp, out, dispose() { for (const n of nodes) { try { if (n.stop) n.stop(); } catch (e) { /* ignore */ } try { n.disconnect(); } catch (e) { /* ignore */ } } eng.nodeCount -= nodes.length; nodes.length = 0; } };
+    };
+
     // voice allocation with a polyphony cap; higher priority voices may steal lower ones
     eng.voice = function (dest, t0, prio, pan, send) {
       prio = prio || 1;
