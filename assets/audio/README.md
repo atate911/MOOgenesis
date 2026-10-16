@@ -17,7 +17,9 @@ Provenance
   triangle, tambourine, bell tree, bar chimes, sleigh bells, wood blocks, shakers, and two pipe-organ stops (Swell Gamba 8',
   Great Open Diapason 8'). `tools/samples/build.py` reads the library's own SFZ definitions (`tools/samples/sfz.py`) for key ranges,
   root pitches, tuning and volume corrections, start offsets, loop points, round robins and dynamic layers, then trims, level-matches,
-  shortens the loops to a memory budget and encodes each sample.
+  shortens the loops to a memory budget and encodes each sample. Mono instruments are one microphone channel of the stereo recording
+  (the side of the stage the section sits on), never the left+right sum: these recordings are wide and nearly uncorrelated, and a sum
+  comb-filters them.
 - Marimba, claves, anvil, snare taps and field drums: **VSCO 2 Community Edition** by Versilian Studios (Sam Gossner, Simon Dalzell;
   sample cutting Elan Hickler), **CC0 1.0** (public domain). Source: https://github.com/sgossner/VSCO-2-CE.
 - Analogue ensemble pads and the sub bass: synthesized for this game by `tools/samples/synth.py` (nine-voice stereo unison with

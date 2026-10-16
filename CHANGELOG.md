@@ -29,6 +29,10 @@ Versions follow `MAJOR.MINOR.PATCH`; the live version is the `VERSION` file.
   stays on for twenty minutes is heard as long, changing blocks rather than a three-minute loop. The samples are re-encoded at the top
   VBR quality (lowpass near 19.5 kHz instead of 16), with a stronger air shelf on the sections and chorus and stereo upper strings;
   preview renders from `tools/audio-report.js --mp3` are 320 kbps.
+  Fixed the "digital" colour of the sections: the Sonatina recordings are wide stereo with nearly uncorrelated channels (the horns
+  partly anti-phase), and folding them to mono by averaging comb-filtered every section with 4-8 dB notches across 1-8 kHz. Mono
+  instruments now take one microphone channel (the one on their side of the stage) instead of the sum; the string and brass sections
+  keep the library's own loops instead of shortened ones.
 - Symphonic re-orchestration and film-style flow. Every synth pluck, FM bell, pad, bass and drum-machine part in the score is now a
   recorded instrument: pizzicato string sections, marimba, glockenspiel, harp, oboe / clarinet / bassoon, contrabass, bass drum,
   snare, field drums, tambourine, claves, anvil, stick taps (the two machine races keep a little sequencer colour). The bell
