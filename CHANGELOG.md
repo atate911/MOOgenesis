@@ -22,7 +22,8 @@ Versions follow `MAJOR.MINOR.PATCH`; the live version is the `VERSION` file.
   a lighter low shelf), more room on the pad, bell and choir sends; the galaxy underscore leans toward Serrie (an analogue sky with a new
   high "air" pad above it, distant women's voices, celeste and harp as single points of light, slower harmonic motion, no hi-hats) and the
   dramatic cues take the Crimson Tide layering (analogue pad as the floor, low men's choir as the bed, strings mid, brass for the peaks,
-  fewer bell sparkles).
+  fewer bell sparkles). Silence is composed: the exploration pieces carry rests between phrases and whole bars where only the hall rings
+  before the next entrance, and the rotation leaves 26 s of quiet between pieces.
 - Symphonic re-orchestration and film-style flow. Every synth pluck, FM bell, pad, bass and drum-machine part in the score is now a
   recorded instrument: pizzicato string sections, marimba, glockenspiel, harp, oboe / clarinet / bassoon, contrabass, bass drum,
   snare, field drums, tambourine, claves, anvil, stick taps (the two machine races keep a little sequencer colour). The bell
@@ -30,7 +31,7 @@ Versions follow `MAJOR.MINOR.PATCH`; the live version is the `VERSION` file.
   longer (2.5 s) and the air shelf softer; the default music level is lower. The music now behaves like an underscore: management
   screens (design, research, ledgers) keep whatever is playing, scene changes wait for the next bar and cross-fade over 4-5 s
   (battles switch on the beat), battle layers swell in over seconds instead of per hit, the lab and spy panels no longer borrow a
-  cue of their own, and the exploration rotation breathes 14 s between pieces. The map underscore senses the empire: at war it turns to the determined and
+  cue of their own, and the exploration rotation breathes 26 s between pieces. The map underscore senses the empire: at war it turns to the determined and
   uneasy pieces, and a declaration of war or a peace treaty changes it at the end of the turn, on the bar.
 - Sampled orchestra for the score (`assets/audio/`, 9 MB of MP3 multisamples): string sections (sustain, spiccato, tremolo), horns, trumpet,
   trombone, tuba, flute, harp, pipe organ, timpani, bass drum, snare, cymbals and gong from the CC0 VSCO 2 Community Edition, plus a
