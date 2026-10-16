@@ -190,16 +190,17 @@ MOO.def(function (M) {
 
   // ---- orders ---------------------------------------------------------------------------------------------------------
   const O = M.Sim.Orders;
-  O.register('researchSlider', function (S, E, o) { if (!(o.field >= 0 && o.field < 6)) return O.fail('bad field'); Rs.setSlider(E, o.field, o.value); return O.ok(); });
+  O.register('researchSlider', function (S, E, o) { const f = O.int(o.field, 0, 5), v = O.num(o.value, 0, 100); if (f === null || v === null) return O.fail('bad field'); Rs.setSlider(E, f, v); return O.ok(); });
   O.register('researchSet', function (S, E, o) {       // set all six field sliders at once (values sum to 100) — AI planners
-    const v = (o.values || []).map(x => Math.max(0, Math.round(x)));
-    if (v.length !== 6 || v.reduce((a, b) => a + b, 0) !== 100) return O.fail('research sliders must sum to 100');
+    const v = (Array.isArray(o.values) ? o.values : []).map(x => (Number.isFinite(x) ? Math.max(0, Math.round(x)) : NaN));
+    if (v.length !== 6 || v.some(x => !Number.isFinite(x)) || v.reduce((a, b) => a + b, 0) !== 100) return O.fail('research sliders must sum to 100');
     E.research.slider = v; return O.ok();
   });
-  O.register('researchLock', function (S, E, o) { if (!(o.field >= 0 && o.field < 6)) return O.fail('bad field'); E.research.lock[o.field] = !!o.locked; return O.ok(); });
+  O.register('researchLock', function (S, E, o) { const f = O.int(o.field, 0, 5); if (f === null) return O.fail('bad field'); E.research.lock[f] = !!o.locked; return O.ok(); });
   O.register('researchEqualize', function (S, E) { Rs.equalize(E); return O.ok(); });
   O.register('researchPick', function (S, E, o) {
     const rs = E.research;
+    if (O.int(o.field, 0, 5) === null || O.int(o.level, 1, 99) === null) return O.fail('bad field');
     if (rs.project[o.field] && rs.invest[o.field] > 1 && rs.project[o.field] !== o.level && !o.force) return O.fail('a project is already under way');
     return Rs.start(S, E, o.field, o.level) ? O.ok() : O.fail('that technology is not available');
   });

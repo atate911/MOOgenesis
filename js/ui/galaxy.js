@@ -183,7 +183,7 @@
     offs.push(UI.bindKey('F2', () => cycleColony(-1), scr)); offs.push(UI.bindKey('F3', () => cycleColony(1), scr));
     const withShips = p => !!M.Sim.Fleet.at(G.S, p.starId, G.S.playerId);
     offs.push(UI.bindKey('F4', () => cycleColony(1, withShips), scr)); offs.push(UI.bindKey('F5', () => cycleColony(-1, withShips), scr));
-    offs.push(UI.bindKey('F10', () => { if (G.saveSlot('auto')) UI.toast('Game saved', 'ok'); }, scr));
+    offs.push(UI.bindKey('F10', () => { if (G.saveSlot('auto')) UI.toast('Game saved', 'ok'); else UI.toast('The game could not be saved (browser storage full or blocked). Use Game › Save › Export to a file.', 'bad', 8000); }, scr));
     offs.push(UI.bindKey('Escape', () => { if (UI.gameMenu) UI.gameMenu(); }, scr));
     offs.push(UI.bindKey('Home', () => { if (map) map.centerOn(G.player().capital, { animate: true }); }, scr));
     offs.push(UI.bindKey('c', () => { if (map && G.sel.star >= 0) map.centerOn(G.sel.star, { animate: true }); }, { screen: 'galaxy' }));
@@ -206,6 +206,9 @@
       bindKeys();
       M.Bus.on('state', () => { if (UI.Screens.current && UI.Screens.current.id === 'galaxy') { updateHud(); UI.Side.refresh(); } });
       M.Bus.on('turn:aborted', () => UI.Side.drop()); M.Bus.on('turn:skipped', () => UI.Side.drop());    // the prompt is moot: let it resolve and go
+      let saveWarned = false;                                                                               // a silently failing autosave used to be discovered only at the Save screen
+      M.Bus.on('save:failed', slot => { if (slot !== 'auto' || saveWarned) return; saveWarned = true; UI.toast('Autosave failed: browser storage is full or blocked. Export a save file from Game › Save.', 'bad', 10000); });
+      M.Bus.on('saved', slot => { if (slot === 'auto') saveWarned = false; });
     },
     enter() {
       if (!G.S) { UI.Screens.go('menu'); return; }

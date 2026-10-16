@@ -104,37 +104,39 @@ MOO.def(function (M) {
   // ---- orders: sliders, build item, tax, security, reserve transfer ---------------------------------------------------------------------------------
   O.register('slider', function (S, E, o) {
     const p = S.planets[o.planet]; if (!p || p.owner !== E.id) return O.fail('not your planet');
-    if (!(o.index >= 0 && o.index < 5)) return O.fail('bad slider');
-    C.setSlider(S, E, p, o.index, o.value); return O.ok();
+    const idx = O.int(o.index, 0, 4), v = O.num(o.value, 0, 100); if (idx === null || v === null) return O.fail('bad slider');
+    C.setSlider(S, E, p, idx, v); return O.ok();
   });
   // set all five planet sliders at once (AI planners; values must sum to 100). The ECO floor then lifts ECO if the planet would pollute.
   O.register('sliders', function (S, E, o) {
     const p = S.planets[o.planet]; if (!p || p.owner !== E.id) return O.fail('not your planet');
-    const v = (o.values || []).map(x => Math.max(0, Math.round(x)));
-    if (v.length !== 5 || v.reduce((a, b) => a + b, 0) !== 100) return O.fail('sliders must sum to 100');
+    const v = (Array.isArray(o.values) ? o.values : []).map(x => (Number.isFinite(x) ? Math.max(0, Math.round(x)) : NaN));
+    if (v.length !== 5 || v.some(x => !Number.isFinite(x)) || v.reduce((a, b) => a + b, 0) !== 100) return O.fail('sliders must sum to 100');
     p.sliders = v; C.applyEcoFloor(S, E, p); return O.ok();
   });
   // AI memory lives in E.ai; planners are pure, so they return patches that the main thread merges
   O.register('aiState', function (S, E, o) { E.ai = Object.assign(E.ai || {}, o.patch || {}); return O.ok(); });
   O.register('sliderLock', function (S, E, o) {
     const p = S.planets[o.planet]; if (!p || p.owner !== E.id) return O.fail('not your planet');
-    p.lock[o.index] = !!o.locked; return O.ok();
+    const idx = O.int(o.index, 0, 4); if (idx === null) return O.fail('bad slider');
+    p.lock[idx] = !!o.locked; return O.ok();
   });
   O.register('build', function (S, E, o) {
     const p = S.planets[o.planet]; if (!p || p.owner !== E.id) return O.fail('not your planet');
     if (o.design === -1) { if (!E.mods.stargate) return O.fail('no stargate technology'); if (p.stargate) return O.fail('already has a stargate'); p.build = -1; return O.ok(); }
-    if (!E.designs[o.design]) return O.fail('no such design');
-    p.build = o.design; return O.ok();
+    const d = O.int(o.design, 0, 5); if (d === null || !E.designs[d]) return O.fail('no such design');     // a non-integer key ('length') used to throw inside the turn
+    p.build = d; return O.ok();
   });
   O.register('rename', function (S, E, o) {
     const p = S.planets[o.planet]; if (!p || p.owner !== E.id) return O.fail('not your planet');
     const n = String(o.name || '').replace(/[^\w \-']/g, '').trim().slice(0, 11); if (!n) return O.fail('empty name');
     p.name = n; return O.ok();
   });
-  O.register('tax', function (S, E, o) { E.tax = Math.max(0, Math.min(200, Math.round(o.value))); return O.ok(); });
-  O.register('security', function (S, E, o) { E.security = Math.max(0, Math.min(200, Math.round(o.value))); return O.ok(); });
+  O.register('tax', function (S, E, o) { const v = O.num(o.value, 0, 200); if (v === null) return O.fail('bad value'); E.tax = Math.round(v); return O.ok(); });
+  O.register('security', function (S, E, o) { const v = O.num(o.value, 0, 200); if (v === null) return O.fail('bad value'); E.security = Math.round(v); return O.ok(); });
   O.register('transfer', function (S, E, o) {   // reserve → planet bank (planet can spend up to 2× its output with it)
     const p = S.planets[o.planet]; if (!p || p.owner !== E.id) return O.fail('not your planet');
-    const amt = Math.max(0, Math.min(Math.floor(o.amount | 0), E.bc)); E.bc -= amt; p.bank = (p.bank | 0) + amt; return O.ok({ moved: amt });
+    const want = O.num(o.amount, 0, 1e9); if (want === null) return O.fail('bad amount');
+    const amt = Math.max(0, Math.min(Math.floor(want), E.bc)); E.bc -= amt; p.bank = (p.bank | 0) + amt; return O.ok({ moved: amt });
   });
 });

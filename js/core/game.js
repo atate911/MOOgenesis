@@ -33,7 +33,7 @@
   };
 
   // ---- persistence --------------------------------------------------------------------------------------------------------------
-  G.saveSlot = slot => { if (!G.S) return false; const ok = M.Save.save(slot, G.S); if (ok) M.Bus.emit('saved', slot); return ok; };
+  G.saveSlot = slot => { if (!G.S) return false; const ok = M.Save.save(slot, G.S); M.Bus.emit(ok ? 'saved' : 'save:failed', slot); return ok; };
   G.autosave = () => G.saveSlot('auto');
   G.loadSlot = function (slot) {
     const S = M.Save.load(slot); if (!S) return false;

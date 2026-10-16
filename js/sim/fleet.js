@@ -76,10 +76,11 @@ MOO.def(function (M) {
   F.send = function (S, E, fromStar, toStar, counts) {
     const g = F.at(S, fromStar, E.id);
     if (!g) return O.fail('no fleet there');
-    if (fromStar === toStar) return O.fail('already there');
+    if (!S.stars[toStar] || fromStar === toStar) return O.fail(fromStar === toStar ? 'already there' : 'no such star');
+    counts = O.counts(counts, 6);                                       // exactly six non-negative ints: a negative count used to CREATE ships and delete the group
     let any = 0, withTanks = true, speed = 99;
     for (let i = 0; i < 6; i++) {
-      const n = Math.min(counts[i] | 0, g.ships[i]); counts[i] = n; if (n <= 0) continue;
+      const n = Math.min(counts[i], g.ships[i] | 0); counts[i] = n; if (n <= 0) continue;
       any += n; const st = stats(S, E, i);
       if (!st.tanks) withTanks = false;
       speed = Math.min(speed, st.warp);
@@ -143,6 +144,8 @@ MOO.def(function (M) {
   // ---- population transports (§6.2) -------------------------------------------------------------------------------------------------------
   F.canTransportTo = function (S, E, p, toStar) {
     const q = S.planets[toStar];
+    if (!q) return { ok: false, msg: 'no such planet' };
+    if (toStar === p.starId) return { ok: false, msg: 'that is this planet' };
     if (!E.explored[toStar]) return { ok: false, msg: 'unexplored' };
     if (q.owner < 0) return { ok: false, msg: 'transports cannot found colonies' };
     if (!F.canReach(S, E, toStar, false)) return { ok: false, msg: 'out of range' };
@@ -222,9 +225,9 @@ MOO.def(function (M) {
   O.register('trans', function (S, E, o) {
     const p = S.planets[o.planet];
     if (!p || p.owner !== E.id) return O.fail('not your planet');
-    if (!o.n || o.n <= 0) { p.trans = null; return O.ok(); }
+    const n = O.num(o.n, 0, 1e6); if (n === null || n <= 0) { p.trans = null; return O.ok(); }
     const chk = F.canTransportTo(S, E, p, o.to); if (!chk.ok) return O.fail(chk.msg);
-    p.trans = { to: o.to, n: Math.min(o.n | 0, Math.floor(p.pop / 2)) };
+    p.trans = { to: o.to, n: Math.min(Math.floor(n), Math.floor(p.pop / 2)) };
     return O.ok();
   });
   O.register('reloc', function (S, E, o) {

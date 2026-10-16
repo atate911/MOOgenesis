@@ -682,7 +682,7 @@ MOO.def(function (M) {
     const planet = t.kind === 'planet', halve = w.half || (C.CONFIG.oracleFix && u.sp.oracle && !bomb && !planet);
     const ab = halve ? Math.floor(t.absorb / 2) : t.absorb, allowed = w.stream ? Infinity : mult, disp = t.sp.disp > 0;
     let hits = 0, absorbed = 0, dealt = 0, kills = 0;
-    for (let i = 0; i < n && t.count > 0; i++) {
+    for (let i = 0; i < n && (t.count > 0 || (bomb && planet)); i++) {       // bombs keep falling on a planet whose bases are gone (collateral: population/factories)
       const roll = 1 + Math.floor(r.next() * 100);
       if (roll < miss) continue;
       hits += mult;
@@ -715,7 +715,7 @@ MOO.def(function (M) {
     ev.push({ type: 'bio-hit', target: t.id, popKilled: killed });
     logLine(B, u.name + ' drops ' + w.name + ': ' + killed + ' population killed');
     // research/03-verification #8: after the population step the ordinary bomb damage loop runs too, with damage = the weapon's minimum (1/2/3) minus the planet's absorb
-    if (P && acc && t.count > 0 && w.dmax > 0) {
+    if (P && acc && w.dmax > 0) {
       const bw = Object.assign({}, w, { kind: 'bomb', dmin: w.dmax, dmax: w.dmax, mul: 1, half: false, stream: false, shots: -1, numfire: n / Math.max(1, u.count * w.count) }), tmp = [];
       fireBeam(B, r, u, bw, wi, t, 0, true, false, acc, tmp);
       for (const e of tmp) if (e.type !== 'beam' && e.type !== 'miss') ev.push(e);
