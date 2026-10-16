@@ -1113,7 +1113,7 @@
   // @@TRACKS-BEGIN
   Track('title', {
     desc: 'Main theme — a slow, noble hymn for horns, men’s choir and strings that gathers into a full orchestral tutti with snare, bass drum and cymbals; space-opera weight',
-    bpm: 64, root: 'D', mode: 'minor', loopFrom: 'A1', trim: 1.2, tens: false,
+    bpm: 64, root: 'D', mode: 'minor', loopFrom: 'A1', trim: 2.34, tens: false,
     forms: [['A1', 'B', 'C', 'A2', 'E', 'C', 'A1', 'E'], ['A1', 'C', 'B', 'A2', 'C', 'E', 'A1', 'B', 'E']],
     alts: [{}, {'lead2': 'flutes', 'choir2': 'choirWomen'}],
     inst: { pad: 'strings', pad2: 'analog', bass: 'deep', lead: 'horn', lead2: 'strings', bell: 'glass', choir: 'ooh', choir2: 'aah', arp: 'strOst' },
@@ -1147,7 +1147,7 @@
 
   Track('galaxy4', {
     desc: 'Deep field — slow analogue pads under a high air pad, distant women’s voices, high strings that swell and fade, a celeste and harp as single points of light, a lone flute: the planetarium, in the Serrie manner',
-    bpm: 60, trim: 2.5, root: 'A', mode: 'lydian', loopFrom: 'A1', tens: false, mix: { bass: 0.6 }, fx: { dly: 2.2 },
+    bpm: 60, trim: 4.48, root: 'A', mode: 'lydian', loopFrom: 'A1', tens: false, mix: { bass: 0.6 }, fx: { dly: 2.2 },
     inst: { pad: 'analog', pad2: 'air', bass: 'deep', lead: 'flute', lead2: 'glass', bell: 'glass', arp: 'harp', choir: 'choirWomen', choir2: 'ooh' },
     ph: {
       S1: '5:4 | 8:4 | 7:4 | 5:4', S2: '6:4 | 8:2 9:2 | 8:4 | 5:4', S3: '10:4 | 9:4 | 8:2 7:2 | 5:4', S4: '5:2 8:2 | 7:3 6:1 | 5:4 | 3:4',
@@ -1196,7 +1196,7 @@
 
   Track('galaxy1', {
     desc: 'Calm exploration, wonder: airy flute, glassy bells and a floating lydian pad',
-    bpm: 70, trim: 1.1, root: 'G', mode: 'lydian', loopFrom: 'A1', fx: { dly: 2.0 },
+    bpm: 70, trim: 2.25, root: 'G', mode: 'lydian', loopFrom: 'A1', fx: { dly: 2.0 },
     inst: { pad: 'analog', pad2: 'air', bass: 'deep', lead: 'flute', lead2: 'glass', bell: 'glass', arp: 'vibes', choir: 'choirWomen' },
     ph: {
       W1: '5:3 8:1 | 7:2 5:2 | 6:3 5:1 | 4:2 3:2',
@@ -1223,7 +1223,7 @@
 
   Track('galaxy2', {
     desc: 'Calm exploration, patience: marimba ostinato, plucked reed melody, warm dorian pad',
-    bpm: 70, trim: 1.1, root: 'D', mode: 'dorian', loopFrom: 'A1', fx: { dly: 1.8 },
+    bpm: 70, trim: 1.97, root: 'D', mode: 'dorian', loopFrom: 'A1', fx: { dly: 1.8 },
     inst: { pad: 'warm', bass: 'deep', lead: 'reed', lead2: 'vibes', bell: 'vibes', arp: 'marimba' },
     ph: {
       P1: '5:1.5 6:.5 8:2 | 8:1.5 7:.5 6:2 | 5:2 3:2 | 4:1 5:1 6:2',
@@ -1247,7 +1247,7 @@
 
   Track('galaxy3', {
     desc: 'Calm exploration, determination: steady pulse, strings and a resolute horn theme',
-    bpm: 88, trim: 1.05, root: 'A', mode: 'minor', oct: 1, loopFrom: 'A1', fx: { dly: 1.5 },
+    bpm: 88, trim: 1.64, root: 'A', mode: 'minor', oct: 1, loopFrom: 'A1', fx: { dly: 1.5 },
     inst: { pad: 'strings', pad2: 'analog', bass: 'pulse', lead: 'horn', lead2: 'bell', bell: 'glass', arp: 'arp', choir: 'aah' },
     ph: {
       D1: '1:1.5 3:.5 5:1 3:1 | 6:1.5 5:.5 3:2 | 7:1.5 5:.5 2:2 | 1:3 r:1',
@@ -1272,7 +1272,7 @@
 
   Track('design', {
     desc: 'Technical, light: bubbling marimba and sequenced plucks over a springy bass',
-    bpm: 112, trim: 0.62, root: 'G', mode: 'major', loopFrom: 'A1',
+    bpm: 112, trim: 1.47, root: 'G', mode: 'major', loopFrom: 'A1',
     forms: [['A1', 'A2', 'B', 'C', 'A3', 'B2', 'D', 'E', 'A1', 'B', 'C', 'A2', 'D', 'B2', 'E', 'A3', 'C', 'E'], ['A1', 'B', 'A2', 'D', 'C', 'A3', 'B2', 'E', 'A1', 'C', 'B', 'A2', 'E', 'D', 'B2', 'A3', 'C', 'E']],
     inst: { pad: 'glassPad', bass: 'pulse', lead: 'marimba', lead2: 'vibes', bell: 'vibes', arp: 'seq', choir: 'ooh' },
     ph: {
@@ -1295,7 +1295,7 @@
 
   Track('research', {
     desc: 'Shimmering discovery: crystal bells, rising sequences and a glassy lydian wash',
-    bpm: 84, trim: 1.06, root: 'E', mode: 'lydian', loopFrom: 'A1',
+    bpm: 84, trim: 1.37, root: 'E', mode: 'lydian', loopFrom: 'A1',
     forms: [['A1', 'A2', 'B', 'C', 'A3', 'B2', 'E', 'C', 'A1', 'B', 'A2', 'B2', 'E', 'A3'], ['A1', 'B', 'A2', 'C', 'B2', 'E', 'A3', 'C', 'A1', 'A2', 'B', 'B2', 'E', 'A3']],
     inst: { pad: 'glassPad', bass: 'deep', lead: 'crystal', lead2: 'glass', bell: 'crystal', arp: 'shimmer', choir: 'eeh' },
     ph: {
@@ -1381,7 +1381,7 @@
 
   Track('gnn', {
     desc: 'Galactic News Network: a confident, upbeat broadcast bed with brass stabs and a bright ident theme',
-    bpm: 120, trim: 0.5, root: 'C', mode: 'major', loopFrom: 'A1',
+    bpm: 120, trim: 0.95, root: 'C', mode: 'major', loopFrom: 'A1',
     forms: [['A1', 'A2', 'B', 'C', 'A3', 'B2', 'D', 'E', 'A1', 'B', 'C', 'A2', 'D', 'B2', 'E', 'A3', 'C', 'A1', 'B', 'E'], ['A1', 'B', 'A2', 'D', 'C', 'A3', 'B2', 'E', 'A1', 'C', 'B', 'A2', 'E', 'D', 'B2', 'A3', 'A1', 'C', 'B', 'E']],
     inst: { pad: 'organ', bass: 'pulse', lead: 'synth', lead2: 'bell', arp: 'seq', bell: 'vibes' },
     ph: {
@@ -1403,7 +1403,7 @@
 
   Track('council', {
     desc: 'Galactic Council: grand ceremonial brass fanfare, hymn-like choir and timpani',
-    bpm: 72, trim: 0.91, root: 'Bb', mode: 'major', oct: 1, loopFrom: 'A1',
+    bpm: 72, trim: 1.53, root: 'Bb', mode: 'major', oct: 1, loopFrom: 'A1',
     forms: [['A1', 'A2', 'B', 'C', 'A3', 'B2', 'E', 'C', 'A1', 'B', 'E', 'A2', 'B2', 'E'], ['A1', 'B', 'A2', 'C', 'B2', 'E', 'A3', 'C', 'A1', 'A2', 'B', 'B2', 'E']],
     inst: { pad: 'organ', bass: 'deep', lead: 'horn', lead2: 'brass', arp: 'harp', bell: 'bell', choir: 'aah' },
     ph: {
@@ -1425,7 +1425,7 @@
   });
   Track('orion', {
     desc: 'Ancient and mysterious, awe: deep drones, metallic chimes and a double-harmonic melody',
-    bpm: 54, trim: 1.5, root: 'D', mode: 'dblHarm', loopFrom: 'A1',
+    bpm: 54, trim: 3.19, root: 'D', mode: 'dblHarm', loopFrom: 'A1',
     forms: [['A1', 'A2', 'B', 'C', 'A3', 'B', 'C', 'A1', 'A3'], ['A1', 'B', 'A2', 'C', 'A3', 'A1', 'B', 'C', 'A3']],
     inst: { pad: 'drone', bass: 'deep', lead: 'harp', lead2: 'chime', bell: 'chime', choir: 'ooh' },
     ph: {
@@ -1446,7 +1446,7 @@
 
   Track('antarans', {
     desc: 'Menacing and dissonant: tritone brass, cluster chords, whispers and metal hits in an unsettled 5/4',
-    bpm: 72, trim: 1.5, meter: 5, root: 'C#', mode: 'octaH', loopFrom: 'A1', lintMin: 0.7, tens: { x1: false },
+    bpm: 72, trim: 2.6, meter: 5, root: 'C#', mode: 'octaH', loopFrom: 'A1', lintMin: 0.7, tens: { x1: false },
     forms: [['A1', 'A2', 'B', 'C', 'A3', 'D', 'A1', 'B', 'C', 'A2', 'D', 'A3'], ['A1', 'B', 'A2', 'C', 'D', 'A3', 'A1', 'C', 'B', 'A2', 'A3', 'D']],
     inst: { pad: 'dark', bass: 'moog', lead: 'horn', lead2: 'brass', arp: 'seq', bell: 'chime', choir: 'uuh' },
     ph: {
@@ -1466,7 +1466,7 @@
 
   Track('victory', {
     desc: 'Triumphant: brass fanfares, rolling timpani and a soaring major theme',
-    bpm: 100, trim: 0.81, root: 'D', mode: 'major', loopFrom: 'A1',
+    bpm: 100, trim: 1.69, root: 'D', mode: 'major', loopFrom: 'A1',
     forms: [['A1', 'B', 'A2', 'C', 'B2', 'D', 'A3', 'C', 'A1', 'B', 'A2', 'D', 'B2', 'A3', 'C', 'A3'], ['A1', 'C', 'B', 'A2', 'D', 'B2', 'A3', 'A1', 'B', 'C', 'A2', 'B2', 'D', 'A3', 'C', 'A3']],
     inst: { pad: 'strings', bass: 'sub', lead: 'brass', lead2: 'bell', arp: 'arp', bell: 'glass', choir: 'aah' },
     ph: {
@@ -1490,7 +1490,7 @@
 
   Track('defeat', {
     desc: 'Somber defeat: slow falling lines, mourning strings and a lone bell',
-    bpm: 56, trim: 1.6, root: 'F', mode: 'minor', loopFrom: 'A1',
+    bpm: 56, trim: 2.73, root: 'F', mode: 'minor', loopFrom: 'A1',
     forms: [['A1', 'A2', 'B', 'C', 'A3', 'E', 'C', 'A1', 'E'], ['A1', 'B', 'A2', 'C', 'E', 'A3', 'C', 'A1', 'E']],
     inst: { pad: 'strings', bass: 'deep', lead: 'flute', lead2: 'bell', bell: 'glass', choir: 'uuh' },
     ph: {
@@ -1511,7 +1511,7 @@
   // ================================================================== diplomacy race themes (45-70 s loops)
   Track('race:alkari', {
     desc: 'Alkari: airy flute over harp-like plucks, soaring major pentatonic and wind chimes',
-    bpm: 88, trim: 1.08, root: 'G', mode: 'major', tens: false,
+    bpm: 88, trim: 1.98, root: 'G', mode: 'major', tens: false,
     forms: [['A', 'B', 'A2', 'A', 'B', 'A2', 'A', 'B', 'A2', 'A', 'B', 'A2', 'A', 'B', 'A2'], ['A', 'A2', 'B', 'A', 'A2', 'B', 'A', 'A2', 'B', 'A', 'A2', 'B', 'A', 'A2', 'B']],
     inst: { pad: 'airPad', bass: 'deep', lead: 'flute', lead2: 'chime', arp: 'kora', bell: 'chime' },
     ph: {
@@ -1529,7 +1529,7 @@
 
   Track('race:bulrathi', {
     desc: 'Bulrathi: deep stomping drums and low, heavy brass in D minor',
-    bpm: 76, trim: 0.81, root: 'D', mode: 'minor', tonic: 50, tens: false,
+    bpm: 76, trim: 1.45, root: 'D', mode: 'minor', tonic: 50, tens: false,
     forms: [['A', 'B', 'C', 'A', 'B', 'C', 'A', 'B', 'C', 'A', 'B', 'C', 'A', 'B', 'C'], ['A', 'C', 'B', 'A', 'C', 'B', 'A', 'C', 'B', 'A', 'C', 'B', 'A', 'C', 'B']],
     inst: { pad: 'dark', bass: 'deep', lead: 'horn', lead2: 'brass', bell: 'chime', choir: 'uuh' },
     ph: {
@@ -1545,7 +1545,7 @@
 
   Track('race:darlok', {
     desc: 'Darlok: eerie minor pads, whispering noise swells and plucked shadows',
-    bpm: 66, trim: 1.36, root: 'F#', mode: 'harmonic', tens: false,
+    bpm: 66, trim: 2.61, root: 'F#', mode: 'harmonic', tens: false,
     forms: [['A', 'B', 'A', 'B', 'A', 'B', 'A', 'B', 'A', 'B', 'A', 'B'], ['A', 'A', 'B', 'B', 'A', 'A', 'B', 'B', 'A', 'A', 'B', 'B']],
     inst: { pad: 'airPad', bass: 'deep', lead: 'pizz', lead2: 'flute', bell: 'chime', choir: 'uuh' },
     ph: {
@@ -1560,7 +1560,7 @@
 
   Track('race:human', {
     desc: 'Human: a noble orchestral-synth march with snare, strings and brass',
-    bpm: 108, trim: 0.78, root: 'F', mode: 'major', tens: false,
+    bpm: 108, trim: 1.02, root: 'F', mode: 'major', tens: false,
     forms: [['A', 'B', 'A2', 'C', 'A', 'B', 'A2', 'C', 'A', 'B', 'A2', 'C', 'A', 'B', 'A2', 'C', 'A', 'B', 'A2', 'C'], ['A', 'C', 'A2', 'B', 'A', 'C', 'A2', 'B', 'A', 'C', 'A2', 'B', 'A', 'C', 'A2', 'B', 'A', 'C', 'A2', 'B']],
     inst: { pad: 'strings', bass: 'sub', lead: 'horn', lead2: 'brass', arp: 'stab', bell: 'glass' },
     ph: {
@@ -1579,7 +1579,7 @@
 
   Track('race:klackon', {
     desc: 'Klackon: chittering insect clicks in whole-tone buzzing ostinati and skittering rhythms',
-    bpm: 132, trim: 0.96, root: 'C', mode: 'wholetone', tens: false,
+    bpm: 132, trim: 1.39, root: 'C', mode: 'wholetone', tens: false,
     forms: [['A', 'B', 'A2', 'B2', 'A', 'B', 'A2', 'B2', 'A', 'B', 'A2', 'B2', 'A', 'B', 'A2', 'B2', 'A', 'B', 'A2', 'B2', 'A', 'B', 'A2', 'B2'], ['A', 'B2', 'A2', 'B', 'A', 'B2', 'A2', 'B', 'A', 'B2', 'A2', 'B', 'A', 'B2', 'A2', 'B', 'A', 'B2', 'A2', 'B', 'A', 'B2', 'A2', 'B']],
     inst: { pad: 'glassPad', bass: 'pulseSyn', lead: 'seqSyn', lead2: 'marimba', arp: 'seqSyn', bell: 'vibes' },
     ph: {
@@ -1596,7 +1596,7 @@
 
   Track('race:meklar', {
     desc: 'Meklar: cold industrial sequencer arps, four-on-the-floor machine pulse and metal strikes',
-    bpm: 128, trim: 0.64, root: 'B', mode: 'minor', tens: false,
+    bpm: 128, trim: 0.96, root: 'B', mode: 'minor', tens: false,
     forms: [['A', 'B', 'A2', 'B2', 'A', 'B', 'A2', 'B2', 'A', 'B', 'A2', 'B2', 'A', 'B', 'A2', 'B2', 'A', 'B', 'A2', 'B2'], ['A', 'B2', 'A2', 'B', 'A', 'B2', 'A2', 'B', 'A', 'B2', 'A2', 'B', 'A', 'B2', 'A2', 'B', 'A', 'B2', 'A2', 'B']],
     inst: { pad: 'dark', bass: 'moogSyn', lead: 'synthSyn', lead2: 'seqSyn', arp: 'arpSawSyn', bell: 'bell' },
     ph: {
@@ -1613,7 +1613,7 @@
 
   Track('race:mrrshan', {
     desc: 'Mrrshan: tribal polyrhythmic percussion under a snaking phrygian-dominant reed line',
-    bpm: 112, trim: 0.68, root: 'G', mode: 'phrygDom', tens: false,
+    bpm: 112, trim: 1.34, root: 'G', mode: 'phrygDom', tens: false,
     forms: [['A', 'B', 'A2', 'C', 'A', 'B', 'A2', 'C', 'A', 'B', 'A2', 'C', 'A', 'B', 'A2', 'C', 'A', 'B', 'A2', 'C'], ['A', 'C', 'A2', 'B', 'A', 'C', 'A2', 'B', 'A', 'C', 'A2', 'B', 'A', 'C', 'A2', 'B', 'A', 'C', 'A2', 'B']],
     inst: { pad: 'dark', bass: 'moog', lead: 'reed', lead2: 'flute', arp: 'kora', bell: 'chime', choir: 'uuh' },
     ph: {
@@ -1628,7 +1628,7 @@
     ],
   });
 
-  Track('race:psilon', {
+  Track('race:psilon', { trim: 1.65,
     desc: 'Psilon: crystalline FM bells and glass-harmonica overtones in a cool lydian shimmer',
     bpm: 90, root: 'C', mode: 'lydian', oct: 1, tens: false,
     forms: [['A', 'B', 'A2', 'A', 'B', 'A2', 'A', 'B', 'A2', 'A', 'B', 'A2', 'A', 'B', 'A2'], ['A', 'A2', 'B', 'A', 'A2', 'B', 'A', 'A2', 'B', 'A', 'A2', 'B', 'A', 'A2', 'B']],
@@ -1644,7 +1644,7 @@
     ],
   });
 
-  Track('race:sakkra', { trim: 0.82,
+  Track('race:sakkra', { trim: 1.66,
     desc: 'Sakkra: hissing percussion and dry skins under a dorian-pentatonic kora line',
     bpm: 100, root: 'A', mode: 'dorian', oct: 1, tens: false,
     forms: [['A', 'B', 'A2', 'A', 'B', 'A2', 'A', 'B', 'A2', 'A', 'B', 'A2', 'A', 'B', 'A2', 'A', 'B', 'A2'], ['A', 'A2', 'B', 'A', 'A2', 'B', 'A', 'A2', 'B', 'A', 'A2', 'B', 'A', 'A2', 'B', 'A', 'A2', 'B']],
@@ -1662,7 +1662,7 @@
 
   Track('race:silicoid', {
     desc: 'Silicoid: vast resonant drones with slow metallic chimes and deep geologic pulses',
-    bpm: 50, trim: 1.45, root: 'C#', mode: 'minor', tens: false,
+    bpm: 50, trim: 2.54, root: 'C#', mode: 'minor', tens: false,
     forms: [['A', 'B', 'C', 'A', 'B', 'C', 'A', 'B', 'C', 'A', 'B', 'C', 'A', 'B', 'C', 'A', 'B', 'C'], ['A', 'C', 'B', 'A', 'C', 'B', 'A', 'C', 'B', 'A', 'C', 'B', 'A', 'C', 'B', 'A', 'C', 'B']],
     inst: { pad: 'drone', bass: 'deep', lead: 'chime', lead2: 'chime', bell: 'chime', choir: 'uuh' },
     ph: {
@@ -1681,7 +1681,7 @@
   // ================================================================== espionage (spy panels borrow the music, see js/ui/spyscenes.js)
   Track('spy', {
     desc: 'Espionage: noir intrigue — walking sub-bass, clock ticks and rim clicks, muted horn phrases, hushed pads in harmonic minor',
-    bpm: 94, trim: 1.35, root: 'C', mode: 'harmonic', loopFrom: 'A1', tens: false,
+    bpm: 94, trim: 1.87, root: 'C', mode: 'harmonic', loopFrom: 'A1', tens: false,
     forms: [['A1', 'A2', 'B', 'C', 'A3', 'E', 'C', 'A1', 'B', 'A2', 'E', 'A3', 'C', 'E', 'A1'], ['A1', 'B', 'A2', 'C', 'E', 'A3', 'A1', 'C', 'B', 'A2', 'E', 'A3', 'C', 'A1', 'E']],
     inst: { pad: 'dark', bass: 'deep', lead: 'horn', lead2: 'vibes', arp: 'pizz', bell: 'vibes', choir: 'uuh' },
     ph: {
