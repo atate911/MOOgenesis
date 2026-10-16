@@ -115,7 +115,9 @@
   }
   function paintFuneral(g, w, hh, t, R) {
     const Sc = M.Gfx && M.Gfx.Scenes, ok = Sc && Sc.defeat;
-    if (ok) { try { Sc.defeat.draw(g, w, hh, t, { race: R.T.race, kind: 'both' }); } catch (e) { g.fillStyle = '#12040a'; g.fillRect(0, 0, w, hh); } } else { g.fillStyle = '#12040a'; g.fillRect(0, 0, w, hh); }
+    let rc = null;
+    if (ok) { try { rc = Sc.defeat.draw(g, w, hh, t, { race: R.T.race, kind: 'both' }); } catch (e) { g.fillStyle = '#12040a'; g.fillRect(0, 0, w, hh); } } else { g.fillStyle = '#12040a'; g.fillRect(0, 0, w, hh); }
+    if (rc && rc.art) return;                                        // the illustrated ending carries the scene; no drawn procession over a photograph
     // the procession: flag bearer, four bearers with the coffin under the empire's banner, mourners with lanterns, marching down the slope
     const col = R.T.color, base = hh * 0.8, slope = 0.1, n = 12, sp = 22, gap = w * 0.055, u = hh * 0.05;
     g.save(); g.globalAlpha = 0.97;
