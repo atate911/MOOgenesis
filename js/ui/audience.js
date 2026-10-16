@@ -298,6 +298,36 @@
     g.strokeStyle = 'rgba(160,236,255,.42)'; g.lineWidth = Math.max(1.4, fw * 0.011); g.beginPath(); g.moveTo(X(0.19), Y(0.655)); g.bezierCurveTo(X(0.4), Y(0.64), X(0.5), Y(0.52), X(0.55), Y(0.36)); g.lineTo(X(0.64), Y(0)); g.stroke();
     g.restore();
   }
+  // Your envoy as the full-length race illustration (assets/art/races/race-<id>-figure): head-and-shoulders crop at the left, lit by the hall
+  // from the right, slightly out of focus and darkened so it sits in the plate with the ambassador. Falls back to the drawn silhouette.
+  function drawEnvoyArt(g, W, H, t) {
+    const WA = M.Gfx && M.Gfx.WorldArt; if (!WA || !WA.enabled) return false;
+    const me0 = G.player(); const im = WA.get(WA.race(me0 ? me0.race : 'human', 'figure')); if (!im) return false;
+    const iw = im.naturalWidth, ih = im.naturalHeight;
+    const cw = Math.round(W * 0.4), ch = H;                                             // the envoy occupies the left 40 %, feathered into the hall
+    const fh = H * 1.75, fw = fh * iw / ih;                                            // 2:3 figure plate: head at the upper left, cropped at the waist
+    const sway = Math.sin(t * 0.7) * W * 0.002, breathe = 1 + Math.sin(t * 1.25) * 0.003;
+    const x = -fw * 0.22 + sway, y = H * 0.05;
+    if (!A.envoyCv || A.envoyCv.width !== cw || A.envoyCv.height !== ch) { A.envoyCv = document.createElement('canvas'); A.envoyCv.width = cw; A.envoyCv.height = ch; }
+    const c = A.envoyCv, e = c.getContext('2d');
+    e.clearRect(0, 0, cw, ch);
+    try { e.filter = 'blur(1.4px) brightness(0.8) saturate(0.9)'; } catch (x2) { /* optional */ }
+    e.drawImage(im, x, y, fw * breathe, fh * breathe);
+    try { e.filter = 'none'; } catch (x2) { /* optional */ }
+    // the plate's studio black must not cut a hard edge into the hall: feather the right side and the bottom
+    e.globalCompositeOperation = 'destination-in';
+    const fx = e.createLinearGradient(0, 0, cw, 0); fx.addColorStop(0, 'rgba(0,0,0,1)'); fx.addColorStop(0.62, 'rgba(0,0,0,1)'); fx.addColorStop(1, 'rgba(0,0,0,0)');
+    e.fillStyle = fx; e.fillRect(0, 0, cw, ch);
+    const fy = e.createLinearGradient(0, ch * 0.55, 0, ch); fy.addColorStop(0, 'rgba(0,0,0,1)'); fy.addColorStop(1, 'rgba(0,0,0,.35)');
+    e.fillStyle = fy; e.fillRect(0, 0, cw, ch);
+    // the hall lights the envoy from the right: darker towards the frame edge, cool rim on the lit edge
+    e.globalCompositeOperation = 'source-atop';
+    const sh = e.createLinearGradient(0, 0, cw, 0); sh.addColorStop(0, 'rgba(10,14,30,.55)'); sh.addColorStop(0.55, 'rgba(10,14,30,.12)'); sh.addColorStop(1, 'rgba(120,200,255,.16)');
+    e.fillStyle = sh; e.fillRect(0, 0, cw, ch);
+    e.globalCompositeOperation = 'source-over';
+    g.drawImage(c, 0, 0);
+    return true;
+  }
   function fallbackScene(g, w, hh, t) {
     const gr = g.createRadialGradient(w * 0.62, hh * 0.45, 0, w * 0.62, hh * 0.45, Math.max(w, hh) * 0.7); gr.addColorStop(0, '#26347a'); gr.addColorStop(1, '#05071a');
     g.fillStyle = gr; g.fillRect(0, 0, w, hh);
@@ -310,7 +340,7 @@
     let ok = false;
     if (S && S.audience && S.audience.draw && A.race) { try { S.audience.draw(g, w, hh, t, { race: A.race, mood: A.mood, talking: A.talking, color: A.color }); ok = true; } catch (e) { if (!A.warned) { A.warned = 1; console.warn('[audience] scene failed', e); } } }
     if (!ok) fallbackScene(g, w, hh, t);
-    drawEmperor(g, w, hh, t, A.myColor, A.talking ? 1 : 0);
+    if (!drawEnvoyArt(g, w, hh, t)) drawEmperor(g, w, hh, t, A.myColor, A.talking ? 1 : 0);
     // materialise: scan-lines clear and the room brightens when the audience opens; "signal lost" when the ambassador is recalled
     const k = clamp((t - A.openT) / 1.1, 0, 1);
     if (k < 1) {

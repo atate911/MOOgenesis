@@ -213,7 +213,13 @@
   function makeBackdrop() {
     const i = st.info, key = i.kind + ':' + i.id + ':' + W + 'x' + H;
     if (key === bgKey && bg) return;
-    bgKey = key; bg = null;
+    bgKey = key; bg = null; st.artBg = false;
+    // photoreal system plate (assets/art/system/system-<colour>): the plate's own sun lights the scene from the top-left, so the procedural star is not drawn
+    try {
+      const WA = Gfx().WorldArt, path = WA && WA.enabled && WA.system ? WA.system(i.kind) : null, im = path ? WA.get(path) : null;
+      if (im) { bg = WA.canvas(path, Math.min(W, 2560), Math.min(H, 1440), { fx: 0.5, fy: 0.42, zoom: 1.12 }); st.artBg = true; return; }   // keep the plate's sun; our planet covers the plate's
+      if (path && !im && WA.whenReady) WA.whenReady(path, () => { if (st.info) { bgKey = ''; makeBackdrop(); geometry(); placeCaption(); } });   // plate still loading: rebuild when it lands
+    } catch (e) { /* optional */ }
     const gpu = glOk() && Gfx().GLSpace && Gfx().GLSpace.makeBackdrop, k = gpu ? Math.min(dpr, 1.5) : 1;      // the GPU renders the sky at screen resolution, the CPU one at CSS pixels
     const w = Math.max(64, Math.min(Math.round(W * k), gpu ? 2560 : 1600)), hh = Math.max(64, Math.round(w * H / W)), seed = 'sys' + i.id + i.kind;
     try {
@@ -224,11 +230,12 @@
   }
   function geometry() {
     const i = st.info, k = i.explored && i.p.type !== 'none' ? 0.84 + 0.16 * clamp(i.p.maxPop / 120, 0, 1) : 0.9;
-    const pr = Math.min(H * 0.4, W * 0.27) * k, px = W * 0.25, py = H * 0.8, sx = W * 0.86, sy = H * 0.15, sr = Math.min(H * 0.13, W * 0.09);
+    const pr = Math.min(H * 0.4, W * 0.27) * k * (st.artBg ? 1.18 : 1), px = W * (st.artBg ? 0.3 : 0.25), py = H * 0.8, sx = st.artBg ? W * 0.06 : W * 0.86, sy = st.artBg ? H * 0.12 : H * 0.15, sr = Math.min(H * 0.13, W * 0.09);
     const la = Math.atan2(sy - py, sx - px), base = { dpr, lightAngle: la, lightElev: 0.5, clouds: true, atmosphere: true, lights: true, cloudShadows: true };
     st.geo = { pr, px, py, sx, sy, sr, la, starOpts: { dpr }, optsGL: Object.assign({ spin: 0.018 }, base), optsCPU: Object.assign({ spin: 0.004 }, base) };
   }
   function drawStar(t) {
+    if (st.artBg) return;                                                              // the plate carries the sun
     const g = st.geo, kind = st.info.kind, Sp = Gfx().Space;
     // wide soft bloom over the whole scene
     try {
@@ -293,11 +300,11 @@
     const r = UI.fitCanvas(cv, { maxDpr: Math.max(1, Math.min(2, q, Math.sqrt(8.3e6 / Math.max(1, box.width * box.height)))) });
     W = r.w; H = r.h; dpr = r.dpr; ctx = r.ctx; sizeDirty = false;
     for (const tl of st.tiles) tl.sized = false;
-    if (st.info) { geometry(); makeBackdrop(); placeCaption(); }
+    if (st.info) { makeBackdrop(); geometry(); placeCaption(); }
   }
   function placeCaption() {                                           // "<Colour> star" label sits right under the glowing star
     const cap = el.querySelector('.sv-star'), g = st.geo;
-    if (cap && g) { cap.style.left = g.sx + 'px'; cap.style.top = (g.sy + g.sr * 1.3) + 'px'; }
+    if (cap && g) { if (st.artBg) { cap.style.left = (W * 0.05) + 'px'; cap.style.top = (H * 0.5) + 'px'; } else { cap.style.left = g.sx + 'px'; cap.style.top = (g.sy + g.sr * 1.3) + 'px'; } }   // under the plate's sun
   }
 
   UI.Screens.register('system', {
