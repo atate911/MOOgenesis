@@ -52,6 +52,12 @@ Versions follow `MAJOR.MINOR.PATCH`; the live version is the `VERSION` file.
   second reverb plane (a short bright stage for the melody, plucks, bells and drums; the hall for the beds) that dries up as a battle
   escalates, a whisper of tape saturation on the 2-bus, and on the exploration pieces long feeding-back dotted-eighth delays and a
   Gamba organ swell: a little Division Bell.
+  Third pass: every compressor's automatic makeup gain is compensated so stages only reduce and levels are predictable; dynamic mud
+  control on the 2-bus (a three-way crossover with the 160-450 Hz band compressed only when the beds pile up, the low band held even);
+  a transient stage on the drums, an exciter on the far choir, tempo-synced pre-delay on the hall, arpeggios ducking under the melody,
+  a slow sub floor under the planetarium pieces, the men's choir as the bed of the battle, council and war cues; the balance opened
+  (upper bass and low mids cut on the bus, bass, strings, pads and drums; the reverbs no longer carry low mids; air on top and on the
+  sides). `tools/audio-trims.js` turns a report into per-cue trims.
 - Symphonic re-orchestration and film-style flow. Every synth pluck, FM bell, pad, bass and drum-machine part in the score is now a
   recorded instrument: pizzicato string sections, marimba, glockenspiel, harp, oboe / clarinet / bassoon, contrabass, bass drum,
   snare, field drums, tambourine, claves, anvil, stick taps (the two machine races keep a little sequencer colour). The bell
