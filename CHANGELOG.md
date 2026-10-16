@@ -72,6 +72,9 @@ Versions follow `MAJOR.MINOR.PATCH`; the live version is the `VERSION` file.
   The choir sings instead of pads: the recorded onsets come through (short attacks), chords longer than a breath are sung as phrases of
   four to seven seconds with a small gap and a swell in each, singers spread by a few tens of milliseconds, every recorded semitone is
   kept so a repeated note alternates between takes (`alt`), and the exciter, Haas spread and bus chorus come off the choir strip.
+  The title is now a hymn for men's choir with the analogue synth around it and no drums (the horns soft behind the voices, a cello
+  counter-line); in the exploration pieces the choir is low and supportive, singing softly (`soft`: longer breaths, slower and lower
+  swells) in more sections but never forward.
 - Symphonic re-orchestration and film-style flow. Every synth pluck, FM bell, pad, bass and drum-machine part in the score is now a
   recorded instrument: pizzicato string sections, marimba, glockenspiel, harp, oboe / clarinet / bassoon, contrabass, bass drum,
   snare, field drums, tambourine, claves, anvil, stick taps (the two machine races keep a little sequencer colour). The bell
