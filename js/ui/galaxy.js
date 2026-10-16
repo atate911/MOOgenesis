@@ -22,6 +22,7 @@
     .gx-msg { pointer-events:auto; margin-left:auto; max-width:28rem; display:flex; flex-direction:column; gap:.3rem; }
     .gx-msg .m { padding:.3rem .7rem; background:rgba(8,12,34,.78); border-left:3px solid var(--brass); font-size:.9rem; }
     .gx-msg .m.bad { border-left-color:var(--rose); } .gx-msg .m.ok { border-left-color:var(--leaf); }
+    .gx-wait { margin-right:.8rem; font:500 .85rem var(--font-display); letter-spacing:.06em; color:var(--brass-hi); opacity:.9; white-space:nowrap; }
     .gx-busy { position:absolute; inset:0; z-index:20; display:none; align-items:center; justify-content:center; background:rgba(3,5,16,.45); backdrop-filter:blur(1.5px); }
     .gx-busy.on { display:flex; } .gx-busy .box { padding:1rem 2rem; font:400 1.4rem var(--font-display); color:var(--brass-hi); background:rgba(8,12,34,.9); border:1px solid var(--brass-lo); }
     .gx-busy .spin { display:inline-block; width:1.1rem; height:1.1rem; margin-right:.7rem; vertical-align:-.15rem; border:2px solid var(--brass-lo); border-top-color:var(--brass-hi); border-radius:50%; animation:gx-spin 1s linear infinite; }
@@ -74,13 +75,34 @@
     register(name, def) { panels[name] = def; },
     has: n => !!panels[n],
     current: () => (cur ? cur.name : null),
-    show(name, params) {
+    // A HELD panel is the turn's pending question (exploration/colonise card, pre-battle choice, battle result). While one is held nothing can replace it
+    // and the galaxy screen re-shows it on enter(): a replaced prompt is a turn that waits forever on a panel nobody can see (the "Year … spinner" freeze).
+    held: null,
+    hold(name, params, onDrop) {
+      if (UI.Side.held) { if (onDrop) { try { onDrop(); } catch (e) { console.error(e); } } return null; }     // the pipeline waits on ONE prompt: a second hold is a stale scene finishing late — settle it, keep the live one
+      const hd = { name, params, onDrop }; UI.Side.held = hd; UI.Side.showHeld(); return hd;
+    },
+    release(hd) { if (UI.Side.held === hd) UI.Side.held = null; },
+    showHeld() {
+      const hd = UI.Side.held; if (!hd) return false;
+      if (UI.Screens.current && UI.Screens.current.id !== 'galaxy') { if (UI.Screens.has('galaxy')) UI.Screens.go('galaxy'); return true; }     // enter() shows it
+      if (hd.params && hd.params.star !== undefined && hd.params.star >= 0 && UI.Galaxy.map) { try { UI.Galaxy.map.centerOn(hd.params.star, { animate: true }); } catch (e) { /* optional */ } }
+      UI.Side.show(hd.name, hd.params, hd);
+      return true;
+    },
+    drop() { const hd = UI.Side.held; UI.Side.held = null; if (hd && hd.onDrop) { try { hd.onDrop(); } catch (e) { console.error(e); } } },
+    show(name, params, _hd) {
       if (!host) return;
+      if (UI.Side.held && _hd !== UI.Side.held) return;                      // the prompt stays; the player may still click around the map (selection highlights, no panel change)
       const def = panels[name]; if (!def) { console.warn('no side panel', name); return; }
       if (cur && cur.def.dispose) { try { cur.def.dispose(); } catch (e) { console.error(e); } }
       UI.clear(host);
       cur = { name, params: params || {}, def };
-      def.render(host, ctx(cur.params));
+      try { def.render(host, ctx(cur.params)); }
+      catch (e) {
+        console.error('[side panel ' + name + ']', e);
+        if (name !== 'star' && name !== 'colony') { cur = null; UI.clear(host); try { UI.Galaxy.showDefault(); } catch (e2) { console.error(e2); } }
+      }
     },
     refresh() { if (cur && cur.def.refresh && host) { try { cur.def.refresh(host, ctx(cur.params)); } catch (e) { console.error('[side refresh]', e); } } },
     title(star, owner) {                    // common header: planet/star name + owner banner
@@ -93,7 +115,9 @@
   let el, mapWrap, hudEl, msgEl, busyEl, map = null, offs = [];
   const NAV = [['Game', 'g', () => UI.gameMenu && UI.gameMenu()], ['Design', 'd', () => go('design')], ['Fleet', 'f', () => go('fleets')], ['Map', 'm', () => go('mapoverview')],
     ['Races', 'r', () => go('races')], ['Planets', 'p', () => go('planets')], ['Tech', 't', () => go('tech')]];
-  function go(screen, params) { if (UI.Screens.has(screen)) UI.Screens.go(screen, Object.assign({ from: 'galaxy' }, params)); else UI.toast('That screen is not built yet', 'warn'); }
+  // while a turn is processing the other screens stay closed: a pending card/scene must keep the player's attention, and the state is mid-turn
+  const turnLocked = () => { if (!G.busy) return false; if (G.pending) UI.toast('Answer the prompt in the side panel first (' + G.pending.type + ')', 'warn', 2200); else UI.toast('The turn is still being processed', 'warn', 1800); return true; };
+  function go(screen, params) { if (turnLocked()) return; if (UI.Screens.has(screen)) UI.Screens.go(screen, Object.assign({ from: 'galaxy' }, params)); else UI.toast('That screen is not built yet', 'warn'); }
   UI.Galaxy = {
     map: null, go, pick: null,                    // pick: temporary star-click handler used by Reloc / Trans / fleet destination selection
     refresh() { if (!el || !G.S) return; if (map) { map.setState(G.S); map.refresh(); } updateHud(); UI.Side.refresh(); },
@@ -129,10 +153,30 @@
     if (!G.S || G.busy) return;
     if (UI.modalOpen()) return;
     if (UI.Galaxy.pendingSend && UI.Galaxy.pendingSend() === false) return;      // a queued fleet move is accepted automatically (an invalid one stops the turn with its message)
-    if (M.Settings.get('confirmEndTurn')) { const ok = await UI.confirm('End the turn?'); if (!ok) return; }
+    if (M.Settings.get('confirmEndTurn')) {
+      const S = G.S, E = G.player(), issues = [];
+      for (const p of S.planets) if (p.owner === E.id && p.sliders[0] > 0 && !(p.build === -1 || (p.build >= 0 && E.designs[p.build]))) issues.push(p.name + ' spends on ships with no design to build');
+      if (E.research && E.research.slider.every(v => !v) && (E.research.total | 0) > 0) issues.push('no research field is funded');
+      if (issues.length) { const ok = await UI.confirm(h('div', h('p', 'End the turn anyway?'), h('ul', issues.slice(0, 6).map(t => h('li', t)))), { title: 'Before you end the turn' }); if (!ok) return; }
+    }
     UI.Galaxy.busy(true, 'Year ' + Q.year(G.S) + ' …');
-    const off = M.Bus.on('turn:waiting', type => { if (!(UI.Screens.current && UI.Screens.current.id === 'galaxy' && !UI.modalOpen())) { UI.Galaxy.floatSkip(); return; } UI.Galaxy.busy(true, 'Year ' + Q.year(G.S) + ' … waiting on “' + type + '”'); UI.Galaxy.skipBtn(true); });
-    try { await G.endTurn(); } finally { if (typeof off === 'function') off(); UI.Galaxy.busy(false); }
+    // 10 s without an answer is normal while the player reads a scene (combat, GNN, council, audience, landing), a modal or a held side-panel prompt:
+    // those all carry their own controls, so the Skip escape is offered ONLY when nothing visible can answer the pending step (a genuinely stuck turn).
+    let lateSkip = 0;
+    const off = M.Bus.on('turn:waiting', type => {
+      const onGalaxy = UI.Screens.current && UI.Screens.current.id === 'galaxy';
+      if (!onGalaxy || UI.modalOpen() || UI.Side.held) {
+        // a scene or a prompt is up and carries its own controls; only if the SAME step is still pending much later is the floating Skip offered there (a hung scene must not be a dead end)
+        clearTimeout(lateSkip);
+        const p = G.pending;
+        lateSkip = setTimeout(() => { if (G.busy && G.pending === p) UI.Galaxy.floatSkip(); }, 45000);
+        return;
+      }
+      UI.Galaxy.busy(true, 'Year ' + Q.year(G.S) + ' … waiting on “' + type + '”'); UI.Galaxy.skipBtn(true);
+    });
+    try { await G.endTurn(); }
+    catch (e) { UI.toast('The turn could not be completed: ' + (e && e.message || e) + '. Load a save or report this.', 'bad', 12000); }
+    finally { if (typeof off === 'function') off(); clearTimeout(lateSkip); UI.Galaxy.busy(false); }
     if (UI.Screens.current && UI.Screens.current.id !== 'galaxy' && G.S && !(G.last && G.last.over)) UI.Screens.go('galaxy');
     UI.Galaxy.refresh();
     if (G.S) { const me = G.player(); if (me.alive) UI.Galaxy.selectStar(G.sel.star >= 0 ? G.sel.star : me.capital, { keepPanel: false }); }
@@ -140,6 +184,7 @@
 
   // ---- hotkeys (research/06 §4.6) ------------------------------------------------------------------------------------------------------------------
   function cycleColony(dir, pred) {
+    if (G.busy) return;
     const S = G.S, mine = S.planets.filter(p => p.owner === S.playerId && (!pred || pred(p)));
     if (!mine.length) return;
     let i = mine.findIndex(p => p.starId === G.sel.star); i = (i + dir + mine.length) % mine.length;
@@ -154,7 +199,7 @@
     offs.push(UI.bindKey('F2', () => cycleColony(-1), scr)); offs.push(UI.bindKey('F3', () => cycleColony(1), scr));
     const withShips = p => !!M.Sim.Fleet.at(G.S, p.starId, G.S.playerId);
     offs.push(UI.bindKey('F4', () => cycleColony(1, withShips), scr)); offs.push(UI.bindKey('F5', () => cycleColony(-1, withShips), scr));
-    offs.push(UI.bindKey('F10', () => { if (G.saveSlot('auto')) UI.toast('Game saved', 'ok'); }, scr));
+    offs.push(UI.bindKey('F10', () => { if (G.saveSlot('auto')) UI.toast('Game saved', 'ok'); else UI.toast('The game could not be saved (browser storage full or blocked). Use Game › Save › Export to a file.', 'bad', 8000); }, scr));
     offs.push(UI.bindKey('Escape', () => { if (UI.gameMenu) UI.gameMenu(); }, scr));
     offs.push(UI.bindKey('Home', () => { if (map) map.centerOn(G.player().capital, { animate: true }); }, scr));
     offs.push(UI.bindKey('c', () => { if (map && G.sel.star >= 0) map.centerOn(G.sel.star, { animate: true }); }, { screen: 'galaxy' }));
@@ -167,15 +212,27 @@
       busyEl = h('div.gx-busy', h('div.box'));
       host = h('div.gx-sidebody');
       const side = h('aside.gx-side', h('div.panel', host));
-      const bar = h('nav.gx-bar',
-        NAV.map(([name, key, fn]) => UI.button(name, fn, { kbd: key.toUpperCase() })),
-        h('span.gx-spacer'),
-        UI.button('Next turn', () => endTurn(), { primary: true, big: true, kbd: 'N' }));
+      const navBtns = NAV.map(([name, key, fn]) => UI.button(name, fn, { kbd: key.toUpperCase() }));
+    const nextBtn = UI.button('Next turn', () => endTurn(), { primary: true, big: true, kbd: 'N' });
+    const bar = h('nav.gx-bar', navBtns, h('span.gx-spacer'), nextBtn);
+    const waitEl = h('span.gx-wait');
+    bar.insertBefore(waitEl, nextBtn);
+    let waitTimer = 0;
+    const WAIT_LABEL = { explore: 'a scout report', colonize: 'the colony decision', battles: 'a battle', techChoice: 'a research choice', tech: 'a breakthrough', gnn: 'the news', council: 'the Council vote', councilResult: 'the Council ruling', diplomacy: 'an audience', ground: 'a ground battle', bombardPrompt: 'the bombard decision', bombard: 'the bombardment', event: 'an event', spyStealChoice: 'the spy choice', spySabotageChoice: 'the sabotage choice', aiPlan: 'the other empires', built: 'the shipyards', notice: 'a report' };
+    const paintWait = () => { const p = G.pending; waitEl.textContent = !G.busy ? '' : p ? 'Waiting for ' + (WAIT_LABEL[p.type] || p.type) + '…' : 'Turn in progress…'; };
+    M.Bus.on('turn:processing', on => {
+      navBtns.slice(1).forEach(b => b.classList.toggle('turn-locked', !!on)); nextBtn.classList.toggle('turn-locked', !!on);     // "Game" (menu) stays usable; its Save/Load/Quit are gated separately
+      clearInterval(waitTimer); waitTimer = on ? setInterval(paintWait, 250) : 0; paintWait();
+    });
       el = h('div.gx', mapWrap, side, bar);
       root.appendChild(el);
       mapWrap.appendChild(h('div.gx-top', hudEl, msgEl)); mapWrap.appendChild(busyEl);
       bindKeys();
       M.Bus.on('state', () => { if (UI.Screens.current && UI.Screens.current.id === 'galaxy') { updateHud(); UI.Side.refresh(); } });
+      M.Bus.on('turn:aborted', () => UI.Side.drop()); M.Bus.on('turn:skipped', () => UI.Side.drop());    // the prompt is moot: let it resolve and go
+      let saveWarned = false;                                                                               // a silently failing autosave used to be discovered only at the Save screen
+      M.Bus.on('save:failed', slot => { if (slot !== 'auto' || saveWarned) return; saveWarned = true; UI.toast('Autosave failed: browser storage is full or blocked. Export a save file from Game › Save.', 'bad', 10000); });
+      M.Bus.on('saved', slot => { if (slot === 'auto') saveWarned = false; });
     },
     enter() {
       if (!G.S) { UI.Screens.go('menu'); return; }
@@ -184,9 +241,14 @@
         map.on('selectStar', id => { if (UI.Galaxy.pick) UI.Galaxy.pick(id); else UI.Galaxy.selectStar(id); });
         map.on('dblStar', id => { G.sel.star = id; if (UI.Screens.has('system')) UI.Screens.go('system', { star: id, from: 'galaxy' }); });
         map.on('selectFleet', fid => { G.sel.fleet = fid; const f = G.S.fleets.find(x => x.id === fid); if (f && f.owner === G.S.playerId) UI.Side.show(f.star >= 0 ? 'fleetDeploy' : 'fleetInfo', { star: f.star, fleet: fid }); else if (f) UI.Side.show('fleetInfo', { fleet: fid }); });
-        map.on('moveOrder', o => UI.Side.show('fleetDeploy', { star: G.S.fleets.find(f => f.id === o.fleetId).star, dest: o.toStar }));
+        map.on('moveOrder', o => {
+          const f = G.S.fleets.find(x => x.id === o.fleetId); if (!f || f.star < 0 || f.owner !== G.S.playerId) return;
+          if (UI.Side.current() === 'fleetDeploy' && UI.Galaxy.pick) { UI.Galaxy.pick(o.toStar); return; }      // the panel is open with the player's own counts: just set the destination
+          UI.Side.show('fleetDeploy', { star: f.star, dest: o.toStar, send: true });                              // otherwise a right-click is "send the fleet there"
+        });
       }
       UI.Galaxy.refresh();
+      if (UI.Side.held) { UI.Side.showHeld(); return; }                                    // back from another screen while the turn waits on a prompt: the prompt, not the default panel
       const star = G.sel.star >= 0 ? G.sel.star : G.player().capital;
       if (map) map.centerOn(star, { animate: false });
       UI.Galaxy.selectStar(star);

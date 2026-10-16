@@ -19,6 +19,11 @@
 //                        weapon.  OFF: the newest item is a candidate too.  Armor and specials are never windowed.  (Unverified against the original binary — keep flagged.)
 //   designScrapCounter   [false] §5.2 / 1oom "BUG this could be a non-non0 ship design": scrapping an aged design with NO ships still lowers the "designs with ships" counter, which can end the
 //                        aging loop early.  OFF: the counter only drops when the scrapped design held ships.
+// FIXES (AI.FIXES.<name>; true = fixed (default), false = original; aiClassic turns them off — outside the quirk table because tools/rules/83-balance pins that one to REPORT.md)
+//   designKeepFleet      [true]  the original scraps LIVE fleets wholesale: the age scrap takes any aged design whatever it flies and the forced removal (> 4 designs with ships)
+//                        takes the OLDEST design (measured: 1,938 of ~5,500 ships built over a 200-turn large game were scrapped by the AI itself, single events of 98 of 697).
+//                        Fixed: the age scrap skips a design flying more than 10 % of the empire's hulls and the forced removal takes the design with the lowest
+//                        ships × cost (a slot is still always freed: with six designs either one flies nothing or the cheapest loss goes).  false reproduces the original.
 //   (not reproduced, no flag: the original's compact array shifts after a scrap so the loop skips the next design — irrelevant with fixed slots; the original's over-filled weapon counts
 //    (101–141 % of what fits) — the sim's `design` order rejects negative free space, so counts are clamped to what fits; reserve tanks / the forced colony Laser are only added when they fit.)
 //
@@ -29,6 +34,7 @@ MOO.def(function (M) {
   AI.QUIRKS = AI.QUIRKS || {};
   const QDEF = { designExcludeNewest: true, designScrapCounter: false };
   for (const q in QDEF) if (AI.QUIRKS[q] === undefined) AI.QUIRKS[q] = QDEF[q];
+  AI.FIXES = AI.FIXES || {}; if (AI.FIXES.designKeepFleet === undefined) AI.FIXES.designKeepFleet = true;
 
   const COLONY = 0, FIGHTER = 1, BOMBER = 2;                                  // the original's shiptype
   const HULL_TBL = [0, 1, 1, 1, 2, 2, 2, 2, 2, 3, 3, 3];
@@ -265,11 +271,13 @@ MOO.def(function (M) {
 
     // 3. roles, aging, one forced removal
     let roles = detectRoles(V, order);
+    const keepLive = ctx.fix('designKeepFleet'), hulls = total(ships);
     let non0 = 0; for (const s of order) if (ships[s] !== 0) non0++;
     for (const s of order.slice()) {
       if (non0 <= 1) break;
       const age = S.year - dy[s];
       if (order.length > 1 && ((S.year < 100 && age > 50) || (S.year >= 100 && age > 100))) {
+        if (keepLive && ships[s] * 10 > hulls) continue;                                            // (fixed) a design flying more than 10 % of the empire's hulls is never aged out
         const had = ships[s] !== 0;
         scrap(s);
         if (had || classicCount) non0--;
@@ -277,8 +285,10 @@ MOO.def(function (M) {
     }
     non0 = 0; for (const s of order) if (ships[s] !== 0) non0++;
     let rem = -1;
-    if (non0 > 4) { let oldest = 0xffff; for (const s of order) if (dy[s] < oldest) { oldest = dy[s]; rem = s; } }
-    else if (order.length > 1) for (const s of order) if (ships[s] === 0) { rem = s; break; }
+    if (non0 > 4) {
+      if (keepLive) { let best = Infinity; for (const s of order) { const v = ships[s] * ctx.designStats(s).cost; if (v < best) { best = v; rem = s; } } }   // (fixed) the cheapest loss: fewest hulls × cost, ties → oldest
+      else { let oldest = 0xffff; for (const s of order) if (dy[s] < oldest) { oldest = dy[s]; rem = s; } }                                               // original: the oldest, however many ships it has
+    } else if (order.length > 1) for (const s of order) if (ships[s] === 0) { rem = s; break; }
     if (rem >= 0 && order.length > 1) scrap(rem);
     roles = detectRoles(V, order);
     // 4. refill the six slots: first missing role colony → bomber → fighter

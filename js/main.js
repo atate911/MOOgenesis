@@ -12,12 +12,16 @@
     // adaptive quality + worker pool (both optional accelerators; the game runs without them)
     try { M.Perf.start(); } catch (e) { console.warn('perf start failed', e); }
     setTimeout(() => { try { M.Workers.init(); } catch (e) { console.warn('workers init failed', e); } }, 400);
-    // pre-compile the WebGL2 shader programs after the first frame so the first use does not hitch (all optional; the Canvas2D paths work without them)
-    setTimeout(() => {
-      for (const k of ['GLSpace', 'GLFx', 'GLPlanets']) {
-        try { const g = M.Gfx && M.Gfx[k]; if (g && g.supported && g.supported() && g.warm) g.warm(); } catch (e) { console.warn(k + ' warm-up failed', e); }
-      }
-    }, 250);
+    // pre-compile the WebGL2 shader programs in the background so the first use does not hitch (all optional; the Canvas2D paths work
+    // without them). The three warm-ups are staggered over idle callbacks and each one only QUEUES work (GL.precompile / idle slices):
+    // nothing here blocks a frame, and a renderer that needs a program before it is linked falls back to Canvas2D for that call.
+    const idle = (fn, t) => (typeof requestIdleCallback === 'function' ? requestIdleCallback(fn, { timeout: t }) : setTimeout(fn, 120));
+    const warms = [['GLSpace', { vortex: false }], ['GLFx', { async: true }], ['GLPlanets', undefined]];
+    idle(function nextWarm() {
+      const w = warms.shift(); if (!w) return;
+      try { const g = M.Gfx && M.Gfx[w[0]], GL = M.Gfx && M.Gfx.GL; if (g && g.warm && GL && GL.supported && GL.supported()) g.warm(w[1]); } catch (e) { console.warn(w[0] + ' warm-up failed', e); }
+      idle(nextWarm, 1500);
+    }, 2000);
 
     const unlock = () => {
       try { if (M.Audio && M.Audio.init) M.Audio.init(); } catch (e) { console.warn('audio init failed', e); }

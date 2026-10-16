@@ -8,6 +8,10 @@
 # the live site and flips back automatically if it is not serving the new
 # release. Old releases are kept (newest 5) for scripts/rollback.sh.
 # Never touches the nginx/Caddy site conf, so certbot's edits survive upgrades.
+# The operator scripts, deploy templates, systemd units and VERSION are
+# refreshed even when the game files are unchanged. Refreshing renames new
+# files over the old ones (moo_install_scripts), so running this script from
+# /opt/moogenesis/scripts — where it replaces itself — is safe.
 set -euo pipefail
 
 INSTALL_ROOT="/opt/moogenesis"
@@ -56,6 +60,22 @@ done
     || die "Cannot find the checkout. Pass --repo /path/to/MOOgenesis (or run from inside it)."
 DOMAIN="$(moo_conf_get "${INSTALL_ROOT}" domain)"; DOMAIN="${DOMAIN:-$MOO_DEFAULT_DOMAIN}"
 
+# Operator scripts, deploy templates, systemd units and VERSION come from the
+# checkout too; they are refreshed on every run, including a no-op one, so a
+# commit that only touches them is still installed.
+refresh_operator_files() {
+    step "Refreshing operator scripts"
+    moo_install_scripts "${REPO_DIR}" "${INSTALL_ROOT}"
+    moo_conf_set "${INSTALL_ROOT}" repo "$REPO_DIR"
+    local changed u
+    changed=$(moo_refresh_units "${REPO_DIR}" "${INSTALL_ROOT}" refresh) || warn "Could not refresh the systemd units"
+    if [[ -n "$changed" ]]; then
+        systemctl daemon-reload
+        for u in $changed; do ok "Refreshed ${u}"; done
+    fi
+    ok "Scripts, deploy templates and VERSION updated"
+}
+
 if $DO_PULL; then
     step "Updating the checkout"
     # The checkout may be owned by the operator; git refuses root on foreign
@@ -89,9 +109,10 @@ echo    "   Repo : ${REPO_DIR}"
 
 if [[ -n "$OLD_REL" && "$FORCE" != true ]]; then
     NEW_HASH="$(moo_tree_hash "${REPO_DIR}")"
-    OLD_HASH="$(moo_tree_hash "${INSTALL_ROOT}/releases/${OLD_REL}")"
+    OLD_HASH="$(moo_release_hash "${INSTALL_ROOT}/releases/${OLD_REL}")"
     if [[ -n "$NEW_HASH" && "$NEW_HASH" == "$OLD_HASH" ]]; then
-        ok "Already up to date — the live files are identical to the checkout (use --force to redeploy anyway)."
+        refresh_operator_files
+        ok "Already up to date — the live game files are identical to the checkout (use --force to redeploy anyway)."
         exit 0
     fi
 fi
@@ -131,26 +152,12 @@ if ! $HEALTHY; then
 fi
 ok "Serving ${REL}"
 
-step "Refreshing operator scripts"
-cp "${REPO_DIR}/scripts/"*.sh "${INSTALL_ROOT}/scripts/"
-chmod 755 "${INSTALL_ROOT}/scripts/"*.sh
-mkdir -p "${INSTALL_ROOT}/deploy"
-cp -a "${REPO_DIR}/deploy/." "${INSTALL_ROOT}/deploy/"
-cp "${REPO_DIR}/VERSION" "${INSTALL_ROOT}/VERSION"
-moo_conf_set "${INSTALL_ROOT}" repo "$REPO_DIR"
-for u in moogenesis-doctor.service moogenesis-doctor.timer; do
-    if [[ -f "/etc/systemd/system/${u}" && -f "${REPO_DIR}/systemd/${u}" ]]; then
-        sed "s|/opt/moogenesis|${INSTALL_ROOT}|g" "${REPO_DIR}/systemd/${u}" > "/tmp/${u}.new"
-        if ! diff -q "/tmp/${u}.new" "/etc/systemd/system/${u}" >/dev/null; then
-            mv "/tmp/${u}.new" "/etc/systemd/system/${u}"; systemctl daemon-reload; ok "Refreshed ${u}"
-        else rm -f "/tmp/${u}.new"; fi
-    fi
-done
-ok "Scripts and VERSION updated"
+refresh_operator_files
 
 moo_prune "${INSTALL_ROOT}"
 echo
 echo -e "${GREEN}${BOLD}   Upgrade complete: v${OLD_VERSION} → v${NEW_VERSION}  (${REL})${NC}"
-echo    "   Players pick up the new files on their next page load (no-cache + ETag)."
+echo    "   Players pick up the new files on their next page load (index.html and js/manifest.js are no-cache;"
+echo    "   the new build id on every css/js URL bypasses anything cached)."
 echo    "   Undo with: sudo bash ${INSTALL_ROOT}/scripts/rollback.sh"
 echo

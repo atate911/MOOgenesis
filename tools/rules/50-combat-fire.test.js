@@ -311,9 +311,10 @@ module.exports = function (M, t) {
     B = F.arena({ fleet: [{ draft: F.LASER(1), n: 1 }] }, { fleet: [{ draft: mk('doom-virus'), n: 600 }] }, { planet: { bases: 1, pop: 5000, antidote: 1 }, planetSide: 0, seed: 'bio2' });
     F.activate(B, 2); F.place(B, 2, 2, 3);
     const ev = C.act(B, 2, { type: 'fire', target: 0 });
-    t.eq(ev.find(e => e.type === 'bio-hit').popKilled, B.planet.popKilled);
-    t.near(B.planet.popKilled / 600, 1 / 3, 0.07);
-    t.eq(B.planet.bio, B.planet.popKilled);
+    const bioKilled = ev.find(e => e.type === 'bio-hit').popKilled;
+    t.ok(bioKilled <= B.planet.popKilled, 'the bomb step that follows the spores keeps falling once the last base is gone and adds its own collateral kills');
+    t.near(bioKilled / 600, 1 / 3, 0.07);
+    t.eq(B.planet.bio, bioKilled);
     B = F.arena({ fleet: [{ draft: F.LASER(1), n: 1 }] }, { fleet: [{ draft: mk('bio-terminator'), n: 30 }] }, { planet: { bases: 1, pop: 5000, antidote: 0 }, planetSide: 0, seed: 'bio3' });
     F.activate(B, 2); F.place(B, 2, 2, 3);
     C.act(B, 2, { type: 'fire', target: 0 });

@@ -7,7 +7,7 @@
     root * @ROOT@/current
     encode zstd gzip
 
-    # Never serve dotfiles.
+    # Never serve dotfiles (.treehash etc.).
     @dotfiles path_regexp dot ^/\.
     handle @dotfiles {
         respond 404
@@ -15,12 +15,35 @@
 
     # version.txt is how install/upgrade/doctor verify WHICH release is live.
     handle /version.txt {
-        header Cache-Control "no-store"
+        header {
+            Cache-Control "no-store"
+            X-Content-Type-Options "nosniff"
+            Referrer-Policy "strict-origin-when-cross-origin"
+            X-Frame-Options "SAMEORIGIN"
+        }
         file_server
     }
 
-    # Files are not fingerprinted, so make browsers revalidate (ETag/304) instead
-    # of risking a stale js/ file next to a new index.html after an upgrade.
+    # Caching. Each release stamps a build id into js/manifest.js, and
+    # js/loader.js appends ?v=<build id> to every css/js URL it loads. Only such
+    # fingerprinted URLs are cached for long: a new release means new URLs.
+    @fingerprinted {
+        path /js/* /css/* /assets/*
+        not path /js/manifest.js /js/loader.js
+        query v=*
+    }
+    handle @fingerprinted {
+        header {
+            Cache-Control "public, max-age=31536000, immutable"
+            X-Content-Type-Options "nosniff"
+            Referrer-Policy "strict-origin-when-cross-origin"
+            X-Frame-Options "SAMEORIGIN"
+        }
+        file_server
+    }
+
+    # Everything else (index.html, js/manifest.js, js/loader.js, un-fingerprinted
+    # assets) is revalidated on every load (no-cache + ETag → 304).
     handle {
         header {
             Cache-Control "no-cache"

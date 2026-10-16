@@ -448,10 +448,10 @@
       if (b < 0 || v1 < 0.004) continue;
       const u = 1 - Math.exp(-1.7 * v1);
       const edge = Math.exp(-Math.pow((u - 0.27) / 0.05, 2));
-      let a = (0.17 * sstep(0.04, 0.5, u) + 0.07 * sstep(0.55, 0.95, u) + 0.3 * edge) * strength;
+      let a = (0.13 * sstep(0.04, 0.5, u) + 0.06 * sstep(0.55, 0.95, u) + 0.11 * edge) * strength;        // a soft tint with a faint contour, not a glowing ring
       const cont = v2 / v1; if (cont > 0.5) a *= 1 - 0.55 * sstep(0.5, 0.95, cont);
       if (a < 0.002) continue;
-      const col = empires[b].rgb, j = i * 4, br = 1 + 0.35 * edge;
+      const col = empires[b].rgb, j = i * 4, br = 1 + 0.15 * edge;
       d[j] = Math.min(255, col[0] * br); d[j + 1] = Math.min(255, col[1] * br); d[j + 2] = Math.min(255, col[2] * br); d[j + 3] = clamp(a, 0, 1) * 255;
     }
     g.putImageData(img, 0, 0);
@@ -902,6 +902,7 @@
       if (!opts.keys || !isActive() || e.ctrlKey || e.metaKey || e.altKey) return;
       const t = e.target, tag = t && t.tagName;
       if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT' || (t && t.isContentEditable)) return;
+      if (t && t !== document.body && t !== document.documentElement && !root.contains(t) && t.closest && t.closest('.s-track, .slider, [role="slider"]')) return;   // a focused side-panel slider gets the arrows (a focused button does not need them)
       const k = e.key; let used = true;
       if (k === 'ArrowLeft' || k === 'ArrowRight' || k === 'ArrowUp' || k === 'ArrowDown') { keys[k] = true; keys.shift = e.shiftKey; cancelFlight(); }
       else if (k === '+' || k === '=' || k === 'Add') zoomStep(1.4);
@@ -1128,7 +1129,7 @@
       ring(cx, cy, rr * ep, th.rgb.brass, 0.62, 1.4, [8, 7], -t * 7);
       ring(cx, cy, sr * ep, th.rgb.cyan, 0.5, 1.2, [2, 6], t * 4);
       // radar sweep pulse from the selected colony / fleet
-      if (!Q.reduce) { const u = mod(t * 0.42, 1), rp = sr * u; ring(cx, cy, rp, th.rgb.cyan, 0.34 * (1 - u), 1.6); }
+      if (!Q.reduce) { const u = mod(t * 0.42, 1), rp = sr * u; ring(cx, cy, rp, th.rgb.cyan, 0.16 * (1 - u), 1); }   // a faint sweep, not a glowing ring
       // labels
       ctx.font = Math.round(10 * uk) + 'px ' + th.fontUi; ctx.textAlign = 'center'; ctx.lineJoin = 'round'; ctx.lineWidth = 3; ctx.strokeStyle = 'rgba(3,5,18,0.85)';
       const lbl = (txt, ang, r, col) => { const x = cx + Math.cos(ang) * r, y = cy + Math.sin(ang) * r; ctx.strokeText(txt, x, y); ctx.fillStyle = col; ctx.fillText(txt, x, y); };
@@ -1217,9 +1218,11 @@
         const tws = twk ? 1 + 0.08 * Math.sin(t * kd.tw * 2.2 + s.ph) + 0.04 * Math.sin(t * 5.3 + s.ph2) : 1;
         const gk = (Q.glow < 0.6 ? 0.75 : 1) * (hot ? 1.12 : 1);
         let sp = null;
-        if (!kd.bh) sp = spaceStar(s.vkind, s.r * 13.5 * gk, Q.spikes && kd.spike >= 0.5 && s.r >= 2.8 && s.known);
+        // unexplored stars are distant glints (tight core, small spikes) rather than soft coloured discs; explored ones keep the full sprite
+        const far = !s.known, Dk = s.r * 13.5 * gk * (far ? 0.72 : 1);
+        if (!kd.bh) sp = spaceStar(s.vkind, Dk, kd.spike >= 0.3 && s.r >= (far ? 2.2 : 2.8));        // spikes on every tier: the sprite is cached, the glint is what makes a star read as a star
         if (sp) {
-          const D = s.r * 13.5 * gk * (0.97 + 0.03 * tws); s.useSp = true;
+          const D = Dk * (0.97 + 0.03 * tws); s.useSp = true;
           ctx.globalAlpha = clamp(a * (0.9 + 0.1 * tws), 0, 1); ctx.drawImage(sp, s.sx - D / 2, s.sy - D / 2, D, D);
         } else if (!kd.bh) {
           const size = s.r * 11.5 * (0.96 + 0.04 * tws) * (s.known ? 1 : 0.9) * gk;
@@ -1641,7 +1644,7 @@
         }
       }
       // reticles
-      if (selStar !== null) { const s = sdById[selStar]; if (s && s.on) { drawBrackets(s.sx, s.sy, s.r * 2.3 + (s.owner >= 0 ? 9 : 5), t, 1, th.rgb.brassHi, selT); ring(s.sx, s.sy, s.r * 2.3 + (s.owner >= 0 ? 17 : 13), th.rgb.brassHi, 0.3, 1, [2, 6], -t * 9); } }
+      if (selStar !== null) { const s = sdById[selStar]; if (s && s.on) { drawBrackets(s.sx, s.sy, s.r * 2.3 + (s.owner >= 0 ? 9 : 5), t, 1, th.rgb.brassHi, selT); } }      // the original's reticle: corner brackets only, no ring
       if (hoverStar !== null && hoverStar !== selStar) {
         const s = sdById[hoverStar]; if (s && s.on) { const e = easeOut(clamp(hoverT / 0.16, 0, 1)); ring(s.sx, s.sy, (s.r * 2 + 6 + (s.owner >= 0 ? 6 : 0)) * (0.7 + 0.3 * e), th.rgb.cyan, 0.9 * e, 1.5); }
       }

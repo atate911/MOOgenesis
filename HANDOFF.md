@@ -7,6 +7,18 @@ Docs: `PROGRESS.md` (plan/status/25-feature acceptance checklist) · `CONVENTION
 Commands: `node tools/check.js` (syntax of every manifest file) · `node tools/rules-test.js [area]` · `node tools/soak.js` (24-thread AI-vs-AI soak/balance; `tools/SOAK.md`) · `node tools/headless.js`.
 Browser-pane tip: animations use requestAnimationFrame, so in the built-in browser pane a tab must be fronted (`tabs_select`) for anything animated (GNN, audiences, scenes, combat) to advance.
 
+## Session 4 (October 2026) — branch `fix/turn-flow-robustness`
+Full review in `tools/handoff/review-2026-10.md` (50 items, priorities, what is fixed) and the UI/immersion review in
+`tools/handoff/ui-immersion-review-2026-10.md`. Fixed on the branch: the stuck-turn class (held side-panel prompts,
+abortable turns, safe skip answers, highlighted "answer" controls), the P1 sim bugs (unanswered audience ≠ accept,
+bombard needs an explicit yes, locked-Tech eco floor, dead empires' fleets, bombs vs empty planets, order validation,
+tech-choice fallback, save-failure toast), the AI defend ping-pong and scrap policy, the graphics hitches, the
+deployment scripts, and the first smoothness round (one-click fleet send, auto-battle option, brief news, etc.).
+Immersion round: photo art everywhere a figure is shown (envoy, endings, GNN anchor masks), wide planet card, calmer
+map. Still open: ship illustrations (Phase B), the star sprite, the galaxy map's first frame, repo size (PNG masters).
+Verification used: `node tools/check.js`, `node tools/rules-test.js` (806), `node tools/soak.js … --strict`,
+`tools/qa/turns.js`, `tools/qa/combat.js`, `tools/qa/fuzz.js`, plus the Playwright reproductions in the session notes.
+
 ## Where we are (end of session 3)
 Session 3 worked through the session-2 list, mostly unattended. **781 rules tests green (21 areas), `check.js` clean (99 files).** Read these notes for detail: `tools/handoff/verification-fixes.md` (quirk flags + combat errata), `tools/balance/REPORT.md` + `tools/handoff/balance.md` (soak numbers, A/B of every AI quirk), `tools/qa/REPORT.md` (headless-Chromium UI QA: no console errors in combat/diplomacy/council/spy/bombard/events/endings/layouts/fuzz), `tools/handoff/graphics-v2.md`, `tools/handoff/followups.md`.
 

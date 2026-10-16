@@ -305,6 +305,14 @@
     return p;
   };
   UI.modalOpen = () => modalStack.length > 0;
+  // Mark the control that moves the game forward (the "answer" of a card/scene): pulsing highlight + keyboard focus, so Enter/Space act on it.
+  UI.attention = function (btn) {
+    if (!btn) return btn;
+    try { doc.querySelectorAll('.needs-answer').forEach(x => x.classList.remove('needs-answer')); } catch (e) { /* ignore */ }
+    btn.classList.add('needs-answer');
+    setTimeout(() => { try { if (btn.isConnected && !btn.disabled && !(doc.activeElement && doc.activeElement.closest && doc.activeElement.closest('.modal') && !btn.closest('.modal'))) btn.focus({ preventScroll: true }); } catch (e) { /* ignore */ } }, 30);
+    return btn;
+  };
   UI.closeAllModals = () => modalStack.slice().forEach(m => m.close(null));
   UI.alert = (msg, o) => UI.modal(Object.assign({ title: 'Notice', body: typeof msg === 'string' ? h('p', msg) : msg, buttons: [{ label: 'OK', value: true, primary: true }] }, o));
   UI.confirm = (msg, o) => UI.modal(Object.assign({ title: 'Confirm', body: typeof msg === 'string' ? h('p', msg) : msg, buttons: [{ label: 'Cancel', value: false }, { label: 'OK', value: true, primary: true }] }, o)).then(v => !!v);
@@ -377,7 +385,9 @@
       if (e.key === 'Escape' && modalStack.length) { const top = modalStack[modalStack.length - 1]; if (top.closable) { top.close(null); e.preventDefault(); } return; }
       if (typing && e.key !== 'Escape') return;
       const c = comboOf(e), cur = UI.Screens && UI.Screens.current && UI.Screens.current.id;
-      for (const k of keymap.slice()) {
+      // the most recently registered binding wins: a prompt's own keys (card "N", scene "Space") shadow the screen's
+      // and boot-time bindings (Next turn "N", perf overlay "F3") for as long as the prompt is up
+      for (const k of keymap.slice().reverse()) {
         if (k.combo !== c) continue;
         if (k.o.screen && k.o.screen !== cur) continue;
         if (modalStack.length && !k.o.modal) continue;

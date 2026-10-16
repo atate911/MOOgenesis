@@ -1,8 +1,13 @@
 #!/usr/bin/env bash
-# Snapshot the server-side state: install.conf, the nginx/Caddy site, the Let's Encrypt
-# account/cert config, and the current release. Players' SAVES are not here —
-# they live in each browser (localStorage); players can use the in-game
-# Save → Export to keep a copy.
+# Snapshot the server-side state: install.conf, VERSION, which release is live
+# (the `current` symlink), the nginx/Caddy site and the WHOLE of
+# /etc/letsencrypt (accounts, renewal config, live/ and archive/ — without the
+# keys a restore cannot bring the certificate back). The release tree itself
+# is not archived: it is 20+ MB of files that git already holds (version.txt
+# names the commit), and a restore rebuilds it with install.sh.
+# Players' SAVES are not here — they live in each browser (localStorage);
+# players can use the in-game Save → Export to keep a copy.
+# The archive holds private keys: it is written with umask 077 / mode 600.
 #
 #   sudo bash /opt/moogenesis/scripts/backup.sh [--root DIR] [--keep N] [--quiet]
 # Prints the archive path as its last stdout line.
@@ -35,16 +40,17 @@ CUR="$(moo_current "$INSTALL_ROOT" || true)"
 
 MEMBERS=()
 for m in install.conf VERSION; do [[ -e "${INSTALL_ROOT}/${m}" ]] && MEMBERS+=("$m"); done
-[[ -n "$CUR" ]] && MEMBERS+=("releases/${CUR}")
+[[ -n "$CUR" ]] && MEMBERS+=(current)        # the symlink only: records WHICH release was live
 [[ ${#MEMBERS[@]} -gt 0 ]] || die "Nothing to back up under ${INSTALL_ROOT}."
 
 # System-side pieces are staged under system/ so the archive stays relocatable.
 TMP=$(mktemp -d); trap 'rm -rf "$TMP"' EXIT
-for p in /etc/nginx/sites-available/${MOO_SITE_NAME}.conf /etc/caddy/conf.d/${MOO_SITE_NAME}.caddy /etc/letsencrypt/renewal /etc/letsencrypt/accounts; do
+for p in /etc/nginx/sites-available/${MOO_SITE_NAME}.conf /etc/caddy/conf.d/${MOO_SITE_NAME}.caddy /etc/letsencrypt; do
     [[ -e "$p" ]] || continue
     mkdir -p "${TMP}/system$(dirname "$p")"; cp -a "$p" "${TMP}/system${p}"
 done
 TAR_EXTRA=(); [[ -d "${TMP}/system" ]] && TAR_EXTRA=(-C "$TMP" system)
+# -h is NOT passed: `current` is stored as a symlink, not as the release tree.
 tar -czf "$DEST" -C "$INSTALL_ROOT" "${MEMBERS[@]}" "${TAR_EXTRA[@]}" \
     || { rm -f "$DEST"; die "Backup failed."; }
 tar -tzf "$DEST" >/dev/null 2>&1 || { rm -f "$DEST"; die "Backup archive is not readable."; }

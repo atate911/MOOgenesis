@@ -689,7 +689,7 @@
         })));
       } else if (win && !rebel && (R.theftRolls | 0) > 0) techBlock = h('div.ld-rline.dim', 'The captured laboratories held nothing the ' + AT.plural + ' did not already know.');
       resultEl = panelBox('ld-result', h('div.ld-rtitle.' + tone, title), h('div.ld-rline', { html: line }), chips.length ? h('div.ld-rchips', chips) : null, techBlock,
-        h('div.ld-actions', UI.button('Continue', () => close(), { primary: true, kbd: 'Space' })));
+        h('div.ld-actions', UI.attention(UI.button('Continue', () => close(), { primary: true, kbd: 'Space' }))));
       H.ui.appendChild(resultEl);
       setHint(KEY('Space', ' continue'));
       sfx(humanWon ? 'tech' : humanLost ? 'war' : 'alert', { vol: 0.8 });
@@ -818,6 +818,7 @@
     } else expLines.push(h('div.ld-note', pv.reason ? cap(String(pv.reason)) + '.' : 'Bombardment is not possible here.'));
     const bio = pv.bio ? h('div.ld-note.bio', 'Biological weapons ignore planetary shields, kill colonists and permanently shrink the planet’s capacity. Other empires will think less of you.') : null;
     const bombBtn = UI.button('Bomb', () => decide(true), { primary: true, kbd: 'B', disabled: !can }), cancelBtn = UI.button('Cancel', () => decide(false), { kbd: 'Esc' });
+    UI.attention(can ? bombBtn : cancelBtn);
     const panel = panelBox('ld-bomb', h('div.ld-eyebrow', 'Orbital bombardment'), h('div.ld-title', 'Bombard ' + pname + '?'), h('div.ld-chips', h('span.chip', VI.plural), h('span.chip.warn', P.owner === S.playerId ? 'Our planet' : 'Enemy world')),
       h('div.ld-kv', rows), h('div.ld-kv', expLines), bio, h('div.ld-actions', cancelBtn, bombBtn));
     H.ui.appendChild(topBar(EI.race, EI.color, 'Bombardment')); H.ui.appendChild(panel);
@@ -893,7 +894,7 @@
       if (bioK > 0) lines.push(h('div.ld-note.bio', { html: 'Biological weapons killed <b>' + bioK + '</b> million colonists and shrank the planet’s maximum population by <b>' + (r.maxPopLost | 0) + '</b>.' }));
       if (!destroyed && !ineffective) chips.push(stat('Remaining', (r.popLeft | 0) + ' pop · ' + (r.factoriesLeft | 0) + ' fac', ''));
       if ((r.shield | 0) > 0 && !destroyed) lines.push(h('div.ld-rline.dim', 'The planetary shield absorbed ' + r.shield + ' damage from every hit.'));
-      panel = panelBox('ld-result', h('div.ld-rtitle.' + tone, title), lines, chips.length ? h('div.ld-rchips', chips) : null, h('div.ld-actions', UI.button('Continue', () => close(), { primary: true, kbd: 'Space' })));
+      panel = panelBox('ld-result', h('div.ld-rtitle.' + tone, title), lines, chips.length ? h('div.ld-rchips', chips) : null, h('div.ld-actions', UI.attention(UI.button('Continue', () => close(), { primary: true, kbd: 'Space' }))));
       H.ui.appendChild(panel); setHint(KEY('Space', ' continue'));
     }
     function close() { if (closing >= 0) return; closing = tl; setHint(''); if (panel) { panel.style.transition = 'opacity .3s'; panel.style.opacity = '0'; panel.style.animation = 'none'; } sfx('click'); }

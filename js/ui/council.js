@@ -569,7 +569,7 @@
         const vote = await runVote(R);
         if (R.demo) { R.phase = 'demo'; say(R, ['Demonstration chamber — press Esc to leave.']); setHint([['Esc', 'leave']]); return; }
         R.awaiting = true;
-        R.orphan = setTimeout(() => { if (RUN === R && R.awaiting) { R.awaiting = false; endRun(R, false); } }, 3200);     // result() normally arrives within a frame
+        R.orphan = setTimeout(() => { if (RUN === R && R.awaiting) { R.awaiting = false; endRun(R, false); } }, 15000);    // result() normally arrives within a frame; a slow huge-map turn must not end the chamber early
         R.spec.resolve(vote);
       } else {
         const out = await runResult(R, R.spec.res);
@@ -596,8 +596,14 @@
     if (!R || R.leaving) return;
     R.leaving = true; clearTimeout(R.orphan);
     nudge(R);
+    const wasVerdict = !!(R.prompt && R.prompt.type === 'verdict');
     if (R.prompt && R.prompt.abort) { const p = R.prompt; R.prompt = null; p.abort(); }
     if (RUN === R) RUN = null;
+    // the Accept / Defy ruling is irreversible (accept after losing = exile = game over): while the turn is still running, a chamber that lost its screen
+    // re-opens with the same prompt instead of answering for the player; only an abandoned turn (load / quit) settles it
+    const G = M.Game;
+    const stillAsked = () => !!(G && G.busy && G.pending && G.pending.type === 'councilResult');
+    if (R.kind === 'result' && wasVerdict && stillAsked()) { setTimeout(() => { if (stillAsked()) begin('result', { res: R.res, resolve: R.spec.resolve }); else { try { R.spec.resolve(); } catch (e) { /* ignore */ } } }, 0); return; }
     try { if (R.kind === 'vote' && !R.awaiting) R.spec.resolve(-1); else if (R.kind === 'result') R.spec.resolve(); } catch (e) { /* ignore */ }
   }
   function begin(kind, payload) {

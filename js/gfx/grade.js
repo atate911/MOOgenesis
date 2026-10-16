@@ -12,7 +12,8 @@
     space: { sat: 0.12, cool: 0.10, vig: 0.38, grain: 0.035, lift: 0.0, bloom: 0.0 },
     portrait: { sat: 0.26, cool: 0.2, dark: 0.1, vig: 0.34, grain: 0, lift: 0.0, bloom: 0.0 },
   };
-  let noise = null, tmp = null;
+  let noise = null, tmp = null, pat = null;
+  const VIG = new Map();                                   // (w,h,vig) -> radial gradient; rebuilding one every frame cost a few ms per pass
   function noiseTile() {
     if (noise) return noise;
     const c = document.createElement('canvas'); c.width = c.height = 160; const g = c.getContext('2d'), d = g.createImageData(160, 160);
@@ -52,13 +53,19 @@
     }
     if (q.lift > 0) { ctx.globalCompositeOperation = 'lighten'; ctx.fillStyle = 'rgb(' + Math.round(4 + 14 * q.lift * 8) + ',' + Math.round(9 + 20 * q.lift * 8) + ',' + Math.round(16 + 30 * q.lift * 8) + ')'; ctx.fillRect(0, 0, w, h); }
     if (q.vig > 0) {
-      const key = w + 'x' + h + ':' + q.vig;
+      const key = w + 'x' + h + ':' + q.vig.toFixed(2);
       ctx.globalCompositeOperation = 'source-over';
-      const gr = ctx.createRadialGradient(w / 2, h * 0.48, Math.min(w, h) * 0.35, w / 2, h * 0.5, Math.hypot(w, h) * 0.58);
-      gr.addColorStop(0, 'rgba(2,6,12,0)'); gr.addColorStop(1, 'rgba(2,6,12,' + q.vig.toFixed(2) + ')'); ctx.fillStyle = gr; ctx.fillRect(0, 0, w, h);
+      let gr = VIG.get(key);
+      if (!gr) {
+        gr = ctx.createRadialGradient(w / 2, h * 0.48, Math.min(w, h) * 0.35, w / 2, h * 0.5, Math.hypot(w, h) * 0.58);
+        gr.addColorStop(0, 'rgba(2,6,12,0)'); gr.addColorStop(1, 'rgba(2,6,12,' + q.vig.toFixed(2) + ')');
+        if (VIG.size > 24) VIG.clear(); VIG.set(key, gr);
+      }
+      ctx.fillStyle = gr; ctx.fillRect(0, 0, w, h);
     }
     if (q.grain > 0 && !low && !(M.Settings && M.Settings.get('reduceMotion'))) {
-      const tile = noiseTile(), pat = ctx.createPattern(tile, 'repeat'), ox = Math.floor((t * 61) % 160), oy = Math.floor((t * 37) % 160);
+      if (!pat) pat = ctx.createPattern(noiseTile(), 'repeat');
+      const ox = Math.floor((t * 61) % 160), oy = Math.floor((t * 37) % 160);
       ctx.globalCompositeOperation = 'overlay'; ctx.globalAlpha = Math.min(1, q.grain * 4); ctx.translate(-ox, -oy); ctx.fillStyle = pat; ctx.fillRect(ox, oy, w, h);
     }
     ctx.restore();

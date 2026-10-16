@@ -6,15 +6,26 @@
   const Flow = UI.Flow = {};
 
   // show a card in the side panel and wait for a button; always returns the panel to the default selection afterwards
+  // The card is the turn's pending question: UI.Side.hold keeps it on screen (re-shown on enter(), never replaced) until it is answered.
   Flow.card = function (opts) {
     return new Promise(resolve => {
-      if (UI.Screens.current && UI.Screens.current.id !== 'galaxy') UI.Screens.go('galaxy');
-      const done = v => { resolve(v); setTimeout(() => UI.Galaxy.showDefault(), 0); };
-      if (opts.star !== undefined && UI.Galaxy.map) UI.Galaxy.map.centerOn(opts.star, { animate: true });
-      UI.Side.show('card', Object.assign({}, opts, { resolve: done }));
+      const params = Object.assign({}, opts);
+      let settled = false, hd = null;
+      const done = v => { if (settled) return; settled = true; UI.Side.release(hd); resolve(v); setTimeout(() => { if (!UI.Side.held) UI.Galaxy.showDefault(); }, 0); };
+      params.resolve = done;
+      hd = UI.Side.hold('card', params, () => done(undefined));
     });
   };
   const planetOf = (S, id) => Q.planetCard(S, id);
+  // GNN in brief: the turn's headlines as one list in a modal, Space/Enter continues (the archive keeps every item; the studio scene is Options › Interface › News)
+  Flow.newsBrief = function (it) {
+    const items = (it.items || []).slice(0, 14);
+    const rows = items.map(i => h('li.nb-item', h('b', i.headline || ''), i.sub ? h('span.dim', ' — ' + i.sub) : null));
+    const body = h('div', h('div.dim.small', 'GNN · ' + (it.year !== undefined ? 'Year ' + it.year : 'This year')), h('ul.nb-list', rows), (it.items || []).length > items.length ? h('div.dim.small', (it.items.length - items.length) + ' more in the archive') : null);
+    const pr = UI.modal({ title: 'Galactic News Network', body, buttons: [{ label: 'Continue', value: true, primary: true }], closable: true, width: '34rem', onOpen: m => { const b = m.querySelector('.btn.primary'); if (b) UI.attention(b); } });
+    return pr.then(() => ({ skipped: false, shown: items.length, brief: true }));
+  };
+  UI.css && UI.css('flow-brief', `.nb-list { margin:.6rem 0 0; padding-left:1.1rem; } .nb-item { margin:.25rem 0; line-height:1.35; }`);
 
   function install() {
     const H = G.handlers;
@@ -35,7 +46,7 @@
       const ans = await Flow.card({ star: it.planet, planetCard: c, title: 'Build a new colony?', body: [], buttons: [{ label: 'No', value: false, kbd: 'N' }, { label: 'Yes', value: true, primary: true, kbd: 'Y' }] });
       if (ans) {
         UI.sfx('colonize');
-        if (UI.Landing && UI.Landing.colony && M.Settings.get('animSpeed') > 0) { try { await UI.Landing.colony(it.planet); } catch (e) { console.warn('[landing]', e); } }   // the colony-ship landing vignette
+        if (UI.Landing && UI.Landing.colony && M.Settings.get('animSpeed') > 0 && M.Settings.get('landingScenes') !== false) { try { await UI.Landing.colony(it.planet); } catch (e) { console.warn('[landing]', e); } }   // the colony-ship landing vignette (Options › Gameplay)
       }
       return !!ans;
     };
@@ -56,7 +67,11 @@
     };
 
     H.techChoice = async it => {
-      if (UI.TechScenes && UI.TechScenes.choose) return UI.TechScenes.choose(it);
+      if (UI.TechScenes && UI.TechScenes.choose) {
+        const v = await UI.TechScenes.choose(it);
+        if (!v && it.choices[0]) { const c = it.choices[0]; UI.Galaxy.message('No ' + Q.FIELD_NAMES[it.field].toLowerCase() + ' project chosen: the scientists start on ' + (c.tech ? c.tech.name : 'level ' + c.level) + '.'); }
+        return v;
+      }
       return new Promise(res => {
         const rows = it.choices.map(c => UI.button((c.tech ? c.tech.name : 'Level ' + c.level) + ' — ' + M.Util.fmt(c.cost) + ' RP', () => pr.close(c.level), { block: true }));
         const pr = UI.modal({ title: 'Choose the next ' + Q.FIELD_NAMES[it.field] + ' research', body: h('div.col', rows), buttons: [], closable: false, width: '28rem' });
@@ -69,7 +84,10 @@
       UI.sfx('tech'); UI.Galaxy.message(G.player().plural + ' scientists achieve a ' + Q.FIELD_NAMES[it.field].toLowerCase() + ' breakthrough: ' + (t ? t.name : 'level ' + it.level), 'ok');
     };
 
-    H.gnn = async it => { if (UI.GNN && UI.GNN.show) return UI.GNN.show(it); (it.items || []).slice(0, 3).forEach(i => UI.Galaxy.message(i.headline)); };
+    H.gnn = async it => {
+      if (M.Settings.get('newsMode') === 'brief' && it && it.items && it.items.length) return Flow.newsBrief(it);        // one page, one Continue (Options › Interface)
+      if (UI.GNN && UI.GNN.show) return UI.GNN.show(it); (it.items || []).slice(0, 3).forEach(i => UI.Galaxy.message(i.headline));
+    };
     H.council = async it => { if (UI.Council && UI.Council.show) return UI.Council.show(it); return M.Sim.Council && M.Sim.Council.autoVote ? M.Sim.Council.autoVote(G.S, it.info) : 0; };
     H.councilResult = async it => { if (UI.Council && UI.Council.result) return UI.Council.result(it); };
     H.diplomacy = async it => { if (UI.Audience && UI.Audience.show) return UI.Audience.show(it); };

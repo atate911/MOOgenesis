@@ -5,7 +5,8 @@
 //   MOO.Perf.fps / frameMs  smoothed frame stats          MOO.Perf.caps  probed capabilities
 //   MOO.Perf.setPreset(p) · MOO.Perf.start() (called at boot) · MOO.Bus 'perf:tier' (tier, q) on change · F3 toggles the overlay
 // In 'auto' the tier starts from a hardware heuristic, then adapts: sustained slow frames drop a tier, sustained headroom raises one
-// (never above the heuristic cap + 1). Gfx modules must scale effort from MOO.Perf.q instead of hard-coding counts.
+// (never above the heuristic cap + 1; never above the cap on a software GL renderer). Gfx modules must scale effort from MOO.Perf.q instead of hard-coding counts.
+//   <html data-fx="off"|"on"> mirrors low tier / reduceMotion for CSS (theme-v2 drops its full-screen overlay when off).
 (function (M) {
   'use strict';
   const TIERS = {
@@ -59,7 +60,10 @@
     P.tier = tier; P.q = Object.assign({}, TIERS[tier]);
     if (!M.Settings || M.Settings.get('gpu') === false) P.q.gl = false;
     if (P.caps && !P.caps.webgl2) P.q.gl = false;
-    if (M.Settings && M.Settings.get('reduceMotion')) { P.q.particles *= 0.4; P.q.animFps = Math.min(P.q.animFps, 30); }
+    const reduce = !!(M.Settings && M.Settings.get('reduceMotion'));
+    if (reduce) { P.q.particles *= 0.4; P.q.animFps = Math.min(P.q.animFps, 30); }
+    // css/theme-v2.css: data-fx="off" drops the full-screen vignette/scanline overlay (a per-frame composite) on the low tier / reduceMotion
+    try { document.documentElement.dataset.fx = (tier === 'low' || reduce) ? 'off' : 'on'; } catch (e) { /* no DOM */ }
     if (changed && M.Bus) M.Bus.emit('perf:tier', tier, P.q, why || '');
   }
 
@@ -70,6 +74,9 @@
   };
 
   // ---- frame-time governor -------------------------------------------------------------------
+  // highest tier index 'auto' may climb to: heuristic cap + 1, except on a software GL renderer where the cap is final (raising to
+  // 'medium' switches the GL renderers on, frames collapse, it drops back, and the cycle repeated every ~20 s)
+  function maxTier() { const c = ORDER.indexOf(P.cap); return P.caps && P.caps.software ? c : c + 1; }
   let acc = 0, n = 0, slowSecs = 0, fastSecs = 0, last = 0, cooldown = 0;
   function tick(dt) {
     if (dt > 0.25 || dt <= 0) return;                // ignore hidden-tab gaps
@@ -83,7 +90,7 @@
     if (avg > budget * 1.35) { slowSecs++; fastSecs = 0; } else if (avg < budget * 0.55) { fastSecs++; slowSecs = 0; } else { slowSecs = 0; fastSecs = 0; }
     const i = ORDER.indexOf(P.tier);
     if (slowSecs >= 3 && i > 0 && !cooldown) { apply(ORDER[i - 1], 'slow frames'); slowSecs = 0; cooldown = 6; }
-    else if (fastSecs >= 10 && i < ORDER.indexOf(P.cap) + 1 && i < ORDER.length - 1 && !cooldown) { apply(ORDER[i + 1], 'headroom'); fastSecs = 0; cooldown = 12; }
+    else if (fastSecs >= 10 && i < maxTier() && i < ORDER.length - 1 && !cooldown) { apply(ORDER[i + 1], 'headroom'); fastSecs = 0; cooldown = 12; }
   }
 
   // ---- overlay (F3) ----------------------------------------------------------------------------

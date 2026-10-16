@@ -8,7 +8,8 @@
      makeBackdrop(w, h, seed, {palette:[hex..], intensity=.55, stars=1, vignette=true}) -> canvas   (1920x1080 in ~150 ms)
      makeStarfield(w, h, seed, count) -> transparent canvas of stars that tiles when drawn with wrap-around offsets
      starSprite(kind, sizePx, {spikes, glow=1, dpr=1}) -> cached canvas; draw with globalCompositeOperation 'lighter'
-     drawStarSurface(ctx, kind, cx, cy, r, t, {dpr, spin, corona=true, prominences=true})   animated close-up (black hole: r = event horizon)
+     drawStarSurface(ctx, kind, cx, cy, r, t, {dpr, spin, corona=true, prominences=true, sync})   animated close-up (black hole: r = event horizon);
+                                         the surface texture builds in background slices (a graded disc shows meanwhile) unless sync:true
    ========================================================================= */
 (function (M) {
   'use strict';
@@ -464,9 +465,27 @@
     return cell;
   }
 
-  function starTex(kind) {
+  // The 512x256 surface texture of a star kind costs 100-250 ms of pure JS, so it is generated row by row in background slices
+  // (starTex(kind) returns null until it is done and drawStarSurface draws a cheap graded disc meanwhile); starTex(kind, true) blocks.
+  var STJOB = {}, STQ = [], stTimer = 0;
+  function starTex(kind, sync) {
     var T = STEX[kind];
     if (T) return T;
+    var job = STJOB[kind];
+    if (!job) { job = STJOB[kind] = starTexJob(kind); STQ.push(job); scheduleStarTex(); }
+    if (!sync) return null;
+    while (!job.done) job.step();
+    var qi = STQ.indexOf(job); if (qi >= 0) STQ.splice(qi, 1);
+    return STEX[kind];
+  }
+  function scheduleStarTex() { if (!stTimer && STQ.length) stTimer = setTimeout(pumpStarTex, 2); }
+  function pumpStarTex() {
+    stTimer = 0;
+    var t0 = now();
+    while (STQ.length && now() - t0 < 6) { var job = STQ[0]; if (job.done || job.step()) STQ.shift(); }
+    scheduleStarTex();
+  }
+  function starTexJob(kind) {
     var cfg = SURF[kind] || SURF.yellow, W = 512, H = 256, N = W * H, sd = hashStr('star:' + kind);
     var g0 = new Uint8Array(N), g1 = new Uint8Array(N), mm = new Uint8Array(N);
     var nz = makeNoise3(sub(sd, 1)), c0 = makeCellular(sub(sd, 2)), c1 = makeCellular(sub(sd, 3)), c2 = makeCellular(sub(sd, 4)), c3 = makeCellular(sub(sd, 5));
@@ -489,9 +508,9 @@
       var l2 = sstep(0.04, 0.30, _cf.f2 - _cf.f1), g2 = 0.40 + 0.60 * l2 * (0.62 + 0.38 * (1 - sstep(0, 0.85, _cf.f1)));
       return g * 0.66 + g2 * 0.34;
     }
-    for (y = 0; y < H; y++) {
+    function row(y) {
       var latr = (0.5 - (y + 0.5) / H) * PI, cl3 = cos(latr), sl3 = sin(latr);
-      for (x = 0; x < W; x++) {
+      for (var x = 0; x < W; x++) {
         var px = cl3 * sinT[x], py = sl3, pz = cl3 * cosT[x], i = y * W + x;
         var v0 = gran(c0, px, py, pz) + 0.06 * nz.n(px * 40, py * 40, pz * 40);
         var v1 = gran(c1, px + 3.7, py - 1.2, pz + 2.1) + 0.06 * nz.n(px * 40 + 9, py * 40, pz * 40);
@@ -509,7 +528,13 @@
         mm[i] = clamp(m, 0, 1) * 255;
       }
     }
-    return (STEX[kind] = { W: W, H: H, g0: g0, g1: g1, m: mm, ramp: makeRampLut(cfg.ramp) });
+    var job = { y: 0, done: false, step: function () {           // one row per step (~0.5-1 ms); true when the texture is finished
+      if (job.done) return true;
+      row(job.y++);
+      if (job.y >= H) { job.done = true; delete STJOB[kind]; STEX[kind] = { W: W, H: H, g0: g0, g1: g1, m: mm, ramp: makeRampLut(cfg.ramp) }; }
+      return job.done;
+    } };
+    return job;
   }
   function makeRampLut(stops) {
     var lut = new Uint8Array(256 * 3), st = stops.map(function (s) { return [s[0], parseHex(s[1])]; });
@@ -723,8 +748,8 @@
     }
     var dpr = opts.dpr > 0 ? opts.dpr : (typeof window !== 'undefined' && window.devicePixelRatio) || 1, cfg = SURF[kind], seed = hashStr(kind);
     var Rr = Math.round(r * dpr); if (Rr > 240) Rr = 240; if (Rr < 3) Rr = 3;
-    var sc = r * dpr / Rr, inst = starInst(kind, Rr), spin = opts.spin !== undefined ? opts.spin : 0.012;
-    if (t - inst.last > 1 / 45 || t < inst.last) { renderStarBody(inst, kind, t, spin); inst.last = t; }
+    var sc = r * dpr / Rr, spin = opts.spin !== undefined ? opts.spin : 0.012, T = starTex(kind, !!opts.sync), inst = T ? starInst(kind, Rr) : null;
+    if (inst && (t - inst.last > 1 / 45 || t < inst.last)) { renderStarBody(inst, kind, t, spin); inst.last = t; }
     var showCorona = opts.corona !== false, flick = 0.92 + 0.08 * sin(t * 1.3 + 1.7) + 0.04 * sin(t * 3.1);
     ctx.globalCompositeOperation = 'lighter';
     if (showCorona) {
@@ -735,8 +760,12 @@
       ctx.restore(); ctx.globalAlpha = 1;
     }
     ctx.globalCompositeOperation = 'source-over';
-    var dw = inst.g.bw * sc / dpr;
-    ctx.drawImage(inst.cv, cx - dw / 2, cy - dw / 2, dw, dw);
+    if (inst) { var dw = inst.g.bw * sc / dpr; ctx.drawImage(inst.cv, cx - dw / 2, cy - dw / 2, dw, dw); }
+    else {                                                     // surface texture still building: limb-darkened disc in the kind's ramp colours
+      var ramp = cfg.ramp, gr = ctx.createRadialGradient(cx - r * 0.1, cy - r * 0.1, 0, cx, cy, r);
+      gr.addColorStop(0, ramp[ramp.length - 2][1]); gr.addColorStop(0.55, ramp[Math.max(0, ramp.length - 3)][1]); gr.addColorStop(1, ramp[1][1]);
+      ctx.fillStyle = gr; ctx.beginPath(); ctx.arc(cx, cy, r, 0, TAU); ctx.fill();
+    }
     ctx.globalCompositeOperation = 'lighter';
     if (opts.prominences !== false && cfg.prom > 0) { drawProminences(ctx, cfg, cx, cy, r, t, seed); drawFlare(ctx, cfg, cx, cy, r, t, seed); }
     if (kind === 'purple') drawPulsarBeams(ctx, cx, cy, r, t);

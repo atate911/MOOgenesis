@@ -2,7 +2,15 @@
 (function () {
   'use strict';
   var man = window.MOO_MANIFEST;
-  var bust = '?_=' + Date.now();
+  // Cache busting. A release built by scripts/lib.sh (moo_make_release) stamps
+  // `window.MOO_BUILD = '<release name>'` into js/manifest.js, and every css/js
+  // URL gets ?v=<build>: the web server caches those for a year, a new release
+  // means new URLs, and index.html / manifest.js stay no-cache. An unstamped
+  // tree (a dev checkout served by any static server, or file://) has no build
+  // id, so it keeps the per-load timestamp — nothing may be cached there.
+  var build = typeof window.MOO_BUILD === 'string' && /^[A-Za-z0-9._+-]{1,80}$/.test(window.MOO_BUILD) ? window.MOO_BUILD : '';
+  var bust = build ? '?v=' + build : '?_=' + Date.now();
+  window.MOO_BUST = bust;
   var fill = document.getElementById('boot-fill');
   var errBox = document.getElementById('boot-err');
   var errors = [];

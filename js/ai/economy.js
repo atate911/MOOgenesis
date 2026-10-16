@@ -55,11 +55,12 @@ MOO.def(function (M) {
     for (const t of S.trans || []) if (t.owner === ctx.id) to.delete(t.to);                      // a transport of mine is already on its way there
     if (!overwrite) for (const o of ctx.orders) if (o.t === 'trans') from.delete(o.planet);      // that planet already sends an invasion transport this turn
     for (const p of mine) if (p.trans && p.trans.n > 0 && !overwrite) from.delete(p.id);
-    const sent = [];
+    const sent = [], F = M.Sim.Fleet;
     for (const d of mine) {
       if (!to.has(d.id)) continue;
       for (const s of mine) {                                                                     // first source in planet order, not the nearest
         if (!from.has(s.id)) continue;
+        if (F && F.canTransportTo && !F.canTransportTo(S, ctx.E, s, d.starId).ok) break;         // the sim's own gate (a hostile-environment colony of mine cannot take transports yet)
         if (Geo.unitDist(S, s.starId, d.starId) < lim) {
           from.delete(s.id);
           const n = Math.floor(s.pop / 3);
