@@ -212,6 +212,7 @@ SPECS = {
 SYNTH = {   # name -> (kind, attack, release); zones come from synth.py (stereo)
     'padSerrie': dict(kind='sustain', attack=0.3, release=0.9, cutK=0, ls=0.9, lmin=1.2, lmax=1.8, stereo=True),
     'padGlass': dict(kind='sustain', attack=0.3, release=0.9, cutK=0, ls=0.9, lmin=1.2, lmax=1.8, stereo=True),
+    'padAir': dict(kind='sustain', attack=0.8, release=1.6, cutK=0, ls=1.4, lmin=1.4, lmax=2.2, stereo=True),
     'padDark': dict(kind='sustain', attack=0.3, release=0.9, cutK=0, ls=0.9, lmin=1.2, lmax=1.8, stereo=True),
     'subBass': dict(kind='sustain', attack=0.02, release=0.25, cutK=0, ls=0.5, lmin=0.8, lmax=1.4, stereo=False),
 }

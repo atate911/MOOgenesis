@@ -18,6 +18,11 @@ Versions follow `MAJOR.MINOR.PATCH`; the live version is the `VERSION` file.
   written length. The analogue pads are re-synthesized as a nine-voice stereo unison with a breathing filter and tape saturation; the
   music bus gains a slow glue compressor; reverb and chorus sends are moderated because the recordings already carry a hall. Rebuild with
   `python3 tools/samples/build.py --sso "<sso>/Sonatina Symphonic Orchestra" --vsco <VSCO-2-CE> --out assets/audio`.
+  Refinement after listening: a more open master (peak-only limiter at 2.2:1, a gentler glue stage, a larger 3.3 s hall with more pre-delay,
+  a lighter low shelf), more room on the pad, bell and choir sends; the galaxy underscore leans toward Serrie (an analogue sky with a new
+  high "air" pad above it, distant women's voices, celeste and harp as single points of light, slower harmonic motion, no hi-hats) and the
+  dramatic cues take the Crimson Tide layering (analogue pad as the floor, low men's choir as the bed, strings mid, brass for the peaks,
+  fewer bell sparkles).
 - Symphonic re-orchestration and film-style flow. Every synth pluck, FM bell, pad, bass and drum-machine part in the score is now a
   recorded instrument: pizzicato string sections, marimba, glockenspiel, harp, oboe / clarinet / bassoon, contrabass, bass drum,
   snare, field drums, tambourine, claves, anvil, stick taps (the two machine races keep a little sequencer colour). The bell

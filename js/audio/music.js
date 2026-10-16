@@ -224,11 +224,11 @@
     strings: smp('strEns', 0.14, { att: 0.2, rel: 0.9 }, 'strings'),
     strTrem: smp('strEnsTrem', 0.15, { att: 0.12 }, 'strings'),
     airPad: smp('strEns', 0.12, { att: 0.45, rel: 1.3, cut: 5000 }, 'airPad'),
-    glassPad: smp('strEns', 0.12, { att: 0.4, rel: 1.1, cut: 6000 }, 'glassPad'),
+    glassPad: smp('padGlass', 0.14, { ens: 0.35, att: 0.7, rel: 1.6 }, 'glassPad'),
     dark: smp('strEns', 0.14, { att: 0.35, rel: 1.1, cut: 2200 }, 'dark'),
     drone: smp('strEns', 0.13, { att: 0.7, rel: 1.5, cut: 1800 }, 'drone'),
-    analog: smp('padSerrie', 0.16, { ens: 0.5 }, 'warm'),
-    padGlass: smp('padGlass', 0.15, { ens: 0.4 }, 'glassPad'),
+    analog: smp('padSerrie', 0.17, { ens: 0.4, att: 0.9, rel: 2.0 }, 'warm'), air: smp('padAir', 0.14, { ens: 0.3, att: 1.4, rel: 2.6 }, 'airPad'),
+    padGlass: smp('padGlass', 0.14, { ens: 0.35, att: 0.7, rel: 1.6 }, 'glassPad'),
     organ: smp('organ', 0.13, {}, 'organ'), organSoft: smp('organSoft', 0.14, { att: 0.12 }, 'organ'),
     flutes: smp('fluteSus', 0.3, { att: 0.08 }, 'flute'),
     // basses: the bass section
@@ -255,9 +255,9 @@
     glass: smp('celeste', 0.5, { rel: 1.4, hold: 0.4 }, 'glass'), bell: smp('glock', 0.5, { rel: 1.6, hold: 0.4 }, 'bell'), crystal: smp('crotales', 0.42, { rel: 2.0, hold: 0.5 }, 'crystal'),
     shimmer: smp('crotales', 0.38, { rel: 1.4, hold: 0.3 }, 'shimmer'), vibes: smp('celeste', 0.42, { rel: 1.2, hold: 0.3 }, 'vibes'), chime: smp('chimes', 0.42, { rel: 2.2, hold: 0.5 }, 'chime'),
     // the recorded chorus: men + women; every vowel preset maps onto it (the recording is one sustained vowel)
-    ooh: smp('chorus', 0.2, { att: 0.4 }, 'ooh'), aah: smp('chorus', 0.2, { att: 0.35 }, 'aah'),
-    uuh: smp('chorus', 0.19, { att: 0.4 }, 'uuh'), eeh: smp('chorus', 0.19, { att: 0.35 }, 'eeh'),
-    choirMen: smp('chorusMen', 0.22, { att: 0.4 }, 'uuh'), choirMenAh: smp('chorusMen', 0.21, { att: 0.35 }, 'aah'), choirWomen: smp('chorusWomen', 0.2, { att: 0.4 }, 'aah'),
+    ooh: smp('chorus', 0.17, { att: 0.5, rel: 1.4 }, 'ooh'), aah: smp('chorus', 0.17, { att: 0.45, rel: 1.4 }, 'aah'),
+    uuh: smp('chorus', 0.16, { att: 0.5, rel: 1.4 }, 'uuh'), eeh: smp('chorus', 0.16, { att: 0.45, rel: 1.4 }, 'eeh'),
+    choirMen: smp('chorusMen', 0.2, { att: 0.5, rel: 1.5 }, 'uuh'), choirMenAh: smp('chorusMen', 0.19, { att: 0.45, rel: 1.5 }, 'aah'), choirWomen: smp('chorusWomen', 0.16, { att: 0.6, rel: 1.6 }, 'aah'),
     // the two machine races keep a little of their electronic character
     seqSyn: SYN.seq, arpSawSyn: SYN.arpSaw, moogSyn: SYN.moog, pulseSyn: SYN.pulse, synthSyn: SYN.synth,
   });
@@ -265,8 +265,8 @@
   const LAYERS = {
     // (the Sonatina recordings carry their own hall, so the sends are moderate; the bus chorus is off the recorded sections and kept
     //  for the synthesized pads only, where it belongs)
-    pad: { lvl: 0.9, verb: 0.32, dly: 0, chorus: 0.12 }, bass: { lvl: 0.7, verb: 0.1, dly: 0 }, arp: { lvl: 0.5, verb: 0.3, dly: 0.12 },
-    lead: { lvl: 0.95, verb: 0.32, dly: 0.08 }, bell: { lvl: 0.5, verb: 0.42, dly: 0.1 }, choir: { lvl: 0.8, verb: 0.4, dly: 0, chorus: 0.1 },
+    pad: { lvl: 0.9, verb: 0.42, dly: 0, chorus: 0.12 }, bass: { lvl: 0.7, verb: 0.12, dly: 0 }, arp: { lvl: 0.5, verb: 0.36, dly: 0.12 },
+    lead: { lvl: 0.95, verb: 0.38, dly: 0.08 }, bell: { lvl: 0.5, verb: 0.55, dly: 0.1 }, choir: { lvl: 0.8, verb: 0.5, dly: 0, chorus: 0.1 },
     drums: { lvl: 0.62, verb: 0.3, dly: 0 }, fx: { lvl: 0.6, verb: 0.6, dly: 0 },
     x1: { lvl: 0.8, verb: 0.12, dly: 0, i0: 0.12 }, x2: { lvl: 0.7, verb: 0.2, dly: 0.3, i0: 0.38 }, x3: { lvl: 0.9, verb: 0.3, dly: 0, i0: 0.62 },
   };
@@ -1091,41 +1091,41 @@
       F1: '5:1 8:1 7:1 5:1 | 6:1 5:1 3:1 5:1 | 4:2 5:2 | 8:4', // flute, the interlude
     },
     sec: [
-      { n: 'intro', bars: 8, cres: [0.56, 0.7], prog: 'i:2 bVI:2 i:2 bVII:1 V:1', hit: 'tam', pad2: { p: 'swell', inst: 'warm', n: 3, reg: [38, 60] }, choir: { inst: 'choirMen', n: 3, reg: [40, 57], vel: 0.5 },
-        lead: { ph: 'r4 H1', inst: 'hornSolo', vel: 0.55 }, drums: { bdSoft: 'x...............' }, bell: { dens: 0.14, res: 1, reg: [72, 96], vel: 0.42 } },
+      { n: 'intro', bars: 8, cres: [0.56, 0.7], prog: 'i:2 bVI:2 i:2 bVII:1 V:1', hit: 'tam', pad2: { p: 'swell', inst: 'analog', n: 3, reg: [38, 60], vel: 0.9 }, choir: { inst: 'choirMen', n: 3, reg: [38, 55], vel: 0.6 },
+        lead: { ph: 'r4 H1', inst: 'hornSolo', vel: 0.55 }, drums: { bdSoft: 'x...............' }, bell: { dens: 0.08, res: 1, reg: [72, 96], vel: 0.38 } },
       { n: 'A1', bars: 16, cres: [0.62, 0.8], prog: 'i bVII:.5 bVI:.5 i iv:.5 V:.5 | i V:.5 bIII:.5 i:.5 bVII:.5 V | i:.5 bVI:.5 i bIII:.5 V:.5 bVII:.5 V:.5 | bVI bIII:.5 V:.5 i i',
-        pad: { p: 'sus', n: 4, reg: [50, 76] }, pad2: { p: 'sus', inst: 'warm', n: 3, reg: [38, 60], vel: 0.7 }, bass: 'whole', lead: { ph: 'H1 H2 H3 H4', vel: 0.75 },
-        lead2: { ph: 'r8 H3 H4', inst: 'strings', oct: 1, vel: 0.45 }, choir: { inst: 'choirMen', n: 3, reg: [40, 60], vel: 0.6 }, timp: { p: 'two', vel: 0.6 }, drums: { bdSoft: 'x.......x.......' }, bell: { dens: 0.12, res: 1, reg: [72, 96], vel: 0.4 } },
+        pad: { p: 'sus', n: 4, reg: [50, 76] }, pad2: { p: 'sus', inst: 'analog', n: 3, reg: [38, 60], vel: 0.8 }, bass: 'whole', lead: { ph: 'H1 H2 H3 H4', vel: 0.75 },
+        lead2: { ph: 'r8 H3 H4', inst: 'strings', oct: 1, vel: 0.45 }, choir: { inst: 'choirMen', n: 3, reg: [40, 60], vel: 0.6 }, timp: { p: 'two', vel: 0.6 }, drums: { bdSoft: 'x.......x.......' }, bell: { dens: 0.07, res: 1, reg: [72, 96], vel: 0.36 } },
       { n: 'B', bars: 8, lv: 0.9, prog: 'i bVI bVII i iv bVI V V', cr: true, pad: { p: 'sus', n: 4, reg: [55, 79] }, pad2: { p: 'sus', inst: 'lowBrass', n: 2, reg: [38, 55], vel: 0.8 }, bass: 'half',
         arp: { pat: '0.0.1.0.2.0.1.0.', res: 4, vel: 0.75, reg: [55, 79], gate: 0.9 }, drums: { sn: 'x..x.xx.x..x.xx.', bd: 'x.......x...x...' }, timp: 'beats',
         lead: { ph: 'CT CT', inst: 'lowBrass', oct: -1, vel: 0.85, art: 0.9 }, choir: { inst: 'aah', n: 4, reg: [48, 72], vel: 0.75 }, fill: 'rollS' },
-      { n: 'C', bars: 8, lv: 0.5, prog: 'bVI:2 iv:2 i:2 V:2', pad: { p: 'swell', inst: 'glassPad', n: 4, reg: [55, 79] }, pad2: { p: 'sus', inst: 'warm', n: 3, reg: [43, 62], vel: 0.6 }, bass: false,
-        lead: { ph: 'F1 F1', inst: 'flute', vel: 0.6 }, arp: { inst: 'harp', p: 'up8', vel: 0.5, reg: [55, 84] }, choir: { inst: 'ooh', n: 3, reg: [57, 76], vel: 0.5 }, bell: { dens: 0.25, res: 1, reg: [72, 96], vel: 0.45 }, drums: false, timp: false, rise: 2 },
+      { n: 'C', bars: 8, lv: 0.5, prog: 'bVI:2 iv:2 i:2 V:2', pad: { p: 'swell', inst: 'glassPad', n: 4, reg: [55, 79] }, pad2: { p: 'sus', inst: 'analog', n: 3, reg: [43, 62], vel: 0.7 }, bass: false,
+        lead: { ph: 'F1 F1', inst: 'flute', vel: 0.6 }, arp: { inst: 'harp', p: 'up8', vel: 0.5, reg: [55, 84] }, choir: { inst: 'ooh', n: 3, reg: [57, 76], vel: 0.5 }, bell: { dens: 0.12, res: 1, reg: [72, 96], vel: 0.4 }, drums: false, timp: false, rise: 2 },
       { n: 'A2', bars: 16, cres: [0.95, 1.08], prog: 'i bVII:.5 bVI:.5 i iv:.5 V:.5 | i V:.5 bIII:.5 i:.5 bVII:.5 V | i:.5 bVI:.5 i bIII:.5 V:.5 bVII:.5 V:.5 | bVI bIII:.5 V:.5 i i', hit: true, cr: true,
         pad: { p: 'sus', n: 4, reg: [50, 79] }, pad2: { p: 'sus', inst: 'lowBrass', n: 2, reg: [38, 55], vel: 0.85 }, bass: 'half', arp: { pat: '0.0.1.0.2.0.1.0.', res: 4, vel: 0.7, reg: [55, 79], gate: 0.9 },
         lead: { ph: 'H1 H2 H3 H4', inst: 'brass', vel: 0.95, harm: -2 }, lead2: { ph: 'H1 H2 H3 H4', inst: 'strings', oct: 1, vel: 0.75 }, choir: { inst: 'aah', n: 4, reg: [45, 72], vel: 0.9 }, choir2: { inst: 'ooh', n: 3, reg: [64, 81], vel: 0.7 },
-        timp: 'beats', drums: { sn: 'x..x.xx.x..x.xx.', bd: 'x.......x.......' }, bell: { dens: 0.3, res: 2, reg: [76, 100], vel: 0.6 }, fill: 'bigS' },
+        timp: 'beats', drums: { sn: 'x..x.xx.x..x.xx.', bd: 'x.......x.......' }, bell: { dens: 0.15, res: 1, reg: [76, 100], vel: 0.5 }, fill: 'bigS' },
       { n: 'E', bars: 8, lv: 0.68, prog: 'i bVI bVII i iv bVI V i', pad: { p: 'sus', n: 4, reg: [50, 76] }, pad2: { p: 'sus', inst: 'warm', n: 3, reg: [38, 60], vel: 0.6 }, bass: 'whole',
-        lead: { ph: 'H4 H4', inst: 'hornSolo', vel: 0.6 }, choir: { inst: 'choirMen', n: 3, reg: [40, 60], vel: 0.55 }, drums: { bdSoft: 'x...............' }, bell: { dens: 0.12, res: 1, reg: [72, 96], vel: 0.4 } },
+        lead: { ph: 'H4 H4', inst: 'hornSolo', vel: 0.6 }, choir: { inst: 'choirMen', n: 3, reg: [40, 60], vel: 0.55 }, drums: { bdSoft: 'x...............' }, bell: { dens: 0.07, res: 1, reg: [72, 96], vel: 0.36 } },
     ],
   });
 
   Track('galaxy4', {
-    desc: 'Deep field — slow analogue pads and a distant choir, high strings that swell and fade, harp and glass bells, a lone flute: space ambience in the Serrie manner',
-    bpm: 66, trim: 2.1, root: 'A', mode: 'lydian', loopFrom: 'A1', tens: false,
-    inst: { pad: 'analog', pad2: 'strings', bass: 'deep', lead: 'flute', lead2: 'glass', bell: 'glass', arp: 'harp', choir: 'ooh', choir2: 'aah' },
+    desc: 'Deep field — slow analogue pads under a high air pad, distant women’s voices, high strings that swell and fade, a celeste and harp as single points of light, a lone flute: the planetarium, in the Serrie manner',
+    bpm: 60, trim: 2.1, root: 'A', mode: 'lydian', loopFrom: 'A1', tens: false,
+    inst: { pad: 'analog', pad2: 'air', bass: 'deep', lead: 'flute', lead2: 'glass', bell: 'glass', arp: 'harp', choir: 'choirWomen', choir2: 'ooh' },
     ph: {
       S1: '5:4 | 8:4 | 7:4 | 5:4', S2: '6:4 | 8:2 9:2 | 8:4 | 5:4', S3: '10:4 | 9:4 | 8:2 7:2 | 5:4', S4: '5:2 8:2 | 7:3 6:1 | 5:4 | 3:4',
     },
     sec: [
-      { n: 'intro', bars: 8, cres: [0.5, 0.6], prog: 'IM7:4 II:4', pad: { p: 'swell', n: 4, reg: [45, 69] }, bass: { pat: '1---', pedal: true }, bell: { dens: 0.12, res: 1, reg: [72, 96], vel: 0.4 } },
-      { n: 'A1', bars: 16, lv: 0.6, prog: 'IM7:2 II:2 IM7:2 vi:2 | IM7:2 II:2 V:2 IM7:2', pad: { p: 'sus', n: 4, reg: [45, 69] }, pad2: { p: 'swell', inst: 'strings', n: 3, reg: [64, 84], vel: 0.5 }, bass: 'whole',
-        lead: { ph: 'S1 S2 S3 S4', vel: 0.55 }, choir: { n: 3, reg: [55, 76], vel: 0.45 }, arp: { pat: '0.2.1.3.', res: 1, vel: 0.45, reg: [57, 84] }, bell: { dens: 0.15, res: 1, reg: [72, 96], vel: 0.4 } },
-      { n: 'B', bars: 16, lv: 0.72, prog: 'vi:2 II:2 IM7:2 V:2 | vi:2 II:2 IM7:2 II:2', pad: { p: 'sus', n: 4, reg: [45, 69] }, pad2: { p: 'swell', inst: 'strings', n: 3, reg: [64, 86], vel: 0.6 }, bass: 'whole',
-        lead: { ph: 'S3 S4 S1 S2', inst: 'glass', vel: 0.5, echo: 0.25 }, choir2: { n: 3, reg: [57, 79], vel: 0.5 }, arp: { p: 'up8', vel: 0.4, reg: [57, 84] }, bell: { dens: 0.2, res: 1, reg: [76, 100], vel: 0.42 } },
-      { n: 'C', bars: 8, lv: 0.4, prog: 'IM7:4 II:4', pad: { p: 'swell', inst: 'glassPad', n: 4, reg: [52, 76] }, bass: false, choir: { n: 3, reg: [55, 76], vel: 0.4 }, bell: { dens: 0.25, res: 1, reg: [76, 100], vel: 0.45 } },
-      { n: 'E', bars: 8, lv: 0.55, prog: 'IM7:2 II:2 IM7:2 V:2', pad: { p: 'sus', n: 4, reg: [45, 69] }, pad2: { p: 'swell', inst: 'strings', n: 3, reg: [64, 84], vel: 0.5 }, bass: 'whole',
-        lead: { ph: 'S1 S4', vel: 0.5 }, arp: { pat: '0.2.1.3.', res: 1, vel: 0.4, reg: [57, 84] }, bell: { dens: 0.15, res: 1, reg: [72, 96], vel: 0.4 } },
+      { n: 'intro', bars: 8, cres: [0.45, 0.58], prog: 'IM7:4 II:4', pad: { p: 'swell', n: 3, reg: [45, 67] }, pad2: { p: 'swell', n: 2, reg: [72, 88], vel: 0.6 }, bass: { pat: '1---', pedal: true }, bell: { dens: 0.08, res: 1, reg: [76, 100], vel: 0.35 } },
+      { n: 'A1', bars: 16, lv: 0.56, prog: 'IM7:4 II:4 | IM7:4 vi:4 | IM7:4 II:4 | V:4 IM7:4', pad: { p: 'sus', n: 3, reg: [45, 67] }, pad2: { p: 'swell', n: 2, reg: [72, 88], vel: 0.6 }, bass: 'whole',
+        lead: { ph: 'S1 S2 S3 S4', vel: 0.45 }, choir: { n: 2, reg: [67, 81], vel: 0.4 }, arp: { pat: '0...2...1...3...', res: 1, vel: 0.4, reg: [57, 84] }, bell: { dens: 0.1, res: 1, reg: [76, 100], vel: 0.35 } },
+      { n: 'B', bars: 16, lv: 0.66, prog: 'vi:4 II:4 | IM7:4 V:4 | vi:4 II:4 | IM7:4 II:4', pad: { p: 'sus', n: 3, reg: [45, 67] }, pad2: { p: 'swell', inst: 'strings', n: 3, reg: [64, 86], vel: 0.5 }, bass: 'whole',
+        lead: { ph: 'S3 S4 S1 S2', inst: 'glass', vel: 0.45, echo: 0.3 }, choir: { n: 2, reg: [67, 81], vel: 0.45 }, choir2: { n: 3, reg: [50, 67], vel: 0.35 }, arp: { pat: '0.......2.......', res: 1, vel: 0.38, reg: [57, 84] }, bell: { dens: 0.14, res: 1, reg: [76, 100], vel: 0.38 } },
+      { n: 'C', bars: 8, lv: 0.38, prog: 'IM7:4 II:4', pad: { p: 'swell', inst: 'glassPad', n: 3, reg: [52, 76] }, pad2: { p: 'swell', n: 2, reg: [72, 88], vel: 0.55 }, bass: false, choir: { n: 2, reg: [67, 81], vel: 0.35 }, bell: { dens: 0.16, res: 1, reg: [76, 100], vel: 0.4 } },
+      { n: 'E', bars: 8, lv: 0.5, prog: 'IM7:4 II:4 | IM7:4 V:4', pad: { p: 'sus', n: 3, reg: [45, 67] }, pad2: { p: 'swell', n: 2, reg: [72, 88], vel: 0.55 }, bass: 'whole',
+        lead: { ph: 'S1 S4', vel: 0.42 }, arp: { pat: '0...2...1...3...', res: 1, vel: 0.36, reg: [57, 84] }, bell: { dens: 0.1, res: 1, reg: [76, 100], vel: 0.35 } },
     ],
   });
 
@@ -1139,7 +1139,7 @@
       B3: '8:.5 8:.5 8:1 10:1 7:1 | 8:.5 8:.5 8:1 5:1 3:1 | 4:1 5:1 6:1 8:1 | 7:2 5:2',
     },
     sec: [
-      { n: 'intro', bars: 4, lv: 0.62, prog: 'i', hit: 'tam', pad2: { p: 'sus', inst: 'dark', n: 3, reg: [38, 57] }, bass: { pat: '1---', pedal: true }, arp: { pat: '0.0.0.0.0.0.0.0.', res: 4, vel: 0.6, reg: [50, 62], gate: 0.7 }, drums: { bd: 'x.......x.......' }, timp: 'hits' },
+      { n: 'intro', bars: 4, lv: 0.62, prog: 'i', hit: 'tam', pad2: { p: 'sus', inst: 'analog', n: 3, reg: [38, 57], vel: 0.9 }, bass: { pat: '1---', pedal: true }, arp: { pat: '0.0.0.0.0.0.0.0.', res: 4, vel: 0.6, reg: [50, 62], gate: 0.7 }, drums: { bd: 'x.......x.......' }, timp: 'hits' },
       { n: 'A1', bars: 16, lv: 0.86, prog: 'i i bVI bVII | i bII i V | i i bVI bVII | i bII bVI V', pad: { p: 'stab', pat: 'x.......x...x...', n: 2, reg: [38, 55], vel: 0.9, gate: 0.5 }, pad2: { p: 'sus', inst: 'strings', n: 4, reg: [55, 79], vel: 0.7 },
         bass: 'oct8', arp: { pat: '0.1.0.2.0.1.0.3.', res: 4, vel: 0.72, reg: [55, 79], gate: 0.9 }, drums: 'warS', timp: 'beats', lead: { ph: 'B1 B2 B1 B2', vel: 0.85 }, choir: { n: 3, reg: [43, 62], vel: 0.7 }, fill: 'rollS' },
       { n: 'B1', bars: 16, lv: 1.0, prog: 'bVI bVII i i | bVI bVII V i | bVI bVII i i | bVI bVII V i', pad: { p: 'stab', pat: 'x.......x.x.....', n: 2, reg: [38, 55], vel: 0.95, gate: 0.5 }, pad2: { p: 'sus', inst: 'strings', n: 4, reg: [55, 79], vel: 0.75 },
@@ -1157,8 +1157,8 @@
 
   Track('galaxy1', {
     desc: 'Calm exploration, wonder: airy flute, glassy bells and a floating lydian pad',
-    bpm: 76, trim: 1.4, root: 'G', mode: 'lydian', loopFrom: 'A1',
-    inst: { pad: 'glassPad', bass: 'deep', lead: 'flute', lead2: 'glass', bell: 'glass', arp: 'vibes', choir: 'ooh' },
+    bpm: 70, trim: 1.1, root: 'G', mode: 'lydian', loopFrom: 'A1',
+    inst: { pad: 'analog', pad2: 'air', bass: 'deep', lead: 'flute', lead2: 'glass', bell: 'glass', arp: 'vibes', choir: 'choirWomen' },
     ph: {
       W1: '5:3 8:1 | 7:2 5:2 | 6:3 5:1 | 4:2 3:2',
       W2: '5:2 7:1 8:1 | 10:3 8:1 | 8:2! 7:1 5:1 | 5:4',
@@ -1168,13 +1168,13 @@
       C2: '5:4 | 7:4 | 6:4 | 4:4',
     },
     sec: [
-      { n: 'intro', bars: 4, lv: 0.45, prog: 'IM7:2 II:2', pad: { p: 'swell' }, bell: { dens: 0.3, res: 1, vel: 0.5 } },
-      { n: 'A1', bars: 8, lv: 0.66, prog: 'IM7:2 II:2 iii:2 V:2', pad: 'sus', bass: 'whole', lead: 'W1 W2', bell: { dens: 0.25, res: 2, vel: 0.7 } },
-      { n: 'A2', bars: 8, lv: 0.76, prog: 'IM7:2 II:2 iii:2 V:2', pad: 'sus', bass: 'whole', arp: { p: 'updown8', vel: 0.6, reg: [62, 86] }, lead: 'W1 W2', bell: { dens: 0.3, res: 2, vel: 0.7 }, choir: { vel: 0.6 } },
-      { n: 'B', bars: 8, lv: 0.86, prog: 'vi:2 II:2 IM7:2 V:2', pad: 'sus', bass: 'half', arp: { p: 'up8', vel: 0.36, reg: [64, 91] }, lead: 'W3 W4', lead2: { ph: 'W3 W4', inst: 'glass', oct: 1, vel: 0.4 }, bell: { dens: 0.25, res: 2 } },
+      { n: 'intro', bars: 4, lv: 0.45, prog: 'IM7:2 II:2', pad: { p: 'swell' }, pad2: { p: 'swell', n: 2, reg: [72, 88], vel: 0.5 }, bell: { dens: 0.14, res: 1, vel: 0.4 } },
+      { n: 'A1', bars: 8, lv: 0.66, prog: 'IM7:2 II:2 iii:2 V:2', pad: 'sus', bass: 'whole', lead: 'W1 W2', bell: { dens: 0.12, res: 1, vel: 0.45 } },
+      { n: 'A2', bars: 8, lv: 0.76, prog: 'IM7:2 II:2 iii:2 V:2', pad: 'sus', bass: 'whole', arp: { p: 'updown8', vel: 0.6, reg: [62, 86] }, lead: 'W1 W2', bell: { dens: 0.14, res: 1, vel: 0.45 }, choir: { vel: 0.6 } },
+      { n: 'B', bars: 8, lv: 0.86, prog: 'vi:2 II:2 IM7:2 V:2', pad: 'sus', bass: 'half', arp: { p: 'up8', vel: 0.36, reg: [64, 91] }, lead: 'W3 W4', lead2: { ph: 'W3 W4', inst: 'glass', oct: 1, vel: 0.4 }, bell: { dens: 0.12, res: 1, vel: 0.45 } },
       { n: 'C', bars: 8, lv: 0.5, prog: 'vi:2 V:2 IM7:2 II:2', pad: { p: 'swell' }, bass: false, lead: { ph: 'C1 C2', inst: 'glass', vel: 0.62 }, bell: { dens: 0.18, res: 1, vel: 0.4 }, choir: { v1: 'u', v2: 'o', vel: 0.5 } },
-      { n: 'A3', bars: 8, lv: 0.9, prog: 'IM7:2 II:2 iii:2 V:2', pad: { p: 'sus', inst: 'strings' }, bass: 'half', arp: { p: 'updown', vel: 0.38, reg: [62, 88] }, lead: { ph: 'W1 W2', harm: -2 }, lead2: { ph: 'W1 W2', inst: 'glass', oct: 1, vel: 0.4 }, choir: { vel: 0.7 }, bell: { dens: 0.3, res: 2 } },
-      { n: 'B2', bars: 8, lv: 1.0, prog: 'vi:2 II:2 IM7:2 V:2', pad: { p: 'sus', inst: 'strings' }, bass: 'half', arp: { p: 'up', vel: 0.38, reg: [64, 93] }, lead: { ph: 'W3 W4', harm: -2 }, lead2: { ph: 'W3 W4', inst: 'glass', oct: 1, vel: 0.45 }, choir: { v1: 'a', v2: 'a', vel: 0.75 }, bell: { dens: 0.35, res: 2 } },
+      { n: 'A3', bars: 8, lv: 0.9, prog: 'IM7:2 II:2 iii:2 V:2', pad: 'sus', pad2: { p: 'swell', inst: 'strings', n: 3, reg: [60, 84], vel: 0.5 }, bass: 'half', arp: { p: 'updown', vel: 0.38, reg: [62, 88] }, lead: { ph: 'W1 W2', harm: -2 }, lead2: { ph: 'W1 W2', inst: 'glass', oct: 1, vel: 0.4 }, choir: { vel: 0.7 }, bell: { dens: 0.3, res: 2 } },
+      { n: 'B2', bars: 8, lv: 1.0, prog: 'vi:2 II:2 IM7:2 V:2', pad: 'sus', pad2: { p: 'swell', inst: 'strings', n: 3, reg: [60, 84], vel: 0.5 }, bass: 'half', arp: { p: 'up', vel: 0.38, reg: [64, 93] }, lead: { ph: 'W3 W4', harm: -2 }, lead2: { ph: 'W3 W4', inst: 'glass', oct: 1, vel: 0.45 }, choir: { v1: 'a', v2: 'a', vel: 0.75 }, bell: { dens: 0.35, res: 2 } },
       { n: 'E', bars: 8, lv: 0.6, prog: 'IM7:2 II:2 IM7:2 V:2', pad: 'sus', bass: 'whole', lead: 'W1 W4', bell: { dens: 0.2, res: 2, vel: 0.45 } },
     ],
   });
@@ -1205,7 +1205,7 @@
   Track('galaxy3', {
     desc: 'Calm exploration, determination: steady pulse, strings and a resolute horn theme',
     bpm: 88, trim: 1.05, root: 'A', mode: 'minor', oct: 1, loopFrom: 'A1',
-    inst: { pad: 'strings', bass: 'pulse', lead: 'horn', lead2: 'bell', bell: 'glass', arp: 'arp', choir: 'aah' },
+    inst: { pad: 'strings', pad2: 'analog', bass: 'pulse', lead: 'horn', lead2: 'bell', bell: 'glass', arp: 'arp', choir: 'aah' },
     ph: {
       D1: '1:1.5 3:.5 5:1 3:1 | 6:1.5 5:.5 3:2 | 7:1.5 5:.5 2:2 | 1:3 r:1',
       D2: '5:1.5 6:.5 8:1 6:1 | 8:1.5 6:.5 3:2 | 4:1.5 6:.5 8:2 | 7#:2 5:2',
@@ -1215,14 +1215,14 @@
       D6: '6:4 | 8:4 | 7#:4 | 5:4',
     },
     sec: [
-      { n: 'intro', bars: 4, lv: 0.5, prog: 'i:2 bVI:1 bVII:1', pad: { p: 'swell' }, bass: { pat: '1---', pedal: true }, drums: { hat: 'o.o.o.o.o.o.o.o.' } },
-      { n: 'A1', bars: 8, lv: 0.66, prog: 'i bVI bVII i | i bVI bVII i', pad: 'sus', bass: 'pulse8', lead: 'D1 D1', drums: { kick: 'x.......x.......', hat: 'o.o.o.o.o.o.o.o.' } },
-      { n: 'A2', bars: 8, lv: 0.78, prog: 'i bVI bVII i | i bVI iv V', pad: 'sus', bass: 'pulse8', lead: 'D1 D2', arp: { p: 'up8', vel: 0.34, reg: [57, 81] }, drums: 'walk' },
-      { n: 'B', bars: 8, lv: 0.9, prog: 'bVI bVII i i | bVI bVII V V', pad: 'sus', bass: 'oct8', lead: 'D3 D4', lead2: { ph: 'D3 D4', inst: 'bell', oct: 1, vel: 0.4 }, arp: { p: 'up8', vel: 0.34, reg: [57, 81] }, drums: 'walk', timp: 'two' },
+      { n: 'intro', bars: 4, lv: 0.5, prog: 'i:2 bVI:1 bVII:1', pad: { p: 'swell' }, bass: { pat: '1---', pedal: true }, drums: false },
+      { n: 'A1', bars: 8, lv: 0.66, prog: 'i bVI bVII i | i bVI bVII i', pad: 'sus', pad2: { p: 'sus', n: 3, reg: [43, 62], vel: 0.6 }, bass: 'pulse8', lead: 'D1 D1', drums: { kick: 'x.......x.......' } },
+      { n: 'A2', bars: 8, lv: 0.78, prog: 'i bVI bVII i | i bVI iv V', pad: 'sus', pad2: { p: 'sus', n: 3, reg: [43, 62], vel: 0.6 }, bass: 'pulse8', lead: 'D1 D2', arp: { p: 'up8', vel: 0.34, reg: [57, 81] }, drums: { kick: 'x.......x.......' } },
+      { n: 'B', bars: 8, lv: 0.9, prog: 'bVI bVII i i | bVI bVII V V', pad: 'sus', bass: 'oct8', lead: 'D3 D4', lead2: { ph: 'D3 D4', inst: 'bell', oct: 1, vel: 0.4 }, arp: { p: 'up8', vel: 0.34, reg: [57, 81] }, drums: { kick: 'x.......x.......' }, timp: 'two' },
       { n: 'C', bars: 8, lv: 0.5, prog: 'iv:2 i:2 bVI:2 V:2', pad: { p: 'swell' }, bass: { pat: '1---', pedal: false }, lead: { ph: 'D5 D6', inst: 'flute', vel: 0.7 }, bell: { dens: 0.2, res: 1, vel: 0.45 }, choir: { vel: 0.55 }, drums: false },
-      { n: 'A3', bars: 8, lv: 0.88, prog: 'i bVI bVII i | i bVI iv V', pad: 'sus', bass: 'pulse8', lead: { ph: 'D1 D2', harm: -2 }, arp: { p: 'up', vel: 0.34, reg: [57, 84] }, drums: 'walk', timp: 'two', choir: { vel: 0.7 } },
+      { n: 'A3', bars: 8, lv: 0.88, prog: 'i bVI bVII i | i bVI iv V', pad: 'sus', pad2: { p: 'sus', n: 3, reg: [43, 62], vel: 0.6 }, bass: 'pulse8', lead: { ph: 'D1 D2', harm: -2 }, arp: { p: 'up', vel: 0.34, reg: [57, 84] }, drums: { kick: 'x.......x.......' }, timp: 'two', choir: { vel: 0.7 } },
       { n: 'B2', bars: 8, lv: 1.0, prog: 'bVI bVII i i | bVI bVII V V', pad: 'sus', bass: 'oct8', lead: { ph: 'D3 D4', harm: -2 }, lead2: { ph: 'D3 D4', inst: 'bell', oct: 1, vel: 0.45 }, arp: { p: 'up', vel: 0.36, reg: [57, 84] }, drums: { kick: 'x...x...x...x...', rim: '....x.......x...', hat: 'x.x.x.x.x.x.x.x.' }, timp: 'beats', choir: { vel: 0.8 }, fill: 'snare' },
-      { n: 'E', bars: 8, lv: 0.64, prog: 'i bVI bVII i | i bVI iv V', pad: 'sus', bass: 'pulse8', lead: 'D1 D2', drums: { kick: 'x.......x.......', hat: 'o.o.o.o.o.o.o.o.' } },
+      { n: 'E', bars: 8, lv: 0.64, prog: 'i bVI bVII i | i bVI iv V', pad: 'sus', pad2: { p: 'sus', n: 3, reg: [43, 62], vel: 0.6 }, bass: 'pulse8', lead: 'D1 D2', drums: { kick: 'x.......x.......' } },
     ],
   });
 

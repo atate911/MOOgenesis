@@ -162,7 +162,7 @@
     return true;
   };
   function makeIR(ctx, o) { const b = new IRBuilder(ctx, o); b.run(Infinity); return b.buf; }
-  const IR_HALL = { seconds: 2.9, rt60: 2.5, pre: 0.028, diff: 0.05, hiStart: 0.45, hiEnd: 0.06, damp: 1.4, er: 9, seed: 11 };   // concert hall: longer, softer tail
+  const IR_HALL = { seconds: 3.8, rt60: 3.3, pre: 0.036, diff: 0.05, hiStart: 0.44, hiEnd: 0.06, damp: 1.45, er: 8, seed: 11 };   // a large, open hall: long dark tail, a little more pre-delay
   const IR_PLATE = { seconds: 1.2, rt60: 1.0, pre: 0.003, diff: 0.008, hiStart: 0.85, hiEnd: 0.25, damp: 0.7, er: 0, seed: 23 };
 
   function softClipCurve() {                      // |x|<=0.6 linear, then tanh knee toward 0.97 (input pre-scaled by 0.5)
@@ -263,7 +263,7 @@
     const master = mk(ctx.createGain());
     const hp = mk(ctx.createBiquadFilter()); hp.type = 'highpass'; hp.frequency.value = 22; hp.Q.value = 0.5;
     const comp = mk(ctx.createDynamicsCompressor());
-    comp.threshold.value = -12; comp.knee.value = 12; comp.ratio.value = 3; comp.attack.value = 0.004; comp.release.value = 0.18;
+    comp.threshold.value = -10; comp.knee.value = 10; comp.ratio.value = 2.2; comp.attack.value = 0.008; comp.release.value = 0.25;   // peaks only: the score keeps its dynamics
     const pre = mk(ctx.createGain()); pre.gain.value = 0.5;
     const shaper = mk(ctx.createWaveShaper());
     if (!cache.clip) cache.clip = softClipCurve();
@@ -274,13 +274,13 @@
     eng.musicBus = mk(ctx.createGain());
     // gentle mastering tilt for music only: tighter lows, a little air
     const eqL = mk(ctx.createBiquadFilter()), eqH = mk(ctx.createBiquadFilter());
-    eqL.type = 'lowshelf'; eqL.frequency.value = 120; eqL.gain.value = -2.5;
-    eqH.type = 'highshelf'; eqH.frequency.value = 3200; eqH.gain.value = 1.5;
+    eqL.type = 'lowshelf'; eqL.frequency.value = 120; eqL.gain.value = -1.5;
+    eqH.type = 'highshelf'; eqH.frequency.value = 3200; eqH.gain.value = 2.0;
     // glue: a slow, shallow compressor on the whole orchestra (2:1 above -20 dB, 40 ms in, 400 ms out) so tutti swells sit together
     // and the master limiter is left with transients only
     const glue = mk(ctx.createDynamicsCompressor());
-    glue.threshold.value = -20; glue.knee.value = 14; glue.ratio.value = 2; glue.attack.value = 0.04; glue.release.value = 0.4;
-    const glueMake = mk(ctx.createGain()); glueMake.gain.value = dbtoa(2);
+    glue.threshold.value = -24; glue.knee.value = 18; glue.ratio.value = 1.6; glue.attack.value = 0.06; glue.release.value = 0.5;
+    const glueMake = mk(ctx.createGain()); glueMake.gain.value = dbtoa(1);
     const duck = mk(ctx.createGain());
     eng.musicBus.connect(eqL); eqL.connect(eqH); eqH.connect(glue); glue.connect(glueMake); glueMake.connect(duck); duck.connect(master);
     eng.glue = glue;

@@ -137,12 +137,19 @@ def chorus(x, rate=0.35, depth_ms=3.5, base_ms=14.0, taps=3, mix=0.6):
 
 def pad(midi, secs, kind):
     f0 = midi_f(midi); t = np.arange(int(secs * SR)) / SR
-    if kind == 'serrie':                       # warm analogue strings-pad: 9 saws spread across the field, breathing 4-pole lowpass
-        x = saw_bank(f0, secs, 9, 13.0)
-        hi = min(12000, f0 * 8 + 1500); x = lowpass_moving(x, hi * 0.55, hi, 0.08, 1.4)
+    if kind == 'serrie':                       # warm analogue strings-pad: 9 saws spread across the field, breathing 4-pole lowpass, slow bloom
+        x = saw_bank(f0, secs, 9, 14.0)
+        hi = min(9000, f0 * 6 + 1200); x = lowpass_moving(x, hi * 0.5, hi, 0.06, 1.3)
         subo = 0.3 * np.sin(2 * np.pi * f0 * 0.5 * t) * np.minimum(1, t / 0.5); x[:, 0] += subo; x[:, 1] += subo
         x = saturate(x, 1.5)
         y = chorus(x, 0.29, 2.6, 15.0, 3, 0.55)
+    elif kind == 'air':                        # the planetarium pad: a high, hollow, very slow shimmer with almost no attack
+        x = 0.5 * saw_bank(f0, secs, 7, 9.0, wave='tri') + 0.35 * saw_bank(f0 * 2, secs, 5, 7.0, wave='tri') + 0.12 * saw_bank(f0 * 3, secs, 3, 5.0, wave='tri')
+        hi = min(12000, f0 * 10 + 1500); x = lowpass_moving(x, hi * 0.45, hi, 0.05, 1.1, 3)
+        x *= (1 + 0.14 * np.sin(2 * np.pi * 0.11 * t))[:, None]
+        y = chorus(x, 0.23, 3.2, 17.0, 3, 0.6)
+        env = np.minimum(1, t / 1.2)[:, None] * np.minimum(1, (secs - t) / 0.3)[:, None]
+        return y * env
     elif kind == 'glass':                      # glassy, airy: triangle + saw mix, high cutoff, slow shimmer
         x = 0.6 * saw_bank(f0, secs, 7, 8.0, wave='tri') + 0.5 * saw_bank(f0 * 2, secs, 5, 6.0)
         hi = min(14000, f0 * 12 + 2000); x = lowpass_moving(x, hi * 0.6, hi, 0.13, 1.2, 3)
@@ -181,6 +188,7 @@ INSTRUMENTS = {
     'choirHiOo': dict(notes=list(range(60, 85, 4)), secs=4.6, fn=lambda m: choir(m, 'oo_upper', 18, 4.6, 1.0, 0.9)),
     'padSerrie': dict(notes=list(range(36, 85, 6)), secs=4.2, fn=lambda m: pad(m, 4.2, 'serrie')),
     'padGlass':  dict(notes=list(range(48, 97, 6)), secs=4.2, fn=lambda m: pad(m, 4.2, 'glass')),
+    'padAir':    dict(notes=list(range(60, 97, 6)), secs=5.0, fn=lambda m: pad(m, 5.0, 'air')),
     'padDark':   dict(notes=list(range(31, 68, 6)), secs=4.2, fn=lambda m: pad(m, 4.2, 'dark')),
     'subBass':   dict(notes=[29, 36, 43], secs=3.0, fn=lambda m: sub(m, 3.0)),
 }
