@@ -157,9 +157,11 @@
 
   // ---- generic event card (exploration, colonisation prompt, notices, pre-battle) ---------------------------------------------------------------------
   //   UI.Flow.card({title, planetCard?, owner?, body:[strings|Nodes], flags:[{text,good}], buttons:[{label,value,primary}]}) → Promise(value)
+  let cardOffs = [];
   UI.Side.register('card', {
     render(host, ctx) {
       const p = ctx.params;
+      cardOffs.splice(0).forEach(off => off());
       host.appendChild(p.star !== undefined ? UI.Side.title(p.star, p.ownerId) : h('div.side-title', h('span.nm', p.heading || '')));
       const body = h('div.sm-event');
       if (p.planetCard) body.appendChild(h('div.sm-card', planetPic(p.planetCard, 44, p.ownerId), h('div.sc-info', h('div', h('span.cls', { style: { font: '400 1.2rem var(--font-display)', color: 'var(--brass-hi)' } }, p.planetCard.typeLabel), p.planetCard.growthLabel ? h('span.chip' + (p.planetCard.growth === 'hostile' ? '.warn' : '.ok'), { style: { marginLeft: '.4rem' } }, p.planetCard.growthLabel) : null), p.planetCard.type !== 'none' ? h('div', 'POP ', h('b.t-leaf', p.planetCard.maxPop), ' max') : null)));
@@ -167,12 +169,15 @@
       for (const b of (p.body || [])) body.appendChild(typeof b === 'string' ? h('p', b) : b);
       for (const f of (p.flags || [])) body.appendChild(h('div.flag' + (f.good ? '.good' : ''), h('b', f.head || ''), ' ', f.text));
       host.appendChild(body);
-      const btns = p.buttons || [{ label: 'Continue', value: true, primary: true }], prim = btns.find(b => b.primary) || btns[0], offs = [];
+      const btns = p.buttons || [{ label: 'Continue', value: true, primary: true }], prim = btns.find(b => b.primary) || btns[0], offs = cardOffs;
       const fire = v => { offs.splice(0).forEach(off => off()); if (p.resolve) p.resolve(v); };            // the original advances on any key: Space/Enter = the primary button, letters = their hotkeys
       const scr = { screen: 'galaxy' };
       offs.push(UI.bindKey('space', () => fire(prim.value), scr), UI.bindKey('enter', () => fire(prim.value), scr));
       for (const b of btns) if (b.kbd && String(b.kbd).length === 1) offs.push(UI.bindKey(String(b.kbd).toLowerCase(), () => fire(b.value), scr));
-      host.appendChild(h('div.sm-actions', btns.map(b => UI.button(b.label, () => fire(b.value), { primary: !!b.primary, kbd: b.kbd }))));
+      const els = btns.map(b => UI.button(b.label, () => fire(b.value), { primary: !!b.primary, kbd: b.kbd }));
+      host.appendChild(h('div.sm-actions', els));
+      UI.attention(els[btns.indexOf(prim)]);                                                               // the answer the turn is waiting for: highlighted + focused (Enter/Space)
     },
+    dispose() { cardOffs.splice(0).forEach(off => off()); },                                               // replaced/removed: its hotkeys go with it (it is re-shown by Flow while pending)
   });
 })(window.MOO);

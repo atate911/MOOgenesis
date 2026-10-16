@@ -12,6 +12,7 @@
   G.changed = () => M.Bus.emit('state');
 
   G.newGame = async function (settings) {
+    G.abortTurn();                                                  // a turn still waiting on a scene must not keep running against the new game
     const st = Object.assign({}, settings);
     if (!st.seed) st.seed = String(Date.now());
     await new Promise(r => setTimeout(r, 30));                     // let the loading overlay paint
@@ -36,13 +37,14 @@
   G.autosave = () => G.saveSlot('auto');
   G.loadSlot = function (slot) {
     const S = M.Save.load(slot); if (!S) return false;
+    G.abortTurn();                                                  // loading mid-turn would otherwise leave Game.busy stuck on the abandoned turn
     G.S = S; G.sel = { star: G.player().capital, fleet: -1 };
     Sim.Fleet.updateRange(S); Sim.Vis.update(S); Sim.Econ.refresh(S);
     M.Bus.emit('game:loaded', S);
     if (M.UI && M.UI.Screens && M.UI.Screens.has('galaxy')) M.UI.Screens.go('galaxy');
     return true;
   };
-  G.quitToMenu = function () { if (G.S && M.Settings.get('autosave')) G.autosave(); G.S = null; M.Bus.emit('game:quit'); if (M.UI && M.UI.Screens) M.UI.Screens.go('menu'); };
+  G.quitToMenu = function () { const mid = G.busy; G.abortTurn(); if (G.S && !mid && M.Settings.get('autosave')) G.autosave(); G.S = null; M.Bus.emit('game:quit'); if (M.UI && M.UI.Screens) M.UI.Screens.go('menu'); };
 
   // ---- parallel helpers -----------------------------------------------------------------------------------------------------------
   // AI planning runs inline or on the worker pool, whichever measures faster on this machine/map (posting the state snapshot costs a few ms, so
@@ -93,35 +95,65 @@
     techChoice: it => (it.choices[0] ? it.choices[0].level : 0),
     council: (it, S) => (Sim.Council && Sim.Council.autoVote ? Sim.Council.autoVote(S, it.info) : 0),
   };
-  const SKIPPED = { skipped: true };
+  const SKIPPED = { skipped: true }, ABORTED = { aborted: true };
+  // What a SKIPPED step answers. The generator's own fallback for `undefined` is not always the harmless choice: an unanswered audience counts as
+  // "accept" (which can declare war on a third empire or break an alliance) and an unanswered bombard prompt bombs. A skip must never change the game
+  // in a way the player did not choose, so the skip answers are the explicit no-op choices.
+  const SKIP_ANSWERS = { diplomacy: 'reject', bombardPrompt: false, colonize: false, councilResult: true };
+  const skipAnswer = it => (Object.prototype.hasOwnProperty.call(SKIP_ANSWERS, it.type) ? SKIP_ANSWERS[it.type] : undefined);
   G.skipWait = null;
+  G.pending = null;                 // {type, it, answer(v)} while the turn waits on an interrupt (the UI shows what is being waited for)
+  let runToken = 0, abortWait = null;
+  // Abandon the turn in progress (load / quit / new game): the generator is closed and its state is left as it is, never autosaved.
+  // Returns true when a turn was running. Synchronous as far as callers are concerned: Game.busy is false on return.
+  G.abortTurn = function () {
+    if (!G.busy) return false;
+    runToken++; G.busy = false;
+    const w = abortWait; abortWait = null;
+    if (w) w(ABORTED);
+    G.pending = null; G.skipWait = null;
+    M.Bus.emit('turn:processing', false); M.Bus.emit('turn:aborted');
+    return true;
+  };
+  G.answerPending = function (v) { const p = G.pending; if (p) p.answer(v); return !!p; };
   G.endTurn = async function () {
     if (!G.S || G.busy) return null;
     G.busy = true; M.Bus.emit('turn:processing', true);
-    const S = G.S, t0 = performance.now(), seen = [];
-    let over = null;
+    const S = G.S, t0 = performance.now(), seen = [], token = ++runToken;
+    const live = () => token === runToken;
+    let over = null, failed = null;
     try {
       const gen = Sim.Turn.run(S);
       let r = gen.next();
       while (!r.done) {
         const it = r.value, h = G.handlers[it.type] || DEFAULTS[it.type];
         let ans;
-        const wd = setTimeout(() => { console.warn('[turn] still waiting on the "' + it.type + '" interrupt after 10 s', it); M.Bus.emit('turn:waiting', it.type); }, 10000);   // diagnostic: a handler that never answers is what freezes a turn
-        const skipP = new Promise(res => { G.skipWait = () => { res(SKIPPED); }; });                 // the player's way out of a stuck interrupt (busy overlay "Skip" button)
-        try { ans = h ? await Promise.race([h(it, S), skipP]) : undefined; } catch (e) { console.error('[interrupt ' + it.type + ']', e); ans = undefined; }
-        if (ans === SKIPPED) { ans = undefined; console.warn('[turn] interrupt "' + it.type + '" skipped by the player'); M.Bus.emit('turn:skipped', it.type); }
-        G.skipWait = null;
+        const wd = setTimeout(() => { if (!live()) return; console.warn('[turn] still waiting on the "' + it.type + '" interrupt after 10 s', it); M.Bus.emit('turn:waiting', it.type); }, 10000);   // diagnostic: a handler that never answers is what freezes a turn
+        const escP = new Promise(res => {
+          G.skipWait = () => { res(SKIPPED); };                                                        // the player's way out of a stuck interrupt (busy overlay "Skip" button)
+          abortWait = res;                                                                            // load / quit / new game while waiting
+          G.pending = { type: it.type, it, answer: v => res(v === undefined ? SKIPPED : v) };          // a scene that lost its UI can still be answered (default = skip)
+        });
+        try { ans = h ? await Promise.race([h(it, S), escP]) : undefined; } catch (e) { console.error('[interrupt ' + it.type + ']', e); ans = undefined; }
         clearTimeout(wd);
+        G.skipWait = null; abortWait = null; G.pending = null;
+        if (ans === ABORTED || !live()) { try { gen.return(); } catch (e) { /* ignore */ } return null; }
+        if (ans === SKIPPED) { ans = skipAnswer(it); console.warn('[turn] interrupt "' + it.type + '" skipped by the player'); M.Bus.emit('turn:skipped', it.type); }
         seen.push(it.type);
         r = gen.next(ans);
       }
       over = r.value || null;
+    } catch (e) {
+      failed = e; console.error('[turn] the turn pipeline threw; the state is mid-turn and was NOT autosaved', e);
     } finally {
-      G.busy = false;
-      G.last = { ms: performance.now() - t0, interrupts: seen, over };
-      if (M.Settings.get('autosave')) G.autosave();
-      M.Bus.emit('turn:processing', false); M.Bus.emit('turn:end', S, G.last); M.Bus.emit('state');
+      if (live()) {
+        G.busy = false; G.pending = null; G.skipWait = null; abortWait = null;
+        G.last = { ms: performance.now() - t0, interrupts: seen, over, error: failed };
+        if (!failed && M.Settings.get('autosave')) G.autosave();                                       // never overwrite the autosave with a half-processed turn
+        M.Bus.emit('turn:processing', false); M.Bus.emit('turn:end', S, G.last); M.Bus.emit('state');
+      }
     }
+    if (failed) throw failed;
     return G.last;
   };
 

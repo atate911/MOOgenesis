@@ -6,12 +6,14 @@
   const Flow = UI.Flow = {};
 
   // show a card in the side panel and wait for a button; always returns the panel to the default selection afterwards
+  // The card is the turn's pending question: UI.Side.hold keeps it on screen (re-shown on enter(), never replaced) until it is answered.
   Flow.card = function (opts) {
     return new Promise(resolve => {
-      if (UI.Screens.current && UI.Screens.current.id !== 'galaxy') UI.Screens.go('galaxy');
-      const done = v => { resolve(v); setTimeout(() => UI.Galaxy.showDefault(), 0); };
-      if (opts.star !== undefined && UI.Galaxy.map) UI.Galaxy.map.centerOn(opts.star, { animate: true });
-      UI.Side.show('card', Object.assign({}, opts, { resolve: done }));
+      const params = Object.assign({}, opts);
+      let settled = false, hd = null;
+      const done = v => { if (settled) return; settled = true; UI.Side.release(hd); resolve(v); setTimeout(() => { if (!UI.Side.held) UI.Galaxy.showDefault(); }, 0); };
+      params.resolve = done;
+      hd = UI.Side.hold('card', params, () => done(undefined));
     });
   };
   const planetOf = (S, id) => Q.planetCard(S, id);

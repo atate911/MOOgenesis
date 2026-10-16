@@ -172,3 +172,10 @@ label.check { display: inline-flex; align-items: center; gap: .5em; cursor: poin
 .sec-h.mint { color: var(--mint, var(--leaf)); } .sec-h.gold { color: var(--title, var(--gold)); } .sec-h.red { color: var(--rose); }
 .t-title { color: var(--title, var(--brass-hi)); } .t-mint { color: var(--mint, var(--leaf)); } .t-amber { color: var(--amber, var(--ember)); } .t-lime { color: var(--lime, var(--leaf)); } .t-cream { color: var(--cream, var(--ivory)); }
 .panel.bronze, .panel.silver { /* variants are styled by the active theme */ }
+
+/* the control that answers the pending turn step (UI.attention): visible even when the eye is elsewhere */
+.btn.needs-answer { position:relative; box-shadow:0 0 0 2px rgba(232,200,80,.85), 0 0 18px rgba(232,200,80,.55); animation:needs-answer 1.1s ease-in-out infinite; }
+.btn.needs-answer:focus-visible { outline:2px solid #fff3c4; outline-offset:2px; }
+@keyframes needs-answer { 0%,100% { box-shadow:0 0 0 2px rgba(232,200,80,.85), 0 0 10px rgba(232,200,80,.35); } 50% { box-shadow:0 0 0 3px rgba(255,235,150,1), 0 0 26px rgba(232,200,80,.8); } }
+@media (prefers-reduced-motion: reduce) { .btn.needs-answer { animation:none; } }
+.gx-bar .btn.turn-locked { opacity:.45; pointer-events:none; }

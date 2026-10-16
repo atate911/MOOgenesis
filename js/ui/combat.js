@@ -278,6 +278,7 @@
     acts.appendChild(bRet); acts.appendChild(bAuto); acts.appendChild(bFight);
     root.appendChild(acts);
     host.appendChild(root);
+    UI.attention(tacticalDefault ? bFight : bAuto);                                                  // the turn waits on this choice: highlight + focus it
 
     const onKey = e => {
       if (UI.modalOpen && UI.modalOpen()) return;
@@ -372,7 +373,7 @@
     if (notes.length) root.appendChild(h('ul.notes', notes.map(n => h('li', n))));
     const btn = UI.button('Continue', onContinue, { primary: true, kbd: 'Space' });
     root.appendChild(h('div.foot', h('span.rd', 'Rounds fought: ', h('b', res.rounds | 0)), btn));
-    root.btn = btn;
+    root.btn = btn; UI.attention(btn);
     return root;
   }
 
@@ -396,11 +397,11 @@
   // ===================================================================================================================================================
   function showOnGalaxy(name, params, last) {                       // last: the final card of the battle → put the default side panel back afterwards
     return new Promise(resolve => {
-      const done = v => { resolve(v); if (last) setTimeout(() => { if (UI.Galaxy && UI.Galaxy.showDefault && UI.Screens.current && UI.Screens.current.id === 'galaxy') UI.Galaxy.showDefault(); }, 0); };
+      let hd = null, settled = false;
+      const done = v => { if (settled) return; settled = true; if (hd) UI.Side.release(hd); resolve(v); if (last) setTimeout(() => { if (UI.Galaxy && UI.Galaxy.showDefault && !UI.Side.held && UI.Screens.current && UI.Screens.current.id === 'galaxy') UI.Galaxy.showDefault(); }, 0); };
       if (UI.Screens.has('galaxy')) {
-        if (!UI.Screens.current || UI.Screens.current.id !== 'galaxy') UI.Screens.go('galaxy');
-        try { if (UI.Galaxy.map && params.battle.star >= 0) UI.Galaxy.map.centerOn(params.battle.star, { animate: true }); } catch (e) { /* map optional */ }
-        UI.Side.show(name, Object.assign({}, params, { resolve: done }));
+        // held: survives a screen change / re-entry and cannot be replaced by another panel until answered (see UI.Side.hold)
+        hd = UI.Side.hold(name, Object.assign({}, params, { star: params.battle.star, resolve: done }), () => done(name === 'prebattle' ? 'auto' : true));
       } else {                                                    // no galaxy screen (test pages): show the card in a modal
         const host = h('div'); let off = null;
         const pr = UI.modal({ title: '', body: host, buttons: [], closable: false, width: '30rem', onOpen: () => { if (name === 'prebattle') off = buildPreBattle(params, host, v => pr.close(v)); else host.appendChild(buildSummary(params.result, params.battle, params.S, () => pr.close(true))); } });
