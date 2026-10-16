@@ -1,38 +1,53 @@
 #!/usr/bin/env python3
-"""Build the game's photo ship sprites from the Fleet AI candidate PNGs.
+"""Build the game's photo ship sprites (several image variants per hull class).
 
-    python3 -I tools/build-ship-art.py            (run from the repo root)
+    python3 -I tools/build-ship-art.py [SOURCE_DIR ...]          (run from the repo root)
 
-For each hull class one candidate (PICKS below) is
-  * cropped to its visible bounds (+ a small margin) and downscaled,
+Sources: every .png/.webp in the given folders (default: "MOOg images/ship-variants" when it exists) whose filename names a
+hull class (frigate, destroyer, cruiser, battleship, doomstar, starbase, battlestation, star-fortress, stargate) becomes one
+variant of that class, in filename order.  A class with no new images keeps its Fleet AI pick (DEFAULT_PICKS).  Pass
+--with-defaults to keep the Fleet AI pick as an extra variant even when new images exist.
+In-game, each ship design gets a stable pseudo-random variant of its class (hash of empire + slot + name).
+
+Each variant is
+  * keyed out of a flat #00FF00 background if the image has no transparency, cropped to its visible bounds (+ margin), downscaled,
   * split into a neutral BASE image (the #FF00FF livery replaced by its own brightness, so it stays shaded grey) and a
     TEAM mask (white, alpha = how "livery" a pixel is).  At runtime Gfx.Ships multiplies the empire colour through the mask,
   * analysed for engine glows (white-cyan blobs at the stern), damage sites, hardpoints and nav-light spots.
-Output: assets/ships/ship-<key>.webp, assets/ships/ship-<key>-team.webp, assets/ships/ship-art.json, and the generated
-SHIP_ART block inside js/gfx/ships.js (between the @@SHIP_ART@@ markers).  Coordinates are in ship units: the visible hull
-spans x = -0.5..0.5 (nose at +x), y has the same scale.
+Art rules: top-down, nose pointing RIGHT (+x) for mobile ships, grey hull, #FF00FF livery, white-cyan engines.
+Output: assets/ships/ship-<class>-<n>.webp + ship-<class>-<n>-team.webp (n from 1), assets/ships/ship-art.json, and the
+generated SHIP_ART block inside js/gfx/ships.js (between the @@SHIP_ART@@ markers).  Stale ship-*.webp files are removed.
+Coordinates are in ship units: the visible hull spans x = -0.5..0.5 (nose at +x), y has the same scale.
 """
-import json, os, re, sys
+import glob, json, os, re, sys
 import numpy as np
 from PIL import Image
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-SRC = os.path.join(ROOT, 'MOOg images', 'fleet-ai-evaluation')
+FLEET_AI = os.path.join(ROOT, 'MOOg images', 'fleet-ai-evaluation')
+VARIANTS = os.path.join(ROOT, 'MOOg images', 'ship-variants')
 OUT = os.path.join(ROOT, 'assets', 'ships')
 JS = os.path.join(ROOT, 'js', 'gfx', 'ships.js')
 
-# one design per class (see tools/handoff/ship-art.md for why)
-PICKS = [
-    ('frigate', 'original--01-frigate.png'),
-    ('destroyer', 'revised--02-destroyer.png'),
-    ('cruiser', 'revised--03-cruiser.png'),
-    ('battleship', 'revised--04-battleship.png'),
-    ('doomstar', 'alternatives--05-doomstar-eclipse.png'),
-    ('starbase', 'original--06-starbase.png'),
-    ('battlestation', 'revised--07-battlestation.png'),
-    ('starfortress', 'alternatives--08-star-fortress-crown.png'),
-    ('stargate', 'original--09-stargate.png'),
-]
+CLASSES = ['frigate', 'destroyer', 'cruiser', 'battleship', 'doomstar', 'starbase', 'battlestation', 'starfortress', 'stargate']
+STRUCTURES = ('starbase', 'battlestation', 'starfortress', 'stargate')
+# filename -> class (first match wins; battlestation before battleship is not needed but kept explicit)
+CLASS_RE = [(k, re.compile(r)) for k, r in [
+    ('battlestation', r'battle[-_ ]?station'), ('battleship', r'battle[-_ ]?ship'), ('starfortress', r'star[-_ ]?fortress|fortress'),
+    ('stargate', r'star[-_ ]?gate'), ('starbase', r'star[-_ ]?base'), ('doomstar', r'doom[-_ ]?star'),
+    ('frigate', r'frigate'), ('destroyer', r'destroyer'), ('cruiser', r'cruiser')]]
+# Fleet AI picks (see tools/handoff/ship-art.md for why)
+DEFAULT_PICKS = {
+    'frigate': 'original--01-frigate.png',
+    'destroyer': 'revised--02-destroyer.png',
+    'cruiser': 'revised--03-cruiser.png',
+    'battleship': 'revised--04-battleship.png',
+    'doomstar': 'alternatives--05-doomstar-eclipse.png',
+    'starbase': 'original--06-starbase.png',
+    'battlestation': 'revised--07-battlestation.png',
+    'starfortress': 'alternatives--08-star-fortress-crown.png',
+    'stargate': 'original--09-stargate.png',
+}
 LONG_SIDE = 1024      # px of the visible long side in the shipped image
 PAD = 0.03            # margin around the visible bounds (fraction of the long side)
 
@@ -92,8 +107,21 @@ def r4(v):
     return round(float(v), 4)
 
 
-def build(key, fname, structure):
-    im = Image.open(os.path.join(SRC, fname)).convert('RGBA')
+def key_green(im):
+    """images without transparency: remove a flat #00FF00 background (with soft edges and green-spill suppression)"""
+    a = np.asarray(im).astype(np.float32) / 255.0
+    if a[..., 3].min() < 0.99:
+        return im
+    r, g, b = a[..., 0], a[..., 1], a[..., 2]
+    gk = g - np.maximum(r, b)                      # how much greener than the other channels
+    alpha = 1 - sstep(0.18, 0.45, gk) * sstep(0.35, 0.6, g)
+    g2 = np.minimum(g, np.maximum(r, b) + 0.06)    # despill the fringe
+    out = np.dstack([r, np.where(alpha < 1, g2, g), b, alpha])
+    return Image.fromarray((out.clip(0, 1) * 255).round().astype(np.uint8), 'RGBA')
+
+
+def build(key, path, stem, structure):
+    im = key_green(Image.open(path).convert('RGBA'))
     a = np.asarray(im).astype(np.float32) / 255.0
     alpha = a[..., 3]
     ys, xs = np.nonzero(alpha > 0.5)
@@ -123,8 +151,8 @@ def build(key, fname, structure):
     team_a = (team * A).clip(0, 1)
     team_img = Image.fromarray((np.dstack([np.ones_like(rgb), team_a]) * 255).round().astype(np.uint8), 'RGBA')
     os.makedirs(OUT, exist_ok=True)
-    base_img.save(os.path.join(OUT, 'ship-%s.webp' % key), 'WEBP', quality=88, method=6, alpha_quality=100)
-    team_img.save(os.path.join(OUT, 'ship-%s-team.webp' % key), 'WEBP', quality=80, method=6, alpha_quality=90)
+    base_img.save(os.path.join(OUT, stem + '.webp'), 'WEBP', quality=88, method=4, alpha_quality=100)
+    team_img.save(os.path.join(OUT, stem + '-team.webp'), 'WEBP', quality=80, method=4, alpha_quality=90)
 
     # ---- analysis in ship units (on the shipped image) ----
     Lp = L * scale                                  # px per unit in the shipped image
@@ -156,7 +184,7 @@ def build(key, fname, structure):
 
     hy = vh / 2.0 / L                                # visible half-height (units)
     hx = vw / 2.0 / L
-    rr = np.random.default_rng(sum(map(ord, key)))   # deterministic per class
+    rr = np.random.default_rng(sum(map(ord, stem)))  # deterministic per variant
     sites = []
     if len(pts):
         for i in rr.choice(len(pts), size=min(6, len(pts)), replace=False):
@@ -190,7 +218,7 @@ def build(key, fname, structure):
                     break
         hole = r4(min(rs) / Lp) if rs else 0
     return {
-        'src': fname, 'hole': hole,
+        'file': stem, 'src': os.path.relpath(path, ROOT), 'hole': hole,
         'ext': [r4(W / 2.0 / Lp), r4(H / 2.0 / Lp)],   # half extents of the image, units
         'hw': r4(hy), 'hl': r4(hx),                    # visible half height / half length, units
         'team': r4(float((team * (A > 0.5)).sum() / max(1, (A > 0.5).sum()))),
@@ -199,13 +227,37 @@ def build(key, fname, structure):
     }
 
 
+def sources(argv):
+    dirs = [a for a in argv if not a.startswith('--')] or ([VARIANTS] if os.path.isdir(VARIANTS) else [])
+    found = {k: [] for k in CLASSES}
+    for d in dirs:
+        for f in sorted(glob.glob(os.path.join(d, '**', '*'), recursive=True)):
+            name = os.path.basename(f).lower()
+            if not name.endswith(('.png', '.webp')) or name.endswith(('-team.webp', '-team.png')):
+                continue
+            for k, rx in CLASS_RE:
+                if rx.search(name):
+                    found[k].append(f)
+                    break
+    out = {}
+    for k in CLASSES:
+        dflt = os.path.join(FLEET_AI, DEFAULT_PICKS[k])
+        out[k] = found[k] + ([dflt] if not found[k] or '--with-defaults' in argv else [])
+    return out
+
+
 def main():
+    src = sources(sys.argv[1:])
+    os.makedirs(OUT, exist_ok=True)
+    for f in glob.glob(os.path.join(OUT, 'ship-*.webp')):   # drop stale variants
+        os.remove(f)
     meta = {}
-    for key, fname in PICKS:
-        structure = key in ('starbase', 'battlestation', 'starfortress', 'stargate')
-        meta[key] = build(key, fname, structure)
-        m = meta[key]
-        print('%-14s ext=%s hw=%.3f team=%.1f%% engines=%d' % (key, m['ext'], m['hw'], m['team'] * 100, len(m['eng'])))
+    for key in CLASSES:
+        meta[key] = []
+        for i, path in enumerate(src[key]):
+            m = build(key, path, 'ship-%s-%d' % (key, i + 1), key in STRUCTURES)
+            meta[key].append(m)
+            print('%-14s #%d %-48s ext=%s hw=%.3f team=%.1f%% engines=%d' % (key, i + 1, os.path.basename(path)[:48], m['ext'], m['hw'], m['team'] * 100, len(m['eng'])))
     with open(os.path.join(OUT, 'ship-art.json'), 'w') as f:
         json.dump(meta, f, indent=1)
     js = open(JS).read()

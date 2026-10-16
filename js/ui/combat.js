@@ -144,11 +144,13 @@
   const unitHp = u => (u.count > 0 ? (u.count - 1) * u.hp1 + Math.max(0, u.hp1 - u.hploss) : 0);
   const hullFit = [0.58, 0.7, 0.82, 0.94];
 
-  function shipCanvas(race, hull, color, flags, w, hh) {
+  // art-variant key of a battle side's design (stable per empire/slot/name, so it matches the ledgers and the design screen)
+  const vkOf = (side, d) => (side && !side.monster && d && M.Gfx.Ships && M.Gfx.Ships.designKey ? M.Gfx.Ships.designKey(side.empire, d.slot, d.name) : '');
+  function shipCanvas(race, hull, color, flags, w, hh, vk) {
     const c = h('canvas', { width: Math.round(w * 2), height: Math.round(hh * 2) });
     try {
       const size = Math.round(w * 2 * (hullFit[clamp(hull | 0, 0, 3)]));
-      const sp = M.Gfx.Ships.sprite(race === 'monster' ? 'sakkra' : race, clamp(hull | 0, 0, 3), size, color, flags || {});
+      const sp = M.Gfx.Ships.sprite(race === 'monster' ? 'sakkra' : race, clamp(hull | 0, 0, 3), size, color, flags || {}, vk || null);
       const k = Math.min(c.width / sp.width, c.height / sp.height, 1.6), g = c.getContext('2d');
       g.drawImage(sp, (c.width - sp.width * k) / 2, (c.height - sp.height * k) / 2, sp.width * k, sp.height * k);
     } catch (e) { /* art is optional */ }
@@ -195,7 +197,7 @@
       const n = s.ships ? s.ships[k] | 0 : 0, d = s.designs && s.designs[k];
       if (n <= 0 || !d) continue;
       any = true;
-      box.appendChild(h('div.d', shipCanvas(s.monster ? 'sakkra' : s.race, s.monster ? 3 : d.hull, col, designFlags(d), 36, 24), h('span', d.name || HULLN[d.hull | 0]), h('span.n', '×' + n)));
+      box.appendChild(h('div.d', shipCanvas(s.monster ? 'sakkra' : s.race, s.monster ? 3 : d.hull, col, designFlags(d), 36, 24, vkOf(s, d)), h('span', d.name || HULLN[d.hull | 0]), h('span.n', '×' + n)));
     }
     if (battle.planet && battle.planetSide === i && (battle.planet.bases | 0) > 0) {
       any = true;
@@ -232,7 +234,7 @@
           if (best < 0) continue;
           const d = sd.designs[best], len = o.h * (sd.monster ? 0.62 : [0.34, 0.42, 0.52, 0.62][clamp(d.hull | 0, 0, 3)]);
           const x = s === 0 ? o.w * 0.22 : o.w * 0.78, y = o.h * 0.64 + Math.sin(t * 0.9 + s * 2) * 3;
-          M.Gfx.Ships.draw(g, { race: sd.monster ? (sd.monster.kind === 'crystal' ? 'silicoid' : 'meklar') : sd.race, hull: sd.monster ? 4 : clamp(d.hull | 0, 0, 3), x, y, size: len, angle: s === 0 ? 0 : Math.PI, color: sideCol(battle, S, s), flags: designFlags(d), t, thrust: 0.4 });
+          M.Gfx.Ships.draw(g, { race: sd.monster ? (sd.monster.kind === 'crystal' ? 'silicoid' : 'meklar') : sd.race, hull: sd.monster ? 4 : clamp(d.hull | 0, 0, 3), x, y, size: len, angle: s === 0 ? 0 : Math.PI, color: sideCol(battle, S, s), flags: designFlags(d), t, thrust: 0.4, vkey: vkOf(sd, d) });
         }
       } catch (e) { /* art is optional */ }
       t0 = t;
@@ -349,7 +351,7 @@
         if (n <= 0 || !d) continue;
         any = true;
         const lost = rs.lost[k] | 0, surv = rs.survivors[k] | 0, vol = rs.voluntary ? rs.voluntary[k] | 0 : 0;
-        box.appendChild(h('div.row', shipCanvas(sd.monster ? 'sakkra' : sd.race, sd.monster ? 3 : d.hull, c, designFlags(d), 36, 24), h('span', d.name), h('span.r', n), h('span.r' + (lost ? '.lost' : ''), lost || '—'), h('span.r' + (surv ? '.left' : ''), surv || '—', vol ? h('sup.vol', { title: 'left the field by retreat' }, '↯') : null)));
+        box.appendChild(h('div.row', shipCanvas(sd.monster ? 'sakkra' : sd.race, sd.monster ? 3 : d.hull, c, designFlags(d), 36, 24, vkOf(sd, d)), h('span', d.name), h('span.r', n), h('span.r' + (lost ? '.lost' : ''), lost || '—'), h('span.r' + (surv ? '.left' : ''), surv || '—', vol ? h('sup.vol', { title: 'left the field by retreat' }, '↯') : null)));
       }
       if (!any) box.appendChild(h('div.dim', 'No ships'));
       cols.appendChild(box);
@@ -896,7 +898,7 @@
     for (const u of B.units) {
       const col = unitColor(u), chip = h('div.cb-chip' + (u.kind === 'planet' ? '.pl' : ''), { style: { '--c': col }, tip: u.name });
       if (u.kind === 'planet') chip.appendChild(UI.icon('defense', 'pi'));
-      else chip.appendChild(shipCanvas(B.sides[u.side].race === 'monster' ? 'sakkra' : B.sides[u.side].race, u.kind === 'monster' ? 3 : u.hull, col, designFlags(st.battle.sides[u.side].designs[u.slot]), 40, 28));
+      else chip.appendChild(shipCanvas(B.sides[u.side].race === 'monster' ? 'sakkra' : B.sides[u.side].race, u.kind === 'monster' ? 3 : u.hull, col, designFlags(st.battle.sides[u.side].designs[u.slot]), 40, 28, vkOf(st.battle.sides[u.side], st.battle.sides[u.side].designs[u.slot])));
       chip.appendChild(h('span.n', { style: { color: '#fff' } }, u.count));
       chip.addEventListener('mouseenter', () => { st.view && st.view.setActive; });
       ui.chips.set(u.id, chip);

@@ -131,7 +131,7 @@
     try {
       const st = M.Sim.Design.stats(G.S, E, slot), hull = Math.max(0, Math.min(3, d.hull | 0));
       const size = Math.round(w * HULL_FIT[hull]);
-      const sp = M.Gfx.Ships.sprite(E.race, hull, size, empCol(E), shipFlags(st));
+      const sp = M.Gfx.Ships.sprite(E.race, hull, size, empCol(E), shipFlags(st), M.Gfx.Ships.designKey ? M.Gfx.Ships.designKey(E.id, slot, d.name) : null);
       const k = Math.min(w / sp.width, hh / sp.height, 1.6), x = c.getContext('2d');
       x.drawImage(sp, (w - sp.width * k) / 2, (hh - sp.height * k) / 2, sp.width * k, sp.height * k);
     } catch (e) { /* art is optional */ }

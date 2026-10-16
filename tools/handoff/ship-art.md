@@ -1,6 +1,11 @@
 # Photo ship art (Fleet AI set)
 
 **What:** `Gfx.Ships` now draws pre-rendered hull art from `assets/ships/` for all 9 hull classes, shared by every race.
+Each class can have several image **variants**. A ship design gets a stable pseudo-random variant: a hash of
+`Ships.designKey(empire, slot, name)` passed as `o.vkey` to `draw()` (or as the 6th argument of `sprite()` / `prewarm()`), or an
+explicit `o.variant`. Callers that pass neither get variant 1. Combat, the combat FX, ledgers, side panels and the design
+screen pass the key; the design preview re-rolls as the name changes. New variants go in `MOOg images/ship-variants/`
+(see the README there).
 The livery panels are recolored to the empire's banner color at runtime. The procedural race painters are still there.
 They are used until the images load, if a file is missing, or when the art is disabled (`?shipart=0` or `MOO.Gfx.Ships.photos = false`).
 
@@ -19,10 +24,12 @@ silhouette per class at 48–64 px and a frigate→doomstar progression that rea
 | Star Fortress | `alternatives--08-star-fortress-crown.png` | Gear/crown: distinct from the stargate ring |
 | Stargate | `original--09-stargate.png` | Ring with a cyan lattice; the animated event horizon fits its aperture |
 
-**Pipeline:** `python3 -I tools/build-ship-art.py` (needs Pillow and numpy) re-crops, downscales (1024 px long side) and splits
-each pick into `ship-<key>.webp` (neutral grey; the magenta replaced by its own brightness) and `ship-<key>-team.webp`
+**Pipeline:** `python3 -I tools/build-ship-art.py [DIR ...]` (needs Pillow and numpy) collects images per class by filename
+from `MOOg images/ship-variants/` (a class without new images falls back to the pick below). It keys out flat green
+backgrounds, re-crops, downscales (1024 px long side) and splits
+each variant into `ship-<class>-<n>.webp` (neutral grey; the magenta replaced by its own brightness) and `ship-<class>-<n>-team.webp`
 (white, alpha = livery weight). It also detects engine nozzles and samples hardpoints, damage sites and nav lights. It writes
-`assets/ships/ship-art.json` and the generated `SHIP_ART` block in `js/gfx/ships.js`. To swap a design, edit `PICKS` and rerun.
+`assets/ships/ship-art.json` and the generated `SHIP_ART` block in `js/gfx/ships.js`. To change a fallback design, edit `DEFAULT_PICKS` and rerun.
 
 **Runtime:** the base image is drawn, then the team mask filled with the banner color is composited with `multiply`. Add-on
 modules (colony pod, troop pods, bomb bay) are still vector-painted on the art's hardpoints. Engine flames, lights,
