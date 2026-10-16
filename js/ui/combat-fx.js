@@ -210,6 +210,7 @@
         id: bu.id, side: bu.side, kind: bu.kind, slot: bu.slot, hull: bu.hull, name: bu.name, empire: bu.empire,
         race: mk_ === 'crystal' ? 'silicoid' : mk_ === 'guardian' ? 'meklar' : side.race && side.race !== 'monster' ? side.race : 'sakkra',
         mkind: mk_ || '', color: monster ? (MON[mk_] || '#9dff6a') : empireColor(side), flags: unitFlags(bu),
+        vkey: monster || bu.kind === 'planet' || !(G.Ships && G.Ships.designKey) ? '' : G.Ships.designKey(bu.empire, bu.slot, bu.name),   // art variant of this design
         x: bu.x, y: bu.y, tx: bu.x, ty: bu.y, count: bu.count, count0: bu.kind === 'planet' ? (B.planet ? B.planet.bases0 : bu.count) : (side.initial[bu.slot] | 0) || bu.count,
         hp1: bu.hp1, hp2: bu.hp2, hploss: bu.hploss, hpShown: 0, absorb: bu.absorb, shieldLvl: 0,
         alpha: 1, alphaT: 1, heading: bu.side === 0 ? 0 : PI, angle: bu.side === 0 ? 0 : PI, moveAng: 0, moving: false, idle: 1,
@@ -246,7 +247,7 @@
       for (const bu of B.units) {
         const du = makeUnit(bu); units[bu.id] = du;
         if (bu.kind === 'planet') planetU = du;
-        else if (G.Ships && G.Ships.prewarm) { try { G.Ships.prewarm(du.race, monsterHull(du), 128, du.color, du.flags); } catch (e) { /* optional */ } }
+        else if (G.Ships && G.Ships.prewarm) { try { G.Ships.prewarm(du.race, monsterHull(du), 128, du.color, du.flags, du.vkey || null); } catch (e) { /* optional */ } }
       }
       rocks = B.rocks.map((r, i) => ({ x: r.x, y: r.y, v: (r.x * 7 + r.y * 13 + i) % 3, rot: ((r.x * 31 + r.y * 17) % 60) / 60 * TAU, spin: (((r.x + r.y * 3) % 5) - 2) * 0.03 + 0.02 }));
       const st = S && S.stars && S.stars[B.star];
@@ -908,7 +909,7 @@
           for (let i = copies - 1; i >= 0; i--) {
             const off = COPY_OFF[i], main = i === 0, sz = main ? u.len : u.len * 0.84;
             const o = { race: u.race, hull: u.kind === 'monster' ? 4 : clamp(u.hull | 0, 0, 3), x: x + off[0] * u.len * dir * 0.55, y: y + off[1] * grid.ch * 0.62 * (u.side === 0 ? 1 : 1), size: sz, angle: main ? u.angle : u.angle * 0.9 + (i % 2 ? 0.05 : -0.05), color: u.color, flags: u.flags, t: t + i * 1.7,
-              thrust: u.moving ? 1 : 0.28, damage: main ? clamp(u.hploss / max(1, u.hp1), 0, 1) * (u.count > 0 ? 1 : 0) : 0, shield: main ? clamp(u.shieldGlow, 0, 1) : 0, cloaked: u.cloak, seed: u.seed + i * 17 };
+              thrust: u.moving ? 1 : 0.28, damage: main ? clamp(u.hploss / max(1, u.hp1), 0, 1) * (u.count > 0 ? 1 : 0) : 0, shield: main ? clamp(u.shieldGlow, 0, 1) : 0, cloaked: u.cloak, seed: u.seed + i * 17, vkey: u.vkey };
             if (!main) ctx.globalAlpha = A * (warpK > 0 ? 1 - warpK : 0.82);
             try { S0.draw(ctx, o); } catch (err) { if (!view._shipWarn) { view._shipWarn = 1; console.warn('[CombatFx] Ships.draw failed', err); } fallbackShip(x, y, u); break; }
           }
@@ -995,7 +996,7 @@
         const orbit = R * 1.5, bs = min(grid.cw * 0.3, R * 0.9);
         for (let i = 0; i < nb; i++) {
           const a = t * 0.16 + i / nb * TAU + 0.6, bx = x + cos(a) * orbit * 1.0, by = y + sin(a) * orbit * 0.62;
-          try { S0.draw(ctx, { race: u.race, hull: 5, x: bx, y: by, size: bs, angle: a + PI / 2, color: u.color, t: t + i, seed: i * 11 + 3 }); } catch (err) { /* art optional */ break; }
+          try { S0.draw(ctx, { race: u.race, hull: 5, x: bx, y: by, size: bs, angle: a + PI / 2, color: u.color, t: t + i, seed: i * 11 + 3, vkey: B.planet ? 'planet|' + B.planet.id : '' }); } catch (err) { /* art optional */ break; }
         }
       }
       // label + base strength

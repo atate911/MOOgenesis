@@ -583,7 +583,7 @@
       for (let i = 0; i < NSLOT; i++) {
         const d = E.designs[i], n = shipsOf(i), s = D.stats(G.S, E, i), b = buildersOf(i);
         const act = n ? UI.button('Scrap…', () => m.close({ scrap: i }), { small: true, danger: true, tip: 'Scrap the ships to free this slot' }) : UI.button('Replace', () => m.close({ slot: i }), { small: true, primary: true });
-        rows.push(h('div.dz-rep' + (n ? '.locked' : ''), thumb(d.hull, shipFlags(s), 90, 48), h('div', h('div.nm', d.name), h('div.mt', D.cost(G.S, E, i) + ' BC · ' + (n ? fmt(n) + ' ships exist — scrap them first' : b ? 'building at ' + b + ' planet' + (b === 1 ? '' : 's') : 'no ships'))), act));
+        rows.push(h('div.dz-rep' + (n ? '.locked' : ''), thumb(d.hull, shipFlags(s), 90, 48, vkey(E, i, d.name)), h('div', h('div.nm', d.name), h('div.mt', D.cost(G.S, E, i) + ' BC · ' + (n ? fmt(n) + ' ships exist — scrap them first' : b ? 'building at ' + b + ' planet' + (b === 1 ? '' : 's') : 'no ships'))), act));
       }
       m = UI.modal({ title: 'All six design slots are in use', width: '34rem', body: h('div', h('p', 'Choose a design to replace. Designs with ships cannot be overwritten — scrap them first.'), rows), buttons: [{ label: 'Cancel', value: null }] });
       m.then(v => resolve(v === undefined ? null : v));
@@ -705,12 +705,14 @@
     ui.sub.textContent = E.plural + ' shipyards · Year ' + Q.year(S);
   }
 
-  function thumb(hull, flags, w, hh) {
+  // art-variant key of a design (Gfx.Ships picks one of the hull class's images from it; matches the ledgers and combat)
+  const vkey = (E, slot, name) => (M.Gfx && M.Gfx.Ships && M.Gfx.Ships.designKey ? M.Gfx.Ships.designKey(E.id, slot, name) : null);
+  function thumb(hull, flags, w, hh, vk) {
     const E = E_(), dpr = 2, c = h('canvas', { width: w * dpr, height: hh * dpr });
     try {
       const Sh = M.Gfx && M.Gfx.Ships;
       if (Sh && Sh.sprite) {
-        const px = [50, 74, 104, 144][hull] * (w / 90), sp = Sh.sprite(E.race, hull, px, bannerColor(E), flags || {});
+        const px = [50, 74, 104, 144][hull] * (w / 90), sp = Sh.sprite(E.race, hull, px, bannerColor(E), flags || {}, vk || null);
         const k = Math.min(1, (w * dpr - 6) / sp.width, (hh * dpr - 6) / sp.height), dw = sp.width * k, dh = sp.height * k;
         c.getContext('2d').drawImage(sp, (w * dpr - dw) / 2, (hh * dpr - dh) / 2, dw, dh);
       }
@@ -725,7 +727,7 @@
       if (!d) { cards.push(h('div.dz-card.empty' + (tgt ? '.tgt' : ''), { onclick: () => selectEmpty(i), tip: 'Empty slot — click to start a new design here' }, h('span.no', i + 1), h('div.em', UI.icon('add'), 'New design'))); continue; }
       const s = D.stats(S, E, i), n = shipsOf(i), b = buildersOf(i), cost = D.cost(S, E, i);
       cards.push(h('div.dz-card' + (st.base === i ? '.sel' : '') + (tgt ? '.tgt' : ''), { onclick: () => selectDesign(i), tip: designTip(d, s, i, n, b), style: { '--c': bannerColor(E) } },
-        h('span.no', i + 1), h('div.thw', thumb(d.hull, shipFlags(s), 80, 64), emblem(d.icon, 'cardemb')),
+        h('span.no', i + 1), h('div.thw', thumb(d.hull, shipFlags(s), 80, 64, vkey(E, i, d.name)), emblem(d.icon, 'cardemb')),
         h('div.dz-ci',
           h('div.nm', h('span.t', d.name)),
           h('div.co', h('b', cost + ' BC'), ' · ' + HULL_LABEL[d.hull]),
@@ -1207,7 +1209,9 @@
     ctx.save(); ctx.globalAlpha = 0.5; ctx.fillStyle = '#000'; ctx.beginPath(); ctx.ellipse(cx, ch * 0.78, sc * target * 0.46, sc * target * 0.07, 0, 0, 6.2832); ctx.fill(); ctx.restore();
     if (Sh && Sh.draw) {
       ctx.save(); ctx.translate(cx, cy + bob); ctx.scale(sc, sc * TILT);
-      try { Sh.draw(ctx, { race: E.race, hull, x: 0, y: 0, size: target, angle: ang, color: col, t, thrust, flags, shield, cloaked: vs.cloak ? 0.28 : 0, shadow: false, seed: 3 }); } catch (e) { /* ignore */ }
+      // the look the design will get: the slot it will land in (target, else first free) + its name, so renaming re-rolls the variant
+      const pslot = st.target >= 0 ? st.target : (E.designs || []).findIndex(x => !x), pk = vkey(E, pslot < 0 ? 0 : pslot, vd.name);
+      try { Sh.draw(ctx, { race: E.race, hull, x: 0, y: 0, size: target, angle: ang, color: col, t, thrust, flags, shield, cloaked: vs.cloak ? 0.28 : 0, shadow: false, seed: 3, vkey: pk }); } catch (e) { /* ignore */ }
       ctx.restore();
       ctx.drawImage(PV.scan, 0, 0, cw, ch);
       if (sc === 1) drawCallouts(ctx, Sh, E, vs, vd, hull, cx, cy + bob, target, ang, flags, TILT, t, cw, ch);

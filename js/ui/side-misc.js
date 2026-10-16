@@ -59,7 +59,7 @@
   }
   function shipPic(E, slot, w, hh) {
     const c = h('canvas', { width: w * 2, height: hh * 2 }), d = E.designs[slot];
-    try { const sp = M.Gfx.Ships.sprite(E.race, d.hull, Math.min(w, hh) * 1.8, getComputedStyle(document.documentElement).getPropertyValue('--emp' + E.color), {}); const k = Math.min(1, (w * 2 - 4) / sp.width, (hh * 2 - 4) / sp.height); c.getContext('2d').drawImage(sp, (w * 2 - sp.width * k) / 2, (hh * 2 - sp.height * k) / 2, sp.width * k, sp.height * k); } catch (e) { /* ignore */ }
+    try { const Sh = M.Gfx.Ships, sp = Sh.sprite(E.race, d.hull, Math.min(w, hh) * 1.8, getComputedStyle(document.documentElement).getPropertyValue('--emp' + E.color), {}, Sh.designKey ? Sh.designKey(E.id, slot, d.name) : null); const k = Math.min(1, (w * 2 - 4) / sp.width, (hh * 2 - 4) / sp.height); c.getContext('2d').drawImage(sp, (w * 2 - sp.width * k) / 2, (hh * 2 - sp.height * k) / 2, sp.width * k, sp.height * k); } catch (e) { /* ignore */ }
     return c;
   }
 
