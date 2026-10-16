@@ -13,7 +13,7 @@ dynamic layers (mod-wheel crossfade groups or velocity splits) all come from the
 Per instrument: pick zones every N semitones from the available notes (one or two dynamic layers, round robins where they matter),
 decode with ffmpeg, trim leading silence, level-match the instrument (one gain for all its zones so the dynamic layers keep their
 relationship), find a seamless loop in the sustain (normalized cross-correlation) and bake an equal-power crossfade into it, cut the
-sample right after the loop, encode MP3 (libmp3lame, VBR q3; mono for recordings, stereo for the synthesized ensembles) and write
+sample right after the loop, encode MP3 (libmp3lame, VBR q0; mono for recordings, stereo for the synthesized ensembles) and write
 instruments.json (zones: file, root, lo, hi, loop seconds, velocity range, round-robin index).  A 0.4 s calibration file with one impulse
 at 0.1 s lets the browser measure its MP3 decoder delay and shift the loop points (see js/audio/sampler.js).
 """
@@ -155,7 +155,7 @@ def encode_mp3(y, path, stereo):
     if yy.ndim == 1: yy = yy[:, None]
     with wave.open(tmp, 'wb') as w:
         w.setnchannels(yy.shape[1]); w.setsampwidth(2); w.setframerate(SR); w.writeframes((yy * 32767).astype('<i2').tobytes())
-    subprocess.run(['ffmpeg', '-y', '-v', 'error', '-i', tmp, '-ac', '2' if stereo else '1', '-codec:a', 'libmp3lame', '-q:a', '3', path], check=True)
+    subprocess.run(['ffmpeg', '-y', '-v', 'error', '-i', tmp, '-ac', '2' if stereo else '1', '-codec:a', 'libmp3lame', '-q:a', '0', path], check=True)
     os.unlink(tmp)
 
 # ---------------------------------------------------------------------------------------------------- instrument specs
@@ -165,7 +165,7 @@ def encode_mp3(y, path, stereo):
 R_STD = r'_(?P<note>[A-G]#?\d)_v(?P<dyn>\d)(?:_rr(?P<rr>\d)|_RR(?P<rr2>\d)|_(?P<rr3>\d))?'
 SPECS = {
     'strSus':   dict(src='Strings/Violin Section/susVib', re=r'VlnEns_susVib' + R_STD, dyn=[2], rr=1, step=5, kind='sustain', attack=0.09, release=0.55, cutK=9000, ls=1.1, lmin=1.1, lmax=1.6),
-    'vlaSus':   dict(src='Strings/Viola Section/susvib', re=r'ViolaEns_susvib' + R_STD, dyn=[2], rr=1, step=5, kind='sustain', attack=0.09, release=0.55, cutK=8000, ls=1.1, lmin=1.1, lmax=1.6, keep=3.4, loopq=0.78),
+    'vlaSus':   dict(src='Strings/Viola Section/susvib', re=r'ViolaEns_susvib' + R_STD, dyn=[2], rr=1, step=5, kind='sustain', attack=0.09, release=0.55, cutK=8000, ls=1.1, lmin=1.1, lmax=1.6, keep=3.4, loopq=0.78, stereo=True),
     'vcSus':    dict(src='Strings/Cello Section/susvib', re=r'susvib' + R_STD, dyn=[3], rr=1, step=5, kind='sustain', attack=0.1, release=0.6, cutK=7000, ls=1.1, lmin=1.1, lmax=1.6, keep=3.4, loopq=0.78),
     'cbSus':    dict(src='Strings/Solo Contrabass/SusVib', re=r'BKCtbss_SusVib' + R_STD, dyn=[3], rr=1, step=5, kind='sustain', attack=0.1, release=0.6, cutK=4000, ls=1.0, lmin=1.0, lmax=1.5, keep=3.4, loopq=0.78),
     'strSpic':  dict(src='Strings/Violin Section/Spic', re=r'VlnEns_Spic' + R_STD, dyn=[1, 2], rr=1, step=5, kind='short', attack=0.002, release=0.12),
@@ -250,11 +250,11 @@ def composites(manifest, log):
 # the file name with the dynamic token in group 1 + 'order' soft..loud, or None (one layer); only: regex the file name must match;
 # skip: regex it must not; xf: the engine crossfades adjacent layers (true for every multi-layer sustain); bright: presence shelf dB.
 def _rx(s): return re.compile(s, re.IGNORECASE)
-SSO_STR = dict(kind='sustain', attack=0.12, release=0.7, stereo=False, keep=3.5, bright=1.5, pan=0)
-SSO_SHORT = dict(kind='short', attack=0.002, release=0.15, stereo=False, keep=1.6, bright=1.0)
+SSO_STR = dict(kind='sustain', attack=0.12, release=0.7, stereo=False, keep=3.5, bright=2.5, pan=0)
+SSO_SHORT = dict(kind='short', attack=0.002, release=0.15, stereo=False, keep=1.6, bright=2.0)
 SSO = {
     # ---- string sections (the heart of the score): sustain, tremolo, staccato, pizzicato per section
-    'vln1Sus':  dict(SSO_STR, pan=-0.45, sfz='Strings - Performance/1st Violins Sustain.sfz', keep=3.4, loopq=0.78),
+    'vln1Sus':  dict(SSO_STR, pan=-0.45, sfz='Strings - Performance/1st Violins Sustain.sfz', keep=3.4, loopq=0.78, stereo=True),
     'vlaSus':   dict(SSO_STR, pan=0.12, sfz='Strings - Performance/Violas Sustain.sfz'),
     'vcSus':    dict(SSO_STR, pan=0.32, sfz='Strings - Performance/Celli Sustain.sfz'),
     'cbSus':    dict(SSO_STR, pan=0.48, sfz='Strings - Performance/Basses Sustain.sfz', release=0.8),
@@ -288,8 +288,8 @@ SSO = {
     'clarinet': dict(SSO_STR, pan=-0.16, sfz='Woodwinds - Performance/Clarinet Solo Sustain (looped).sfz', stereo=False, attack=0.05, release=0.3, keep=4.0),
     'bassoon':  dict(SSO_STR, pan=0.2, sfz='Woodwinds - Performance/Bassoon Solo Sustain (looped).sfz', stereo=False, attack=0.05, release=0.3, keep=4.0),
     # ---- the recorded chorus (men + women, every semitone; thinned to minor thirds)
-    'chorusMen':   dict(SSO_STR, sfz='Chorus - Performance/Mixed Chorus.sfz', only=r'chorus-male', step=3, attack=0.35, release=1.1, keep=5.5, bright=2.0, stereo=True),
-    'chorusWomen': dict(SSO_STR, sfz='Chorus - Performance/Mixed Chorus.sfz', only=r'chorus-female', step=3, attack=0.35, release=1.1, keep=5.5, bright=2.0, stereo=True), # ---- harp, keyboard percussion, bells
+    'chorusMen':   dict(SSO_STR, sfz='Chorus - Performance/Mixed Chorus.sfz', only=r'chorus-male', step=3, attack=0.35, release=1.1, keep=5.5, bright=3.0, stereo=True),
+    'chorusWomen': dict(SSO_STR, sfz='Chorus - Performance/Mixed Chorus.sfz', only=r'chorus-female', step=3, attack=0.35, release=1.1, keep=5.5, bright=3.0, stereo=True), # ---- harp, keyboard percussion, bells
     'harp':     dict(SSO_SHORT, pan=-0.5, sfz='Concert Harp.sfz', release=0.6, keep=3.5, stereo=True),
     'glock':    dict(SSO_SHORT, pan=-0.35, sfz='Percussion/Glockenspiel.sfz', release=0.6, keep=3.0, stereo=True),
     'celeste':  dict(SSO_SHORT, pan=-0.3, sfz='Percussion/Celeste.sfz', only=r'celeste-.*-hard', step=3, release=0.6, keep=2.6),
@@ -392,7 +392,7 @@ def build_sso(root, name, spec, out, log):
             if loop is not None: loop = (loop[0] - cut, loop[1] - cut)
         fade = np.minimum(1, np.arange(len(x)) / (0.003 * SR)); x = x * (fade if x.ndim == 1 else fade[:, None])
         x = x * 10 ** (s['volume'] / 20)
-        if spec.get('bright', 0) > 0 and pitched: x = brighten(x, 2500.0, spec['bright'], 7000.0, spec['bright'] * 0.6)
+        if spec.get('bright', 0) > 0 and pitched: x = brighten(x, 3000.0, spec['bright'], 8000.0, spec['bright'])
         keep = spec.get('keep')
         if spec['kind'] == 'sustain':
             if loop is None or loop[1] <= loop[0] + SR * 0.04 or loop[1] > len(x):

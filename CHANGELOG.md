@@ -24,6 +24,11 @@ Versions follow `MAJOR.MINOR.PATCH`; the live version is the `VERSION` file.
   dramatic cues take the Crimson Tide layering (analogue pad as the floor, low men's choir as the bed, strings mid, brass for the peaks,
   fewer bell sparkles). Silence is composed: the exploration pieces carry rests between phrases and whole bars where only the hall rings
   before the next entrance, and the rotation leaves 26 s of quiet between pieces.
+  Against repetition: every looping piece now carries `forms`, two differently ordered blocks of its sections each five minutes or
+  longer, played in turn from a random starting block (the title also alternates its doubling instruments per block), so a cue that
+  stays on for twenty minutes is heard as long, changing blocks rather than a three-minute loop. The samples are re-encoded at the top
+  VBR quality (lowpass near 19.5 kHz instead of 16), with a stronger air shelf on the sections and chorus and stereo upper strings;
+  preview renders from `tools/audio-report.js --mp3` are 320 kbps.
 - Symphonic re-orchestration and film-style flow. Every synth pluck, FM bell, pad, bass and drum-machine part in the score is now a
   recorded instrument: pizzicato string sections, marimba, glockenspiel, harp, oboe / clarinet / bassoon, contrabass, bass drum,
   snare, field drums, tambourine, claves, anvil, stick taps (the two machine races keep a little sequencer colour). The bell

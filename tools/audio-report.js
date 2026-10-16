@@ -40,7 +40,7 @@ function table(head, rows) {
   const saveWav = (name, b64) => {
     if (!wavDir || !b64) return;
     const f = path.join(wavDir, name + '.wav'); fs.writeFileSync(f, Buffer.from(b64, 'base64'));
-    if (opt.mp3) { try { execFileSync('ffmpeg', ['-y', '-loglevel', 'error', '-i', f, '-codec:a', 'libmp3lame', '-q:a', '3', f.replace(/\.wav$/, '.mp3')]); fs.unlinkSync(f); } catch (e) { /* keep the wav */ } }
+    if (opt.mp3) { try { execFileSync('ffmpeg', ['-y', '-loglevel', 'error', '-i', f, '-codec:a', 'libmp3lame', '-b:a', '320k', f.replace(/\.wav$/, '.mp3')]); fs.unlinkSync(f); } catch (e) { /* keep the wav */ } }
   };
 
   // ---- composition lint (no rendering) ---------------------------------------------------------------------------------
