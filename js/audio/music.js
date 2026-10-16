@@ -1228,7 +1228,7 @@
 
   Track('design', {
     desc: 'Technical, light: bubbling marimba and sequenced plucks over a springy bass',
-    bpm: 112, trim: 0.8, root: 'G', mode: 'major', loopFrom: 'A1',
+    bpm: 112, trim: 0.62, root: 'G', mode: 'major', loopFrom: 'A1',
     inst: { pad: 'glassPad', bass: 'pulse', lead: 'marimba', lead2: 'vibes', bell: 'vibes', arp: 'seq', choir: 'ooh' },
     ph: {
       T1: '5:.5 8:.5 5:.5 3:.5 5:1 r:1 | 6:.5 8:.5 6:.5 3:.5 6:1 r:1 | 4:.5 6:.5 4:.5 2:.5 4:1 r:1 | 5:.5 7:.5 5:.5 3:.5 2:1 r:1',
@@ -1271,7 +1271,7 @@
   });
   Track('combat1', {
     desc: 'Driving percussive tension: galloping bass, fast saw arps, timpani and a brass riff',
-    bpm: 142, trim: 1.0, root: 'E', mode: 'minor', loopFrom: 'A1', tens: false, gate: { drums: 0.2, lead: 0.4, bell: 0.55 },
+    bpm: 142, trim: 0.88, root: 'E', mode: 'minor', loopFrom: 'A1', tens: false, gate: { drums: 0.2, lead: 0.4, bell: 0.55 },
     inst: { pad: 'dark', bass: 'moog', lead: 'synth', lead2: 'brass', arp: 'arpSaw', bell: 'bell' },
     ph: {
       M1: '1:.5 1:.5 3:.5 1:.5 5:1 4:.5 3:.5 | 1:.5 1:.5 3:.5 1:.5 5:1 6:.5 5:.5',
@@ -1332,7 +1332,7 @@
 
   Track('gnn', {
     desc: 'Galactic News Network: a confident, upbeat broadcast bed with brass stabs and a bright ident theme',
-    bpm: 120, trim: 0.93, root: 'C', mode: 'major', loopFrom: 'A1',
+    bpm: 120, trim: 0.5, root: 'C', mode: 'major', loopFrom: 'A1',
     inst: { pad: 'organ', bass: 'pulse', lead: 'synth', lead2: 'bell', arp: 'seq', bell: 'vibes' },
     ph: {
       G1: '5:.5 5:.5 8:1.5 5:.5 8:1 | 7:.5 7:.5 9:1.5 7:.5 9:1 | 8:.5 8:.5 10:1.5 8:.5 10:1 | 6:.5 6:.5 8:1 9:.5 10:.5 11:1',
@@ -1536,7 +1536,7 @@
 
   Track('race:meklar', {
     desc: 'Meklar: cold industrial sequencer arps, four-on-the-floor machine pulse and metal strikes',
-    bpm: 128, trim: 0.8, root: 'B', mode: 'minor', tens: false,
+    bpm: 128, trim: 0.64, root: 'B', mode: 'minor', tens: false,
     inst: { pad: 'dark', bass: 'moogSyn', lead: 'synthSyn', lead2: 'seqSyn', arp: 'arpSawSyn', bell: 'bell' },
     ph: {
       MK1: '1:.5 5:.5 1:.5 4:.5 1:.5 3:.5 1:.5 2:.5',
@@ -1552,7 +1552,7 @@
 
   Track('race:mrrshan', {
     desc: 'Mrrshan: tribal polyrhythmic percussion under a snaking phrygian-dominant reed line',
-    bpm: 112, trim: 0.85, root: 'G', mode: 'phrygDom', tens: false,
+    bpm: 112, trim: 0.68, root: 'G', mode: 'phrygDom', tens: false,
     inst: { pad: 'dark', bass: 'moog', lead: 'reed', lead2: 'flute', arp: 'kora', bell: 'chime', choir: 'uuh' },
     ph: {
       MR1: '1:.5 2:.5 3:1 2:.5 1:.5 3:1 | 6:1.5 5:.5 4:1 2:1 | 1:.5 2:.5 3:1 2:.5 1:.5 3:1 | 6:2 4:1 3:1',
@@ -1581,7 +1581,7 @@
     ],
   });
 
-  Track('race:sakkra', {
+  Track('race:sakkra', { trim: 0.82,
     desc: 'Sakkra: hissing percussion and dry skins under a dorian-pentatonic kora line',
     bpm: 100, root: 'A', mode: 'dorian', oct: 1, tens: false,
     inst: { pad: 'airPad', bass: 'pulse', lead: 'kora', lead2: 'flute', arp: 'pizz', bell: 'vibes' },
