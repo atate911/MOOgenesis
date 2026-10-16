@@ -197,13 +197,15 @@
       if (ens > 0) { makeSrc(p.z, -4 - ens * 6 + detHum, 0, 0.75 * p.g0, 0.75 * p.g1); makeSrc(p.z, 4 + ens * 6 + detHum, 0.012 + eng.rand() * 0.01, (0.75 * ens + 0.25 * (1 - ens)) * p.g0, (0.75 * ens + 0.25 * (1 - ens)) * p.g1); }
       else makeSrc(p.z, detHum, 0, p.g0, p.g1);
     }
+    const lvl0 = d => oneShot ? 1 : 0.5 + 0.5 * d;
     // sub layer (o.sub = gain): a sine an octave below the note (at the note itself when it is already deep) through the same envelope,
     // the weight a bass section recorded at a distance does not carry on its own
     if (num(o.sub, 0) > 0 && inst.pitched) {
-      const f = o.f || 110, fs = f > 58 ? f / 2 : f, so = v.osc('sine', fs, t, end), sg = v.gain(num(o.sub, 0) * 0.9);
-      const lp = v.filter('lowpass', Math.min(180, fs * 2.5), 0.7); so.connect(lp); lp.connect(sg); sg.connect(mix);
+      // the samples sit at about -16 dBFS RMS; the sub is scaled so sub=1 is roughly their level, and it never goes below 30 Hz
+      const f = o.f || 110, fs = f > 60 ? f / 2 : f;
+      if (fs >= 30) { const so = v.osc('sine', fs, t, end), sg = v.gain(num(o.sub, 0) * 0.16 * lvl0(dyn)); const lp = v.filter('lowpass', Math.min(180, fs * 2.5), 0.7); so.connect(lp); lp.connect(sg); sg.connect(mix); }
     }
-    const lvl = d => oneShot ? 1 : 0.5 + 0.5 * d;
+    const lvl = lvl0;
     const peak = vel * num(o.gain, 1) * inst.gain * z0.gain * lvl(dyn);
     if (oneShot) K.envPerc(env.gain, t, peak, att, dur + rel);
     else {

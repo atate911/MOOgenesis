@@ -186,24 +186,16 @@ SPECS = {
     'vcPizz':   dict(src='Strings/Cello Section/pizzT', re=r'pizzT' + R_STD, dyn=[1, 2], rr=1, step=0, kind='short', attack=0.001, release=0.35, stereo=False, keep=2.2, pan=0.45),
     'cbPizz':   dict(src='Strings/Solo Contrabass/Pizz', re=r'BKCtbss_Pizz' + R_STD, dyn=[1, 3], rr=1, step=0, kind='short', attack=0.001, release=0.4, stereo=False, keep=2.6, pan=0.6),
     # ---- brass: horn in two layers (mp / f), solo horn and trumpet for lines, trombone and tuba
-    'hornSus':  dict(src='Brass/F Horn/sus', re=r'MOHorn_sus' + R_STD, dyn=[1, 3], rr=1, step=0, kind='sustain', attack=0.06, release=0.4, ls=1.2, lmin=1.1, lmax=1.6, stereo=True, xf=True, pan=-0.42),
-    'hornSolo': dict(src='Brass/F Horn/sus', re=r'MOHorn_sus' + R_STD, dyn=[2], rr=1, step=0, kind='sustain', attack=0.06, release=0.4, ls=1.2, lmin=1.1, lmax=1.6, stereo=False, pan=-0.35),
-    'hornStac': dict(src='Brass/F Horn/stac', re=r'MOHorn_stac' + R_STD, dyn=[2, 3], rr=1, step=0, kind='short', attack=0.002, release=0.18, stereo=False, keep=1.6, pan=-0.42),
     'tptSus':   dict(src='Brass/Trumpet/susvib', re=r'Sum_SHTrumpet_susvib' + R_STD, dyn=[1, 2], rr=1, step=0, kind='sustain', attack=0.05, release=0.35, ls=1.2, lmin=1.4, lmax=2.6, stereo=False, xf=True, pan=0.4, xf_sec=0.4),
     'tptSolo':  dict(src='Brass/Trumpet/susvib', re=r'Sum_SHTrumpet_susvib' + R_STD, dyn=[2], rr=1, step=0, kind='sustain', attack=0.05, release=0.35, ls=1.2, lmin=1.4, lmax=2.6, stereo=False, pan=0.35, xf_sec=0.4),
     'tptStac':  dict(src='Brass/Trumpet/stac', re=r'stac' + R_STD, dyn=[2, 3], rr=1, step=0, kind='short', attack=0.002, release=0.16, stereo=False, keep=1.4, pan=0.4),
     'tbnSus':   dict(src='Brass/Tenor Trombone/sus', re=r'tenortbn_sus' + R_STD, dyn=[1, 3], rr=1, step=0, kind='sustain', attack=0.06, release=0.4, ls=1.2, lmin=1.1, lmax=1.6, stereo=False, xf=True, pan=0.52),
     'tbnStac':  dict(src='Brass/Tenor Trombone/stac', re=r'stac' + R_STD, dyn=[2, 3], rr=1, step=0, kind='short', attack=0.002, release=0.18, stereo=False, keep=1.5, pan=0.52),
-    'tubaSus':  dict(src='Brass/Tuba/sus', re=r'Tuba3_sus' + R_STD, dyn=[1, 3], rr=1, step=0, kind='sustain', attack=0.07, release=0.45, ls=1.2, lmin=1.4, lmax=2.6, stereo=False, xf=True, pan=0.55, xf_sec=0.4), # ---- winds
     'fluteSus': dict(src='Woodwinds/Flute/susNV', re=r'susNV' + R_STD, dyn=[1, 3], rr=1, step=0, kind='sustain', attack=0.06, release=0.3, ls=1.0, lmin=1.1, lmax=1.6, stereo=False, xf=True, pan=-0.15),
     'flute':    dict(src='Woodwinds/Flute/susvib', re=r'LDFlute_susvib' + R_STD, dyn=[-1], rr=1, step=0, kind='sustain', attack=0.05, release=0.3, ls=1.0, lmin=1.1, lmax=1.6, stereo=False, pan=-0.15),
     'altoFlute': dict(src='Woodwinds/Flute/susNV', re=r'susNV' + R_STD, dyn=[1], rr=1, step=0, kind='sustain', attack=0.06, release=0.3, ls=1.0, lmin=1.1, lmax=1.6, stereo=False, pan=-0.12),
-    'oboe':     dict(src='Woodwinds/Oboe/Vib', re=r'Oboe_Vib' + R_STD, dyn=[1, 3], rr=1, step=0, kind='sustain', attack=0.05, release=0.3, ls=1.0, lmin=1.1, lmax=1.6, stereo=False, xf=True, pan=0.16),
-    'corAnglais': dict(src='Woodwinds/Oboe/Sus', re=r'Oboe_Sus' + R_STD, dyn=[1], rr=1, step=0, kind='sustain', attack=0.06, release=0.3, ls=1.0, lmin=1.1, lmax=1.6, stereo=False, pan=0.18),
-    'clarinet': dict(src='Woodwinds/Clarinet/susLong', re=r'DCClar_susLong' + R_STD, dyn=[1, 3], rr=1, step=0, kind='sustain', attack=0.05, release=0.3, ls=1.0, lmin=1.1, lmax=1.6, stereo=False, xf=True, pan=-0.24),
     'bassoon':  dict(src='Woodwinds/Bassoon/vib', re=r'(?P<note>[A-G]#?\d)_v(?P<dyn>\d)', dyn=[1, 2], rr=1, step=0, kind='sustain', attack=0.05, release=0.3, ls=1.0, lmin=1.1, lmax=1.6, stereo=False, xf=True, pan=0.3),
     # ---- harp, keyboard percussion, drums, metals (VSCO percussion files are summed mono recordings)
-    'harp':     dict(src='Strings/Harp', re=r'KSHarp_(?P<note>[A-G]#?\d)_(?P<dyn>mf|f|mp)', dyn=['*'], rr=1, step=0, kind='short', attack=0.002, release=0.5, octave=0, keep=3.0, stereo=False, pan=-0.6),
     'marimba':  dict(src='Percussion/Marimba', re=r'Marimba_hit_Outrigger_(?P<note>[A-G]#?\d)_loud', dyn=['*'], rr=1, step=0, kind='short', attack=0.001, release=0.3, pitch='detect', range=(60.0, 2500.0), keep=2.0, stereo=False, pan=-0.3),
     'bassDrum': dict(src='Percussion', re=r'BDrumNewhit_v(?P<dyn>\d)_rr(?P<rr>\d)', dyn=[3, 5, 7], rr=2, step=0, kind='short', attack=0.001, release=0.3, pitched=False, top=True, keep=2.5, stereo=False, pan=0.25),
     'snare':    dict(src='Percussion', re=r'Snare2-HitSN_v(?P<dyn>\d)_rr(?P<rr>\d)', dyn=[3, 7], rr=2, step=0, kind='short', attack=0.001, release=0.2, pitched=False, top=True, keep=1.6, stereo=False, pan=-0.28),
@@ -327,7 +319,11 @@ SSO = {
     'organ':    dict(SSO_STR, sfz='Organ/Great - Open Diapason 8ft.sfz', step=4, attack=0.05, release=0.35, keep=4.0),
 }
 
-SSO_KEEP = ['chorusMen', 'chorusWomen', 'celeste', 'crotales', 'chimes', 'glock', 'bellTree', 'sleigh', 'woodBlock', 'shaker', 'triangle', 'organSoft', 'timpRoll', 'timpani']   # Sonatina covers only what VSCO has not recorded
+# chosen per family by measuring the raw recordings' top end: VSCO is the closer, brighter take for strings, trumpet, trombone, flute,
+# bassoon, drums and cymbals; Sonatina is the more natural one for horns, tuba, oboe, cor anglais, clarinet and harp, and the only
+# recorded chorus, celeste, crotales, chimes, glockenspiel, bell tree and small percussion
+SSO_KEEP = ['chorusMen', 'chorusWomen', 'celeste', 'crotales', 'chimes', 'glock', 'bellTree', 'sleigh', 'woodBlock', 'shaker', 'triangle', 'organSoft', 'timpRoll', 'timpani',
+            'hornSus', 'hornStac', 'hornSolo', 'tubaSus', 'oboe', 'corAnglais', 'clarinet', 'harp']   # Sonatina covers only what VSCO has not recorded
 SSO = {k: v for k, v in SSO.items() if k in SSO_KEEP}
 SSO_REPLACES = set()
 

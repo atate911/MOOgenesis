@@ -39,6 +39,9 @@ Versions follow `MAJOR.MINOR.PATCH`; the live version is the `VERSION` file.
   carry 10-15 dB more than Sonatina's distant perspective. Sonatina stays only for what VSCO never recorded: the chorus, celeste, crotales,
   tubular chimes, bell tree, small percussion, timpani and the soft organ stop. The master tone shelves are flat; a sine sub-octave layer
   sits under the basses and timpani (a deliberate Zimmer layer, not a correction), and a mid/side stage widens the image.
+  The split is per family, by measurement: VSCO for strings, trumpet, trombone, flute, bassoon, drums and cymbals; Sonatina for horns,
+  tuba, oboe, cor anglais, clarinet and harp (VSCO's horn and harp are the dull ones). The synth pads' filters open further (a low
+  pad used to close at 2 kHz).
 - Symphonic re-orchestration and film-style flow. Every synth pluck, FM bell, pad, bass and drum-machine part in the score is now a
   recorded instrument: pizzicato string sections, marimba, glockenspiel, harp, oboe / clarinet / bassoon, contrabass, bass drum,
   snare, field drums, tambourine, claves, anvil, stick taps (the two machine races keep a little sequencer colour). The bell

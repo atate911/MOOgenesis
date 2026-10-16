@@ -283,8 +283,8 @@
     glue.threshold.value = -24; glue.knee.value = 18; glue.ratio.value = 1.6; glue.attack.value = 0.06; glue.release.value = 0.5;
     const glueMake = mk(ctx.createGain()); glueMake.gain.value = dbtoa(1);
     const duck = mk(ctx.createGain());
-    const width = (function () {                   // M/S width: L' = M + w*S, R' = M - w*S  (w = 1.5 -> side +3.5 dB)
-      const w = 1.5, inG = mk(ctx.createGain()), split = mk(ctx.createChannelSplitter(2)), merge = mk(ctx.createChannelMerger(2));
+    const width = (function () {                   // M/S width: L' = M + w*S, R' = M - w*S  (w = 1.25 -> side +1.9 dB)
+      const w = 1.25, inG = mk(ctx.createGain()), split = mk(ctx.createChannelSplitter(2)), merge = mk(ctx.createChannelMerger(2));
       const a = (1 + w) / 2, b = (1 - w) / 2;      // L' = a*L + b*R ; R' = b*L + a*R
       const ll = mk(ctx.createGain()), lr = mk(ctx.createGain()), rl = mk(ctx.createGain()), rr = mk(ctx.createGain());
       ll.gain.value = a; lr.gain.value = b; rl.gain.value = b; rr.gain.value = a;

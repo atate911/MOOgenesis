@@ -139,26 +139,26 @@ def pad(midi, secs, kind):
     f0 = midi_f(midi); t = np.arange(int(secs * SR)) / SR
     if kind == 'serrie':                       # warm analogue strings-pad: 9 saws spread across the field, breathing 4-pole lowpass, slow bloom
         x = saw_bank(f0, secs, 9, 14.0)
-        hi = min(9000, f0 * 6 + 1200); x = lowpass_moving(x, hi * 0.5, hi, 0.06, 1.3)
+        hi = min(12000, f0 * 12 + 3200); x = lowpass_moving(x, hi * 0.55, hi, 0.06, 1.3)
         subo = 0.3 * np.sin(2 * np.pi * f0 * 0.5 * t) * np.minimum(1, t / 0.5); x[:, 0] += subo; x[:, 1] += subo
         x = saturate(x, 1.5)
         y = chorus(x, 0.29, 2.6, 15.0, 3, 0.55)
     elif kind == 'air':                        # the planetarium pad: a high, hollow, very slow shimmer with almost no attack
         x = 0.5 * saw_bank(f0, secs, 7, 9.0, wave='tri') + 0.35 * saw_bank(f0 * 2, secs, 5, 7.0, wave='tri') + 0.12 * saw_bank(f0 * 3, secs, 3, 5.0, wave='tri')
-        hi = min(12000, f0 * 10 + 1500); x = lowpass_moving(x, hi * 0.45, hi, 0.05, 1.1, 3)
+        hi = min(15000, f0 * 14 + 4000); x = lowpass_moving(x, hi * 0.5, hi, 0.05, 1.1, 3)
         x *= (1 + 0.14 * np.sin(2 * np.pi * 0.11 * t))[:, None]
         y = chorus(x, 0.23, 3.2, 17.0, 3, 0.6)
         env = np.minimum(1, t / 1.2)[:, None] * np.minimum(1, (secs - t) / 0.3)[:, None]
         return y * env
     elif kind == 'glass':                      # glassy, airy: triangle + saw mix, high cutoff, slow shimmer
         x = 0.6 * saw_bank(f0, secs, 7, 8.0, wave='tri') + 0.5 * saw_bank(f0 * 2, secs, 5, 6.0)
-        hi = min(14000, f0 * 12 + 2000); x = lowpass_moving(x, hi * 0.6, hi, 0.13, 1.2, 3)
+        hi = min(15000, f0 * 16 + 4000); x = lowpass_moving(x, hi * 0.6, hi, 0.13, 1.2, 3)
         x *= (1 + 0.1 * np.sin(2 * np.pi * 0.17 * t))[:, None]
         x = saturate(x, 1.2)
         y = chorus(x, 0.41, 2.0, 11.0, 3, 0.45)
     else:                                      # 'dark': low, filtered, ominous
         x = saw_bank(f0, secs, 9, 9.0)
-        hi = min(6500, f0 * 3.5 + 500); x = lowpass_moving(x, hi * 0.5, hi, 0.06, 2.0)
+        hi = min(7000, f0 * 8 + 1200); x = lowpass_moving(x, hi * 0.5, hi, 0.06, 2.0)
         subo = 0.45 * np.sin(2 * np.pi * f0 * 0.5 * t) * np.minimum(1, t / 0.5); x[:, 0] += subo; x[:, 1] += subo
         x = saturate(x, 1.8)
         y = chorus(x, 0.22, 4.0, 18.0, 3, 0.5)

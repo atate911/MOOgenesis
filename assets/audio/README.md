@@ -6,17 +6,17 @@ where `fetch` is blocked) and plays them through the same voice graph as the syn
 so the score sounds the way it always did until the files arrive, and on a machine without them.
 
 Provenance
-- Chorus, celeste, crotales, tubular chimes, bell tree, triangle, tambourine, sleigh bells, wood blocks, shakers, timpani and the
-  Swell Gamba organ stop: **Sonatina Symphonic Orchestra 2.0** (SSO), created by Mattias Westlund (2011) and developed
-  further by Peter Eastman and contributors, released under the **Creative Commons Sampling Plus 1.0** licence
-  (https://creativecommons.org/licenses/sampling+/1.0/ — sampling, transforming and redistributing the samples inside another work is
-  allowed, commercially or not; the samples may not be used in advertising). Source: https://github.com/peastman/sso.
-  Used here: 1st violins, 2nd violins (staccato), violas, celli and basses (sustain, tremolo, staccato, pizzicato), section horns
-  (mp and ff), trumpets, trombones and tuba (sustain, staccato), solo horn and trumpet, flutes, solo flute, alto flute, oboe,
-  cor anglais, clarinet, bassoon, the mixed chorus (men and women), concert harp, glockenspiel, celeste, crotales, tubular chimes,
-  timpani (hits in two layers, looped rolls, crescendo rolls), bass drum, snare, snare roll, piatti, cymbal rolls, tam-tams,
-  triangle, tambourine, bell tree, bar chimes, sleigh bells, wood blocks, shakers, and two pipe-organ stops (Swell Gamba 8',
-  Great Open Diapason 8'). `tools/samples/build.py` reads the library's own SFZ definitions (`tools/samples/sfz.py`) for key ranges,
+- Per family, the source was chosen by measuring the raw recordings' top end and keeping the more natural one.
+  **VSCO 2 Community Edition** (Versilian Studios, CC0 1.0; https://github.com/sgossner/VSCO-2-CE): violin, viola and cello sections
+  and the solo contrabass (sustain, tremolo, spiccato, pizzicato, two dynamic layers), trumpet, tenor trombone, flute, bassoon, marimba,
+  bass drum, snare, cymbals, gong, tambourine, claves, anvil, snare taps, field drums, pipe organ.
+  **Sonatina Symphonic Orchestra 2.0** (Mattias Westlund, Peter Eastman and contributors; Creative Commons Sampling Plus 1.0,
+  https://creativecommons.org/licenses/sampling+/1.0/ ; https://github.com/peastman/sso): section horns (mp and ff), solo horn, tuba,
+  oboe, cor anglais, clarinet, the mixed chorus (men and women), concert harp, glockenspiel, celeste, crotales, tubular chimes, timpani
+  (hits in two layers, looped rolls), triangle, bell tree, sleigh bells, wood blocks, shakers, and the Swell Gamba 8' organ stop.
+  Stereo recordings stay stereo (sections) or use one microphone channel (the side of the stage the player sits on); nothing is
+  equalised: the recordings' own balance is what plays.
+  `tools/samples/build.py` reads the library's own SFZ definitions (`tools/samples/sfz.py`) for key ranges,
   root pitches, tuning and volume corrections, start offsets, loop points, round robins and dynamic layers, then trims, level-matches,
   shortens the loops to a memory budget and encodes each sample. Mono instruments are one microphone channel of the stereo recording
   (the side of the stage the section sits on), never the left+right sum: these recordings are wide and nearly uncorrelated, and a sum
