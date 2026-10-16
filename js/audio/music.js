@@ -542,25 +542,46 @@
     }
   }
 
+  // The choir is written as parts, not as chords: a voice that keeps its pitch across a chord change holds it (a tie, no new attack); a
+  // voice that has to jump a third or more walks to its new note through a diatonic passing tone in the last beat; at a phrase start
+  // the voices enter one after another; and a chord longer than a breath is sung as breath-length phrases that swell. `soft` sings low
+  // and slow (the supportive role). The melody, when a piece gives the choir one, is a separate line layer (lead2 / bell2) in the choir's voice.
   function genChoir(C, s, cfg, key) {
     key = key || 'choir';
     const inst = resolveInst(cfg.inst, C.inst[key] || DEF_INST[key]), reg = cfg.reg || [55, 77], n = cfg.n || 3, vel = num(cfg.vel, 1);
     let prev = C.prevChoir[key];
-    const segs = s.R.segs;
+    const segs = s.R.segs, soft = !!cfg.soft, rng = C.vrng, spb = C.spb;
+    const breathBeats = Math.max(2, Math.round((soft ? 8.0 : 5.2) / spb));
+    const sampled = inst.v === 'sample';
+    const scaleHas = m => C.scale.indexOf(mod12(m - C.tonic)) >= 0;
+    const voices = [];                                   // per part: { m, ev } of the note currently sounding
+    const base = { v1: cfg.v1 || inst.v1, v2: cfg.v2 || inst.v2, att: cfg.att, rel: cfg.rel };
+    const sing = (j, m, beat, L, k, first) => {           // one phrase of one voice: staggered entry, a small swell, breath-length
+      const dyn0 = (soft ? 0.3 : 0.55) + (soft ? 0.12 : 0.2) * (k % 2), dt = first ? j * 0.16 + rng() * 0.08 : j * 0.04 + rng() * 0.05;
+      return emit(C, 'choir', inst, s.start + beat, m, Math.max(0.5, L), vel * (0.9 + 0.1 * (k % 2)), Object.assign({}, base, { pan: (j - (n - 1) / 2) * 0.35, dt, dyn: dyn0, swell: dyn0 + (soft ? 0.22 : 0.18) }));
+    };
     for (let i = 0; i < segs.length; i++) {
       const sg = segs[i], notes = voiceChord(sg.ch, prev, reg[0], reg[1], n, (reg[0] + reg[1]) / 2);
       prev = notes;
       let L = sg.b1 - sg.b0;
       while (i + 1 < segs.length && segs[i + 1].ch.sym === sg.ch.sym) { i++; L = segs[i].b1 - sg.b0; }
-      const soft = !!cfg.soft, breathBeats = Math.max(2, Math.round((soft ? 8.0 : 5.2) / C.spb)), rng = C.vrng;
       notes.forEach(function (m, j) {
-        const ex = { pan: (j - (notes.length - 1) / 2) * 0.35, v1: cfg.v1 || inst.v1, v2: cfg.v2 || inst.v2, att: cfg.att, rel: cfg.rel };
-        if (inst.v !== 'sample' || L <= breathBeats * 1.5) { emit(C, 'choir', inst, s.start + sg.b0, m, L, vel, ex); return; }
-        let b = 0, k = 0;
-        while (b < L) {                                 // phrases of roughly a breath, singers not quite together, each phrase swelling a little
+        const cur = voices[j];
+        if (!sampled) { emit(C, 'choir', inst, s.start + sg.b0, m, L, vel, Object.assign({}, base, { pan: (j - (n - 1) / 2) * 0.35 })); return; }
+        // a held common tone: extend the sounding note instead of re-attacking (up to a breath)
+        if (cur && cur.m === m && cur.ev && (cur.ev.o.dur / spb) + L <= breathBeats * 1.4) { cur.ev.o.dur += L * spb; cur.len += L; return; }
+        // a leap: walk into the new note through a passing tone in the last beat of the old one
+        if (cur && cur.ev && Math.abs(m - cur.m) >= 3 && cur.len >= 2 && cur.ev.o.dur > 1.6 * spb) {
+          const dir = m > cur.m ? 1 : -1; let pt = m - dir;
+          while (Math.abs(pt - cur.m) > 0 && !scaleHas(pt)) pt -= dir;
+          if (pt !== cur.m && pt !== m) { cur.ev.o.dur -= spb; emit(C, 'choir', inst, s.start + sg.b0 - 1, pt, 0.98, vel * 0.85, Object.assign({}, base, { pan: (j - (n - 1) / 2) * 0.35, dyn: 0.5, leg: true })); }
+        }
+        // the new note, in breath-length phrases if it is long
+        let b = 0, k = 0, first = !cur;
+        while (b < L) {
           const len = Math.min(L - b, breathBeats + Math.round((rng() - 0.5) * 2)), gap = b + len < L ? 0.35 : 0;
-          const dyn0 = (soft ? 0.3 : 0.55) + (soft ? 0.12 : 0.2) * (k % 2), dt = (j * 0.05 + rng() * 0.06);
-          emit(C, 'choir', inst, s.start + sg.b0 + b, m, Math.max(0.5, len - gap), vel * (0.9 + 0.1 * (k % 2)), Object.assign({}, ex, { dt, dyn: dyn0, swell: dyn0 + (soft ? 0.22 : 0.18) }));
+          const ev = sing(j, m, sg.b0 + b, len - gap, k, first && b === 0);
+          voices[j] = { m, ev, len };
           b += len; k++;
         }
       });
@@ -1135,7 +1156,7 @@
     desc: 'Main theme — a hymn that opens on the organ with the men low beneath it and ends with the men’s choir carrying everything, the analogue synth around them, a pedal that sinks to the very deep octave; no drums',
     bpm: 70, root: 'D', mode: 'minor', loopFrom: 'A1', trim: 2.34, tens: false, tone: { lo: 1.0 }, mix: { choir: 1.45, pad: 1.0, lead: 0.75, bass: 1.15 },
     forms: [['A1', 'B', 'C', 'A2', 'E', 'C', 'A1', 'E'], ['A1', 'C', 'B', 'A2', 'C', 'E', 'A1', 'B', 'E']],
-    alts: [{}, {'lead2': 'flutes', 'choir2': 'choirWomen'}],
+    alts: [{}, { choir2: 'choirWomen' }],
     inst: { pad: 'organ', pad2: 'analog', bass: 'deep', lead: 'horn', lead2: 'strings', bell: 'glass', choir: 'ooh', choir2: 'aah', arp: 'strOst' },
     ph: {
       H1: '5:3 8:1 | 7:2 6:2 | 5:3 3:1 | 4:2 5:2',             // the hymn: rising fourth, falling step (the game's leitmotif), noble descent, half cadence
@@ -1150,15 +1171,15 @@
         lead: { ph: 'r4 H1', inst: 'hornSolo', vel: 0.55 }, bell: { dens: 0.08, res: 1, reg: [72, 96], vel: 0.38 } },
       { n: 'A1', bars: 16, cres: [0.62, 0.8], prog: 'i bVII:.5 bVI:.5 i iv:.5 V:.5 | i V:.5 bIII:.5 i:.5 bVII:.5 V | i:.5 bVI:.5 i bIII:.5 V:.5 bVII:.5 V:.5 | bVI bIII:.5 V:.5 i i',
         pad: { p: 'sus', inst: 'organ', n: 4, reg: [45, 72], vel: 0.95 }, pad2: { p: 'sus', inst: 'analog', n: 3, reg: [38, 60], vel: 0.6 }, bass: { pat: ['1---', '1---', 'c---', 'c---'], inst: { p: 'deep', sub: 0.7, att: 0.4, rel: 1.6 } }, lead: { ph: 'H1 H2 H3 H4', vel: 0.7 },
-        lead2: { ph: 'r8 H3 H4', inst: 'strings', oct: 1, vel: 0.45 }, choir: { inst: 'choirMen', n: 3, reg: [38, 57], vel: 0.6 }, bell: { dens: 0.07, res: 1, reg: [72, 96], vel: 0.36 } },
+        lead2: { ph: 'r8 H3 H4', inst: 'choirMen', oct: -1, vel: 0.55 }, choir: { inst: 'choirMen', n: 3, reg: [38, 57], vel: 0.6 }, bell: { dens: 0.07, res: 1, reg: [72, 96], vel: 0.36 } },
       { n: 'B', bars: 8, lv: 0.9, prog: 'i bVI bVII i iv bVI V V', cr: true, pad: { p: 'sus', inst: 'organ', n: 4, reg: [50, 76], vel: 0.7 }, pad2: { p: 'sus', inst: 'analog', n: 3, reg: [43, 64], vel: 0.85 }, bass: { pat: ['1---', 'c---'], inst: { p: 'deep', sub: 0.75, att: 0.3, rel: 1.4 } },
         arp: { pat: '0.......2.......', res: 2, vel: 0.4, reg: [55, 79], gate: 0.9 },
-        lead: { ph: 'CT CT', inst: 'cello', oct: -1, vel: 0.6, art: 0.95 }, choir: { inst: 'choirMen', n: 3, reg: [38, 57], vel: 0.85 }, choir2: { inst: 'aah', n: 3, reg: [57, 74], vel: 0.5 } },
+        lead: { ph: 'CT CT', inst: 'cello', oct: -1, vel: 0.6, art: 0.95 }, lead2: { ph: 'H1 H2', inst: 'choirMen', oct: -1, vel: 0.7 }, choir: { inst: 'choirMen', n: 3, reg: [38, 57], vel: 0.8 }, choir2: { inst: 'aah', n: 3, reg: [57, 74], vel: 0.5 } },
       { n: 'C', bars: 8, lv: 0.5, prog: 'bVI:2 iv:2 i:2 V:2', pad: { p: 'swell', inst: 'organSoft', n: 4, reg: [55, 79], vel: 0.6 }, pad2: { p: 'sus', inst: 'analog', n: 3, reg: [43, 62], vel: 0.7 }, bass: { pat: ['c---', '1---'], inst: { p: 'deep', sub: 0.8, att: 1.2, rel: 2.4 } },
         lead: { ph: 'F1 F1', inst: 'flute', vel: 0.6 }, arp: { inst: 'harp', p: 'up8', vel: 0.5, reg: [55, 84] }, choir: { inst: 'choirMen', n: 3, reg: [38, 55], vel: 0.55 }, bell: { dens: 0.12, res: 1, reg: [72, 96], vel: 0.4 }, drums: false, timp: false, rise: 2 },
       { n: 'A2', bars: 16, cres: [0.95, 1.08], prog: 'i bVII:.5 bVI:.5 i iv:.5 V:.5 | i V:.5 bIII:.5 i:.5 bVII:.5 V | i:.5 bVI:.5 i bIII:.5 V:.5 bVII:.5 V:.5 | bVI bIII:.5 V:.5 i i', cr: true,
         pad: { p: 'sus', inst: 'organ', n: 4, reg: [45, 72], vel: 0.5 }, pad2: { p: 'sus', inst: 'analog', n: 3, reg: [43, 64], vel: 0.9 }, bass: { pat: ['c---', 'c---', '1---', 'c---'], inst: { p: 'deep', sub: 0.85, att: 0.3, rel: 1.4 } }, arp: { pat: '0.......2.......', res: 2, vel: 0.4, reg: [55, 79], gate: 0.9 },
-        lead: { ph: 'H1 H2 H3 H4', inst: 'horn', vel: 0.7, harm: -2 }, lead2: { ph: 'H1 H2 H3 H4', inst: 'strings', oct: 1, vel: 0.75 }, choir: { inst: 'choirMen', n: 4, reg: [38, 60], vel: 1.0 }, choir2: { inst: 'aah', n: 3, reg: [57, 76], vel: 0.6 },
+        lead: { ph: 'H1 H2 H3 H4', inst: 'horn', vel: 0.7, harm: -2 }, lead2: { ph: 'H1 H2 H3 H4', inst: 'choirMen', oct: -1, vel: 0.9 }, choir: { inst: 'choirMen', n: 3, reg: [38, 57], vel: 0.95 }, choir2: { inst: 'aah', n: 3, reg: [57, 76], vel: 0.6 },
         bell: { dens: 0.15, res: 1, reg: [76, 100], vel: 0.5 } },
       { n: 'E', bars: 8, lv: 0.68, prog: 'i bVI bVII i iv bVI V i', pad: { p: 'sus', n: 4, reg: [50, 76] }, pad2: { p: 'sus', inst: 'warm', n: 3, reg: [38, 60], vel: 0.6 }, bass: { pat: ['1---', 'c---'], inst: { p: 'deep', sub: 0.7, att: 0.6, rel: 2.0 } },
         lead: { ph: 'H4 H4', inst: 'hornSolo', vel: 0.6 }, choir: { inst: 'choirMen', n: 3, reg: [38, 57], vel: 0.7 }, bell: { dens: 0.07, res: 1, reg: [72, 96], vel: 0.36 } },
