@@ -213,8 +213,8 @@
     // the weight a bass section recorded at a distance does not carry on its own
     if (num(o.sub, 0) > 0 && inst.pitched) {
       // the samples sit at about -16 dBFS RMS; the sub is scaled so sub=1 is roughly their level, and it never goes below 30 Hz
-      const f = o.f || 110, fs = f / 2;
-      if (fs >= 32) { const so = v.osc('sine', fs, t, end), sg = v.gain(num(o.sub, 0) * 0.16 * lvl0(dyn)); const lp = v.filter('lowpass', Math.min(180, fs * 2.5), 0.7); so.connect(lp); lp.connect(sg); sg.connect(mix); }
+      const f = o.f || 110, fs = f >= 64 ? f / 2 : (f < 45 ? f : 0);
+      if (fs >= 30) { const so = v.osc('sine', fs, t, end), sg = v.gain(num(o.sub, 0) * 0.16 * lvl0(dyn)); const lp = v.filter('lowpass', Math.min(180, fs * 2.5), 0.7); so.connect(lp); lp.connect(sg); sg.connect(mix); }
     }
     const lvl = lvl0;
     const peak = vel * num(o.gain, 1) * inst.gain * z0.gain * lvl(dyn);

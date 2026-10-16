@@ -75,6 +75,9 @@ Versions follow `MAJOR.MINOR.PATCH`; the live version is the `VERSION` file.
   The title is now a hymn for men's choir with the analogue synth around it and no drums (the horns soft behind the voices, a cello
   counter-line); in the exploration pieces the choir is low and supportive, singing softly (`soft`: longer breaths, slower and lower
   swells) in more sections but never forward.
+  The title's arc: it opens on the pipe organ with the men low beneath it and ends with the men's choir carrying everything, the organ
+  under them; a pedal in the bass sinks from the low octave to the very deep one and back (the sub follows a very deep note at its own
+  pitch, an octave below a note that has one).
 - Symphonic re-orchestration and film-style flow. Every synth pluck, FM bell, pad, bass and drum-machine part in the score is now a
   recorded instrument: pizzicato string sections, marimba, glockenspiel, harp, oboe / clarinet / bassoon, contrabass, bass drum,
   snare, field drums, tambourine, claves, anvil, stick taps (the two machine races keep a little sequencer colour). The bell
