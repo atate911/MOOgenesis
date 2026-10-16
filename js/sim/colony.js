@@ -57,6 +57,7 @@ MOO.def(function (M) {
     const s = p.sliders, lk = p.lock;
     if (lk[idx]) return;
     let budget = 100; for (let i = 0; i < 5; i++) if (lk[i]) budget -= s[i];
+    budget = Math.max(0, budget);
     const others = []; for (let i = 0; i < 5; i++) if (!lk[i] && i !== idx) others.push(i);
     if (!others.length) { s[idx] = budget; C.applyEcoFloor(S, E, p); return; }
     s[idx] = clamp(Math.round(value), 0, budget);
@@ -94,6 +95,17 @@ MOO.def(function (M) {
     for (const i of [SHIP, DEF, IND]) if (s[i] < 0) s[i] = 0;
     s[ECO] = clamp(s[ECO], 0, 100);
     if (!lk[TECH]) s[TECH] = Math.max(0, 100 - s[SHIP] - s[DEF] - s[IND] - s[ECO]);
+    else {
+      // TECH cannot absorb the remainder: the raise must come out of the unlocked SHIP / DEF / IND (largest first) so the planet never spends > 100 %
+      // (it did: [0,0,60,0,40] + locked TECH + floor 35 gave 114 %, and the next setSlider then wrote a negative slider); a shortfall goes to ECO
+      let sum = s[SHIP] + s[DEF] + s[IND] + s[ECO] + s[TECH];
+      while (sum > 100) {
+        let best = -1; for (const i of [SHIP, DEF, IND]) if (!lk[i] && s[i] > 0 && (best < 0 || s[i] > s[best])) best = i;
+        if (best < 0) break;
+        const cut = Math.min(s[best], sum - 100); s[best] -= cut; sum -= cut;
+      }
+      if (sum < 100) s[ECO] += 100 - sum;
+    }
   };
 
   // ---- one-turn phases (called by Econ.turn in the documented order) ---------------------------------------------------

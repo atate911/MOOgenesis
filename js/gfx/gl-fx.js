@@ -1100,13 +1100,18 @@
 
   // ------------------------------------------------------------------ public API
   FX.supported = function () { return !broken && !!(GL && GL.supported && GL.supported()); };
-  FX.warm = function () {
+  // FX.warm() compiles every program now (blocking; create() relies on the result). FX.warm({async: true}) only queues them for
+  // background compilation through GL.precompile (one per idle slot, nothing blocks); a later FX.warm() then just picks them up.
+  const WARM_PROGS = [['part', PART_FS, PART_VS], ['partN', PARTN_FS, PART_VS], ['beam', BEAM_FS, BEAM_VS], ['shield', SHIELD_FS, SHIELD_VS], ['out', OUT_FS],
+    ['bloomDown', BLOOM_DOWN_FS], ['bloomUp', BLOOM_UP_FS]];
+  FX.warm = function (o) {
     const g = ensure(); if (!g) return false;
-    const ok = [['part', PART_FS, PART_VS], ['partN', PARTN_FS, PART_VS], ['beam', BEAM_FS, BEAM_VS], ['shield', SHIELD_FS, SHIELD_VS], ['out', OUT_FS],
-      ['bloomDown', BLOOM_DOWN_FS], ['bloomUp', BLOOM_UP_FS]].map(a => !!prog(a[0], a[1], a[2]));
+    if (o && o.async && GL.precompile) { WARM_PROGS.forEach(a => { if (!bad[a[0]] && !(progs[a[0]] && progs[a[0]].epoch === epoch)) GL.precompile('glfx.' + a[0], a[2] || null, a[1]); }); return true; }
+    const ok = WARM_PROGS.map(a => !!prog(a[0], a[1], a[2]));
     if (ok.indexOf(false) >= 0) { broken = true; return false; }
     return true;
   };
+  FX.ready = function () { return !broken && WARM_PROGS.every(a => (progs[a[0]] && progs[a[0]].epoch === epoch) || (GL.ready && GL.ready('glfx.' + a[0]))); };
   FX.create = function (opts) {
     opts = opts || NO;
     if (!opts.forceGL) {

@@ -9,6 +9,7 @@
 //   ctx.reserve() → planned empire reserve BC · ctx.fund(p, bc) → emits `transfer` and lowers the planned reserve (never more than is left)
 //   ctx.shared → scratch object for cross-step hand-over within one plan (documented by the step that fills it: intel.js fronts/centres, colonize.js needConquer…)
 //   ctx.quirk(name) → bool: original-game bugs are switchable (`AI.QUIRKS[name]`, default = fixed; `S.settings.options.aiClassic` flips every quirk to the original behaviour)
+//   ctx.fix(name) → bool: behaviour fixes outside the quirk table (`AI.FIXES[name]`, default true = fixed; aiClassic turns them all off)
 MOO.def(function (M) {
   'use strict';
   const AI = M.AI, Geo = M.Sim.Geo;
@@ -16,6 +17,9 @@ MOO.def(function (M) {
   const OBJ = ['diplomat', 'militarist', 'expansionist', 'technologist', 'industrialist', 'ecologist'];
   AI.PERS = PERS; AI.OBJ = OBJ;
   AI.QUIRKS = AI.QUIRKS || {};            // modules register their own: AI.QUIRKS.fourthColonyShip = false (false = fixed, true = original behaviour)
+  // Behaviour fixes OUTSIDE the audited quirk table (tools/rules/83-balance pins AI.QUIRKS to the decisions in tools/balance/REPORT.md): modules register AI.FIXES.<name> = true
+  // (true = fixed, the default; false = the original behaviour).  `options.aiClassic` switches every one off, like it switches every quirk on.  Read with ctx.fix(name).
+  AI.FIXES = AI.FIXES || {};
 
   AI.ctx = function (S, eid, seed) {
     const E = S.empires[eid];
@@ -33,6 +37,7 @@ MOO.def(function (M) {
       log(msg) { if (AI.debug && typeof console !== 'undefined') console.log('[AI ' + eid + ']', msg); },
       persName: () => PERS[E.personality], objName: () => OBJ[E.objective],
       quirk: name => (classic ? true : !!AI.QUIRKS[name]),
+      fix: name => (classic ? false : AI.FIXES[name] !== false),
       dist: (a, b) => (a === b ? 0 : Geo.parsecs(S, a, b)),
       mine() { return cache.mine || (cache.mine = S.planets.filter(p => p.owner === eid)); },
       planetsOf(e) { return S.planets.filter(p => p.owner === e); },
@@ -66,6 +71,7 @@ MOO.def(function (M) {
         }
         for (const k of Object.keys(buildPlan)) { const p = S.planets[+k]; if (p.build !== buildPlan[k]) orders.push({ t: 'build', planet: p.id, design: buildPlan[k] }); }
         if (Object.keys(patchObj).length) orders.push({ t: 'aiState', patch: patchObj });
+        if (ctx.errors.length) orders.push({ t: 'aiLog', errors: ctx.errors.map(e => ({ step: String(e.step), msg: String(e.msg).slice(0, 600) })) });   // step exceptions → S.aiLog (js/ai/ai.js)
         return orders;
       },
     };

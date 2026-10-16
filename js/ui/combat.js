@@ -166,8 +166,9 @@
     try {
       const sp = S && S.planets && pl ? S.planets[pl.id] : null;
       const look = sp ? (sp.type === 'none' ? 'asteroids' : sp.growth === 'gaia' ? 'gaia' : sp.type) : (pl && pl.type) || 'barren';
-      const spr = M.Gfx.pick('planets').sprite({ look, seed: sp ? sp.id * 7919 + (sp.gfx | 0) : 7, inhabited: true }, size * 2);
-      c.getContext('2d').drawImage(spr, 0, 0, size * 2, size * 2);
+      const paint = s2 => { const g = c.getContext('2d'); g.clearRect(0, 0, size * 2, size * 2); g.drawImage(s2, 0, 0, size * 2, size * 2); };
+      const spr = M.Gfx.pick('planets').sprite({ look, seed: sp ? sp.id * 7919 + (sp.gfx | 0) : 7, inhabited: true }, size * 2, { onReady: s2 => { if (c.isConnected) paint(s2); } });
+      paint(spr);
     } catch (e) { const x = c.getContext('2d'); x.fillStyle = '#445'; x.beginPath(); x.arc(size, size, size * 0.8, 0, 6.3); x.fill(); }
     return c;
   }
@@ -279,7 +280,12 @@
     }), { danger: false, kbd: 'R', disabled: !canRetreat, tip: canRetreat ? 'Withdraw the whole fleet without a fight (R)' : 'You have no ships to withdraw' });
     acts.appendChild(bRet); acts.appendChild(bAuto); acts.appendChild(bFight);
     root.appendChild(acts);
+    // "select and move on": one tick and no further battle this game asks — Auto is applied straight away (Options › Gameplay turns it off again)
+    const autoAll = h('label.pb-autoall', h('input', { type: 'checkbox' }), ' Auto-resolve every battle this game');
+    autoAll.querySelector('input').addEventListener('change', e => { if (!e.target.checked) return; try { S.settings.options = S.settings.options || {}; S.settings.options.autoBattle = true; } catch (x) { /* ignore */ } UI.toast('Battles will be auto-resolved for the rest of this game (Options › Gameplay to change).', 'ok', 4000); finish('auto'); });
+    root.appendChild(autoAll);
     host.appendChild(root);
+    UI.attention(tacticalDefault ? bFight : bAuto);                                                  // the turn waits on this choice: highlight + focus it
 
     const onKey = e => {
       if (UI.modalOpen && UI.modalOpen()) return;
@@ -313,6 +319,7 @@
     Promise.all(jobs).then(() => { if (!token.dead && res.n) onUpdate(res); });
   }
 
+  UI.css('combat-autoall', `.pb-autoall { display:flex; align-items:center; gap:.4rem; margin:.5rem 0 0; font-size:.85rem; color:var(--mist); cursor:pointer; } .pb-autoall input { accent-color:var(--brass-hi); }`);
   UI.Side.register('prebattle', {
     render(host, ctx) {
       this.off = buildPreBattle(ctx.params, host, v => { if (this.off) { this.off(); this.off = null; } if (ctx.params.resolve) ctx.params.resolve(v); });
@@ -374,7 +381,7 @@
     if (notes.length) root.appendChild(h('ul.notes', notes.map(n => h('li', n))));
     const btn = UI.button('Continue', onContinue, { primary: true, kbd: 'Space' });
     root.appendChild(h('div.foot', h('span.rd', 'Rounds fought: ', h('b', res.rounds | 0)), btn));
-    root.btn = btn;
+    root.btn = btn; UI.attention(btn);
     return root;
   }
 
@@ -398,11 +405,11 @@
   // ===================================================================================================================================================
   function showOnGalaxy(name, params, last) {                       // last: the final card of the battle → put the default side panel back afterwards
     return new Promise(resolve => {
-      const done = v => { resolve(v); if (last) setTimeout(() => { if (UI.Galaxy && UI.Galaxy.showDefault && UI.Screens.current && UI.Screens.current.id === 'galaxy') UI.Galaxy.showDefault(); }, 0); };
+      let hd = null, settled = false;
+      const done = v => { if (settled) return; settled = true; if (hd) UI.Side.release(hd); resolve(v); if (last) setTimeout(() => { if (UI.Galaxy && UI.Galaxy.showDefault && !UI.Side.held && UI.Screens.current && UI.Screens.current.id === 'galaxy') UI.Galaxy.showDefault(); }, 0); };
       if (UI.Screens.has('galaxy')) {
-        if (!UI.Screens.current || UI.Screens.current.id !== 'galaxy') UI.Screens.go('galaxy');
-        try { if (UI.Galaxy.map && params.battle.star >= 0) UI.Galaxy.map.centerOn(params.battle.star, { animate: true }); } catch (e) { /* map optional */ }
-        UI.Side.show(name, Object.assign({}, params, { resolve: done }));
+        // held: survives a screen change / re-entry and cannot be replaced by another panel until answered (see UI.Side.hold)
+        hd = UI.Side.hold(name, Object.assign({}, params, { star: params.battle.star, resolve: done }), () => done(name === 'prebattle' ? 'auto' : true));
       } else {                                                    // no galaxy screen (test pages): show the card in a modal
         const host = h('div'); let off = null;
         const pr = UI.modal({ title: '', body: host, buttons: [], closable: false, width: '30rem', onOpen: () => { if (name === 'prebattle') off = buildPreBattle(params, host, v => pr.close(v)); else host.appendChild(buildSummary(params.result, params.battle, params.S, () => pr.close(true))); } });
@@ -416,7 +423,8 @@
     S = S || G.S;
     const Cb = E(), me = mySide(battle), seed = String(battle.seed) + ':ui';
     if (!battle.sides.some(s => s.human)) return Cb.resolve(battle, M.RNG.create(seed));          // nobody to ask: pure auto-resolve
-    let choice = opts.skipCard ? 'fight' : await showOnGalaxy('prebattle', { battle, S });
+    const autoAll = !!(S && S.settings && S.settings.options && S.settings.options.autoBattle);
+    let choice = opts.skipCard ? 'fight' : autoAll ? 'auto' : await showOnGalaxy('prebattle', { battle, S });
     if (choice === 'retreat') {
       const res = Cb.retreatBeforeBattle(battle, me);
       await showOnGalaxy('combatResult', { battle, S, result: res }, true);
@@ -493,7 +501,7 @@
     k('a', () => ui.b.auto.click()); k('p', () => ui.b.planet.click()); k('s', () => ui.b.scan.click()); k('m', () => ui.b.missile.click()); k('x', () => ui.b.special.click());
     k('r', e => { if (e && e.shiftKey) doRetreat(true); else ui.b.retreat.click(); });
     k('w', () => ui.b.wait.click()); k('d', () => ui.b.done.click());
-    k('escape', () => { if (st.overlay) closeOverlay(); else if (st.special) cancelSpecial(); else ui.b.done.click(); });
+    k('escape', () => { if (st.summary) { if (st.summaryBtn) st.summaryBtn.click(); return; } if (st.overlay) closeOverlay(); else if (st.special) cancelSpecial(); else ui.b.done.click(); });   // the summary is the battle's last answer: Esc continues, never strands the screen
     k('space', () => { if (st.view && st.view.busy()) st.view.skip(); else if (st.summary) { if (st.summaryBtn) st.summaryBtn.click(); } else if (st.overlay) closeOverlay(); else ui.b.done.click(); });
     k('enter', () => { if (st.summary && st.summaryBtn) st.summaryBtn.click(); });
     k('l', () => toggleLog());
@@ -792,7 +800,7 @@
       UI.sfx('error', { vol: 0.35 });
     }
   }
-  function onRight() { if (st.overlay) closeOverlay(); else if (st.special) cancelSpecial(); }
+  function onRight() { if (st.summary) { if (st.summaryBtn) st.summaryBtn.click(); return; } if (st.overlay) closeOverlay(); else if (st.special) cancelSpecial(); }
   function onHover(cell) {
     st.hover = cell;
     const B = st.B; if (!B || !st.view) return;

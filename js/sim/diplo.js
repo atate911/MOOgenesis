@@ -1113,10 +1113,13 @@ MOO.def(function (M) {
 
   // ── audiences as interrupts ─────────────────────────────────────────────────────────────────────────────────────────────────────────
   // {type:'diplomacy', from(AI), to(human), kind, msgType, greeting?, text:{personality,situation,vars,msgType}, options:[{id,label}], info, answer(choice)}
-  // The UI shows greeting (if any) then text, offers `options`, and returns the chosen option id (undefined = the default "yes"). Multi-step audiences (demand to
+  // The UI shows greeting (if any) then text, offers `options`, and returns the chosen option id (undefined = no answer = the negative branch). Multi-step audiences (demand to
   // break an alliance, "what if we also offered…", ally reactions) are chained: answer() inserts the follow-up interrupt right behind the current one.
   const OK_OPT = [{ id: 'ok', label: 'OK' }], AR_OPT = [{ id: 'accept', label: 'Accept' }, { id: 'reject', label: 'Reject' }];
-  const yes = c => c === undefined || c === null || c === true || c === 'accept' || c === 'agree' || c === 'yes' || c === 'ok' || (typeof c === 'string' && c.indexOf('swap') === 0);
+  // Only an explicit answer accepts. `undefined`/`null` (no answer: a skipped or broken scene, a headless driver) used to count as yes, which could
+  // declare war on a third empire (callToArms) or break an alliance (demandBreak) without the player choosing. Headless drivers that want the
+  // old "AI-played human accepts everything" behaviour answer 'accept' explicitly (Sim.autoTurn does).
+  const yes = c => c === true || c === 'accept' || c === 'agree' || c === 'yes' || c === 'ok' || (typeof c === 'string' && c.indexOf('swap') === 0);
   D.yes = yes;
   const mk = (S, H, A, kind, type, sit, vars, options, extra) => Object.assign({ type: 'diplomacy', from: A.id, to: H.id, kind, msgType: type, text: say(S, A.id, H.id, sit || D.situation(type), vars, type), options: options || OK_OPT }, extra || {});
   const insertAfter = (out, cur, next) => { const i = out.indexOf(cur); if (i < 0) out.push(next); else out.splice(i + 1, 0, next); };

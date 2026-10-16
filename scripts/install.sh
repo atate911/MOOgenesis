@@ -7,6 +7,9 @@
 #                                [--no-healthwatch]
 #
 # Idempotent: re-running is safe. Never overwrites a live nginx site conf.
+# A re-run reads domain / email / web from the existing install.conf (flags
+# still win), reuses the live release when the checkout is unchanged, and
+# keeps tls=yes once a certificate is in place.
 # The game is static files — no service user, no database. Player saves live
 # in each player's browser, so there is nothing server-side to lose.
 set -euo pipefail
@@ -14,9 +17,11 @@ set -euo pipefail
 INSTALL_ROOT="/opt/moogenesis"
 DOMAIN="moo.dhlab.us"
 EMAIL=""
+ARG_DOMAIN=""; ARG_EMAIL=""; ARG_WEB=""
 WANT_TLS=true
 CERT_STAGING=false
 WANT_HEALTHWATCH=true
+FORCE=false
 WEB="auto"                # auto | nginx | caddy
 CADDYFILE=""
 SKIP_NGINX=false          # test hook: deploy the release only (no apt/nginx/certbot)
@@ -35,19 +40,20 @@ warn() { echo -e "   ${YELLOW}!${NC} $*"; }
 
 while [[ $# -gt 0 ]]; do
     case "$1" in
-        --domain) DOMAIN="$2"; shift 2 ;;
-        --email)  EMAIL="$2"; shift 2 ;;
+        --domain) ARG_DOMAIN="$2"; shift 2 ;;
+        --email)  ARG_EMAIL="$2"; shift 2 ;;
         --root)   INSTALL_ROOT="$2"; shift 2 ;;
-        --web)    WEB="$2"; shift 2 ;;
+        --web)    ARG_WEB="$2"; shift 2 ;;
         --caddyfile) CADDYFILE="$2"; shift 2 ;;
         --no-tls) WANT_TLS=false; shift ;;
         --staging) CERT_STAGING=true; shift ;;
         --no-healthwatch) WANT_HEALTHWATCH=false; shift ;;
+        --force)  FORCE=true; shift ;;
         --no-nginx) SKIP_NGINX=true; WANT_TLS=false; WANT_HEALTHWATCH=false; shift ;;
         -h|--help)
             cat <<USAGE
 Usage: sudo bash $0 [options]
-  --domain NAME      public host name (default: ${DOMAIN})
+  --domain NAME      public host name (default: ${DOMAIN}, or the one in install.conf on a re-run)
   --email ADDR       Let's Encrypt contact (recommended; expiry notices go here)
   --root PATH        install root (default: ${INSTALL_ROOT})
   --web nginx|caddy  which web server to configure (default: auto — Caddy if it is
@@ -56,11 +62,20 @@ Usage: sudo bash $0 [options]
   --no-tls           nginx mode only: HTTP only — skip the Let's Encrypt certificate (Caddy always uses HTTPS)
   --staging          use the Let's Encrypt staging CA (test without rate limits)
   --no-healthwatch   don't install the daily doctor timer
+  --force            build a new release even when the live one matches the checkout
 USAGE
             exit 0 ;;
         *) die "Unknown option: $1  (use --help)" ;;
     esac
 done
+
+# A re-run keeps what the first run was told, unless a flag says otherwise.
+CONF_DOMAIN="$(moo_conf_get "$INSTALL_ROOT" domain)"
+CONF_EMAIL="$(moo_conf_get "$INSTALL_ROOT" email)"
+CONF_WEB="$(moo_conf_get "$INSTALL_ROOT" web)"
+DOMAIN="${ARG_DOMAIN:-${CONF_DOMAIN:-$DOMAIN}}"
+EMAIL="${ARG_EMAIL:-$CONF_EMAIL}"
+if [[ -n "$ARG_WEB" ]]; then WEB="$ARG_WEB"; elif [[ "$CONF_WEB" =~ ^(nginx|caddy)$ ]]; then WEB="$CONF_WEB"; fi
 
 [[ $EUID -eq 0 ]] || die "Run with sudo:  sudo bash $0"
 [[ -f "${REPO_DIR}/index.html" && -f "${REPO_DIR}/js/manifest.js" ]] \
@@ -77,7 +92,7 @@ echo    "║   Master of Orion — Reborn — Installer           ║"
 echo -e "╚══════════════════════════════════════════════════╝${NC}"
 echo    "   Repo    : ${REPO_DIR}  (v${VERSION})"
 echo    "   Target  : ${INSTALL_ROOT}"
-echo    "   Domain  : ${DOMAIN}"
+echo    "   Domain  : ${DOMAIN}$([[ -z "$ARG_DOMAIN" && -n "$CONF_DOMAIN" ]] && echo '  (from install.conf)')"
 echo    "   Web     : ${WEB}"
 echo    "   TLS     : $([[ $WEB == caddy ]] && echo "automatic (Caddy)" || { $WANT_TLS && echo "Let's Encrypt" || echo off; })"
 
@@ -90,15 +105,28 @@ if ! $SKIP_NGINX; then
         command -v caddy >/dev/null || die "--web caddy was requested but caddy is not installed."
     else
         command -v nginx   >/dev/null || NEED+=(nginx)
-        command -v certbot >/dev/null || { $WANT_TLS && NEED+=(certbot python3-certbot-nginx); }
-        if $WANT_TLS && ! dpkg -s python3-certbot-nginx >/dev/null 2>&1; then
-            [[ " ${NEED[*]} " == *" python3-certbot-nginx "* ]] || NEED+=(python3-certbot-nginx)
+        if $WANT_TLS; then
+            # Three ways certbot shows up: absent (install the apt pair), the snap
+            # (it bundles the nginx plugin; the apt python3-certbot-nginx cannot be
+            # loaded by it), or the apt package (needs the plugin package).
+            CERTBOT_BIN="$(command -v certbot || true)"
+            if [[ -z "$CERTBOT_BIN" ]]; then
+                NEED+=(certbot python3-certbot-nginx)
+            elif [[ "$CERTBOT_BIN" == /snap/bin/* || "$(readlink -f "$CERTBOT_BIN" 2>/dev/null)" == */snap* ]]; then
+                info "certbot is the snap (${CERTBOT_BIN}); its nginx plugin is built in"
+            elif ! dpkg -s python3-certbot-nginx >/dev/null 2>&1; then
+                NEED+=(python3-certbot-nginx)
+            fi
         fi
     fi
     if [[ ${#NEED[@]} -gt 0 ]]; then
         info "Installing: ${NEED[*]}"
         DEBIAN_FRONTEND=noninteractive apt-get update -qq
         DEBIAN_FRONTEND=noninteractive apt-get install -y -qq "${NEED[@]}"
+    fi
+    if [[ "$WEB" == nginx ]] && $WANT_TLS && ! certbot plugins --non-interactive 2>/dev/null | grep -qi nginx; then
+        warn "certbot cannot load its nginx plugin — the certificate step will fail."
+        warn "snap certbot: sudo snap install --classic certbot · apt certbot: sudo apt install python3-certbot-nginx"
     fi
     ok "${WEB}, curl$([[ $WEB == nginx ]] && $WANT_TLS && echo ', certbot') present"
 fi
@@ -108,23 +136,28 @@ mkdir -p "${INSTALL_ROOT}/releases" "${INSTALL_ROOT}/backups" "${INSTALL_ROOT}/s
 ok "${INSTALL_ROOT}/{releases,backups,scripts}"
 
 step "Publishing the game"
-REL=$(moo_make_release "${REPO_DIR}" "${INSTALL_ROOT}") || die "Could not build a release from ${REPO_DIR}."
 PREV=$(moo_current "${INSTALL_ROOT}" || true)
-moo_switch "${INSTALL_ROOT}" "$REL"
-moo_prune "${INSTALL_ROOT}"
-ok "Release ${REL} is live  (previous: ${PREV:-none})"
+REL=""
+if [[ -n "$PREV" && "$FORCE" != true && -d "${INSTALL_ROOT}/releases/${PREV}" ]] \
+   && [[ "$(moo_release_hash "${INSTALL_ROOT}/releases/${PREV}")" == "$(moo_tree_hash "${REPO_DIR}")" ]]; then
+    REL="$PREV"
+    ok "Release ${REL} already matches the checkout — keeping it (--force builds a new one)"
+else
+    REL=$(moo_make_release "${REPO_DIR}" "${INSTALL_ROOT}") || die "Could not build a release from ${REPO_DIR}."
+    moo_switch "${INSTALL_ROOT}" "$REL"
+    moo_prune "${INSTALL_ROOT}"
+    ok "Release ${REL} is live  (previous: ${PREV:-none})"
+fi
 
 info "Installing operator scripts ..."
-cp "${REPO_DIR}/scripts/"*.sh "${INSTALL_ROOT}/scripts/"
-chmod 755 "${INSTALL_ROOT}/scripts/"*.sh
-mkdir -p "${INSTALL_ROOT}/deploy"
-cp -a "${REPO_DIR}/deploy/." "${INSTALL_ROOT}/deploy/"
-cp "${REPO_DIR}/VERSION" "${INSTALL_ROOT}/VERSION"
+moo_install_scripts "${REPO_DIR}" "${INSTALL_ROOT}"
 
 moo_conf_set "${INSTALL_ROOT}" domain "$DOMAIN"
 [[ -n "$EMAIL" ]] && moo_conf_set "${INSTALL_ROOT}" email "$EMAIL"
 moo_conf_set "${INSTALL_ROOT}" repo "$REPO_DIR"
-moo_conf_set "${INSTALL_ROOT}" tls "no"
+# tls is set to "no" only on a fresh install; once certbot/Caddy has turned it
+# on, a re-run must not flip it back (doctor.sh and upgrade.sh probe https then).
+moo_conf_has "${INSTALL_ROOT}" tls || moo_conf_set "${INSTALL_ROOT}" tls "no"
 moo_conf_set "${INSTALL_ROOT}" web "$WEB"
 
 if $SKIP_NGINX; then
@@ -207,13 +240,20 @@ if command -v ufw >/dev/null && ufw status 2>/dev/null | grep -q "Status: active
         || warn "ufw is active — allow ports 80 and 443 yourself"
 fi
 
-step "Health check (plain HTTP)"
+# A certificate certbot installed on an earlier run means the site already
+# answers https (and redirects http) — record that before probing it.
+if [[ "$(moo_conf_get "${INSTALL_ROOT}" tls)" != yes && "$(moo_tls_live "${INSTALL_ROOT}" "$DOMAIN")" == yes ]]; then
+    moo_conf_set "${INSTALL_ROOT}" tls "yes"
+    info "A certificate for ${DOMAIN} is already installed — TLS marked on"
+fi
+PROBE=http; [[ "$(moo_tls_live "${INSTALL_ROOT}" "$DOMAIN")" == yes ]] && PROBE=https
+step "Health check (${PROBE})"
 HEALTHY=false
 for i in 1 2 3; do
     if moo_health "${INSTALL_ROOT}" "$DOMAIN" "$REL"; then HEALTHY=true; break; fi
     [[ $i -lt 3 ]] && { info "Waiting for nginx ..."; sleep 2; }
 done
-$HEALTHY && ok "Serving ${REL} on http://${DOMAIN}/" \
+$HEALTHY && ok "Serving ${REL} on ${PROBE}://${DOMAIN}/" \
          || die "nginx is not serving the new release. See: sudo tail /var/log/nginx/moogenesis.error.log"
 
 if $WANT_TLS; then
@@ -236,20 +276,26 @@ if $WANT_TLS; then
             || warn "No certbot timer found — renew with: sudo certbot renew"
         TLS_NOTE="https"
     else
-        warn "Certificate request failed — the site is up over plain HTTP."
-        echo "     Usual causes: DNS not pointing here yet, or router port 80/443 not forwarded."
-        echo "     Fix, then re-run:  sudo bash ${REPO_DIR}/scripts/install.sh --domain ${DOMAIN} --email you@example.com"
+        if [[ "$(moo_conf_get "${INSTALL_ROOT}" tls)" == yes ]]; then
+            warn "certbot failed, but a certificate is already installed — the site stays on https."
+            TLS_NOTE="https"
+        else
+            warn "Certificate request failed — the site is up over plain HTTP."
+            echo "     Usual causes: DNS not pointing here yet, or router port 80/443 not forwarded."
+            echo "     Fix, then re-run:  sudo bash ${REPO_DIR}/scripts/install.sh --domain ${DOMAIN} --email you@example.com"
+        fi
     fi
+elif [[ "$(moo_conf_get "${INSTALL_ROOT}" tls)" == yes ]]; then
+    info "--no-tls given, but a certificate is already installed — leaving https on (tls=yes)"
+    TLS_NOTE="https"
 fi
 
 fi   # nginx / caddy
 
 if $WANT_HEALTHWATCH; then
     step "Daily health check"
-    for u in moogenesis-doctor.service moogenesis-doctor.timer; do
-        sed "s|/opt/moogenesis|${INSTALL_ROOT}|g" "${REPO_DIR}/systemd/${u}" > "/etc/systemd/system/${u}"
-    done
-    systemctl daemon-reload
+    CHANGED=$(moo_refresh_units "${REPO_DIR}" "${INSTALL_ROOT}" install) || die "Could not write the systemd units."
+    [[ -z "$CHANGED" ]] || systemctl daemon-reload
     systemctl enable --now moogenesis-doctor.timer >/dev/null 2>&1 \
         && ok "moogenesis-doctor.timer enabled (runs doctor.sh daily; a failing run shows in 'systemctl --failed')" \
         || warn "Could not enable moogenesis-doctor.timer"

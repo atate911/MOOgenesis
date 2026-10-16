@@ -65,11 +65,13 @@ MOO.def(function (M) {
       const rs = e.research;
       for (let f = 0; f < 6; f++) {
         // a field without a project that holds RP (a completed project leaves 1, so the next choice comes the SAME turn) asks for / gets its next project
-        if (rs.project[f] === 0 && (rs.invest[f] > 0 || S.turn === 0) && Sim.Research.choices(e, f).length) {
+        // (a field whose slider is up but whose pile decayed to 0 — or whose project was stolen — is asked too; otherwise it could stay project-less for good)
+        if (rs.project[f] === 0 && (rs.invest[f] > 0 || rs.slider[f] > 0 || S.turn === 0) && Sim.Research.choices(e, f).length) {
           if (e.human) {
             const choices = Sim.Research.choices(e, f).map(l => ({ level: l, cost: Sim.Research.projectCost(S, e, f, l), tech: Sim.Research.techAt(f, l) }));
             const pick = yield { type: 'techChoice', empire: e.id, field: f, choices };
-            if (pick) Sim.Research.start(S, e, f, pick); else Sim.Research.start(S, e, f, choices[0].level);
+            if (!(pick && Sim.Research.start(S, e, f, pick))) Sim.Research.start(S, e, f, choices[0].level);     // an invalid / missing pick → the first choice, never "no project"
+
           } else Sim.Research.aiPick(S, e, f, R);
         }
       }
@@ -102,9 +104,13 @@ MOO.def(function (M) {
     }
     Sim.Fleet.cleanup(S);
 
-    // (23–24) bombardment (humans are asked "Bomb?" first; unanswered = yes), transports land + ground combat
+    // (23–24) bombardment (humans are asked "Bomb?" first: only an explicit `true` bombs; no answer at all (headless / AI-played human) uses the AI's own rule), transports land + ground combat
     if (has('Ground')) {
-      if (Sim.Ground.pending && Sim.Ground.setBombard) for (const q of Sim.Ground.pending(S)) { const yes = yield q; Sim.Ground.setBombard(S, q.empire, q.planet, yes !== false); }
+      if (Sim.Ground.pending && Sim.Ground.setBombard) for (const q of Sim.Ground.pending(S)) {
+        const yes = yield q;
+        const bomb = yes === true || (yes === undefined && !!(Sim.Ground.aiBombs && Sim.Ground.aiBombs(S, E[q.empire], S.planets[q.planet])));
+        Sim.Ground.setBombard(S, q.empire, q.planet, bomb);
+      }
       if (Sim.Ground.bombard) { const bev = Sim.Ground.bombard(S, R); for (const ev of (bev || [])) yield ev; }
     }
     const landed = Sim.Fleet.landTransports(S, mv.landed);
@@ -126,7 +132,7 @@ MOO.def(function (M) {
       if (out && out.needsAnswer && out.accepted === null && typeof out.finish === 'function') out.finish(!(ruling === false || ruling === 'defy'));
       if (out && out.gameOver) councilOver = { reason: out.reason, winner: out.winner };      // the turn still finishes (year advances); the verdict is announced at its end
     }
-    if (has('Diplo') && Sim.Diplo.turn) { const ds = Sim.Diplo.turn(S, R); for (const d of (ds || [])) { const ans = yield d; if (d.answer) d.answer(ans); } }
+    if (has('Diplo') && Sim.Diplo.turn) { const ds = Sim.Diplo.turn(S, R); for (const d of (ds || [])) { const ans = yield d; if (d.answer && ans !== 'skip') d.answer(ans); } }   // 'skip' = unanswered: no deal, no refusal
     // (29) fuel check
     const lost = Sim.Fleet.fuelCheck(S);
     for (const l of lost) if (S.empires[l.empire].human) Sim.Ev.push(S, { type: 'notice', kind: 'outOfFuel', ...l });
@@ -159,17 +165,20 @@ MOO.def(function (M) {
       if (!hasPlanet) for (const f of S.fleets) if (f.owner === e.id) for (let i = 0; i < 6; i++) if (f.ships[i] && Sim.Design.stats(S, e, i).colonyMin) hasColonizer = true;
       if (!hasPlanet && !hasColonizer) {
         e.alive = false; Sim.Ev.push(S, { type: 'empireDestroyed', empire: e.id });
-        // its population transports in flight vanish with it; otherwise they land later, 'invade' a planet and hand it to a dead empire (soak DEAD_OWNER, seed 24052)
+        // its fleets and population transports vanish with it (as Events.killEmpire does); otherwise ghost warships keep shooting transports, fight no-op battles
+        // and count in fleet power forever, and transports land later and hand a planet to a dead empire (soak DEAD_OWNER, seed 24052)
+        S.fleets = S.fleets.filter(f => f.owner !== e.id);
         if (S.trans) S.trans = S.trans.filter(t => t.owner !== e.id);
       }
     }
   };
   // conquest victory: only one empire left (or the human is dead)
   T.victory = function (S) {
-    if (Sim.Victory && Sim.Victory.check) { const v = Sim.Victory.check(S); if (v) return v; }      // council verdict, last empire standing, funeral (research/05 §8)
+    const playOn = !!(S.settings && S.settings.options && S.settings.options.playOn);          // the player chose "Keep playing" after winning: only a defeat ends the game now
+    if (Sim.Victory && Sim.Victory.check) { const v = Sim.Victory.check(S); if (v && !(playOn && v.reason !== 'defeat')) return v; }      // council verdict, last empire standing, funeral (research/05 §8)
     const live = S.empires.filter(e => e.alive);
     if (!S.empires[S.playerId].alive && !S.settings.playerAI) return { reason: 'defeat', winner: live.length ? live[0].id : -1 };
-    if (live.length === 1) return { reason: 'conquest', winner: live[0].id };
+    if (live.length === 1 && !playOn) return { reason: 'conquest', winner: live[0].id };
     return null;
   };
   const Sim_ = M.Sim; void Sim_;

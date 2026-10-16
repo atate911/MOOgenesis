@@ -1,6 +1,10 @@
 [Unit]
 Description=Master of Orion — Reborn — daily health check
 Documentation=file:/opt/moogenesis/scripts/doctor.sh
+# doctor.sh probes the live site and DNS: wait for the network and for whichever
+# web server fronts the game (units that are not installed are simply ignored).
+Wants=network-online.target
+After=network-online.target nginx.service caddy.service
 
 [Service]
 Type=oneshot

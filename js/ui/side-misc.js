@@ -52,7 +52,8 @@
     const c = h('canvas', { width: size * 2, height: size * 2 });
     try {
       const P = M.Gfx.pick('planets'); const look = card.type === 'none' ? 'asteroids' : card.growth === 'gaia' ? 'gaia' : card.type;
-      const sp = P.sprite({ look, seed: card.id * 7919 + (card.gfx | 0), inhabited: owner !== undefined && owner >= 0 }, size * 2); c.getContext('2d').drawImage(sp, 0, 0, size * 2, size * 2);
+      const paint = s2 => { const g = c.getContext('2d'); g.clearRect(0, 0, size * 2, size * 2); g.drawImage(s2, 0, 0, size * 2, size * 2); };
+      const sp = P.sprite({ look, seed: card.id * 7919 + (card.gfx | 0), inhabited: owner !== undefined && owner >= 0 }, size * 2, { onReady: s2 => { if (c.isConnected) paint(s2); } }); paint(sp);
     } catch (e) { const x = c.getContext('2d'); x.fillStyle = '#445'; x.beginPath(); x.arc(size, size, size * .8, 0, 6.3); x.fill(); }
     return h('div.sm-pic', c);
   }
@@ -115,6 +116,10 @@
       this.reach();
       UI.Galaxy.pendingSend = () => { if (this.dest < 0 || this.acc.disabled) return true; return this.accept(ctx, true); };   // Next turn auto-accepts the queued move
       this.update(ctx);
+      // "select and move on": a right-click on the destination (or a click in route mode) is an explicit send — accept at once when the whole group can go;
+      // an invalid route stays on the panel with its reason so the player can change ships or destination
+      if (ctx.params.send && this.dest >= 0 && !this.acc.disabled) { setTimeout(() => { if (UI.Side.current() === 'fleetDeploy' && this.dest >= 0 && !this.acc.disabled) this.accept(ctx); }, 0); }
+      else if (this.dest >= 0) UI.attention(this.acc);
     },
     // dim every star the selected ships cannot reach (fuel range; Reserve Fuel Tanks only count when every selected design has them, as Q.route does)
     reach() {
@@ -157,9 +162,11 @@
 
   // ---- generic event card (exploration, colonisation prompt, notices, pre-battle) ---------------------------------------------------------------------
   //   UI.Flow.card({title, planetCard?, owner?, body:[strings|Nodes], flags:[{text,good}], buttons:[{label,value,primary}]}) → Promise(value)
+  let cardOffs = [];
   UI.Side.register('card', {
     render(host, ctx) {
       const p = ctx.params;
+      cardOffs.splice(0).forEach(off => off());
       host.appendChild(p.star !== undefined ? UI.Side.title(p.star, p.ownerId) : h('div.side-title', h('span.nm', p.heading || '')));
       const body = h('div.sm-event');
       if (p.planetCard) body.appendChild(h('div.sm-card', planetPic(p.planetCard, 44, p.ownerId), h('div.sc-info', h('div', h('span.cls', { style: { font: '400 1.2rem var(--font-display)', color: 'var(--brass-hi)' } }, p.planetCard.typeLabel), p.planetCard.growthLabel ? h('span.chip' + (p.planetCard.growth === 'hostile' ? '.warn' : '.ok'), { style: { marginLeft: '.4rem' } }, p.planetCard.growthLabel) : null), p.planetCard.type !== 'none' ? h('div', 'POP ', h('b.t-leaf', p.planetCard.maxPop), ' max') : null)));
@@ -167,12 +174,15 @@
       for (const b of (p.body || [])) body.appendChild(typeof b === 'string' ? h('p', b) : b);
       for (const f of (p.flags || [])) body.appendChild(h('div.flag' + (f.good ? '.good' : ''), h('b', f.head || ''), ' ', f.text));
       host.appendChild(body);
-      const btns = p.buttons || [{ label: 'Continue', value: true, primary: true }], prim = btns.find(b => b.primary) || btns[0], offs = [];
+      const btns = p.buttons || [{ label: 'Continue', value: true, primary: true }], prim = btns.find(b => b.primary) || btns[0], offs = cardOffs;
       const fire = v => { offs.splice(0).forEach(off => off()); if (p.resolve) p.resolve(v); };            // the original advances on any key: Space/Enter = the primary button, letters = their hotkeys
       const scr = { screen: 'galaxy' };
       offs.push(UI.bindKey('space', () => fire(prim.value), scr), UI.bindKey('enter', () => fire(prim.value), scr));
       for (const b of btns) if (b.kbd && String(b.kbd).length === 1) offs.push(UI.bindKey(String(b.kbd).toLowerCase(), () => fire(b.value), scr));
-      host.appendChild(h('div.sm-actions', btns.map(b => UI.button(b.label, () => fire(b.value), { primary: !!b.primary, kbd: b.kbd }))));
+      const els = btns.map(b => UI.button(b.label, () => fire(b.value), { primary: !!b.primary, kbd: b.kbd }));
+      host.appendChild(h('div.sm-actions', els));
+      UI.attention(els[btns.indexOf(prim)]);                                                               // the answer the turn is waiting for: highlighted + focused (Enter/Space)
     },
+    dispose() { cardOffs.splice(0).forEach(off => off()); },                                               // replaced/removed: its hotkeys go with it (it is re-shown by Flow while pending)
   });
 })(window.MOO);

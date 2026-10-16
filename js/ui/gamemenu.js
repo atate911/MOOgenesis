@@ -11,6 +11,9 @@
 
   const game = () => M.Game || null;
   function hasGame() { const G = game(); try { return !!(G && typeof G.hasGame === 'function' && G.hasGame()); } catch (e) { return false; } }
+  // mid-turn the state is half-processed: saving it would corrupt the slot, loading/quitting would abandon the turn (Game.abortTurn) — the prompt comes first
+  const MID_TURN = 'A turn is in progress — answer the pending prompt (or wait for it to finish) first.';
+  function midTurn() { const G = game(); return !!(G && G.busy); }
   function summary() {
     const G = game();
     try { if (G && G.S && M.Save && M.Save.meta) return M.Save.meta(G.S); } catch (e) { /* unknown state shape */ }
@@ -20,13 +23,13 @@
   // ok() -> true, or a string explaining why the entry is unavailable
   const ENTRIES = [
     { id: 'resume', label: 'Resume', icon: 'play', kbd: 'R', primary: true, ok: () => true },
-    { id: 'save', label: 'Save game', icon: 'save', kbd: 'S', sep: true, ok: () => (UI.openSaveLoad ? (hasGame() ? true : 'There is no game in progress to save.') : 'Saving is not available.') },
-    { id: 'load', label: 'Load game', icon: 'load', kbd: 'L', ok: () => (UI.openSaveLoad ? true : 'Loading is not available.') },
+    { id: 'save', label: 'Save game', icon: 'save', kbd: 'S', sep: true, ok: () => (UI.openSaveLoad ? (midTurn() ? MID_TURN : hasGame() ? true : 'There is no game in progress to save.') : 'Saving is not available.') },
+    { id: 'load', label: 'Load game', icon: 'load', kbd: 'L', ok: () => (UI.openSaveLoad ? (midTurn() ? MID_TURN : true) : 'Loading is not available.') },
     { id: 'options', label: 'Options', icon: 'sliders', kbd: 'O', ok: () => (UI.openOptions ? true : 'Options are not available.') },
     { id: 'news', label: 'GNN archive', icon: 'news', kbd: 'G', ok: () => (UI.GNN && UI.GNN.archive ? (hasGame() ? true : 'There is no game in progress.') : 'The news archive is not available.') },
     { id: 'spies', label: 'Spies caught', icon: 'spy', kbd: 'C', ok: () => (UI.Spy && UI.Spy.caught ? (hasGame() ? true : 'There is no game in progress.') : 'Not available.') },
     { id: 'help', label: 'Almanac', icon: 'book', kbd: 'A', ok: () => (UI.Screens.has('help') ? true : 'The almanac is not available yet.') },
-    { id: 'quit', label: 'Quit to title', icon: 'quit', kbd: 'Q', sep: true, danger: true, ok: () => (hasGame() ? true : 'There is no game in progress.') },
+    { id: 'quit', label: 'Quit to title', icon: 'quit', kbd: 'Q', sep: true, danger: true, ok: () => (midTurn() ? MID_TURN : hasGame() ? true : 'There is no game in progress.') },
   ];
 
   function confirmQuit() {

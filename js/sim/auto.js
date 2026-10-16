@@ -18,6 +18,7 @@ MOO.def(function (M) {
         case 'colonize': ans = true; break;
         case 'techChoice': ans = it.choices[0] ? it.choices[0].level : 0; break;
         case 'council': ans = Sim.Council && Sim.Council.autoVote ? Sim.Council.autoVote(S, it.info) : 0; break;
+        case 'diplomacy': ans = 'accept'; break;                     // an AI-played human accepts AI proposals (the historical soak/balance behaviour; Diplo.yes no longer treats "no answer" as yes)
         default: ans = undefined;
       }
       seen.push(it && it.type);

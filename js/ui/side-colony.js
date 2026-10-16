@@ -6,6 +6,11 @@
 
   UI.css('side-colony', `
     .sc-card { display:flex; gap:.7rem; align-items:center; margin-bottom:.5rem; padding:.45rem; background:rgba(0,0,0,.28); border:1px solid rgba(214,179,106,.28); }
+    .sc-card.wide { display:block; padding:0; position:relative; overflow:hidden; aspect-ratio:16 / 7; }
+    .sc-card.wide .sc-pic { width:100%; height:100%; filter:none; } .sc-card.wide .sc-pic canvas { display:block; object-fit:cover; }
+    .sc-card.wide .sc-info { position:absolute; right:.6rem; bottom:.45rem; text-align:right; text-shadow:0 1px 2px #000, 0 0 10px rgba(0,0,0,.9); }
+    .sc-card.wide::after { content:''; position:absolute; inset:0; pointer-events:none; background:linear-gradient(180deg, rgba(0,0,0,0) 45%, rgba(0,0,0,.55) 100%); }
+    .sc-card.wide .sc-info { z-index:1; }
     .sc-pic { flex:none; width:5.6rem; height:5.6rem; display:grid; place-items:center; } .sc-pic canvas { width:100%; height:100%; }
     .sc-info { flex:1; min-width:0; line-height:1.25; }
     .sc-info .cls { font:400 1.25rem var(--font-display); color:var(--brass-hi); }
@@ -91,7 +96,7 @@
     const look = card.type === 'none' ? 'asteroids' : (card.growth === 'gaia' ? 'gaia' : card.type);
     const P = M.Gfx && M.Gfx.pick('planets');
     try {
-      if (P && P.sprite) { const sp = P.sprite({ look, seed: card.id * 7919 + (card.gfx | 0), inhabited: card.owner >= 0, color: card.owner >= 0 ? getComputedStyle(document.documentElement).getPropertyValue('--emp' + G.S.empires[card.owner].color) : undefined }, size * 2); c.getContext('2d').drawImage(sp, 0, 0, size * 2, size * 2); return c; }
+      if (P && P.sprite) { const sp = P.sprite({ look, seed: card.id * 7919 + (card.gfx | 0), inhabited: card.owner >= 0, color: card.owner >= 0 ? getComputedStyle(document.documentElement).getPropertyValue('--emp' + G.S.empires[card.owner].color) : undefined }, size * 2, { onReady: s2 => { if (c.isConnected) { const g = c.getContext('2d'); g.clearRect(0, 0, size * 2, size * 2); g.drawImage(s2, 0, 0, size * 2, size * 2); } } }); c.getContext('2d').drawImage(sp, 0, 0, size * 2, size * 2); return c; }
     } catch (e) { console.warn('planet sprite', e); }
     const x = c.getContext('2d'); x.fillStyle = '#556'; x.beginPath(); x.arc(size, size, size * 0.8, 0, 6.3); x.fill(); return c;
   }
@@ -128,7 +133,12 @@
         h('span.own', h('span.empire-dot', { style: { '--c': 'var(--emp' + E.color + ')' } }), E.plural));
       // planet card
       const key = c.type + c.growth + c.id;
-      if (st.cardKey !== key) { st.cardKey = key; st.picHost = h('div.sc-pic', planetCanvas(c, 52)); }
+      if (st.cardKey !== key) {
+        st.cardKey = key;
+        const WA = M.Gfx && M.Gfx.WorldArt, art = WA && WA.enabled ? WA.orbit(c, G.S) : null;
+        st.card.classList.toggle('wide', !!art);                                          // the original's wide landscape planet box, with the photoreal orbit plate
+        st.picHost = h('div.sc-pic', art ? WA.canvas(art, 560, 245, { fx: 0.5, fy: 0.5 }) : planetCanvas(c, 52));   // WA.canvas paints itself when the plate lands
+      }
       UI.mount(st.card, st.picHost, h('div.sc-info',
         h('div', h('span.cls', c.typeLabel), c.growthLabel ? h('span.tag' + (c.growth === 'hostile' ? '' : '.good'), c.growthLabel) : null, c.specialLabel ? h('span.tag.cy', c.specialLabel) : null),
         h('div', 'POP ', h('span.pm', c.maxPopShown + (c.canTerraform ? '+' : '')), ' max'),

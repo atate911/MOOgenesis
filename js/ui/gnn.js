@@ -1289,7 +1289,7 @@
     btnArch = UI.button('Archive', () => openArchive(), { small: true, icon: 'list' });
     btnPause = UI.button('Pause', () => act('pause'), { small: true, icon: 'pause', kbd: 'P' });
     hud = h('div.gnn-hud', h('div.gnn-hint', h('b', 'Space'), ' next  ·  ', h('b', 'P'), ' pause  ·  ', h('b', 'Esc'), ' skip'),
-      h('div.gnn-hud-r', pips, btnArch, btnPause, UI.button('Next', () => act('next'), { small: true, icon: 'right', kbd: 'Space' }), UI.button('Skip', () => act('skip'), { small: true, icon: 'nextturn', kbd: 'Esc' })));
+      h('div.gnn-hud-r', pips, btnArch, btnPause, UI.attention(UI.button('Next', () => act('next'), { small: true, icon: 'right', kbd: 'Space' })), UI.button('Skip', () => act('skip'), { small: true, icon: 'nextturn', kbd: 'Esc' })));
     cutP = h('div.gnn-cut-p'); cutE = h('div.gnn-cut-e'); cutEl = h('div.gnn-cut', cutP, cutE);
     flashEl = h('div.gnn-flash'); fadeEl = h('div.gnn-fade');
     root = h('div.gnn', { tabindex: '-1', role: 'region', 'aria-label': 'Galactic News Network broadcast' },

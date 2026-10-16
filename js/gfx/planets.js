@@ -14,8 +14,11 @@
    API  (MOO.Gfx.Planets)
      LOOKS                               the 16 look keys; unknown keys fall back to 'barren'
      desc = {look, seed (int|string), rings, bands:'jovian'|'saturn'|'ice'|'storm', inhabited, color:'#hex'}
-     sprite(desc, diameterPx, {dpr=1, lightAngle, lightElev, clouds, atmosphere, lights, phase}) -> cached canvas (diameterPx*dpr square)
+     sprite(desc, diameterPx, {dpr=1, lightAngle, lightElev, clouds, atmosphere, lights, phase, onReady(cv), sync}) -> cached canvas (diameterPx*dpr square)
+                                         never blocks: drawn from the best tier built so far (cv.pending = true), repainted IN PLACE as tiers land;
+                                         onReady fires when final, MOO.Bus 'planets:sprite' (desc, cv, final) on every repaint; sync:true = old blocking behaviour
      draw(ctx, desc, cx, cy, radius, t, {dpr, lightAngle=-2.3, lightElev=.55, spin=.015, clouds, atmosphere, lights, cloudShadows})
+                                         first frame of a new planet uses a cheap 64 px placeholder texture; real tiers arrive in the background
      drawAsteroids(ctx, desc, cx, cy, w, h, t, {count, lightAngle})   parallax field of tumbling rocks, clipped to w x h
      preload(descs, done, progressFn | {onProgress, sizes:[px..], spriteOpts, tier, budget})   timed slices, never freezes the UI
      clear()                             drop all caches
@@ -1039,6 +1042,9 @@
   /* ================================================================ planet objects, texture cache */
   var PCACHE = {}, useClock = 0, QUEUE = [], pumpTimer = 0, TEXCAP = 120 * 1048576, texBytes = 0;
   var COLC = {};
+  // First-frame placeholder: a 64x32 texture of the same look (2-8 ms to generate) drawn while the real tiers are built in the
+  // background. Nothing in draw()/sprite() generates a 128+ tier synchronously any more (that cost 30-650 ms per unique planet).
+  var PH_W = 64;
 
   function getPlanet(desc) {
     desc = desc || {};
@@ -1053,7 +1059,7 @@
       P = PCACHE[key] = {
         key: key, look: look, seed: seed, bands: bands, rings: rings, cfg: cfgOf(look, bands),
         tau: (rnd() - 0.5) * 0.8, pitch: rings ? (rnd() < 0.8 ? 1 : -1) * (0.27 + rnd() * 0.15) : (rnd() - 0.32) * 0.62,
-        phase0: rnd(), phase0c: rnd(), tex: {}, jobs: {}, last: 0, ring: null, rock: null
+        phase0: rnd(), phase0c: rnd(), tex: {}, ph: null, jobs: {}, last: 0, ring: null, rock: null
       };
       if (rings) P.ring = makeRingSpec(P, rnd);
       P.cfg.dlut = gammaLut(P.cfg.gamma);
@@ -1081,6 +1087,17 @@
     var best = null;
     for (var i = TIERS.length - 1; i >= 0; i--) if (P.tex[TIERS[i]]) { best = P.tex[TIERS[i]]; break; }
     return best;
+  }
+  function placeholderTex(P) {
+    if (!P.ph) { var job = makeJob(P, PH_W); stepJob(job, Infinity); P.ph = job.tex; }
+    return P.ph;
+  }
+  // best texture right now (placeholder when nothing is built yet) + the next tier queued towards `want` (never synchronous)
+  function texNow(P, want, prio) {
+    var tex = bestTex(P), nt = tex ? TIERS[TIERS.indexOf(tex.W) + 1] : TIERS[0];
+    if (!tex) tex = placeholderTex(P);
+    if (nt && nt <= want) requestTex(P, nt, false, prio);
+    return tex;
   }
   function addTex(P, W, tex) {
     if (P.tex[W]) return;
@@ -1110,7 +1127,7 @@
         job = QUEUE[0] = job.P.jobs[job.W] = makeJob(job.P, job.W);
       }
       stepJob(job, Math.max(1, 7.5 - (now() - t0)));
-      if (job.done) { QUEUE.shift(); addTex(job.P, job.W, job.tex); delete job.P.jobs[job.W]; }
+      if (job.done) { QUEUE.shift(); addTex(job.P, job.W, job.tex); delete job.P.jobs[job.W]; texLanded(job.P); }
     }
     if (QUEUE.length) schedule();
   }
@@ -1546,11 +1563,7 @@
     setFlags(inst, desc, opts, Rr);
     // texture: best available now, better tier generated in the background
     var want = tierFor(Rr, true), tex = P.tex[want];
-    if (!tex) {                       // refine step by step: 128 (sync) -> 256 -> 512 -> 1024, each generated in the background
-      tex = bestTex(P) || requestTex(P, 128, true);
-      var nt = TIERS[TIERS.indexOf(tex.W) + 1];
-      if (nt && nt <= want) requestTex(P, nt, false, Rr);
-    }
+    if (!tex) tex = texNow(P, want, Rr);   // refine step by step: placeholder -> 128 -> 256 -> 512 -> 1024, every tier generated in the background
     var lvl = levelFor(tex, Rr);
     var spin = opts.spin !== undefined ? opts.spin : 0.015, tt = t || 0;
     var sp = P.phase0 + spin * tt; sp -= floor(sp);
@@ -1568,7 +1581,11 @@
     ctx.imageSmoothingEnabled = sm;
   }
 
-  var SPR = {}, SPRKEYS = [];
+  // Sprites are cached canvases. A sprite rendered before its wanted texture tier exists is PENDING: it is drawn from the best tier
+  // available (or the placeholder), the missing tiers are queued, and the SAME canvas is repainted in place as each tier lands
+  // (cv.pending = true until final). opts.onReady(cv) fires once it is final; MOO.Bus 'planets:sprite' (desc, cv) fires on every
+  // repaint for callers that copied the pixels elsewhere. opts.sync = true restores the old blocking behaviour (baking static scenes).
+  var SPR = {}, SPRKEYS = [], PENDING = {};
   function sprite(desc, diameterPx, opts) {
     opts = opts || {};
     var P = getPlanet(desc), dpr = opts.dpr > 0 ? opts.dpr : 1;
@@ -1576,20 +1593,44 @@
     var la = opts.lightAngle !== undefined ? opts.lightAngle : -2.3, le = opts.lightElev !== undefined ? opts.lightElev : 0.55;
     var key = [P.key, Dd, opts.clouds === false ? 0 : 1, opts.atmosphere === false ? 0 : 1, opts.lights === false ? 0 : 1, desc && desc.inhabited ? 1 : 0,
       desc && desc.color || '', la.toFixed(2), le.toFixed(2), opts.phase === undefined ? '' : opts.phase].join('|');
-    var hit = SPR[key]; if (hit) return hit;
-    var cv = P.look === 'asteroids' ? rockSprite(P, Dd, la, opts) : renderSprite(P, Dd, desc || {}, opts, la, le);
+    var hit = SPR[key];
+    if (hit) {
+      var pe = PENDING[key];
+      if (pe) {
+        if (opts.sync) { requestTex(P, pe.want, true); upgradeSprite(key, pe); }
+        else { if (opts.onReady) pe.cbs.push(opts.onReady); var b = bestTex(P); if (b && b.W > pe.W) upgradeSprite(key, pe); }
+      }
+      return hit;
+    }
+    var cv, pend = null;
+    if (P.look === 'asteroids') cv = rockSprite(P, Dd, la, opts);
+    else {
+      var st = { P: P, Dd: Dd, desc: desc || {}, opts: opts, la: la, le: le, cbs: [], W: 0, want: 0 };
+      cv = renderSprite(P, Dd, desc || {}, opts, la, le, st);
+      if (st.W < st.want) { pend = st; st.cv = cv; cv.pending = true; if (opts.onReady) st.cbs.push(opts.onReady); }
+    }
     SPR[key] = cv; SPRKEYS.push(key);
-    if (SPRKEYS.length > 700) delete SPR[SPRKEYS.shift()];
+    if (pend) PENDING[key] = pend;
+    while (SPRKEYS.length > 700) { var old = SPRKEYS.shift(); if (PENDING[old]) { SPRKEYS.push(old); if (SPRKEYS[0] === old) break; continue; } delete SPR[old]; }   // pending sprites stay until their tier lands
     return cv;
   }
-  function renderSprite(P, Dd, desc, opts, la, le) {
+  // st (optional) receives {W: tier drawn, want: tier wanted}; without st the wanted tier is generated synchronously (old behaviour)
+  function renderSprite(P, Dd, desc, opts, la, le, st) {
     var ext = haloExtent(P), fit = 1 + ext + 0.02;
     if (P.ring) { var e = ringExtents(P); fit = max(fit, e.hx + 0.03, e.hy + 0.03); }
     var Rr = Math.max(3, Math.floor((Dd / 2 - 1.5) / fit));
-    var lay = { bw: Dd, bh: Dd, cx: Dd / 2, cy: Dd / 2 }, inst = makeInst(P, Rr, lay);
-    relight(inst, la, le);
-    setFlags(inst, desc, opts, Rr);
-    var want = tierFor(Rr, false), best = bestTex(P), tex = best && best.W >= want ? best : requestTex(P, want, true);
+    var inst = st && st.inst;                 // a pending sprite keeps its instance (geometry + lighting tables) so a repaint is only the pixel loop
+    if (!inst) {
+      inst = makeInst(P, Rr, { bw: Dd, bh: Dd, cx: Dd / 2, cy: Dd / 2 });
+      relight(inst, la, le);
+      setFlags(inst, desc, opts, Rr);
+      if (st) st.inst = inst;
+    }
+    var want = tierFor(Rr, false), best = bestTex(P), tex;
+    if (best && best.W >= want) tex = best;
+    else if (!st || opts.sync) tex = requestTex(P, want, true);
+    else tex = texNow(P, want, Rr);
+    if (st) { st.W = tex.W; st.want = want; }
     var lvl = levelFor(tex, Rr);
     var ph = opts.phase !== undefined ? opts.phase : 0;
     inst.fr.spin = (P.phase0 + ph) % 1; inst.fr.cspin = (P.phase0c + ph * 1.15) % 1;
@@ -1598,6 +1639,25 @@
     var cv = createCanvas(Dd, Dd), c = cv.getContext('2d');
     c.drawImage(inst.ringLayers.back, 0, 0); c.drawImage(inst.cv, 0, 0); c.drawImage(inst.ringLayers.front, 0, 0);
     return cv;
+  }
+  // repaint a pending sprite in place from the best tier now available; final when the wanted tier is reached
+  function upgradeSprite(key, pe) {
+    var fresh = renderSprite(pe.P, pe.Dd, pe.desc, pe.opts, pe.la, pe.le, pe), cv = pe.cv;
+    if (fresh !== cv) { var c = cv.getContext('2d'); c.save(); c.setTransform(1, 0, 0, 1, 0, 0); c.globalCompositeOperation = 'copy'; c.drawImage(fresh, 0, 0); c.restore(); }
+    var final_ = pe.W >= pe.want;
+    if (final_) { delete PENDING[key]; cv.pending = false; pe.inst = null; }
+    try { if (M.Bus && M.Bus.emit) M.Bus.emit('planets:sprite', pe.desc, cv, final_); } catch (e) { /* listeners are optional */ }
+    if (final_) for (var i = 0; i < pe.cbs.length; i++) { try { pe.cbs[i](cv); } catch (e2) { console.warn('[Planets] onReady', e2); } }
+  }
+  // a big sprite's repaint is a full pixel loop (~100 ms at 500 px), so those only repaint for the first real tier and the final one
+  function texLanded(P) {
+    var best = bestTex(P); if (!best) return;
+    for (var key in PENDING) {
+      var pe = PENDING[key];
+      if (pe.P !== P || best.W <= pe.W) continue;
+      if (pe.Dd > 256 && best.W < pe.want && pe.W >= TIERS[0]) continue;
+      upgradeSprite(key, pe);
+    }
   }
 
   /* ================================================================ asteroids */
@@ -1812,7 +1872,7 @@
             if (!job || job.lazy) { var ph = job; job = P.jobs[tier] = makeJob(P, tier); if (ph) { var pi = QUEUE.indexOf(ph); if (pi >= 0) QUEUE.splice(pi, 1); } }
             if (!stepJob(job, Math.max(1, budget - (now() - t0)))) break;
             var qi = QUEUE.indexOf(job); if (qi >= 0) QUEUE.splice(qi, 1);
-            addTex(P, tier, job.tex); delete P.jobs[tier];
+            addTex(P, tier, job.tex); delete P.jobs[tier]; texLanded(P);
           }
         }
         for (var i = 0; i < sizes.length; i++) sprite(d, sizes[i], opts.spriteOpts);
@@ -1827,9 +1887,9 @@
   // drop every cache (textures, sprites, instances, rock sheets); descriptors keep working and regenerate on demand
   function clear() {
     var k;
-    for (k in PCACHE) { PCACHE[k].tex = {}; PCACHE[k].jobs = {}; }
+    for (k in PCACHE) { PCACHE[k].tex = {}; PCACHE[k].jobs = {}; PCACHE[k].ph = null; }
     QUEUE.length = 0; texBytes = 0;
-    INST = {}; INSTKEYS = []; instBytes = 0; SPR = {}; SPRKEYS = []; SHEETS = {}; ROCKQ.length = 0; BELTS = {};
+    INST = {}; INSTKEYS = []; instBytes = 0; SPR = {}; SPRKEYS = []; PENDING = {}; SHEETS = {}; ROCKQ.length = 0; BELTS = {};
   }
 
   Gfx.Planets = {

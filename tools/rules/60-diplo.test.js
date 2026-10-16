@@ -682,7 +682,7 @@ module.exports = function (M, t) {
     t.eq(out.length, 1); t.eq(out[0].type, 'diplomacy'); t.eq(out[0].kind, 'offerNap'); t.eq(out[0].text.situation, 'offerNap'); t.eq(out[0].text.personality, 'aggressive'); t.eq(out[0].greeting.situation, 'greeting'); t.deep(out[0].options.map(o => o.id), ['accept', 'reject']);
     out[0].answer('reject'); t.eq(out.length, 2, 'the incentive page follows'); t.eq(out[1].incentive.bc, 100); t.eq(rel(S, 0, 1).treaty, T.NONE);
     const m0 = rel(S, 0, 1).moodTreaty; out[1].answer('accept'); t.eq(rel(S, 0, 1).treaty, T.NAP); t.eq(S.empires[0].bc, 600); t.eq(S.empires[1].bc, 400); t.eq(rel(S, 0, 1).moodTreaty < m0 - 20, true, 'after every AI audience: -10 and d30+20 on the topic');
-    const S2 = accGame(); const o2 = []; D._.buildAudience(S2, S2.empires[0], S2.empires[1], rel(S2, 0, 1), 24, {}, o2); o2[0].answer(undefined); t.eq(rel(S2, 0, 1).treaty, T.NAP, 'no answer = yes (headless default)');
+    const S2 = accGame(); const o2 = []; D._.buildAudience(S2, S2.empires[0], S2.empires[1], rel(S2, 0, 1), 24, {}, o2); o2[0].answer(undefined); t.eq(rel(S2, 0, 1).treaty, T.NONE, 'no answer is NOT an acceptance (a skipped or broken scene must never sign, declare war or break an alliance)');
     const S3 = accGame(); const o3 = []; D._.buildAudience(S3, S3.empires[0], S3.empires[1], rel(S3, 0, 1), 24, {}, o3); o3[0].answer('reject'); t.eq(rel(S3, 0, 1).treaty, T.NONE); t.eq(o3.length, 1);
     // the demand to break an alliance with the AI's enemy comes first (type 27): agree → you break it, forget it → relation -100
     const S4 = accGame(); setAll(S4, 0, 2, { treaty: T.ALLIANCE }); setAll(S4, 1, 2, { treaty: T.WAR }); const o4 = []; D._.buildAudience(S4, S4.empires[0], S4.empires[1], rel(S4, 0, 1), 24, {}, o4);

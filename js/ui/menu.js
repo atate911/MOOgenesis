@@ -99,7 +99,7 @@
     UI.clear(listEl);
     const latest = M.Save.available() && M.Save.latest();
     if (latest) {
-      listEl.appendChild(UI.button('Continue', () => M.Game && M.Game.loadSlot ? M.Game.loadSlot(latest.slot) : UI.toast('Game controller not ready yet', 'warn'), { primary: true }));
+      listEl.appendChild(UI.button('Continue', () => { if (!(M.Game && M.Game.loadSlot)) { UI.toast('Game controller not ready yet', 'warn'); return; } let ok = false; try { ok = M.Game.loadSlot(latest.slot); } catch (e) { console.error('[continue]', e); } if (!ok) UI.alert('The last save could not be loaded. It may be damaged or from an older version.', { title: 'Cannot continue' }); }, { primary: true }));
     }
     listEl.appendChild(UI.button('New game', () => UI.Screens.has('setup') ? UI.Screens.go('setup') : UI.toast('New game setup is not available yet', 'warn'), { primary: !latest }));
     listEl.appendChild(UI.button('Load game', () => UI.Screens.has('saveload') ? UI.Screens.go('saveload', { mode: 'load', from: 'menu' }) : UI.toast('Load screen is not available yet', 'warn')));

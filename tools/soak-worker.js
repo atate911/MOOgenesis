@@ -141,7 +141,8 @@ function playGame(env, job, hooks) {
 
   const wall = new Float32Array(maxTurns), phase = {}, initColonies = {}, elimTurn = [];
   let S = null, played = 0, where = 'newGame', worst = { ms: 0, turn: 0, timings: null };
-  let prevSimTurn = 0, alive = [], lastSnap = null;
+  let prevSimTurn = 0, alive = [], lastSnap = null, aiErrSeen = 0;
+  const reachAt30 = {};                                    // per empire: colonisable planets inside fuel range at the turn-30 snapshot (NO_EXPANSION needs one)
   const gameStart = performance.now();
   probe.armed = true;
   probe.rand = 0; probe.randStack = '';
@@ -182,6 +183,14 @@ function playGame(env, job, hooks) {
       alive[k] = a;
       for (const f in e) if (typeof e[f] === 'number' && !Number.isFinite(e[f])) warnOnce('NAN', 'error', played, 'S.empires[' + k + '].' + f + ' is ' + e[f], { empire: k });
     }
+    // AI planner steps that threw (the `aiLog` order keeps S.aiLog = {n, last[]}): every new entry is an AI_ERRORS hit (details of the first 3, counts of all)
+    const log = S.aiLog;
+    if (log && typeof log.n === 'number' && Array.isArray(log.last) && log.n > aiErrSeen) {
+      for (const x of log.last.slice(Math.max(0, log.last.length - (log.n - aiErrSeen)))) {
+        warn('AI_ERRORS', 'warn', played, 'AI planner step "' + x.step + '" of empire ' + x.empire + ' threw: ' + String(x.msg).split('\n')[0], { empire: x.empire });
+      }
+      aiErrSeen = log.n;
+    }
   };
 
   // ---- stats snapshots and state scans ----
@@ -207,13 +216,25 @@ function playGame(env, job, hooks) {
     return snap;
   };
 
+  // unowned planets the empire could colonise right now (type at/above its colonisable threshold, inside normal fuel range); null when the state has no such fields (mock sim)
+  const reachableColonies = eid => {
+    const E = S.empires && S.empires[eid], planets = Array.isArray(S.planets) ? S.planets : null;
+    if (!E || !planets || !E.frange || !E.mods) return null;
+    const thr = E.race === 'silicoid' ? 1 : (E.mods.colonyFor || 7), out = [];
+    for (const p of planets) if (p && p.owner < 0 && p.typeIdx >= thr && E.frange[p.starId] === 1 && p.id !== S.orion) out.push(p.id);
+    return out;
+  };
   const sanitySnap = snap => {                             // balance / AI-health checks on a stats snapshot
     const t = snap.turn;
     for (const r of snap.e) {
       if (!r.alive) continue;
       const tag = { empire: r.id };
-      if (t === 40 && r.colonies !== null && initColonies[r.id] !== undefined && r.colonies <= initColonies[r.id])
-        warnOnce('NO_EXPANSION', 'warn', t, 'empire ' + r.id + ' still has ' + r.colonies + ' colonies at turn 40', tag);
+      if (t === 30) reachAt30[r.id] = reachableColonies(r.id);
+      if (t === 40 && r.colonies !== null && initColonies[r.id] !== undefined && r.colonies <= initColonies[r.id]) {
+        const reach = reachAt30[r.id] === undefined ? reachableColonies(r.id) : reachAt30[r.id];   // a start with no colonisable planet inside fuel range by turn 30 is a map condition, not an AI failure
+        if (reach === null || reach.length) warnOnce('NO_EXPANSION', 'warn', t, 'empire ' + r.id + ' still has ' + r.colonies + ' colonies at turn 40' + (reach ? ' (colonisable and in range since turn 30: planets ' + reach.slice(0, 5).join(', ') + ')' : ''), tag);
+        else warnOnce('ISOLATED_START', 'info', t, 'empire ' + r.id + ' still has ' + r.colonies + ' colonies at turn 40: no colonisable free planet inside its fuel range by turn 30', tag);
+      }
       if (t >= 20 && r.colonies > 0 && r.production !== null && r.production <= 0) warnOnce('STUCK_PRODUCTION', 'warn', t, 'empire ' + r.id + ' production is ' + r.production, tag);
       if (t >= 20 && r.colonies > 0 && r.research !== null && r.research <= 0) warnOnce('STUCK_RESEARCH', 'warn', t, 'empire ' + r.id + ' research is ' + r.research, tag);
       const old = res.snaps.filter(s => s.turn <= t - 50).pop();           // latest snapshot at least 50 turns back

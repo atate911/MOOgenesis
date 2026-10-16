@@ -17,6 +17,10 @@ jobs:
         run: node tools/check.js
       - name: Rules tests
         run: node tools/rules-test.js
+      - name: VERSION file matches js/core/ns.js
+        run: |
+          v=$(tr -d '[:space:]' < VERSION)
+          grep -Fq "M.VERSION = '$v';" js/core/ns.js || { echo "js/core/ns.js M.VERSION is not '$v' (VERSION file)"; exit 1; }
       - name: Shell scripts
         run: |
           for f in scripts/*.sh; do bash -n "$f"; done

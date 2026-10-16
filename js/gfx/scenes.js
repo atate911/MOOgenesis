@@ -444,7 +444,7 @@
     if (P && P.sprite) {
       try {
         const dia = Math.round(r * 2 * (d.rings ? 2.15 : 1.16));
-        const o = { dpr: S * min(1, 640 / (dia * S)) };     // cap the sprite at ~640 device px (generation cost / memory)
+        const o = { dpr: S * min(1, 640 / (dia * S)), sync: true };     // cap the sprite at ~640 device px (generation cost / memory); sync: a static layer is baked once, so it needs the final tier now
         if (opt) for (const k in opt) o[k] = opt[k];
         const spr = P.sprite(d, dia, o);
         if (spr && spr.width) { g.drawImage(spr, cx - dia / 2, cy - dia / 2, dia, dia); return; }
@@ -1691,15 +1691,6 @@
     }
     g.restore();
   }
-  function holoCrownFx(g, cx, cy, sc, t, a) {
-    g.save(); g.globalCompositeOperation = 'lighter';
-    glow(g, '#ffd54f', cx, cy - sc * 0.15, sc * 1.5, 0.28 * a);
-    for (let i = 0; i < 5; i++) { // glints at the jewels
-      const th = i * TAU / 5 + t * 0.5, gx = cx + cos(th) * sc * 0.92 * 0.92, gy = cy - sc * 0.78 * 0.9 + sin(th) * sc * 0.22, q = 0.5 + 0.5 * sin(t * 3 + i * 1.7);
-      glow(g, '#fff4c0', gx, gy, sc * 0.16 * q, 0.9 * a * q);
-    }
-    g.restore();
-  }
   function holoBallotFx(g, cx, cy, sc, t, a, col) {
     // ballots drop into the slot (dynamic segments) + glow pulse when one lands
     let n = 0;
@@ -1756,7 +1747,6 @@
       const hsc = ped.s * 0.215, hcy = ped.top - ped.s * 0.22;
       ctx.fillStyle = rgr(ctx, ped.cx, hcy, hsc * 0.2, hsc * 1.5, [0, 'rgba(2,4,22,0.62)', 0.6, 'rgba(2,4,22,0.34)', 1, 'rgba(2,4,22,0)']); ctx.fillRect(ped.cx - hsc * 1.6, hcy - hsc * 1.6, hsc * 3.2, hsc * 3.2);
       if (holo === 'galaxy') holoGalaxy(ctx, ped.cx, hcy, hsc * 1.05, t, fl, seats);
-      else if (holo === 'crown') { holoDraw(ctx, holoModel('crown'), ped.cx, hcy + hsc * 0.15, hsc * 0.82, '#ffd54f', { yaw: t * 0.5, pitch: -0.42, a: fl, lw: max(1, hsc * 0.012) }); holoCrownFx(ctx, ped.cx, hcy, hsc, t, fl); }
       else holoBallotFx(ctx, ped.cx, hcy, hsc * 0.9, t, fl, hcol);
       holoScan(ctx, ped.cx, hcy, hsc * 0.95, hsc * 1.0, hcol, t, fl * 0.8);
 
@@ -1829,7 +1819,7 @@
           ctx.restore(); ctx.fillStyle = C.ivory; ctx.fillRect(bx - u * 0.035, by - u * 0.022, u * 0.07, u * 0.044); ctx.fillStyle = col; ctx.fillRect(bx - u * 0.035, by - u * 0.022, u * 0.07, u * 0.01);
         }
         if (winner) {
-          crownIcon(ctx, ox, oy - BH * u - u * 0.035 + sin(t * 2) * u * 0.012, u * 0.2, 1, t);
+          glow(ctx, '#ffd870', ox, oy - BH * u - u * 0.02, u * 0.5, 0.35 + 0.15 * sin(t * 2));       // the elected seat glows; no drawn crown over the portrait
           ctx.save(); ctx.globalCompositeOperation = 'lighter'; ctx.fillStyle = '#ffe08a';
           for (let i = 0; i < 14; i++) { const q = fract(t * 0.4 + i / 14), sx = ox + (h2(i, B.i) - 0.5) * u * 0.5, sy = oy - deskH - q * u * 0.85; ctx.globalAlpha = (1 - q) * 0.8; ctx.fillRect(sx, sy, 2, 2); }
           ctx.restore();
@@ -3619,7 +3609,22 @@
     draw(ctx, w, h, t, o) {
       t = tm(t);
       o = o || {};
-      const S = begin(ctx, w, h), col = o.color || '#4a90e8';
+      const S = begin(ctx, w, h), col = o.color || '#4a90e8', race = o.race || 'human';
+      // photoreal ending: the winner's own council hall with the sovereign standing in it (race council + figure illustrations); the drawn throne room is the fallback
+      const WA = G.WorldArt, hallPath = WA ? WA.race(race, 'council') : null;
+      if (hallPath && WA.get(hallPath)) {
+        // the council plate already shows the sovereign enthroned among the delegates: a slow push-in, a warm wash for a victory, a cold red one for conquest
+        artBG(ctx, hallPath, w, h, { fx: 0.5, fy: 0.42, zoom: 1 + 0.05 * sstep(0, 40, t) });
+        ctx.fillStyle = o.color === '#b0303a' ? 'rgba(40,6,10,0.3)' : 'rgba(4,6,16,0.22)'; ctx.fillRect(0, 0, w, h);
+        const rays = sstep(0.2, 3, t);
+        for (let i = 0; i < 2; i++) { const bx = [w * 0.3, w * 0.7][i], sw = sin(t * 0.3 + i * 2) * w * 0.06; beam(ctx, bx, h * 0.75, bx + sw, -h * 0.1, 12, w * 0.07, '#ffe9b0', 0.04 * rays); }
+        ctx.fillStyle = lgr(ctx, 0, h * 0.74, 0, h, [0, 'rgba(3,4,12,0)', 1, 'rgba(3,4,12,0.88)']); ctx.fillRect(0, h * 0.74, w, h * 0.26);   // ground for the caption
+        finish(ctx, w, h, 0.35, 0.03, t);
+        end(ctx);
+        const L = { x: w * 0.3, y: h * 0.05, w: w * 0.4, h: h * 0.7 };
+        return { sovereign: L, crown: { x: w * 0.44, y: h * 0.02, w: w * 0.12, h: h * 0.08 }, text: { x: w * 0.1, y: h * 0.04, w: w * 0.8, h: h * 0.14 }, bottom: { x: w * 0.1, y: h * 0.8, w: w * 0.8, h: h * 0.15 } };
+      }
+      if (WA && hallPath) WA.get(hallPath);                                                                  // start loading for the next frame
       const e = layer('victory|' + col, w, h, S, (g, ww, hh, c) => throneBG(g, ww, hh, c, { color: col })), I = e.d;
       ctx.drawImage(e.c, 0, 0, w, h);
       fireworks(ctx, w, h, t, { x: w * 0.04, y: h * 0.05, w: w * 0.92, h: h * 0.4 }, 4, 3);
@@ -3665,6 +3670,20 @@
       t = tm(t);
       o = o || {};
       const S = begin(ctx, w, h), kind = o.focus === 'star' || o.focus === 'planet' ? o.focus : o.kind === 'star' || o.kind === 'planet' ? o.kind : 'both';
+      // photoreal defeat: the devastated-world illustration, slow push-in, embers; the drawn dying star is the fallback
+      const WA = G.WorldArt, devPath = WA ? WA.event('devastated') : null;
+      if (devPath && WA.get(devPath)) {
+        artBG(ctx, devPath, w, h, { fx: 0.5, fy: 0.5, zoom: 1 + 0.06 * sstep(0, 30, t) });
+        ctx.fillStyle = 'rgba(20,4,6,0.3)'; ctx.fillRect(0, 0, w, h);
+        ctx.save(); ctx.globalCompositeOperation = 'lighter';
+        for (let i = 0; i < 40; i++) { const u = fract(t * (0.04 + h2(i, 1) * 0.05) + h2(i, 2)), x = w * h2(i, 3) + sin(t * 0.8 + i) * 12, y = h * (1 - u), a = sin(u * PI) * (0.4 + 0.4 * sin(t * 6 + i)); ctx.globalAlpha = a * 0.7; glowL(ctx, '#ff7a30', x, y, 2 + h2(i, 4) * 3, 1); }
+        ctx.restore();
+        ctx.fillStyle = lgr(ctx, 0, h * 0.78, 0, h, [0, 'rgba(6,2,4,0)', 1, 'rgba(6,2,4,0.85)']); ctx.fillRect(0, h * 0.78, w, h * 0.22);
+        finish(ctx, w, h, 0.5, 0.035, t);
+        end(ctx);
+        return { art: true, text: { x: w * 0.1, y: h * 0.04, w: w * 0.8, h: h * 0.14 }, bottom: { x: w * 0.1, y: h * 0.8, w: w * 0.8, h: h * 0.15 } };
+      }
+      if (devPath) WA.get(devPath);
       const sx = w * (kind === 'planet' ? 0.82 : 0.68), sy = h * (kind === 'planet' ? 0.2 : 0.33), sR = h * (kind === 'star' ? 0.34 : kind === 'planet' ? 0.1 : 0.24);
       const px = w * (kind === 'star' ? 0.14 : 0.24), py = h * (kind === 'star' ? 1.04 : 0.92), pR = h * (kind === 'star' ? 0.2 : kind === 'planet' ? 0.5 : 0.36);
       const e = layer('defeat|' + kind, w, h, S, (g, ww, hh, c) => {

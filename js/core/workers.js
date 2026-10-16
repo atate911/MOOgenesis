@@ -72,11 +72,17 @@
   }
 
   function pump() {
+    if (!workers.length && queue.length) {                                    // every worker died / was terminated: the queue runs inline rather than waiting forever
+      const jobs = queue.splice(0);
+      for (const j of jobs) inline(j.op, j.payload, j.snap).then(j.res, j.rej);
+      return;
+    }
     while (queue.length) {
       const rec = workers.find(r => !r.busy);
       if (!rec) return;
       const job = queue.shift();
       rec.busy = true; job.rec = rec; job.t0 = performance.now();
+      if (job.arm) job.arm();                                                     // the watchdog starts when the job is POSTED, not when it was queued
       const msg = { id: job.id, op: job.op, payload: job.payload };
       if (job.snap && rec.snapVer !== snapVer) { msg.snapStr = snapStr; msg.snapVer = snapVer; rec.snapVer = snapVer; }
       pending.set(job.id, job);
@@ -130,15 +136,19 @@
       return new Promise((res, rej) => {
         const id = seq++; let settled = false, timer = 0;
         const fin = f => v => { if (settled) return; settled = true; clearTimeout(timer); f(v); };
-        queue.push({ id, op, payload, snap: !!o.snap, transfer: o.transfer, res: fin(res), rej: fin(rej) });
-        timer = setTimeout(() => {
-          if (settled) return;
-          console.warn('[workers] job ' + op + ' timed out after ' + JOB_TIMEOUT_MS + ' ms — re-running inline');
-          stat.errors++;
-          const qi = queue.findIndex(j => j.id === id); if (qi >= 0) queue.splice(qi, 1);
-          const p = pending.get(id); if (p && p.rec) { pending.delete(id); try { p.rec.w.terminate(); } catch (e) { /* ignore */ } const i = workers.indexOf(p.rec); if (i >= 0) { try { workers[i] = spawn(); } catch (e) { workers.splice(i, 1); } } }
-          inline(op, payload, o.snap).then(fin(res), fin(rej));
-        }, JOB_TIMEOUT_MS);
+        // the timer used to start at enqueue: on a 1-worker machine a job that merely WAITED behind others was declared dead, re-run inline (main-thread
+        // freeze) while the worker still ran it too; now it is armed in pump() when the job is actually posted to a worker
+        const arm = () => {
+          timer = setTimeout(() => {
+            if (settled) return;
+            console.warn('[workers] job ' + op + ' timed out after ' + JOB_TIMEOUT_MS + ' ms — re-running inline');
+            stat.errors++;
+            const p = pending.get(id); if (p && p.rec) { pending.delete(id); try { p.rec.w.terminate(); } catch (e) { /* ignore */ } const i = workers.indexOf(p.rec); if (i >= 0) { try { workers[i] = spawn(); } catch (e) { workers.splice(i, 1); } } }
+            inline(op, payload, o.snap).then(fin(res), fin(rej));
+            pump();                                                             // the jobs queued behind the dead worker get the respawned one
+          }, JOB_TIMEOUT_MS);
+        };
+        queue.push({ id, op, payload, snap: !!o.snap, transfer: o.transfer, res: fin(res), rej: fin(rej), arm });
         pump();
       });
     },
