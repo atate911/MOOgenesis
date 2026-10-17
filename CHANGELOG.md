@@ -6,13 +6,14 @@ Versions follow `MAJOR.MINOR.PATCH`; the live version is the `VERSION` file.
 ## Unreleased
 
 - Music, the end of the game: a crowning cue (`triumph`) that raises the council's music to a state ceremony, solemn and big, in the
-  procession's key of F, nobilmente — the solo trumpet plays the call (the title leitmotif the procession opens with) over the organ of
-  the chamber as a timpani roll gathers, and the whole brass section answers it (trumpets and horns in parts, trombones and tuba
+  procession's key of F, nobilmente — the solo trumpet plays the call (the title leitmotif the procession opens with) alone over the organ
+  of the chamber; halfway through, the second and third trumpets come in under it for a full, rounded chord together with the bass
+  horns (trombones down to the bass trombone, the tuba) as a timpani roll gathers; the whole brass section answers it (trumpets and horns in parts, trombones and tuba
   sustained, timpani and the cadence on the step); the horn section takes the procession's theme in two parts with the trumpet section
   above it and trombones on the step, over a dignified cadence, with
   strings, organ, trombones and tuba sustained and the men beneath, bass drum and timpani on the step, a crash on the phrase starts; the
-  big phrase as a hymn in trumpets and horns, each in two parts, with the whole chorus, the flutes above, brass and trombones sustained,
-  harp and bells; the lift, the hymn carried up over IV-V-bVI-bVII-I over tremolo strings with a crash on every bar and the tam-tam on
+  big phrase as a hymn in three trumpet parts and two horn parts with the whole chorus, brass and trombones (four parts, down to the bass
+  trombone) sustained, the tuba deep under with its sub-octave, harp and bells; the lift, the hymn carried up over IV-V-bVI-bVII-I over tremolo strings with a crash on every bar and the tam-tam on
   the flat sixth; the chord; two bars of snare and timpani rolls out of the quiet; the last chord the hall carries (80 bpm, about 102 s,
   ≈ -9 LUFS with the limiter untouched: the loudest cue in the score, as measured; nothing short, nothing syncopated). Band presets
   added along the way: `tbn`, `tuba`, `tptStab`, `hornStab`, `tbnStab`. It plays once and hands over to the victory loop under its last
