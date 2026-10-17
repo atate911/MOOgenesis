@@ -8,8 +8,8 @@ MOO.def(function (M) {
   // (research/05 §11.2): random events, monsters, the stars report, the rankings filler, genocide, the Guardian, coups, Orion — never a fleet
   // skirmish, a first contact (that is the audience), a colony founded or a treaty signed. Reporting every AI-vs-AI fleet kill made the
   // broadcast worthless (83 newscasts in 200 turns, half of a session's clicks); battles are archived, the human's own are shown as battles.
-  // Kept beyond the original because they change the political map and the player would otherwise only see them in the Races screen:
-  // wars, peace, alliances formed/broken, an emperor elected or refused, a planet changing hands by invasion when the human is not a party.
+  // Beyond the original, wars between AI empires the player has met are news; peace, alliances, conquests and other empires' local
+  // events are archive-only since the October 2026 playtest (broadcastFilter below decides the final importance).
   const IMPORTANT = { empireDestroyed: 2, warDeclared: 2, guardianSlain: 2, planetDestroyed: 2, systemNova: 2, emperorElected: 2, councilRefused: 2, allianceFormed: 1, allianceBroken: 1, peaceTreaty: 1,
     antaranRaid: 2, plague: 1, monsterAttack: 1, monsterSpawn: 1, monsterKilled: 1, planetRebels: 1, piracy: 1, orionColonised: 1, coup: 1, starsReport: 1, rankings: 1 };
   // AI-vs-AI conquests are news (importance 1) only while the human is not a party: the human's own invasions have their ground-combat scene
@@ -45,6 +45,41 @@ MOO.def(function (M) {
     return IMPORTANT[ev.cat] || 0;
   }
 
+  // ---- the broadcast filter (October 2026 playtest: "too many GNN updates — war, then in the same turn not at war") -----------------------
+  // Everything stays in the archive; only what changes the player's game interrupts them with a newscast:
+  //  * a war between two AI empires the player has met — and only if the pair is STILL at war when the bulletin is compiled (the AI-vs-AI
+  //    pass can declare war and make peace, or jump from war straight into an "instant alliance", within one turn), at most once per pair
+  //    in WAR_COOLDOWN turns (flapping pairs), at most WAR_MAX new wars per bulletin (alliance call-ups cascade);
+  //  * empires destroyed, Orion colonised, the Guardian slain, a planet destroyed / a star gone nova, the stars report, the human's own coup,
+  //    the rare rankings filler.
+  // Archived only: AI-vs-AI peace, alliances, treaties, trade and conquests; wars the human is party to (the audience already told them);
+  // other empires' local random events (quakes, accidents, finds, plague…); event cards the human already saw; Council outcomes (the human
+  // sat in the chamber); AI coups.
+  const PAIR_CATS = { warDeclared: 1, peaceTreaty: 1, allianceFormed: 1, allianceBroken: 1, treatyBroken: 1, napSigned: 1, tradeSigned: 1, tributePaid: 1 };
+  const SEEN_BY_HUMAN = { emperorElected: 1, councilRefused: 1 };
+  const EVENT_KEEP = { systemNova: 1, planetDestroyed: 1, orionColonised: 1 };
+  const WAR_COOLDOWN = 20, WAR_MAX = 2;
+  N.POLICY = { WAR_COOLDOWN, WAR_MAX };
+  function broadcastFilter(S, ev, imp, st) {
+    if (!(imp >= 1)) return imp;
+    if (SEEN_BY_HUMAN[ev.cat] || ev.cat === 'invasionSuccess') return 0;
+    if (PAIR_CATS[ev.cat]) {
+      if (ev.cat !== 'warDeclared' || isHuman(S, ev.empire) || isHuman(S, ev.empire2)) return 0;
+      const a = ev.empire, b = ev.empire2, D = M.Sim.Diplo, me = S.playerId;
+      if (!(a >= 0 && b >= 0) || !D || !D.rec || !D.T) return 0;
+      if (!(D.rec(S, a, b).treaty >= D.T.WAR)) return 0;                                      // the war already ended (peace / instant alliance) this turn
+      if (me === undefined || me < 0 || !(D.rec(S, me, a).contact && D.rec(S, me, b).contact)) return 0;
+      const key = Math.min(a, b) + '-' + Math.max(a, b);
+      S.newsWar = S.newsWar || {};
+      if (st.warPairs[key] || st.wars >= WAR_MAX || (S.newsWar[key] !== undefined && S.turn - S.newsWar[key] < WAR_COOLDOWN)) return 0;
+      st.warPairs[key] = 1; st.wars++; S.newsWar[key] = S.turn;
+      return imp;
+    }
+    if (ev.cat === 'coup') return isHuman(S, ev.empire) ? imp : 0;
+    if (ev.kind !== undefined && ev.stage !== undefined) return EVENT_KEEP[ev.cat] ? imp : 0;     // a random event (Events.announce)
+    return imp;
+  }
+
   N.rankings = function (S) {
     const st = M.Sim.stats(S).filter(r => r.alive), W = [1, 5, 25, 125];
     const rows = (key, fn) => st.map(r => ({ empire: r.id, race: r.race, name: S.empires[r.id].plural, color: S.empires[r.id].color, value: Math.round(fn(r)) })).sort((x, y) => y.value - x.value);
@@ -53,7 +88,7 @@ MOO.def(function (M) {
   };
 
   N.compile = function (S, R) {
-    const items = [], T = text();
+    const items = [], T = text(), st = { wars: 0, warPairs: {} };
     const evs = M.Sim.Ev.take(S, e => e.type === 'news');
     const seen = new Set();
     for (const ev of evs) {
@@ -61,7 +96,7 @@ MOO.def(function (M) {
       const key = ev.cat + '|' + line; if (seen.has(key)) continue; seen.add(key);
       items.push({ cat: ev.cat, headline: line, sub: ev.sub || null, graphic: ev.graphic || GRAPHIC[ev.cat] || 'ticker', planet: ev.planet !== undefined ? planetArt(S, ev.planet) : (ev.star !== undefined ? planetArt(S, ev.star) : null),
         star: ev.star !== undefined && ev.star >= 0 ? { name: S.stars[ev.star].name, kind: S.stars[ev.star].color } : null, race: ev.empire !== undefined && ev.empire >= 0 ? S.empires[ev.empire].race : null,
-        race2: ev.empire2 !== undefined && ev.empire2 >= 0 ? S.empires[ev.empire2].race : null, importance: importanceOf(S, ev) });
+        race2: ev.empire2 !== undefined && ev.empire2 >= 0 ? S.empires[ev.empire2].race : null, importance: broadcastFilter(S, ev, importanceOf(S, ev), st) });
     }
     // empires destroyed this turn (event from Turn.checkDeaths)
     for (const ev of M.Sim.Ev.take(S, e => e.type === 'empireDestroyed')) {
@@ -93,8 +128,10 @@ MOO.def(function (M) {
     // skirmishes and the like would otherwise pad every newscast)
     const bulletin = items.filter(it => it.importance >= 1);
     if (!bulletin.length) return null;
-    const tick = (M.Data.text && M.Data.text.tickers) || [], ticker = [];
-    for (let i = 0; i < 5 && tick.length; i++) ticker.push(pick(R, tick));
+    // ticker lines come from their own stream (seed + turn): drawing them from the game's RNG only when a bulletin airs made the simulation
+    // depend on what the GNN chooses to broadcast (every later combat / event / AI roll shifted when the broadcast filter changed)
+    const tick = (M.Data.text && M.Data.text.tickers) || [], ticker = [], TR = M.RNG.create(String(S.seed) + ':gnn-ticker:' + S.turn);
+    for (let i = 0; i < 5 && tick.length; i++) ticker.push(pick(TR, tick));
     return { type: 'gnn', year: M.Data.Config.displayYear(S), turn: S.turn, items: bulletin, rankings, ticker };
   };
 

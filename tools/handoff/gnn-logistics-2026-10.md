@@ -48,3 +48,16 @@ side-panel cards, pre-battle, combat result, landing/bombard, tech scenes, endin
 (the lit grid cells already show the moves; pulsing Done would invite skipping turns) and Next Turn while nothing is pending.
 Verified with Playwright: player modal unlit; card default lit; event modal takes the light and returns it; AI offer and Council vote /
 verdict light all options; `tools/qa/turns.js`, `tools/qa/spy.js` clean.
+
+## GNN volume (playtest: "too many updates; at war, then in the same turn not")
+Cause: the AI-vs-AI diplomacy pass (`js/sim/diplo.js`, the P1×P2 loop) can `startWar` (warCheck / alliance call-ups) and later in the same
+pass `stopWar` the pair or jump it into an "instant alliance" out of war; both news items reached one bulletin. Volume came mostly from
+AI-vs-AI alliances, conquests and other empires' local random events (announce() defaulted them to importance 1).
+`js/sim/news.js` `broadcastFilter(S, ev, importance, st)` decides what airs (see its header): AI-vs-AI wars only while the pair is still at
+war at compile time, both empires met, per pair once per `POLICY.WAR_COOLDOWN` (20) turns, `POLICY.WAR_MAX` (2) per bulletin; event-born
+items only for systemNova / planetDestroyed / orionColonised; AI coups and Council outcomes archive. The archive (`S.newsLog`) is unchanged.
+Measured (`news-audit`, 6 headless games, 741–814 turns): 1.19 → 0.46 broadcasts per 10 turns; remaining: stars report, rankings filler,
+empire destroyed, planet destroyed; 0 contradictions. The ticker now uses `RNG.create(seed:gnn-ticker:turn)`; before, the filter changed
+game outcomes (state hashes diverged at turn 40). Verified identical hashes with the filter on and with its war cool-down disabled.
+Tests: `tools/rules/89-news-policy.test.js` (6), three `87-fun-audit` assertions updated to the new policy; `86-ai-fixes` scrap test sums
+three seeds (fixed 706 vs original 1606 over six seeds; the single seed had become an outlier after the RNG stream change).

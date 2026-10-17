@@ -35,6 +35,14 @@ Versions follow `MAJOR.MINOR.PATCH`; the live version is the `VERSION` file.
   inside its box (it read as a pasted rectangle), floats in a soft projection beam, and its floor glow is an ellipse. Light shafts in
   every scene (`Scenes` `beam()`) have soft edges (four nested layers) instead of one hard-sided trapezoid. A voted seat lights a desk
   lamp instead of an unshaded "ballot chip"; name plates show an empire-colour gem instead of a thumbnail of the same photo.
+- GNN broadcasts only what changes the player's game (`News` `broadcastFilter`; everything is still archived): a war between two AI
+  empires the player has met, if the pair is still at war when the bulletin is compiled (the AI pass could declare war and make peace,
+  or go from war to an instant alliance, in one turn: the "at war, then not" newscast), once per pair per 20 turns, two new wars per
+  bulletin at most; empires destroyed, Orion colonised, the Guardian slain, planets destroyed / novas, the stars report, the human's own
+  coup, the rankings filler. Archived only: AI peace / alliances / treaties / trade / conquests, wars the human is party to (the audience
+  already said so), other empires' local random events, event cards already shown, Council outcomes, AI coups. Measured over six
+  headless games: 1.19 → 0.46 newscasts per 10 turns. The GNN ticker draws from its own random stream: drawing it from the game's RNG
+  only when a bulletin aired made the simulation depend on what was broadcast. `86-ai-fixes` scrap measurement now sums three seeds.
 
 ## 1.1.2 — 2026-10-17
 

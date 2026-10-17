@@ -161,14 +161,18 @@ module.exports = function (M, t) {
     t.eq(sc[0], best, 'the cheapest loss');
     withFix('designKeepFleet', false, () => { const o = scraps(S, 1); t.ok(o.length >= 3, 'original: aged designs go whatever they fly (' + o.join() + ')'); });
   });
-  t.test('scrapped ships measured: 120 turns of a medium game lose far fewer live hulls to the AI\'s own scrapDesign than the original rule', () => {
+  t.test('scrapped ships measured: 120 turns of three medium games lose far fewer live hulls to the AI\'s own scrapDesign than the original rule', () => {
+    // summed over three seeds: one 120-turn game is too noisy for a "half as many" claim (any change to the RNG stream, e.g. the GNN ticker
+    // getting its own stream in 2026-10, sent the single seed down a path where the fix lost more; over six seeds it still loses ~0.4×)
     const play = fixOn => {
       let lost = 0, built = 0;
-      const S = Sim.Setup.create({ size: 'medium', opponents: 3, seed: 'fx-scrap', playerAI: true, race: 'human', difficulty: 'hard' });
+      for (const seed of ['fx-scrap', 'fx-s2', 'fx-s3']) {
+      const S = Sim.Setup.create({ size: 'medium', opponents: 3, seed, playerAI: true, race: 'human', difficulty: 'hard' });
       const aa = O.applyAll;
       O.applyAll = function (St, eid, orders) { const res = aa(St, eid, orders); res.forEach((r, i) => { if (orders[i].t === 'scrapDesign' && r.ok && r.ships > 0) lost += r.ships; }); return res; };
       try { withFix('designKeepFleet', fixOn, () => { for (let i = 0; i < 120; i++) Sim.autoTurn(S); }); } finally { O.applyAll = aa; }
       for (const f of S.fleets) built += f.ships.reduce((a, b) => a + b, 0);
+      }
       return { lost, alive: built };
     };
     const a = play(true), b = play(false);
