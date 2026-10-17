@@ -332,22 +332,44 @@
     const bh = ho.h * 0.96, bw = bh * 0.8;
     let bc = R.bustCv; if (!bc || bc.width !== round(bw) || bc.height !== round(bh)) { bc = R.bustCv = mkCanvas(bw, bh); R.bustG = bc.getContext('2d'); }
     const b = R.bustG; b.globalCompositeOperation = 'source-over'; b.clearRect(0, 0, bc.width, bc.height);
-    try { P.draw(b, e.race, 0, 0, bc.width, bc.height, { t, mood: 'neutral', talking: true, bg: false, color: seat.color, key: 'cou-bust' }); } catch (er) { return; }
+    // The photo is drawn added on top of the hall ('lighter'), so anything that is not black becomes light: its grey studio backdrop used to add a
+    // hazy box right up to the canvas edge (the hard-edged rectangle). Crush the darks to black so only the figure emits, tint it, then fade
+    // it to nothing well inside the box (an ellipse) and into the beam at the bottom.
+    try { b.filter = 'grayscale(1) contrast(2.1) brightness(0.9)'; } catch (er) { /* no canvas filters: the masks below still remove the box */ }
+    try { P.draw(b, e.race, 0, 0, bc.width, bc.height, { t, mood: 'neutral', talking: true, bg: false, color: seat.color, key: 'cou-bust' }); } catch (er) { try { b.filter = 'none'; } catch (e2) { /* ignore */ } return; }
+    try { b.filter = 'none'; } catch (er) { /* ignore */ }
     b.globalCompositeOperation = 'source-atop'; b.fillStyle = 'rgba(64,176,255,0.55)'; b.fillRect(0, 0, bc.width, bc.height);
     b.fillStyle = 'rgba(190,240,255,0.18)'; b.fillRect(0, 0, bc.width, bc.height);
     b.globalCompositeOperation = 'destination-out'; b.fillStyle = 'rgba(0,0,0,0.42)';
     const step = max(3, round(bc.height / 90)), off = round((t * 24) % step);
     for (let y = off; y < bc.height; y += step) b.fillRect(0, y, bc.width, max(1, step / 3));
+    b.globalCompositeOperation = 'destination-in';
+    b.save(); b.translate(bc.width / 2, bc.height * 0.46); b.scale(1, bc.height / bc.width * 0.92);
+    const mg = b.createRadialGradient(0, 0, bc.width * 0.2, 0, 0, bc.width * 0.5);
+    mg.addColorStop(0, 'rgba(0,0,0,1)'); mg.addColorStop(0.55, 'rgba(0,0,0,0.9)'); mg.addColorStop(1, 'rgba(0,0,0,0)');
+    b.fillStyle = mg; b.fillRect(-bc.width, -bc.width, bc.width * 2, bc.width * 2); b.restore();
+    const vg = b.createLinearGradient(0, 0, 0, bc.height); vg.addColorStop(0, 'rgba(0,0,0,1)'); vg.addColorStop(0.7, 'rgba(0,0,0,1)'); vg.addColorStop(1, 'rgba(0,0,0,0)');
+    b.fillStyle = vg; b.fillRect(0, 0, bc.width, bc.height);
+    b.globalCompositeOperation = 'source-over';
     const k = R.bustK * (0.9 + 0.1 * Math.sin(t * 31) * Math.sin(t * 9.7)), cx = pe.cx, base = pe.cy - ho.h * 0.02;
     g.save();
-    const rg = g.createRadialGradient(cx, base - bh * 0.5, bh * 0.1, cx, base - bh * 0.5, bh * 0.78);
-    rg.addColorStop(0, 'rgba(2,6,28,' + (0.78 * k).toFixed(3) + ')'); rg.addColorStop(0.7, 'rgba(2,6,28,' + (0.5 * k).toFixed(3) + ')'); rg.addColorStop(1, 'rgba(2,6,28,0)');
+    const rg = g.createRadialGradient(cx, base - bh * 0.5, bh * 0.1, cx, base - bh * 0.5, bh * 0.7);
+    rg.addColorStop(0, 'rgba(2,6,28,' + (0.5 * k).toFixed(3) + ')'); rg.addColorStop(0.7, 'rgba(2,6,28,' + (0.28 * k).toFixed(3) + ')'); rg.addColorStop(1, 'rgba(2,6,28,0)');
     g.fillStyle = rg; g.fillRect(cx - bh, base - bh * 1.3, bh * 2, bh * 1.5);
-    g.globalCompositeOperation = 'lighter'; g.globalAlpha = 0.9 * k;
+    g.globalCompositeOperation = 'lighter';
+    // the projection beam: three nested cones from the emitter, fading upward; the figure floats inside the light instead of on a pasted card
+    for (let i = 0; i < 3; i++) {
+      const wTop = bw * (0.95 - i * 0.24), wBot = bw * (0.3 - i * 0.07), top = base - bh * 1.04, a = (0.05 + 0.035 * i) * k;
+      const lg = g.createLinearGradient(0, base, 0, top); lg.addColorStop(0, 'rgba(120,212,255,' + a.toFixed(3) + ')'); lg.addColorStop(0.65, 'rgba(120,212,255,' + (a * 0.45).toFixed(3) + ')'); lg.addColorStop(1, 'rgba(120,212,255,0)');
+      g.fillStyle = lg; g.beginPath(); g.moveTo(cx - wBot / 2, base); g.lineTo(cx - wTop / 2, top); g.lineTo(cx + wTop / 2, top); g.lineTo(cx + wBot / 2, base); g.closePath(); g.fill();
+    }
+    g.globalAlpha = 0.9 * k;
     g.drawImage(bc, cx - bw / 2, base - bh, bw, bh);
     g.globalAlpha = 0.4 * k; g.drawImage(bc, cx - bw / 2 - 1.5, base - bh, bw, bh);
-    const gl = g.createRadialGradient(cx, base, 2, cx, base, bw * 0.7); gl.addColorStop(0, 'rgba(98,216,255,' + (0.5 * k).toFixed(3) + ')'); gl.addColorStop(1, 'rgba(98,216,255,0)');
-    g.globalAlpha = 1; g.fillStyle = gl; g.fillRect(cx - bw, base - bw * 0.3, bw * 2, bw * 0.6);
+    // the pool of light on the emitter: an ellipse (the old radial fill was cut by a rectangle shorter than its radius: a hard band)
+    g.globalAlpha = 1; g.save(); g.translate(cx, base); g.scale(1, 0.32);
+    const gl = g.createRadialGradient(0, 0, 2, 0, 0, bw * 0.7); gl.addColorStop(0, 'rgba(98,216,255,' + (0.5 * k).toFixed(3) + ')'); gl.addColorStop(1, 'rgba(98,216,255,0)');
+    g.fillStyle = gl; g.fillRect(-bw * 0.72, -bw * 0.72, bw * 1.44, bw * 1.44); g.restore();
     g.restore();
   }
   function paint(R, dt) {
@@ -387,7 +409,7 @@
     return new Promise((res, rej) => {
       const done = () => { if (R.prompt && R.prompt.type === 'continue') { R.prompt = null; clearCards(); res(); } };
       R.prompt = { type: 'continue', done, abort: () => rej(ABORT) };
-      showCards([{ cls: 'go big', t1: label || 'Continue', t2: 'Space', pick: done }]);
+      const els = showCards([{ cls: 'go big', t1: label || 'Continue', t2: 'Space', pick: done }]); UI.attention(els[0], { focus: false });
       setHint([['Space', 'continue']]);
     });
   }
@@ -397,6 +419,7 @@
       let settled = false;
       const choose = vote => {
         if (settled) return; settled = true; R.prompt = null;
+        UI.attentionClear(els);
         els.forEach((e, i) => e.classList.add(cards[i].vote === vote ? 'picked' : 'dim'));
         res(vote);
       };
@@ -406,7 +429,7 @@
         return { key: String(c.key), vote: c.empire, badge: { race: e.race, color: empHex(e.color) }, color: empHex(e.color), t1: self ? 'Yourself' : leaderOf(e), t2: self ? e.leader + ' of the ' + e.name : 'of the ' + e.name + ' · ' + votesText(e.votes), cnt: R.cast[c.empire] | 0,
           tip: self ? 'Cast your votes for your own claim.' : 'Backing a candidate warms them to you and cools the other candidate.', pick: () => choose(c.empire) };
       });
-      const els = showCards(cards);
+      const els = showCards(cards); UI.attentionGroup(els);              // your vote: every candidate (and Abstain) glows; none is recommended
       R.prompt = { type: 'vote', cards, choose, armed: false, abort: () => rej(ABORT) };
       setTimeout(() => { if (R.prompt && R.prompt.type === 'vote') R.prompt.armed = true; }, 700);
       setHint([['1', 'first'], ['2', 'second'], ['0', 'abstain'], ['Esc', 'abstain']]);
@@ -420,6 +443,7 @@
       let settled = false;
       const choose = yes => {
         if (settled) return; settled = true; R.prompt = null;
+        UI.attentionClear(els);
         els.forEach((e, i) => e.classList.add((i === 0) === yes ? 'picked' : 'dim'));
         resolve(yes);
       };
@@ -427,7 +451,7 @@
         { key: 'Y', cls: 'big', color: '#f3dca0', t1: mine ? 'Accept the crown' : 'Accept the ruling', t2: mine ? 'You become ruler of the galaxy and the game ends in victory.' : leaderOf(W) + ' rules. You go into exile and the game ends.', pick: () => choose(true) },
         { key: 'N', cls: 'big bad', color: '#ff5c6a', t1: 'Defy the Council', t2: 'Final War: every other empire unites against you and pools its technology.', pick: () => choose(false) },
       ];
-      const els = showCards(cards);
+      const els = showCards(cards); UI.attentionGroup(els);              // accept / defy: both glow, the game waits for the player's call
       R.prompt = { type: 'verdict', choose, cards, els, abort: () => rej(ABORT) };
       setHint([['Y', 'accept'], ['N', 'defy']]);
       sfx('open');
@@ -668,7 +692,7 @@
     dt = min(dt, 0.1); R.t += dt; R.acc += dt;
     if (R.speaker >= 0) R.speakT += dt;
     const fps = R.rm ? 0 : (PQ().animFps || 60);
-    if (R.rm ? !CN.dirty : (fps < 59 && R.acc < 1 / fps - 0.002)) return;
+    if (R.rm ? !CN.dirty : !UI.pace(R.pace || (R.pace = {}), fps, dt)) return;
     const d = R.acc; R.acc = 0; CN.dirty = false;
     paint(R, d);
   }

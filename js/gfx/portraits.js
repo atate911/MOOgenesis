@@ -4726,8 +4726,13 @@
     st.pa = dt > 0 && dt < 0.5 ? (st.pa || 0) + (tt - (st.pa || 0)) * (1 - Math.exp(-dt * 6)) : tt;
     st.pt = t;
     const ph = st.seed * 0.001, ta = st.pa;
-    const zoom = 1 + 0.012 * (0.5 + 0.5 * Math.sin(t * 0.55 + ph)) + (0.004 + 0.008 * ta) * Math.sin(t * (1.1 + 1.7 * ta) + ph * 3);
-    const iw = dw / zoom, ih = dh / zoom, ix = (dw - iw) * 0.5 + Math.sin(t * 0.31 + ph) * dw * 0.004, iy = (dh - ih) * 0.3;
+    // A photograph must hold still. The old breathing zoom (1.2 %) plus a talking "pump" (up to 1.2 % more at ~0.45 Hz) and a sideways drift
+    // made every photo bob and slide, and on screens that redraw their portraits at 10-20 fps (Races, council alcoves, GNN badges) the motion
+    // stepped visibly: the "photos jump around" report. Small portraits (< 220 device px) and o.still are now static; large ones keep a very
+    // slow, slight push (0.35 %) so a scene still feels alive. Talking is shown by the flicker in phGrade only, never by moving the picture.
+    const pxSize = Math.min(w * sx, h * sy), amp = o.still || pxSize < 220 ? 0 : 1;
+    const zoom = 1 + amp * 0.0035 * (0.5 + 0.5 * Math.sin(t * 0.3 + ph));
+    const iw = dw / zoom, ih = dh / zoom, ix = (dw - iw) * 0.5, iy = (dh - ih) * 0.3;
     const feathered = o.bg === false && !shape;
     ctx.save();
     if (o.flip) { ctx.translate(x + w / 2, 0); ctx.scale(-1, 1); ctx.translate(-(x + w / 2), 0); }

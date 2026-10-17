@@ -11,6 +11,9 @@
     .gx-side { grid-column:2; grid-row:1; min-height:0; padding:.55rem .55rem .35rem .35rem; display:flex; flex-direction:column; background:linear-gradient(90deg, rgba(6,9,25,.0), rgba(6,9,25,.9) 12%); }
     .gx-side .panel { flex:1 1 auto; min-height:0; display:flex; flex-direction:column; overflow:hidden; }
     .gx-sidebody { min-height:0; overflow-y:auto; flex:1 1 auto; padding-right:.2rem; }
+    .gx-sidebody.reveal { animation: gx-reveal .16s ease-out; }                /* panel change: a short settle, never on refresh (immersion review, Phase C) */
+    @keyframes gx-reveal { from { opacity:.35; transform:translateX(6px); } to { opacity:1; transform:none; } }
+    :root[data-reduce-motion] .gx-sidebody.reveal { animation:none; }
     .gx-bar { grid-column:1 / -1; grid-row:2; display:flex; gap:.4rem; align-items:center; padding:.45rem .6rem; background:linear-gradient(180deg, rgba(14,20,52,.96), rgba(6,9,25,.98)); border-top:1px solid rgba(214,179,106,.45); }
     .gx-bar .btn { padding:.4em 1em; }
     .gx-bar .gx-spacer { flex:1; }
@@ -97,7 +100,9 @@
       if (UI.Side.held && _hd !== UI.Side.held) return;                      // the prompt stays; the player may still click around the map (selection highlights, no panel change)
       const def = panels[name]; if (!def) { console.warn('no side panel', name); return; }
       if (cur && cur.def.dispose) { try { cur.def.dispose(); } catch (e) { console.error(e); } }
+      const changed = !cur || cur.name !== name || (cur.params && params && cur.params.star !== params.star);
       UI.clear(host);
+      if (changed && !(M.Settings && M.Settings.get && M.Settings.get('reduceMotion'))) { host.classList.remove('reveal'); void host.offsetWidth; host.classList.add('reveal'); }
       cur = { name, params: params || {}, def };
       try { def.render(host, ctx(cur.params)); }
       catch (e) {
@@ -181,7 +186,8 @@
         // a scene or a prompt is up and carries its own controls; only if the SAME step is still pending much later is the floating Skip offered there (a hung scene must not be a dead end)
         clearTimeout(lateSkip);
         const p = G.pending;
-        lateSkip = setTimeout(() => { if (G.busy && G.pending === p) UI.Galaxy.floatSkip(); }, 45000);
+        const live = () => type === 'gnn' && UI.GNN && UI.GNN.isOnAir && UI.GNN.isOnAir();   // a GNN on air waits for the player by design (its last story never times out) and has its own Continue / Skip
+        lateSkip = setTimeout(() => { if (G.busy && G.pending === p && !live()) UI.Galaxy.floatSkip(); }, 45000);
         return;
       }
       UI.Galaxy.busy(true, 'Year ' + Q.year(G.S) + ' … waiting on “' + type + '”'); UI.Galaxy.skipBtn(true);
@@ -215,6 +221,16 @@
     offs.push(UI.bindKey('Escape', () => { if (UI.gameMenu) UI.gameMenu(); }, scr));
     offs.push(UI.bindKey('Home', () => { if (map) map.centerOn(G.player().capital, { animate: true }); }, scr));
     offs.push(UI.bindKey('c', () => { if (map && G.sel.star >= 0) map.centerOn(G.sel.star, { animate: true }); }, { screen: 'galaxy' }));
+    // the original's Alt-R (research/06 §4.6): point every colony's rally line at the selected colony; pressed again (all already point there) it resets them all
+    offs.push(UI.bindKey('alt+r', () => {
+      if (G.busy || !G.S) return;
+      const S = G.S, E = G.player(), id = G.sel.star, q = id >= 0 ? S.planets[id] : null;
+      if (!q || q.owner !== E.id) { UI.sfx('error'); UI.toast('Select one of your colonies first: Alt+R sends every colony\'s new ships there.', 'warn'); return; }
+      const others = S.planets.filter(p => p.owner === E.id && p.id !== q.id), already = others.length && others.every(p => p.reloc === q.id);
+      const r = G.order({ t: 'relocAll', to: already ? -1 : q.id }); if (!r.ok) { UI.toast(r.msg, 'bad'); return; }
+      UI.sfx('click'); UI.toast(already ? 'Rally points cleared: new ships stay where they are built.' : 'Every colony now sends its new ships to ' + S.stars[q.starId].name + '. Alt+R again clears them.', 'ok');
+      UI.Galaxy.refresh();
+    }, scr));
   }
 
   UI.Screens.register('galaxy', {

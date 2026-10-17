@@ -554,7 +554,8 @@
 
     // ---------------------------------------------------------------- state
     let S = null, me = null, destroyed = false, pcU = PC_DEFAULT, gw = 100, gh = 100, galaxyKey = '';
-    let W = 0, H = 0, dpr = 1, ctx = null, uk = 1, sizeDirty = true, accDt = 0, clock = 0, lastFrameT = 0;
+    let W = 0, H = 0, dpr = 1, ctx = null, uk = 1, sizeDirty = true, clock = 0, lastFrameT = 0;
+    const pace = {}, paceFn = UI.pace || ((st, fps, dt) => { st.dt = dt; return true; });   // UI.pace: even-cadence frame gate (kit.js); tool pages without it draw every frame
     let mode = 'normal', prevMode = 'normal', modeT = 1, wCol = 0, wEnv = 0, wMin = 0;
     let fog = opts.fog !== false, reachSet = null, reachAnim = false;
     const habSetting = () => !(M.Settings && M.Settings.get('mapIcons') === false);
@@ -584,7 +585,7 @@
     function newSD(id) {
       const r = rng32(hashInt(id * 7919 + 13));
       return { id, st: null, pl: null, x: 0, y: 0, vis: 0, known: false, live: false, stale: false, owner: -1, mine: false, capital: false, kind: 'unknown', vkind: 'unknown', orion: false, guard: false, env: -1, min: -1, nebula: false, name: '', pri: 0,
-        art: false, pop: 0, maxPop: 0, hab: 0, rk: 1, rkT: 1, ph: r() * TAU, ph2: r() * TAU, fr: 0.8 + r() * 1.2, ang: r() * TAU,
+        art: false, gate: false, reloc: -1, pop: 0, maxPop: 0, hab: 0, rk: 1, rkT: 1, ph: r() * TAU, ph2: r() * TAU, fr: 0.8 + r() * 1.2, ang: r() * TAU,
         sx: 0, sy: 0, r: 3, on: false, glowA: 1, coreA: 1, lblA: 0, lblSlot: 0, lblX: 0, lblY: 0, pipY: 0 };
     }
     function readGalaxy() {
@@ -628,6 +629,8 @@
         sd.hab = habKind(sd, pl, st); if (reachSet !== null) { sd.rkT = (typeof reachSet === 'function' ? reachSet(sd.id) : reachSet.has(sd.id)) ? 1 : 0.2; reachAnim = true; }
         sd.nebula = !!(st.inNebula || st.nebula);
         sd.pop = vis === 2 ? (pl ? pl.pop || 0 : 0) : (seen ? seen.pop || 0 : 0); sd.maxPop = sd.known && pl ? pl.maxPop || 0 : 0;
+        sd.gate = !!pl && !!pl.stargate && vis === 2 && sd.owner >= 0;              // stargates: own ones, and foreign ones while in scanner range
+        sd.reloc = sd.mine && pl && pl.reloc >= 0 && pl.reloc !== st.id && planets[pl.reloc] && planets[pl.reloc].owner === pid ? planets[pl.reloc].starId : -1;
         sd.name = st.name || ('Star ' + st.id); if (sd.lblName !== sd.name) { sd.lbl = null; sd.lblName = sd.name; }
         sd.pri = (sd.orion ? 100 : 0) + (sd.capital ? 40 : 0) + (sd.mine ? 30 : sd.owner >= 0 ? 20 : 0) + (vis === 2 ? 4 : vis === 1 ? 2 : 0);
         SD.push(sd); sdById[st.id] = sd;
@@ -979,42 +982,30 @@
         }
       }
     }
+    // The static part of the backdrop (ambient sky, galaxy cloud, parallax star tiles: five or six overlapping full-screen 'lighter' draws,
+    // the biggest fill-rate item of a map frame) changes only with the camera, the canvas size, the quality knobs or a new sky image, so
+    // it is painted into an offscreen canvas when one of those changes and blitted with one opaque draw every frame. A 4X camera rests
+    // most of the time; while it moves the cost is the old one plus the copy.
+    const bdc = { c: null, g: null, key: '' };
     function drawBackdrop(t) {
       const pf = stats.profile, prof = stats.passes; let tq = pf ? performance.now() : 0;
       const lq = k => { if (pf) { const n = performance.now(); prof[k] = (prof[k] || 0) * 0.92 + (n - tq) * 0.08; tq = n; } };
       ensureAmbient(); lq('bd_ensure');
       const z = cam.z, px = (cam.x - gw / 2) * fitZ, py = (cam.y - gh / 2) * fitZ, zr = clamp(Math.log2(z / fitZ), -1, 5);
-      const par = Q.parallax;
+      const par = Q.parallax, nl = par === 0 ? 1 : par === 1 ? 1 : 2;
+      // slow dust drift (peak ~2 px/s; off where Q.parallax is 0: reduceMotion / low tier), quantised to whole pixels so the cached backdrop
+      // is repainted a few times a second while the dust crawls, not every frame
+      const drx = par ? Math.round(Math.sin(t * 0.05) * 40) : 0, dry = par ? Math.round(Math.cos(t * 0.037) * 28) : 0;
+      const key = W + 'x' + H + '@' + dpr + '|' + cam.x + ',' + cam.y + ',' + z + '|' + par + '|' + nl + '|' + drx + ',' + dry + '|' + Q.nebula + '|' + (amb.ext ? amb.extKey + '@' + amb.extAt : '-') + '|' + amb.key + '|' + amb.tileDpr;
       ctx.globalCompositeOperation = 'source-over'; ctx.globalAlpha = 1;
-      if (amb.ext) {
-        const mx = W * 0.04, my = H * 0.04, ox = par ? clamp(-px * 0.05, -mx, mx) : 0, oy = par ? clamp(-py * 0.05, -my, my) : 0;
-        ctx.drawImage(amb.ext, -mx + ox, -my + oy, W + mx * 2, H + my * 2);
-      } else {
-        const gk = W + 'x' + H;
-        if (amb.gradKey !== gk) { const g = ctx.createRadialGradient(W * 0.5, H * 0.46, 0, W * 0.5, H * 0.5, Math.hypot(W, H) * 0.62); g.addColorStop(0, '#0c1442'); g.addColorStop(0.55, '#070c2b'); g.addColorStop(1, '#03051a'); amb.grad = g; amb.gradKey = gk; }
-        ctx.fillStyle = amb.grad; ctx.fillRect(0, 0, W, H);
-        // far dust layer (parallax)
-        const far = amb.far, s = Math.max(W / far.width, H / far.height) * 1.14, dw = far.width * s, dh = far.height * s;
-        const ox = par ? clamp(-px * 0.07, -(dw - W) / 2, (dw - W) / 2) : 0, oy = par ? clamp(-py * 0.07, -(dh - H) / 2, (dh - H) / 2) : 0;
-        ctx.globalCompositeOperation = 'lighter'; ctx.globalAlpha = clamp(0.95 * Q.nebula, 0, 1);
-        ctx.drawImage(far, (W - dw) / 2 + ox, (H - dh) / 2 + oy, dw, dh);
+      if (key !== bdc.key || !bdc.c) {
+        if (!bdc.c || bdc.c.width !== canvas.width || bdc.c.height !== canvas.height) { bdc.c = mk(canvas.width, canvas.height); bdc.g = bdc.c.getContext('2d', { alpha: false }); amb.gradKey = ''; }
+        const g = bdc.g; g.setTransform(dpr, 0, 0, dpr, 0, 0); g.globalCompositeOperation = 'source-over'; g.globalAlpha = 1;
+        paintBackdropStatic(g, z, px, py, zr, par, nl, drx, dry);
+        bdc.key = key;
       }
+      ctx.drawImage(bdc.c, 0, 0, W, H);
       lq('bd_base');
-      // galaxy-anchored ambient cloud
-      const wd = amb.world, wx = (wd.x0 - cam.x) * z + W / 2, wy = (wd.y0 - cam.y) * z + H / 2;
-      ctx.globalCompositeOperation = 'lighter'; ctx.globalAlpha = clamp((amb.ext ? 0.32 : 0.85) * Q.nebula, 0, 1);
-      ctx.drawImage(wd.canvas, wx, wy, wd.w * z, wd.h * z);
-      lq('bd_world');
-      // parallax star layers
-      ctx.globalCompositeOperation = 'lighter';
-      const nl = Q.parallax === 0 ? 1 : Q.parallax === 1 ? 1 : 2;
-      for (let li = 0; li < nl; li++) {
-        const L = amb.tiles[li], f = par ? L.f : 0, sT = 512 * (1 + zr * (0.04 + f * 0.55) * 0.35), ox = W / 2 - px * f, oy = H / 2 - py * f;
-        ctx.globalAlpha = (li === 0 ? 0.9 : 1) * (amb.ext ? 0.6 : 1);
-        const i0 = Math.floor((0 - ox) / sT), i1 = Math.floor((W - ox) / sT), j0 = Math.floor((0 - oy) / sT), j1 = Math.floor((H - oy) / sT);
-        for (let i = i0; i <= i1; i++) for (let j = j0; j <= j1; j++) ctx.drawImage(L.c, Math.round(ox + i * sT), Math.round(oy + j * sT), Math.ceil(sT) + 1, Math.ceil(sT) + 1);
-      }
-      lq('bd_tiles');
       // twinkling sparkles
       if (Q.sparkles > 0) {
         const P = Math.max(W, H) * 1.5, n = Math.min(Q.sparkles, amb.sparks.length);
@@ -1028,6 +1019,34 @@
       }
       ctx.globalAlpha = 1; ctx.globalCompositeOperation = 'source-over';
       lq('bd_spark');
+    }
+    function paintBackdropStatic(g, z, px, py, zr, par, nl, drx, dry) {
+      if (amb.ext) {
+        const mx = W * 0.04, my = H * 0.04, ox = par ? clamp(-px * 0.05 + drx, -mx, mx) : 0, oy = par ? clamp(-py * 0.05 + dry, -my, my) : 0;
+        g.drawImage(amb.ext, -mx + ox, -my + oy, W + mx * 2, H + my * 2);
+      } else {
+        const gk = W + 'x' + H;
+        if (amb.gradKey !== gk) { const gr = g.createRadialGradient(W * 0.5, H * 0.46, 0, W * 0.5, H * 0.5, Math.hypot(W, H) * 0.62); gr.addColorStop(0, '#0c1442'); gr.addColorStop(0.55, '#070c2b'); gr.addColorStop(1, '#03051a'); amb.grad = gr; amb.gradKey = gk; }
+        g.fillStyle = amb.grad; g.fillRect(0, 0, W, H);
+        // far dust layer (parallax)
+        const far = amb.far, s = Math.max(W / far.width, H / far.height) * 1.14, dw = far.width * s, dh = far.height * s;
+        const ox = par ? clamp(-px * 0.07 + drx, -(dw - W) / 2, (dw - W) / 2) : 0, oy = par ? clamp(-py * 0.07 + dry, -(dh - H) / 2, (dh - H) / 2) : 0;
+        g.globalCompositeOperation = 'lighter'; g.globalAlpha = clamp(0.95 * Q.nebula, 0, 1);
+        g.drawImage(far, (W - dw) / 2 + ox, (H - dh) / 2 + oy, dw, dh);
+      }
+      // galaxy-anchored ambient cloud
+      const wd = amb.world, wx = (wd.x0 - cam.x) * z + W / 2, wy = (wd.y0 - cam.y) * z + H / 2;
+      g.globalCompositeOperation = 'lighter'; g.globalAlpha = clamp((amb.ext ? 0.32 : 0.85) * Q.nebula, 0, 1);
+      g.drawImage(wd.canvas, wx, wy, wd.w * z, wd.h * z);
+      // parallax star layers
+      g.globalCompositeOperation = 'lighter';
+      for (let li = 0; li < nl; li++) {
+        const L = amb.tiles[li], f = par ? L.f : 0, sT = 512 * (1 + zr * (0.04 + f * 0.55) * 0.35), ox = W / 2 - px * f, oy = H / 2 - py * f;
+        g.globalAlpha = (li === 0 ? 0.9 : 1) * (amb.ext ? 0.6 : 1);
+        const i0 = Math.floor((0 - ox) / sT), i1 = Math.floor((W - ox) / sT), j0 = Math.floor((0 - oy) / sT), j1 = Math.floor((H - oy) / sT);
+        for (let i = i0; i <= i1; i++) for (let j = j0; j <= j1; j++) g.drawImage(L.c, Math.round(ox + i * sT), Math.round(oy + j * sT), Math.ceil(sT) + 1, Math.ceil(sT) + 1);
+      }
+      g.globalAlpha = 1; g.globalCompositeOperation = 'source-over';
     }
     function drawNebulae(t) {
       if (!gnebs.length) return;
@@ -1144,6 +1163,45 @@
       lbl('range ' + me.range + ' pc', -PI * 0.5, rr * ep + 11 * uk, rgba(th.rgb.brassHi, 0.9)); lbl('scan ' + scanOf() + ' pc', PI * 0.5, sr * ep + 13 * uk, rgba(th.rgb.cyan, 0.9));
       ctx.textAlign = 'left';
     }
+    // ------------------------------------------------------------------ logistics: rally lines (RELOC) and stargates
+    // The original drew thin blue-grey lines from each colony to its rally point (research/06 §3); several colonies pointing at one world read as a
+    // fan converging on it. Chevrons drift toward the target so the direction is clear without arrowheads cluttering a busy hub.
+    const GATE_RGB = [199, 166, 255];
+    function drawRelocs(t) {
+      const n = SD.length; if (M.Settings && M.Settings.get('mapReloc') === false) return;
+      ctx.lineCap = 'round';
+      for (let i = 0; i < n; i++) {
+        const s = SD[i]; if (s.reloc < 0) continue;
+        const b = sdById[s.reloc]; if (!b) continue;
+        if ((s.sx < -40 && b.sx < -40) || (s.sx > W + 40 && b.sx > W + 40) || (s.sy < -40 && b.sy < -40) || (s.sy > H + 40 && b.sy > H + 40)) continue;
+        const dx = b.sx - s.sx, dy = b.sy - s.sy, len = Math.hypot(dx, dy); if (len < 12) continue;
+        const ux = dx / len, uy = dy / len, r0 = s.r * 2 + 4, r1 = b.r * 2 + 6, gate = s.gate && b.gate;
+        const x0 = s.sx + ux * r0, y0 = s.sy + uy * r0, x1 = b.sx - ux * r1, y1 = b.sy - uy * r1, col = gate ? GATE_RGB : [150, 172, 214];
+        ctx.beginPath(); ctx.moveTo(x0, y0); ctx.lineTo(x1, y1); ctx.lineWidth = 1.1 * uk; ctx.strokeStyle = rgba(col, s.id === selStar || s.reloc === selStar ? 0.75 : 0.42);
+        ctx.setLineDash(gate ? [2, 5] : [6, 5]); ctx.lineDashOffset = Q.flow ? -t * 10 : 0; ctx.stroke(); ctx.setLineDash([]);
+        // chevrons every ~70 px, drifting toward the rally point
+        const L = Math.hypot(x1 - x0, y1 - y0), step = 70 * uk, cs = 4 * uk; if (L < step * 0.6) continue;
+        ctx.strokeStyle = rgba(col, 0.6); ctx.lineWidth = 1.2 * uk; ctx.beginPath();
+        const off = Q.flow ? mod(t * 18, step) : step / 2;
+        for (let d = off; d < L - 6; d += step) { const cx = x0 + ux * d, cy = y0 + uy * d; ctx.moveTo(cx - ux * cs - uy * cs, cy - uy * cs + ux * cs); ctx.lineTo(cx, cy); ctx.lineTo(cx - ux * cs + uy * cs, cy - uy * cs - ux * cs); }
+        ctx.stroke();
+      }
+      ctx.lineCap = 'butt';
+    }
+    // a stargate: a thin violet ring with four bright notches, turning slowly (static with Reduce motion)
+    function drawGates(t) {
+      ctx.save();
+      for (let i = 0; i < SD.length; i++) {
+        const s = SD[i]; if (!s.gate || !s.on) continue;
+        const rr = s.r * 2.2 + 12 * uk, a0 = Q.reduce ? 0 : t * 0.35 + s.ph;              // outside the owner ring
+        ctx.globalAlpha = 0.85 * s.rk; ctx.lineWidth = 1 * uk; ctx.strokeStyle = rgba(GATE_RGB, 0.7);
+        ctx.beginPath(); ctx.arc(s.sx, s.sy, rr, 0, TAU); ctx.stroke();
+        ctx.lineWidth = 3 * uk; ctx.strokeStyle = rgba([226, 210, 255], 0.95); ctx.beginPath();
+        for (let k = 0; k < 4; k++) { const a = a0 + k * PI / 2; ctx.moveTo(s.sx + Math.cos(a - 0.24) * rr, s.sy + Math.sin(a - 0.24) * rr); ctx.arc(s.sx, s.sy, rr, a - 0.24, a + 0.24); }
+        ctx.stroke();
+      }
+      ctx.restore();
+    }
     function drawLanes(t) {
       const z = cam.z, hw = W / 2, hh = H / 2, pid = pidOf();
       ctx.lineCap = 'round';
@@ -1213,7 +1271,7 @@
       for (let i = 0; i < n; i++) {
         const s = SD[i]; s.useSp = false; if (!s.on) continue;
         const kd = KINDS[s.vkind] || KINDS.unknown;
-        let a = s.live ? 1 : s.known ? 0.92 : 0.62;
+        let a = s.live ? 1 : s.known ? 0.92 : 0.65;
         if (ovAny > 0) {                                           // overlay modes tone the starfield down so the colour code reads
           let keep = 1;
           if (wCol > 0) keep = Math.min(keep, lerp(1, s.owner >= 0 ? 1 : 0.22, wCol));
@@ -1226,12 +1284,13 @@
         const tws = twk ? 1 + 0.08 * Math.sin(t * kd.tw * 2.2 + s.ph) + 0.04 * Math.sin(t * 5.3 + s.ph2) : 1;
         const gk = (Q.glow < 0.6 ? 0.75 : 1) * (hot ? 1.12 : 1);
         let sp = null;
-        // unexplored stars are distant glints (tight core, small spikes) rather than soft coloured discs; explored ones keep the full sprite
-        const far = !s.known, Dk = s.r * 13.5 * gk * (far ? 0.72 : 1);
-        if (!kd.bh) sp = spaceStar(s.vkind, Dk, kd.spike >= 0.3 && s.r >= (far ? 2.2 : 2.8));        // spikes on every tier: the sprite is cached, the glint is what makes a star read as a star
+        // unexplored stars are the same lit sprite family as explored ones, ~60 % size and ~65 % brightness, blackbody-tinted by the star's
+        // real class (vis 0 = class visible, planet hidden): distant lit points, never flat discs; explored ones keep the full sprite
+        const far = !s.known, Dk = s.r * 13.5 * gk * (far ? 0.6 : 1);
+        if (!kd.bh) sp = spaceStar(s.vkind, Dk, kd.spike >= 0.3 && s.r >= (far ? 1.8 : 2.8));        // spikes on every tier: the sprite is cached, the glint is what makes a star read as a star
         if (sp) {
           const D = Dk * (0.97 + 0.03 * tws); s.useSp = true;
-          ctx.globalAlpha = clamp(a * (0.9 + 0.1 * tws), 0, 1); ctx.drawImage(sp, s.sx - D / 2, s.sy - D / 2, D, D);
+          ctx.globalAlpha = clamp(a * tws, 0, 1); ctx.drawImage(sp, s.sx - D / 2, s.sy - D / 2, D, D);   // tws: the ~1 Hz twinkle, +-8 % (+4 % flicker), per-star phase
         } else if (!kd.bh) {
           const size = s.r * 11.5 * (0.96 + 0.04 * tws) * (s.known ? 1 : 0.9) * gk;
           ctx.globalAlpha = clamp(a * tws * (s.known ? 0.95 : 0.8), 0, 1); ctx.drawImage(haloSprite(s.vkind), s.sx - size / 2, s.sy - size / 2, size, size);
@@ -1253,7 +1312,7 @@
         let a = (s.live ? 1 : s.known ? 0.92 : 0.8) * s.rk;
         if (wCol > 0 && s.owner < 0) a *= lerp(1, 0.5, wCol);
         ctx.globalAlpha = a;
-        const rr = s.r * (s.id === selStar ? 1.08 : 1), cs = coreSprite(s.vkind, rr * 2 * dpr);
+        const rr = s.r * (s.id === selStar ? 1.08 : 1) * (s.known ? 1 : 0.6), cs = coreSprite(s.vkind, rr * 2 * dpr);
         ctx.drawImage(cs, s.sx - rr, s.sy - rr, rr * 2, rr * 2);
       }
       // ---- C: spikes for our own sprites, sparkle for uncharted stars, pulsar beams, black-hole swirl (additive)
@@ -1263,9 +1322,9 @@
         const kd = KINDS[s.vkind] || KINDS.unknown;
         let keep = 1; if (wCol > 0 && s.owner < 0) keep = lerp(1, 0.2, wCol); if (wEnv > 0 || wMin > 0) keep = Math.min(keep, lerp(1, 0.3, Math.max(wEnv, wMin)));
         keep *= s.rk;
-        if (!s.known) {                                              // uncharted: a small cold sparkle so it reads as "a star I have not visited"
-          if (!Q.spikes || s.r < 2.2) continue;
-          const sz = s.r * 7.5, tws = twk ? 0.75 + 0.25 * Math.sin(t * 1.3 + s.ph) : 1; ctx.globalAlpha = 0.3 * tws * keep; ctx.drawImage(spikeSprite('unknown'), s.sx - sz / 2, s.sy - sz / 2, sz, sz); continue;
+        if (!s.known) {                                              // uncharted: a faint glint in the star's own tint so it reads as "a star I have not visited"
+          if (!Q.spikes || s.r < 1.8 || s.useSp) continue;          // (the Space sprite already carries its spikes)
+          const sz = s.r * 6.5, tws = twk ? 0.8 + 0.2 * Math.sin(t * 1.3 + s.ph) : 1; ctx.globalAlpha = 0.22 * tws * keep; ctx.drawImage(spikeSprite(s.vkind), s.sx - sz / 2, s.sy - sz / 2, sz, sz); continue;
         }
         if (kd.bh) {
           if (!SPR.spaceBad && !(M.Gfx && M.Gfx.pick('space') && M.Gfx.pick('space').starSprite) && Q.glow >= 0.75) { const bs = s.r * 7.2; ctx.save(); ctx.translate(s.sx, s.sy); ctx.scale(1, 0.34); ctx.rotate(t * 0.5 + s.ph); ctx.globalAlpha = 0.9 * s.rk; ctx.drawImage(bhSwirlSprite(), -bs * 0.55, -bs * 0.55, bs * 1.1, bs * 1.1); ctx.restore(); }
@@ -1301,11 +1360,7 @@
         const s = SD[i]; if (!s.on) continue;
         const x = s.sx, y = s.sy, r = s.r;
         ctx.globalAlpha = s.rk;
-        // unexplored: a small plotted-point ring (chart "pin") so it never reads as background dust; a dotted outer ring when there is room
-        if (!s.known && ovAny < 0.5) {
-          ctx.beginPath(); ctx.arc(x, y, Math.max(3.4, r * 1.55) + 0.5, 0, TAU); ctx.lineWidth = 1; ctx.strokeStyle = 'rgba(150,172,236,' + (0.5 * (1 - ovAny)) + ')'; ctx.stroke();
-          if (znv > 60) { ctx.setLineDash([1.5, 3.5]); ctx.beginPath(); ctx.arc(x, y, r * 2.5 + 3, 0, TAU); ctx.strokeStyle = 'rgba(150,170,230,0.26)'; ctx.stroke(); ctx.setLineDash([]); }
-        }
+        // unexplored stars carry no ring at rest (they are lit points like the rest); the hover ring and the selection brackets are drawn in drawOverlays
         // inside a gameplay nebula
         if (s.nebula && ovAny < 0.6) { ctx.setLineDash([2, 3.5]); ctx.lineDashOffset = -t * 4; ctx.beginPath(); ctx.arc(x, y, r * 2.15 + 3.5, 0, TAU); ctx.strokeStyle = 'rgba(190,130,255,0.5)'; ctx.lineWidth = 1.1; ctx.stroke(); ctx.setLineDash([]); }
         // owner ring + flag
@@ -1506,6 +1561,11 @@
     }
     function drawFleetGlyph(x, y, sz, owner, ang, kind, sel, hov, count, moving, a, t, ph) {
       const col = empCol(owner), Sh = M.Gfx && M.Gfx.Ships; let usedExt = false;
+      if (moving && Q.flow) {                                     // short engine trail behind a fleet under way (cached tinted streak, additive)
+        const tl = sz * (1.6 + 0.2 * Math.sin(t * 13 + y * 0.1));
+        ctx.save(); ctx.globalCompositeOperation = 'lighter'; ctx.translate(x, y); ctx.rotate(ang); ctx.globalAlpha = a * 0.7; ctx.drawImage(tintTrail(owner, col), -tl - sz * 0.22, -sz * 0.2, tl, sz * 0.4); ctx.restore();
+        ctx.globalCompositeOperation = 'source-over'; ctx.globalAlpha = 1;
+      }
       if (a >= 0.995 && Sh && Sh.drawFleetMarker && !extMarkerBad) {
         try { Sh.drawFleetMarker(ctx, x, y, sz, empHex(owner), ang, t + ph, { selected: sel, count: count, moving: moving }); usedExt = true; }
         catch (e) { extMarkerBad = true; console.warn('[GalaxyMap] Ships.drawFleetMarker failed; using built-in markers', e); }
@@ -1514,7 +1574,6 @@
       if (!usedExt) {
         const hi = mixc(col, [255, 255, 255], 0.45), lo = mixc(col, [0, 0, 0], 0.35), pulse = 0.85 + 0.15 * Math.sin(t * 3.1 + x * 0.05), gz = sz * 2.5;
         ctx.globalCompositeOperation = 'lighter'; ctx.globalAlpha = a * (sel ? 0.8 : 0.5) * pulse; ctx.drawImage(glowSprite(col), x - gz / 2, y - gz / 2, gz, gz);
-        if (moving && Q.flow) { const tl = sz * (1.5 + 0.2 * Math.sin(t * 13 + y * 0.1)); ctx.save(); ctx.translate(x, y); ctx.rotate(ang); ctx.globalAlpha = a * 0.7; ctx.drawImage(tintTrail(owner, col), -tl - sz * 0.22, -sz * 0.2, tl, sz * 0.4); ctx.restore(); }
         ctx.globalCompositeOperation = 'source-over'; ctx.globalAlpha = a;
         ctx.save(); ctx.translate(x, y); ctx.rotate(ang); ctx.scale(sz, sz); ctx.lineJoin = 'round';
         ctx.beginPath(); ctx.moveTo(0.62, 0); ctx.lineTo(-0.42, -0.4); ctx.lineTo(-0.2, 0); ctx.lineTo(-0.42, 0.4); ctx.closePath();
@@ -1595,7 +1654,7 @@
     }
     function drawRoute(x0, y0, x1, y1, valid, text, col) {
       const dx = x1 - x0, dy = y1 - y0, len = Math.hypot(dx, dy); if (len < 4) return;
-      const ux = dx / len, uy = dy / len, c = valid ? th.rgb.cyan : th.rgb.rose, ex = x1 - ux * 12, ey = y1 - uy * 12;
+      const ux = dx / len, uy = dy / len, c = col || (valid ? th.rgb.cyan : th.rgb.rose), ex = x1 - ux * 12, ey = y1 - uy * 12;
       ctx.lineCap = 'round';
       ctx.beginPath(); ctx.moveTo(x0, y0); ctx.lineTo(ex, ey); ctx.lineWidth = 5; ctx.strokeStyle = rgba(c, 0.16); ctx.setLineDash([]); ctx.stroke();
       ctx.beginPath(); ctx.moveTo(x0, y0); ctx.lineTo(ex, ey); ctx.lineWidth = 1.8; ctx.strokeStyle = rgba(c, 0.95); if (!valid) ctx.setLineDash([6, 5]); else ctx.setLineDash([9, 5]); ctx.lineDashOffset = -clock * 22; ctx.stroke(); ctx.setLineDash([]);
@@ -1642,7 +1701,11 @@
       // route preview (supplied by the screen) or the built-in one while choosing a destination
       if (routePrev && sdById[routePrev.to]) {
         const a = routePrev.from !== undefined && routePrev.from !== null ? sdById[routePrev.from] : null, b = sdById[routePrev.to];
-        if (a) { const pc = Math.ceil(Math.hypot(b.x - a.x, b.y - a.y) / pcU); const txt = routePrev.valid === false ? (routePrev.reason || 'Out of range') : (pc + ' pc' + (routePrev.eta ? ' · ETA ' + routePrev.eta + ' ' + plural(routePrev.eta, 'turn') : '')); drawRoute(a.sx, a.sy, b.sx, b.sy, routePrev.valid !== false, txt); }
+        if (a) {
+          const pc = Math.ceil(Math.hypot(b.x - a.x, b.y - a.y) / pcU), ok = routePrev.valid !== false, eta = routePrev.eta ? ' · ETA ' + routePrev.eta + ' ' + plural(routePrev.eta, 'turn') : '';
+          const txt = !ok ? (routePrev.reason || 'Out of range') : (routePrev.kind === 'reloc' ? 'Rally · ' : '') + (routePrev.gate ? 'Stargate' + eta : pc + ' pc' + eta);
+          drawRoute(a.sx, a.sy, b.sx, b.sy, ok, txt, ok && routePrev.gate ? GATE_RGB : null);
+        }
       } else if (routeFleet !== null && hoverStar !== null) {
         const fd = FD.get(routeFleet), b = sdById[hoverStar];
         if (fd && b) {
@@ -1877,8 +1940,8 @@
       lap('rebuild');
       if (reachAnim) { let any = false; const k = Math.min(1, dt * 9); for (let i = 0; i < SD.length; i++) { const q = SD[i]; if (q.rk !== q.rkT) { q.rk += (q.rkT - q.rk) * k; if (Math.abs(q.rkT - q.rk) < 0.01) q.rk = q.rkT; else any = true; } } reachAnim = any; }
       computeScreen(t, dt); updateFleets(dt); updateHover(); lap('update');
-      drawBackdrop(t); lap('backdrop'); drawNebulae(t); lap('nebulae'); drawBounds(); lap('bounds'); drawTerritory(t); lap('territory'); drawGrid(t); lap('grid'); drawRanges(t); drawLanes(t); lap('lanes');
-      drawStarsPass(t, dt); lap('stars'); drawSystems(t); lap('systems'); drawLabels(t, dt); lap('labels'); drawFleets(t); lap('fleets'); drawOverlays(t, dt); drawHud(t); lap('overlays');
+      drawBackdrop(t); lap('backdrop'); drawNebulae(t); lap('nebulae'); drawBounds(); lap('bounds'); drawTerritory(t); lap('territory'); drawGrid(t); lap('grid'); drawRanges(t); drawRelocs(t); drawLanes(t); lap('lanes');
+      drawStarsPass(t, dt); drawGates(t); lap('stars'); drawSystems(t); lap('systems'); drawLabels(t, dt); lap('labels'); drawFleets(t); lap('fleets'); drawOverlays(t, dt); drawHud(t); lap('overlays');
       drawMini(); lap('mini');
       if (dirty.legend) buildLegend();
       lap('legend');
@@ -1889,9 +1952,8 @@
       if (destroyed || !root.isConnected || (doc.hidden && !force)) return;
       const tf0 = performance.now();
       readQuality();
-      accDt += dtRaw;
-      if (Q.fps < 55 && accDt < 1 / Q.fps - 0.002) return;
-      const dt = Math.min(0.1, accDt); accDt = 0;
+      if (!paceFn(pace, Q.fps, dtRaw)) return;
+      const dt = Math.min(0.1, pace.dt);
       if (!fitCv()) return;
       if (S && pendingView !== null) applyInitialView();
       queueWarmup();
@@ -1935,7 +1997,7 @@
       },
       fit(o) { if (!W) { pendingCmd = () => api.fit({ animate: false }); return api; } pendingView = null; flyTo(gw / 2, gh / 2, fitZ, !(o && o.animate === false)); return api; },
       home(o) { if (!W) { pendingCmd = () => api.home({ animate: false }); return api; } pendingView = null; const c = capitalStar(); if (!c) return api.fit(o); flyTo(c.x, c.y, clamp(Math.max(W / 200, fitZ * 1.4), minZ, maxZ), !(o && o.animate === false)); return api; },
-      setRoutePreview(p) { routePrev = p ? { from: p.from, to: p.to, eta: p.eta, valid: p.valid !== false, reason: p.reason } : null; return api; },
+      setRoutePreview(p) { routePrev = p ? { from: p.from, to: p.to, eta: p.eta, valid: p.valid !== false, reason: p.reason, gate: !!p.gate, kind: p.kind || '' } : null; return api; },
       beginRoute(fid) { if (!FD.has(fid)) return api; if (selFleet !== fid) setSelFleet(fid, false); setRouteMode(fid); return api; },
       endRoute() { setRouteMode(null); return api; },
       highlightStars(ids, o) { hiSpec = ids && ids.length ? { ids: ids.slice(), col: o && o.color ? hex(o.color) : null } : null; return api; },

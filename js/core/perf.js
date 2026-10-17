@@ -2,7 +2,9 @@
 //   MOO.Perf.q            current quality knobs (read every frame, cheap):
 //       dpr (max devicePixelRatio for canvases), particles (×), planetDetail (×), gl (use WebGL2 renderers), bloom, nebula (×), glow (×), maxFx, animFps
 //   MOO.Perf.tier         'low' | 'medium' | 'high' | 'ultra'   (effective tier)        MOO.Perf.preset  'auto' | tier (user choice)
-//   MOO.Perf.fps / frameMs  smoothed frame stats          MOO.Perf.caps  probed capabilities
+//   MOO.Perf.fps / frameMs  smoothed frame stats   MOO.Perf.hz  display refresh estimate (UI.displayHz)   MOO.Perf.caps  probed capabilities
+//   Screens that draw slower than the loop gate with MOO.UI.pace(st, fps, dt) (even cadence at the nearest achievable rate), never with
+//   their own "accumulate and reset" timers.
 //   MOO.Perf.setPreset(p) · MOO.Perf.start() (called at boot) · MOO.Bus 'perf:tier' (tier, q) on change · F3 toggles the overlay
 // In 'auto' the tier starts from a hardware heuristic, then adapts: sustained slow frames drop a tier, sustained headroom raises one
 // (never above the heuristic cap + 1; never above the cap on a software GL renderer). Gfx modules must scale effort from MOO.Perf.q instead of hard-coding counts.
@@ -20,7 +22,7 @@
   const P = M.Perf = {
     TIERS, ORDER,
     tier: 'high', preset: 'auto', q: Object.assign({}, TIERS.high),
-    fps: 60, frameMs: 16.7, caps: null, cap: 'high', started: false, overlay: false,
+    fps: 60, frameMs: 16.7, hz: 60, caps: null, cap: 'high', started: false, overlay: false,
   };
 
   function probe() {
@@ -77,20 +79,30 @@
   // highest tier index 'auto' may climb to: heuristic cap + 1, except on a software GL renderer where the cap is final (raising to
   // 'medium' switches the GL renderers on, frames collapse, it drops back, and the cycle repeated every ~20 s)
   function maxTier() { const c = ORDER.indexOf(P.cap); return P.caps && P.caps.software ? c : c + 1; }
-  let acc = 0, n = 0, slowSecs = 0, fastSecs = 0, last = 0, cooldown = 0;
+  let acc = 0, n = 0, slowSecs = 0, fastSecs = 0, last = 0, cooldown = 0, secs = 0;
+  const failedAt = {};                             // tier -> second it was dropped from for slow frames (not climbed back into for RECLIMB_S)
+  const RECLIMB_S = 300;                           // a tier that failed is retried after five minutes, not twenty seconds: the old loop went
+  // medium → low (3 slow s) → medium (10 fast s: the loop runs at the display rate while screens draw at 30, so it always looks fast) → low …,
+  // the game alternating between two looks and two frame rates every ~20 s on a machine that is only a little too slow for the tier above
   function tick(dt) {
-    if (dt > 0.25 || dt <= 0) return;                // ignore hidden-tab gaps
+    const raw = M.UI && M.UI.rawDt > 0 ? M.UI.rawDt : dt;
+    if (raw > 0.25 || raw <= 0) return;              // ignore hidden-tab gaps and one-off stalls (shader links, warm-up) — the loop clamps dt to 0.1
     P.frameMs += (dt * 1000 - P.frameMs) * 0.08; P.fps = 1000 / P.frameMs;
+    P.hz = M.UI && M.UI.displayHz ? M.UI.displayHz() : 60;
     acc += dt; n++;
     if (acc < 1) return;
-    const avg = acc / n * 1000; acc = 0; n = 0;
+    const avg = acc / n * 1000; acc = 0; n = 0; secs++;
     if (cooldown > 0) cooldown--;
     if (P.preset !== 'auto') return;
-    const budget = 1000 / Math.min(P.q.animFps, 60);   // ms per frame we should hit
+    const budget = 1000 / Math.min(P.q.animFps, 60, P.hz || 60);   // ms per frame we should hit (a 30 Hz display is not slow frames)
     if (avg > budget * 1.35) { slowSecs++; fastSecs = 0; } else if (avg < budget * 0.55) { fastSecs++; slowSecs = 0; } else { slowSecs = 0; fastSecs = 0; }
     const i = ORDER.indexOf(P.tier);
-    if (slowSecs >= 3 && i > 0 && !cooldown) { apply(ORDER[i - 1], 'slow frames'); slowSecs = 0; cooldown = 6; }
-    else if (fastSecs >= 10 && i < maxTier() && i < ORDER.length - 1 && !cooldown) { apply(ORDER[i + 1], 'headroom'); fastSecs = 0; cooldown = 12; }
+    if (slowSecs >= 3 && i > 0 && !cooldown) { failedAt[P.tier] = secs; apply(ORDER[i - 1], 'slow frames'); slowSecs = 0; cooldown = 6; }
+    else if (fastSecs >= 10 && i < maxTier() && i < ORDER.length - 1 && !cooldown) {
+      const up = ORDER[i + 1];
+      if (failedAt[up] !== undefined && secs - failedAt[up] < RECLIMB_S) { fastSecs = 0; return; }
+      apply(up, 'headroom'); fastSecs = 0; cooldown = 12;
+    }
   }
 
   // ---- overlay (F3) ----------------------------------------------------------------------------
@@ -101,7 +113,7 @@
     if (!P.overlay) return;
     const w = M.Workers ? M.Workers.stats() : null, c = P.caps || {};
     ovEl.textContent =
-      `${P.fps.toFixed(0)} fps · ${P.frameMs.toFixed(1)} ms · tier ${P.tier}${P.preset === 'auto' ? ' (auto)' : ''}\n` +
+      `${P.fps.toFixed(0)} fps · ${P.frameMs.toFixed(1)} ms · display ${P.hz || 60} Hz · tier ${P.tier}${P.preset === 'auto' ? ' (auto)' : ''}${P.q.animFps < (P.hz || 60) ? ' · cap ' + P.q.animFps : ''}\n` +
       `GPU ${c.gpu || 'n/a'}${P.q.gl ? '' : ' [2D mode]'}\n` +
       `threads ${c.threads} · workers ${w ? w.size : 0}${w && w.inline ? ' (inline)' : ''} busy ${w ? w.busy : 0} q ${w ? w.queued : 0} · util ${w ? (w.utilisation * 100).toFixed(0) : 0}%\n` +
       `jobs ${w ? w.completed : 0} done · last batch ${w ? w.lastBatchN : 0}×${w ? w.lastBatchMs.toFixed(0) : 0}ms` + (performance.memory ? `\nheap ${(performance.memory.usedJSHeapSize / 1048576).toFixed(0)} MB` : '');

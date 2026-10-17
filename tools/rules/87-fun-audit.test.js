@@ -6,6 +6,7 @@ module.exports = function (M, t) {
   const me = S => S.empires[S.playerId];
   const R = S => M.RNG.bind(S.rs);
   const notices = (S, kind) => (S.ev || []).filter(e => e.type === 'notice' && e.kind === kind);
+  const meetAll = S => { for (const a of S.empires) for (const b of S.empires) if (a.id !== b.id) Sim.Diplo.rec(S, a.id, b.id).contact = true; };
 
   t.test('GNN: AI-vs-AI fleet kills, battles, first contacts, colonies and treaties are archived, never broadcast; wars are', () => {
     const S = game('gnn1');
@@ -16,7 +17,7 @@ module.exports = function (M, t) {
     Ev.push(S, { type: 'news', cat: 'napSigned', empire: 1, empire2: 2 });
     t.eq(N.compile(S, R(S)), null, 'nothing to broadcast');
     t.eq((S.newsLog || []).length, 5, 'all five archived');
-    Ev.push(S, { type: 'news', cat: 'warDeclared', empire: 1, empire2: 2 });
+    meetAll(S); Sim.Diplo.startWar(S, 1, 2, 'test');                                   // a real war between two AI empires the player has met
     Ev.push(S, { type: 'news', cat: 'fleetDestroyed', empire: 2, empire2: 1, star: 1, ships: 1 });
     const g = N.compile(S, R(S));
     t.ok(g && g.type === 'gnn', 'a war is news');
@@ -24,12 +25,13 @@ module.exports = function (M, t) {
     t.eq(S.newsLog.length, 7, 'both archived');
   });
 
-  t.test('GNN: an AI-vs-AI conquest is news, a conquest the human is party to is not (the ground scene already showed it)', () => {
+  t.test('GNN: conquests are archived, AI-vs-AI ones too (the empire falling is the news: empireDestroyed)', () => {
     const S = game('gnn2');
     Ev.push(S, { type: 'news', cat: 'invasionSuccess', empire: 1, empire2: 0, planet: me(S).capital });
     t.eq(N.compile(S, R(S)), null);
     Ev.push(S, { type: 'news', cat: 'invasionSuccess', empire: 1, empire2: 2, planet: S.empires[2].capital });
-    const g = N.compile(S, R(S)); t.ok(g && g.items.length === 1 && g.items[0].cat === 'invasionSuccess');
+    t.eq(N.compile(S, R(S)), null, 'AI-vs-AI conquest archived');
+    t.ok(S.newsLog.filter(n => n.cat === 'invasionSuccess').length === 2, 'both in the archive');
   });
 
   t.test('GNN: a category without a template uses the ready-made headline (random events of other empires reach the news)', () => {
@@ -56,8 +58,8 @@ module.exports = function (M, t) {
     const out2 = [];
     Sim.Events.start(S, R(S), 14, 1, S.planets[S.empires[1].capital], out2);              // 14 = rich minerals found on an AI homeworld
     t.eq(out2.length, 0, 'no card for another empire\'s event');
-    const g = N.compile(S, R(S));
-    t.ok(g && g.items.length === 1, 'but it is news'); t.ok(/mineral|rich/i.test(g.items[0].headline), g.items[0].headline);
+    t.eq(N.compile(S, R(S)), null, 'a local find on an AI world is archive material, not a newscast');
+    t.ok(S.newsLog.some(n => /mineral|rich/i.test(n.headline)), 'archived');
   });
 
   t.test('report: a colony filling up reports its population maximum once (the turn it crosses)', () => {

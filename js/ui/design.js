@@ -712,7 +712,7 @@
     try {
       const Sh = M.Gfx && M.Gfx.Ships;
       if (Sh && Sh.sprite) {
-        const px = [50, 74, 104, 144][hull] * (w / 90), sp = Sh.sprite(E.race, hull, px, bannerColor(E), flags || {}, vk || null);
+        const px = [50, 74, 104, 144][hull] * (w / 90), sp = Sh.sprite(E.race, hull, px, bannerColor(E), flags || {}, vk || null, '3q');   // the 3/4 render when the class has one
         const k = Math.min(1, (w * dpr - 6) / sp.width, (hh * dpr - 6) / sp.height), dw = sp.width * k, dh = sp.height * k;
         c.getContext('2d').drawImage(sp, (w * dpr - dw) / 2, (hh * dpr - dh) / 2, dw, dh);
       }
@@ -1178,8 +1178,8 @@
   function frame(dt, t) {
     if (!PV.cv || !st.draft || !PV.cv.offsetParent) return;
     const fps = (M.Perf && M.Perf.q && M.Perf.q.animFps) || 60;
-    PV.acc += dt; if (fps < 60 && PV.acc < 1 / fps - 0.002) return;
-    const step = Math.min(PV.acc, 0.1); PV.acc = 0;
+    if (!UI.pace(PV.pace || (PV.pace = {}), fps, dt)) return;
+    const step = Math.min(PV.pace.dt, 0.1);
     drawPreview(step, t);
   }
 
@@ -1211,7 +1211,7 @@
       ctx.save(); ctx.translate(cx, cy + bob); ctx.scale(sc, sc * TILT);
       // the look the design will get: the slot it will land in (target, else first free) + its name, so renaming re-rolls the variant
       const pslot = st.target >= 0 ? st.target : (E.designs || []).findIndex(x => !x), pk = vkey(E, pslot < 0 ? 0 : pslot, vd.name);
-      try { Sh.draw(ctx, { race: E.race, hull, x: 0, y: 0, size: target, angle: ang, color: col, t, thrust, flags, shield, cloaked: vs.cloak ? 0.28 : 0, shadow: false, seed: 3, vkey: pk }); } catch (e) { /* ignore */ }
+      try { Sh.draw(ctx, { race: E.race, hull, x: 0, y: 0, size: target, angle: ang, color: col, t, thrust, flags, shield, cloaked: vs.cloak ? 0.28 : 0, shadow: false, seed: 3, vkey: pk, view: '3q' }); } catch (e) { /* ignore */ }   // 3/4 beauty render when the class has one (else the top view turns with the drag)
       ctx.restore();
       ctx.drawImage(PV.scan, 0, 0, cw, ch);
       if (sc === 1) drawCallouts(ctx, Sh, E, vs, vd, hull, cx, cy + bob, target, ang, flags, TILT, t, cw, ch);
@@ -1237,7 +1237,7 @@
   }
 
   function drawCallouts(ctx, Sh, E, vs, vd, hull, cx, cy, size, ang, flags, TILT, t, cw, ch) {
-    let an; try { an = Sh.anchors({ race: E.race, hull, x: 0, y: 0, size, angle: ang, flags, color: PV.color }); } catch (e) { return; }
+    let an; try { an = Sh.anchors({ race: E.race, hull, x: 0, y: 0, size, angle: ang, flags, color: PV.color, view: '3q' }); } catch (e) { return; }
     const P = pt => ({ x: cx + pt.x, y: cy + pt.y * TILT });
     const items = [], fs = PV.fs;
     const pickAnchor = (arr, k) => (arr && arr.length ? arr[k % arr.length] : null);

@@ -174,8 +174,12 @@ label.check { display: inline-flex; align-items: center; gap: .5em; cursor: poin
 .panel.bronze, .panel.silver { /* variants are styled by the active theme */ }
 
 /* the control that answers the pending turn step (UI.attention): visible even when the eye is elsewhere */
-.btn.needs-answer { position:relative; box-shadow:0 0 0 2px rgba(232,200,80,.85), 0 0 18px rgba(232,200,80,.55); animation:needs-answer 1.1s ease-in-out infinite; }
-.btn.needs-answer:focus-visible { outline:2px solid #fff3c4; outline-offset:2px; }
-@keyframes needs-answer { 0%,100% { box-shadow:0 0 0 2px rgba(232,200,80,.85), 0 0 10px rgba(232,200,80,.35); } 50% { box-shadow:0 0 0 3px rgba(255,235,150,1), 0 0 26px rgba(232,200,80,.8); } }
-@media (prefers-reduced-motion: reduce) { .btn.needs-answer { animation:none; } }
+.needs-answer { box-shadow:0 0 0 2px rgba(255,214,90,.85), 0 0 16px 3px rgba(255,200,70,.5); animation:needs-answer 1.2s ease-in-out infinite; }
+.btn.needs-answer { position:relative; }
+.needs-answer:focus-visible { outline:2px solid #fff3c4; outline-offset:2px; }
+/* every option of a decision with no safe default: a softer, cooler pulse on all of them (UI.attentionGroup) */
+.needs-choice { box-shadow:0 0 0 1px rgba(150,210,255,.5); animation:needs-choice 1.7s ease-in-out infinite; }
+@keyframes needs-choice { 0%,100% { box-shadow:0 0 0 1px rgba(150,210,255,.35); } 50% { box-shadow:0 0 0 2px rgba(175,228,255,.85), 0 0 14px 2px rgba(120,200,255,.4); } }
+@keyframes needs-answer { 0%,100% { box-shadow:0 0 0 2px rgba(255,214,90,.8), 0 0 8px 1px rgba(255,200,70,.3); } 50% { box-shadow:0 0 0 3px rgba(255,242,175,1), 0 0 24px 7px rgba(255,205,80,.72); } }
+@media (prefers-reduced-motion: reduce) { .needs-answer, .needs-choice { animation:none; } }
 .gx-bar .btn.turn-locked { opacity:.45; pointer-events:none; }

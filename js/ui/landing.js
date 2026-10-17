@@ -386,35 +386,44 @@
 
   // ================================================================================================================================ 2. ground combat (invasion)
   const _sold = new Map();
-  // a tiny soldier on a unit square, baked at px × px; face = +1 looks right, -1 left; dead = grave marker
+  // a trooper as a photo-treated silhouette on a unit square, baked at px × px: near-black body with a faint team tint, a warm rim from the
+  // battlefield's key light (upper right of the ground-battle plate), a soft contact shadow and a little grain, so it sits in the plate instead of
+  // on it. face = +1 looks right, -1 left; dead = fallen figure.
   function soldierSprite(px, color, face, dead) {
     const key = px + '|' + color + '|' + face + '|' + (dead ? 1 : 0);
     let c = _sold.get(key); if (c) return c;
     c = document.createElement('canvas'); c.width = c.height = px;
     const g = c.getContext('2d'); g.scale(px, px);
-    if (dead) {
-      g.fillStyle = 'rgba(0,0,0,.4)'; g.beginPath(); g.ellipse(0.5, 0.78, 0.3, 0.1, 0, 0, TAU); g.fill();
-      g.strokeStyle = 'rgba(255,92,106,.78)'; g.lineWidth = 0.075; g.lineCap = 'round';
-      g.beginPath(); g.moveTo(0.3, 0.5); g.lineTo(0.7, 0.86); g.moveTo(0.7, 0.5); g.lineTo(0.3, 0.86); g.stroke();
-    } else {
-      if (face < 0) { g.translate(1, 0); g.scale(-1, 1); }
-      const dk = U.darken(color, 0.55), mid = U.darken(color, 0.12), hi = U.lighten(color, 0.55);
-      g.fillStyle = 'rgba(0,0,0,.4)'; g.beginPath(); g.ellipse(0.5, 0.94, 0.27, 0.05, 0, 0, TAU); g.fill();
-      g.fillStyle = dk; g.fillRect(0.33, 0.66, 0.14, 0.27); g.fillRect(0.53, 0.66, 0.14, 0.27);                                // legs
-      const tg = g.createLinearGradient(0.3, 0.4, 0.7, 0.7); tg.addColorStop(0, hi); tg.addColorStop(0.35, color); tg.addColorStop(1, dk);
-      g.fillStyle = tg; g.beginPath(); g.moveTo(0.3, 0.42); g.lineTo(0.7, 0.42); g.lineTo(0.77, 0.69); g.lineTo(0.23, 0.69); g.closePath(); g.fill();   // torso
-      g.strokeStyle = 'rgba(6,9,26,.8)'; g.lineWidth = 0.035; g.lineJoin = 'round'; g.stroke();
-      g.fillStyle = '#0c1130'; g.fillRect(0.5, 0.49, 0.43, 0.065);                                                               // rifle
-      g.fillStyle = mid; g.fillRect(0.52, 0.505, 0.3, 0.035);
-      g.fillStyle = '#e8e2cc'; g.beginPath(); g.arc(0.5, 0.27, 0.14, 0, TAU); g.fill();                                          // head
-      g.fillStyle = color; g.beginPath(); g.arc(0.5, 0.25, 0.155, PI, TAU); g.closePath(); g.fill();                              // helmet
-      g.strokeStyle = 'rgba(6,9,26,.85)'; g.lineWidth = 0.03; g.beginPath(); g.arc(0.5, 0.27, 0.15, 0, TAU); g.stroke();
-      g.fillStyle = hi; g.fillRect(0.4, 0.17, 0.1, 0.03);
-    }
+    if (face < 0) { g.translate(1, 0); g.scale(-1, 1); }
+    const body = U.darken(color, 0.86), tint = U.darken(color, 0.55), rim = '#ffb784';
+    const shade = (y, rx, ry, a) => { g.fillStyle = 'rgba(0,0,0,' + a + ')'; g.beginPath(); g.ellipse(0.5, y, rx, ry, 0, 0, TAU); g.fill(); };
+    const figure = (gg) => {                                                        // standing trooper, built once and stamped twice (rim pass + body pass)
+      gg.beginPath();
+      gg.moveTo(0.44, 0.93); gg.lineTo(0.47, 0.70); gg.lineTo(0.36, 0.70); gg.lineTo(0.37, 0.93); gg.lineTo(0.30, 0.93); gg.lineTo(0.29, 0.66);      // left leg
+      gg.lineTo(0.27, 0.44); gg.lineTo(0.40, 0.40); gg.lineTo(0.41, 0.33); gg.lineTo(0.50, 0.28); gg.lineTo(0.59, 0.33); gg.lineTo(0.60, 0.40);    // torso + neck
+      gg.lineTo(0.73, 0.46); gg.lineTo(0.90, 0.50); gg.lineTo(0.90, 0.54); gg.lineTo(0.72, 0.56); gg.lineTo(0.70, 0.66); gg.lineTo(0.70, 0.93);    // rifle arm, right leg
+      gg.lineTo(0.63, 0.93); gg.lineTo(0.62, 0.70); gg.lineTo(0.53, 0.70); gg.lineTo(0.51, 0.93); gg.closePath();
+      gg.moveTo(0.50, 0.30); gg.arc(0.50, 0.21, 0.11, 0, TAU);                                                                                         // helmet
+    };
+    const fallen = (gg) => {                                                        // on the ground, seen from the side
+      gg.beginPath(); gg.moveTo(0.12, 0.86); gg.lineTo(0.30, 0.80); gg.lineTo(0.55, 0.78); gg.lineTo(0.78, 0.74); gg.lineTo(0.88, 0.78); gg.lineTo(0.86, 0.88); gg.lineTo(0.12, 0.90); gg.closePath();
+      gg.moveTo(0.97, 0.80); gg.arc(0.90, 0.80, 0.075, 0, TAU);
+    };
+    const shape = dead ? fallen : figure;
+    shade(dead ? 0.90 : 0.945, dead ? 0.42 : 0.22, dead ? 0.045 : 0.035, 0.45);        // contact shadow
+    g.save(); g.translate(0.028, -0.022); g.fillStyle = rim; g.globalAlpha = dead ? 0.55 : 0.8; shape(g); g.fill('evenodd'); g.restore();   // warm rim, upper right
+    g.fillStyle = body; shape(g); g.fill('evenodd');
+    g.save(); g.clip(); g.fillStyle = tint; g.globalAlpha = 0.5; shape(g);          // faint team tint on the lit half
+    const tg = g.createLinearGradient(0.3, 0.8, 0.8, 0.3); tg.addColorStop(0, 'rgba(0,0,0,0)'); tg.addColorStop(1, tint); g.fillStyle = tg; g.fillRect(0, 0, 1, 1);
+    if (!dead) { g.fillStyle = color; g.globalAlpha = 0.55; g.fillRect(0.40, 0.40, 0.10, 0.05); }                                                  // shoulder patch
+    const n = max(6, (px * px * 0.02) | 0), r1 = rng32(hashStr(key));            // 2 % grain
+    for (let i = 0; i < n; i++) { g.fillStyle = r1() < 0.5 ? 'rgba(255,255,255,.22)' : 'rgba(0,0,0,.3)'; g.fillRect(r1(), r1(), 1.2 / px, 1.2 / px); }
+    g.restore();
     _sold.set(key, c); if (_sold.size > 90) _sold.delete(_sold.keys().next().value);
     return c;
   }
-  const PER_ROW = 15;
+  const FIG_CAP = 24;                                 // figures shown per side (the readouts carry the exact numbers)
+  const PER_ROW = 8;
 
   MAKERS.ground = function (H, d, run) {
     const S = G.S, R = d.result, rebel = !!R.rebellion;
@@ -442,10 +451,11 @@
     const shipSize = () => clamp(Host.h * 0.1 * (ns > 14 ? 0.8 : 1), 28, 120);
 
     // ---- soldier grids (structure of arrays: no allocation per frame) -------------------------------------------------------------------------------
-    const nA = a0, nD = d0, deadA = new Uint8Array(nA), deadD = new Uint8Array(nD), flashA = new Float32Array(nA), flashD = new Float32Array(nD);
-    const PA = { x: new Float32Array(nA), y: new Float32Array(nA) }, PD = { x: new Float32Array(nD), y: new Float32Array(nD) };
-    const ordA = Array.from({ length: nA }, (_, i) => i).sort(() => rnd() - 0.5), ordD = Array.from({ length: nD }, (_, i) => i).sort(() => rnd() - 0.5);
-    let killedA = 0, killedD = 0;
+    const nA = a0, nD = d0, fA = min(nA, FIG_CAP), fD = min(nD, FIG_CAP);                  // real counts / figures drawn
+    const deadA = new Uint8Array(fA), deadD = new Uint8Array(fD), flashA = new Float32Array(fA), flashD = new Float32Array(fD);
+    const PA = { x: new Float32Array(fA), y: new Float32Array(fA) }, PD = { x: new Float32Array(fD), y: new Float32Array(fD) };
+    const ordA = Array.from({ length: fA }, (_, i) => i).sort(() => rnd() - 0.5), ordD = Array.from({ length: fD }, (_, i) => i).sort(() => rnd() - 0.5);
+    let killedA = 0, killedD = 0, lostA = 0, lostD = 0;                                   // figures fallen / real troopers lost
     const L = { def: { x: 0, y: 0, w: 1, h: 1 }, att: { x: 0, y: 0, w: 1, h: 1 }, cell: 20 };
     const tracers = { n: 0, d: new Float32Array(6 * 48) };
 
@@ -467,7 +477,7 @@
     const showHeads = () => { for (const e of [hdDef, hdAtt, ftDef, ftAtt]) e.classList.add('on'); };
 
     function setNums() {
-      const aLeft = nA - killedA, dLeft = nD - killedD;
+      const aLeft = nA - lostA, dLeft = nD - lostD;
       nAttEl.innerHTML = aLeft + '<small>' + plural(aLeft, 'trooper') + '</small>'; nDefEl.innerHTML = dLeft + '<small>' + plural(dLeft, 'trooper') + '</small>';
     }
     function setHud() {
@@ -528,7 +538,7 @@
       for (let i = 0; i < shipsT.length; i++) {
         const s = shipsT[i]; if (s.dead) continue;
         const u = phase === 'intro' ? 0 : phase === 'land' ? 1 : clamp((ph0 - s.delay) / DESC, 0, 1), q = shipPos(s, u);
-        try { Sh.draw(ctx, { race: AT.race, hull: ns > 14 ? 0 : 1, x: q.x, y: q.y, size, angle: PI / 2, color: AT.color, t: tl + i, thrust: 1 - u * 0.85, flags: { troops: true } }); } catch (e) { warnOnce('ships', e); }
+        try { Sh.draw(ctx, { race: AT.race, hull: ns > 14 ? 0 : 1, x: q.x, y: q.y, size, angle: PI / 2, view: '3q', color: AT.color, t: tl + i, thrust: 1 - u * 0.85, flags: { troops: true } }); } catch (e) { warnOnce('ships', e); }
       }
       ctx.globalAlpha = 1;
     }
@@ -540,7 +550,7 @@
         const rows = ceil(n / PER_ROW);
         for (let i = 0; i < n; i++) { const col = i % PER_ROW, row = (i / PER_ROW) | 0; Pn.x[i] = right ? r.x + r.w - pad - (col + 1) * cell : r.x + pad + col * cell; Pn.y[i] = r.y + (r.h - rows * cell) / 2 + row * cell; }
       };
-      fill(PD, L.def, nD, false); fill(PA, L.att, nA, true);
+      fill(PD, L.def, fD, false); fill(PA, L.att, fA, true);
     }
     function kill(sideId, idx, quiet) {
       const dead = sideId === 'a' ? deadA : deadD; if (dead[idx]) return; dead[idx] = 1;
@@ -550,13 +560,15 @@
     }
     function applyStep(k, quiet) {
       k = clamp(k | 0, 0, steps); const r = rounds[k];
-      const wantA = nA - clamp(r.a | 0, 0, nA), wantD = nD - clamp(r.d | 0, 0, nD);
-      while (killedA < wantA && killedA < nA) { kill('a', ordA[killedA], quiet); killedA++; }
-      while (killedD < wantD && killedD < nD) { kill('d', ordD[killedD], quiet); killedD++; }
+      lostA = nA - clamp(r.a | 0, 0, nA); lostD = nD - clamp(r.d | 0, 0, nD);
+      const figs = (lost, n, f) => (lost <= 0 ? 0 : lost >= n ? f : clamp(round(lost / n * f), 1, f - 1));   // figures fallen for the real losses
+      const wantA = figs(lostA, nA, fA), wantD = figs(lostD, nD, fD);
+      while (killedA < wantA && killedA < fA) { kill('a', ordA[killedA], quiet); killedA++; }
+      while (killedD < wantD && killedD < fD) { kill('d', ordD[killedD], quiet); killedD++; }
       setNums();
     }
     function aliveIdx(sideId) {
-      const dead = sideId === 'a' ? deadA : deadD, n = sideId === 'a' ? nA : nD;
+      const dead = sideId === 'a' ? deadA : deadD, n = sideId === 'a' ? fA : fD;
       if (!n) return -1;
       for (let tries = 0; tries < 8; tries++) { const i = (rnd() * n) | 0; if (!dead[i]) return i; }
       for (let i = 0; i < n; i++) if (!dead[i]) return i;
@@ -579,8 +591,8 @@
       if (ph0 >= TIME.fight) { applyStep(steps, false); go('hold'); }
     }
     function decayFlashes(dt) {
-      for (let i = 0; i < nA; i++) if (flashA[i] > 0) flashA[i] = max(0, flashA[i] - dt * 3);
-      for (let i = 0; i < nD; i++) if (flashD[i] > 0) flashD[i] = max(0, flashD[i] - dt * 3);
+      for (let i = 0; i < fA; i++) if (flashA[i] > 0) flashA[i] = max(0, flashA[i] - dt * 3);
+      for (let i = 0; i < fD; i++) if (flashD[i] > 0) flashD[i] = max(0, flashD[i] - dt * 3);
       const dd = tracers.d;
       for (let i = tracers.n - 1; i >= 0; i--) { const o = i * 6; dd[o + 4] += dt * dd[o + 5]; if (dd[o + 4] >= 1) { tracers.n--; const l = tracers.n * 6; for (let j = 0; j < 6; j++) dd[o + j] = dd[l + j]; } }
     }
@@ -594,12 +606,12 @@
       ctx.restore();
     }
     function drawGrid(ctx, Pn, n, dead, flash, col, face, t) {
-      const cell = L.cell, px = max(8, round(cell * Host.dpr * 1.1)), alive = soldierSprite(px, col, face, false), grave = soldierSprite(px, col, face, true);
-      const sz = cell * 0.98, ox = (cell - sz) / 2;
+      const cell = L.cell, sz = cell * 0.62, px = max(8, round(sz * Host.dpr * 1.1)), alive = soldierSprite(px, col, face, false), grave = soldierSprite(px, col, face, true);
+      const ox = (cell - sz) / 2, oy = cell - sz - 1;                                     // figures stand on the lower edge of their cell
       for (let i = 0; i < n; i++) {
         const x = Pn.x[i], y = Pn.y[i];
-        if (dead[i]) { ctx.globalAlpha *= 0.85; ctx.drawImage(grave, x + ox, y + ox, sz, sz); ctx.globalAlpha /= 0.85; continue; }
-        ctx.drawImage(alive, x + ox, y + ox + sin(t * 2.6 + i * 1.7) * cell * 0.015, sz, sz);
+        if (dead[i]) { ctx.globalAlpha *= 0.7; ctx.drawImage(grave, x + ox, y + oy, sz, sz); ctx.globalAlpha /= 0.7; continue; }
+        ctx.drawImage(alive, x + ox, y + oy + sin(t * 2.6 + i * 1.7) * cell * 0.012, sz, sz);
         if (flash[i] > 0.02) {
           const mx = x + cell * (face > 0 ? 0.92 : 0.08), my = y + cell * 0.52, ga = ctx.globalAlpha;
           ctx.save(); ctx.globalCompositeOperation = 'lighter'; ctx.globalAlpha = ga * flash[i];
@@ -611,7 +623,7 @@
       const a = panelA, t = tl;
       panelFrame(ctx, L.def, DF.color, a); panelFrame(ctx, L.att, AT.color, a);
       ctx.globalAlpha = a;
-      drawGrid(ctx, PD, nD, deadD, flashD, DF.color, 1, t); drawGrid(ctx, PA, nA, deadA, flashA, AT.color, -1, t);
+      drawGrid(ctx, PD, fD, deadD, flashD, DF.color, 1, t); drawGrid(ctx, PA, fA, deadA, flashA, AT.color, -1, t);
       ctx.globalAlpha = 1;
       if (tracers.n) {
         ctx.save(); ctx.globalCompositeOperation = 'lighter'; ctx.lineCap = 'round'; ctx.lineWidth = 1.4;
@@ -702,8 +714,8 @@
       layout(w, hh) {
         // two panels facing each other; each hugs its grid (15 soldiers per row), both centred on the same band of the screen
         const m = w * 0.045, gap = w * 0.07, pw = (w - 2 * m - gap) / 2, stageTop = hh * 0.225, stageBot = hh * 0.62, pad = 10;
-        const rows = ceil(max(nA, nD, 1) / PER_ROW);
-        L.cell = floor(clamp(min((pw - 2 * pad) / PER_ROW, (stageBot - stageTop - 2 * pad) / max(rows, 3)), 8, 60));
+        const rows = ceil(max(fA, fD, 1) / PER_ROW);
+        L.cell = floor(clamp(min((pw - 2 * pad) / PER_ROW, (stageBot - stageTop - 2 * pad) / max(rows, 3)), 8, 46));
         const gw = PER_ROW * L.cell + 2 * pad, gh = max(rows, 3) * L.cell + 2 * pad, top = stageTop + (stageBot - stageTop - gh) / 2;
         L.def = { x: w / 2 - gap / 2 - gw, y: top, w: gw, h: gh }; L.att = { x: w / 2 + gap / 2, y: top, w: gw, h: gh };
         layoutSoldiers();
@@ -793,7 +805,7 @@
     for (let i = 0; i < cnt; i++) {
       const a = -PI * (0.62 - 0.28 * (cnt === 1 ? 0.5 : i / (cnt - 1))) - 0.08, rr = pl.r * (1.2 + 0.05 * sin(t * 0.6 + i)), x = pl.x + cos(a) * rr + sin(t * 0.5 + i) * 4, y = pl.y + sin(a) * rr + cos(t * 0.7 + i * 2) * 3;
       pts.push({ x, y });
-      if (Sh) { try { Sh.draw(ctx, { race, hull: 2, x, y, size: clamp(pl.r * 0.16, 26, 90), angle: atan2(pl.y - y, pl.x - x), color, t: t + i, thrust: 0.25, flags: { bomb: true } }); } catch (e) { warnOnce('ships', e); } }
+      if (Sh) { try { Sh.draw(ctx, { race, hull: 2, x, y, size: clamp(pl.r * 0.16, 26, 90), angle: atan2(pl.y - y, pl.x - x), view: '3q', color, t: t + i, thrust: 0.25, flags: { bomb: true } }); } catch (e) { warnOnce('ships', e); } }
     }
     return pts;
   }
@@ -832,15 +844,26 @@
       draw(ctx, w, hh) {
         const info = bombBackdrop(ctx, w, hh, tl, Object.assign({ planet: { desc: planetDesc(P, VI), size: 1.08, x: 0.27, y: 1.0 } }, bg)), pl = info.planet;
         drawBombers(ctx, pl, pv.ships || 3, EI.race, EI.color, tl);
-        if (pl) {                                                           // targeting reticle over the planet
-          const rr = pl.r, cx = pl.x, cy = pl.y, a = tl * 0.35;
-          ctx.save(); ctx.strokeStyle = 'rgba(255,92,106,.7)'; ctx.lineWidth = 2; ctx.setLineDash([10, 8]); ctx.lineDashOffset = -tl * 14;
-          ctx.beginPath(); ctx.arc(cx, cy, rr * 1.02, PI * 1.04, PI * 1.96); ctx.stroke(); ctx.setLineDash([]);
-          ctx.lineWidth = 3; ctx.strokeStyle = 'rgba(255,200,150,.9)';
-          for (let k = 0; k < 4; k++) { const aa = a + k * PI / 2 - PI / 2; if (cy + sin(aa) * rr * 1.12 < cy + 4) { ctx.beginPath(); ctx.arc(cx, cy, rr * 1.12, aa - 0.06, aa + 0.06); ctx.stroke(); } }
-          const ta = -PI * 0.55 + sin(tl * 0.9) * 0.4, sx = cx + cos(ta) * rr * 0.98, sy = cy + sin(ta) * rr * 0.98;
-          ctx.strokeStyle = 'rgba(255,92,106,.85)'; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.arc(sx, sy, 18, 0, TAU);
-          ctx.moveTo(sx - 28, sy); ctx.lineTo(sx - 10, sy); ctx.moveTo(sx + 10, sy); ctx.lineTo(sx + 28, sy); ctx.moveTo(sx, sy - 28); ctx.lineTo(sx, sy - 10); ctx.moveTo(sx, sy + 10); ctx.lineTo(sx, sy + 28); ctx.stroke();
+        if (pl) {
+          const rr = pl.r, cx = pl.x, cy = pl.y, shielded = (pv.shield | 0) > 0, sc = shielded ? VI.color : '#cfd8ff';
+          ctx.save(); ctx.globalCompositeOperation = 'lighter';
+          // the shield as a limb glow hugging the planet's edge (banner-tinted when a shield is up, a faint neutral haze otherwise)
+          const pulse = shielded ? 0.75 + 0.25 * sin(tl * 1.7) : 0.5, g1 = ctx.createRadialGradient(cx, cy, rr * 0.982, cx, cy, rr * (shielded ? 1.035 : 1.022));
+          g1.addColorStop(0, rgba(sc, 0)); g1.addColorStop(0.4, rgba(sc, (shielded ? 0.34 : 0.14) * pulse)); g1.addColorStop(0.62, rgba(sc, (shielded ? 0.14 : 0.05) * pulse)); g1.addColorStop(1, rgba(sc, 0));
+          ctx.fillStyle = g1; ctx.beginPath(); ctx.arc(cx, cy, rr * 1.1, PI, TAU); ctx.lineTo(cx + rr * 1.1, cy); ctx.closePath(); ctx.fill();
+          if (shielded) {                                                            // ripples where the bombs strike the field
+            for (let k = 0; k < 3; k++) { const ph = ((tl * 0.45 + k * 0.37) % 1), aa = -PI * (0.3 + 0.17 * k) + sin(tl * 0.3 + k) * 0.08, px = cx + cos(aa) * rr, py = cy + sin(aa) * rr, rad = rr * (0.03 + 0.12 * ph);
+              ctx.strokeStyle = rgba(sc, 0.5 * (1 - ph)); ctx.lineWidth = 2.2 * (1 - ph) + 0.4; ctx.beginPath(); ctx.arc(px, py, rad, 0, TAU); ctx.stroke(); }
+          }
+          // the targeting reticle: a lit ring with ticks and a soft bloom, sweeping the upper limb
+          const ta = -PI * 0.55 + sin(tl * 0.9) * 0.4, sx = cx + cos(ta) * rr * 0.98, sy = cy + sin(ta) * rr * 0.98, spin = tl * 0.6, R0 = 20;
+          ctx.shadowColor = 'rgba(255,120,90,.9)'; ctx.shadowBlur = 14; ctx.strokeStyle = 'rgba(255,150,120,.95)'; ctx.lineWidth = 1.6;
+          ctx.beginPath(); ctx.arc(sx, sy, R0, 0, TAU); ctx.stroke();
+          ctx.lineWidth = 2.2; ctx.beginPath();
+          for (let k = 0; k < 4; k++) { const aa = spin + k * PI / 2; ctx.moveTo(sx + cos(aa) * (R0 + 4), sy + sin(aa) * (R0 + 4)); ctx.lineTo(sx + cos(aa) * (R0 + 12), sy + sin(aa) * (R0 + 12)); }
+          ctx.stroke();
+          ctx.shadowBlur = 0; ctx.fillStyle = 'rgba(255,230,200,.9)'; ctx.beginPath(); ctx.arc(sx, sy, 1.8, 0, TAU); ctx.fill();
+          const g2 = ctx.createRadialGradient(sx, sy, 0, sx, sy, R0 * 2.2); g2.addColorStop(0, 'rgba(255,110,80,.28)'); g2.addColorStop(1, 'rgba(255,110,80,0)'); ctx.fillStyle = g2; ctx.fillRect(sx - R0 * 2.2, sy - R0 * 2.2, R0 * 4.4, R0 * 4.4);
           ctx.restore();
         }
         vignette(ctx, w, hh, 0.45);
@@ -998,6 +1021,7 @@
   // ================================================================================================================================ 4. event presentations ({type:'event'} interrupts of Sim.Events → flow.js H.event)
   const EVENT_ICON = { plague: 'plague', quake: 'warning', nova: 'nova', accident: 'warning', assassin: 'war', virus: 'warning', comet: 'nova', pirates: 'pirate', derelict: 'artifact', rebellion: 'rebel', crystal: 'monster', amoeba: 'monster', enviro: 'planet', rich: 'minerals', support: 'money', poor: 'minerals' };
   const EVENT_TITLE = { plague: 'Plague', quake: 'Earthquake', nova: 'Supernova', accident: 'Industrial accident', assassin: 'Assassination', virus: 'Computer virus', comet: 'Comet', pirates: 'Space pirates', derelict: 'Ancient derelict', rebellion: 'Rebellion', crystal: 'Space crystal', amoeba: 'Space amoeba', enviro: 'Fertile soil', rich: 'Rich minerals', support: 'Donation', poor: 'Depleted minerals' };
+  const EVENT_ART = { plague: 'plague', comet: 'comet', pirates: 'pirates', rebellion: 'rebellion', nova: 'nova', crystal: 'devastated', amoeba: 'devastated' };   // WorldArt event plates
   const BAD_EVENTS = { plague: 1, quake: 1, nova: 1, accident: 1, assassin: 1, virus: 1, comet: 1, pirates: 1, rebellion: 1, crystal: 1, amoeba: 1, poor: 1 };
   UI.Events = {
     // a notice card for one event; plague / supernova cards offer to pay toward the cure from the reserve (order eventCure)
@@ -1007,8 +1031,11 @@
       const bad = !!BAD_EVENTS[it.kind] && !ended, buttons = [{ label: 'Continue', value: true, primary: true }];
       if (p && p.event && (it.kind === 'plague' || it.kind === 'nova') && p.owner === S.playerId && (G.player().bc | 0) > 0) buttons.unshift({ label: 'Pay toward the cure', value: 'cure' });
       sfx(bad ? 'alert' : 'confirm', { vol: 0.7 });
-      return UI.modal({ title: (EVENT_TITLE[it.kind] || 'Event') + (p ? ' — ' + planetName(S, p) : ''), cls: 'ld-event', width: '30rem', buttons,
-        body: h('div', { style: { display: 'flex', gap: '.8rem', alignItems: 'flex-start' } }, h('div', { style: { color: bad ? 'var(--rose)' : 'var(--leaf)', width: '2.6rem', height: '2.6rem', flex: 'none' } }, UI.icon(EVENT_ICON[it.kind] || 'event')), h('p', { style: { lineHeight: 1.45, margin: 0 } }, it.text || '')) })
+      const WA = M.Gfx && M.Gfx.WorldArt, apath = WA && WA.enabled && EVENT_ART[it.kind] && (it.stage === 'destroyed' ? WA.event('planet-destroyed') : WA.event(EVENT_ART[it.kind]));
+      const plate = apath ? h('div', { style: { margin: '-.2rem 0 .8rem', borderRadius: '2px', overflow: 'hidden', boxShadow: '0 0 0 1px rgba(0,0,0,.6), 0 6px 18px rgba(0,0,0,.45)', aspectRatio: '460 / 200', background: '#05070f' } },
+        Object.assign(WA.canvas(apath, 920, 400, { fx: 0.5, fy: 0.45 }), { style: 'display:block;width:100%;height:100%' })) : null;
+      return UI.modal({ title: (EVENT_TITLE[it.kind] || 'Event') + (p ? ' — ' + planetName(S, p) : ''), cls: 'ld-event', width: apath ? '32rem' : '30rem', buttons,
+        body: h('div', plate, h('div', { style: { display: 'flex', gap: '.8rem', alignItems: 'flex-start' } }, h('div', { style: { color: bad ? 'var(--rose)' : 'var(--leaf)', width: '2.6rem', height: '2.6rem', flex: 'none' } }, UI.icon(EVENT_ICON[it.kind] || 'event')), h('p', { style: { lineHeight: 1.45, margin: 0 } }, it.text || ''))) })
         .then(v => { if (v === 'cure' && p) G.order({ t: 'eventCure', planet: p.id }); return v; });
     },
   };

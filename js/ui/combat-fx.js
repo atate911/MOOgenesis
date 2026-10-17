@@ -103,28 +103,66 @@
     g.save(); g.translate(px * 0.04, px * 0.06); path(); g.fillStyle = 'rgba(0,0,8,0.4)'; g.filter = 'blur(' + (px * 0.03) + 'px)'; g.fill(); g.restore();
     g.filter = 'none';
     path();
-    const body = g.createRadialGradient(cx - r0 * 0.4, cy - r0 * 0.45, r0 * 0.1, cx, cy, r0 * 1.45);
-    body.addColorStop(0, '#c2bcc4'); body.addColorStop(0.3, '#8d8892'); body.addColorStop(0.7, '#4a4754'); body.addColorStop(1, '#1e1c27');
+    const body = g.createRadialGradient(cx - r0 * 0.45, cy - r0 * 0.5, r0 * 0.08, cx, cy, r0 * 1.4);   // darker, rock-brown, higher contrast (the fallback until the rock cutouts land)
+    body.addColorStop(0, '#9c9190'); body.addColorStop(0.28, '#625a5c'); body.addColorStop(0.66, '#2d2a30'); body.addColorStop(1, '#0d0c12');
     g.fillStyle = body; g.fill();
     g.save(); path(); g.clip();
-    for (let i = 0; i < 5; i++) {                                             // craters
-      const a = R() * TAU, d = R() * r0 * 0.6, x = cx + cos(a) * d, y = cy + sin(a) * d, rr = r0 * (0.1 + R() * 0.15);
-      const cg = g.createRadialGradient(x - rr * 0.2, y - rr * 0.2, rr * 0.1, x, y, rr);
-      cg.addColorStop(0, 'rgba(10,8,16,0.55)'); cg.addColorStop(0.75, 'rgba(10,8,16,0.25)'); cg.addColorStop(1, 'rgba(255,255,255,0.18)');
-      g.fillStyle = cg; g.beginPath(); g.ellipse(x, y, rr, rr * 0.82, 0.4, 0, TAU); g.fill();
+    for (let i = 0; i < 9; i++) {                                             // craters: shadowed bowl, lit far rim
+      const a = R() * TAU, d = R() * r0 * 0.7, x = cx + cos(a) * d, y = cy + sin(a) * d, rr = r0 * (0.07 + R() * 0.16);
+      const cg = g.createRadialGradient(x - rr * 0.25, y - rr * 0.25, rr * 0.05, x, y, rr);
+      cg.addColorStop(0, 'rgba(6,5,10,0.7)'); cg.addColorStop(0.7, 'rgba(6,5,10,0.3)'); cg.addColorStop(0.92, 'rgba(255,240,225,0.22)'); cg.addColorStop(1, 'rgba(255,240,225,0)');
+      g.fillStyle = cg; g.beginPath(); g.ellipse(x, y, rr, rr * 0.8, 0.4, 0, TAU); g.fill();
     }
-    for (let i = 0; i < 70; i++) { g.fillStyle = 'rgba(' + (R() < 0.5 ? '255,255,255' : '0,0,0') + ',' + (0.03 + R() * 0.08).toFixed(3) + ')'; const s = 0.6 + R() * 1.6; g.fillRect(cx + (R() - 0.5) * r0 * 2, cy + (R() - 0.5) * r0 * 2, s, s); }
+    for (let i = 0; i < 110; i++) { g.fillStyle = 'rgba(' + (R() < 0.45 ? '255,240,225' : '0,0,0') + ',' + (0.04 + R() * 0.1).toFixed(3) + ')'; const s = 0.6 + R() * 1.8; g.fillRect(cx + (R() - 0.5) * r0 * 2, cy + (R() - 0.5) * r0 * 2, s, s); }
     const hi = g.createLinearGradient(cx - r0, cy - r0, cx + r0 * 0.3, cy + r0 * 0.3);
-    hi.addColorStop(0, 'rgba(255,245,230,0.34)'); hi.addColorStop(0.5, 'rgba(255,245,230,0.04)'); hi.addColorStop(1, 'rgba(0,0,20,0.35)');
+    hi.addColorStop(0, 'rgba(255,240,220,0.3)'); hi.addColorStop(0.5, 'rgba(255,240,220,0.02)'); hi.addColorStop(1, 'rgba(0,0,12,0.5)');
     g.fillStyle = hi; g.fillRect(0, 0, px, px);
     g.restore();
     path();
     const rim = g.createLinearGradient(cx - r0, cy - r0, cx + r0, cy + r0);
-    rim.addColorStop(0, 'rgba(255,240,220,0.5)'); rim.addColorStop(0.5, 'rgba(255,255,255,0.05)'); rim.addColorStop(1, 'rgba(0,0,0,0.6)');
+    rim.addColorStop(0, 'rgba(255,236,214,0.55)'); rim.addColorStop(0.5, 'rgba(255,255,255,0.03)'); rim.addColorStop(1, 'rgba(0,0,0,0.75)');
     g.lineWidth = max(1, px * 0.012); g.strokeStyle = rim; g.stroke();
     rockCache.set(key, c);
     return c;
   }
+  // rendered rock / debris / base cutouts (assets/art/fx/*, batch 4) — null until they exist, so every caller keeps its drawn sprite
+  const WAfx = name => { const WA = G.WorldArt; if (!WA || !WA.enabled) return null; const p = WA.fx(name); return p ? WA.get(p) : null; };
+
+  // orbital missile platform: a lit ring sprite (dark disc, bright rim, nav lights in the banner colour), cached per size + colour
+  const baseCache = new Map();
+  function baseSprite(px, color, dpr) {
+    const key = px + '|' + color + '|' + dpr;
+    let c = baseCache.get(key);
+    if (c) return c;
+    if (baseCache.size > 24) baseCache.clear();
+    const S = max(8, Math.ceil(px * dpr));
+    c = mk(S, S);
+    const g = c.getContext('2d'), r = px * 0.44, cx = px / 2, cy = px / 2, rgb = hexRgb(color);
+    g.scale(S / px, S / px);
+    g.save(); g.filter = 'blur(' + (px * 0.05) + 'px)'; g.fillStyle = 'rgba(0,0,8,0.5)'; g.beginPath(); g.arc(cx + px * 0.04, cy + px * 0.06, r, 0, TAU); g.fill(); g.restore();
+    const body = g.createRadialGradient(cx - r * 0.4, cy - r * 0.45, r * 0.1, cx, cy, r);
+    body.addColorStop(0, '#6c747e'); body.addColorStop(0.55, '#2c3139'); body.addColorStop(1, '#0d1016');
+    g.fillStyle = body; g.beginPath(); g.arc(cx, cy, r, 0, TAU); g.fill();
+    for (let i = 0; i < 6; i++) {                                              // silo covers
+      const a = i / 6 * TAU + 0.3, x = cx + cos(a) * r * 0.55, y = cy + sin(a) * r * 0.55;
+      g.fillStyle = 'rgba(8,10,16,0.7)'; g.beginPath(); g.arc(x, y, r * 0.16, 0, TAU); g.fill();
+      g.strokeStyle = 'rgba(200,210,224,0.35)'; g.lineWidth = max(0.6, px * 0.01); g.stroke();
+    }
+    g.fillStyle = 'rgba(20,24,32,0.9)'; g.beginPath(); g.arc(cx, cy, r * 0.22, 0, TAU); g.fill();
+    const rim = g.createLinearGradient(cx - r, cy - r, cx + r, cy + r);
+    rim.addColorStop(0, 'rgba(255,245,230,0.75)'); rim.addColorStop(0.5, 'rgba(180,200,220,0.12)'); rim.addColorStop(1, 'rgba(0,0,0,0.7)');
+    g.lineWidth = max(1, px * 0.03); g.strokeStyle = rim; g.beginPath(); g.arc(cx, cy, r - g.lineWidth / 2, 0, TAU); g.stroke();
+    g.globalCompositeOperation = 'lighter';
+    for (let i = 0; i < 4; i++) {                                              // nav lights in the banner colour
+      const a = i / 4 * TAU + 0.78, x = cx + cos(a) * r * 0.9, y = cy + sin(a) * r * 0.9, gr = g.createRadialGradient(x, y, 0, x, y, r * 0.2);
+      gr.addColorStop(0, 'rgba(255,255,255,0.95)'); gr.addColorStop(0.25, 'rgba(' + rgb.join(',') + ',0.8)'); gr.addColorStop(1, 'rgba(' + rgb.join(',') + ',0)');
+      g.fillStyle = gr; g.beginPath(); g.arc(x, y, r * 0.2, 0, TAU); g.fill();
+    }
+    baseCache.set(key, c);
+    return c;
+  }
+  const LIMB = { inferno: '#ff9a50', toxic: '#b0ff70', radiated: '#ffd070', desert: '#ffd9a0', arid: '#ffd9a0', steppe: '#f0e0b0', ocean: '#8fd0ff', terran: '#8fd0ff', jungle: '#9fe0b0', gaia: '#9fe0ff' };
+  const limbColor = look => LIMB[look] || '#c8d8ff';
 
   // ==========================================================================================================================================================
   function createView(canvas) {
@@ -137,6 +175,22 @@
     let backdrop = { star: 'yellow', seed: 1, nebula: true, decor: null, key: '' }, star = { x: 60, y: 60 };
     let activeId = -1, moveCells = [], targetCells = [], hoverCell = null, showPath = false, targetMap = new Map();
     let roundNo = 0, bannerT = null, camT = 0;
+    const nud = { x: 0, y: 0, t: 0 };                           // camera nudge on big hits (2–4 px for 120 ms; off with reduceMotion)
+    const DEBRIS = [];                                          // kill debris: rendered cutouts when present (else the particle shards from Gfx.Fx), small fixed pool
+    for (let i = 0; i < 24; i++) DEBRIS.push({ on: false, x: 0, y: 0, vx: 0, vy: 0, rot: 0, vr: 0, age: 0, life: 1, s: 20, v: 1 });
+    const reduceMotion = () => !!(M.Settings && M.Settings.get && M.Settings.get('reduceMotion'));
+    function nudge(ang, amp) { if (reduceMotion()) return; nud.x = cos(ang) * amp; nud.y = sin(ang) * amp; nud.t = 0.12; }
+    function spawnDebris(x, y, len) {
+      if (!WAfx('debris-1')) return false;                     // no cutouts yet: the FX system's shards stand in
+      let n = 0;
+      for (const d of DEBRIS) {
+        if (d.on) continue;
+        const a = Math.random() * TAU, sp = len * (0.25 + Math.random() * 0.6);
+        d.on = true; d.x = x; d.y = y; d.vx = cos(a) * sp; d.vy = sin(a) * sp; d.rot = Math.random() * TAU; d.vr = (Math.random() - 0.5) * 3; d.age = 0; d.life = 2.6 + Math.random() * 1.6; d.s = len * (0.14 + Math.random() * 0.14); d.v = 1 + (n % 3);
+        if (++n >= 4) break;
+      }
+      return true;
+    }
     const texts = [];                                           // floating numbers (small pool)
     for (let i = 0; i < 72; i++) texts.push({ on: false, x: 0, y: 0, vx: 0, vy: 0, age: 0, life: 1, txt: '', col: '#fff', size: 14, bold: true });
     let fx = null, spdOverride = null, inst = false, clock = 0;
@@ -244,6 +298,7 @@
       if (fx && fx.clear) fx.clear();
       units = []; planetU = null; missiles.clear(); sched.length = 0; jobs.length = 0; job = null; roundNo = B.round; bannerT = null; activeId = -1; moveCells = []; targetCells = []; hoverCell = null; showPath = false; targetMap.clear();
       for (const t of texts) t.on = false;
+      for (const d of DEBRIS) d.on = false; nud.t = 0;
       for (const bu of B.units) {
         const du = makeUnit(bu); units[bu.id] = du;
         if (bu.kind === 'planet') planetU = du;
@@ -395,7 +450,7 @@
           if (inst) return 0;
           const p = upos(t), rel = e.amount / max(1, t.hp2), big = rel > 0.5 ? 2 : rel > 0.15 ? 1 : 0;
           spawnText(p.x + (Math.random() - 0.5) * t.len * 0.4, p.y - t.len * 0.15, '−' + e.amount, big === 2 ? C.rose : big === 1 ? C.ember : '#ffd9a0', 14 + big * 5, { life: 1.4 });
-          if (rel > 0.12) view.shake(min(18, 3 + rel * 18));
+          if (rel > 0.12) { view.shake(min(18, 3 + rel * 18)); nudge(t.lastHitAngle === undefined ? PI : t.lastHitAngle + PI, 2 + rel * 2); }
           return 0.04;
         }
         case 'ship-destroyed': {
@@ -405,14 +460,20 @@
           if (inst) return 0;
           const p = upos(t);
           spawnText(p.x, p.y - t.len * 0.55, e.left <= 0 ? 'Destroyed' : '−' + e.n + (e.n > 1 ? ' ships' : ' ship'), C.rose, e.left <= 0 ? 17 : 14, { life: 1.6 });
+          if (e.left <= 0 && fx) {                              // the stack dies: shockwave ring, drifting wreckage, a directional camera nudge
+            if (fx.shockwave) fx.shockwave(p.x, p.y, t.len * 1.7, t.color);
+            spawnDebris(p.x, p.y, t.len);
+            nudge(Math.random() * TAU, 4);
+          }
           return 0.06;
         }
         case 'explosion': {
           if (inst || !fx) return 0;
           const n = e.size | 0 || 1, x = cx(e.x), y = cy(e.y);
           fx.explosion(x, y, sizeFx(n) * 1.5, { kind: 'fire' });
+          if (n >= 3 && fx.shockwave) fx.shockwave(x, y, sizeFx(n) * 2.4, '#ffc890');
           sfx(n >= 3 ? 'explosion_big' : 'explosion_small', { pan: panOf(x), vol: n >= 2 ? 1 : 0.8 });
-          if (n >= 2) view.shake(6 + n * 4);
+          if (n >= 2) { view.shake(6 + n * 4); nudge(Math.random() * TAU, 2 + n); }
           return 0.1;
         }
         case 'planet-hit': {
@@ -719,6 +780,8 @@
         else if (tr.length > 2 && !m.moving) tr.splice(0, 2);
       }
       for (const r of rocks) r.rot += r.spin * dt;
+      if (nud.t > 0) nud.t -= dt;
+      for (const d of DEBRIS) if (d.on) { d.age += dt; if (d.age > d.life) d.on = false; else { d.x += d.vx * dt; d.y += d.vy * dt; d.vx *= 1 - min(1, dt * 0.9); d.vy *= 1 - min(1, dt * 0.9); d.rot += d.vr * dt; } }
       for (const t of texts) if (t.on) { t.age += dt; if (t.age > t.life) t.on = false; else if (t.age > 0) { t.x += t.vx * dt; t.y += t.vy * dt; t.vy *= 1 - min(1, dt * 1.2); } }
       if (bannerT) { bannerT.age += dt; if (bannerT.age > bannerT.life) bannerT = null; }
       if (fx) fx.update(sd);
@@ -745,17 +808,11 @@
       // checker
       g.fillStyle = 'rgba(190,210,255,0.028)';
       for (let j = 0; j < 8; j++) for (let i = 0; i < 10; i++) if ((i + j) & 1) g.fillRect(x0 + i * cw, y0 + j * ch, cw, ch);
-      // lines
-      g.lineWidth = 1;
-      g.strokeStyle = ('rgba(' + BR + ',0.16)'); g.beginPath();
-      for (let i = 1; i < 10; i++) { const x = Math.round(x0 + i * cw) + 0.5; g.moveTo(x, y0); g.lineTo(x, y0 + gh); }
-      for (let j = 1; j < 8; j++) { const y = Math.round(y0 + j * ch) + 0.5; g.moveTo(x0, y); g.lineTo(x0 + gw, y); }
-      g.stroke();
-      // intersection ticks
-      g.strokeStyle = ('rgba(' + BH + ',0.5)'); g.beginPath();
-      for (let i = 0; i <= 10; i++) for (let j = 0; j <= 8; j++) { const x = x0 + i * cw, y = y0 + j * ch; g.moveTo(x - 3, y); g.lineTo(x + 3, y); g.moveTo(x, y - 3); g.lineTo(x, y + 3); }
-      g.stroke();
+      // no full line grid: the cells only show near the cursor and the selected unit (drawGridNear); faint intersection dots keep the board readable
+      g.fillStyle = ('rgba(' + BH + ',0.22)');
+      for (let i = 1; i < 10; i++) for (let j = 1; j < 8; j++) g.fillRect(x0 + i * cw - 0.75, y0 + j * ch - 0.75, 1.5, 1.5);
       // frame + corner brackets
+      g.lineWidth = 1;
       g.strokeStyle = ('rgba(' + BR + ',0.55)'); g.strokeRect(x0 - 0.5, y0 - 0.5, gw + 1, gh + 1);
       g.strokeStyle = ('rgba(' + BH + ',0.9)'); g.lineWidth = 2; const bl = min(cw, ch) * 0.34;
       for (const [px, py, sx, sy] of [[x0, y0, 1, 1], [x0 + gw, y0, -1, 1], [x0, y0 + gh, 1, -1], [x0 + gw, y0 + gh, -1, -1]]) { g.beginPath(); g.moveTo(px + sx * bl, py); g.lineTo(px, py); g.lineTo(px, py + sy * bl); g.stroke(); }
@@ -772,15 +829,59 @@
       return s ? '#e8504d' : '#4a90e8';
     }
 
-    function drawBackdrop(t) {
+    // The scene backdrop (nebula, three drifting star layers, sun, lens ghosts and the colour grade: a dozen full-screen passes plus a
+    // filtered copy of the frame) is repainted at 24 Hz into an offscreen canvas and blitted every frame. Its star layers drift under
+    // 0.25 px between repaints and the film grain already steps at 24 Hz, so nothing visible changes; the per-frame cost of the screen
+    // is now the units and the effects. When a photoreal plate is available (drawPlate below) it is drawn directly instead: one image
+    // and a few fills a frame.
+    const bdc = { c: null, g: null, key: '', pace: {}, bdObj: null, bkey: '' };
+
+    // photoreal plate behind the board: a battle backdrop (batch 3, by situation) when it exists, else the star-system plate with its own planet
+    // kept off-frame, darkened so the ships read, with a very slow drift. Returns false (nothing drawn) when WorldArt is off or still loading.
+    function drawPlate(t) {
+      const WA = G.WorldArt; if (!WA || !WA.enabled) return false;
+      const kind = B && B.nebula ? 'nebula' : rocks.length >= 5 ? 'asteroids' : planetU ? 'planet' : 'deep';
+      let path = WA.battle(kind), im = path ? WA.get(path) : null, mode = 'battle';
+      if (!im) { path = WA.system(backdrop.star); im = path ? WA.get(path) : null; mode = 'system'; }
+      if (!im) return false;
+      const iw = im.naturalWidth, ih = im.naturalHeight, drift = reduceMotion() ? 0 : 1;
+      const dx = sin(t * 0.05) * 2 * drift, dy = cos(t * 0.037) * 1.5 * drift;
+      let sx = 0, sy = 0, sw = iw, sh = ih, starU = 0.84, starV = 0.16;
+      if (mode === 'system') { sx = iw * 0.42; sy = 0; sw = iw * 0.58; sh = ih * 0.56; starU = (0.86 * iw - sx) / sw; starV = 0.17 * ih / sh; }   // top-right of the plate: the star, no planet
+      else if (kind === 'star') { starU = 0.9; starV = 0.5; }
+      const s = max(W / sw, H / sh) * 1.02, dw = sw * s, dh = sh * s, ox = (W - dw) / 2 + dx, oy = (H - dh) / 2 + dy;
+      ctx.save(); ctx.imageSmoothingQuality = 'high';
+      ctx.drawImage(im, sx, sy, sw, sh, ox, oy, dw, dh);
+      ctx.fillStyle = 'rgba(2,4,12,0.45)'; ctx.fillRect(0, 0, W, H);                                   // ~55 % brightness
+      if (B && B.nebula && mode === 'system') {                                                       // inside a nebula: a soft two-hue haze over the plate (shields are weaker here)
+        const n1 = ctx.createRadialGradient(W * 0.3 + dx * 4, H * 0.6, 0, W * 0.3, H * 0.6, W * 0.5), n2 = ctx.createRadialGradient(W * 0.75, H * 0.3 + dy * 4, 0, W * 0.75, H * 0.3, W * 0.45);
+        n1.addColorStop(0, 'rgba(120,70,190,0.26)'); n1.addColorStop(1, 'rgba(120,70,190,0)'); n2.addColorStop(0, 'rgba(60,150,170,0.2)'); n2.addColorStop(1, 'rgba(60,150,170,0)');
+        ctx.fillStyle = n1; ctx.fillRect(0, 0, W, H); ctx.fillStyle = n2; ctx.fillRect(0, 0, W, H);
+      }
+      const vg = ctx.createRadialGradient(W * 0.5, H * 0.5, min(W, H) * 0.3, W * 0.5, H * 0.5, hypot(W, H) * 0.6);
+      vg.addColorStop(0, 'rgba(1,2,8,0)'); vg.addColorStop(1, 'rgba(1,2,8,0.5)'); ctx.fillStyle = vg; ctx.fillRect(0, 0, W, H);
+      ctx.restore();
+      star.x = ox + starU * dw; star.y = oy + starV * dh;
+      return true;
+    }
+    function drawBackdrop(dt, t) {
       let ok = false;
-      const Sc = G.Scenes && G.Scenes.battle;
+      try { ok = drawPlate(t); } catch (err) { if (!view._plateWarn) { view._plateWarn = 1; console.warn('[CombatFx] plate backdrop failed', err); } ok = false; }
+      const Sc = !ok && G.Scenes && G.Scenes.battle;
       if (Sc) {
-        try {
-          const r = Sc.draw(ctx, W, H, t, { starKind: backdrop.star, seed: backdrop.seed, nebula: backdrop.nebula, planet: backdrop.decor ? { desc: backdrop.decor, size: 0.85 } : null });
-          if (r && r.star) { star.x = r.star.x; star.y = r.star.y; }
-          ok = true;
-        } catch (err) { if (!view._bdWarn) { view._bdWarn = 1; console.warn('[CombatFx] backdrop failed', err); } }
+        if (bdc.bdObj !== backdrop) { bdc.bdObj = backdrop; bdc.bkey = JSON.stringify([backdrop.star, backdrop.seed, backdrop.nebula, backdrop.decor]); }
+        const key = W + 'x' + H + '@' + dpr + '|' + bdc.bkey;
+        const paced = UI.pace ? UI.pace(bdc.pace, 24, dt) : true;
+        if (paced || key !== bdc.key || !bdc.c) {
+          try {
+            if (!bdc.c || bdc.c.width !== canvas.width || bdc.c.height !== canvas.height) { bdc.c = mk(canvas.width, canvas.height); bdc.g = bdc.c.getContext('2d', { alpha: false }); }
+            const g = bdc.g; g.setTransform(dpr, 0, 0, dpr, 0, 0); g.globalAlpha = 1; g.globalCompositeOperation = 'source-over';
+            const r = Sc.draw(g, W, H, t, { starKind: backdrop.star, seed: backdrop.seed, nebula: backdrop.nebula, planet: backdrop.decor ? { desc: backdrop.decor, size: 0.85 } : null });
+            if (r && r.star) { star.x = r.star.x; star.y = r.star.y; }
+            bdc.key = key; ok = true;
+          } catch (err) { bdc.key = ''; if (!view._bdWarn) { view._bdWarn = 1; console.warn('[CombatFx] backdrop failed', err); } }
+        } else ok = true;
+        if (ok) ctx.drawImage(bdc.c, 0, 0, W, H);
       }
       if (!ok) {
         const gr = ctx.createRadialGradient(W * 0.5, H * 0.5, 0, W * 0.5, H * 0.5, hypot(W, H) * 0.6);
@@ -803,11 +904,39 @@
     function drawRocks() {
       const px = max(16, min(grid.cw * 0.9, grid.ch * 1.35)) | 0;
       for (const r of rocks) {
-        const spr = rockSprite(r.v, px, dpr), x = cx(r.x), y = cy(r.y);
+        const im = WAfx('rock-' + (r.v % 8 + 1)), x = cx(r.x), y = cy(r.y);
         ctx.save(); ctx.translate(x, y); ctx.rotate(r.rot);
-        ctx.drawImage(spr, -px / 2, -px / 2, px, px);
+        if (im) { const s = px * 1.15, k = min(s / im.naturalWidth, s / im.naturalHeight); ctx.drawImage(im, -im.naturalWidth * k / 2, -im.naturalHeight * k / 2, im.naturalWidth * k, im.naturalHeight * k); }
+        else ctx.drawImage(rockSprite(r.v, px, dpr), -px / 2, -px / 2, px, px);
         ctx.restore();
       }
+    }
+    function drawDebris() {
+      for (const d of DEBRIS) {
+        if (!d.on) continue;
+        const im = WAfx('debris-' + d.v); if (!im) { d.on = false; continue; }
+        const k = min(d.s / im.naturalWidth, d.s / im.naturalHeight), a = d.age < d.life * 0.7 ? 1 : 1 - (d.age - d.life * 0.7) / (d.life * 0.3);
+        ctx.save(); ctx.globalAlpha = a; ctx.translate(d.x, d.y); ctx.rotate(d.rot);
+        ctx.drawImage(im, -im.naturalWidth * k / 2, -im.naturalHeight * k / 2, im.naturalWidth * k, im.naturalHeight * k);
+        ctx.restore();
+      }
+    }
+    // grid lines only near the cursor (two cells, fading) and around the selected unit (one cell)
+    function drawGridNear() {
+      const cw = grid.cw, ch = grid.ch, gx = grid.x, gy = grid.y, au = units[activeId];
+      const cells = [];
+      if (hoverCell) cells.push([hoverCell.x, hoverCell.y, 2, 0.26]);
+      if (au && !au.gone && au.alpha > 0.2) cells.push([round(au.x), round(au.y), 1, 0.2]);
+      if (!cells.length) return;
+      ctx.save(); ctx.lineWidth = 1;
+      for (const [hx, hy, rad, a0] of cells) {
+        for (let i = max(0, hx - rad); i <= min(9, hx + rad); i++) for (let j = max(0, hy - rad); j <= min(7, hy + rad); j++) {
+          const d = max(abs(i - hx), abs(j - hy)), a = a0 * (1 - d / (rad + 1));
+          ctx.strokeStyle = 'rgba(' + BR + ',' + a.toFixed(3) + ')';
+          ctx.strokeRect(round(gx + i * cw) + 0.5, round(gy + j * ch) + 0.5, round(cw), round(ch));
+        }
+      }
+      ctx.restore();
     }
 
     function drawHighlights(t) {
@@ -876,11 +1005,12 @@
       const side = u.side === 0 ? '98,216,255' : '255,160,110';
       const gl = ctx.createRadialGradient(x + cw / 2, y + ch / 2, 0, x + cw / 2, y + ch / 2, max(cw, ch) * 0.7);
       gl.addColorStop(0, 'rgba(' + side + ',0.16)'); gl.addColorStop(1, 'rgba(' + side + ',0)'); ctx.fillStyle = gl; ctx.fillRect(x - cw * 0.2, y - ch * 0.2, cw * 1.4, ch * 1.4);
-      ctx.strokeStyle = 'rgba(255,236,170,' + (0.8 + 0.2 * k).toFixed(2) + ')'; ctx.lineWidth = 2.4; ctx.lineCap = 'square'; ctx.beginPath();
+      // the original's brick-red selection frame (a thin pale inner edge keeps it readable on red hulls)
       const x0 = x - p, y0 = y - p, x1 = x + cw + p, y1 = y + ch + p;
-      ctx.moveTo(x0, y0 + tk); ctx.lineTo(x0, y0); ctx.lineTo(x0 + tk, y0); ctx.moveTo(x1 - tk, y0); ctx.lineTo(x1, y0); ctx.lineTo(x1, y0 + tk);
-      ctx.moveTo(x0, y1 - tk); ctx.lineTo(x0, y1); ctx.lineTo(x0 + tk, y1); ctx.moveTo(x1 - tk, y1); ctx.lineTo(x1, y1); ctx.lineTo(x1, y1 - tk);
-      ctx.stroke();
+      const corners = () => { ctx.beginPath(); ctx.moveTo(x0, y0 + tk); ctx.lineTo(x0, y0); ctx.lineTo(x0 + tk, y0); ctx.moveTo(x1 - tk, y0); ctx.lineTo(x1, y0); ctx.lineTo(x1, y0 + tk); ctx.moveTo(x0, y1 - tk); ctx.lineTo(x0, y1); ctx.lineTo(x0 + tk, y1); ctx.moveTo(x1 - tk, y1); ctx.lineTo(x1, y1); ctx.lineTo(x1, y1 - tk); ctx.stroke(); };
+      ctx.lineCap = 'square';
+      ctx.strokeStyle = 'rgba(176,48,58,' + (0.85 + 0.15 * k).toFixed(2) + ')'; ctx.lineWidth = 2.6; corners();
+      ctx.strokeStyle = 'rgba(255,214,200,' + (0.3 + 0.2 * k).toFixed(2) + ')'; ctx.lineWidth = 1; corners();
       ctx.restore();
     }
 
@@ -979,7 +1109,15 @@
         try { P.draw(ctx, u.planetDesc, x, y, R, t, { dpr: dpr, lightAngle: la, spin: 0.01 }); drawn = true; } catch (err) { if (!view._plWarn) { view._plWarn = 1; console.warn('[CombatFx] planet draw failed', err); } }
       }
       if (!drawn) { const g2 = ctx.createRadialGradient(x - R * 0.3, y - R * 0.3, R * 0.1, x, y, R); g2.addColorStop(0, '#6a8ccf'); g2.addColorStop(1, '#10204a'); ctx.fillStyle = g2; ctx.beginPath(); ctx.arc(x, y, R, 0, TAU); ctx.fill(); }
-      ctx.save(); ctx.lineWidth = 1.5; ctx.strokeStyle = rgba(dispOwner, 0.55); ctx.beginPath(); ctx.arc(x, y, R * 1.04, 0, TAU); ctx.stroke(); ctx.restore();
+      // limb glow: a soft atmosphere ring that follows the edge, brighter on the side facing the star
+      { const lc = limbColor(u.planetDesc && u.planetDesc.look);
+        ctx.save(); ctx.globalCompositeOperation = 'lighter';
+        const lg = ctx.createRadialGradient(x, y, R * 0.88, x, y, R * 1.16);
+        lg.addColorStop(0, rgba(lc, 0)); lg.addColorStop(0.42, rgba(lc, 0.28)); lg.addColorStop(0.62, rgba(lc, 0.16)); lg.addColorStop(1, rgba(lc, 0));
+        ctx.fillStyle = lg; ctx.beginPath(); ctx.arc(x, y, R * 1.16, 0, TAU); ctx.fill();
+        ctx.lineWidth = max(1.5, R * 0.05); ctx.lineCap = 'round'; ctx.strokeStyle = rgba(lc, 0.5); ctx.beginPath(); ctx.arc(x, y, R * 1.0, la - 1.25, la + 1.25); ctx.stroke();
+        ctx.restore();
+        ctx.save(); ctx.lineWidth = 1; ctx.strokeStyle = rgba(dispOwner, 0.4); ctx.beginPath(); ctx.arc(x, y, R * 1.05, 0, TAU); ctx.stroke(); ctx.restore(); }
       // planetary shield: a faint bubble that lights up when struck
       if (u.shieldLvl > 0 && !(B && B.nebula)) {
         const sg = u.shieldGlow, br = R * 1.32;
@@ -992,12 +1130,16 @@
       if (u.flash > 0.02) { ctx.save(); ctx.globalCompositeOperation = 'lighter'; ctx.globalAlpha = u.flash * 0.5; const r = R * 1.2; ctx.drawImage(glowSprite('#ffb070'), x - r, y - r, r * 2, r * 2); ctx.restore(); }
       // missile bases in orbit
       const nb = min(6, u.count);
-      const S0 = G.Ships;
-      if (nb > 0 && S0 && S0.draw) {
-        const orbit = R * 1.5, bs = min(grid.cw * 0.3, R * 0.9);
+      if (nb > 0) {                                                                 // lit platform sprites (the rendered cutout when it exists)
+        const orbit = R * 1.5, bs = min(grid.cw * 0.3, R * 0.9), im = WAfx('base-platform'), spr = im ? null : baseSprite(bs | 0, u.color, dpr);
         for (let i = 0; i < nb; i++) {
           const a = t * 0.16 + i / nb * TAU + 0.6, bx = x + cos(a) * orbit * 1.0, by = y + sin(a) * orbit * 0.62;
-          try { S0.draw(ctx, { race: u.race, hull: 5, x: bx, y: by, size: bs, angle: a + PI / 2, color: u.color, t: t + i, seed: i * 11 + 3, vkey: B.planet ? 'planet|' + B.planet.id : '' }); } catch (err) { /* art optional */ break; }
+          ctx.save(); ctx.translate(bx, by); ctx.rotate(a * 0.5 + i);
+          if (im) {
+            const k = min(bs / im.naturalWidth, bs / im.naturalHeight); ctx.drawImage(im, -im.naturalWidth * k / 2, -im.naturalHeight * k / 2, im.naturalWidth * k, im.naturalHeight * k);
+            ctx.globalCompositeOperation = 'lighter'; const r2 = bs * 0.3, bl = 0.5 + 0.5 * sin(t * 3 + i); ctx.globalAlpha = 0.5 + 0.5 * bl; ctx.drawImage(glowSprite(u.color), bs * 0.3 - r2, -r2, r2 * 2, r2 * 2);
+          } else ctx.drawImage(spr, -bs / 2, -bs / 2, bs, bs);
+          ctx.restore();
         }
       }
       // label + base strength
@@ -1075,12 +1217,13 @@
       stepSeq(dt); update(dt);
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
       ctx.globalAlpha = 1; ctx.globalCompositeOperation = 'source-over';
-      drawBackdrop(t);
-      const sh = fx && fx.shake > 0.3 ? fx.shake : 0;
+      drawBackdrop(dt, t);
+      const sh = fx && fx.shake > 0.3 ? fx.shake : 0, nk = nud.t > 0 ? sin(PI * nud.t / 0.12) : 0;
       ctx.save();
-      if (sh) ctx.translate((Math.random() - 0.5) * sh * 0.9, (Math.random() - 0.5) * sh * 0.9);
+      if (sh || nk) ctx.translate((Math.random() - 0.5) * sh * 0.9 + nud.x * nk, (Math.random() - 0.5) * sh * 0.9 + nud.y * nk);
       buildGridLayer(); ctx.drawImage(gridLayer, 0, 0, W, H);
-      drawRocks();
+      drawGridNear();
+      drawRocks(); drawDebris();
       if (planetU) drawPlanet(planetU, t);
       drawHighlights(t);
       sorted.length = 0;
@@ -1099,7 +1242,7 @@
     };
     view.hitChanceLabel = null;
     view.resize = resize;
-    view.dispose = function () { if (fx && fx.clear) fx.clear(); jobs.length = 0; job = null; sched.length = 0; };
+    view.dispose = function () { if (fx && fx.clear) fx.clear(); jobs.length = 0; job = null; sched.length = 0; for (const d of DEBRIS) d.on = false; nud.t = 0; };
     view.isInstant = () => spdK() <= 0;
     view.unitsList = () => units;
     return view;

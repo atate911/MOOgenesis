@@ -19,6 +19,13 @@ Art rules: top-down, nose pointing RIGHT (+x) for mobile ships, grey hull, #FF00
 Output: assets/ships/ship-<class>-<n>.webp + ship-<class>-<n>-team.webp (n from 1), assets/ships/ship-art.json, and the
 generated SHIP_ART block inside js/gfx/ships.js (between the @@SHIP_ART@@ markers).  Stale ship-*.webp files are removed.
 Coordinates are in ship units: the visible hull spans x = -0.5..0.5 (nose at +x), y has the same scale.
+
+Second view ("3q", the 3/4 beauty angle; docs/IMAGE-GEN-SPRITES.md): a source whose filename names the class AND contains
+the token `3q` (e.g. frigate-3q.png, 02-destroyer-3q.png, frigate-2-3q.png) is the 3/4 view of that class.  It pairs with
+the top-down variant of the same number (`<class>-<n>-3q`; no number = variant 1); a class with a single 3q image lends
+it to every variant.  Same keying / crop / livery split; written as ship-<class>-<n>-3q.webp + -3q-team.webp and recorded
+under the variant's `q` key (ext, hw, hl, eng, lights, sites, dir).  Units for the 3q view: the longer visible side = 1.
+Nothing changes when no 3q image exists (today): `q` is simply absent and Gfx.Ships falls back to the top view.
 """
 import glob, json, os, re, sys
 import numpy as np
@@ -51,6 +58,10 @@ DEFAULT_PICKS = {
 }
 LONG_SIDE = 1024      # px of the visible long side in the shipped image
 PAD = 0.03            # margin around the visible bounds (fraction of the long side)
+Q_RE = re.compile(r'(^|[-_ .])3q([-_ .]|$)')            # the 3/4-view token in a filename
+Q_NUM_RE = re.compile(r'[-_ ](\d+)[-_ ]3q')               # <class>-<n>-3q -> pairs with top-down variant n
+Q_AXIS_DEG = 30.0     # the 3/4 view's ship axis: nose points to the lower right, this many degrees below the horizontal
+FX_DIR = os.path.join(ROOT, 'MOOg images', 'fx')
 
 
 def sstep(a, b, v):
@@ -121,14 +132,15 @@ def key_green(im):
     return Image.fromarray((out.clip(0, 1) * 255).round().astype(np.uint8), 'RGBA')
 
 
-def build(key, path, stem, structure):
+def build(key, path, stem, structure, view='top'):
     im = key_green(Image.open(path).convert('RGBA'))
     a = np.asarray(im).astype(np.float32) / 255.0
     alpha = a[..., 3]
     ys, xs = np.nonzero(alpha > 0.5)
     x0, x1, y0, y1 = xs.min(), xs.max() + 1, ys.min(), ys.max() + 1
     vw, vh = x1 - x0, y1 - y0
-    L = max(vw, vh) if structure else vw            # px per ship unit
+    q = view == '3q'
+    L = max(vw, vh) if (structure or q) else vw      # px per ship unit (3/4 view: the longer visible side)
     pad = int(round(PAD * max(vw, vh)))
     cx, cy = (x0 + x1) / 2.0, (y0 + y1) / 2.0
     hw_px, hh_px = vw / 2.0 + pad, vh / 2.0 + pad
@@ -167,6 +179,9 @@ def build(key, path, stem, structure):
     pts = np.stack([(gx * step - W / 2.0) / Lp, (gy * step - H / 2.0) / Lp], 1) if len(gx) else np.zeros((0, 2))
 
     eng = []
+    # 3/4 view: the ship axis runs from the stern (upper left) to the nose (lower right) at Q_AXIS_DEG below the horizontal;
+    # engines are the white-cyan blobs whose projection on that axis lies in the rear 40 %, nozzle = the blob's rear edge
+    ax, ay = np.cos(np.radians(Q_AXIS_DEG)), np.sin(np.radians(Q_AXIS_DEG))
     if not structure:
         cyan = (A > 0.5) & (v > 0.72) & (((h > 165) & (h < 215) & (s > 0.12)) | ((s < 0.1) & (v > 0.93)))
         cg = cyan[::step, ::step]
@@ -174,14 +189,17 @@ def build(key, path, stem, structure):
             if len(cys) < 3:
                 continue
             ux, uy = unit(cxs.mean() * step, cys.mean() * step)
-            if ux > -0.2:                            # engines live at the stern (left)
+            if (ux * ax + uy * ay if q else ux) > -0.2:   # engines live at the stern
                 continue
             r = np.sqrt(len(cys) / np.pi) * step / Lp
             eng.append((ux, uy, r, len(cys)))
         eng.sort(key=lambda e: -e[3])
         eng = eng[:8]
         # nozzle = rear edge of the blob
-        eng = [{'x': r4(e[0] - e[2] * 0.5), 'y': r4(e[1]), 'r': r4(min(max(e[2] * 0.9, 0.012), 0.06))} for e in eng]
+        if q:
+            eng = [{'x': r4(e[0] - e[2] * 0.5 * ax), 'y': r4(e[1] - e[2] * 0.5 * ay), 'r': r4(min(max(e[2] * 0.9, 0.012), 0.06))} for e in eng]
+        else:
+            eng = [{'x': r4(e[0] - e[2] * 0.5), 'y': r4(e[1]), 'r': r4(min(max(e[2] * 0.9, 0.012), 0.06))} for e in eng]
 
     hy = vh / 2.0 / L                                # visible half-height (units)
     hx = vw / 2.0 / L
@@ -208,6 +226,14 @@ def build(key, path, stem, structure):
         top, bot = pts[np.argmin(pts[:, 1])], pts[np.argmax(pts[:, 1])]
         lights = [{'x': r4(top[0]), 'y': r4(top[1]), 'r': 0.008, 'c': [255, 80, 70], 'kind': 'blink', 'per': 1.6, 'ph': 0.0},
                   {'x': r4(bot[0]), 'y': r4(bot[1]), 'r': 0.008, 'c': [90, 255, 140], 'kind': 'blink', 'per': 1.6, 'ph': 0.5}]
+    if q:
+        return {
+            'file': stem, 'src': os.path.relpath(path, ROOT),
+            'ext': [r4(W / 2.0 / Lp), r4(H / 2.0 / Lp)], 'hw': r4(hy), 'hl': r4(hx),
+            'team': r4(float((team * (A > 0.5)).sum() / max(1, (A > 0.5).sum()))),
+            'eng': eng, 'sites': sites, 'lights': lights,
+            'dir': r4(np.radians(180 + Q_AXIS_DEG)),   # direction the engine flames point (towards the stern), radians, image frame
+        }
     hole = 0
     if structure and A[H // 2, W // 2] < 0.5:      # open centre (gate / ring): radius of the clear aperture
         rs = []
@@ -244,7 +270,7 @@ def sources(argv):
     for d in dirs:
         for f in sorted(glob.glob(os.path.join(d, '**', '*'), recursive=True)):
             name = os.path.basename(f).lower()
-            if not name.endswith(('.png', '.webp')) or name.endswith(('-team.webp', '-team.png')):
+            if not name.endswith(('.png', '.webp')) or name.endswith(('-team.webp', '-team.png')) or Q_RE.search(name):
                 continue
             for k, rx in CLASS_RE:
                 if rx.search(name):
@@ -270,8 +296,27 @@ def sources(argv):
     return out
 
 
+def q_sources(argv):
+    """class -> {variant number: 3/4-view image path}.  Default folders: ship-variants + fx (explicit folders: those)."""
+    dirs = [a for a in argv if not a.startswith('--')] or [d for d in (VARIANTS, FX_DIR) if os.path.isdir(d)]
+    out = {k: {} for k in CLASSES}
+    for d in dirs:
+        for f in sorted(glob.glob(os.path.join(d, '**', '*'), recursive=True)):
+            name = os.path.basename(f).lower()
+            if not name.endswith(('.png', '.webp')) or name.endswith(('-team.webp', '-team.png')) or not Q_RE.search(name):
+                continue
+            for k, rx in CLASS_RE:
+                if rx.search(name):
+                    m = Q_NUM_RE.search(name)
+                    n = int(m.group(1)) if m else 1
+                    out[k].setdefault(n, f)
+                    break
+    return out
+
+
 def main():
     src = sources(sys.argv[1:])
+    qsrc = q_sources(sys.argv[1:])
     os.makedirs(OUT, exist_ok=True)
     for f in glob.glob(os.path.join(OUT, 'ship-*.webp')):   # drop stale variants
         os.remove(f)
@@ -282,6 +327,16 @@ def main():
             m = build(key, path, 'ship-%s-%d' % (key, i + 1), key in STRUCTURES)
             meta[key].append(m)
             print('%-14s #%d %-48s ext=%s hw=%.3f team=%.1f%% engines=%d' % (key, i + 1, os.path.basename(path)[:48], m['ext'], m['hw'], m['team'] * 100, len(m['eng'])))
+        # 3/4 view: variant n takes <class>-<n>-3q, else the class's first 3q image (a single image serves every variant)
+        qs = qsrc[key]
+        if qs:
+            built = {}
+            for i in range(len(meta[key])):
+                n = i + 1 if (i + 1) in qs else sorted(qs)[0]
+                if n not in built:
+                    built[n] = build(key, qs[n], 'ship-%s-%d-3q' % (key, n), key in STRUCTURES, '3q')
+                    print('%-14s #%d 3q %-45s ext=%s engines=%d' % (key, n, os.path.basename(qs[n])[:45], built[n]['ext'], len(built[n]['eng'])))
+                meta[key][i]['q'] = built[n]
     with open(os.path.join(OUT, 'ship-art.json'), 'w') as f:
         json.dump(meta, f, indent=1)
     js = open(JS).read()

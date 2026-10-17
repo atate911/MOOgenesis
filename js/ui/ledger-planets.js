@@ -34,6 +34,7 @@
     .lp-tbl tfoot td { position:sticky; bottom:0; padding:.4rem .65rem; background:#0d1540; border-top:1px solid rgba(214,179,106,.45); border-bottom:0; font-weight:600; color:var(--ivory); }
     .lp-tbl tfoot td.nm { font-family:var(--font-display); font-size:.95rem; letter-spacing:.07em; color:var(--brass); }
     .lp-nm { display:inline-flex; align-items:center; gap:.5rem; }
+    .lp-orb { flex:none; width:2.75rem; height:1.75rem; display:block; box-shadow:0 0 0 1px rgba(0,0,0,.8), 0 0 6px rgba(0,0,0,.5); background:#06080f; } .lp-orb canvas { display:block; width:100%; height:100%; }
     .lp-dot { flex:none; width:.95rem; height:.95rem; border-radius:50%; background:radial-gradient(circle at 32% 30%, #fff9, var(--c) 42%, color-mix(in srgb, var(--c) 35%, #000) 100%); box-shadow:0 0 7px color-mix(in srgb, var(--c) 55%, transparent); }
     .lp-cap { width:.95em; height:.95em; color:var(--gold); }
     .lp-pop { position:relative; display:inline-flex; align-items:baseline; gap:.45rem; min-width:6.5rem; padding-bottom:.18rem; }
@@ -141,10 +142,16 @@
 
   // ---- the table (own implementation: sorting, keyboard selection, sticky totals) ----------------------------------------------------------------
   const dimIf = (v, txt) => (v ? txt : h('span.dim', '—'));
+  // the orbit plate as a small landscape thumbnail (Gfx.WorldArt), else the coloured type dot
+  function orbThumb(r) {
+    const WA = M.Gfx && M.Gfx.WorldArt, path = WA && WA.enabled ? WA.orbit({ type: r.type, growth: r.growthClass, special: r.special }, G.S) : null;
+    if (path) return h('span.lp-orb', WA.canvas(path, 88, 56, { fx: 0.5, fy: 0.5 }));
+    return h('i.lp-dot', { style: { '--c': TYPE_COL[r.growthClass === 'gaia' ? 'gaia' : r.type] || '#889' } });
+  }
   const COLS = [
     { key: 'n', label: '#', cls: 'idx', align: 'r', value: r => r.n, fmt: r => r.n },
     { key: 'name', label: 'Planet', cls: 'nm', value: r => r.name.toLowerCase(),
-      fmt: r => h('span.lp-nm', h('i.lp-dot', { style: { '--c': TYPE_COL[r.growthClass === 'gaia' ? 'gaia' : r.type] || '#889' } }), h('span', r.name), r.capital ? UI.icon('home', 'lp-cap') : null) },
+      fmt: r => h('span.lp-nm', orbThumb(r), h('span', r.name), r.capital ? UI.icon('home', 'lp-cap') : null) },
     { key: 'pop', label: 'Population', dir: -1, value: r => r.pop, fmt: r => {
       const g = r.grow, fill = r.maxPop > 0 ? Math.min(1, r.pop / r.maxPop) : 0;
       return h('div.lp-pop' + (fill >= 1 ? '.full' : ''), { tip: 'Population <b>' + r.pop + '</b> of ' + r.maxPop + ' max' + (g ? '<br>' + (g > 0 ? 'Growing' : 'Shrinking') + ' ' + Math.abs(g / 10).toFixed(1) + ' million per turn' : '') },

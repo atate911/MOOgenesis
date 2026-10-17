@@ -77,7 +77,7 @@
     let pm;
     const body = h('div', h('p', 'Your agents left a trail. Whom should the victim blame?'),
       h('div.col', fc.map(c => UI.button('Frame the ' + c.name, () => pm.close(c.empire), { block: true })), UI.button('Take no risks — blame no one', () => pm.close(-1), { block: true })));
-    pm = UI.modal({ title: 'Frame a rival?', body, buttons: [], closable: true, width: '26rem' });
+    pm = UI.modal({ title: 'Frame a rival?', body, buttons: [], closable: true, width: '26rem', choices: 'button' });
     return pm.then(v => (typeof v === 'number' && v >= 0 ? v : -1));
   }
   function techEventsOf(it, g) {                                  // the 'tech' event queued by Research.grant for this theft: play it now instead of later
@@ -103,7 +103,7 @@
         });
         const body = h('div', h('div.spy-hd', h('div', h('div.race', T ? T.name : it.race), h('small', 'Your ' + it.n + (it.n === 1 ? ' spy steals' : ' spies steal') + ' the plans for:'))), h('div.spy-grid', btns), info,
           it.anyCaught ? h('div.spy-warn', 'One of your agents was spotted — they may learn who is behind this.') : null);
-        pm = UI.modal({ title: 'Espionage', body, buttons: [{ label: 'Abort mission', value: null }], closable: true, width: '38rem', onOpen: () => { off = modalKeys({}, null); }, onClose: () => { if (off) off(); } });
+        pm = UI.modal({ title: 'Espionage', body, buttons: [{ label: 'Abort mission', value: null }], closable: true, width: '38rem', choices: '.spy-fld:not([disabled])', onOpen: () => { off = modalKeys({}, null); }, onClose: () => { if (off) off(); } });
         pm.then(v => resolve(typeof v === 'number' ? v : null));
       });
       if (idx === null || idx === undefined) pick = null;
@@ -142,7 +142,7 @@
         const body = h('div', h('div.spy-hd', h('div', h('div.race', T ? T.name : it.race), h('small', 'Your ' + it.n + (it.n === 1 ? ' saboteur is' : ' saboteurs are') + ' inside — sabotage strength ' + it.units + '. Pick a colony, then the damage.'))), rows, acts,
           it.anyCaught ? h('div.spy-warn', 'One of your agents was spotted — they may learn who is behind this.') : null);
         let off = null;
-        pm = UI.modal({ title: 'Sabotage', body, buttons: [{ label: 'Abort mission', value: null }], closable: true, width: '44rem', onOpen: () => { off = modalKeys({ f: () => go('factories'), b: () => go('bases'), i: () => go('revolt') }, null); }, onClose: () => { if (off) off(); } });
+        pm = UI.modal({ title: 'Sabotage', body, buttons: [{ label: 'Abort mission', value: null }], closable: true, width: '44rem', choices: '.spy-act button:not([disabled])', onOpen: () => { off = modalKeys({ f: () => go('factories'), b: () => go('bases'), i: () => go('revolt') }, null); }, onClose: () => { if (off) off(); } });
         pm.then(v => resolve(v && typeof v === 'object' ? v : null));
       });
       if (!choice) pick = null;

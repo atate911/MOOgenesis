@@ -138,6 +138,8 @@
     return c;
   }
   function planetPic(p, size) {
+    const WA = M.Gfx && M.Gfx.WorldArt, path = WA && WA.enabled ? WA.orbit(p, G.S) : null;     // the orbit plate, else the planet sprite
+    if (path) return WA.canvas(path, size, size, { fx: 0.5, fy: 0.5 });
     const c = h('canvas', { width: size, height: size });
     try {
       const look = p.type === 'none' ? 'asteroids' : (p.growth === 'gaia' ? 'gaia' : p.type);

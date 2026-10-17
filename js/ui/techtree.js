@@ -242,7 +242,7 @@
       }
     }
     // the picture of the selected tech: a slow hologram, only while the view is on screen
-    let acc = 0;
+    const pace = {};
     function drawArt(t) {
       if (!art.isConnected || art.offsetParent === null) return;
       const E = G.player(); if (!E) return;
@@ -254,8 +254,8 @@
     }
     W.offFrame = UI.onFrame((dt, t) => {
       if (!el.isConnected || el.offsetParent === null) return;
-      acc += dt; const fps = reduced() ? 1 : 30;
-      if (acc < 1 / fps) return; acc = 0; drawArt(t);
+      const fps = reduced() ? 1 : 30;
+      if (!UI.pace(pace, fps, dt)) return; drawArt(t);
     });
     W.focusSearch = () => { search.focus(); search.select(); };
     return { el, refresh: () => refresh(false), focusSearch: W.focusSearch, select, destroy() { if (W.offFrame) W.offFrame(); el.remove(); } };

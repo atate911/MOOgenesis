@@ -931,7 +931,7 @@
       if (p < 3.6) {
         const k = easeOut(p / 3.6), x = lerp(w * 1.04, tx, k), y = lerp(-hh * 0.08, ty, k) - sin(k * PI) * hh * 0.1, sz = lerp(hh * 0.15, hh * 0.05, k);
         glow(g, '#8fe0ff', x, y, sz * 1.1, 0.5 * (1 - k * 0.6));
-        drawShipSafe(g, { race: it.race || 'human', hull: 'frigate', x: x, y: y, size: sz, angle: atan2(ty - y, tx - x) + 0.15, color: it.race ? raceColor(it.race) : steel('#d6b36a'), t: t, thrust: 0.9, flags: { colony: true } });
+        drawShipSafe(g, { race: it.race || 'human', hull: 'frigate', x: x, y: y, size: sz, angle: atan2(ty - y, tx - x) + 0.15, color: it.race ? raceColor(it.race) : steel('#d6b36a'), t: t, thrust: 0.9, flags: { colony: true }, view: '3q' });
       } else {
         const q = p - 3.6;
         for (let i = 0; i < 3; i++) { const u = fract(q / 1.5 + i / 3); g.strokeStyle = rgba('#5fdc8f', (1 - u) * 0.8); g.lineWidth = 1.2 + (1 - u) * 1.6; g.beginPath(); g.ellipse(tx, ty, pr * 0.55 * u + 2, pr * 0.28 * u + 1, -0.9, 0, TAU); g.stroke(); }
@@ -1049,7 +1049,7 @@
     const order = s.fleet.slice().sort((a, b) => a.ny - b.ny);
     for (const f of order) {
       const p = shipAt(f, t, w, hh);
-      drawShipSafe(g, { race: f.race, hull: f.hull, x: p.x, y: p.y, size: p.len / (HULL_LEN[f.hull] || 1), angle: f.side < 0 ? 0 : PI, color: f.col, t: t, thrust: 0.75, seed: f.ph });
+      drawShipSafe(g, { race: f.race, hull: f.hull, x: p.x, y: p.y, size: p.len / (HULL_LEN[f.hull] || 1), angle: f.side < 0 ? 0 : PI, color: f.col, t: t, thrust: 0.75, seed: f.ph, view: '3q' });
     }
     // volleys
     while (lt >= s.next) {
@@ -1264,7 +1264,7 @@
   }
 
   let root, stage, mon, monCv, monTag, monLive, monCapB, monCapS, monCapE, lt, ltBar, ltFlag, ltFlagTxt, ltKick, hlBox, hlT, hlR, subBox, subT, subR, ltBadges, srLive;
-  let tk, tkWin, tkTrack, hud, pips, btnPause, btnArch, ttl, ttlYear, ttlMeta, rank, rkIco, rkTitle, rkSub, rkTabs, rkList, cutEl, cutP, cutE, flashEl, fadeEl;
+  let tk, tkWin, tkTrack, hud, pips, btnPause, btnArch, btnNext, ttl, ttlYear, ttlMeta, rank, rkIco, rkTitle, rkSub, rkTabs, rkList, cutEl, cutP, cutE, flashEl, fadeEl;
   let R = null, curU = 12.8, layKey = '';
 
   function build(el) {
@@ -1290,7 +1290,7 @@
     btnArch = UI.button('Archive', () => openArchive(), { small: true, icon: 'list' });
     btnPause = UI.button('Pause', () => act('pause'), { small: true, icon: 'pause', kbd: 'P' });
     hud = h('div.gnn-hud', h('div.gnn-hint', h('b', 'Space'), ' next  ·  ', h('b', 'P'), ' pause  ·  ', h('b', 'Esc'), ' skip'),
-      h('div.gnn-hud-r', pips, btnArch, btnPause, UI.attention(UI.button('Next', () => act('next'), { small: true, icon: 'right', kbd: 'Space' })), UI.button('Skip', () => act('skip'), { small: true, icon: 'nextturn', kbd: 'Esc' })));
+      h('div.gnn-hud-r', pips, btnArch, btnPause, btnNext = UI.attention(UI.button('Next', () => act('next'), { small: true, icon: 'right', kbd: 'Space' })), UI.button('Skip', () => act('skip'), { small: true, icon: 'nextturn', kbd: 'Esc' })));
     cutP = h('div.gnn-cut-p'); cutE = h('div.gnn-cut-e'); cutEl = h('div.gnn-cut', cutP, cutE);
     flashEl = h('div.gnn-flash'); fadeEl = h('div.gnn-fade');
     root = h('div.gnn', { tabindex: '-1', role: 'region', 'aria-label': 'Galactic News Network broadcast' },
@@ -1373,8 +1373,13 @@
   }
   function pickAnchor(intr) {
     if (intr.anchorRace && RACE_IDS.concat(raceIds()).indexOf(intr.anchorRace) >= 0) return intr.anchorRace;
-    const ready = raceIds().filter(portraitReady), pool = ready.length ? ready : raceIds();
-    return pool[floor(Math.random() * pool.length)] || 'human';
+    // One anchor for the whole game, picked from the races NOT playing it when there are any: the network is neutral and its face stays
+    // the same. A random race per broadcast (the old rule) put a different species, often a rival's, behind the desk every time.
+    const S = M.Game && M.Game.S, all = raceIds();
+    const playing = S && Array.isArray(S.empires) ? S.empires.map(e => e && e.race) : [];
+    const neutral = all.filter(r => playing.indexOf(r) < 0), pool = neutral.length ? neutral : all;
+    if (!pool.length) return 'human';
+    return pool[hashStr('gnn-anchor|' + (S && S.seed !== undefined ? S.seed : 'demo')) % pool.length];
   }
 
   const restart = el => { el.classList.remove('in'); void el.offsetWidth; el.classList.add('in'); };
@@ -1470,7 +1475,7 @@
   }
   function applySegment(i) {
     const seg = R.segs[i];
-    R.idx = i; R.segT = 0; R.hold = 0; R.holdSet = false; R.wasTyping = false; R.talkTail = 0;
+    R.idx = i; R.segT = 0; R.hold = 0; R.holdSet = false; R.wasTyping = false; R.talkTail = 0; setEndWait(false);
     if (seg.kind === 'title') applyTitle(); else if (seg.kind === 'item') applyItem(seg); else applyRank(seg);
     updatePips();
   }
@@ -1522,6 +1527,7 @@
   }
   function act(a) {
     if (!R || R.finishing) return;
+    if ((a === 'next' || a === 'skip') && R.t < 0.6) return;                 // the Next-turn keypress / click (or its repeat) that opened the broadcast
     if (a === 'next') {
       if (R.phase === 'cut') { endCut(); fastForward(); return; }
       if (isBusy()) { fastForward(); return; }
@@ -1538,11 +1544,23 @@
     btnPause.classList.toggle('active', !!R.paused);
     root.dataset.paused = R.paused ? '1' : '0';
   }
+  // How long a finished story stays up before the next one: reading time, not a fixed beat. The text has already typed out (44 cps, faster
+  // than anyone reads), so the hold is most of the reading time of headline + sub at ~16 characters a second (about 190 words a minute),
+  // 4 s at least. The old 2.8-3.5 s cap cut a two-line story off mid-sentence. The LAST story never times out (see stepSegment).
   function holdFor(seg) {
-    const f = [0.8, 1, 0.7][R.speed];
-    if (seg.kind === 'rank') return 3.6 * f;
-    const it = seg.item, chars = it.headline.length + (it.sub ? it.sub.length * 0.5 : 0);
-    return clamp(2.2 + chars * 0.02, 2.8, 3.5) * (it.importance >= 2 ? 1.12 : 1) * f;
+    const f = [0.85, 1, 0.75][R.speed];
+    if (seg.kind === 'rank') return 5.5 * f;
+    const it = seg.item, chars = it.headline.length + (it.sub ? it.sub.length : 0);
+    return clamp(1.2 + chars / 16, 4, 11) * (it.importance >= 2 ? 1.12 : 1) * f;
+  }
+  // the last story stays on air until the player continues (auto-closing it hid stories before they were read): the Next button becomes Continue
+  function setEndWait(on) {
+    if (!btnNext || R.endWait === on) return;
+    R.endWait = on;
+    const lab = Array.from(btnNext.childNodes).find(n => n.nodeType === 3 && n.nodeValue.trim());
+    if (lab) lab.nodeValue = on ? 'Continue' : 'Next';
+    root.dataset.end = on ? '1' : '0';
+    if (on) UI.attention(btnNext);
   }
   function stepRank(dt) {
     const rk = R.rk;
@@ -1576,6 +1594,7 @@
     R.wasTyping = typing;
     if (R.talkTail > 0) R.talkTail -= dt;
     if (!isBusy()) {
+      if (R.idx >= R.segs.length - 1) { setEndWait(true); return; }       // the last story waits for Space / click / Continue
       if (!R.holdSet) { R.holdSet = true; R.hold = holdFor(seg); }
       if (!R.paused) { R.hold -= dt; if (R.hold <= 0) goTo(R.idx + 1); }
     }
@@ -1623,8 +1642,8 @@
       if (R.tkT > 6) { R.tkT = 0; R.tkIdx = (R.tkIdx + 1) % R.tkLines.length; UI.clear(tkTrack); tkTrack.appendChild(h('span.gnn-tk-i', R.tkLines[R.tkIdx])); }
     }
     const fps = PQ().animFps || 60;
-    if (fps < 59 && R.accDt < 1 / fps - 0.002) return;
-    const gdt = R.accDt; R.accDt = 0;
+    if (!UI.pace(R.pace, fps, dt) && !R.redraw) return;
+    R.redraw = false; const gdt = R.accDt; R.accDt = 0;
     drawFrame(gdt);
   }
   function drawFrame(gdt) {
@@ -1666,7 +1685,7 @@
     root.classList.toggle('rm', reduced());
     stopWipe();
     R = {
-      pending: pend, intr: intr, segs: buildSegments(intr), idx: -1, t: 0, accDt: 0, segT: 0, phase: 'play', cut: null, paused: false, finishing: false, fadeT: 0, fadeDur: 0.5,
+      pending: pend, intr: intr, segs: buildSegments(intr), idx: -1, t: 0, accDt: 0, pace: {}, redraw: false, segT: 0, phase: 'play', cut: null, paused: false, finishing: false, fadeT: 0, fadeDur: 0.5,
       speed: animSpeed(), rm: reduced(), anchor: pickAnchor(intr), mood: 'neutral', tone: 'normal', talkTail: 0, wasTyping: false, hold: 0, holdSet: false, titleDur: 2.5, titleK: 0,
       hl: new Typer(hlT, hlR, hlBox), sub: new Typer(subT, subR, subBox), gfx: null, rk: null, curPlanet: null, L: null, shown: 0, skipped: false, leaving: false,
       tkLines: tickerLines(intr), tkIdx: 0, tkT: 0, tkU: 0, anims: null, prevTrack: musicCur(), prevSnap: musicSnap(), musicStarted: false,
@@ -1707,7 +1726,7 @@
       }
     },
     update(dt) { frame(dt); },
-    resize() { layKey = ''; if (R) R.accDt = 1; },
+    resize() { layKey = ''; if (R) R.redraw = true; },
   });
   UI.bindKey('space', e => { if (!e || !e.repeat) act('next'); }, { screen: 'gnn' });
   UI.bindKey('enter', e => { if (!e || !e.repeat) act('next'); }, { screen: 'gnn' });

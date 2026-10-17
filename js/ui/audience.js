@@ -191,6 +191,11 @@
         A.menuEl.appendChild(b);
       });
       setFocus(A.focus);
+      // waiting-for-input light: a lone Continue / OK gets the gold light; an offer the turn is waiting on (an AI-initiated audience) lights
+      // all its answers softly — accepting or refusing a treaty is the player's call, the light only says "the game waits here"
+      const bs = Array.from(A.menuEl.querySelectorAll('.au-item'));
+      if (items.length === 1 && bs[0]) UI.attention(bs[0], { focus: false });
+      else if (A.mode === 'ai' && M.Game && M.Game.busy) UI.attentionGroup(bs);
     });
   }
   function setFocus(i) {
@@ -306,7 +311,7 @@
     const iw = im.naturalWidth, ih = im.naturalHeight;
     const cw = Math.round(W * 0.4), ch = H;                                             // the envoy occupies the left 40 %, feathered into the hall
     const fh = H * 1.75, fw = fh * iw / ih;                                            // 2:3 figure plate: head at the upper left, cropped at the waist
-    const sway = Math.sin(t * 0.7) * W * 0.002, breathe = 1 + Math.sin(t * 1.25) * 0.003;
+    const sway = Math.sin(t * 0.35) * W * 0.0006, breathe = 1 + Math.sin(t * 0.5) * 0.0012;   // barely-there life: a photo that sways reads as jumping
     const x = -fw * 0.22 + sway, y = H * 0.05;
     if (!A.envoyCv || A.envoyCv.width !== cw || A.envoyCv.height !== ch) { A.envoyCv = document.createElement('canvas'); A.envoyCv.width = cw; A.envoyCv.height = ch; }
     const c = A.envoyCv, e = c.getContext('2d');
@@ -707,7 +712,7 @@
       if (A.moodUntil && t > A.moodUntil) { A.mood = baseMood(); A.moodUntil = 0; }
       if (A.recall > 0) A.recall = Math.min(1, A.recall + dt * 1.1);
       const fps = Math.max(24, Math.min(60, M.Perf && M.Perf.q ? M.Perf.q.animFps : 60));
-      if (t - A.lastDraw >= 1 / fps - 0.002) { A.lastDraw = t; paint(t); }
+      if (UI.pace(A.pace || (A.pace = {}), fps, dt)) { A.lastDraw = t; paint(t); }
     },
     resize() { fit(); },
   });
