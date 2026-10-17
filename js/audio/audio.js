@@ -3,8 +3,9 @@
 // createEngine, offline, renderWindowed, Voices, playVoice, kit}. Music lives in music.js, effects in sfx.js.
 //
 // Architecture: an "engine" (createEngine) wraps one AudioContext (real or Offline) with
-//   voices -> layer/sfx buses -> musicBus / sfxBus -> master -> highpass -> compressor -> soft-clip limiter -> outGain -> destination
+//   voices -> layer/sfx buses -> musicBus (-> eq -> M/S width -> glue compressor -> duck) / sfxBus -> master -> highpass -> compressor -> soft-clip limiter -> outGain -> destination
 // plus two convolution reverbs (music hall, sfx plate). Every voice is a small graph that is stopped + disconnected when it ends.
+// The duck stage dips the music for a moment under big sound effects (eng.duckMusic, driven by sfx.js) so stingers read without being loud.
 (function (M) {
   'use strict';
 
@@ -17,6 +18,7 @@
   const mtof = m => 440 * Math.pow(2, (m - 69) / 12);
   const ftom = f => 69 + 12 * Math.log2(f / 440);
   const dbtoa = d => Math.pow(10, d / 20);
+  const makeupDb = (thr, ratio) => 0.6 * Math.abs(thr * (1 - 1 / ratio));   // the DynamicsCompressor's built-in makeup for a threshold / ratio (Blink's formula)
   const noop = () => {};
 
   function hashStr(s) {
@@ -50,6 +52,18 @@
     p.exponentialRampToValueAtTime(1e-4, t + a + d);
     return t + a + d;
   }
+  // equal-power fade of an AudioParam from `from` to `to` over `sec` seconds ('in' = sine, 'out' = cosine shape). Never throws:
+  // when a curve cannot be scheduled (WebKit refuses a new event inside a running setValueCurveAtTime) it falls back to a linear ramp.
+  function fadeParam(p, from, to, t, sec, shape) {
+    if (!(sec > 0.01)) { try { p.cancelScheduledValues(t); p.setValueAtTime(to, t); } catch (e) { try { p.value = to; } catch (e2) { /* ignore */ } } return; }
+    const n = 48, c = new Float32Array(n);
+    for (let i = 0; i < n; i++) { const x = i / (n - 1) * Math.PI / 2; c[i] = shape === 'out' ? to + (from - to) * Math.cos(x) : from + (to - from) * Math.sin(x); }
+    try { p.cancelScheduledValues(t); p.setValueAtTime(from, t); p.setValueCurveAtTime(c, t, sec); }
+    catch (e) {
+      try { p.cancelScheduledValues(t); p.setValueAtTime(p.value, t); p.linearRampToValueAtTime(to, t + sec); }
+      catch (e2) { try { p.value = to; } catch (e3) { /* ignore */ } }
+    }
+  }
   function envAdsr(p, t, peak, a, d, sus, dur, r) { // returns the time the envelope reaches silence
     peak = Math.max(peak, 2e-4);
     const tA = t + a;
@@ -64,7 +78,7 @@
   }
 
   // ------------------------------------------------------------------ settings
-  const settings = { music: 0.6, sfx: 0.8, muted: false };
+  const settings = { music: 0.5, sfx: 0.8, muted: false };   // the score sits in the background by default
   function loadSettings() {
     try {
       const raw = window.localStorage && window.localStorage.getItem(LS_KEY);
@@ -85,6 +99,7 @@
 
   // ------------------------------------------------------------------ shared buffers (cached per sample rate)
   const cache = Object.create(null);
+  A._cache = cache;                             // (debug / measurement hook: generated impulse responses, noise buffers, curves)
 
   function makeNoise(ctx, kind, seconds, seed) {
     const sr = ctx.sampleRate, n = Math.floor(sr * seconds), buf = ctx.createBuffer(1, n, sr), d = buf.getChannelData(0), rng = makeRng(seed);
@@ -149,7 +164,8 @@
     return true;
   };
   function makeIR(ctx, o) { const b = new IRBuilder(ctx, o); b.run(Infinity); return b.buf; }
-  const IR_HALL = { seconds: 2.0, rt60: 1.8, pre: 0.02, diff: 0.04, hiStart: 0.5, hiEnd: 0.07, damp: 1.2, er: 7, seed: 11 };
+  const IR_STAGE = { seconds: 0.9, rt60: 0.55, pre: 0.008, diff: 0.03, hiStart: 0.9, hiEnd: 0.45, damp: 0.6, er: 12, seed: 23 };   // a stage: short, bright, early reflections
+  const IR_HALL = { seconds: 3.8, rt60: 3.3, pre: 0.036, diff: 0.05, hiStart: 0.7, hiEnd: 0.22, damp: 1.2, er: 8, seed: 11 };   // a large, open hall: long dark tail, a little more pre-delay
   const IR_PLATE = { seconds: 1.2, rt60: 1.0, pre: 0.003, diff: 0.008, hiStart: 0.85, hiEnd: 0.25, damp: 0.7, er: 0, seed: 23 };
 
   function softClipCurve() {                      // |x|<=0.6 linear, then tanh knee toward 0.97 (input pre-scaled by 0.5)
@@ -237,7 +253,7 @@
     opts = opts || {};
     const sr = ctx.sampleRate;
     const eng = {
-      ctx, sr, offline: !!opts.offline, unity: !!opts.unity, maxVoices: opts.maxVoices || 32,
+      ctx, sr, offline: !!opts.offline, unity: !!opts.unity, maxVoices: opts.maxVoices || 96,
       voices: new Set(), nodeCount: 0, vnow: 0, baseNodes: 0,
       stats: { created: 0, disposed: 0, stolen: 0, refused: 0, peak: 0 },
     };
@@ -250,8 +266,8 @@
     const master = mk(ctx.createGain());
     const hp = mk(ctx.createBiquadFilter()); hp.type = 'highpass'; hp.frequency.value = 22; hp.Q.value = 0.5;
     const comp = mk(ctx.createDynamicsCompressor());
-    comp.threshold.value = -12; comp.knee.value = 12; comp.ratio.value = 3; comp.attack.value = 0.004; comp.release.value = 0.18;
-    const pre = mk(ctx.createGain()); pre.gain.value = 0.5;
+    comp.threshold.value = -6; comp.knee.value = 4; comp.ratio.value = 6; comp.attack.value = 0.003; comp.release.value = 0.12;   // a peak limiter: the glue stage levels, this only catches peaks
+    const pre = mk(ctx.createGain()); pre.gain.value = 0.5 * dbtoa(-makeupDb(-6, 6));
     const shaper = mk(ctx.createWaveShaper());
     if (!cache.clip) cache.clip = softClipCurve();
     shaper.curve = cache.clip; try { shaper.oversample = '2x'; } catch (e) { /* ignore */ }
@@ -259,11 +275,63 @@
     master.connect(hp); hp.connect(comp); comp.connect(pre); pre.connect(shaper); shaper.connect(outGain); outGain.connect(ctx.destination);
     eng.master = master; eng.outGain = outGain;
     eng.musicBus = mk(ctx.createGain());
-    // gentle mastering tilt for music only: tighter lows, a little air
+    // music-only tone stage, left flat on purpose (the shelves are kept as hooks for a listening pass)
     const eqL = mk(ctx.createBiquadFilter()), eqH = mk(ctx.createBiquadFilter());
-    eqL.type = 'lowshelf'; eqL.frequency.value = 120; eqL.gain.value = -2.5;
-    eqH.type = 'highshelf'; eqH.frequency.value = 3200; eqH.gain.value = 4;
-    eng.musicBus.connect(eqL); eqL.connect(eqH); eqH.connect(master);
+    eqL.type = 'lowshelf'; eqL.frequency.value = 55; eqL.gain.value = 2.0;      // deep bass: the weight lives under 60 Hz, not at 150      // weight
+    const eqM = mk(ctx.createBiquadFilter()); eqM.type = 'peaking'; eqM.frequency.value = 220; eqM.gain.value = -2.5; eqM.Q.value = 0.9;   // (static part of the mud control; the dynamic part is the multiband stage below)
+    eqH.type = 'highshelf'; eqH.frequency.value = 3200; eqH.gain.value = 0.5;    // presence, mastering-mild
+    const eqA = mk(ctx.createBiquadFilter()); eqA.type = 'highshelf'; eqA.frequency.value = 9000; eqA.gain.value = 1.5;
+    const eqS = mk(ctx.createBiquadFilter()); eqS.type = 'peaking'; eqS.frequency.value = 3600; eqS.gain.value = -1.5; eqS.Q.value = 1.2;   // where shrillness lives   // air, mastering-mild
+    // glue: a slow, shallow compressor on the whole orchestra (2:1 above -20 dB, 40 ms in, 400 ms out) so tutti swells sit together
+    // and the master limiter is left with transients only
+    const glue = mk(ctx.createDynamicsCompressor());
+    glue.threshold.value = -24; glue.knee.value = 18; glue.ratio.value = 1.6; glue.attack.value = 0.06; glue.release.value = 0.5;
+    const glueMake = mk(ctx.createGain()); glueMake.gain.value = dbtoa(-makeupDb(-24, 1.6));   // no makeup: the fader sets the level
+    const sat = mk(ctx.createWaveShaper());        // a whisper of tape-style saturation before the limiter: density, not distortion
+    (function () { const n = 2048, c = new Float32Array(n), d = 1.6; for (let i = 0; i < n; i++) { const x = (i / (n - 1)) * 2 - 1; c[i] = Math.tanh(d * x) / d; } sat.curve = c; try { sat.oversample = '2x'; } catch (e) { /* ignore */ } })();
+    const duck = mk(ctx.createGain());
+    const width = (function () {                   // M = (L+R)/2, S = (L-R)/2 ; S -> hp 120 -> +1.5 dB @ 6k -> x w ; L' = M + S', R' = M - S'
+      const w = 1.15, inG = mk(ctx.createGain()), split = mk(ctx.createChannelSplitter(2)), merge = mk(ctx.createChannelMerger(2));
+      const mid = mk(ctx.createGain()), side = mk(ctx.createGain()), lToM = mk(ctx.createGain()), rToM = mk(ctx.createGain()), lToS = mk(ctx.createGain()), rToS = mk(ctx.createGain());
+      lToM.gain.value = 0.5; rToM.gain.value = 0.5; lToS.gain.value = 0.5; rToS.gain.value = -0.5;
+      inG.connect(split); split.connect(lToM, 0); split.connect(rToM, 1); split.connect(lToS, 0); split.connect(rToS, 1);
+      lToM.connect(mid); rToM.connect(mid); lToS.connect(side); rToS.connect(side);
+      const sHp = mk(ctx.createBiquadFilter()); sHp.type = 'highpass'; sHp.frequency.value = 120; sHp.Q.value = 0.7;
+      const sAir = mk(ctx.createBiquadFilter()); sAir.type = 'highshelf'; sAir.frequency.value = 6000; sAir.gain.value = 1.0;
+      const sW = mk(ctx.createGain()); sW.gain.value = w; const sNeg = mk(ctx.createGain()); sNeg.gain.value = -1;
+      side.connect(sHp); sHp.connect(sAir); sAir.connect(sW);
+      mid.connect(merge, 0, 0); sW.connect(merge, 0, 0);            // L' = M + S'
+      mid.connect(merge, 0, 1); sW.connect(sNeg); sNeg.connect(merge, 0, 1);   // R' = M - S'
+      return { in: inG, out: merge };
+    })();
+    const mb = (function () {                      // LR4 crossovers at 160 and 450 Hz; the middle band gets its own compressor (3:1 above -26 dB, 25 ms / 250 ms)
+      const inG = mk(ctx.createGain()), out = mk(ctx.createGain());
+      const lr = (type, f) => { const a = mk(ctx.createBiquadFilter()), b = mk(ctx.createBiquadFilter()); for (const n of [a, b]) { n.type = type; n.frequency.value = f; n.Q.value = Math.SQRT1_2; } a.connect(b); return { in: a, out: b }; };
+      const lo = lr('lowpass', 160), hiA = lr('highpass', 160), mid = lr('lowpass', 450), hi = lr('highpass', 450);
+      inG.connect(lo.in); lo.out.connect(out);
+      inG.connect(hiA.in); hiA.out.connect(mid.in); hiA.out.connect(hi.in); hi.out.connect(out);
+      const cp = mk(ctx.createDynamicsCompressor()); cp.threshold.value = -30; cp.ratio.value = 3; cp.attack.value = 0.025; cp.release.value = 0.25; cp.knee.value = 6;
+      const cg = mk(ctx.createGain()); cg.gain.value = dbtoa(-makeupDb(-30, 3) - 1.5);   // makeup taken back: the band only ever ducks
+      mid.out.connect(cp); cp.connect(cg); cg.connect(out);
+      // the low band (under 160 Hz) is held even: a slow 2.5:1 so the bass and the sub sit at one weight whatever the register
+      const lc = mk(ctx.createDynamicsCompressor()); lc.threshold.value = -22; lc.ratio.value = 2; lc.attack.value = 0.03; lc.release.value = 0.3; lc.knee.value = 8;
+      const lg = mk(ctx.createGain()); lg.gain.value = dbtoa(-makeupDb(-22, 2) + 1.0);
+      lo.out.disconnect(); lo.out.connect(lc); lc.connect(lg); lg.connect(out);
+      return { in: inG, out };
+    })();
+    eng.musicBus.connect(eqL); eqL.connect(eqM); eqM.connect(mb.in); mb.out.connect(eqH); eqH.connect(eqS); eqS.connect(eqA); eqA.connect(width.in); width.out.connect(glue); glue.connect(glueMake); glueMake.connect(sat); sat.connect(duck); duck.connect(master);
+    eng.glue = glue;
+    eng.duck = duck; eng.duckUntil = 0; eng.duckLevel = 1;
+    // dip the music by `depthDb` for `hold` seconds (15 ms in, ~250 ms release). While an earlier duck is still holding, the depth
+    // never decreases (the deeper one is kept, the hold is extended); a shorter + shallower request inside a running duck is ignored.
+    eng.duckMusic = function (depthDb, hold) {
+      if (eng.offline || eng.unity) return;
+      const t = ctx.currentTime, until = t + Math.max(0.05, hold || 0.3), p = duck.gain;
+      let g = dbtoa(-Math.abs(depthDb || 3));
+      if (eng.duckUntil > t) { if (eng.duckUntil >= until && eng.duckLevel <= g) return; g = Math.min(g, eng.duckLevel); }
+      try { p.cancelScheduledValues(t); p.setTargetAtTime(g, t, 0.015); p.setTargetAtTime(1, until, 0.25); } catch (e) { /* ignore */ }
+      eng.duckUntil = until; eng.duckLevel = g;
+    };
     eng.sfxBus = mk(ctx.createGain()); eng.sfxBus.connect(master);
     eng.sfxIn = eng.sfxBus;
 
@@ -289,7 +357,8 @@
       inp.connect(h); h.connect(conv); conv.connect(l); l.connect(out); out.connect(bus);
       return inp;
     };
-    eng.hallIn = verb('hall', IR_HALL, eng.musicBus, 170, 8800);
+    eng.hallIn = verb('hall', IR_HALL, eng.musicBus, 260, 11000);   // the hall carries no low mids: openness
+    eng.stageIn = verb('stage', IR_STAGE, eng.musicBus, 220, 13000);   // the close plane: drums, lead, plucks, bells
     eng.sfxVerbIn = verb('plate', IR_PLATE, eng.sfxBus, 120, 11000);
     if (jobs.length) {                                  // keep every main-thread task well under a frame: <=2.5 ms slices, one buffer assignment per task
       const next = () => {
@@ -327,6 +396,74 @@
         inp.connect(d); d.connect(lp); lp.connect(g); g.connect(d); lp.connect(pn); pn.connect(out);
       });
       return { in: inp, out, dispose() { for (const n of nodes) { try { n.disconnect(); } catch (e) { /* ignore */ } } eng.nodeCount -= nodes.length; nodes.length = 0; } };
+    };
+
+    // ensemble chorus: three modulated delay taps spread across the stereo field (strings / choir / pad "ensemble" thickening)
+    // Group-bus processing, one chain per music layer (the mix engineer's channel strips): a high-pass that keeps each group out of
+    // the register below it, a cut in the low-mid "mud" region so the beds do not stack up at 250 Hz, a touch of presence where a
+    // line has to read, gentle bus compression on bass / lead, and parallel compression on the drums for weight without pumping.
+    // Nothing here adds what a recording lacks; it clears the space between the recordings.
+    const STRIPS = {
+      bass:  { hp: 30, cuts: [[200, -3.5, 1.0]], comp: [-22, 3, 0.01, 0.2] },   // (no spread: the bass stays centred and solid)
+      pad:   { hp: 150, hp2: true, cuts: [[260, -3.5, 0.9], [3200, 0.5, 0.8]], spread: [0.014, 0.22] },
+      arp:   { hp: 140, cuts: [[250, -1.5, 1.0]], spread: [0.011, 0.12] },
+      lead:  { hp: 100, cuts: [[250, -2.5, 1.0], [2800, 1, 0.9]], comp: [-20, 2, 0.02, 0.25] },
+      bell:  { hp: 300, cuts: [[8000, 1, 'hs']], spread: [0.016, 0.25] },
+      choir: { hp: 170, hp2: true, cuts: [[300, -2, 1.0]] },   // a recorded choir: nothing synthetic on its strip   // the far choir gets a little sheen of its own making
+      drums: { hp: 30, cuts: [[220, -2, 1.2]], par: [-24, 4, 0.003, 0.12, 0.35], trans: 0.55 },   // weight (parallel) and hit (transient)
+      fx:    { hp: 60 },
+    };
+    eng.makeStrip = function (kind) {
+      const st = STRIPS[kind] || STRIPS.fx, nodes = [], N = n => { nodes.push(n); eng.nodeCount++; return n; };
+      const inp = N(ctx.createGain()), out = N(ctx.createGain());
+      let node = inp;
+      const hp = N(ctx.createBiquadFilter()); hp.type = 'highpass'; hp.frequency.value = st.hp; hp.Q.value = 0.7; node.connect(hp); node = hp;
+      if (st.hp2) { const h2 = N(ctx.createBiquadFilter()); h2.type = 'highpass'; h2.frequency.value = st.hp; h2.Q.value = 0.7; node.connect(h2); node = h2; }   // 24 dB/oct: the beds stay out of the bass
+      for (const c of st.cuts || []) {
+        const f = N(ctx.createBiquadFilter());
+        if (c[2] === 'hs') { f.type = 'highshelf'; f.frequency.value = c[0]; f.gain.value = c[1]; }
+        else { f.type = 'peaking'; f.frequency.value = c[0]; f.gain.value = c[1]; f.Q.value = c[2]; }
+        node.connect(f); node = f;
+      }
+      if (st.comp) { const cp = N(ctx.createDynamicsCompressor()), mg = N(ctx.createGain()); cp.threshold.value = st.comp[0]; cp.ratio.value = st.comp[1]; cp.attack.value = st.comp[2]; cp.release.value = st.comp[3]; cp.knee.value = 8; mg.gain.value = dbtoa(-makeupDb(st.comp[0], st.comp[1])); node.connect(cp); cp.connect(mg); node = mg; }
+      if (st.excite) {                              // exciter: high band -> soft saturation -> only the new harmonics above the band, mixed in low
+        const bp = N(ctx.createBiquadFilter()), sh = N(ctx.createWaveShaper()), hp2 = N(ctx.createBiquadFilter()), g = N(ctx.createGain());
+        bp.type = 'highpass'; bp.frequency.value = st.excite[0]; bp.Q.value = 0.7;
+        const n = 1024, c = new Float32Array(n); for (let i = 0; i < n; i++) { const x = (i / (n - 1)) * 2 - 1; c[i] = Math.tanh(6 * x); } sh.curve = c; try { sh.oversample = '4x'; } catch (e) { /* ignore */ }
+        hp2.type = 'highpass'; hp2.frequency.value = st.excite[0] * 2; hp2.Q.value = 0.7; g.gain.value = st.excite[1];
+        node.connect(bp); bp.connect(sh); sh.connect(hp2); hp2.connect(g); g.connect(out);
+      }
+      if (st.trans) {                               // transient shaper without a worklet: slow-attack minus fast-attack compression leaves the hits
+        const slow = N(ctx.createDynamicsCompressor()), fast = N(ctx.createDynamicsCompressor()), neg = N(ctx.createGain()), g = N(ctx.createGain());
+        for (const cp of [slow, fast]) { cp.threshold.value = -30; cp.ratio.value = 6; cp.release.value = 0.15; cp.knee.value = 2; }
+        slow.attack.value = 0.02; fast.attack.value = 0.0005; neg.gain.value = -1; g.gain.value = st.trans * dbtoa(-makeupDb(-30, 6));
+        node.connect(slow); node.connect(fast); slow.connect(g); fast.connect(neg); neg.connect(g); g.connect(out);
+      }
+      if (st.par) {                                 // parallel compression: a squashed copy under the dry drums
+        const cp = N(ctx.createDynamicsCompressor()), pg = N(ctx.createGain());
+        cp.threshold.value = st.par[0]; cp.ratio.value = st.par[1]; cp.attack.value = st.par[2]; cp.release.value = st.par[3]; cp.knee.value = 4; pg.gain.value = st.par[4] * dbtoa(-makeupDb(st.par[0], st.par[1]) + 4);   // (+4: the squashed copy is meant to sit up)
+        node.connect(cp); cp.connect(pg); pg.connect(out);
+      }
+      if (st.spread) {                              // L' = L + g*R(delayed), R' = R + g*L(delayed)
+        const sp = N(ctx.createChannelSplitter(2)), mg = N(ctx.createChannelMerger(2)), dL = N(ctx.createDelay(0.05)), dR = N(ctx.createDelay(0.05)), gL = N(ctx.createGain()), gR = N(ctx.createGain()), dry = N(ctx.createGain());
+        dL.delayTime.value = st.spread[0]; dR.delayTime.value = st.spread[0] * 1.17; gL.gain.value = st.spread[1]; gR.gain.value = st.spread[1];
+        node.connect(sp); sp.connect(dL, 0); sp.connect(dR, 1); dL.connect(gL); dR.connect(gR);
+        sp.connect(mg, 0, 0); sp.connect(mg, 1, 1); gR.connect(mg, 0, 0); gL.connect(mg, 0, 1);
+        mg.connect(out);
+      } else node.connect(out);
+      return { in: inp, out, nodes, dispose() { for (const n of nodes) { try { n.disconnect(); } catch (e) { /* ignore */ } } eng.nodeCount -= nodes.length; } };
+    };
+    eng.makeChorus = function (o) {
+      o = o || {};
+      const nodes = [], N = n => { nodes.push(n); eng.nodeCount++; return n; };
+      const inp = N(ctx.createGain()), out = N(ctx.createGain()), taps = [[0.0135, -0.75, 0.29], [0.0185, 0, 0.37], [0.0235, 0.75, 0.43]];
+      for (const tp of taps) {
+        const d = N(ctx.createDelay(0.1)), lfo = N(ctx.createOscillator()), lg = N(ctx.createGain()), pn = N(ctx.createStereoPanner()), g = N(ctx.createGain());
+        d.delayTime.value = tp[0]; lfo.type = 'sine'; lfo.frequency.value = tp[2] * num(o.rate, 1); lg.gain.value = num(o.depth, 0.0026); pn.pan.value = tp[1]; g.gain.value = 0.55;
+        lfo.connect(lg); lg.connect(d.delayTime); lfo.start();
+        inp.connect(d); d.connect(g); g.connect(pn); pn.connect(out);
+      }
+      return { in: inp, out, dispose() { for (const n of nodes) { try { if (n.stop) n.stop(); } catch (e) { /* ignore */ } try { n.disconnect(); } catch (e) { /* ignore */ } } eng.nodeCount -= nodes.length; nodes.length = 0; } };
     };
 
     // voice allocation with a polyphony cap; higher priority voices may steal lower ones
@@ -719,7 +856,7 @@
   A.Voices = V;
   A.playVoice = function (name, eng, dest, t, o) { return V[name](eng, dest, t, o || {}); };
   A.createEngine = createEngine;
-  A.kit = { clamp, num, mtof, ftom, dbtoa, hashStr, makeRng, envPerc, envAdsr, volToGain };
+  A.kit = { clamp, num, mtof, ftom, dbtoa, hashStr, makeRng, envPerc, envAdsr, fadeParam, volToGain };
 
   const readyHooks = [];
   function fireReady() { const h = readyHooks.splice(0); for (const fn of h) { try { fn(); } catch (e) { console.warn('[audio] ready hook failed', e); } } }

@@ -81,6 +81,7 @@ window.MOO_MANIFEST = {
     'js/gfx/pick.js',
     'js/gfx/grade.js',
     'js/audio/audio.js',
+    'js/audio/sampler.js',
     'js/audio/music.js',
     'js/audio/sfx.js',
 

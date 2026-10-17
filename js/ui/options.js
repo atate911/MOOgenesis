@@ -50,7 +50,7 @@
   if (M.Bus) M.Bus.on('settings', k => { if (!k || k === 'uiScale' || k === 'showTips' || k === 'reduceMotion') applyDisplayPrefs(); });
 
   // ------------------------------------------------------------------ audio plumbing (MOO.Audio may be absent)
-  const DEFAULT_VOL = { music: 0.6, sfx: 0.8 };
+  const DEFAULT_VOL = { music: 0.5, sfx: 0.8 };
   const aud = () => M.Audio || null;
   function getVol(kind) {
     const a = aud();
