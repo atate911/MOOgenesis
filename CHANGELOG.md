@@ -3,6 +3,23 @@
 Versions follow `MAJOR.MINOR.PATCH`; the live version is the `VERSION` file.
 `scripts/upgrade.sh` refuses to move to an older `VERSION` unless told to.
 
+## Unreleased
+
+- Galaxy music, less repetitive and more atmospheric (`js/audio/music.js`): four new exploration pieces in the planetarium manner —
+  `galaxy5` (the veil: a slow harp waltz in three, oboe, women far back), `galaxy6` (the abyss: cellos on a sunken pedal, bassoon
+  and alto flute, the men chanting the phrygian step; also in the war rotation), `galaxy7` (the cradle: a lullaby in six, rocking
+  harp, clarinet, glockenspiel) and `galaxy8` (the beacon: glass synth, slow pizzicato, a distant horn calling the leitmotif,
+  crotales and tubular bells answered by the delay) — eight pieces in the map rotation, about 35 minutes before anything returns.
+  Every galaxy piece now has `forms` (three or four orderings of its sections, so a performance opens differently each time),
+  alternative written readings of its melodies (`ph: [...]`, chosen per performance; a doubling that says `ph: '@'` follows the
+  lead's choice), parts that sit out some performances (`skip`), phrases the player leaves out (`rest`), breath sections of
+  varying length (`barsVar`) and a small tempo rubato (`rubato`), on top of the per-pass instrumentation `alts`; a per-performance
+  `take` seeds the variation RNG so no two performances of a piece are the same. The rotation is a programme rather than a jukebox:
+  breaths of varying length between pieces (`gap: [16, 38]` s), about half the time a short `drift` interlude re-rooted to the
+  key and mode of the piece that follows (`between: 'drift'`, a consonant chord walk per mode), reshuffles that never repeat the
+  piece just heard and keep pieces in the same key apart; `Music.snapshot()/restore()` carry the whole rotation. Fixed: galaxy4's
+  cello and men's lines in section B were written 16 bars late and never sounded; galaxy1's section C had two `choir` keys.
+
 ## 1.1.1 — 2026-10-17
 
 - Fun audit (`tools/handoff/fun-audit-2026-10.md`): the GNN now broadcasts only what the original treats as news (events, wars,
