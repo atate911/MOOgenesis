@@ -809,7 +809,7 @@
 
   // ================================================================== player
   const smooth = x => { x = clamp(x, 0, 1); return x * x * (3 - 2 * x); };
-  const S = { cur: null, old: [], timer: null, intensity: 0, pending: null, playlist: null, ticks: 0, plWait: null };
+  const S = { cur: null, old: [], timer: null, intensity: 0, pending: null, playlist: null, ticks: 0, plWait: null, then: null };   // then: the piece a one-shot cue hands over to
 
   class Player {
     constructor(eng, def, o) {
@@ -870,6 +870,8 @@
       const base = this.pass.start - this.shift, k = Math.ceil((now - base + 0.06) / unit);
       return Math.min(base + k * unit, now + (kind === 'beat' ? 1.5 : 4.5));
     }
+    // when a performance that does not loop ends (its last pass is also its first); Infinity for a looping piece
+    endTime() { return this.loop || !this.pass ? Infinity : this.pass.start + this.pass.len - this.shift; }
     // the first bar line at or after `time` in this performance (never past its end): where the next piece enters
     boundaryAfter(time) {
       if (!this.pass) return time;
@@ -984,6 +986,7 @@
       if (S.cur) {
         S.cur.tick(now, look);
         if (S.playlist) playlistCheck(now);
+        else if (S.then && S.cur && !S.cur.stopped) chainCheck(now);
         if (S.cur && S.cur.finished && !S.playlist) { const p = S.cur; S.cur = null; p.dispose(); }
       }
       for (let i = S.old.length - 1; i >= 0; i--) { const p = S.old[i]; p.tick(now, look); if (p.finished) { p.dispose(); S.old.splice(i, 1); } }
@@ -998,6 +1001,15 @@
   // the key of the piece that follows, never the same template twice running) and the interlude into the next piece, so the music never
   // stops; a gap (a number or [lo, hi] seconds) is available for moods that want a breath. A reshuffle never repeats the piece just heard and
   // keeps pieces in the same key apart.
+  // A one-shot cue (the crowning swell) hands over to the piece named in its `then`: the follow-up enters under the cue's last chord,
+  // fading in over the chord, and the cue is given a long fade that mostly happens after its last note, so the hall carries it on
+  function chainCheck(now) {
+    if (S.switchAt) { S.then = null; return; }                  // another piece is already arranged to follow: the chain is void
+    const p = S.cur, end = p.endTime(); if (end === Infinity) return;
+    if (end - now > S.then.fade) return;
+    const w = S.then; S.then = null;
+    startTrack(w.id, { fade: w.fade, inFade: w.fade, oldFade: Math.max(0.5, end - now) + 6, quantize: false });
+  }
   function playlistCheck(now) {
     const pl = S.playlist, p = S.cur;
     if (!pl || !p || !p.schedDone || pl.advancing) return;
@@ -1085,10 +1097,11 @@
     const def = TRACKS[id], eng = A.engine, fade = num(opts.fade, 3.5);
     if (opts.quantize !== false && S.cur && !S.cur.stopped && S.cur.id !== id) {
       const at = S.cur.nextBoundary(opts.quantize || 'bar');
-      if (at - eng.ctx.currentTime > 0.1) { S.switchAt = { id, opts: Object.assign({}, opts, { quantize: false }), at }; if (!opts.keepPlaylist) { S.playlist = null; S.plWait = null; } ensureTimer(); return true; }
+      if (at - eng.ctx.currentTime > 0.1) { S.switchAt = { id, opts: Object.assign({}, opts, { quantize: false }), at }; S.then = null; if (!opts.keepPlaylist) { S.playlist = null; S.plWait = null; } ensureTimer(); return true; }
     }
     S.switchAt = null;
     if (!opts.keepPlaylist) { S.playlist = null; S.plWait = null; }
+    S.then = opts.then && TRACKS[opts.then] && opts.loop === false ? { id: opts.then, fade: num(opts.thenFade, 5) } : null;   // a one-shot cue may name the piece that follows it
     const p = new Player(eng, def, { loop: opts.loop !== false, intensity: S.intensity });
     if (S.cur) { S.cur.fadeOut(num(opts.oldFade, fade)); S.old.push(S.cur); }    // oldFade: let a piece that is ending ring out under the next one
     S.cur = p;
@@ -1109,13 +1122,14 @@
         return 'pending';
       }
       if (S.cur && S.cur.id === id && !S.cur.stopped && !opts.restart) { S.switchAt = null; return true; }
+      if (S.then && S.then.id === id && S.cur && !S.cur.stopped && !opts.restart) return true;    // it follows the cue that is playing; nothing to do
       return startTrack(id, opts);
     } catch (e) { console.warn('[music] play failed', e); return false; }
   };
   Music.stop = function (opts) {
     try {
       opts = opts || {};
-      S.pending = null; S.playlist = null; S.plWait = null; S.switchAt = null;
+      S.pending = null; S.playlist = null; S.plWait = null; S.switchAt = null; S.then = null;
       if (S.cur) { S.cur.fadeOut(num(opts.fade, 3)); S.old.push(S.cur); S.cur = null; }
       return true;
     } catch (e) { console.warn('[music] stop failed', e); return false; }
@@ -1161,7 +1175,7 @@
   Music.onSamplesReady = function () {
     const p = S.cur; if (!p || p.stopped || !A.engine) return;
     const elapsed = A.engine.ctx.currentTime - p.t0;
-    if (elapsed >= 0 && elapsed < 14) startTrack(p.id, { fade: 2.5, loop: p.loop, keepPlaylist: true, quantize: false });
+    if (elapsed >= 0 && elapsed < 14) startTrack(p.id, { fade: 2.5, loop: p.loop, keepPlaylist: true, quantize: false, then: S.then && S.then.id, thenFade: S.then && S.then.fade });   // a one-shot cue keeps its follow-up
   };
 
   // A scene that borrows the music (GNN, lab, spy panels) takes a snapshot first and restores it afterwards: a running playlist
@@ -1216,7 +1230,25 @@
       return r === false ? false : pick;
     } catch (e) { console.warn('[music] setMood failed', e); return false; }
   };
-  Music.state = function () { return { cur: S.cur && S.cur.id, old: S.old.length, timer: !!S.timer, intensity: S.intensity, pending: S.pending && S.pending.id, playlist: !!S.playlist }; };
+  Music.state = function () { return { cur: S.cur && S.cur.id, old: S.old.length, timer: !!S.timer, intensity: S.intensity, pending: S.pending && S.pending.id, playlist: !!S.playlist, then: S.then && S.then.id }; };
+
+  // The end of the game: finale('victory') cuts to the crowning swell ('triumph', once, on the next beat, over whatever is playing) and
+  // hands over to the victory loop under its last chord; finale('defeat') goes to the dirge on the bar. Calling it again while the cue
+  // or its follow-up is playing or queued does nothing, so the council chamber can fire it the moment the crown is given and the
+  // endings screen, opening a few seconds later, inherits it. Any other end-game scene (conquest, a future ending) uses the same call.
+  const FINALES = { victory: { stinger: 'triumph', then: 'victory' }, defeat: { then: 'defeat' } };
+  Music.finale = function (kind, opts) {
+    try {
+      opts = opts || {};
+      const F = FINALES[kind] || (TRACKS[kind] ? { then: kind } : null);
+      if (!F) { console.warn('[music] unknown finale "' + kind + '"'); return false; }
+      const cur = Music.current();
+      if (!opts.restart && cur && (cur === F.stinger || cur === F.then)) return cur;
+      if (!F.stinger) return Music.play(F.then, Object.assign({ fade: 4.5, quantize: 'bar' }, opts)) ? F.then : false;
+      return Music.play(F.stinger, Object.assign({ fade: 1.2, quantize: 'beat', loop: false, then: F.then, thenFade: 5 }, opts)) ? F.stinger : false;
+    } catch (e) { console.warn('[music] finale failed', e); return false; }
+  };
+  Music.finales = () => Object.keys(FINALES);
 
   // Offline render of a track (windowed so the node graph stays small). opts: {from, intensity, sampleRate}
   Music.renderOffline = function (id, seconds, opts) {
@@ -2014,6 +2046,41 @@
       { n: 'B2', bars: 8, lv: 1.0, prog: 'vi IV I V | vi IV V I', pad: { p: 'sus', inst: 'strings' }, bass: 'walk', lead: { ph: 'VB VC', inst: 'brass', harm: -2 }, lead2: { ph: 'VB VC', inst: 'bell', oct: 1, vel: 0.4 }, choir: { v1: 'a', v2: 'a', vel: 1.0 }, timp: 'beats', drums: { kick: 'x.......x.......', snare: ['x..x.xx.x..x.xx.', 'x..x.xx.x..xxxxx'] }, fill: 'roll' },
       { n: 'D', bars: 8, lv: 0.9, prog: 'I V vi IV | I V IV V', pad: 'sus', bass: 'half', lead: { ph: 'V1 V2', inst: 'horn' }, timp: 'two', drums: { kick: 'x.......x.......', snare: ['x..x.xx.x..x.xx.', 'x..x.xx.x..xxxxx'] }, choir: { vel: 0.5 }, arp: { p: 'up8', vel: 0.3, reg: [57, 81] }, bell: { dens: 0.25, res: 2, reg: [72, 91], vel: 0.5 } },
       { n: 'A3', bars: 8, lv: 1.05, prog: 'I V vi IV | IV V I I', pad: 'sus', bass: 'half', lead: { ph: 'V2 V3', harm: -2 }, lead2: { ph: 'V2 V3', inst: 'bell', oct: 1, vel: 0.4 }, timp: 'beats', drums: { kick: 'x...x...x...x...', snare: ['x..x.xx.x..x.xx.', 'x..x.xx.x..xxxxx'], hat: 'x.x.x.x.x.x.x.x.' }, choir: { vel: 0.9 }, arp: { p: 'up', vel: 0.3, reg: [57, 83], jump: 0.1 }, fill: 'roll' },
+    ],
+  });
+
+  // The crowning — the end-game swell. Played once, cut to on the beat over whatever the chamber was playing (either council piece,
+  // Bb or F) and handed over to the victory loop under its last chord (Music.finale). A dominant pedal under a timpani roll and a
+  // cymbal rise for one bar so the key change reads as a lift, then the tutti on the downbeat: tam-tam, bass drum and crash, the
+  // game's call (the title leitmotif the procession opens with) in full brass with the horn section beneath, the procession's big
+  // phrase as a hymn in brass and horns with the whole chorus over the flat-sixth lift, the field drums and timpani on the step,
+  // bells and harp over the top, and a last chord with a harp run and the bell tree that the hall carries on. D major, the key of
+  // the victory piece that follows.
+  Track('triumph', {
+    desc: 'The crowning — the end-game swell: a dominant roll and cymbal rise out of whatever was playing, then the tutti on the downbeat — tam-tam, bass drum and crash, the game’s call in full brass with the horns beneath, the procession’s big phrase as a hymn in brass, horns and the whole chorus over the flat-sixth lift, field drums and timpani on the step, bells and harp over it all, and a last chord the hall carries; plays once and hands over to the victory loop',
+    bpm: 84, trim: 1.7, root: 'D', mode: 'major', tens: false, lintMin: 0.8, tone: { hi: 1.5, lo: 1.0 },
+    fx: { verb: 1.3, stage: 1.1 }, mix: { choir: 1.35, drums: 1.1, lead: 1.1, bell: 1.15, pad: 1.05, bass: 1.1 },
+    inst: { pad: 'strings', pad2: 'brass', bass: 'lowBrass', lead: 'brass', lead2: 'horn', arp: 'harp', bell: 'bell', choir: 'aah', choir2: 'choirMen' },
+    ph: {
+      CL: '5:3 8:1 | 7:2 6:2 | 5:4 | 4:2 7:2',          // the call (the game's leitmotif); its last bar rises into the hymn instead of resting
+      B1: '5:2 6:1 8:1 | 10:3 9:1 | 8:2 6:2 | 5:4',       // the procession's big phrase
+      CD: '4:2 3:1 2:1 | 5:3 4:1 | 3:2 2:2 | 1:4',        // and its cadence
+      FIN: '8:12', FIN3: '3:12',                          // the last chord: octave in the brass, the third in the horns
+    },
+    sec: [
+      { n: 'rise', bars: 1, cres: [0.45, 1.0], prog: 'V', rise: 1, pad: { p: 'swell', inst: 'strTrem', n: 4, reg: [50, 76], vel: 0.9, width: 1.3 }, choir2: { n: 3, reg: [38, 57], vel: 0.8 },
+        bass: { p: 'whole', inst: { p: 'lowBrass', att: 0.1 }, vel: 0.8 }, timp: { p: 'roll', roll: 1, vel: 1.0 }, drums: { sn: 'o.o.o.x.x.xxxxxx', vel: 0.9 } },
+      { n: 'call', bars: 4, lv: 1.0, hit: 'tam', cr: true, prog: 'I | V | I | ii:.5 V:.5', pad: { p: 'sus', n: 4, reg: [50, 78], vel: 0.9, width: 1.3 }, pad2: { p: 'sus', inst: 'brass', n: 4, reg: [45, 69], vel: 0.6, width: 1.3 },
+        bass: { p: 'half', inst: { p: 'lowBrass', att: 0.05 }, vel: 1.0 }, lead: { ph: 'CL', vel: 1.0 }, lead2: { ph: 'CL', inst: 'horn', oct: -1, vel: 0.65 }, drums: { p: 'field', vel: 1.0 }, timp: 'beats',
+        choir: { v1: 'a', v2: 'a', n: 4, reg: [57, 79], vel: 0.9 }, choir2: { n: 3, reg: [38, 57], vel: 0.85 }, bell: { dens: 0.2, res: 2, reg: [74, 96], vel: 0.5 }, fill: 'bigS' },
+      { n: 'hymn', bars: 8, cres: [1.0, 1.08], prog: 'I:.5 IV:.5 | I:.5 vi:.5 | bVI:.5 V:.5 | I | IV:.5 V:.5 | I | vi:.5 V:.5 | I', rise: 1, pad: { p: 'sus', n: 4, reg: [50, 78], vel: 0.95, width: 1.3 }, pad2: { p: 'sus', inst: 'brass', n: 4, reg: [45, 69], vel: 0.7, width: 1.3 },
+        bass: { p: 'half', inst: { p: 'lowBrass', att: 0.05 }, vel: 1.0 }, lead: { ph: 'B1 CD', vel: 1.0 }, lead2: { ph: 'B1 CD', inst: 'horn', oct: -1, vel: 0.7 }, drums: { p: 'field', vel: 1.0 }, timp: { p: 'beats', roll: 1 },
+        choir: { v1: 'a', v2: 'a', n: 4, reg: [57, 79], vel: 1.0 }, choir2: { n: 3, reg: [38, 57], vel: 0.9 }, bell: { dens: 0.25, res: 2, reg: [74, 96], vel: 0.52 }, arp: { p: 'up8', vel: 0.45, reg: [57, 86] }, fill: 'bigS' },
+      { n: 'crown', bars: 3, lv: 1.1, hit: 'tam', cr: true, prog: 'I', pad: { p: 'sus', n: 4, reg: [50, 81], vel: 1.0, width: 1.4 }, pad2: { p: 'sus', inst: 'brass', n: 4, reg: [45, 69], vel: 0.8, width: 1.3 },
+        bass: { p: 'whole', inst: { p: 'lowBrass', att: 0.06 }, vel: 1.0 }, lead: { ph: 'FIN', vel: 1.0 }, lead2: { ph: 'FIN3', inst: 'horn', vel: 0.8 }, timp: { kick: ['X...............', '................', '................'], vel: 1.0 },
+        drums: { bd: ['X...............', '................', '................'], bellTree: ['x...............', '................', '................'] },
+        choir: { v1: 'a', v2: 'a', n: 4, reg: [57, 81], vel: 1.0 }, choir2: { n: 3, reg: [38, 57], vel: 0.95 }, bell: { dens: 0.3, res: 2, reg: [74, 98], vel: 0.55 },
+        arp: { pat: ['0123456789012345', '................', '................'], res: 4, vel: 0.5, reg: [50, 93], gate: 0.9 } },
     ],
   });
 

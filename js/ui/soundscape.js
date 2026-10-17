@@ -5,6 +5,8 @@
 // panels no longer borrow a cue of their own (their stingers play over the underscore, as a film would).
 // The battle screen raises Music.setIntensity as ships die; leaving the combat group resets it, so the tension layers never leak
 // into the exploration music.
+// The endings go through Music.finale: a win cuts to the crowning swell ('triumph', once) and hands over to the victory loop; a loss
+// goes to the dirge. The council chamber fires the same finale the moment the player is crowned, so the ending screen inherits it.
 (function (M) {
   'use strict';
   const UI = M.UI;
@@ -51,7 +53,7 @@
     if (id === 'audience' || id === 'races') return raceMood(params);
     if (id === 'endings' || id === 'ending') {
       const win = params && (params.kind === 'good' || params.kind === 'tyrant' || params.win);
-      return win ? ['victory', 'victory'] : ['defeat', 'defeat'];
+      return win ? ['victory', 'victory', 'finale'] : ['defeat', 'defeat', 'finale'];
     }
     if (id === 'galaxy') { war = atWar(); early = earlyYears(); return ['galaxy', galaxyMood()]; }
     return MAP[id] || null;
@@ -72,7 +74,8 @@
     group = pick[0];
     try {
       if (group !== 'combat' && m.setIntensity) m.setIntensity(0);           // before the new track is built: its players copy the current level
-      m.setMood(pick[1], group === 'combat' ? { fade: 1.5, quantize: 'beat' } : { fade: 4.5, quantize: 'bar' });
+      if (pick[2] === 'finale' && m.finale) m.finale(pick[1]);
+      else m.setMood(pick[1], group === 'combat' ? { fade: 1.5, quantize: 'beat' } : { fade: 4.5, quantize: 'bar' });
     } catch (e) { /* audio optional */ }
   }
   function calm() { const m = music(); if (m && m.setIntensity) { try { m.setIntensity(0); } catch (e) { /* audio optional */ } } }

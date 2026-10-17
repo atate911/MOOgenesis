@@ -3,6 +3,23 @@
 Versions follow `MAJOR.MINOR.PATCH`; the live version is the `VERSION` file.
 `scripts/upgrade.sh` refuses to move to an older `VERSION` unless told to.
 
+## Unreleased
+
+- Music, the end of the game: a crowning swell (`triumph`) — one bar of dominant pedal under a timpani roll and a cymbal rise out of
+  whatever the chamber was playing, then the tutti on the downbeat: tam-tam, bass drum and crash, the game's call (the title leitmotif
+  the procession opens with) in full brass with the horns beneath, the procession's big phrase as a hymn in brass, horns and the whole
+  chorus over the flat-sixth lift, field drums and timpani on the step, bells and harp over it all, and a last chord with a harp run
+  and the bell tree that the hall carries on (D major, 84 bpm, about 46 s, ≈ -13 LUFS: the loudest cue in the score, as measured).
+  It plays once and hands over to the victory loop under its last chord (`Music.finale('victory')`; `finale('defeat')` goes to the
+  dirge). The Galactic Council fires it the moment the player is crowned, before the Accept / Defy question, so the swell is already
+  under way when the ending opens; a refused crown cuts it under the war alarm. Every ending (council, conquest) goes through the same
+  call, so a future end-game scene gets the same sound. Engine: a one-shot cue may name the piece that follows it (`Music.play(id,
+  { loop: false, then, thenFade })`; `chainCheck` enters the follow-up under the cue's last chord with the long tail the rotation seams
+  use; `play()` of the chained piece while the cue is up is a no-op).
+- Council music: the chamber no longer starts the original `council` piece itself over the Soundscape's choice, so the two council
+  readings (`council2`, the procession in state, and `council`) alternate between visits as intended; before, the direct call made
+  the glue always land on `council2`.
+
 ## 1.2.0 — 2026-10-17
 
 - GNN (`tools/handoff/gnn-logistics-2026-10.md`): a broadcast no longer closes on its own. The last story stays on air until

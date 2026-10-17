@@ -13,7 +13,8 @@
 //   MOO.UI.Council.isActive() -> bool
 //   screen 'council'  (params {_run}; opened without one it shows a demo chamber with the live electorate, Esc closes it)
 // Keys: Space / Enter / click = next · Esc / right-click = skip the replay (and abstain at the ballot) · 1 / 2 / 0 = your vote · Y / N = accept / defy.
-// Soft dependencies (all guarded): Gfx.Scenes.council, Gfx.Portraits, Audio.Music ('council') / SFX ('vote','gavel','war'), Settings ('animSpeed','reduceMotion'), Perf.q.
+// Soft dependencies (all guarded): Gfx.Scenes.council, Gfx.Portraits, Audio.Music (the 'council' mood via UI.Soundscape; Music.finale('victory') the moment the
+// player is crowned, so the swell is already under way when the ending opens) / SFX ('vote','gavel','war'), Settings ('animSpeed','reduceMotion'), Perf.q.
 (function (M) {
   'use strict';
   const UI = M.UI, U = M.Util, h = UI.h, G = M.Game, doc = document;
@@ -29,6 +30,8 @@
   const PQ = () => (M.Perf && M.Perf.q) || { dpr: 1.5, animFps: 60 };
   const Mu = () => (M.Audio && M.Audio.Music) || null;
   const musicPlay = (id, o) => { try { const m = Mu(); if (m && m.play) return m.play(id, o); } catch (e) { /* audio is optional */ } return null; };
+  const musicFinale = kind => { try { const m = Mu(); if (m && m.finale) return m.finale(kind); } catch (e) { /* audio is optional */ } return null; };
+  const musicStop = o => { try { const m = Mu(); if (m && m.stop) return m.stop(o); } catch (e) { /* audio is optional */ } return null; };
   let sfxIds = null;
   function sfx(id, fb) {
     try {
@@ -545,6 +548,7 @@
     R.holo = 'crown';
     for (const id of R.ids) { const s = R.seats[R.seatOf[id]]; s.state = id === res.winner ? 'winner' : (R.meta[R.seatOf[id]].vote === -1 ? 'abstain' : 'idle'); }
     refreshTags(R); paintTally(R); sfx('gavel');
+    if (mine) musicFinale('victory');                                 // the crowning swell cuts in on the beat; the ending inherits it
     const title = Council.titleFor(S, res.winner, S ? S.year : undefined);
     say(R, ['In the year ', brass(String(res.year)), ', the Council has chosen ', who(W, W.leader), ' of the ' + W.name + ' as ', gold(title), '.']);
     await beat(R, 2800);
@@ -559,6 +563,7 @@
         await beat(R, 1900);
         return { over: true };
       }
+      if (mine) musicStop({ fade: 0.6 });                            // the crown refused: the swell dies under the alarm; the map's war music follows
       sfx('war', 'alert');
       say(R, [res.text || 'So be it. You defy the Council. Now you will feel the wrath of the New Republic!'], 'bad');
       await beat(R, 1600);
@@ -584,7 +589,9 @@
     CN.skip.style.display = spec.kind === 'vote' ? '' : 'none';
     UI.clear(CN.cards); say(R, ['']); setHint([]);
     try { CN.root.focus({ preventScroll: true }); } catch (e) { /* not focusable yet */ }
-    musicPlay('council', { fade: 1.0 });
+    // the Soundscape glue picks the chamber's piece on the 'screen' event (the two council readings alternate between visits); a direct
+    // play here would override its choice, so it is only the fallback when the glue is not installed
+    if (!(UI.Soundscape && UI.Soundscape.onScreen)) musicPlay('council', { fade: 1.0 });
     drive(R);
   }
   async function drive(R) {
