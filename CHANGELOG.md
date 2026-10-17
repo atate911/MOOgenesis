@@ -3,6 +3,23 @@
 Versions follow `MAJOR.MINOR.PATCH`; the live version is the `VERSION` file.
 `scripts/upgrade.sh` refuses to move to an older `VERSION` unless told to.
 
+## Unreleased
+
+- The era: a slow arc under the exploration music that is felt in hindsight, never heard moving. `soundscape.js` reads a target from
+  the state each turn and lets a value follow it a few hundredths a turn (`Music.setEra`). The target starts moving about halfway
+  through a game: it is built from how many of the player's colonies have foreign colonies pressing close, how many races have been
+  met beyond the first, the size of the fleets around the player against their own (the arms race), cold relations and open wars —
+  a lone empire with five colonies reads 0, a first contact far away 0.05, three races met with one on the border 0.3, a crowded
+  frontier with growing fleets 0.65, one war 0.9; a new performance of an exploration piece reads it once when it is compiled, never mid-piece. As
+  it rises: chords gain ninths and sevenths (about half of them at the top), then major sevenths and minor ninths, a fourth chord turning
+  minor and the tonic gaining its seventh near the top (never the cadence, never a suspension), the pads voice one more note past the
+  midpoint and sit closer (stage width −30 %), the delay echoes tighten by half while the hall stays (it is what makes the recordings
+  real), the tempo lifts up to 4.5 %, and recorded low strings and the men stand in more and more often (`eraAlts`, 90 % at the top);
+  past two thirds of the arc something eerie appears now and then, far back in the hall — a high violin tremolo holding a note a half
+  step off the chord and swelling over a few bars, a bowed-cymbal shimmer, very rarely a breath of whispered noise (`genEerie`, the
+  `tremHi` preset on the `fx` layer); the rare pieces grow likelier. Below 0.3 the planetarium
+  rotation plays; war still takes the war rotation.
+
 ## 1.2.0 — 2026-10-17
 
 - GNN (`tools/handoff/gnn-logistics-2026-10.md`): a broadcast no longer closes on its own. The last story stays on air until
@@ -82,7 +99,7 @@ Versions follow `MAJOR.MINOR.PATCH`; the live version is the `VERSION` file.
   Every galaxy piece now has `forms` (three or four orderings of its sections, so a performance opens differently each time),
   alternative written readings of its melodies (`ph: [...]`, chosen per performance; a doubling that says `ph: '@'` follows the
   other line's choice), parts that sit out some performances (`skip`), phrases the player leaves out (`rest`), breath sections of
-  varying length (`barsVar`) and a small tempo rubato (`rubato`), on top of the per-pass instrumentation `alts`; a per-performance
+  varying length (`barsVar`; at most two bars, with a faint high pad so a breath is never a hole in a long programme) and a small tempo rubato (`rubato`), on top of the per-pass instrumentation `alts`; a per-performance
   `take` seeds the variation RNG so no two performances of a piece are the same. The music never stops on the map: a piece
   crossfades into a one-minute interlude (five hidden templates — drift, harp, voices, horizon, pulse — re-rooted to the key and
   mode of the piece that follows, never the same one twice running) and the interlude into the next piece — each newcomer enters on the last bar line of the piece before it and fades in equal-power
