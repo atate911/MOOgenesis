@@ -22,6 +22,11 @@
   const SCENES = ['first-landing', 'galaxy', 'ground-battle'];
   const RACES = ['human', 'mrrshan', 'silicoid', 'sakkra', 'psilon', 'alkari', 'klackon', 'bulrathi', 'meklar', 'darlok'];
   const PURPOSES = ['audience', 'scientist', 'figure', 'homeworld', 'council', 'homeworld-square'];
+  // Batch-4 sprites / skies (docs/IMAGE-GEN-SPRITES.md) and batch-3 stills (docs/IMAGE-GEN-OTHER.md): looked up by the same rules,
+  // so the callers below fall back to procedural art until the files exist in assets/art/.
+  const BATTLE = ['planet', 'nebula', 'asteroids', 'star', 'deep'];
+  const FX = ['rock-1', 'rock-2', 'rock-3', 'rock-4', 'rock-5', 'rock-6', 'rock-7', 'rock-8', 'debris-1', 'debris-2', 'debris-3', 'base-platform'];
+  const STILLS = ['end-exile', 'inst-spaceport', 'title-key-art'];
   const has = (a, k) => a.indexOf(k) >= 0;
 
   function budget() { const gb = (M.HW && M.HW.memoryGB) || 4; return Math.max(160, Math.min(480, gb * 48)) * 1048576; }
@@ -78,6 +83,10 @@
     return has(SURFACE, look) ? 'surface/surface-' + look : null;
   }
   function systemPath(color) { return has(SYSTEM, color) ? 'system/system-' + color : null; }
+  function systemSkyPath(color) { return has(SYSTEM, color) ? 'system-sky/system-sky-' + color : null; }   // planet-free sky (batch 4)
+  function battlePath(name) { return has(BATTLE, name) ? 'battle/battle-' + name : null; }                  // tactical backdrops (batch 3)
+  function fxPath(name) { return has(FX, name) ? 'fx/' + name : null; }                                      // rock / debris / base cutouts (batch 4)
+  function stillPath(name) { return has(STILLS, name) ? 'still/' + name : null; }                            // end-exile, inst-spaceport, title-key-art (batch 3)
   function eventPath(name) { return has(EVENTS, name) ? 'event/event-' + name : null; }
   function scenePath(name) { return has(SCENES, name) ? 'scene/scene-' + name : null; }
   function racePath(race, purpose) { return has(RACES, race) && has(PURPOSES, purpose) ? 'races/race-' + race + '-' + purpose : null; }
@@ -133,8 +142,9 @@
   M.Gfx.WorldArt = {
     get: get, ready: ready, whenReady: whenReady, draw: draw, canvas: canvas, preload: preload,
     orbit: orbitPath, surface: surfacePath, system: systemPath, event: eventPath, scene: scenePath, race: racePath, colony: colonyPath, gnn: GNN,
+    systemSky: systemSkyPath, battle: battlePath, fx: fxPath, still: stillPath,
     get enabled() { return W.enabled; }, set enabled(v) { W.enabled = !!v; },
-    lists: { orbit: ORBIT, surface: SURFACE, system: SYSTEM, events: EVENTS, colony: COLONY, scenes: SCENES, races: RACES, purposes: PURPOSES },
+    lists: { orbit: ORBIT, surface: SURFACE, system: SYSTEM, events: EVENTS, colony: COLONY, scenes: SCENES, races: RACES, purposes: PURPOSES, battle: BATTLE, fx: FX, stills: STILLS },
     _state: W,
   };
 })(window.MOO);

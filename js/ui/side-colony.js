@@ -26,7 +26,10 @@
     .sc-sliders .s-val.warn { color:var(--rose); } .sc-sliders .s-val.dim { color:var(--mist); }
     .sc-sliders .s-label small { color:var(--mist); margin-left:.25rem; font-size:.72rem; }
     .sc-build { display:grid; grid-template-columns: 1fr auto; gap:.5rem; align-items:stretch; margin-top:.2rem; }
-    .sc-bbox { display:flex; align-items:center; gap:.5rem; padding:.35rem .5rem; cursor:pointer; background:rgba(0,0,0,.3); border:1px solid var(--brass-lo); min-height:4rem; }
+    .sc-bbox { display:flex; align-items:center; gap:.5rem; padding:.35rem .5rem; cursor:pointer; background:rgba(0,0,0,.3); border:1px solid var(--brass-lo); min-height:4rem; position:relative; overflow:hidden; }
+    .sc-bbox .yard { position:absolute; inset:0; z-index:0; pointer-events:none; filter:brightness(.45) saturate(.8); } .sc-bbox .yard canvas { display:block; width:100%; height:100%; }
+    .sc-bbox .yard::after { content:""; position:absolute; inset:0; background:linear-gradient(90deg, rgba(0,0,0,.15), rgba(0,0,0,.6)); }
+    .sc-bbox > :not(.yard) { position:relative; z-index:1; }
     .sc-bbox:hover { border-color:var(--brass-hi); background:rgba(214,179,106,.08); }
     .sc-bbox canvas { width:3.6rem; height:3rem; flex:none; object-fit:contain; } .sc-bbox .bn { font:400 1.05rem var(--font-display); color:var(--brass-hi); } .sc-bbox .bc { font-size:.82rem; color:var(--mist); }
     .sc-btns { display:flex; flex-direction:column; gap:.3rem; } .sc-btns .btn { padding:.25em .9em; font-size:.92rem; }
@@ -107,8 +110,15 @@
   }
   function shipCanvas(E, slot, w, hh) {
     const c = h('canvas', { width: w * 2, height: hh * 2 }), d = E.designs[slot];
-    try { const S = M.Gfx && M.Gfx.Ships; if (S && S.sprite && d) { const sp = S.sprite(E.race, d.hull, Math.min(w, hh) * 1.7, getComputedStyle(document.documentElement).getPropertyValue('--emp' + E.color), {}, S.designKey ? S.designKey(E.id, slot, d.name) : null); const k = Math.min(1, (w * 2 - 4) / sp.width, (hh * 2 - 4) / sp.height); c.getContext('2d').drawImage(sp, (w * 2 - sp.width * k) / 2, (hh * 2 - sp.height * k) / 2, sp.width * k, sp.height * k); } } catch (e) { /* ignore */ }
+    try { const S = M.Gfx && M.Gfx.Ships; if (S && S.sprite && d) { const sp = S.sprite(E.race, d.hull, Math.min(w, hh) * 1.7, getComputedStyle(document.documentElement).getPropertyValue('--emp' + E.color), { view: '3q' }, S.designKey ? S.designKey(E.id, slot, d.name) : null); const k = Math.min(1, (w * 2 - 4) / sp.width, (hh * 2 - 4) / sp.height); c.getContext('2d').drawImage(sp, (w * 2 - sp.width * k) / 2, (hh * 2 - sp.height * k) / 2, sp.width * k, sp.height * k); } } catch (e) { /* ignore */ }
     return c;
+  }
+
+  // the build box backdrop: the spaceport still (docs/IMAGE-GEN-OTHER.md #52) when it exists, else the industrial colony plate, darkened by CSS
+  function yardPlate() {
+    const WA = M.Gfx && M.Gfx.WorldArt; if (!WA || !WA.enabled) return null;
+    const still = WA.still('inst-spaceport'), path = still && WA.get(still) ? still : 'colony/colony-industrial';
+    return h('div.yard', WA.canvas(path, 320, 100, { fx: 0.5, fy: 0.55 }));
   }
 
   // ------------------------------------------------------------------------------------------------------------------------------------------------
@@ -166,6 +176,7 @@
       // build box + buttons
       const b = c.build, d = E.designs[b.slot];
       const boxInner = b.stargate ? [h('div.bn', 'Stargate'), h('div.bc', U.fmt(Math.floor(b.progress)) + ' / 3000 BC')] : [shipCanvas(E, b.slot, 58, 48), h('div', h('div.bn', b.name), h('div.bc', b.cost + ' BC' + (b.progress ? ' · ' + U.fmt(b.progress) + ' stored' : '')))];
+      const yard = yardPlate(); if (yard) boxInner.unshift(yard);                              // the shipyard behind the design (the original's gantry picture)
       UI.mount(st.build,
         h('div.sc-bbox', { tip: 'Click to cycle ship designs', onclick: () => cycleBuild(c, E) }, boxInner),
         h('div.sc-btns', UI.button('Ships', () => chooseBuild(c, E), { small: true }), UI.button('Reloc', () => ctx.show('reloc', { planet: c.id }), { small: true, tip: 'Set the rally point for newly built ships' }),

@@ -216,7 +216,7 @@
     const S = M.Gfx && M.Gfx.Ships;
     g.save(); g.translate(x, y); g.rotate(ang || 0); if (alpha !== undefined) g.globalAlpha = alpha;
     try {
-      if (S && S.sprite) { const c = S.sprite(o.race || 'human', o.hull === undefined ? 2 : o.hull, size, o.banner || '#62d8ff', {}); g.drawImage(c, -c.cx, -c.cy); g.restore(); return; }
+      if (S && S.sprite) { const c = S.sprite(o.race || 'human', o.hull === undefined ? 2 : o.hull, size, o.banner || '#62d8ff', { view: '3q' }); g.drawImage(c, -c.cx, -c.cy); g.restore(); return; }
     } catch (e) { /* draw the fallback */ }
     g.fillStyle = '#9fb4e8'; poly(g, [size * 0.5, 0, -size * 0.4, -size * 0.3, -size * 0.2, 0, -size * 0.4, size * 0.3], true); g.fill();
     g.restore();

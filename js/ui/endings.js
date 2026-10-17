@@ -99,7 +99,48 @@
     const g = cv.getContext('2d'); g.setTransform(dpr, 0, 0, dpr, 0, 0);
     return { g, w, h: hh };
   }
+  // Exile on the illustrated plates: the galaxy plate pushing out slowly (the end-exile still from docs/IMAGE-GEN-OTHER.md replaces it when it
+  // exists), the player's homeworld receding as a disc-masked vignette, the ship as a dark silhouette with its engines lit. Returns false when
+  // WorldArt is off or nothing is loaded yet, so the drawn starfield below stays the fallback.
+  function paintExileArt(g, w, hh, t, R) {
+    const WA = M.Gfx && M.Gfx.WorldArt, Sh = M.Gfx && M.Gfx.Ships; if (!WA || !WA.enabled) return false;
+    const still = WA.still('end-exile'), stillIm = still && WA.get(still), scene = WA.scene('galaxy');
+    const k = clamp(t / 40, 0, 1);
+    g.fillStyle = '#02030c'; g.fillRect(0, 0, w, hh);
+    const bg = stillIm ? WA.draw(g, stillIm, 0, 0, w, hh, { fx: 0.6, fy: 0.45, zoom: 1 + 0.06 * (1 - k) }) : WA.draw(g, scene, 0, 0, w, hh, { fx: 0.62, fy: 0.42, zoom: 1.08 - 0.08 * k });
+    if (!bg) return false;
+    g.fillStyle = 'rgba(2,3,12,.38)'; g.fillRect(0, 0, w, hh);                                   // the plate sits low-key under the caption
+    if (!stillIm) {                                                                              // the homeworld shrinks into the distance
+      const hp = WA.race(R.T.race, 'homeworld'), r = hh * (0.19 - 0.13 * k), cx = w * (0.8 - 0.05 * k), cy = hh * 0.3;
+      if (hp && WA.get(hp) && r > 2) {
+        g.save(); g.globalAlpha = 0.95 - 0.45 * k; g.beginPath(); g.arc(cx, cy, r, 0, TAU); g.clip();
+        WA.draw(g, hp, cx - r * 1.35, cy - r * 1.35, r * 2.7, r * 2.7, { fx: 0.5, fy: 0.5 });
+        const sh = g.createRadialGradient(cx - r * 0.35, cy - r * 0.3, r * 0.2, cx, cy, r); sh.addColorStop(0, 'rgba(0,0,0,0)'); sh.addColorStop(0.75, 'rgba(0,0,0,.25)'); sh.addColorStop(1, 'rgba(0,0,0,.9)');
+        g.fillStyle = sh; g.fillRect(cx - r, cy - r, r * 2, r * 2); g.restore();
+        g.save(); g.globalCompositeOperation = 'lighter'; const gl = g.createRadialGradient(cx, cy, r * 0.9, cx, cy, r * 1.6); gl.addColorStop(0, 'rgba(120,150,255,.22)'); gl.addColorStop(1, 'rgba(0,0,0,0)'); g.fillStyle = gl; g.fillRect(cx - r * 2, cy - r * 2, r * 4, r * 4); g.restore();
+      }
+    }
+    // the ship: drawn into a scratch layer, multiplied down to a silhouette, lit by a warm rim from the right and its own engine glow
+    if (Sh && Sh.draw) {
+      const sx = w * (0.42 + 0.05 * sin(t * 0.2)), sy = hh * 0.52 + sin(t * 0.7) * hh * 0.01, size = hh * 0.22, pad = size * 1.2;
+      const L = paintExileArt.layer || (paintExileArt.layer = doc.createElement('canvas'));
+      const lw = round(pad * 2), lh = round(pad * 2); if (L.width !== lw || L.height !== lh) { L.width = lw; L.height = lh; }
+      const x = L.getContext('2d'); x.setTransform(1, 0, 0, 1, 0, 0); x.clearRect(0, 0, lw, lh);
+      try {
+        Sh.draw(x, { race: R.T.race, hull: 'cruiser', x: pad, y: pad, size, angle: PI, color: R.T.color, t, thrust: 0.9, view: '3q' });
+        x.globalCompositeOperation = 'source-atop';
+        x.fillStyle = 'rgba(4,5,14,.75)'; x.fillRect(0, 0, lw, lh);                              // ~25 % luminance
+        const rim = x.createLinearGradient(pad + size * 0.6, 0, pad - size * 0.3, 0); rim.addColorStop(0, 'rgba(255,196,120,.38)'); rim.addColorStop(1, 'rgba(255,196,120,0)');
+        x.fillStyle = rim; x.fillRect(0, 0, lw, lh);
+        x.globalCompositeOperation = 'source-over';
+        g.drawImage(L, sx - pad, sy - pad);
+        g.save(); g.globalCompositeOperation = 'lighter'; const eg = g.createRadialGradient(sx + size * 0.42, sy, 0, sx + size * 0.42, sy, size * 0.45); eg.addColorStop(0, 'rgba(140,210,255,.55)'); eg.addColorStop(1, 'rgba(140,210,255,0)'); g.fillStyle = eg; g.fillRect(sx - size, sy - size, size * 2.5, size * 2); g.restore();
+      } catch (e) { /* no ship art */ }
+    }
+    return true;
+  }
   function paintExile(g, w, hh, t, R) {
+    if (paintExileArt(g, w, hh, t, R)) return;
     g.fillStyle = '#02030c'; g.fillRect(0, 0, w, hh);
     const gr = g.createRadialGradient(w * 0.72, hh * 0.38, 0, w * 0.72, hh * 0.38, w * 0.75); gr.addColorStop(0, 'rgba(70,46,150,.38)'); gr.addColorStop(1, 'rgba(0,0,0,0)'); g.fillStyle = gr; g.fillRect(0, 0, w, hh);
     for (let L = 0; L < 3; L++) {                                     // three parallax star layers
@@ -111,7 +152,7 @@
     const k = clamp(t / 40, 0, 1), pr = hh * (0.2 - 0.15 * k);                                   // the throne-world of Orion recedes
     try { if (Pl && Pl.draw) { g.globalAlpha = 0.9 - 0.4 * k; Pl.draw(g, { look: 'terran', seed: 7, inhabited: true }, w * (0.82 - 0.06 * k), hh * 0.3, pr, t, { dpr: 1 }); g.globalAlpha = 1; } } catch (e) { g.globalAlpha = 1; }
     const sx = w * (0.42 + 0.06 * sin(t * 0.2)), sy = hh * 0.55 + sin(t * 0.7) * hh * 0.012;
-    try { if (Sh && Sh.draw) Sh.draw(g, { race: R.T.race, hull: 'cruiser', x: sx, y: sy, size: hh * 0.2, angle: PI, color: R.T.color, t, thrust: 0.8 }); } catch (e) { /* no ship art */ }
+    try { if (Sh && Sh.draw) Sh.draw(g, { race: R.T.race, hull: 'cruiser', x: sx, y: sy, size: hh * 0.2, angle: PI, color: R.T.color, t, thrust: 0.8, view: '3q' }); } catch (e) { /* no ship art */ }
   }
   function paintFuneral(g, w, hh, t, R) {
     const Sc = M.Gfx && M.Gfx.Scenes, ok = Sc && Sc.defeat;

@@ -9,7 +9,7 @@ AI leaders that have personalities and objectives, spies, the Galactic Council, 
 > come from the freely licensed Sonatina Symphonic Orchestra (CC Sampling Plus 1.0) and VSCO 2 Community Edition (CC0) — see `assets/audio/README.md`.
 
 ## Status
-**Playable, in active development.** The whole loop works end to end (new game → galaxy → turns against 1–5 AI empires → research, ship design, tactical/ground combat, diplomacy, spies, council, events, endings, save/load). What remains — QA click-through, balance audit, GPU wiring, a second "serious sci-fi" graphics pass — is tracked in **`HANDOFF.md`** (start there) and `PROGRESS.md`.
+**Playable, in active development.** The whole loop works end to end (new game → galaxy → turns against 1–5 AI empires → research, ship design, tactical/ground combat, diplomacy, spies, council, events, endings, save/load). What remains — QA click-through, balance audit, GPU wiring, the art still to generate (**`ART-NEEDED.md`**) — is tracked in **`HANDOFF.md`** (start there) and `PROGRESS.md`.
 
 ## Run it
 * Double-click `index.html` (works from `file://` — no build step, no dependencies), **or** serve the folder: `python -m http.server 8765` → http://localhost:8765/

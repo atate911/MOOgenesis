@@ -17,6 +17,24 @@ rally-point display and the original's Alt+R. Open: the human council plate has 
 changed (`UI.pace()` + `UI.displayHz()` in kit.js replace every per-screen frame gate; cached galaxy backdrop; combat backdrop at
 24 Hz; governor hysteresis) and what still needs a real GPU (frame rates per tier, the F3 overlay now shows the display Hz and cap).
 
+## Session 6 (October 2026) — graphics audit + pass 3, branch `claude/admiring-tesla-v9gcy3`
+Pass 3 (`briefs/graphics-pass-3.md`) is implemented on the code side: Phase 0 (map glyphs, wordmark, exile, troop
+silhouettes, bombard overlay, combat cheap wins, system plates and sun, unused plates consumed), Phase 1 (the 3/4 ship
+view through `tools/build-ship-art.py` and `Gfx.Ships` `view:'3q'`, rock / debris / base cutout loaders) and Phase 2
+(combat FX pass, map ambience). **Waiting on art** (checklist with drop-in steps: `ART-NEEDED.md`): generate `docs/IMAGE-GEN-SPRITES.md` (27 cutouts and skies) and
+items 26-30, 41, 48, 52 of `docs/IMAGE-GEN-OTHER.md`; drop ship cutouts into `MOOg images/ship-variants/` and run
+`python3 -I tools/build-ship-art.py`; convert the rest to webp under `assets/art/{fx,system-sky,battle,still}/`
+(paths in `js/gfx/worldart.js`). Until then each consumer logs one 404 per missing file and keeps its fallback.
+Still owed: the real-hardware GPU check (`tools/test-hw.html?auto=1`) and Phase 3 (move the PNG masters out of git).
+Verify with `node tools/qa/art-shots.js` (both tiers).
+
+`tools/handoff/graphics-inventory-2026-10.md`: every screen captured through the real UI (`node tools/qa/art-shots.js`,
+`TIER=medium` for the GL look) and each element traced to its renderer. The illustrated layer (portraits, halls, labs, GNN,
+surfaces, orbit plates, three endings) is done; still flat or procedural: ships (top-down only, no 3/4 view, no race
+silhouettes), the tactical battlefield (blob asteroids, bare grid, flat star), the system view (procedural sun and nebula,
+`system-*` plates unused), unexplored-star discs on the map, the exile ending, the invasion troop markers, the title wordmark.
+
+## Session 5 (October 2026) — fun audit, branch `claude/optimistic-franklin-bvqmi3`
 `tools/handoff/fun-audit-2026-10.md`: what the original's fun is, how the remake was measured (player's-eye headless transcript +
 Playwright click-through), what changed (GNN news policy, end-of-turn planet reports, discovery cards, combat card layout, map camera)
 and what is still open (ship art, one-press GNN, tutor pop-ups, report sounds, tech adjust dialogs).

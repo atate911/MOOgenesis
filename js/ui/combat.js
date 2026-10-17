@@ -153,7 +153,7 @@
     const c = h('canvas', { width: Math.round(w * 2), height: Math.round(hh * 2) });
     try {
       const size = Math.round(w * 2 * (hullFit[clamp(hull | 0, 0, 3)]));
-      const sp = M.Gfx.Ships.sprite(race === 'monster' ? 'sakkra' : race, clamp(hull | 0, 0, 3), size, color, flags || {}, vk || null);
+      const sp = M.Gfx.Ships.sprite(race === 'monster' ? 'sakkra' : race, clamp(hull | 0, 0, 3), size, color, flags || {}, vk || null, '3q');   // pre-battle card: the 3/4 render when the class has one
       const k = Math.min(c.width / sp.width, c.height / sp.height, 1.6), g = c.getContext('2d');
       g.drawImage(sp, (c.width - sp.width * k) / 2, (c.height - sp.height * k) / 2, sp.width * k, sp.height * k);
     } catch (e) { /* art is optional */ }

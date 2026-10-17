@@ -9,13 +9,19 @@
     .menu-shade { position:absolute; inset:0; pointer-events:none;
       background: radial-gradient(ellipse at 50% 50%, transparent 45%, rgba(2,3,12,.75) 100%),
                   linear-gradient(90deg, rgba(3,5,18,.85) 0%, rgba(3,5,18,.35) 38%, transparent 62%); }
-    .menu-col { position:absolute; left:clamp(2rem, 7vw, 8rem); top:50%; transform:translateY(-50%); width:min(34rem, 86vw); }
+    .menu-col { position:absolute; left:clamp(2rem, 7vw, 8rem); top:50%; transform:translateY(-50%); width:min(34rem, 86vw); isolation:isolate; }   /* stacking context for the wordmark's extrusion (::before, z-index -1); on the h1 itself it would stop Chromium painting the background-clip:text face */
     .menu-kicker { font:400 clamp(1rem,1.4vw,1.5rem) var(--font-display); color:var(--brass); letter-spacing:.35em; margin:0 0 .3rem .15rem; opacity:0; animation: menu-fade .5s .05s ease-out forwards; }
-    .menu-title { margin:0; font:400 clamp(3.2rem, 7.4vw, 8.4rem)/.92 var(--font-title); letter-spacing:.045em; color:transparent;
+    /* metallic 3-D wordmark: the face is a steel-to-gold gradient clipped to the glyphs (with the sweep highlight on top), the extrusion and
+       bevel are a second copy of the text underneath (::before, same metrics) carrying a stacked text-shadow: 1 px bright bevel up-left,
+       six dark steps down-right, a warm glow. The face cannot carry text-shadow itself (background-clip:text clips it away). */
+    .menu-title { position:relative; margin:0; font:400 clamp(3.2rem, 7.4vw, 8.4rem)/.92 var(--font-title); letter-spacing:.045em; color:transparent;
       background: linear-gradient(100deg, transparent 38%, rgba(255,255,255,.95) 50%, transparent 62%) no-repeat 160% 0 / 260% 100%,
-                  linear-gradient(180deg,#fff6d8 0%,#e9cf90 38%,#c39a50 70%,#7d6334 100%);
-      -webkit-background-clip:text; background-clip:text; filter: drop-shadow(0 0 28px rgba(214,179,106,.28)) drop-shadow(0 4px 0 rgba(0,0,0,.45));
+                  linear-gradient(180deg,#fffbe9 0%,#f4dfa6 22%,#d9b86a 44%,#8e7340 50%,#e6c77e 56%,#b58f4a 76%,#5c4524 100%);
+      -webkit-background-clip:text; background-clip:text;   /* no filter here: a filter on a background-clip:text element stops Chromium painting the face; the glow is on ::before */
       animation: menu-sweep 2.6s .5s cubic-bezier(.3,.6,.2,1) 1 both; }
+    .menu-title::before { content:attr(data-text); position:absolute; inset:0; z-index:-1; color:#6b542a; -webkit-text-fill-color:#6b542a; background:none;
+      text-shadow: -1px -1px 0 rgba(255,250,230,.55), 1px 1px 0 #3a2c12, 2px 2px 0 #332710, 3px 3px 0 #2c210d, 4px 4px 0 #251b0a, 5px 5px 0 #1e1607, 6px 6px 1px #140e04,
+                   7px 9px 14px rgba(0,0,0,.6), 0 0 34px rgba(214,179,106,.18); }
     .menu-sub { margin:.7rem 0 2.4rem .2rem; color:var(--mist); font-size:clamp(1rem,1.25vw,1.35rem); max-width:28rem; opacity:0; animation: menu-fade .5s .15s ease-out forwards; }
     .menu-list { display:flex; flex-direction:column; gap:.7rem; width:min(21rem, 80vw); opacity:0; animation: menu-fade .4s .1s ease-out forwards; }
     .menu-list .btn { justify-content:flex-start; padding:.6em 1.3em; font-size:1.25rem; }
@@ -25,6 +31,11 @@
     @keyframes menu-sweep { from { background-position: 160% 0, 0 0; } to { background-position: -60% 0, 0 0; } }
   `);
   const bump = css => css.replace(/(^|[}])([^{}]*)[{]/g, (m, a, sel) => a + sel.replace(/[/][*][^]*?[*][/]/g, '').split(',').map(s => s.trim()).filter(Boolean).map(s => ':root:root ' + s).join(', ') + ' {');   // raise specificity over the theme-v2 .panel/.btn rules
+  // the wordmark face must stay a clipped gradient: theme-v2's generic h1 rule paints headings solid gold with a text-shadow, so these win on specificity
+  UI.css('menu-wordmark', bump(`
+    .menu-title { color:transparent; -webkit-text-fill-color:transparent; text-shadow:none; }
+    .menu-title::before { color:#6b542a; -webkit-text-fill-color:#6b542a; }
+  `));
   // Restyle: the original's title menu is plain gold text on the art — no boxes; hover brightens, keyboard focus gets a marker.
   UI.css('menu-orig', bump(`
     .menu-list { gap:.15rem; }
@@ -115,7 +126,7 @@
       el.appendChild(h('div.menu-wrap', canvas, h('div.menu-shade'),
         h('div.menu-col',
           h('div.menu-kicker', 'The galaxy awaits'),
-          h('h1.menu-title', 'Master of Orion'),
+          h('h1.menu-title', { 'data-text': 'Master of Orion' }, 'Master of Orion'),
           h('div.menu-sub', 'Ten races. One throne-world. Seize the stars, outwit your rivals, and win the vote of the Galactic Council — or end it by force.'),
           listEl, metaEl),
         h('div.menu-foot', 'Master of Orion Reborn · a fan remake — all art, music and text are original')));
@@ -153,7 +164,7 @@
       const S = M.Gfx && M.Gfx.Ships;
       if (S && S.draw) {
         const u = ((t - t0) * 0.045) % 1.35 - 0.2;
-        try { S.draw(ctx, { race: 'human', hull: 3, x: w * (1.1 - u * 1.35), y: hh * (0.2 + u * .1), size: Math.min(w, hh) * 0.2, angle: Math.PI + 0.08, color: '#d6b36a', t, thrust: 0.8 }); } catch (e) { /* ignore */ }
+        try { S.draw(ctx, { race: 'human', hull: 3, x: w * (1.1 - u * 1.35), y: hh * (0.2 + u * .1), size: Math.min(w, hh) * 0.2, angle: Math.PI + 0.08, color: '#d6b36a', t, thrust: 0.8, view: '3q' }); } catch (e) { /* ignore */ }
       }
     },
   });
