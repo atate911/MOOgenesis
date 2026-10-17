@@ -6,8 +6,8 @@
 //
 // Public API (MOO.Audio.Music):
 //   play(id,{fade,loop}) stop({fade}) current() has(id) list() setIntensity(0..1)
-//   playlist(ids,{shuffle, gap: s | [lo,hi], fade, start, between: templateId, betweenP, gapIn}) (a programme: breaths of varying length,
-//     interludes re-rooted to the next piece's key, reshuffles that never repeat the last piece and keep same-key pieces apart)
+//   playlist(ids,{shuffle, gap: s | [lo,hi], fade, start, between: templateId | [ids], betweenP, gapIn}) (a programme: pieces crossfade into
+//     interludes re-rooted to the next piece's key and those into the next piece; reshuffles never repeat the last piece or put same-key pieces together)
 //   setMood(name,{fade}) snapshot() / restore(snap,{fade}) (hand the music back after a scene: track OR running playlist)
 //   renderOffline(id,seconds,opts) analyze(id) (composition lint, used by tools/test-audio.html and tools/audio-report.js)
 // Intensity: layers x1..x3 are tension overlays that fade in above 0.12 / 0.38 / 0.62; a track may also *gate* its own layers
@@ -241,6 +241,7 @@
     // basses: the bass section
     deep: smp('cbSus', 0.3, { att: 0.1, sub: 0.4, eq: [[200, -3, 1], [600, -2, 1]] }, 'deep'), sub: smp('cbSus', 0.3, { att: 0.1, sub: 0.5, eq: [[200, -3, 1], [600, -2, 1]] }, 'sub'),
     moog: smp('cbPizz', 0.55, {}, 'moog'), pulse: smp('cbPizz', 0.5, {}, 'pulse'),
+    subSwell: smp('subBass', 0.36, { att: 1.6, rel: 1.6, sub: 0.3, eq: [[80, 2, 'ls'], [300, -2.5, 1]] }, 'sub'),   // the deep swell of the rare pieces
     // brass and winds (the horns crossfade between their mp and ff recordings with the written dynamic)
     horn: smp('hornSus', 0.34, { vib: 0, att: 0.09, hp: 90, eq: [[300, -2, 1], [4000, 2, 'hs']] }, 'horn'),
     hornSolo: smp('hornSolo', 0.31, { hp: 70, eq: [[4000, 2, 'hs']] }, 'horn'),
@@ -297,6 +298,7 @@
     bd: { v: 'sample', smp: 'bassDrum', fb: 'kick', fbo: { f: 44, f0: 120, dur: 0.5 }, lvl: 0.9 }, bdSoft: { v: 'sample', smp: 'bassDrum', fb: 'kick', fbo: { f: 44, f0: 120, dur: 0.5 }, lvl: 0.55 },
     sn: { v: 'sample', smp: 'snare', fb: 'snare', fbo: {}, lvl: 0.75 }, snRoll: { v: 'sample', smp: 'snareRoll', fb: 'snare', fbo: { dur: 0.6 }, lvl: 0.7 },
     tam: { v: 'sample', smp: 'gong', fb: 'crash', fbo: { dur: 3 }, lvl: 0.8, hp: 60 }, crashS: { v: 'sample', smp: 'crash', fb: 'crash', fbo: {}, lvl: 0.7, hp: 180 },
+    boom: { v: 'boom', lvl: 0.75, dur: 2.0 }, boomHi: { v: 'boom', lvl: 0.5, f: 90, dur: 1.1 }, kickSyn: { v: 'kick', f: 48, f0: 135, dur: 0.36, lvl: 0.85 }, snareSyn: { v: 'snare', lvl: 0.6 },   // the synthetic hits
     tri: { v: 'sample', smp: 'triangle', fb: 'hat', fbo: { open: true }, lvl: 0.4 }, bellTree: { v: 'sample', smp: 'bellTree', fb: 'none', lvl: 0.5 }, sleigh: { v: 'sample', smp: 'sleigh', fb: 'shaker', fbo: {}, lvl: 0.4 },
   };
   const VEL = { x: 0.78, X: 1, o: 0.42, g: 0.26 };
@@ -313,6 +315,8 @@
     ominous: { t5: 'X.....x...x.....', t4: '........x.....o.', rim: '..o...o...o...o.', shk: 'o.o.o.o.o.o.o.o.' },
     news: { kick: 'x.....x.x.......', snare: '....x.......x...', hat: 'x.x.x.x.x.x.x.x.', clap: '....x.......x...' },
     marchS: { bd: 'x.......x.......', sn: ['x..x.xx.x..x.xx.', 'x..x.xx.x..xxxxx'] }, warS: { bd: 'x..x..x.x..x..x.', sn: '....x.......x...' },
+    // the Mutiny kit: processed booms and synthetic kick / snare with an anvil, sparse, over two bars
+    mutiny: { boom: ['x...............', '........x.......'], kickSyn: ['x.......x.......', 'x.......x...x...'], snareSyn: ['........x.......', '....x.......x...'], metal: ['....x...........', '............x...'], boomHi: ['............x...', '................'], hiss: ['........x.......', '................'] },
   };
   const FILLS = {
     snare: { snare: '............xxxx', ramp: [0.5, 1] },
@@ -600,7 +604,8 @@
     const ly = BUS[key], inst = resolveInst(spec.inst, C.inst[key] || DEF_INST[key]);
     const vel = num(spec.vel, key === 'lead' ? 0.9 : 0.7), art = num(spec.art, inst.v === 'pluck' || inst.v === 'bell' || inst.v === 'chime' ? 1 : 0.97);
     const harm = spec.harm || 0, oct = spec.oct || 0, rng = C.vrng, brassy = inst.v === 'brass' || inst.v === 'flute', graceP = num(spec.grace, brassy ? 0.18 : 0), echoP = num(spec.echo, brassy ? 0 : 0.07);
-    let phs = spec.ph === '@' ? (s.R.L.lead.ph || s.R.L.lead) : spec.ph;
+    const ref = key === 'lead' ? s.R.L.lead2 : s.R.L.lead;                       // '@': double the other line (lead2 follows lead, lead follows lead2)
+    let phs = spec.ph === '@' ? (ref && (ref.ph || ref)) : spec.ph;
     if (Array.isArray(phs)) {                                                   // several written readings of the line: one per performance
       const picks = C.phPick || (C.phPick = new Map());                          // (a doubling that says ph: '@' follows the lead's choice)
       if (!picks.has(phs)) picks.set(phs, Math.floor(rng() * phs.length));
@@ -979,9 +984,10 @@
     } catch (e) { console.warn('[music] tick failed', e); }
   }
 
-  // The rotation is a programme, not a jukebox: between two pieces there is a breath of silence whose length varies, and about half the
-  // time a short drift interlude (the hidden 'drift' template re-rooted to the key of the piece that follows) so the next piece seems to
-  // grow out of the hall rather than start. A reshuffle never repeats the piece just heard and keeps pieces in the same key apart.
+  // The rotation is a programme, not a jukebox: a piece crossfades into a short interlude (one of the hidden 'drift' templates, re-rooted to
+  // the key of the piece that follows, never the same template twice running) and the interlude into the next piece, so the music never
+  // stops; a gap (a number or [lo, hi] seconds) is available for moods that want a breath. A reshuffle never repeats the piece just heard and
+  // keeps pieces in the same key apart.
   function playlistCheck(now) {
     const pl = S.playlist, p = S.cur;
     if (!pl || !p || !p.schedDone || pl.advancing) return;
@@ -991,9 +997,12 @@
       if (pl.queued) { id = pl.queued; pl.queued = null; gap = pl.gapIn; }      // the piece the interlude was leading into
       else {
         pl.i = (pl.i + 1) % pl.order.length;
-        if (pl.i === 0 && pl.shuffle) pl.order = shuffled(pl.ids, pl.order[pl.order.length - 1]);
+        if (pl.i === 0 && pl.shuffle) pl.order = composeOrder(pl, pl.order[pl.order.length - 1]);
         id = pl.order[pl.i];
-        if (pl.between && Math.random() < pl.betweenP) { const d = interludeFor(pl.between, id); if (d) { pl.queued = id; id = d; gap = pl.gapIn; } }
+        if (pl.between && Math.random() < pl.betweenP) {
+          const pool = pl.between.length > 1 ? pl.between.filter(t => t !== pl.lastTpl) : pl.between, tpl = pool[Math.floor(Math.random() * pool.length)];   // never the same bridge twice running
+          const d = interludeFor(tpl, id); if (d) { pl.lastTpl = tpl; pl.queued = id; id = d; gap = pl.gapIn; }
+        }
       }
       const g = pickGap(gap);
       if (g > 0) { p.fadeOut(Math.max(0.5, p.endAt - now)); S.old.push(p); S.cur = null; S.plWait = { at: p.endAt + g, id: id, fade: 0.4 }; }
@@ -1001,6 +1010,18 @@
     }
   }
   const pickGap = g => (Array.isArray(g) ? g[0] + Math.random() * (g[1] - g[0]) : num(g, 0));
+  // one cycle of the programme: the regular pieces shuffled, and each rare piece slipped in with probability pl.rare.p, never beside another
+  function composeOrder(pl, last) {
+    const a = shuffled(pl.ids, last);
+    if (pl.rare) {
+      const isRare = id => id !== undefined && pl.rare.ids.indexOf(id) >= 0;
+      for (const id of pl.rare.ids) if (Math.random() < pl.rare.p) for (let tries = 0; tries < 10; tries++) {
+        const k = 1 + Math.floor(Math.random() * a.length);
+        if (!isRare(a[k - 1]) && !isRare(a[k]) && !(k === 1 && last === id)) { a.splice(k, 0, id); break; }
+      }
+    }
+    return a;
+  }
   const rootOf = id => (TRACKS[id] ? TRACKS[id].root : null);
   // a shuffle that never opens with `last` and keeps two pieces in the same key apart (tries a dozen times, then takes what it has)
   function shuffled(ids, last) {
@@ -1093,8 +1114,12 @@
       if (!ids.length) return false;
       const pl = {
         ids, shuffle: !!opts.shuffle, gap: Array.isArray(opts.gap) ? opts.gap.slice() : num(opts.gap, 1.5), fade: num(opts.fade, 3), order: opts.shuffle ? shuffled(ids) : ids.slice(), i: 0, advancing: false,
-        between: opts.between && TRACKS[opts.between] ? opts.between : null, betweenP: num(opts.betweenP, 0.5), gapIn: Array.isArray(opts.gapIn) ? opts.gapIn.slice() : num(opts.gapIn, 7), queued: null,
+        between: opts.between ? [].concat(opts.between).filter(t => TRACKS[t]) : null, betweenP: num(opts.betweenP, 0.5), gapIn: Array.isArray(opts.gapIn) ? opts.gapIn.slice() : num(opts.gapIn, 0), queued: null, lastTpl: null,
       };
+      if (pl.between && !pl.between.length) pl.between = null;
+      if (opts.rare) { const ids = [].concat(opts.rare.ids || opts.rare).filter(id => TRACKS[id] && pl.ids.indexOf(id) < 0); pl.rare = ids.length ? { ids, p: num(opts.rare.p, 0.35) } : null; }
+      if (pl.shuffle) pl.order = composeOrder(pl);
+      if (opts.start && pl.rare && pl.rare.ids.indexOf(opts.start) >= 0 && pl.order.indexOf(opts.start) < 0) pl.order.unshift(opts.start);   // restored mid-rare-piece: come back to it
       if (opts.start && pl.order.indexOf(opts.start) >= 0) {           // begin with a given track (the rest keeps its order / shuffle)
         const k = pl.order.indexOf(opts.start);
         pl.order = pl.shuffle ? [opts.start].concat(pl.order.filter(id => id !== opts.start)) : pl.order.slice(k).concat(pl.order.slice(0, k));
@@ -1123,14 +1148,14 @@
   // (the galaxy rotation) comes back as a playlist, a single looping track as that track, silence as silence.
   Music.snapshot = function () {
     const pl = S.playlist;
-    return { id: Music.current(), playlist: pl ? { ids: pl.ids.slice(), shuffle: pl.shuffle, gap: pl.gap, gapIn: pl.gapIn, fade: pl.fade, between: pl.between, betweenP: pl.betweenP, start: pl.queued || (S.plWait && S.plWait.id) || pl.order[pl.i] } : null };
+    return { id: Music.current(), playlist: pl ? { ids: pl.ids.slice(), shuffle: pl.shuffle, gap: pl.gap, gapIn: pl.gapIn, fade: pl.fade, between: pl.between, betweenP: pl.betweenP, rare: pl.rare, start: pl.queued || (S.plWait && S.plWait.id) || pl.order[pl.i] } : null };
   };
   Music.restore = function (snap, opts) {
     try {
       opts = opts || {};
       const fade = num(opts.fade, 1.5);
       if (!snap) return Music.stop({ fade });
-      if (snap.playlist) { const pl = snap.playlist; return Music.playlist(pl.ids, { shuffle: pl.shuffle, gap: pl.gap, gapIn: pl.gapIn, fade: pl.fade, between: pl.between, betweenP: pl.betweenP, start: pl.start, firstFade: fade }); }
+      if (snap.playlist) { const pl = snap.playlist; return Music.playlist(pl.ids, { shuffle: pl.shuffle, gap: pl.gap, gapIn: pl.gapIn, fade: pl.fade, between: pl.between, betweenP: pl.betweenP, rare: pl.rare, start: pl.start, firstFade: fade }); }
       if (snap.id) return Music.play(snap.id, { fade });
       return Music.stop({ fade });
     } catch (e) { console.warn('[music] restore failed', e); return false; }
@@ -1140,16 +1165,18 @@
   const GALAXY = ['galaxy4', 'galaxy1', 'galaxy5', 'galaxy2', 'galaxy8', 'galaxy3', 'galaxy7', 'galaxy6'];   // the exploration programme (eight pieces, ~35 minutes before anything returns)
   const MOODS = {
     title: 'title', menu: 'title', explore: GALAXY, galaxy: GALAXY, map: GALAXY,
-    calm: GALAXY, wonder: 'galaxy1', patient: 'galaxy2', determined: 'galaxy3', deep: 'galaxy4', veil: 'galaxy5', abyss: 'galaxy6', cradle: 'galaxy7', beacon: 'galaxy8', design: 'design', research: 'research', tech: 'research',
+    calm: GALAXY, wonder: 'galaxy1', patient: 'galaxy2', determined: 'galaxy3', deep: 'galaxy4', veil: 'galaxy5', abyss: 'galaxy6', cradle: 'galaxy7', beacon: 'galaxy8', tide: 'galaxy9', chorale: 'galaxy10', design: 'design', research: 'research', tech: 'research',
     combat: ['combat3', 'combat1', 'combat2'], battle: ['combat3', 'combat1', 'combat2'], tension: 'ground', ground: 'ground', news: 'gnn', gnn: 'gnn', council: 'council',
     orion: 'orion', antarans: 'antarans', victory: 'victory', defeat: 'defeat', spy: 'spy', espionage: 'spy', intrigue: 'spy',
   };
   // array moods listed here play as a shuffled playlist with a pause between pieces (the original's map was silent; a breath between
   // tracks keeps the exploration music from looping one piece for an hour). Others pick the next track of the list on each request.
   MOODS.galaxyWar = ['galaxy3', 'ground', 'galaxy6', 'galaxy2', 'spy'];        // at war: the determined and uneasy pieces carry the map
-  // silence is an instrument: a breath of varying length between pieces, and about half the time a drift interlude in the next piece's key
-  const CALM_ROT = { gap: [16, 38], gapIn: [5, 11], fade: 5, between: 'drift', betweenP: 0.55 };
-  const MOOD_ROTATE = { explore: CALM_ROT, galaxy: CALM_ROT, map: CALM_ROT, calm: CALM_ROT, galaxyWar: { gap: [9, 20], gapIn: [4, 8], fade: 4, between: 'drift', betweenP: 0.35 } };
+  // the music never stops on the map: every piece crossfades into an interlude in the next piece's key, and that into the next piece
+  const INTERLUDES = ['drift', 'drift2', 'drift3', 'drift4', 'drift5'];
+  // the rare pieces (the tide, the chorale) are slipped into a cycle about a third of the time each; at war their readings with the synthetic hits, more often
+  const CALM_ROT = { gap: 0, gapIn: 0, fade: 7, between: INTERLUDES, betweenP: 1, rare: { ids: ['galaxy9', 'galaxy10'], p: 0.35 } };
+  const MOOD_ROTATE = { explore: CALM_ROT, galaxy: CALM_ROT, map: CALM_ROT, calm: CALM_ROT, galaxyWar: { gap: 0, gapIn: 0, fade: 5, between: INTERLUDES, betweenP: 0.6, rare: { ids: ['galaxy9:war', 'galaxy10:war'], p: 0.6 } } };
   let moodTick = 0;
   Music.moods = () => Object.keys(MOODS).concat(Object.keys(TRACKS).filter(id => id.indexOf('race:') === 0));
   // setMood('combat' | 'explore' | 'council' | 'human' | 'race:human' | any track id, {fade, loop}) -> id of the track chosen (or false)
@@ -1536,21 +1563,147 @@
     ],
   });
 
-  // The interlude between two pieces of the exploration programme (hidden; the rotation re-roots it to the key and mode of the piece that
-  // follows, see interludeFor): the hall, one high pad, a pedal, a few points of light and, perhaps, the first notes of the hymn
+  // The interludes between two pieces of the exploration programme (hidden; the rotation re-roots one of them to the key and mode of the
+  // piece that follows, see interludeFor). Each is a minute of one idea: drift (the hall, one high pad, a pedal, a few points of light and
+  // perhaps the first notes of the hymn), drift2 (harp and a cello line), drift3 (voices), drift4 (strings, the analogue sky and a distant
+  // horn), drift5 (a soft marimba pulse). The music never stops between pieces: a piece crossfades into the interlude and the interlude
+  // into the next piece.
   Track('drift', {
     desc: 'Drift — an interlude: one high pad, a pedal, a few points of light and perhaps the first notes of the hymn, in the key of the piece that follows',
-    bpm: 52, trim: 4.6, tone: { hi: -3 }, root: 'C', mode: 'major', hidden: true, interlude: true, tens: false, gentle: true, rubato: 0.04, mix: { bass: 0.7 }, fx: { dly: 2.4, verb: 1.35 },
+    bpm: 52, trim: 5.6, tone: { hi: -3 }, root: 'C', mode: 'major', hidden: true, interlude: true, tens: false, gentle: true, rubato: 0.04, mix: { bass: 0.7 }, fx: { dly: 2.4, verb: 1.35 },
     alts: [{}, { bell: 'crystal', lead: 'crystal' }, { lead: 'hornSolo', bell: 'chime' }, { pad: 'strings', lead: 'flute' }],
     inst: { pad: 'air', pad2: 'strings', bass: 'deep', lead: 'glass', bell: 'glass', arp: 'harp', choir: 'ooh' },
     ph: { H: '5:3 8:1 | 7:2 6:2 | 5:4 | r:4', T: '8:4 | 5:4 | r:8', U: '3:4 | 5:4 | 4:4 | r:4' },
     sec: [
-      { n: 'in', bars: 4, cres: [0.3, 0.44], prog: 'I:4', pad: { p: 'swell', n: 2, reg: [64, 81] }, bass: { pat: '1---', pedal: true, inst: { p: 'deep', att: 2.2, rel: 3.2, sub: 0.5 } }, bell: { dens: 0.06, res: 1, reg: [76, 100], vel: 0.32 } },
+      { n: 'in', bars: 2, cres: [0.38, 0.46], prog: 'I:2', pad: { p: 'swell', n: 2, reg: [64, 81] }, bass: { pat: '1---', pedal: true, inst: { p: 'deep', att: 2.2, rel: 3.2, sub: 0.5 } }, bell: { dens: 0.06, res: 1, reg: [76, 100], vel: 0.32 } },
       { n: 'A', bars: 8, lv: 0.44, prog: 'I:2 IV:2 | vi:2 V:2', pad: { p: 'swell', n: 2, reg: [64, 81] }, pad2: { p: 'swell', n: 3, reg: [50, 72], vel: 0.5, skip: 0.3 }, bass: { pat: '1---', pedal: true, inst: { p: 'deep', att: 2.0, rel: 3.0, sub: 0.5 } },
         lead: { ph: ['r2 H', 'H r4', 'r2 T r2', 'r4 U', 'r8'], vel: 0.36, echo: 0.3 }, arp: { pat: '0.......2.......', res: 2, vel: 0.3, reg: [57, 84], skip: 0.5 }, choir: { n: 2, reg: [62, 76], vel: 0.3, soft: true, skip: 0.4 }, bell: { dens: 0.08, res: 1, reg: [76, 100], vel: 0.34 } },
       { n: 'out', bars: 2, barsVar: [1, 3], lv: 0.3, prog: 'I:4', pad: { p: 'swell', n: 2, reg: [64, 81] }, bell: { dens: 0.05, res: 1, reg: [76, 100], vel: 0.3 } },
     ],
   });
+
+
+  Track('drift2', {
+    desc: 'Drift, harp — a slow harp figure under one long cello line, strings far back; an interlude in the key of the piece that follows',
+    bpm: 54, trim: 10, tone: { hi: -3 }, root: 'C', mode: 'major', hidden: true, interlude: true, tens: false, gentle: true, rubato: 0.04, mix: { bass: 0.7 }, fx: { dly: 2.2, verb: 1.3 },
+    alts: [{}, { arp: 'vibes', lead: 'altoFlute' }, { lead: 'clarinet' }],
+    inst: { pad: 'strings', pad2: 'air', bass: 'deep', lead: 'cello', bell: 'glass', arp: 'harp', choir: 'ooh' },
+    ph: { C1: '1:8 | 3:8 | 2:6 1:2 | 5:8', C2: '5:8 | 6:8 | 5:6 4:2 | 3:8' },
+    sec: [
+      { n: 'in', bars: 2, cres: [0.38, 0.48], prog: 'I:2', pad: { p: 'swell', n: 3, reg: [52, 74] }, bass: { pat: '1---', pedal: true, inst: { p: 'deep', att: 1.8, rel: 3.0, sub: 0.5 } }, arp: { pat: '0.1.2.3.', res: 2, vel: 0.34, reg: [55, 84] } },
+      { n: 'A', bars: 8, lv: 0.46, prog: 'I:2 IV:2 | vi:2 V:2', pad: { p: 'swell', n: 3, reg: [52, 74] }, pad2: { p: 'swell', n: 2, reg: [72, 88], vel: 0.4, skip: 0.4 }, bass: { pat: '1---', pedal: true, inst: { p: 'deep', att: 1.8, rel: 3.0, sub: 0.5 } },
+        arp: { pat: '0.1.2.3.', res: 2, vel: 0.36, reg: [55, 84] }, lead: { ph: ['C1', 'C2', 'r2 C1', 'r8'], oct: -1, vel: 0.5 }, bell: { dens: 0.06, res: 1, reg: [76, 100], vel: 0.32 } },
+      { n: 'out', bars: 2, barsVar: [1, 2], lv: 0.36, prog: 'I:2', pad: { p: 'swell', n: 3, reg: [52, 74] }, arp: { pat: '0...2...', res: 2, vel: 0.3, reg: [55, 84] }, bell: { dens: 0.05, res: 1, reg: [76, 100], vel: 0.3 } },
+    ],
+  });
+
+  Track('drift3', {
+    desc: 'Drift, voices — the women humming over the men, an air pad, one flute note; an interlude in the key of the piece that follows',
+    bpm: 52, trim: 5.4, tone: { hi: -3 }, root: 'C', mode: 'major', hidden: true, interlude: true, tens: false, gentle: true, rubato: 0.04, mix: { bass: 0.7 }, fx: { dly: 2.4, verb: 1.35 },
+    alts: [{}, { lead: 'glass' }, { choir: 'aah', lead: 'altoFlute' }],
+    inst: { pad: 'air', pad2: 'strings', bass: 'deep', lead: 'flute', bell: 'glass', choir: 'choirWomen', choir2: 'choirMen' },
+    ph: { F: '8:4 | 5:4 | r:8', G: '5:4 | 6:4 | 5:8' },
+    sec: [
+      { n: 'in', bars: 2, cres: [0.38, 0.48], prog: 'I:2', pad: { p: 'swell', n: 2, reg: [64, 81] }, bass: { pat: '1---', pedal: true, inst: { p: 'deep', att: 2.0, rel: 3.0, sub: 0.5 } }, choir2: { n: 3, reg: [38, 55], vel: 0.34, soft: true } },
+      { n: 'A', bars: 8, lv: 0.46, prog: 'I:2 IV:2 | vi:2 V:2', pad: { p: 'swell', n: 2, reg: [64, 81] }, pad2: { p: 'swell', n: 3, reg: [50, 72], vel: 0.45, skip: 0.3 }, bass: { pat: '1---', pedal: true, inst: { p: 'deep', att: 2.0, rel: 3.0, sub: 0.5 } },
+        choir: { n: 2, reg: [65, 79], vel: 0.36, soft: true }, choir2: { n: 3, reg: [38, 55], vel: 0.36, soft: true }, lead: { ph: ['r2 F r2', 'r4 G', 'r8'], vel: 0.34, echo: 0.3 }, bell: { dens: 0.06, res: 1, reg: [76, 100], vel: 0.32 } },
+      { n: 'out', bars: 2, barsVar: [1, 2], lv: 0.36, prog: 'I:2', pad: { p: 'swell', n: 2, reg: [64, 81] }, choir2: { n: 3, reg: [38, 55], vel: 0.3, soft: true, skip: 0.3 }, bell: { dens: 0.05, res: 1, reg: [76, 100], vel: 0.3 } },
+    ],
+  });
+
+  Track('drift4', {
+    desc: 'Drift, horizon — strings and the analogue sky swelling together, a horn calling the hymn from far away, crotales; an interlude in the key of the piece that follows',
+    bpm: 52, trim: 9.1, tone: { hi: -3 }, root: 'C', mode: 'major', hidden: true, interlude: true, tens: false, gentle: true, rubato: 0.04, mix: { bass: 0.75 }, fx: { dly: 2.2, verb: 1.3 },
+    alts: [{}, { lead: 'cello' }, { lead: 'oboe', pad2: 'air' }],
+    inst: { pad: 'strings', pad2: 'analog', bass: 'deep', lead: 'hornSolo', bell: 'crystal', choir: 'ooh' },
+    ph: { H: '5:3 8:1 | 7:2 6:2 | 5:4 | r:4', H2: '8:3 10:1 | 9:2 8:2 | 7:4 | 5:4' },
+    sec: [
+      { n: 'in', bars: 2, cres: [0.38, 0.5], prog: 'I:2', pad: { p: 'swell', n: 3, reg: [48, 70] }, pad2: { p: 'swell', n: 3, reg: [43, 64], vel: 0.55 }, bass: { pat: '1---', pedal: true, inst: { p: 'deep', att: 1.8, rel: 3.0, sub: 0.55 } } },
+      { n: 'A', bars: 8, lv: 0.5, prog: 'I:2 IV:2 | vi:2 V:2', pad: { p: 'sus', n: 3, reg: [48, 70] }, pad2: { p: 'swell', n: 3, reg: [43, 64], vel: 0.55 }, bass: { pat: '1---', pedal: true, inst: { p: 'deep', att: 1.8, rel: 3.0, sub: 0.55 } },
+        lead: { ph: ['r2 H r2', 'H r4', 'r4 H2', 'r8'], vel: 0.4 }, bell: { dens: 0.06, res: 1, reg: [76, 100], vel: 0.34 }, choir: { n: 2, reg: [60, 76], vel: 0.3, soft: true, skip: 0.4 } },
+      { n: 'out', bars: 2, barsVar: [1, 2], lv: 0.38, prog: 'I:2', pad: { p: 'swell', n: 3, reg: [48, 70] }, bell: { dens: 0.05, res: 1, reg: [76, 100], vel: 0.3 } },
+    ],
+  });
+
+  Track('drift5', {
+    desc: 'Drift, pulse — a soft marimba figure keeps time under a warm pad, a celeste phrase above; an interlude in the key of the piece that follows',
+    bpm: 58, trim: 9.8, tone: { hi: -2.5 }, root: 'C', mode: 'major', hidden: true, interlude: true, tens: false, gentle: true, rubato: 0.04, mix: { bass: 0.75 }, fx: { dly: 2.0, verb: 1.2 },
+    alts: [{}, { arp: 'pizz' }, { arp: 'harp', lead: 'vibes' }],
+    inst: { pad: 'warm', bass: 'deep', lead: 'glass', bell: 'vibes', arp: 'marimba', choir: 'ooh' },
+    ph: { M: '5:2 8:2 | 7:4 | 6:2 5:2 | r:4' },
+    sec: [
+      { n: 'in', bars: 2, cres: [0.38, 0.48], prog: 'I:2', pad: { p: 'swell', n: 3, reg: [50, 72] }, arp: { pat: '0.2.', res: 1, vel: 0.34, reg: [57, 78] } },
+      { n: 'A', bars: 8, lv: 0.48, prog: 'I:2 IV:2 | vi:2 V:2', pad: { p: 'sus', n: 3, reg: [50, 72] }, bass: { pat: '1---', inst: { p: 'deep', att: 1.2, rel: 2.4, sub: 0.5 } }, arp: { pat: '0.2.', res: 1, vel: 0.36, reg: [57, 78] },
+        lead: { ph: ['r2 M r2', 'r4 M', 'r8'], vel: 0.36 }, bell: { dens: 0.08, res: 1, reg: [76, 93], vel: 0.34 } },
+      { n: 'out', bars: 2, barsVar: [1, 2], lv: 0.38, prog: 'I:2', pad: { p: 'swell', n: 3, reg: [50, 72] }, arp: { pat: '0...', res: 1, vel: 0.3, reg: [57, 78] } },
+    ],
+  });
+
+  // ---------------------------------------------------------------- the rare pieces (the Crimson Tide manner): once a cycle or so, with impact
+  Track('galaxy9', {
+    desc: 'The tide — deep bass swells rising out of the dark, the analogue sky and cellos over them, low brass and the men entering, the hymn in the horns at the crest; rare on the map, and felt when it comes',
+    bpm: 60, trim: 3.1, tone: { lo: 1.0 }, root: 'D', mode: 'minor', loopFrom: 'A1', tens: false, rubato: 0.02, mix: { bass: 1.25, choir: 1.2, pad: 1.05 }, fx: { dly: 1.2, verb: 1.15 },
+    forms: [['A1', 'B', 'C', 'A2', 'E'], ['A1', 'C', 'A2', 'B', 'E'], ['A1', 'B', 'A2', 'E']],
+    alts: [{}, { lead: 'cello', pad2: 'strings' }, { pad: 'dark', lead2: 'brass' }],
+    inst: { pad: 'analog', pad2: 'cellos', bass: 'subSwell', lead: 'horn', lead2: 'lowBrass', bell: 'crystal', choir: 'choirMen', choir2: 'aah' },
+    ph: {
+      H1: '5:3 8:1 | 7:2 6:2 | 5:3 3:1 | 4:2 5:2',                         // the hymn (the game's leitmotif)
+      T1: '1:4 | 3:4 | 5:4 | 4:2 3:2', T2: '5:4 | 6:4 | 8:4 | 7:2 5:2',    // the slow rise
+      T3: '8:2 7:2 | 6:2 5:2 | 4:4 | 5:4',                                   // the brass answer
+      CM: '1:8 | 3:8 | 2:6 1:2 | 1:8',
+    },
+    sec: [
+      { n: 'intro', bars: 4, cres: [0.5, 0.62], prog: 'i:4', pad: { p: 'swell', n: 3, reg: [38, 60], vel: 0.7 }, bass: { pat: 'c---', pedal: true, inst: { p: 'subSwell', att: 2.4, rel: 1.8 } }, bell: { dens: 0.05, res: 1, reg: [76, 100], vel: 0.3 } },
+      { n: 'A1', bars: 16, cres: [0.62, 0.78], prog: 'i:2 bVI:2 | i:2 bVII:2 | i:2 bVI:2 | iv:2 V:2', pad: { p: 'swell', n: 3, reg: [38, 60], vel: 0.75 }, pad2: { p: 'swell', n: 3, reg: [43, 64], vel: 0.6 }, bass: { pat: ['c---', '1---'], inst: { p: 'subSwell', att: 2.2, rel: 1.8 } },
+        lead: { ph: ['r4 T1 r4 T2', 'T1 r4 T2 r4', 'r8 T1 T2'], vel: 0.6 }, choir: { n: 3, reg: [38, 55], vel: 0.5, soft: true }, bell: { dens: 0.06, res: 1, reg: [76, 100], vel: 0.32 } },
+      { n: 'B', bars: 8, lv: 0.95, hit: 'tam', cr: true, prog: 'bVI bVII i i | bVI bVII V i', pad: { p: 'sus', n: 3, reg: [38, 60], vel: 0.8 }, pad2: { p: 'stab', inst: 'lowBrass', pat: 'x.......x...x...', n: 2, reg: [38, 55], vel: 0.9, gate: 0.6 }, bass: { pat: 'c---', inst: { p: 'subSwell', att: 1.2, rel: 1.6 } },
+        lead: { ph: ['H1 H1', 'H1 T3'], vel: 0.85, harm: -2 }, choir: { n: 3, reg: [38, 57], vel: 0.9 }, choir2: { n: 3, reg: [57, 74], vel: 0.5, skip: 0.4 }, timp: 'two', bell: { dens: 0.1, res: 1, reg: [76, 100], vel: 0.4 } },
+      { n: 'C', bars: 8, lv: 0.5, prog: 'i:4 | i:4', pad: { p: 'swell', n: 3, reg: [38, 60], vel: 0.6 }, bass: { pat: 'c---', pedal: true, inst: { p: 'subSwell', att: 2.6, rel: 2.0 } }, lead2: { ph: ['r2 CM', 'CM'], inst: 'choirMen', oct: -1, vel: 0.45, skip: 0.3 }, choir: { n: 3, reg: [38, 55], vel: 0.45, soft: true }, bell: { dens: 0.1, res: 1, reg: [76, 100], vel: 0.38 }, rise: 2 },
+      { n: 'A2', bars: 16, cres: [0.85, 1.08], hit: 'tam', prog: 'i:2 bVI:2 | i:2 bVII:2 | i:2 bVI:2 | iv:2 V:2', pad: { p: 'sus', n: 3, reg: [38, 60], vel: 0.8 }, pad2: { p: 'sus', inst: 'strings', n: 4, reg: [55, 79], vel: 0.7 }, bass: { pat: 'c---', inst: { p: 'subSwell', att: 1.6, rel: 1.6 } },
+        lead: { ph: ['H1 H1 T3 H1', 'T1 T2 H1 H1'], inst: 'brass', vel: 0.95, harm: -2 }, lead2: { ph: ['r4 H1 r4 H1', 'r8 H1 H1'], inst: 'choirMen', oct: -1, vel: 0.8 }, choir: { n: 3, reg: [38, 57], vel: 1.0 }, choir2: { n: 3, reg: [57, 76], vel: 0.6 }, timp: 'beats', bell: { dens: 0.12, res: 1, reg: [76, 100], vel: 0.42 } },
+      { n: 'E', bars: 8, lv: 0.55, prog: 'i:2 bVI:2 | i:4', pad: { p: 'swell', n: 3, reg: [38, 60], vel: 0.65 }, bass: { pat: 'c---', pedal: true, inst: { p: 'subSwell', att: 2.6, rel: 2.2 } }, lead: { ph: ['r4 H1', 'T2 r4'], inst: 'hornSolo', vel: 0.55 }, choir: { n: 3, reg: [38, 55], vel: 0.5, soft: true }, bell: { dens: 0.06, res: 1, reg: [76, 100], vel: 0.32 } },
+    ],
+  });
+
+  Track('galaxy10', {
+    desc: 'The chorale — the men’s choir carries everything: a hymn sung low over the organ and the analogue bed, a horn counter-line, the women joining at the crest, timpani underneath; rare on the map',
+    bpm: 56, trim: 2.15, tone: { lo: 0.8 }, root: 'G', mode: 'minor', loopFrom: 'A1', tens: false, rubato: 0.02, mix: { choir: 1.4, bass: 1.1 }, fx: { dly: 1.0, verb: 1.2 },
+    forms: [['A1', 'B', 'C', 'A2', 'E'], ['A1', 'C', 'A2', 'B', 'E'], ['A1', 'B', 'A2', 'C', 'E']],
+    alts: [{}, { pad: 'organSoft', lead: 'cello' }, { pad2: 'cellos', choir2: 'choirWomen' }],
+    inst: { pad: 'organ', pad2: 'analog', bass: 'deep', lead: 'horn', lead2: 'choirMen', bell: 'glass', choir: 'choirMen', choir2: 'aah' },
+    ph: {
+      HY1: '1:3 3:1 | 2:2 1:2 | 5:3 4:1 | 3:4', HY2: '3:3 5:1 | 4:2 3:2 | 2:3 3:1 | 1:4',     // the chorale, two lines
+      HY3: '5:3 6:1 | 8:2 7:2 | 6:2 5:2 | 4:4', HY4: '6:2 5:2 | 4:2 3:2 | 2:3 1:1 | 1:4',     // its answer, higher
+      CT: '1:2 3:2 | 2:2 1:2 | 4:2 3:2 | 2:3 r:1',                                             // the horn beneath
+    },
+    sec: [
+      { n: 'intro', bars: 4, cres: [0.5, 0.62], prog: 'i:2 bVI:2', pad: { p: 'swell', n: 4, reg: [45, 72], vel: 0.9 }, pad2: { p: 'swell', n: 3, reg: [38, 60], vel: 0.5 }, bass: { pat: 'c---', pedal: true, inst: { p: 'deep', sub: 0.8, att: 0.8, rel: 2.0 } }, choir: { n: 3, reg: [38, 55], vel: 0.5, soft: true } },
+      { n: 'A1', bars: 16, cres: [0.68, 0.82], prog: 'i iv bVI V | i bVII bVI V | i iv bIII bVII | bVI iv V i', pad: { p: 'sus', n: 4, reg: [45, 72], vel: 0.85 }, pad2: { p: 'sus', n: 3, reg: [38, 60], vel: 0.55 }, bass: { pat: ['1---', 'c---'], inst: { p: 'deep', sub: 0.75, att: 0.5, rel: 1.6 } },
+        lead2: { ph: ['HY1 HY2 HY1 HY2', 'HY1 HY2 HY3 HY4', 'r4 HY1 HY2 HY4'], inst: 'choirMen', oct: -1, vel: 0.85 }, lead: { ph: ['r8 CT CT', 'CT r4 CT r4'], vel: 0.5, skip: 0.3 }, choir: { n: 3, reg: [38, 57], vel: 0.75 }, bell: { dens: 0.06, res: 1, reg: [72, 96], vel: 0.34 } },
+      { n: 'B', bars: 8, lv: 1.0, hit: 'tam', cr: true, prog: 'bVI bVII i i | bVI iv V i', pad: { p: 'sus', n: 4, reg: [45, 72], vel: 0.8 }, pad2: { p: 'sus', n: 3, reg: [43, 64], vel: 0.8 }, bass: { pat: 'c---', inst: { p: 'deep', sub: 0.85, att: 0.4, rel: 1.4 } },
+        lead2: { ph: ['HY3 HY4', 'HY1 HY4'], inst: 'choirMen', oct: -1, vel: 1.0 }, lead: { ph: ['HY3 HY4', 'HY1 HY4'], vel: 0.75, harm: -2 }, choir: { n: 3, reg: [38, 57], vel: 1.0 }, choir2: { n: 3, reg: [57, 76], vel: 0.65 }, timp: 'two', bell: { dens: 0.1, res: 1, reg: [72, 96], vel: 0.4 } },
+      { n: 'C', bars: 8, lv: 0.5, prog: 'i:2 bVI:2 | iv:2 i:2', pad: { p: 'swell', inst: 'organSoft', n: 4, reg: [50, 76], vel: 0.6 }, bass: { pat: 'c---', pedal: true, inst: { p: 'deep', sub: 0.85, att: 1.2, rel: 2.4 } }, lead2: { ph: ['HY1 HY2', 'r4 HY2'], inst: 'choirMen', oct: -1, vel: 0.6 }, choir: { n: 3, reg: [38, 55], vel: 0.55, soft: true }, bell: { dens: 0.12, res: 1, reg: [72, 96], vel: 0.4 }, rise: 2 },
+      { n: 'A2', bars: 16, cres: [0.88, 1.1], hit: 'tam', prog: 'i iv bVI V | i bVII bVI V | i iv bIII bVII | bVI iv V i', pad: { p: 'sus', n: 4, reg: [45, 72], vel: 0.7 }, pad2: { p: 'sus', n: 3, reg: [43, 64], vel: 0.9 }, bass: { pat: ['c---', 'c---', '1---', 'c---'], inst: { p: 'deep', sub: 0.9, att: 0.3, rel: 1.4 } },
+        lead2: { ph: ['HY1 HY2 HY3 HY4', 'HY3 HY4 HY1 HY2'], inst: 'choirMen', oct: -1, vel: 1.0 }, lead: { ph: '@', inst: 'horn', vel: 0.7, harm: -2 }, choir: { n: 3, reg: [38, 57], vel: 1.05 }, choir2: { n: 3, reg: [57, 76], vel: 0.7 }, timp: 'beats', bell: { dens: 0.14, res: 1, reg: [76, 100], vel: 0.45 } },
+      { n: 'E', bars: 8, lv: 0.58, prog: 'i iv bVI i | bVI iv V i', pad: { p: 'sus', n: 4, reg: [45, 72], vel: 0.8 }, bass: { pat: 'c---', pedal: true, inst: { p: 'deep', sub: 0.8, att: 0.8, rel: 2.2 } }, lead2: { ph: ['HY2 HY4', 'r4 HY4'], inst: 'choirMen', oct: -1, vel: 0.7 }, choir: { n: 3, reg: [38, 55], vel: 0.6, soft: true }, bell: { dens: 0.06, res: 1, reg: [72, 96], vel: 0.32 } },
+    ],
+  });
+
+  // The war-time readings of the rare pieces: the same music with the Mutiny-style synthetic hits (processed booms, synth kick and snare,
+  // anvil) placed in the big sections, sparse in the first; the war rotation plays these instead of the plain ones.
+  function hitsVariant(baseId) {
+    const base = TRACKS[baseId]; if (!base) return null;
+    const d = JSON.parse(JSON.stringify(base)); delete d._p; delete d.id;
+    d.hidden = true; d.desc = String(base.desc).split(' — ')[0] + ', at war: the same piece with synthetic drum hits in its big sections';
+    d.mix = Object.assign({}, d.mix || {}, { drums: 1.15 }); d.trim = num(base.trim, DEFAULT_TRIM);
+    for (const sct of d.sec) {
+      const top = sct.cres ? sct.cres[1] : num(sct.lv, 1);
+      if (top >= 0.9) sct.drums = { p: 'mutiny', vel: 0.9 };
+      else if (top >= 0.75 && sct.n !== 'intro') sct.drums = { p: 'mutiny', vel: 0.6, skip: 0.3 };
+    }
+    return Track(baseId + ':war', d);
+  }
+  hitsVariant('galaxy9'); hitsVariant('galaxy10');
 
   Track('design', {
     desc: 'Technical, light: bubbling marimba and sequenced plucks over a springy bass',
@@ -2056,6 +2209,6 @@
   };
   for (const r in WAR) warVariant('race:' + r, WAR[r]);
   Music._warVariant = warVariant; Music._respell = respell;
-  Music._rotation = { shuffled, interludeFor, pickGap, GALAXY, S };  // test hooks
+  Music._rotation = { shuffled, composeOrder, interludeFor, pickGap, GALAXY, INTERLUDES, S };  // test hooks
 
 })(window.MOO);
