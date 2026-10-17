@@ -7,6 +7,13 @@ Docs: `PROGRESS.md` (plan/status/25-feature acceptance checklist) · `CONVENTION
 Commands: `node tools/check.js` (syntax of every manifest file) · `node tools/rules-test.js [area]` · `node tools/soak.js` (24-thread AI-vs-AI soak/balance; `tools/SOAK.md`) · `node tools/headless.js`.
 Browser-pane tip: animations use requestAnimationFrame, so in the built-in browser pane a tab must be fronted (`tabs_select`) for anything animated (GNN, audiences, scenes, combat) to advance.
 
+## Session 6 (October 2026) — graphics audit, branch `claude/admiring-tesla-v9gcy3`
+`tools/handoff/graphics-inventory-2026-10.md`: every screen captured through the real UI (`node tools/qa/art-shots.js`,
+`TIER=medium` for the GL look) and each element traced to its renderer. The illustrated layer (portraits, halls, labs, GNN,
+surfaces, orbit plates, three endings) is done; still flat or procedural: ships (top-down only, no 3/4 view, no race
+silhouettes), the tactical battlefield (blob asteroids, bare grid, flat star), the system view (procedural sun and nebula,
+`system-*` plates unused), unexplored-star discs on the map, the exile ending, the invasion troop markers, the title wordmark.
+
 ## Session 5 (October 2026) — fun audit, branch `claude/optimistic-franklin-bvqmi3`
 `tools/handoff/fun-audit-2026-10.md`: what the original's fun is, how the remake was measured (player's-eye headless transcript +
 Playwright click-through), what changed (GNN news policy, end-of-turn planet reports, discovery cards, combat card layout, map camera)
