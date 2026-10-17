@@ -5,22 +5,20 @@ Versions follow `MAJOR.MINOR.PATCH`; the live version is the `VERSION` file.
 
 ## Unreleased
 
-- Music, the end of the game: a crowning cue (`triumph`) that steps the council's music up to a military band in the throne-room
-  manner, in the procession's key of F — a bugle call on the solo trumpet alone; a bright staccato intro (trumpets, horns and
-  glockenspiel in staccato figures two octaves apart, trombones staccato on the beats, the tuba short, flute runs, a crisp cadence);
-  the cut, tam-tam, bass drum, boom and crash, and the full section drives a dotted fanfare forward: trumpets in two parts with the
-  flutes at pitch, horns in two parts an octave below, brass chords pushing in a 3-3-2, trombones and baritones on the step, the tuba in
-  marching octaves, a bassoon walking, the men, the full cadence with toms and a crash every other bar; then the council's big phrase in
-  trumpets and horns with the whole chorus, flutes above and clarinet runs, brass chords on every beat; the lift, a fanfare carried up
-  over IV-V-bVI-bVII-I with trumpet and trombone stabs on every beat, piccolo-style flute runs and a crash on every bar; the chord; two
-  bars of snare and timpani rolls out of the quiet; the last blast the hall carries (112 bpm, about 73 s, ≈ -9 LUFS with the limiter
-  untouched: the loudest cue in the score, as measured). New band presets: `tbn`, `tuba`, `tptStab`, `hornStab`, `tbnStab`. It plays
-  once and hands over to the victory loop under its last chord (`Music.finale('victory')`; `finale('defeat')` goes to the dirge). The
-  Galactic Council fires it the moment the player is crowned, before the Accept / Defy question, so it is already under way when the
-  ending opens; a refused crown cuts it under the war alarm. Every ending (council, conquest) goes through the same call, so a future
-  end-game scene gets the same sound. Engine: a one-shot cue may name the piece that follows it (`Music.play(id, { loop: false, then,
-  thenFade })`; `chainCheck` enters the follow-up under the cue's last chord with the long tail the rotation seams use; `play()` of the
-  chained piece while the cue is up is a no-op).
+- Music, the end of the game: a crowning cue (`triumph`) that raises the council's music to a state ceremony, solemn and big, in the
+  procession's key of F, nobilmente — the solo trumpet plays the call (the title leitmotif the procession opens with) over the organ of
+  the chamber as a timpani roll gathers; the horn section takes the procession's theme in two parts over a dignified cadence, with
+  strings, organ, trombones and tuba sustained and the men beneath, bass drum and timpani on the step, a crash on the phrase starts; the
+  big phrase as a hymn in trumpets and horns, each in two parts, with the whole chorus, the flutes above, brass and trombones sustained,
+  harp and bells; the lift, the hymn carried up over IV-V-bVI-bVII-I over tremolo strings with a crash on every bar and the tam-tam on
+  the flat sixth; the chord; two bars of snare and timpani rolls out of the quiet; the last chord the hall carries (80 bpm, about 90 s,
+  ≈ -9 LUFS with the limiter untouched: the loudest cue in the score, as measured; nothing short, nothing syncopated). Band presets
+  added along the way: `tbn`, `tuba`, `tptStab`, `hornStab`, `tbnStab`. It plays once and hands over to the victory loop under its last
+  chord (`Music.finale('victory')`; `finale('defeat')` goes to the dirge). The Galactic Council fires it the moment the player is
+  crowned, before the Accept / Defy question, so it is already under way when the ending opens; a refused crown cuts it under the war
+  alarm. Every ending (council, conquest) goes through the same call, so a future end-game scene gets the same sound. Engine: a one-shot
+  cue may name the piece that follows it (`Music.play(id, { loop: false, then, thenFade })`; `chainCheck` enters the follow-up under the
+  cue's last chord with the long tail the rotation seams use; `play()` of the chained piece while the cue is up is a no-op).
 - Council music: the chamber no longer starts the original `council` piece itself over the Soundscape's choice, so the two council
   readings (`council2`, the procession in state, and `council`) alternate between visits as intended; before, the direct call made
   the glue always land on `council2`.
