@@ -315,8 +315,8 @@
     ominous: { t5: 'X.....x...x.....', t4: '........x.....o.', rim: '..o...o...o...o.', shk: 'o.o.o.o.o.o.o.o.' },
     news: { kick: 'x.....x.x.......', snare: '....x.......x...', hat: 'x.x.x.x.x.x.x.x.', clap: '....x.......x...' },
     marchS: { bd: 'x.......x.......', sn: ['x..x.xx.x..x.xx.', 'x..x.xx.x..xxxxx'] }, warS: { bd: 'x..x..x.x..x..x.', sn: '....x.......x...' },
-    // the field-drum kit (the council procession): snare rudiments with a roll into every second bar, tenor field drums beneath, bass drum on the step
-    field: { bd: 'o...............', sn: ['x.oo.xo.x.oo.xo.', 'x.oo.xo.xxxxxxxx', 'x..xo.x.x..xo.x.', 'xo.xo.x.x..oxxxx'], snRoll: ['................', '........x.......', '................', '............x...'] },
+    // the field-drum kit (the council procession): snare accents on the step, ghosted drags leading into the beats, a 16th roll into every second bar, a soft bass drum on the downbeat
+    field: { bd: 'o...............', sn: ['x...x.o.x...x.oo', 'x..ox...x..oxxxx', 'x...x.o.x...x.o.', 'x..ox..ox...xxxx'] },
     // the Mutiny kit: processed booms and synthetic kick / snare with an anvil, sparse, over two bars
     mutiny: { boom: ['x...............', '........x.......'], kickSyn: ['x.......x.......', 'x.......x...x...'], snareSyn: ['........x.......', '....x.......x...'], metal: ['....x...........', '............x...'], boomHi: ['............x...', '................'], hiss: ['........x.......', '................'] },
   };
@@ -1865,7 +1865,7 @@
   });
   Track('council2', {
     desc: 'Galactic Council, the procession: a slow processional march — the snare alone carries the march, a solo horn the tune low in its warm register over tuba and trombones, the organ and choir of the chamber; the drums fall away while the votes are cast and return with the tam-tam for the result',
-    bpm: 80, trim: 2.9, tone: { lo: 0.8 }, root: 'Eb', mode: 'major', loopFrom: 'P1', tens: false, rubato: 0.015, mix: { drums: 1.0, lead: 1.15, bass: 1.1, choir: 1.0 },
+    bpm: 80, trim: 2.9, tone: { lo: 0.8 }, root: 'Eb', mode: 'major', loopFrom: 'P1', tens: false, rubato: 0.015, fx: { stage: 0.7 }, mix: { drums: 1.0, lead: 1.15, bass: 1.1, choir: 1.0 },
     forms: [['P1', 'P2', 'D', 'R', 'E'], ['P1', 'D', 'P2', 'R', 'E'], ['P1', 'P2', 'E', 'D', 'R'], ['P1', 'D', 'R', 'P2', 'E']],
     alts: [{}, { bell: 'glass', lead2: 'horn' }, { pad: 'organSoft', choir: 'choirWomen' }],
     // a solo horn carries the tune an octave down (E2-F5 is what was recorded; the line sits around Eb3-Bb4), tuba and trombones take the step
