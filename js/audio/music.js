@@ -2052,40 +2052,40 @@
   });
 
   // The crowning — the council's music stepped up to a military band (the throne-room manner). Played once, cut to on the beat over
-  // whatever the chamber was playing, handed over to the victory loop under its last chord (Music.finale). The procession's themes in
-  // its key of F: a brass chorale on the call (trumpets and horns in parts) over the chamber's organ with the cadence soft beneath; a two-bar swell
-  // (timpani and snare rolls, tremolo strings, the brass opening, the cymbal rising); the cut — tam-tam, bass drum, boom, crash — and
-  // the horn section takes the climbing theme in two parts with harmonized trumpet fanfare figures in the gaps, the men beneath, the march cadence and the
-  // timpani on the step; the big phrase in trumpets and horns with the whole chorus, brass chords on every beat, the full cadence with
-  // toms and a crash every other bar; the lift — a fanfare carried up over IV-V-bVI-bVII-I with brass stabs on every beat and a crash on
-  // every bar; the chord; two bars of snare and timpani rolls; the last blast. F major, 108 bpm.
+  // whatever the chamber was playing, handed over to the victory loop under its last chord (Music.finale). In the procession's key of
+  // F: a bugle call on the solo trumpet alone; a bright staccato intro (trumpets, horns and glockenspiel in staccato figures, trombones
+  // on the beats, flute runs, a crisp cadence); the cut — tam-tam, bass drum, boom, crash — and the full section drives a dotted
+  // fanfare forward over marching octaves in the tuba and the full cadence; then the council's big phrase in trumpets and horns with the
+  // whole chorus; the lift — a fanfare carried up over IV-V-bVI-bVII-I with stabs on every beat and a crash on every bar; the chord;
+  // two bars of snare and timpani rolls; the last blast. 112 bpm.
   Track('triumph', {
-    desc: 'The crowning — the council’s music stepped up to a military band: a brass chorale on the call — trumpets and horns in parts, trombones and baritones in chords, tuba under, an oboe on top — over the chamber’s organ with the cadence soft beneath; the swell (timpani and snare rolls, tremolo strings, the brass opening, the cymbal rising); the cut — tam-tam, bass drum, boom and crash — and the horn section takes the climbing theme with the flutes above, trumpet fanfares in the gaps, bassoons and baritones walking, trombones on the step, the men beneath; the big phrase in trumpets and horns with the whole chorus, flutes and clarinet runs, brass chords on every beat, trombones on the step, the full cadence with toms and crashes; the lift with brass stabs on every beat and a crash on every bar; the chord; two bars of snare and timpani rolls; the last blast the hall carries; plays once and hands over to the victory loop',
-    bpm: 108, trim: 3.4, root: 'F', mode: 'major', tens: false, lintMin: 0.8, tone: { hi: 2.5, lo: 1.5 },
+    desc: 'The crowning — the council’s music stepped up to a military band: a bugle call on the solo trumpet alone; a bright staccato intro — trumpets, horns and glockenspiel in staccato figures, trombones on the beats, flute runs, a crisp cadence; the cut — tam-tam, bass drum, boom and crash — and the full section drives a dotted fanfare forward with the flutes, trombones and baritones on the step, the tuba in marching octaves, the whole cadence; the council’s big phrase in trumpets and horns with the whole chorus, clarinet runs, brass chords on every beat; the lift with stabs on every beat and a crash on every bar; the chord; two bars of snare and timpani rolls; the last blast the hall carries; plays once and hands over to the victory loop',
+    bpm: 112, trim: 3.4, root: 'F', mode: 'major', tens: false, lintMin: 0.8, tone: { hi: 2.5, lo: 1.5 },
     fx: { verb: 1.25, stage: 1.3 }, sends: { drums: { verb: 0.2, stage: 0.6, dly: 0 } }, mix: { choir: 1.3, drums: 1.7, lead: 1.35, bell: 1.25, pad: 1.05, bass: 1.25, arp: 1.15 },
     inst: { pad: 'strings', pad2: 'tbn', bass: 'tuba', lead: 'horn', lead2: 'tpt', arp: 'harp', arp2: 'clarinet', bell: 'bell', bell2: 'flute', choir: 'aah', choir2: 'choirMen' },
     ph: {
-      CL: '5:3 8:1 | 7:2 6:2 | 5:4 | r:4',                                              // the call that opens the procession — the game's leitmotif, the solo trumpet's
-      A1: '1:3 2:1 | 3:2 5:2 | 6:3 5:1 | 3:2 2:2', A2: '1:3 2:1 | 3:2 5:2 | 8:3 7:1 | 5:4',   // the procession's theme: a climb from the tonic, and its answer to the octave
-      FF: 'r:3 5:.25 5:.25 5:.5 | 8:1 r:3 | r:3 5:.25 5:.25 5:.5 | 10:1 r:3',              // the trumpets' fanfare figures in the gaps of the theme
-      B1: '5:2 6:1 8:1 | 10:3 9:1 | 8:2 6:2 | 5:4', B2: '6:2 5:1 6:1 | 8:3 10:1 | 9:2 8:1 7:1 | 8:4',   // the big phrase
+      BG: '1:.5 1:.5 5:1 1:.5 1:.5 5:1 | 8:1.5 5:.5 3:1 1:1 | 5:.5 5:.5 8:1 5:.5 5:.5 8:1 | 10:2 8:2',          // the bugle call, on the open notes, for the solo trumpet alone
+      ST: '1:.5 3:.5 5:.5 8:.5 r:2 | r:2 8:.5 5:.5 3:.5 1:.5 | 1:.5 3:.5 5:.5 8:.5 r:2 | 5:.5 5:.5 5:.5 r:.5 8:.5 8:.5 8:.5 r:.5',   // the staccato intro: bright arpeggio figures and repeated notes
+      FA: '5:.75 5:.25 8:1 10:.75 10:.25 12:1 | 11:.5 10:.5 9:.5 8:.5 10:2 | 5:.75 5:.25 8:1 10:.75 10:.25 12:1 | 13:1 12:1 10:2',    // the fanfare: dotted figures driving up to the high fifth
+      FB: '8:.75 8:.25 10:1 12:.75 12:.25 13:1 | 12:.5 11:.5 10:.5 9:.5 8:2 | 10:.75 10:.25 12:1 12:.75 12:.25 13:1 | 12:4',          // and its answer, higher, landing on the high fifth
+      B1: '5:2 6:1 8:1 | 10:3 9:1 | 8:2 6:2 | 5:4', B2: '6:2 5:1 6:1 | 8:3 10:1 | 9:2 8:1 7:1 | 8:4',   // the council's big phrase
       L1: '8:2 9:1 10:1 | 12:2 11:1 10:1 | 8:2 9:2 | 10:4',                                // the lift: a fanfare carried up over the flat sixth and seventh to the high third
       FIN: '8:8', FIN5: '5:8', FIN3: '10:8',                                               // the last chord: octave, fifth, high third
     },
     sec: [
-      // the chamber: a brass chorale on the call — trumpets in two parts, the horns in two parts an octave below, trombones and baritones in chords, the tuba under, an oboe on top — over the organ of the council, the men low, the cadence soft on the step
-      { n: 'open', bars: 4, cres: [0.65, 0.78], prog: 'I | V | I | I:.5 V:.5', pad: { p: 'sus', inst: 'organ', n: 4, reg: [50, 74], vel: 0.5, width: 1.3 }, pad2: { p: 'sus', inst: 'tbn', n: 3, reg: [41, 62], vel: 0.75, width: 1.2 },
-        bass: { p: 'whole', inst: { p: 'tuba', att: 0.12 }, vel: 0.75 }, lead: { ph: 'CL', inst: 'tpt', vel: 1.0, harm: -2, hvel: 0.85 }, lead2: { ph: 'CL', inst: 'horn', oct: -1, vel: 0.85, harm: -2, hvel: 0.8 }, bell2: { ph: 'CL', inst: 'oboe', vel: 0.55 },
-        choir2: { n: 3, reg: [38, 57], vel: 0.5 }, timp: { p: 'two', vel: 0.5 }, drums: { bd: 'x...............', sn: ['o..o.oo.o..o.oo.', 'o..o.oo.o..o.oo.', 'o..o.oo.o..o.oo.', 'x..x.xx.x..xxxxx'], vel: 0.6 } },
-      // the swell: two bars on the dominant, everything rising — timpani and snare rolls, tremolo strings, the men, the brass and trombones opening, the cymbal
-      { n: 'rise', bars: 2, cres: [0.4, 1.0], prog: 'V', rise: 2, pad: { p: 'swell', inst: 'strTrem', n: 4, reg: [50, 76], vel: 1.0, width: 1.3 }, pad2: { p: 'swell', inst: 'tbn', n: 3, reg: [41, 62], vel: 0.8, width: 1.2 }, choir2: { n: 3, reg: [38, 57], vel: 0.9 },
-        bass: { p: 'whole', inst: { p: 'tuba', att: 0.1 }, vel: 0.9 }, timp: { p: 'roll', roll: 2, vel: 1.0 }, drums: { sn: ['o.o.o.o.x.x.x.x.', 'x.x.x.xxxxxxxxxx'], snRoll: ['x...............', 'x.......x.......'], bd: ['................', '........x...x.x.'], vel: 1.0 } },
-      // the band falls in: the cut — tam-tam, bass drum, boom, crash — and the horn section takes the climbing theme in two parts, the flutes an octave above, harmonized trumpet fanfares in the gaps, trombones on the step, the bassoons and baritones walking, the tuba, the men, the cadence and the timpani, the harp
-      { n: 'theme', bars: 8, cres: [0.95, 1.05], hit: 'tam', cr: true, prog: 'I | I | IV | V | I | vi | ii | V', pad: { p: 'sus', n: 4, reg: [50, 76], vel: 0.85, width: 1.3 }, pad2: { p: 'stab', inst: 'tbn', pat: 'x.......x.......', n: 3, reg: [41, 62], vel: 0.9, gate: 0.7 },
-        bass: { p: 'half', inst: { p: 'tuba', att: 0.05 }, vel: 1.0 }, lead: { ph: 'A1 A2', vel: 1.0, harm: -2, hvel: 0.85 }, lead2: { ph: 'FF FF', inst: 'tpt', vel: 0.95, harm: -2, hvel: 0.85 }, bell2: { ph: 'A1 A2', inst: 'flute', oct: 1, vel: 0.7 }, timp: { p: 'two', vel: 1.0 },
-        arp2: { pat: '0...2...1...3...', res: 4, inst: 'bassoon', vel: 0.65, reg: [41, 62], gate: 0.9 },
-        drums: { bd: 'X.......x.......', kickSyn: 'x...............', boom: ['x...............', '................', '................', '................'], sn: ['X..x.xx.X..x.xx.', 'X..x.xx.X.xxxxxx'], crashS: ['x...............', '................', '................', '................'], vel: 1.0 },
-        choir2: { n: 3, reg: [38, 57], vel: 0.85 }, bell: { dens: 0.12, res: 2, reg: [72, 94], vel: 0.45 }, arp: { p: 'up8', vel: 0.4, reg: [53, 81] }, fill: 'bigS' },
+      // the bugle call: the solo trumpet alone, on the open notes; a snare roll gathers under its last note
+      { n: 'bugle', bars: 4, lv: 0.8, prog: 'I', lead: { ph: 'BG', inst: 'tptSolo', vel: 1.0 }, drums: { sn: ['................', '................', '................', '........o.o.xxxx'], vel: 0.8 } },
+      // the staccato intro: bright, crisp — trumpets and horns in staccato figures two octaves apart, the glockenspiel with them, trombones staccato on the beats, the tuba short, flute runs, a crisp cadence
+      { n: 'stacc', bars: 4, cres: [0.85, 1.0], cr: true, prog: 'I | I | IV:.5 V:.5 | I', pad: { p: 'stab', inst: 'tbnStab', pat: 'x...x...x...x...', n: 3, reg: [41, 62], vel: 0.9, gate: 0.5 },
+        bass: { p: 'half', inst: { p: 'tuba', att: 0.02 }, vel: 1.0, gate: 0.5 }, lead: { ph: 'ST', inst: 'tptStab', vel: 1.0 }, lead2: { ph: 'ST', inst: 'hornStab', oct: -1, vel: 0.85 }, bell2: { ph: 'ST', inst: 'bell', vel: 0.65 }, timp: { p: 'beats', vel: 0.9 },
+        arp2: { p: 'run', inst: 'flute', vel: 0.45, reg: [72, 96], gate: 0.7 },
+        drums: { bd: 'X.......X.......', kickSyn: 'x.......x.......', sn: ['X..x..x.X..x..x.', 'X..x..x.X.xxxxxx'], crashS: ['x...............', '................', '................', '................'], vel: 1.0 }, fill: 'bigS' },
+      // the fanfare: the cut — tam-tam, bass drum, boom, crash — and the full section drives forward: trumpets in two parts on a dotted fanfare with the flutes at pitch, the horns in two parts an octave below, brass chords pushing in a 3-3-2, trombones and baritones on the step, the tuba in marching octaves, the men, the full cadence with toms and a crash every other bar, bells and harp over it
+      { n: 'fanfare', bars: 8, cres: [1.0, 1.1], hit: 'tam', cr: true, prog: 'I | V | I | IV:.5 V:.5 | I | ii:.5 IV:.5 | I | I:.5 V:.5', pad: { p: 'stab', inst: 'brassStab', pat: 'x..x..x.x..x..x.', n: 4, reg: [50, 72], vel: 0.9, gate: 0.6, width: 1.3 }, pad2: { p: 'stab', inst: 'tbn', pat: 'x...x...x...x...', n: 3, reg: [41, 62], vel: 0.95, gate: 0.8, width: 1.2 },
+        bass: { p: 'oct8', inst: { p: 'tuba', att: 0.03 }, vel: 1.0 }, lead: { ph: 'FA FB', inst: 'tpt', vel: 1.0, harm: -2, hvel: 0.85 }, lead2: { ph: 'FA FB', inst: 'horn', oct: -1, vel: 1.0, harm: -2, hvel: 0.85 }, bell2: { ph: 'FA FB', inst: 'flute', vel: 0.7 }, timp: { p: 'beats', vel: 1.0 },
+        arp2: { pat: '0...2...1...3...', res: 4, inst: 'bassoon', vel: 0.6, reg: [41, 62], gate: 0.9 },
+        drums: { bd: 'X...x...X...x...', kickSyn: 'x.......x.......', boom: ['x...............', '................', '................', '................'], sn: ['X.xxX.x.X.xxX.x.', 'X.xxX.x.X.xxxxxx', 'X.xxX.x.X.xxX.x.', 'X.xxX.xxX.xxXXXX'], t5: ['................', '............x.x.'], crashS: ['x...............', '................'], vel: 1.0 },
+        choir2: { n: 3, reg: [38, 57], vel: 0.9 }, bell: { dens: 0.18, res: 2, reg: [72, 94], vel: 0.5 }, arp: { p: 'up8', vel: 0.4, reg: [53, 81] }, fill: 'bigS' },
       // the big phrase: trumpets and horns in parts with the whole chorus, the flutes above, clarinet runs, brass chords on every beat, trombones and baritones on the step, the tuba, the full cadence with the toms and a crash every other bar, bells over it
       { n: 'big', bars: 8, cres: [1.05, 1.15], cr: true, prog: 'IV | V | vi:.5 ii:.5 | V | IV | I | IV | I', pad: { p: 'stab', inst: 'brass', pat: 'x...x...x...x...', n: 4, reg: [50, 72], vel: 0.9, gate: 0.9, width: 1.3 }, pad2: { p: 'stab', inst: 'tbn', pat: 'x.......x.......', n: 3, reg: [41, 62], vel: 0.95, gate: 0.8, width: 1.2 },
         bass: { p: 'half', inst: { p: 'tuba', att: 0.03 }, vel: 1.0 }, lead: { ph: 'B1 B2', inst: 'tpt', vel: 1.0, harm: -2, hvel: 0.85 }, lead2: { ph: 'B1 B2', inst: 'horn', oct: -1, vel: 1.0, harm: -2, hvel: 0.85 }, bell2: { ph: 'B1 B2', inst: 'flute', oct: 1, vel: 0.7 }, timp: { p: 'beats', vel: 1.0 },
