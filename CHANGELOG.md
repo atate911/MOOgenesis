@@ -27,7 +27,7 @@ Versions follow `MAJOR.MINOR.PATCH`; the live version is the `VERSION` file.
 - The underscore senses the game's phase: in the first years, before anyone has been met (and before turn 70), the map plays the
   planetarium rotation only (`galaxyEarly`: deep field, beacon, wonder, veil, cradle, with the pad and harp interludes — big sky, no
   choir or drums); contact, or time, opens the full programme, and war the war rotation (`soundscape.js`, on the bar at turn end).
-- Galactic Council: a second piece, `council2` (the procession: rolling snare rudiments and tenor field drums behind the brass
+- Galactic Council: a second piece, `council2` (the procession: the snare alone carries the march with rudiments and rolls, a solo horn the tune over tuba and trombones, behind the brass
   horns carrying the tune low in their register over tuba and trombones on the step, organ and choir; the drums fall away while the votes are cast and return with the tam-tam for the result; new
   `DRUMS.field` kit); the original `council` is kept and the two alternate between visits.
 
