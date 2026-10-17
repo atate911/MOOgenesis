@@ -24,6 +24,12 @@ Versions follow `MAJOR.MINOR.PATCH`; the live version is the `VERSION` file.
   the piece just heard and keep pieces in the same key apart; `Music.snapshot()/restore()` carry the whole rotation, rare pieces
   included. Fixed: galaxy4's cello and men's lines in section B were written 16 bars late and never sounded; galaxy1's section C
   had two `choir` keys.
+- The underscore senses the game's phase: in the first years, before anyone has been met (and before turn 70), the map plays the
+  planetarium rotation only (`galaxyEarly`: deep field, beacon, wonder, veil, cradle, with the pad and harp interludes — big sky, no
+  choir or drums); contact, or time, opens the full programme, and war the war rotation (`soundscape.js`, on the bar at turn end).
+- Galactic Council: a second piece, `council2` (the procession: rolling snare rudiments and tenor field drums behind the brass
+  fanfares, organ and choir; the drums fall away while the votes are cast and return with the tam-tam for the result; new
+  `DRUMS.field` kit); the original `council` is kept and the two alternate between visits.
 
 ## 1.1.1 — 2026-10-17
 

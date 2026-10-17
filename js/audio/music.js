@@ -315,6 +315,8 @@
     ominous: { t5: 'X.....x...x.....', t4: '........x.....o.', rim: '..o...o...o...o.', shk: 'o.o.o.o.o.o.o.o.' },
     news: { kick: 'x.....x.x.......', snare: '....x.......x...', hat: 'x.x.x.x.x.x.x.x.', clap: '....x.......x...' },
     marchS: { bd: 'x.......x.......', sn: ['x..x.xx.x..x.xx.', 'x..x.xx.x..xxxxx'] }, warS: { bd: 'x..x..x.x..x..x.', sn: '....x.......x...' },
+    // the field-drum kit (the council procession): snare rudiments with a roll into every second bar, tenor field drums beneath, bass drum on the step
+    field: { bd: 'x.......x.......', sn: ['x..o.xo.x..o.xo.', 'x..o.xo.xxxxxxxx', 'x..o.xo.x..o.xo.', 'xo.xo.x.x..o.xxx'], snRoll: ['................', '........x.......', '................', '............x...'], t4: 'x.......x.......', t3: '....o.......o...' },
     // the Mutiny kit: processed booms and synthetic kick / snare with an anvil, sparse, over two bars
     mutiny: { boom: ['x...............', '........x.......'], kickSyn: ['x.......x.......', 'x.......x...x...'], snareSyn: ['........x.......', '....x.......x...'], metal: ['....x...........', '............x...'], boomHi: ['............x...', '................'], hiss: ['........x.......', '................'] },
   };
@@ -1163,10 +1165,12 @@
 
   // Moods: game-level names -> tracks (lists rotate so repeated requests do not replay the same piece)
   const GALAXY = ['galaxy4', 'galaxy1', 'galaxy5', 'galaxy2', 'galaxy8', 'galaxy3', 'galaxy7', 'galaxy6'];   // the exploration programme (eight pieces, ~35 minutes before anything returns)
+  // the first years, alone among the stars: the planetarium pieces only (big sky, synth pads, bells, no choir or drums), the pad and harp interludes
+  const GALAXY_EARLY = ['galaxy4', 'galaxy8', 'galaxy1', 'galaxy5', 'galaxy7'];
   const MOODS = {
-    title: 'title', menu: 'title', explore: GALAXY, galaxy: GALAXY, map: GALAXY,
+    title: 'title', menu: 'title', explore: GALAXY, galaxy: GALAXY, map: GALAXY, galaxyEarly: GALAXY_EARLY,
     calm: GALAXY, wonder: 'galaxy1', patient: 'galaxy2', determined: 'galaxy3', deep: 'galaxy4', veil: 'galaxy5', abyss: 'galaxy6', cradle: 'galaxy7', beacon: 'galaxy8', tide: 'galaxy9', chorale: 'galaxy10', design: 'design', research: 'research', tech: 'research',
-    combat: ['combat3', 'combat1', 'combat2'], battle: ['combat3', 'combat1', 'combat2'], tension: 'ground', ground: 'ground', news: 'gnn', gnn: 'gnn', council: 'council',
+    combat: ['combat3', 'combat1', 'combat2'], battle: ['combat3', 'combat1', 'combat2'], tension: 'ground', ground: 'ground', news: 'gnn', gnn: 'gnn', council: ['council2', 'council'], procession: 'council2',
     orion: 'orion', antarans: 'antarans', victory: 'victory', defeat: 'defeat', spy: 'spy', espionage: 'spy', intrigue: 'spy',
   };
   // array moods listed here play as a shuffled playlist with a pause between pieces (the original's map was silent; a breath between
@@ -1176,7 +1180,8 @@
   const INTERLUDES = ['drift', 'drift2', 'drift3', 'drift4', 'drift5'];
   // the rare pieces (the tide, the chorale) are slipped into a cycle about a third of the time each; at war their readings with the synthetic hits, more often
   const CALM_ROT = { gap: 0, gapIn: 0, fade: 7, between: INTERLUDES, betweenP: 1, rare: { ids: ['galaxy9', 'galaxy10'], p: 0.35 } };
-  const MOOD_ROTATE = { explore: CALM_ROT, galaxy: CALM_ROT, map: CALM_ROT, calm: CALM_ROT, galaxyWar: { gap: 0, gapIn: 0, fade: 5, between: INTERLUDES, betweenP: 0.6, rare: { ids: ['galaxy9:war', 'galaxy10:war'], p: 0.6 } } };
+  const EARLY_ROT = { gap: 0, gapIn: 0, fade: 8, between: ['drift', 'drift2', 'drift4', 'drift5'], betweenP: 1 };
+  const MOOD_ROTATE = { explore: CALM_ROT, galaxy: CALM_ROT, map: CALM_ROT, calm: CALM_ROT, galaxyEarly: EARLY_ROT, galaxyWar: { gap: 0, gapIn: 0, fade: 5, between: INTERLUDES, betweenP: 0.6, rare: { ids: ['galaxy9:war', 'galaxy10:war'], p: 0.6 } } };
   let moodTick = 0;
   Music.moods = () => Object.keys(MOODS).concat(Object.keys(TRACKS).filter(id => id.indexOf('race:') === 0));
   // setMood('combat' | 'explore' | 'council' | 'human' | 'race:human' | any track id, {fade, loop}) -> id of the track chosen (or false)
@@ -1858,6 +1863,35 @@
       { n: 'E', bars: 8, lv: 0.82, prog: 'I V vi iii | IV V I I', pad: { p: 'sus', inst: 'strings' }, bass: 'half', lead: 'CB', timp: 'two', choir: { vel: 0.6 } },
     ],
   });
+  Track('council2', {
+    desc: 'Galactic Council, the procession: a slow processional march — rolling snare and field drums behind brass fanfares, the organ and choir of the chamber; the drums fall away while the votes are cast and return with the tam-tam for the result',
+    bpm: 80, trim: 2.1, tone: { lo: 0.5 }, root: 'Eb', mode: 'major', loopFrom: 'P1', tens: false, rubato: 0.015, mix: { drums: 0.95, choir: 1.1 },
+    forms: [['P1', 'P2', 'D', 'R', 'E'], ['P1', 'D', 'P2', 'R', 'E'], ['P1', 'P2', 'E', 'D', 'R'], ['P1', 'D', 'R', 'P2', 'E']],
+    alts: [{}, { lead2: 'cello', bell: 'glass' }, { pad: 'organSoft', choir: 'choirWomen' }],
+    inst: { pad: 'organ', pad2: 'strings', bass: 'deep', lead: 'brass', lead2: 'horn', arp: 'harp', bell: 'bell', choir: 'aah', choir2: 'choirMen' },
+    ph: {
+      M1: '5:1.5 5:.5 6:1 8:1 | 10:2 8:2 | 9:1.5 8:.5 7:1 5:1 | 6:2 5:2',       // the processional tune
+      M2: '3:1.5 3:.5 4:1 5:1 | 8:2 7:1 6:1 | 5:1.5 4:.5 3:1 2:1 | 1:4',
+      M3: '8:1.5 8:.5 9:1 10:1 | 12:2 10:2 | 11:1.5 10:.5 9:1 8:1 | 7:2 5:2',   // its answer, higher
+      M4: '6:1.5 6:.5 7:1 8:1 | 10:2 9:1 8:1 | 7:1.5 6:.5 5:1 4:1 | 5:4',
+      F1: '1:1 5:1 8:2 | 8:1.5 6:.5 5:1 3:1 | 5:2 7:2 | 7:3 r:1',               // the fanfare (the council's own)
+      CT: '1:2 3:2 | 2:2 1:2 | 4:2 3:2 | 2:3 r:1',                                // the horn beneath
+      CH: '5:4 | 6:4 | 5:2 4:2 | 3:4', CH2: '3:4 | 4:4 | 5:2 6:2 | 5:4',         // the hymn while the votes are cast
+    },
+    sec: [
+      { n: 'intro', bars: 4, cres: [0.55, 0.8], prog: 'I:2 V:2', pad: { p: 'swell', n: 4, reg: [50, 74] }, bass: 'whole', drums: { bd: 'x.......x.......', t4: 'x...............', sn: ['o...o...o...o...', 'o.o.o.o.o.o.o.o.', 'x.o.x.o.x.o.x.o.', 'x.x.x.x.x.x.x.x.'] }, fill: 'rollS', lead: { ph: 'r2 F1', inst: 'horn', vel: 0.7 } },
+      { n: 'P1', bars: 16, lv: 0.8, prog: 'I V vi IV | I IV V I | I vi IV V | ii V I I', pad: { p: 'sus', n: 4, reg: [50, 74], vel: 0.8 }, pad2: { p: 'sus', n: 4, reg: [55, 79], vel: 0.6 }, bass: 'half',
+        lead: { ph: ['M1 M2 M3 M4', 'M1 M2 M1 M2', 'M3 M4 M1 M2'], vel: 0.8 }, lead2: { ph: ['CT CT CT CT', 'r4 CT r4 CT'], vel: 0.5, skip: 0.3 }, drums: 'field', timp: 'two', choir: { vel: 0.5 }, bell: { dens: 0.1, res: 1, reg: [72, 96], vel: 0.42 }, fill: 'snS' },
+      { n: 'P2', bars: 16, lv: 0.88, prog: 'I V vi IV | I IV V I | I vi IV V | ii V I I', pad: { p: 'sus', n: 4, reg: [50, 74], vel: 0.8 }, pad2: { p: 'sus', n: 4, reg: [55, 79], vel: 0.65 }, bass: 'walk',
+        lead: { ph: ['M1 M2 M3 M4', 'M3 M4 M1 M2'], vel: 0.85, harm: -2 }, lead2: { ph: '@', inst: 'strings', oct: 1, vel: 0.45, skip: 0.4 }, drums: { p: 'field', vel: 1.0 }, timp: 'beats', choir: { vel: 0.65 }, choir2: { n: 3, reg: [38, 57], vel: 0.6 }, bell: { dens: 0.12, res: 1, reg: [72, 96], vel: 0.42 }, fill: 'bigS' },
+      { n: 'D', bars: 8, lv: 0.5, prog: 'IV:2 I:2 | vi:2 V:2', pad: { p: 'swell', inst: 'organSoft', n: 4, reg: [50, 76], vel: 0.7 }, pad2: { p: 'sus', n: 3, reg: [55, 76], vel: 0.55 }, bass: 'whole',
+        lead: { ph: ['CH CH2', 'r4 CH2', 'CH r4'], inst: 'horn', vel: 0.6 }, arp: { p: 'up8', vel: 0.3, reg: [57, 81], skip: 0.3 }, drums: { t4: 'x...............', sn: '........o.......', vel: 0.55 }, choir2: { n: 3, reg: [38, 55], vel: 0.5, soft: true }, bell: { dens: 0.15, res: 1, reg: [72, 96], vel: 0.45 }, rise: 2 },
+      { n: 'R', bars: 8, lv: 1.02, hit: 'tam', cr: true, prog: 'I V | vi IV | ii V | I I', pad: { p: 'sus', n: 4, reg: [50, 74], vel: 0.85 }, pad2: { p: 'sus', n: 4, reg: [55, 81], vel: 0.75 }, bass: 'half',
+        lead: { ph: ['F1 F1', 'F1 M3'], vel: 1.0, harm: -2 }, lead2: { ph: ['M1 M2', 'r4 M1'], inst: 'horn', vel: 0.7 }, drums: { p: 'field', vel: 1.0 }, timp: 'beats', choir: { v1: 'a', v2: 'a', vel: 0.9 }, choir2: { n: 3, reg: [38, 57], vel: 0.8 }, bell: { dens: 0.2, res: 2, reg: [72, 96], vel: 0.5 }, fill: 'bigS' },
+      { n: 'E', bars: 8, lv: 0.7, prog: 'I V vi IV | I IV V I', pad: { p: 'sus', n: 4, reg: [50, 74], vel: 0.8 }, pad2: { p: 'sus', n: 4, reg: [55, 79], vel: 0.55 }, bass: 'half',
+        lead: { ph: ['M1 M2', 'M4 M2'], inst: 'horn', vel: 0.7 }, drums: { p: 'field', vel: 0.7 }, timp: 'two', choir: { vel: 0.5 }, bell: { dens: 0.1, res: 1, reg: [72, 96], vel: 0.4 } },
+    ],
+  });
   Track('orion', {
     desc: 'Ancient and mysterious, awe: deep drones, metallic chimes and a double-harmonic melody',
     bpm: 54, trim: 3.19, root: 'D', mode: 'dblHarm', loopFrom: 'A1',
@@ -2209,6 +2243,6 @@
   };
   for (const r in WAR) warVariant('race:' + r, WAR[r]);
   Music._warVariant = warVariant; Music._respell = respell;
-  Music._rotation = { shuffled, composeOrder, interludeFor, pickGap, GALAXY, INTERLUDES, S };  // test hooks
+  Music._rotation = { shuffled, composeOrder, interludeFor, pickGap, GALAXY, GALAXY_EARLY, INTERLUDES, S };  // test hooks
 
 })(window.MOO);
