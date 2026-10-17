@@ -11,7 +11,7 @@ const fs = require('fs'), path = require('path');
   const shot = async n => { await page.screenshot({ path: `${OUT}/${n}${tag}.png` }); console.log('shot', n); };
   const base = `http://localhost:${PORT}/index.html`;
   const go = async (u, ms) => { await page.goto(u); await sleep(ms * slow); };
-  const tryShot = async (name, fn, ms = 2500) => { const b = errors.length; try { await fn(); await sleep(ms * slow); await shot(name); } catch (e) { console.log('FAIL', name, e.message); } const e = errors.slice(b).filter(x => !/willReadFrequently|GPU stall/.test(x)); if (e.length) console.log('  errs', name, [...new Set(e)].slice(0, 5)); };
+  const tryShot = async (name, fn, ms = 2500) => { const b = errors.length; try { await fn(); await sleep(ms * slow); await shot(name); } catch (e) { console.log('FAIL', name, e.message); } const e = errors.slice(b).filter(x => !/willReadFrequently|GPU stall|HTTP 404 .*assets\/art\/(system-sky|battle|fx|still)\//.test(x)); if (e.length) console.log('  errs', name, [...new Set(e)].slice(0, 5)); };
   const next = async () => { for (const b of await page.$$('button')) { const t = (await b.textContent()).trim(); if (/^(next|continue)/i.test(t)) { await b.click(); return; } } };
 
   await tryShot('menu', () => go(base, 4000));
@@ -35,6 +35,6 @@ const fs = require('fs'), path = require('path');
   for (const k of ['colony', 'invade', 'bomb'])
     await tryShot('landing-' + k, async () => { await page.evaluate(() => MOO.UI.Screens.go('galaxy')); await sleep(300); await page.evaluate(k => { void MOO.UI.Ground.demo(k); }, k); await sleep(k === 'colony' ? 2800 : 4000); }, 500);
   for (const scn of ['planet', 'big', 'nebula']) await tryShot('combat-' + scn, () => go(`${base}?dev=1&screen=combat&scn=${scn}`, 5000), 500);
-  console.log('ERRORS', [...new Set(errors)].filter(x => !/willReadFrequently|GPU stall/.test(x)).slice(0, 30));
+  console.log('ERRORS', [...new Set(errors)].filter(x => !/willReadFrequently|GPU stall|HTTP 404 .*assets\/art\/(system-sky|battle|fx|still)\//.test(x)).slice(0, 30));
   await browser.close(); srv.close();
 })();

@@ -984,10 +984,10 @@
       const lq = k => { if (pf) { const n = performance.now(); prof[k] = (prof[k] || 0) * 0.92 + (n - tq) * 0.08; tq = n; } };
       ensureAmbient(); lq('bd_ensure');
       const z = cam.z, px = (cam.x - gw / 2) * fitZ, py = (cam.y - gh / 2) * fitZ, zr = clamp(Math.log2(z / fitZ), -1, 5);
-      const par = Q.parallax;
+      const par = Q.parallax, drx = par ? Math.sin(t * 0.05) * 40 : 0, dry = par ? Math.cos(t * 0.037) * 28 : 0;   // slow dust drift (peak ~2 px/s), off with reduceMotion / low tier
       ctx.globalCompositeOperation = 'source-over'; ctx.globalAlpha = 1;
       if (amb.ext) {
-        const mx = W * 0.04, my = H * 0.04, ox = par ? clamp(-px * 0.05, -mx, mx) : 0, oy = par ? clamp(-py * 0.05, -my, my) : 0;
+        const mx = W * 0.04, my = H * 0.04, ox = par ? clamp(-px * 0.05 + drx, -mx, mx) : 0, oy = par ? clamp(-py * 0.05 + dry, -my, my) : 0;
         ctx.drawImage(amb.ext, -mx + ox, -my + oy, W + mx * 2, H + my * 2);
       } else {
         const gk = W + 'x' + H;
@@ -995,7 +995,7 @@
         ctx.fillStyle = amb.grad; ctx.fillRect(0, 0, W, H);
         // far dust layer (parallax)
         const far = amb.far, s = Math.max(W / far.width, H / far.height) * 1.14, dw = far.width * s, dh = far.height * s;
-        const ox = par ? clamp(-px * 0.07, -(dw - W) / 2, (dw - W) / 2) : 0, oy = par ? clamp(-py * 0.07, -(dh - H) / 2, (dh - H) / 2) : 0;
+        const ox = par ? clamp(-px * 0.07 + drx, -(dw - W) / 2, (dw - W) / 2) : 0, oy = par ? clamp(-py * 0.07 + dry, -(dh - H) / 2, (dh - H) / 2) : 0;
         ctx.globalCompositeOperation = 'lighter'; ctx.globalAlpha = clamp(0.95 * Q.nebula, 0, 1);
         ctx.drawImage(far, (W - dw) / 2 + ox, (H - dh) / 2 + oy, dw, dh);
       }
@@ -1213,7 +1213,7 @@
       for (let i = 0; i < n; i++) {
         const s = SD[i]; s.useSp = false; if (!s.on) continue;
         const kd = KINDS[s.vkind] || KINDS.unknown;
-        let a = s.live ? 1 : s.known ? 0.92 : 0.62;
+        let a = s.live ? 1 : s.known ? 0.92 : 0.65;
         if (ovAny > 0) {                                           // overlay modes tone the starfield down so the colour code reads
           let keep = 1;
           if (wCol > 0) keep = Math.min(keep, lerp(1, s.owner >= 0 ? 1 : 0.22, wCol));
@@ -1226,12 +1226,13 @@
         const tws = twk ? 1 + 0.08 * Math.sin(t * kd.tw * 2.2 + s.ph) + 0.04 * Math.sin(t * 5.3 + s.ph2) : 1;
         const gk = (Q.glow < 0.6 ? 0.75 : 1) * (hot ? 1.12 : 1);
         let sp = null;
-        // unexplored stars are distant glints (tight core, small spikes) rather than soft coloured discs; explored ones keep the full sprite
-        const far = !s.known, Dk = s.r * 13.5 * gk * (far ? 0.72 : 1);
-        if (!kd.bh) sp = spaceStar(s.vkind, Dk, kd.spike >= 0.3 && s.r >= (far ? 2.2 : 2.8));        // spikes on every tier: the sprite is cached, the glint is what makes a star read as a star
+        // unexplored stars are the same lit sprite family as explored ones, ~60 % size and ~65 % brightness, blackbody-tinted by the star's
+        // real class (vis 0 = class visible, planet hidden): distant lit points, never flat discs; explored ones keep the full sprite
+        const far = !s.known, Dk = s.r * 13.5 * gk * (far ? 0.6 : 1);
+        if (!kd.bh) sp = spaceStar(s.vkind, Dk, kd.spike >= 0.3 && s.r >= (far ? 1.8 : 2.8));        // spikes on every tier: the sprite is cached, the glint is what makes a star read as a star
         if (sp) {
           const D = Dk * (0.97 + 0.03 * tws); s.useSp = true;
-          ctx.globalAlpha = clamp(a * (0.9 + 0.1 * tws), 0, 1); ctx.drawImage(sp, s.sx - D / 2, s.sy - D / 2, D, D);
+          ctx.globalAlpha = clamp(a * tws, 0, 1); ctx.drawImage(sp, s.sx - D / 2, s.sy - D / 2, D, D);   // tws: the ~1 Hz twinkle, +-8 % (+4 % flicker), per-star phase
         } else if (!kd.bh) {
           const size = s.r * 11.5 * (0.96 + 0.04 * tws) * (s.known ? 1 : 0.9) * gk;
           ctx.globalAlpha = clamp(a * tws * (s.known ? 0.95 : 0.8), 0, 1); ctx.drawImage(haloSprite(s.vkind), s.sx - size / 2, s.sy - size / 2, size, size);
@@ -1253,7 +1254,7 @@
         let a = (s.live ? 1 : s.known ? 0.92 : 0.8) * s.rk;
         if (wCol > 0 && s.owner < 0) a *= lerp(1, 0.5, wCol);
         ctx.globalAlpha = a;
-        const rr = s.r * (s.id === selStar ? 1.08 : 1), cs = coreSprite(s.vkind, rr * 2 * dpr);
+        const rr = s.r * (s.id === selStar ? 1.08 : 1) * (s.known ? 1 : 0.6), cs = coreSprite(s.vkind, rr * 2 * dpr);
         ctx.drawImage(cs, s.sx - rr, s.sy - rr, rr * 2, rr * 2);
       }
       // ---- C: spikes for our own sprites, sparkle for uncharted stars, pulsar beams, black-hole swirl (additive)
@@ -1263,9 +1264,9 @@
         const kd = KINDS[s.vkind] || KINDS.unknown;
         let keep = 1; if (wCol > 0 && s.owner < 0) keep = lerp(1, 0.2, wCol); if (wEnv > 0 || wMin > 0) keep = Math.min(keep, lerp(1, 0.3, Math.max(wEnv, wMin)));
         keep *= s.rk;
-        if (!s.known) {                                              // uncharted: a small cold sparkle so it reads as "a star I have not visited"
-          if (!Q.spikes || s.r < 2.2) continue;
-          const sz = s.r * 7.5, tws = twk ? 0.75 + 0.25 * Math.sin(t * 1.3 + s.ph) : 1; ctx.globalAlpha = 0.3 * tws * keep; ctx.drawImage(spikeSprite('unknown'), s.sx - sz / 2, s.sy - sz / 2, sz, sz); continue;
+        if (!s.known) {                                              // uncharted: a faint glint in the star's own tint so it reads as "a star I have not visited"
+          if (!Q.spikes || s.r < 1.8 || s.useSp) continue;          // (the Space sprite already carries its spikes)
+          const sz = s.r * 6.5, tws = twk ? 0.8 + 0.2 * Math.sin(t * 1.3 + s.ph) : 1; ctx.globalAlpha = 0.22 * tws * keep; ctx.drawImage(spikeSprite(s.vkind), s.sx - sz / 2, s.sy - sz / 2, sz, sz); continue;
         }
         if (kd.bh) {
           if (!SPR.spaceBad && !(M.Gfx && M.Gfx.pick('space') && M.Gfx.pick('space').starSprite) && Q.glow >= 0.75) { const bs = s.r * 7.2; ctx.save(); ctx.translate(s.sx, s.sy); ctx.scale(1, 0.34); ctx.rotate(t * 0.5 + s.ph); ctx.globalAlpha = 0.9 * s.rk; ctx.drawImage(bhSwirlSprite(), -bs * 0.55, -bs * 0.55, bs * 1.1, bs * 1.1); ctx.restore(); }
@@ -1301,11 +1302,7 @@
         const s = SD[i]; if (!s.on) continue;
         const x = s.sx, y = s.sy, r = s.r;
         ctx.globalAlpha = s.rk;
-        // unexplored: a small plotted-point ring (chart "pin") so it never reads as background dust; a dotted outer ring when there is room
-        if (!s.known && ovAny < 0.5) {
-          ctx.beginPath(); ctx.arc(x, y, Math.max(3.4, r * 1.55) + 0.5, 0, TAU); ctx.lineWidth = 1; ctx.strokeStyle = 'rgba(150,172,236,' + (0.5 * (1 - ovAny)) + ')'; ctx.stroke();
-          if (znv > 60) { ctx.setLineDash([1.5, 3.5]); ctx.beginPath(); ctx.arc(x, y, r * 2.5 + 3, 0, TAU); ctx.strokeStyle = 'rgba(150,170,230,0.26)'; ctx.stroke(); ctx.setLineDash([]); }
-        }
+        // unexplored stars carry no ring at rest (they are lit points like the rest); the hover ring and the selection brackets are drawn in drawOverlays
         // inside a gameplay nebula
         if (s.nebula && ovAny < 0.6) { ctx.setLineDash([2, 3.5]); ctx.lineDashOffset = -t * 4; ctx.beginPath(); ctx.arc(x, y, r * 2.15 + 3.5, 0, TAU); ctx.strokeStyle = 'rgba(190,130,255,0.5)'; ctx.lineWidth = 1.1; ctx.stroke(); ctx.setLineDash([]); }
         // owner ring + flag
@@ -1506,6 +1503,11 @@
     }
     function drawFleetGlyph(x, y, sz, owner, ang, kind, sel, hov, count, moving, a, t, ph) {
       const col = empCol(owner), Sh = M.Gfx && M.Gfx.Ships; let usedExt = false;
+      if (moving && Q.flow) {                                     // short engine trail behind a fleet under way (cached tinted streak, additive)
+        const tl = sz * (1.6 + 0.2 * Math.sin(t * 13 + y * 0.1));
+        ctx.save(); ctx.globalCompositeOperation = 'lighter'; ctx.translate(x, y); ctx.rotate(ang); ctx.globalAlpha = a * 0.7; ctx.drawImage(tintTrail(owner, col), -tl - sz * 0.22, -sz * 0.2, tl, sz * 0.4); ctx.restore();
+        ctx.globalCompositeOperation = 'source-over'; ctx.globalAlpha = 1;
+      }
       if (a >= 0.995 && Sh && Sh.drawFleetMarker && !extMarkerBad) {
         try { Sh.drawFleetMarker(ctx, x, y, sz, empHex(owner), ang, t + ph, { selected: sel, count: count, moving: moving }); usedExt = true; }
         catch (e) { extMarkerBad = true; console.warn('[GalaxyMap] Ships.drawFleetMarker failed; using built-in markers', e); }
@@ -1514,7 +1516,6 @@
       if (!usedExt) {
         const hi = mixc(col, [255, 255, 255], 0.45), lo = mixc(col, [0, 0, 0], 0.35), pulse = 0.85 + 0.15 * Math.sin(t * 3.1 + x * 0.05), gz = sz * 2.5;
         ctx.globalCompositeOperation = 'lighter'; ctx.globalAlpha = a * (sel ? 0.8 : 0.5) * pulse; ctx.drawImage(glowSprite(col), x - gz / 2, y - gz / 2, gz, gz);
-        if (moving && Q.flow) { const tl = sz * (1.5 + 0.2 * Math.sin(t * 13 + y * 0.1)); ctx.save(); ctx.translate(x, y); ctx.rotate(ang); ctx.globalAlpha = a * 0.7; ctx.drawImage(tintTrail(owner, col), -tl - sz * 0.22, -sz * 0.2, tl, sz * 0.4); ctx.restore(); }
         ctx.globalCompositeOperation = 'source-over'; ctx.globalAlpha = a;
         ctx.save(); ctx.translate(x, y); ctx.rotate(ang); ctx.scale(sz, sz); ctx.lineJoin = 'round';
         ctx.beginPath(); ctx.moveTo(0.62, 0); ctx.lineTo(-0.42, -0.4); ctx.lineTo(-0.2, 0); ctx.lineTo(-0.42, 0.4); ctx.closePath();
