@@ -237,6 +237,7 @@
     analog: smp('padSerrie', 0.17, { ens: 0.25, att: 0.9, rel: 2.0, hp: 110, eq: [[220, -2, 1], [1500, -2, 1.2], [6000, 1.5, 'hs']] }, 'warm'), air: smp('padAir', 0.14, { ens: 0.3, att: 1.4, rel: 2.6, hp: 300, eq: [[8000, 1.5, 'hs']] }, 'airPad'),
     padGlass: smp('padGlass', 0.14, { ens: 0.35, att: 0.7, rel: 1.6 }, 'glassPad'),
     organ: smp('organ', 0.13, {}, 'organ'), organSoft: smp('organSoft', 0.14, { att: 0.12 }, 'organ'),
+    organDeep: smp('organ', 0.2, { att: 0.15, rel: 1.2, sub: 0.6, eq: [[70, 4, 'ls'], [2500, -2, 1]] }, 'organ'),   // the pipe organ's pedal registers: a 16' beneath (pad3, through the bass strip)
     flutes: smp('fluteSus', 0.3, { att: 0.08 }, 'flute'),
     // basses: the bass section
     deep: smp('cbSus', 0.3, { att: 0.1, sub: 0.4, eq: [[200, -3, 1], [600, -2, 1]] }, 'deep'), sub: smp('cbSus', 0.3, { att: 0.1, sub: 0.5, eq: [[200, -3, 1], [600, -2, 1]] }, 'sub'),
@@ -282,8 +283,8 @@
     drums: { lvl: 0.68, verb: 0.08, stage: 0.32, dly: 0 }, fx: { lvl: 0.6, verb: 0.5, stage: 0.2, dly: 0 },
     x1: { lvl: 0.8, verb: 0.12, dly: 0, i0: 0.12 }, x2: { lvl: 0.7, verb: 0.2, dly: 0.3, i0: 0.38 }, x3: { lvl: 0.9, verb: 0.3, dly: 0, i0: 0.62 },
   };
-  const BUS = { pad: 'pad', pad2: 'pad', bass: 'bass', arp: 'arp', arp2: 'arp', drums: 'drums', perc: 'drums', timp: 'drums', lead: 'lead', lead2: 'lead', bell: 'bell', bell2: 'bell', choir: 'choir', choir2: 'choir' };
-  const DEF_INST = { pad: 'warm', pad2: 'warm', bass: 'sub', arp: 'arp', arp2: 'arp', lead: 'brass', lead2: 'bell', bell: 'glass', bell2: 'glass', choir: 'ooh', choir2: 'aah' };
+  const BUS = { pad: 'pad', pad2: 'pad', pad3: 'bass', bass: 'bass', arp: 'arp', arp2: 'arp', drums: 'drums', perc: 'drums', timp: 'drums', lead: 'lead', lead2: 'lead', bell: 'bell', bell2: 'bell', choir: 'choir', choir2: 'choir' };
+  const DEF_INST = { pad: 'warm', pad2: 'warm', pad3: 'organDeep', bass: 'sub', arp: 'arp', arp2: 'arp', lead: 'brass', lead2: 'bell', bell: 'glass', bell2: 'glass', choir: 'ooh', choir2: 'aah' };
   const LINES = { lead: 1, lead2: 1, bell: 1, bell2: 1 };
 
   const DRUMV = {
@@ -374,7 +375,7 @@
     def.sec.forEach(function (s, idx) {
       const R = { n: s.n || 'S' + idx, bars: s.bars, lv: num(s.lv, 1), lv1: s.cres ? s.cres[1] : num(s.lv, 1), lv0: s.cres ? s.cres[0] : num(s.lv, 1), L: {}, raw: s };
       R.segs = expandProg(s.prog, s.bars, meter, tpc);
-      for (const key of ['pad', 'pad2', 'bass', 'arp', 'arp2', 'drums', 'perc', 'timp', 'lead', 'lead2', 'bell', 'bell2', 'choir', 'choir2']) {
+      for (const key of ['pad', 'pad2', 'pad3', 'bass', 'arp', 'arp2', 'drums', 'perc', 'timp', 'lead', 'lead2', 'bell', 'bell2', 'choir', 'choir2']) {
         let v = s[key] !== undefined ? s[key] : base[key];
         if (v === true) v = base[key];
         if (v) R.L[key] = v;
@@ -432,7 +433,7 @@
         let L = len;
         if (cfg.merge !== false) { while (i + 1 < segs.length && segs[i + 1].ch.sym === sg.ch.sym) { i++; L = segs[i].b1 - sg.b0; } }
         const att = style === 'swell' ? Math.min(L * C.spb * 0.6, 3.5) : undefined;
-        notes.forEach(function (m, j) { emit(C, 'pad', inst, b0, m, L, vel * (j === 0 ? 1 : 0.9), { pan: (j / Math.max(1, notes.length - 1) - 0.5) * 0.8 * num(cfg.width, 1), att: att, dt: (rng() - 0.5) * 0.02, rel: cfg.rel }); });
+        notes.forEach(function (m, j) { emit(C, BUS[key] || 'pad', inst, b0, m, L, vel * (j === 0 ? 1 : 0.9), { pan: (j / Math.max(1, notes.length - 1) - 0.5) * 0.8 * num(cfg.width, 1), att: att, dt: (rng() - 0.5) * 0.02, rel: cfg.rel }); });
       } else if (style === 'pulse' || style === 'stab') {
         const grid = cleanPat(cfg.pat || (style === 'pulse' ? 'x.x.x.x.' : 'x.......')), step = C.meter / grid.length;
         for (let bar0 = sg.b0; bar0 < sg.b1 - 1e-9; bar0 += C.meter) {      // the pattern is one bar; repeat it across the chord
@@ -440,7 +441,7 @@
             const ch = grid[k]; if (ch === '.' || ch === '-') continue;
             const bb = bar0 + k * step; if (bb < sg.b0 - 1e-9 || bb >= sg.b1 - 1e-9) continue;
             const vv = (VEL[ch] || 0.7) * vel;
-            notes.forEach(function (m, j) { emit(C, 'pad', inst, s.start + bb, m, step * num(cfg.gate, 0.8), vv, { pan: (j / Math.max(1, notes.length - 1) - 0.5) * 0.6 }); });
+            notes.forEach(function (m, j) { emit(C, BUS[key] || 'pad', inst, s.start + bb, m, step * num(cfg.gate, 0.8), vv, { pan: (j / Math.max(1, notes.length - 1) - 0.5) * 0.6 }); });
           }
         }
       }
@@ -678,7 +679,7 @@
     }
   }
 
-  const GEN = { pad: genPad, pad2: genPad, bass: genBass, arp: genArp, arp2: genArp, drums: genDrums, perc: genDrums, timp: genTimp, choir: genChoir, choir2: genChoir, lead: genLine, lead2: genLine };
+  const GEN = { pad: genPad, pad2: genPad, pad3: genPad, bass: genBass, arp: genArp, arp2: genArp, drums: genDrums, perc: genDrums, timp: genTimp, choir: genChoir, choir2: genChoir, lead: genLine, lead2: genLine };
 
   // ---------------------------------------------------------------- tension overlays (layers x1..x3, gated by setIntensity)
   function genTension(C, s) {
@@ -2060,10 +2061,10 @@
   // flutes above, harp and bells; the lift — the hymn carried up over IV-V-bVI-bVII-I with a crash on every bar and the rolls; the chord;
   // two bars of snare and timpani rolls out of the quiet; the last chord. 80 bpm. Nothing short, nothing syncopated: a procession.
   Track('triumph', {
-    desc: 'The crowning — the council’s music raised to a state ceremony, solemn and big: the solo trumpet plays the call over the organ of the chamber, the second and third trumpets and the bass horns coming in under it halfway for a full chord as a timpani roll gathers, and the whole brass section answers it — trumpets, horns, trombones, tuba; the horn section takes the procession’s theme in two parts with the trumpets above over a dignified cadence with strings, organ, trombones and tuba sustained and the men beneath; the big phrase as a hymn in full brass — three trumpet parts, horns, trombones down to the bass trombone, the tuba deep under — with the whole chorus, harp and bells; the lift with a crash on every bar; the chord; two bars of snare and timpani rolls; the last chord the hall carries; plays once and hands over to the victory loop',
+    desc: 'The crowning — the council’s music raised to a state ceremony, solemn and big: the solo trumpet plays the call over the organ of the chamber with a deep pipe organ beneath everything, the second and third trumpets and the bass horns coming in under it halfway for a full chord as a timpani roll gathers, and the whole brass section answers it — trumpets, horns, trombones, tuba; the horn section takes the procession’s theme in two parts with the trumpets above over a dignified cadence with strings, organ, trombones and tuba sustained and the men beneath; the big phrase as a hymn in full brass — three trumpet parts, horns, trombones down to the bass trombone, the tuba deep under — with the whole chorus, harp and bells; the lift with a crash on every bar; the chord; two bars of snare and timpani rolls; the last chord the hall carries; plays once and hands over to the victory loop',
     bpm: 80, trim: 3.4, root: 'F', mode: 'major', tens: false, lintMin: 0.8, tone: { hi: 2.0, lo: 5.0 }, bassC: 33,
     fx: { verb: 1.35, stage: 1.15 }, sends: { drums: { verb: 0.22, stage: 0.5, dly: 0 } }, mix: { choir: 1.35, drums: 1.6, lead: 1.5, bell: 1.3, pad: 1.15, bass: 2.3 },
-    inst: { pad: 'strings', pad2: 'tbn', bass: 'tuba', lead: 'horn', lead2: 'tpt', arp: 'harp', bell: 'bell', bell2: 'flute', choir: 'aah', choir2: 'choirMen' },
+    inst: { pad: 'strings', pad2: 'tbn', pad3: 'organDeep', bass: 'tuba', lead: 'horn', lead2: 'tpt', arp: 'harp', bell: 'bell', bell2: 'flute', choir: 'aah', choir2: 'choirMen' },
     ph: {
       CL: '5:3 8:1 | 7:2 6:2 | 5:4 | 5:2 8:2',                                            // the call that opens the procession — the game's leitmotif; its last bar rises to the octave
       CLa: '5:3 8:1 | 7:2 6:2', CLb: '5:4 | 5:2 8:2', CL3: '1:4 | 1:2 3:2',                 // the call in halves for the solo trumpet, and the third trumpet's part under its second half
@@ -2074,40 +2075,40 @@
     },
     sec: [
       // the call: the solo trumpet alone over the organ of the chamber
-      { n: 'call', bars: 2, cres: [0.65, 0.75], prog: 'I | V', pad: { p: 'sus', inst: 'organ', n: 4, reg: [50, 74], vel: 0.7, width: 1.3 }, lead: { ph: 'CLa', inst: 'tptSolo', vel: 1.0 } },
+      { n: 'call', bars: 2, cres: [0.65, 0.75], prog: 'I | V', pad: { p: 'sus', inst: 'organ', n: 4, reg: [50, 74], vel: 0.7, width: 1.3 }, pad3: { p: 'sus', n: 3, reg: [36, 57], vel: 0.75, width: 1.1 }, lead: { ph: 'CLa', inst: 'tptSolo', vel: 1.0 } },
       // halfway through the call the second and third trumpets come in under it for a full, rounded chord, with the bass horns — trombones down to the bass trombone, the tuba — a timpani roll and a soft snare gathering
-      { n: 'call2', bars: 2, cres: [0.8, 0.95], prog: 'I | I:.5 IV:.5', pad: { p: 'sus', inst: 'organ', n: 4, reg: [50, 74], vel: 0.7, width: 1.3 }, pad2: { p: 'sus', inst: 'tbn', n: 4, reg: [31, 58], vel: 0.9, width: 1.2 }, bass: { p: 'whole', inst: { p: 'tuba', att: 0.12 }, vel: 1.0 },
+      { n: 'call2', bars: 2, cres: [0.8, 0.95], prog: 'I | I:.5 IV:.5', pad: { p: 'sus', inst: 'organ', n: 4, reg: [50, 74], vel: 0.7, width: 1.3 }, pad3: { p: 'sus', n: 3, reg: [36, 57], vel: 0.8, width: 1.1 }, pad2: { p: 'sus', inst: 'tbn', n: 4, reg: [31, 58], vel: 0.9, width: 1.2 }, bass: { p: 'whole', inst: { p: 'tuba', att: 0.12 }, vel: 1.0 },
         lead: { ph: 'CLb', inst: 'tptSolo', vel: 1.0 }, lead2: { ph: 'CLb', inst: 'tpt', vel: 0.9, harm: -2, hvel: 0.95 }, bell2: { ph: 'CL3', inst: 'tpt', vel: 0.9 },
         timp: { p: 'hits', roll: 1, vel: 0.85 }, drums: { sn: ['................', 'o.o.o.o.x.x.xxxx'], vel: 0.8 } },
       // the brass answers: the call again, now in the whole section — trumpets in two parts, the horns in two parts an octave below, trombones and tuba sustained, the men, timpani and the cadence on the step, a crash on the entry
-      { n: 'brass', bars: 4, cres: [0.85, 1.0], cr: true, prog: 'I | V | I | I:.5 IV:.5', pad: { p: 'sus', inst: 'organ', n: 4, reg: [50, 74], vel: 0.6, width: 1.3 }, pad2: { p: 'sus', inst: 'tbn', n: 4, reg: [31, 58], vel: 0.85, width: 1.2 },
+      { n: 'brass', bars: 4, cres: [0.85, 1.0], cr: true, prog: 'I | V | I | I:.5 IV:.5', pad: { p: 'sus', inst: 'organ', n: 4, reg: [50, 74], vel: 0.6, width: 1.3 }, pad3: { p: 'sus', n: 3, reg: [36, 57], vel: 0.85, width: 1.1 }, pad2: { p: 'sus', inst: 'tbn', n: 4, reg: [31, 58], vel: 0.85, width: 1.2 },
         bass: { p: 'half', inst: { p: 'tuba', att: 0.08 }, vel: 1.0 }, lead: { ph: 'CL', inst: 'tpt', vel: 1.0, harm: -2, hvel: 0.9 }, lead2: { ph: 'CL', inst: 'horn', oct: -1, vel: 0.95, harm: -2, hvel: 0.85 }, bell2: { ph: 'CL', inst: 'tptSolo', vel: 0.85 }, timp: { p: 'two', vel: 0.95 },
         drums: { bd: 'X.......x.......', sn: ['X..ox.o.x..ox.o.', 'X..ox.o.x.oxxxxx'], crashS: ['x...............', '................', '................', '................'], vel: 0.95 }, choir2: { n: 3, reg: [36, 55], vel: 0.8 } },
       // the procession: the horn section takes the theme in two parts with the trumpet section above it, trombones on the step, over a dignified cadence — strings, organ and trombones sustained, the tuba, the men beneath, bass drum and timpani on the step, a crash on the phrase starts
-      { n: 'procession', bars: 8, cres: [0.95, 1.05], hit: 'tam', cr: true, prog: 'I | I | IV | V | I | vi | ii | V', pad: { p: 'sus', n: 5, reg: [43, 76], vel: 0.95, width: 1.3 }, pad2: { p: 'stab', inst: 'tbn', pat: 'x.......x.......', n: 4, reg: [31, 58], vel: 0.9, gate: 0.92, width: 1.2 },
+      { n: 'procession', bars: 8, cres: [0.95, 1.05], hit: 'tam', cr: true, prog: 'I | I | IV | V | I | vi | ii | V', pad: { p: 'sus', n: 5, reg: [43, 76], vel: 0.95, width: 1.3 }, pad3: { p: 'sus', n: 3, reg: [36, 57], vel: 0.85, width: 1.1 }, pad2: { p: 'stab', inst: 'tbn', pat: 'x.......x.......', n: 4, reg: [31, 58], vel: 0.9, gate: 0.92, width: 1.2 },
         bass: { p: 'half', inst: { p: 'tuba', att: 0.08 }, vel: 1.0 }, lead: { ph: 'A1 A2', oct: -1, vel: 1.0, harm: -2, hvel: 0.85 }, lead2: { ph: 'A1 A2', inst: 'tpt', vel: 1.0, harm: -2, hvel: 0.85 }, bell2: { ph: 'A1 A2', inst: 'tptSolo', vel: 0.8 }, timp: { p: 'two', vel: 1.0 },
         drums: { bd: 'X.......x.......', t5: 'X.......x.......', boom: ['x...............', '................', '................', '................'], sn: ['X..ox.o.x..ox.o.', 'X..ox.o.x.oxxxxx', 'X.o.x..ox.o.x..o', 'X..ox...x..oxxxx'], crashS: ['x...............', '................', '................', '................'], vel: 1.0 },
         choir2: { n: 3, reg: [36, 55], vel: 0.9 }, bell: { dens: 0.1, res: 1, reg: [72, 94], vel: 0.45 }, arp: { p: 'up8', vel: 0.35, reg: [53, 81] } },
       // the hymn: the big phrase in trumpets and horns, each in two parts, the whole chorus, the flutes above, brass and trombones sustained, strings, organ beneath, the harp, bells, timpani on the beats, the cadence, a crash at the top of each phrase
-      { n: 'hymn', bars: 8, cres: [1.0, 1.12], cr: true, prog: 'IV | V | vi:.5 ii:.5 | V | IV | I | IV | I', pad: { p: 'sus', inst: 'brass', n: 4, reg: [50, 72], vel: 0.85, width: 1.3 }, pad2: { p: 'sus', inst: 'tbn', n: 4, reg: [31, 58], vel: 0.9, width: 1.2 },
+      { n: 'hymn', bars: 8, cres: [1.0, 1.12], cr: true, prog: 'IV | V | vi:.5 ii:.5 | V | IV | I | IV | I', pad: { p: 'sus', inst: 'brass', n: 4, reg: [50, 72], vel: 0.85, width: 1.3 }, pad3: { p: 'sus', n: 3, reg: [36, 57], vel: 0.9, width: 1.1 }, pad2: { p: 'sus', inst: 'tbn', n: 4, reg: [31, 58], vel: 0.9, width: 1.2 },
         bass: { p: 'half', inst: { p: 'tuba', att: 0.06 }, vel: 1.0 }, lead: { ph: 'B1 B2', inst: 'tpt', vel: 1.0, harm: -2, hvel: 0.85 }, lead2: { ph: 'B1 B2', inst: 'horn', oct: -1, vel: 1.0, harm: -2, hvel: 0.85 }, bell2: { ph: 'B1 B2', inst: 'tptSolo', vel: 0.85 }, timp: { p: 'beats', vel: 1.0 },
         drums: { bd: 'X.......x.......', t5: 'X.......x.......', boom: ['x...............', '................', '................', '................'], sn: ['X..ox.o.x..ox.o.', 'X..ox.o.x.oxxxxx', 'X.o.x..ox.o.x..o', 'X..ox...x..oxxxx'], crashS: ['x...............', '................', '................', '................'], vel: 1.0 },
         choir: { v1: 'a', v2: 'a', n: 5, reg: [55, 81], vel: 1.0 }, choir2: { n: 3, reg: [36, 55], vel: 1.0 }, bell: { dens: 0.2, res: 2, reg: [72, 96], vel: 0.5 }, arp: { p: 'up8', vel: 0.45, reg: [53, 84] }, fill: 'rollS' },
       // the lift: the hymn carried up by trumpets and horns over IV-V-bVI-bVII-I, tremolo strings, trombones and brass sustained, the whole chorus, a crash on every bar, the tam-tam on the flat sixth, the rolls into the chord
-      { n: 'lift', bars: 4, cres: [1.1, 1.2], prog: 'IV | V | bVI:.5 bVII:.5 | I', rise: 1, pad: { p: 'sus', inst: 'strTrem', n: 4, reg: [50, 81], vel: 1.0, width: 1.3 }, pad2: { p: 'sus', inst: 'tbn', n: 4, reg: [31, 58], vel: 1.0, width: 1.2 },
+      { n: 'lift', bars: 4, cres: [1.1, 1.2], prog: 'IV | V | bVI:.5 bVII:.5 | I', rise: 1, pad: { p: 'sus', inst: 'strTrem', n: 4, reg: [50, 81], vel: 1.0, width: 1.3 }, pad3: { p: 'sus', n: 3, reg: [36, 57], vel: 0.95, width: 1.1 }, pad2: { p: 'sus', inst: 'tbn', n: 4, reg: [31, 58], vel: 1.0, width: 1.2 },
         bass: { p: 'half', inst: { p: 'tuba', att: 0.05 }, vel: 1.0 }, lead: { ph: 'L1', inst: 'tpt', vel: 1.0, harm: -2, hvel: 0.85 }, lead2: { ph: 'L1', inst: 'horn', oct: -1, vel: 1.0, harm: -2, hvel: 0.85 }, bell2: { ph: 'L1', inst: 'tptSolo', vel: 0.9 }, timp: { p: 'beats', roll: 1, vel: 1.0 },
         drums: { bd: 'X.......x.......', t5: 'X.......x.......', boom: 'x...............', crashS: 'x...............', sn: ['X..ox.o.x..ox.o.', 'X..ox.o.x.oxxxxx', 'X..ox.o.xxxxxxxx', 'X.xxxxxxxxxxxxxx'], tam: ['................', '................', 'x...............', '................'], vel: 1.0 },
         choir: { v1: 'a', v2: 'a', n: 5, reg: [55, 83], vel: 1.0 }, choir2: { n: 3, reg: [36, 55], vel: 1.0 }, bell: { dens: 0.25, res: 2, reg: [72, 96], vel: 0.55 }, arp: { p: 'up8', vel: 0.5, reg: [53, 84] } },
       // the chord: tam-tam, crash, the bell tree and the harp, the whole band on the chord, two bars to ring over the cadence
-      { n: 'chord', bars: 2, lv: 1.2, hit: 'tam', cr: true, prog: 'I', pad: { p: 'sus', inst: 'brass', n: 4, reg: [50, 74], vel: 1.0, width: 1.3 }, pad2: { p: 'sus', inst: 'tbn', n: 4, reg: [31, 58], vel: 1.0, width: 1.2 },
+      { n: 'chord', bars: 2, lv: 1.2, hit: 'tam', cr: true, prog: 'I', pad: { p: 'sus', inst: 'brass', n: 4, reg: [50, 74], vel: 1.0, width: 1.3 }, pad3: { p: 'sus', n: 3, reg: [36, 57], vel: 1.0, width: 1.1 }, pad2: { p: 'sus', inst: 'tbn', n: 4, reg: [31, 58], vel: 1.0, width: 1.2 },
         bass: { pat: '1---', inst: { p: 'tuba', att: 0.05 }, vel: 1.0 }, lead: { ph: 'FIN', vel: 1.0 }, lead2: { ph: 'FIN3', inst: 'tpt', vel: 1.0 }, bell2: { ph: 'FIN5', inst: 'tptSolo', vel: 0.9 }, timp: { kick: ['X...............', '................'], vel: 1.0 },
         drums: { bd: ['X...............', '................'], t5: ['X...............', '................'], boom: ['x...............', '................'], crashS: ['x...............', '................'], bellTree: ['x...............', '................'], sn: ['........X..ox.o.', 'X..ox.o.x..ox.o.'], vel: 1.0 },
         choir: { v1: 'a', v2: 'a', n: 5, reg: [55, 83], vel: 1.0 }, choir2: { n: 3, reg: [36, 55], vel: 1.0 }, bell: { dens: 0.25, res: 2, reg: [72, 96], vel: 0.55 }, arp: { pat: ['0123456789012345', '................'], res: 4, vel: 0.5, reg: [48, 91], gate: 0.9 } },
       // the breath: everything falls to the rolls — snare and timpani out of the quiet, tremolo strings, the organ, the trombones and the men swelling into the last chord
-      { n: 'breath', bars: 2, cres: [0.25, 1.0], prog: 'I', rise: 2, pad: { p: 'swell', inst: 'strTrem', n: 4, reg: [50, 76], vel: 1.0, width: 1.3 }, pad2: { p: 'swell', inst: 'tbn', n: 4, reg: [31, 58], vel: 0.8, width: 1.2 }, choir2: { n: 3, reg: [36, 55], vel: 0.9 }, bass: { p: 'whole', inst: { p: 'tuba', att: 0.15 }, vel: 0.85 },
+      { n: 'breath', bars: 2, cres: [0.25, 1.0], prog: 'I', rise: 2, pad: { p: 'swell', inst: 'strTrem', n: 4, reg: [50, 76], vel: 1.0, width: 1.3 }, pad3: { p: 'swell', n: 3, reg: [36, 57], vel: 0.9, width: 1.1 }, pad2: { p: 'swell', inst: 'tbn', n: 4, reg: [31, 58], vel: 0.8, width: 1.2 }, choir2: { n: 3, reg: [36, 55], vel: 0.9 }, bass: { p: 'whole', inst: { p: 'tuba', att: 0.15 }, vel: 0.85 },
         timp: { p: 'roll', roll: 2, vel: 1.0 }, drums: { sn: ['o.o.o.o.x.x.x.x.', 'x.x.x.xxxxxxxxxx'], snRoll: ['................', 'x.......x.......'], bd: ['................', '............x.x.'], vel: 1.0 } },
       // the last chord: tam-tam, bass drum, crash, the bell tree, trumpets, horns, trombones and tuba, the whole chorus, the flutes above, the harp — and the hall carries it under the victory loop
-      { n: 'blast', bars: 2, lv: 1.25, hit: 'tam', cr: true, prog: 'I', pad: { p: 'sus', inst: 'brass', n: 4, reg: [50, 74], vel: 1.0, width: 1.3 }, pad2: { p: 'sus', inst: 'tbn', n: 4, reg: [31, 58], vel: 1.0, width: 1.2 },
+      { n: 'blast', bars: 2, lv: 1.25, hit: 'tam', cr: true, prog: 'I', pad: { p: 'sus', inst: 'brass', n: 4, reg: [50, 74], vel: 1.0, width: 1.3 }, pad3: { p: 'sus', n: 3, reg: [36, 57], vel: 1.0, width: 1.1 }, pad2: { p: 'sus', inst: 'tbn', n: 4, reg: [31, 58], vel: 1.0, width: 1.2 },
         bass: { pat: '1---', inst: { p: 'tuba', att: 0.04 }, vel: 1.0 }, lead: { ph: 'FIN5', vel: 1.0 }, lead2: { ph: 'FIN3', inst: 'tpt', vel: 1.0 }, bell2: { ph: 'FIN', inst: 'tptSolo', vel: 0.9 }, timp: { kick: ['X...............', '................'], vel: 1.0 },
         drums: { bd: ['X...............', '................'], t5: ['X...............', '................'], boom: ['x...............', '................'], kickSyn: ['x...............', '................'], crashS: ['x...............', '................'], tam: ['x...............', '................'], bellTree: ['x...............', '................'], vel: 1.0 },
         choir: { v1: 'a', v2: 'a', n: 5, reg: [55, 83], vel: 1.0 }, choir2: { n: 3, reg: [36, 55], vel: 1.0 }, bell: { dens: 0.25, res: 2, reg: [72, 96], vel: 0.55 }, arp: { pat: ['0123456789012345', '................'], res: 4, vel: 0.55, reg: [48, 91], gate: 0.9 } },
