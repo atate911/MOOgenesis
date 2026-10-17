@@ -3,6 +3,44 @@
 Versions follow `MAJOR.MINOR.PATCH`; the live version is the `VERSION` file.
 `scripts/upgrade.sh` refuses to move to an older `VERSION` unless told to.
 
+## Unreleased
+
+- Galaxy music, less repetitive and more atmospheric (`js/audio/music.js`): four new exploration pieces in the planetarium manner —
+  `galaxy5` (the veil: a slow harp waltz in three, oboe, women far back), `galaxy6` (the abyss: cellos on a sunken pedal, bassoon
+  and alto flute, the men chanting the phrygian step; also in the war rotation), `galaxy7` (the cradle: a lullaby in six, rocking
+  harp, clarinet, glockenspiel) and `galaxy8` (the beacon: glass synth, slow pizzicato, a distant horn calling the leitmotif,
+  crotales and tubular bells answered by the delay) — eight pieces in the map rotation, about 35 minutes before anything returns.
+  Two rare pieces in the Crimson Tide manner slip into a cycle about a third of the time each: `galaxy9` (the tide: deep sub-bass
+  swells, the analogue sky, low brass, the hymn in the horns at the crest, tam-tam) and `galaxy10` (the chorale: the men's choir
+  carrying the hymn over the organ, horns beneath, the women at the crest, timpani); at war their `:war` readings add the Mutiny
+  kit (processed booms, synthetic kick and snare, anvil) in the big sections.
+  Every galaxy piece now has `forms` (three or four orderings of its sections, so a performance opens differently each time),
+  alternative written readings of its melodies (`ph: [...]`, chosen per performance; a doubling that says `ph: '@'` follows the
+  other line's choice), parts that sit out some performances (`skip`), phrases the player leaves out (`rest`), breath sections of
+  varying length (`barsVar`) and a small tempo rubato (`rubato`), on top of the per-pass instrumentation `alts`; a per-performance
+  `take` seeds the variation RNG so no two performances of a piece are the same. The music never stops on the map: a piece
+  crossfades into a one-minute interlude (five hidden templates — drift, harp, voices, horizon, pulse — re-rooted to the key and
+  mode of the piece that follows, never the same one twice running) and the interlude into the next piece — each newcomer enters on the last bar line of the piece before it and fades in equal-power
+  over up to six seconds while the outgoing piece plays its final chord to the end and decays beneath it; reshuffles never repeat
+  the piece just heard and keep pieces in the same key apart; `Music.snapshot()/restore()` carry the whole rotation, rare pieces
+  included. Fixed: galaxy4's cello and men's lines in section B were written 16 bars late and never sounded; galaxy1's section C
+  had two `choir` keys.
+- The underscore senses the game's phase: in the first years, before anyone has been met (and before turn 70), the map plays the
+  planetarium rotation only (`galaxyEarly`: deep field, beacon, wonder, veil, cradle, with the pad and harp interludes — big sky, no
+  choir or drums); contact, or time, opens the full programme, and war the war rotation (`soundscape.js`, on the bar at turn end).
+- The procession (`procession`): a march in the nobilmente manner — a solo horn carries a long-breathed theme over tuba and
+  trombones on the step, the snare alone keeps a march cadence with a firm bass drum on the one, bone dry (`def.sends` lets a
+  piece override one layer's reverb / stage / delay sends), strings and organ behind, the choir entering as the theme returns,
+  the flat-sixth lift for the big phrase, a lyrical trio, a hymn and the full chamber's answer. On the map it wears the family
+  tone (dark top, more hall) and grows out of the interlude through an eight-bar approach (strings and the horn call, harp, ghosted
+  snare under the horn, the cadence only with the theme); it is the rarest of the rare pieces in peacetime (`rare.p` may be a map
+  of id → probability) and a regular piece at war. The Galactic Council plays the same composition in state (`council2`, derived
+  at registration): abbreviated (long sections halved, the big phrase within the first quarter minute), slower, and ceremonial —
+  tam-tam and a timpani roll under a brass fanfare on the call, the organ of the chamber spread wide, the horn section and brass
+  doubling the solo horn over a sustained brass bed, cymbals on the entries, timpani on the step, the choir forward, a brighter
+  room; it alternates with the original `council`. `Music.renderOffline(id, secs, { loop: false })` lets a performance end
+  naturally instead of running into its next pass.
+
 ## 1.1.3 — 2026-10-17
 
 - GNN (`tools/handoff/gnn-logistics-2026-10.md`): a broadcast no longer closes on its own. The last story stays on air until

@@ -30,6 +30,17 @@
     } catch (e) { return false; }
   }
   let war = false;
+  // the first years, before anyone has been met: the planetarium rotation (big sky, no choir or drums); contact, or time, opens the full programme
+  function earlyYears() {
+    try {
+      const S = M.Game && M.Game.S; if (!S) return false;
+      if ((S.turn || 0) >= 70) return false;
+      const me = S.empires[S.playerId]; if (!me || !me.relations) return true;
+      return !S.empires.some(e => e && e.alive !== false && e.id !== me.id && me.relations[e.id] && (me.relations[e.id].met || me.relations[e.id].contact));
+    } catch (e) { return false; }
+  }
+  let early = false;
+  const galaxyMood = () => (war ? 'galaxyWar' : early ? 'galaxyEarly' : 'galaxy');
   function raceMood(params) {
     const S = M.Game && M.Game.S; if (!S || !params) return null;
     const e = S.empires[params.empire !== undefined ? params.empire : params.with];
@@ -42,16 +53,16 @@
       const win = params && (params.kind === 'good' || params.kind === 'tyrant' || params.win);
       return win ? ['victory', 'victory'] : ['defeat', 'defeat'];
     }
-    if (id === 'galaxy') { war = atWar(); return ['galaxy', war ? 'galaxyWar' : 'galaxy']; }
+    if (id === 'galaxy') { war = atWar(); early = earlyYears(); return ['galaxy', galaxyMood()]; }
     return MAP[id] || null;
   }
-  // a declaration of war or a peace treaty changes the map's music at the end of the turn, on the bar, never mid-phrase
+  // a declaration of war, a peace treaty or the first contact changes the map's music at the end of the turn, on the bar, never mid-phrase
   function onTurnEnd() {
     UI.sfx('newturn');
     const m = music(); if (!m || !m.setMood || group !== 'galaxy') return;
-    const w = atWar(); if (w === war) return;
-    war = w;
-    try { m.setMood(w ? 'galaxyWar' : 'galaxy', { fade: 5, quantize: 'bar' }); } catch (e) { /* audio optional */ }
+    const w = atWar(), e = earlyYears(); if (w === war && e === early) return;
+    war = w; early = e;
+    try { m.setMood(galaxyMood(), { fade: 6, quantize: 'bar' }); } catch (e2) { /* audio optional */ }
   }
 
   function onScreen(id, params) {
