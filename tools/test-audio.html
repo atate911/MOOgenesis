@@ -77,8 +77,10 @@
 
 <script src="../js/core/ns.js"></script>
 <script src="../js/audio/audio.js"></script>
+<script src="../js/audio/sampler.js"></script>
 <script src="../js/audio/music.js"></script>
 <script src="../js/audio/sfx.js"></script>
+<script src="lib/audio-metrics.js"></script>
 <script>
 (function (M) {
   'use strict';
@@ -89,86 +91,10 @@
   const yieldUI = () => new Promise(r => setTimeout(r, 0));
   const R = window.__audioTest = { music: {}, sfx: {}, lint: {}, leak: [], log: [], running: false, done: false };
 
-  // ------------------------------------------------------------ analysis helpers
-  function fftInPlace(re, im) {
-    const n = re.length;
-    for (let i = 1, j = 0; i < n; i++) { let bit = n >> 1; for (; j & bit; bit >>= 1) j ^= bit; j ^= bit; if (i < j) { let t = re[i]; re[i] = re[j]; re[j] = t; t = im[i]; im[i] = im[j]; im[j] = t; } }
-    for (let len = 2; len <= n; len <<= 1) {
-      const ang = -2 * Math.PI / len, wr = Math.cos(ang), wi = Math.sin(ang);
-      for (let i = 0; i < n; i += len) {
-        let cr = 1, ci = 0;
-        for (let k = 0; k < len / 2; k++) {
-          const a = i + k, b = a + len / 2, tr = re[b] * cr - im[b] * ci, ti = re[b] * ci + im[b] * cr;
-          re[b] = re[a] - tr; im[b] = im[a] - ti; re[a] += tr; im[a] += ti;
-          const nr = cr * wr - ci * wi; ci = cr * wi + ci * wr; cr = nr;
-        }
-      }
-    }
-  }
+  // ------------------------------------------------------------ analysis (shared with tools/audio-report.js: tools/lib/audio-metrics.js)
   const db = x => 20 * Math.log10(Math.max(x, 1e-9));
   const r1 = x => Math.round(x * 10) / 10, r2 = x => Math.round(x * 100) / 100, r3 = x => Math.round(x * 1000) / 1000;
-
-  function analyze(buf, opt) {
-    opt = opt || {};
-    const sr = buf.sampleRate, n = buf.length, L = buf.getChannelData(0), Rr = buf.numberOfChannels > 1 ? buf.getChannelData(1) : L;
-    let peak = 0, sumsq = 0, nan = 0, dc = 0, clip = 0;
-    for (let i = 0; i < n; i++) {
-      const l = L[i], r = Rr[i];
-      if (!isFinite(l) || !isFinite(r)) { nan++; continue; }
-      const a = Math.max(Math.abs(l), Math.abs(r));
-      if (a > peak) peak = a;
-      if (a > 0.99) clip++;
-      sumsq += (l * l + r * r) * 0.5; dc += (l + r) * 0.5;
-    }
-    const rms = Math.sqrt(sumsq / n), out = { peak: peak, rms: rms, rmsDb: db(rms), nan: nan, dc: dc / n, clip: clip, secs: n / sr };
-    // 1-second windows
-    const w = Math.floor(sr); let silent = 0, wins = 0, minWin = 0, maxWin = -200;
-    for (let s = 0; s + w <= n; s += w) {
-      let e = 0; for (let i = s; i < s + w; i++) { const m = (L[i] + Rr[i]) * 0.5; e += m * m; }
-      const d = db(Math.sqrt(e / w)); wins++; if (d < -55) silent++; if (d > maxWin) maxWin = d; if (wins === 1 || d < minWin) minWin = d;
-    }
-    out.silentPct = wins ? 100 * silent / wins : 0; out.winMin = minWin; out.winMax = maxWin;
-    // RMS over the half-second windows that actually contain sound (used to calibrate layer levels)
-    { const hw = Math.floor(sr * 0.5); let pw = 0, cnt = 0;
-      for (let s0 = 0; s0 + hw <= n; s0 += hw) { let e = 0; for (let i = s0; i < s0 + hw; i++) { const m = (L[i] + Rr[i]) * 0.5; e += m * m; } e /= hw; if (db(Math.sqrt(e)) > -65) { pw += e; cnt++; } }
-      out.actDb = cnt ? db(Math.sqrt(pw / cnt)) : -200; }
-    // spectrum: average power over frames
-    const N = 4096, hop = Math.max(N, Math.floor(n / 160)), re = new Float64Array(N), im = new Float64Array(N), P = new Float64Array(N / 2), win = new Float64Array(N);
-    for (let i = 0; i < N; i++) win[i] = 0.5 - 0.5 * Math.cos(2 * Math.PI * i / (N - 1));
-    let frames = 0;
-    for (let s = 0; s + N <= n; s += hop) {
-      for (let i = 0; i < N; i++) { re[i] = (L[s + i] + Rr[s + i]) * 0.5 * win[i]; im[i] = 0; }
-      fftInPlace(re, im);
-      for (let k = 0; k < N / 2; k++) P[k] += re[k] * re[k] + im[k] * im[k];
-      frames++;
-    }
-    const bw = sr / N; let eLo = 0, eMid = 0, eHi = 0, tot = 0, cen = 0;
-    for (let k = 1; k < N / 2; k++) {
-      const f = k * bw, e = P[k]; tot += e; cen += e * f;
-      if (f < 200) eLo += e; else if (f < 2000) eMid += e; else eHi += e;
-    }
-    out.low = tot ? 100 * eLo / tot : 0; out.mid = tot ? 100 * eMid / tot : 0; out.high = tot ? 100 * eHi / tot : 0; out.centroid = tot ? cen / tot : 0;
-    // log-spaced band feature vector (for SFX distinctness)
-    const edges = [60, 120, 250, 500, 1000, 2000, 4000, 8000, 16000], feat = new Float64Array(8);
-    for (let k = 1; k < N / 2; k++) { const f = k * bw; for (let b = 0; b < 8; b++) if (f >= edges[b] && f < edges[b + 1]) { feat[b] += P[k]; break; } }
-    let ft = 0; for (let b = 0; b < 8; b++) { feat[b] = Math.log10(feat[b] + 1e-12); ft += feat[b]; }
-    out.feat = Array.from(feat);
-    // head / tail / envelope shape
-    let head = 0; for (let i = 0; i < Math.min(8, n); i++) head = Math.max(head, Math.abs(L[i]), Math.abs(Rr[i]));
-    let tail = 0; for (let i = Math.max(0, n - 256); i < n; i++) tail = Math.max(tail, Math.abs(L[i]), Math.abs(Rr[i]));
-    out.head = head; out.tail = tail;
-    const eb = 16, envv = new Float64Array(eb), seg = Math.floor(n / eb);
-    for (let b = 0; b < eb; b++) { let e = 0; for (let i = b * seg; i < (b + 1) * seg; i++) { const m = (L[i] + Rr[i]) * 0.5; e += m * m; } envv[b] = Math.sqrt(e / seg); }
-    out.env = Array.from(envv);
-    // effective length: last sample where short-window RMS > -55 dBFS (1 ms*... 20 ms windows)
-    const wlen = Math.floor(sr * 0.02); let eff = 0;
-    for (let s = Math.floor((n - wlen) / wlen) * wlen; s >= 0; s -= wlen) { let e = 0; for (let i = s; i < s + wlen; i++) { const m = (L[i] + Rr[i]) * 0.5; e += m * m; } if (db(Math.sqrt(e / wlen)) > -55) { eff = (s + wlen) / sr; break; } }
-    out.effSecs = eff;
-    // largest jump between consecutive samples (click detector) in the first 20 ms
-    let jump = 0; for (let i = 1; i < Math.min(n, Math.floor(sr * 0.02)); i++) jump = Math.max(jump, Math.abs(L[i] - L[i - 1]));
-    out.jump20 = jump;
-    return out;
-  }
+  const analyze = (buf, opt) => window.AudioMetrics.analyze(buf, opt);
 
   // ------------------------------------------------------------ rendering runners
   function cell(txt, cls, title) { return '<td class="' + (cls || '') + '"' + (title ? ' title="' + title + '"' : '') + '>' + txt + '</td>'; }
@@ -180,10 +106,11 @@
     b.mooStats = buf.mooStats;
     return b;
   }
-  const MUSIC_LIMITS = { peak: 0.98, rmsLo: -28, rmsHi: -12, silentMax: 15, bandMin: 0.5 };
+  const MUSIC_LIMITS = { peak: 0.98, rmsLo: -28, rmsHi: -12, silentMax: 15, bandMin: 0.5, lufsHi: -13, kneeMax: 2 };
   function judgeMusic(a) {
     const f = [];
     if (a.nan) f.push('NaN'); if (a.peak > MUSIC_LIMITS.peak) f.push('peak');
+    if (a.lufs > MUSIC_LIMITS.lufsHi) f.push('loud'); if (a.kneePct > MUSIC_LIMITS.kneeMax) f.push('limiter');
     if (a.rmsDb < MUSIC_LIMITS.rmsLo || a.rmsDb > MUSIC_LIMITS.rmsHi) f.push('rms');
     if (a.silentPct >= MUSIC_LIMITS.silentMax) f.push('silence');
     if (a.vPeak > 32) f.push('polyphony'); if (a.vRefused > 0.03 * (a.vMade + a.vRefused)) f.push('voices-refused');
@@ -194,11 +121,11 @@
     const rows = [];
     for (const id of Object.keys(R.music)) {
       const a = R.music[id], f = a.fails;
-      rows.push('<tr>' + cell(id) + cell(a.mode) + cell(r1(a.secs)) + cell(r3(a.peak), a.peak > MUSIC_LIMITS.peak ? 'fail' : 'pass') + cell(r1(a.rmsDb), a.rmsDb < MUSIC_LIMITS.rmsLo || a.rmsDb > MUSIC_LIMITS.rmsHi ? 'fail' : 'pass')
+      rows.push('<tr>' + cell(id) + cell(a.mode) + cell(r1(a.secs)) + cell(r3(a.peak), a.peak > MUSIC_LIMITS.peak ? 'fail' : 'pass') + cell(r1(a.lufs), a.lufs > MUSIC_LIMITS.lufsHi ? 'fail' : 'pass') + cell(r2(a.kneePct) + '%', a.kneePct > MUSIC_LIMITS.kneeMax ? 'fail' : 'pass') + cell(r1(a.rmsDb), a.rmsDb < MUSIC_LIMITS.rmsLo || a.rmsDb > MUSIC_LIMITS.rmsHi ? 'fail' : 'pass')
         + cell(r1(a.silentPct) + '%', a.silentPct >= MUSIC_LIMITS.silentMax ? 'fail' : 'pass') + cell(r1(a.low) + '%', a.low < 0.5 ? 'fail' : 'pass') + cell(r1(a.mid) + '%', a.mid < 0.5 ? 'fail' : 'pass') + cell(r1(a.high) + '%', a.high < 0.5 ? 'fail' : 'pass')
         + cell(Math.round(a.centroid)) + cell(a.nan, a.nan ? 'fail' : 'pass') + cell(r1(a.winMin) + '/' + r1(a.winMax)) + cell(a.clip) + cell(a.vPeak + '/' + a.vStolen + '/' + a.vRefused, a.vRefused ? 'warn' : '') + cell(r1(a.ms) + 's') + cell(f.length ? 'FAIL: ' + f.join(',') : 'PASS', f.length ? 'fail' : 'pass') + '</tr>');
     }
-    setTable($('t-music'), ['track', 'mode', 'secs', 'peak', 'RMS dBFS', 'silent 1s', '&lt;200Hz', '200-2k', '&gt;2k', 'centroid', 'NaN', 'win min/max dB', 'clip', 'voices peak/stolen/refused', 'render', 'verdict'], rows);
+    setTable($('t-music'), ['track', 'mode', 'secs', 'peak', 'LUFS', 'limiter knee', 'RMS dBFS', 'silent 1s', '&lt;200Hz', '200-2k', '&gt;2k', 'centroid', 'NaN', 'win min/max dB', 'clip', 'voices peak/stolen/refused', 'render', 'verdict'], rows);
   }
   async function runMusic(ids, seconds, full) {
     const all = Music.list().map(t => t.id); ids = ids || all;
@@ -235,10 +162,10 @@
       let best = null, bs = -1;
       for (const o of ids) { if (o === id) continue; const s = cosine(a.fv, R.sfx[o].fv); if (s > bs) { bs = s; best = o; } }
       a.nn = best; a.nnSim = bs;
-      rows.push('<tr>' + cell(id) + cell(r2(a.effSecs) + 's') + cell(r3(a.peak), a.peak > 0.98 ? 'fail' : 'pass') + cell(r1(a.rmsDb)) + cell(Math.round(a.centroid)) + cell(r1(a.low) + '/' + r1(a.mid) + '/' + r1(a.high))
+      rows.push('<tr>' + cell(id) + cell(r2(a.effSecs) + 's') + cell(r3(a.peak), a.peak > 0.98 ? 'fail' : 'pass') + cell(r1(a.lufsMoment)) + cell(r1(a.rmsDb)) + cell(Math.round(a.centroid)) + cell(r1(a.low) + '/' + r1(a.mid) + '/' + r1(a.high))
         + cell(r3(a.head), a.head > 0.02 ? 'fail' : 'pass') + cell(r3(a.tail), a.tail > 0.003 ? 'fail' : 'pass') + cell(a.nan, a.nan ? 'fail' : 'pass') + cell(best ? best + ' ' + r3(bs) : '-', bs > 0.995 ? 'warn' : '') + cell(a.fails.length ? 'FAIL: ' + a.fails.join(',') : 'PASS', a.fails.length ? 'fail' : 'pass') + '</tr>');
     }
-    setTable($('t-sfx'), ['sfx', 'length', 'peak', 'RMS dBFS', 'centroid', 'low/mid/high %', 'head', 'tail', 'NaN', 'nearest (cos)', 'verdict'], rows);
+    setTable($('t-sfx'), ['sfx', 'length', 'peak', 'LUFS-M', 'RMS dBFS', 'centroid', 'low/mid/high %', 'head', 'tail', 'NaN', 'nearest (cos)', 'verdict'], rows);
   }
   async function runSfx(ids) {
     ids = ids || SFX.list().map(x => x.id || x);
@@ -371,7 +298,7 @@
     const lines = [];
     const mids = Object.keys(R.music), mf = mids.filter(i => R.music[i].fails.length);
     lines.push('music renders: ' + mids.length + ' tracks, ' + (mids.length - mf.length) + ' pass, ' + mf.length + ' fail' + (mf.length ? '  [' + mf.map(i => i + ':' + R.music[i].fails.join('+')).join(' ') + ']' : ''));
-    if (mids.length) { const rm = mids.map(i => R.music[i].rmsDb); lines.push('  RMS dBFS min ' + r1(Math.min.apply(null, rm)) + ' max ' + r1(Math.max.apply(null, rm)) + ' | peak max ' + r3(Math.max.apply(null, mids.map(i => R.music[i].peak))) + ' | worst silence ' + r1(Math.max.apply(null, mids.map(i => R.music[i].silentPct))) + '%'); }
+    if (mids.length) { const rm = mids.map(i => R.music[i].rmsDb), lu = mids.map(i => R.music[i].lufs); lines.push('  LUFS min ' + r1(Math.min.apply(null, lu)) + ' max ' + r1(Math.max.apply(null, lu)) + ' | RMS dBFS min ' + r1(Math.min.apply(null, rm)) + ' max ' + r1(Math.max.apply(null, rm)) + ' | peak max ' + r3(Math.max.apply(null, mids.map(i => R.music[i].peak))) + ' | worst silence ' + r1(Math.max.apply(null, mids.map(i => R.music[i].silentPct))) + '%'); }
     const sids = Object.keys(R.sfx), sf = sids.filter(i => R.sfx[i].fails.length);
     lines.push('sfx renders: ' + sids.length + ' effects, ' + (sids.length - sf.length) + ' pass, ' + sf.length + ' fail' + (sf.length ? '  [' + sf.map(i => i + ':' + R.sfx[i].fails.join('+')).join(' ') + ']' : ''));
     const sim = sids.filter(i => R.sfx[i].nnSim > 0.995).map(i => i + '~' + R.sfx[i].nn);
@@ -439,7 +366,11 @@
     // any click unlocks audio (autoplay policy)
     document.addEventListener('pointerdown', () => A.init(), { once: true });
   }
-  function refresh() { const s = A.stats(), m = Music.state(); $('stats').textContent = s ? ' ctx ' + s.state + ' · voices ' + s.voices + ' · nodes ' + s.nodes + ' (base ' + s.baseNodes + ') · music: ' + (m.cur || '-') + (m.old ? ' +' + m.old + ' fading' : '') : ' audio not initialised'; }
+  function refresh() {
+    const s = A.stats(), m = Music.state(), sm = A.Samples ? A.Samples.status() : null;
+    $('stats').textContent = (s ? ' ctx ' + s.state + ' · voices ' + s.voices + ' · nodes ' + s.nodes + ' (base ' + s.baseNodes + ') · music: ' + (m.cur || '-') + (m.old ? ' +' + m.old + ' fading' : '') : ' audio not initialised')
+      + (sm ? ' · samples: ' + sm.state + ' ' + sm.instruments + '/' + sm.total + ' (' + sm.mb + ' MB decoded, decoder offset ' + sm.offsetMs + ' ms)' : '');
+  }
   build();
   setInterval(refresh, 1000);
   console.log('test-audio ready:', Music.list().length, 'tracks,', SFX.list().length, 'sfx');

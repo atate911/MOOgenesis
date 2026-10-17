@@ -37,7 +37,7 @@
       if (c.special === 'poor' || c.special === 'ultrapoor') flags.push({ head: c.specialLabel + '.', text: 'Production from industry is ' + (c.special === 'poor' ? 'halved' : 'cut to a third') + '.' });
       if (c.special === 'artifacts') flags.push({ head: 'Ancient artifacts.', text: 'Research on this world is doubled.', good: true });
       if (c.special === 'orion') flags.push({ head: 'Orion!', text: 'The throne-world of the Ancients — research here is quadrupled.', good: true });
-      UI.sfx('scan');
+      UI.sfx('discover');
       await Flow.card({ star: it.star, ownerId: S.planets[it.star].owner, planetCard: c, title: 'Scout ships explore a new star system', body: [], flags });
     };
 

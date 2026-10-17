@@ -3,3 +3,4 @@ tools/out/
 *.tmp
 *.tmp.*
 .claude/settings.local.json
+__pycache__/

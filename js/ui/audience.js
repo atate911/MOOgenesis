@@ -613,7 +613,7 @@
     const S = S_(), E = S.empires[it.from];
     setMood(KIND_MOOD[it.kind] || 'neutral', 0); A.base = A.mood;
     paintTop(); terms([]); note('');
-    if (it.kind === 'warDeclared') UI.sfx('war'); else if (it.kind === 'firstContact') UI.sfx('scan'); else UI.sfx('alert');
+    if (it.kind === 'warDeclared') UI.sfx('war'); else if (it.kind === 'firstContact') UI.sfx('contact'); else UI.sfx('alert');
     if (it.greeting) { await speak(it.greeting, { mood: A.mood, moodSecs: 0 }); await pause(650); }
     let text;
     if (it.incentive) {

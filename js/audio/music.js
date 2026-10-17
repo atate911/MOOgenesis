@@ -5,8 +5,11 @@
 // (25 ms timer, ~160 ms ahead) or an offline window renderer plays the events through the voice factories in audio.js.
 //
 // Public API (MOO.Audio.Music):
-//   play(id,{fade,loop}) stop({fade}) current() list() playlist(ids,{shuffle,gap,fade}) setIntensity(0..1) renderOffline(id,seconds,opts)
-//   analyze(id) (composition lint, used by tools/test-audio.html)
+//   play(id,{fade,loop}) stop({fade}) current() has(id) list() playlist(ids,{shuffle,gap,fade,start}) setIntensity(0..1)
+//   setMood(name,{fade}) snapshot() / restore(snap,{fade}) (hand the music back after a scene: track OR running playlist)
+//   renderOffline(id,seconds,opts) analyze(id) (composition lint, used by tools/test-audio.html and tools/audio-report.js)
+// Intensity: layers x1..x3 are tension overlays that fade in above 0.12 / 0.38 / 0.62; a track may also *gate* its own layers
+// (def.gate = {drums: 0.2, lead: 0.4, ...}) so a battle starts sparse and fills in as the fight escalates (combat1/combat2).
 (function (M) {
   'use strict';
 
@@ -178,7 +181,8 @@
   }
 
   // ================================================================== presets
-  const INST = {
+  // Synth presets (always available; also the fallbacks while the samples load or when they cannot load at all)
+  const SYN = {
     warm: { lvl: 0.15, v: 'pad', att: 1.0, rel: 1.5, det: 9, lfo: 0.11, gain: 0.26 },
     strings: { lvl: 0.14, v: 'pad', att: 0.28, rel: 0.55, det: 6, cutK: 5, cutB: 900, lfo: 0.2, lfoDepth: 0.12, vib: 6, gain: 0.24 },
     glassPad: { lvl: 0.11, v: 'pad', wave: 'triangle', att: 1.5, rel: 2.0, det: 5, cutK: 7, cutB: 800, lfo: 0.08, sub: 0.25, gain: 0.3 },
@@ -210,25 +214,88 @@
     ooh: { lvl: 0.1, v: 'choir', v1: 'o', v2: 'a' }, aah: { lvl: 0.09, v: 'choir', v1: 'a', v2: 'a' }, uuh: { lvl: 0.1, v: 'choir', v1: 'u', v2: 'o' }, eeh: { lvl: 0.09, v: 'choir', v1: 'e', v2: 'i' },
     drone: { lvl: 0.11, v: 'drone' }, glassHarm: { lvl: 0.25, v: 'harp' },
   };
+  // a sampled preset: `smp` instrument (assets/audio), `fb` + `fbo` = the synth voice that plays until the samples are in
+  const fbOf = name => { const o = Object.assign({}, SYN[name]); const fb = o.v; delete o.v; delete o.lvl; return { fb, fbo: o }; };
+  const smp = (inst, lvl, extra, fbName) => Object.assign({ lvl, v: 'sample', smp: inst }, fbOf(fbName), extra || {});
+  const INST = Object.assign({}, SYN, {
+    // sustains: the string sections carry the harmony (Sonatina: 1st violins / violas / celli / basses, each in its seat on the stage;
+    // no detuned copies — a recorded section is already a section). The analogue pad survives as 'analog' for the Zimmer beds.
+    warm: smp('strEns', 0.14, { att: 0.25, rel: 1.0, hp: 110, eq: [[250, -2.5, 1], [1600, -1.5, 1.2], [8000, 1.5, 'hs']] }, 'warm'),
+    strings: smp('strEns', 0.14, { att: 0.2, rel: 0.9, hp: 110, eq: [[250, -2.5, 1], [8000, 1.5, 'hs']] }, 'strings'),
+    strTrem: smp('strEnsTrem', 0.15, { att: 0.12, hp: 90, eq: [[8000, 2, 'hs']] }, 'strings'),
+    cello: smp('vcSus', 0.3, { att: 0.18, rel: 1.0, hp: 60, leg: true, eq: [[250, -2, 1], [2800, 1.5, 0.8], [7000, 1, 'hs']] }, 'strings'),   // the cello section as a singing line
+    cellos: smp('vcSus', 0.24, { att: 0.3, rel: 1.2, hp: 60, eq: [[250, -2, 1], [6000, 2, 'hs']] }, 'warm'),   // cellos as a low bed
+    airPad: smp('strEns', 0.12, { att: 0.45, rel: 1.3, cut: 5000 }, 'airPad'),
+    glassPad: smp('padGlass', 0.14, { ens: 0.35, att: 0.7, rel: 1.6 }, 'glassPad'),
+    dark: smp('strEns', 0.14, { att: 0.35, rel: 1.1, cut: 2200 }, 'dark'),
+    drone: smp('strEns', 0.13, { att: 0.7, rel: 1.5, cut: 1800 }, 'drone'),
+    analog: smp('padSerrie', 0.17, { ens: 0.25, att: 0.9, rel: 2.0, hp: 110, eq: [[220, -2, 1], [1500, -2, 1.2], [6000, 1.5, 'hs']] }, 'warm'), air: smp('padAir', 0.14, { ens: 0.3, att: 1.4, rel: 2.6, hp: 300, eq: [[8000, 1.5, 'hs']] }, 'airPad'),
+    padGlass: smp('padGlass', 0.14, { ens: 0.35, att: 0.7, rel: 1.6 }, 'glassPad'),
+    organ: smp('organ', 0.13, {}, 'organ'), organSoft: smp('organSoft', 0.14, { att: 0.12 }, 'organ'),
+    flutes: smp('fluteSus', 0.3, { att: 0.08 }, 'flute'),
+    // basses: the bass section
+    deep: smp('cbSus', 0.3, { att: 0.1, sub: 0.4, eq: [[200, -3, 1], [600, -2, 1]] }, 'deep'), sub: smp('cbSus', 0.3, { att: 0.1, sub: 0.5, eq: [[200, -3, 1], [600, -2, 1]] }, 'sub'),
+    moog: smp('cbPizz', 0.55, {}, 'moog'), pulse: smp('cbPizz', 0.5, {}, 'pulse'),
+    // brass and winds (the horns crossfade between their mp and ff recordings with the written dynamic)
+    horn: smp('hornSus', 0.34, { vib: 0, att: 0.09, hp: 90, eq: [[300, -2, 1], [4000, 2, 'hs']] }, 'horn'),
+    hornSolo: smp('hornSolo', 0.31, { hp: 70, eq: [[4000, 2, 'hs']] }, 'horn'),
+    brass: smp('brassEns', 0.33, { att: 0.08, hp: 60, eq: [[4000, 2, 'hs']] }, 'brass'),
+    synth: smp('brassEns', 0.33, { att: 0.06 }, 'synth'),
+    tpt: smp('tptSus', 0.3, {}, 'brass'), tptSolo: smp('tptSolo', 0.28, {}, 'brass'),
+    lowBrass: smp('lowBrass', 0.36, { att: 0.08, eq: [[3500, 2.5, 'hs']] }, 'horn'),
+    brassStab: smp('brassStac', 1.5, { ring: true }, 'brassStab'),
+    flute: smp('flute', 0.42, { att: 0.07, hp: 200, eq: [[6000, 1.5, 'hs']] }, 'flute'), altoFlute: smp('altoFlute', 0.42, { att: 0.08 }, 'flute'),
+    oboe: smp('oboe', 0.4, { att: 0.06, hp: 180, eq: [[6000, 1.5, 'hs']] }, 'flute'), reed: smp('corAnglais', 0.4, { att: 0.07, hp: 150, eq: [[6000, 1.5, 'hs']] }, 'reed'),
+    clarinet: smp('clarinet', 0.42, { att: 0.07, hp: 120, eq: [[6000, 1.5, 'hs']] }, 'flute'), bassoon: smp('bassoon', 0.42, { att: 0.07, hp: 60, eq: [[5000, 1.5, 'hs']] }, 'horn'),
+    // plucked and struck: pizzicato sections, marimba, harp (no synth plucks in the symphonic palette)
+    arp: smp('strEnsPizz', 0.42, { rel: 0.35 }, 'arp'), arpSaw: smp('strEnsPizz', 0.42, { rel: 0.35 }, 'arpSaw'), seq: smp('strEnsPizz', 0.42, { rel: 0.3 }, 'seq'),
+    pizz: smp('strEnsPizz', 0.5, { rel: 0.4 }, 'pizz'), kora: smp('strEnsPizz', 0.45, { rel: 0.5 }, 'kora'), stab: smp('brassStac', 1.3, { ring: true }, 'stab'),
+    strOst: smp('strEnsSpic', 0.5, { ring: true }, 'pizz'),
+    marimba: smp('marimba', 0.45, { rel: 0.6, hold: 0.1 }, 'marimba'),
+    harp: smp('harp', 0.8, { rel: 1.3, hold: 0.3, hp: 90, eq: [[6000, 1.5, 'hs']] }, 'harp'), glassHarm: smp('harp', 0.7, { rel: 1.3, hold: 0.3 }, 'harp'),
+    // bells: celeste (glass), glockenspiel (bell), crotales (crystal, shimmer), tubular chimes (chime)
+    glass: smp('celeste', 0.5, { rel: 1.4, hold: 0.4, hp: 300, eq: [[8000, 1.5, 'hs']] }, 'glass'), bell: smp('glock', 0.5, { rel: 1.6, hold: 0.4, hp: 400, eq: [[8000, 1.5, 'hs']] }, 'bell'), crystal: smp('crotales', 0.42, { rel: 2.0, hold: 0.5, hp: 600, eq: [[8000, 2, 'hs']] }, 'crystal'),
+    shimmer: smp('crotales', 0.38, { rel: 1.4, hold: 0.3 }, 'shimmer'), vibes: smp('celeste', 0.42, { rel: 1.2, hold: 0.3 }, 'vibes'), chime: smp('chimes', 0.42, { rel: 2.2, hold: 0.5, hp: 150, eq: [[8000, 1.5, 'hs']] }, 'chime'),
+    // the recorded chorus: men + women; every vowel preset maps onto it (the recording is one sustained vowel)
+    ooh: smp('chorus', 0.17, { att: 0.12, rel: 1.2, hp: 150, hum: 1.5, alt: true, eq: [[5000, 2.5, 'hs']] }, 'ooh'), aah: smp('chorus', 0.17, { att: 0.12, rel: 1.2, hp: 150, hum: 1.5, alt: true, eq: [[5000, 2.5, 'hs']] }, 'aah'),
+    uuh: smp('chorus', 0.16, { att: 0.12, rel: 1.2, hp: 150, hum: 1.5, alt: true, eq: [[5000, 2.5, 'hs']] }, 'uuh'), eeh: smp('chorus', 0.16, { att: 0.12, rel: 1.2, hp: 150, hum: 1.5, alt: true, eq: [[5000, 2.5, 'hs']] }, 'eeh'),
+    choirMen: smp('chorusMen', 0.23, { att: 0.12, rel: 1.3, hp: 100, hum: 1.5, alt: true, eq: [[5000, 2.5, 'hs']] }, 'uuh'), choirMenAh: smp('chorusMen', 0.19, { att: 0.12, rel: 1.3, hp: 100, hum: 1.5, alt: true, eq: [[5000, 2.5, 'hs']] }, 'aah'), choirWomen: smp('chorusWomen', 0.16, { att: 0.15, rel: 1.4, hp: 220, hum: 1.5, alt: true, eq: [[5000, 2, 'hs']] }, 'aah'),
+    // the two machine races keep a little of their electronic character
+    seqSyn: SYN.seq, arpSawSyn: SYN.arpSaw, moogSyn: SYN.moog, pulseSyn: SYN.pulse, synthSyn: SYN.synth,
+  });
+  Music._SYN = SYN;
   const LAYERS = {
-    pad: { lvl: 0.85, verb: 0.34, dly: 0 }, bass: { lvl: 0.75, verb: 0, dly: 0 }, arp: { lvl: 0.75, verb: 0.22, dly: 0.38 },
-    lead: { lvl: 1, verb: 0.3, dly: 0.24 }, bell: { lvl: 0.8, verb: 0.45, dly: 0.34 }, choir: { lvl: 0.8, verb: 0.5, dly: 0 },
-    drums: { lvl: 0.85, verb: 0.14, dly: 0 }, fx: { lvl: 0.8, verb: 0.55, dly: 0 },
+    // (the Sonatina recordings carry their own hall, so the sends are moderate; the bus chorus is off the recorded sections and kept
+    //  for the synthesized pads only, where it belongs)
+    // verb = the hall (far plane), stage = the short bright stage (close plane): pads and choir live far back, the melody, plucks,
+    // bells and drums stand at the front of the stage with the hall only behind them
+    pad: { lvl: 0.82, verb: 0.36, stage: 0.0, dly: 0, chorus: 0.12 }, bass: { lvl: 0.8, verb: 0.06, stage: 0.08, dly: 0 }, arp: { lvl: 0.5, verb: 0.18, stage: 0.22, dly: 0.12 },
+    lead: { lvl: 1.0, verb: 0.16, stage: 0.26, dly: 0.08 }, bell: { lvl: 0.45, verb: 0.3, stage: 0.24, dly: 0.1 }, choir: { lvl: 0.72, verb: 0.42, stage: 0.0, dly: 0, chorus: 0 },
+    drums: { lvl: 0.68, verb: 0.08, stage: 0.32, dly: 0 }, fx: { lvl: 0.6, verb: 0.5, stage: 0.2, dly: 0 },
     x1: { lvl: 0.8, verb: 0.12, dly: 0, i0: 0.12 }, x2: { lvl: 0.7, verb: 0.2, dly: 0.3, i0: 0.38 }, x3: { lvl: 0.9, verb: 0.3, dly: 0, i0: 0.62 },
   };
-  const BUS = { pad: 'pad', bass: 'bass', arp: 'arp', arp2: 'arp', drums: 'drums', perc: 'drums', timp: 'drums', lead: 'lead', lead2: 'lead', bell: 'bell', bell2: 'bell', choir: 'choir' };
-  const DEF_INST = { pad: 'warm', bass: 'sub', arp: 'arp', arp2: 'arp', lead: 'brass', lead2: 'bell', bell: 'glass', bell2: 'glass', choir: 'ooh' };
+  const BUS = { pad: 'pad', pad2: 'pad', bass: 'bass', arp: 'arp', arp2: 'arp', drums: 'drums', perc: 'drums', timp: 'drums', lead: 'lead', lead2: 'lead', bell: 'bell', bell2: 'bell', choir: 'choir', choir2: 'choir' };
+  const DEF_INST = { pad: 'warm', pad2: 'warm', bass: 'sub', arp: 'arp', arp2: 'arp', lead: 'brass', lead2: 'bell', bell: 'glass', bell2: 'glass', choir: 'ooh', choir2: 'aah' };
   const LINES = { lead: 1, lead2: 1, bell: 1, bell2: 1 };
 
   const DRUMV = {
-    kick: { v: 'kick' }, snare: { v: 'snare' }, hat: { v: 'hat' }, ohat: { v: 'hat', open: true }, clap: { v: 'clap' }, crash: { v: 'crash' },
-    t1: { v: 'tom', f: 196 }, t2: { v: 'tom', f: 147 }, t3: { v: 'tom', f: 110 }, t4: { v: 'tom', f: 82 }, t5: { v: 'tom', f: 62, dur: 0.6 },
-    metal: { v: 'metal' }, metal2: { v: 'metal', f: 520, dur: 0.5 }, click: { v: 'click' }, click2: { v: 'click', f: 3600 }, click3: { v: 'click', f: 1500, q: 4 },
+    kick: { v: 'sample', smp: 'bassDrum', fb: 'kick', fbo: { f: 48, f0: 135, dur: 0.36 }, lvl: 0.85 }, snare: { v: 'sample', smp: 'snare', fb: 'snare', fbo: {}, lvl: 0.7 },
+    hat: { v: 'sample', smp: 'taps', fb: 'hat', fbo: {}, lvl: 0.5 }, ohat: { v: 'sample', smp: 'taps', fb: 'hat', fbo: { open: true }, lvl: 0.55 }, clap: { v: 'sample', smp: 'tamb', fb: 'clap', fbo: {}, lvl: 0.6 },
+    crash: { v: 'sample', smp: 'crash', fb: 'crash', fbo: {}, lvl: 0.7, hp: 180 },
+    t1: { v: 'sample', smp: 'tenorHi', fb: 'tom', fbo: { f: 196 }, lvl: 0.7 }, t2: { v: 'sample', smp: 'tenorHi', fb: 'tom', fbo: { f: 147 }, lvl: 0.7 }, t3: { v: 'sample', smp: 'tenorLo', fb: 'tom', fbo: { f: 110 }, lvl: 0.75 },
+    t4: { v: 'sample', smp: 'tenorLo', fb: 'tom', fbo: { f: 82 }, lvl: 0.8 }, t5: { v: 'sample', smp: 'bassDrum', fb: 'tom', fbo: { f: 62, dur: 0.6 }, lvl: 0.7 },
+    metal: { v: 'sample', smp: 'anvil', fb: 'metal', fbo: {}, lvl: 0.6 }, metal2: { v: 'sample', smp: 'anvil', fb: 'metal', fbo: { f: 520, dur: 0.5 }, lvl: 0.45 },
+    click: { v: 'sample', smp: 'claves', fb: 'click', fbo: {}, lvl: 0.5 }, click2: { v: 'sample', smp: 'woodBlock', fb: 'click', fbo: { f: 3600 }, lvl: 0.45 }, click3: { v: 'sample', smp: 'claves', fb: 'click', fbo: { f: 1500, q: 4 }, lvl: 0.4 },
     whisper: { v: 'whisper', dur: 2.6 }, whisper2: { v: 'whisper', dur: 1.3, f0: 2800, f1: 1500 },
-    shk: { v: 'shaker' }, hiss: { v: 'shaker', dur: 0.22, hp: 3500, f: 7000, att: 0.03 }, rim: { v: 'click', f: 1900, q: 3, dur: 0.03, gain: 6 },
+    shk: { v: 'sample', smp: 'shaker', fb: 'shaker', fbo: {}, lvl: 0.45 }, hiss: { v: 'sample', smp: 'tambShake', fb: 'shaker', fbo: { dur: 0.22, hp: 3500, f: 7000, att: 0.03 }, lvl: 0.4 }, rim: { v: 'sample', smp: 'taps', fb: 'click', fbo: { f: 1900, q: 3, dur: 0.03, gain: 6 }, lvl: 0.55 },
+    // sampled orchestral percussion (assets/audio) with synth fallbacks
+    bd: { v: 'sample', smp: 'bassDrum', fb: 'kick', fbo: { f: 44, f0: 120, dur: 0.5 }, lvl: 0.9 }, bdSoft: { v: 'sample', smp: 'bassDrum', fb: 'kick', fbo: { f: 44, f0: 120, dur: 0.5 }, lvl: 0.55 },
+    sn: { v: 'sample', smp: 'snare', fb: 'snare', fbo: {}, lvl: 0.75 }, snRoll: { v: 'sample', smp: 'snareRoll', fb: 'snare', fbo: { dur: 0.6 }, lvl: 0.7 },
+    tam: { v: 'sample', smp: 'gong', fb: 'crash', fbo: { dur: 3 }, lvl: 0.8, hp: 60 }, crashS: { v: 'sample', smp: 'crash', fb: 'crash', fbo: {}, lvl: 0.7, hp: 180 },
+    tri: { v: 'sample', smp: 'triangle', fb: 'hat', fbo: { open: true }, lvl: 0.4 }, bellTree: { v: 'sample', smp: 'bellTree', fb: 'none', lvl: 0.5 }, sleigh: { v: 'sample', smp: 'sleigh', fb: 'shaker', fbo: {}, lvl: 0.4 },
   };
   const VEL = { x: 0.78, X: 1, o: 0.42, g: 0.26 };
-  const GHOSTY = { hat: 1, shk: 1, rim: 1, click: 1, click2: 1, click3: 1, hiss: 0, t3: 0 };
+  const GHOSTY = { hat: 1, shk: 1, rim: 1, click: 1, click2: 1, click3: 1, hiss: 0, t3: 0, sn: 0, bd: 0 };
   const DRUMS = {
     pulse4: { kick: 'x...x...x...x...', hat: '..x...x...x...x.', clap: '....x.......x...' },
     soft: { kick: 'x.......x.......', hat: 'o.o.o.o.o.o.o.o.' },
@@ -240,9 +307,11 @@
     heavy: { kick: 'x..x..x...x..x..', snare: '........x.......', hat: 'xoxoxoxoxoxoxoxo', metal2: '..............x.' },
     ominous: { t5: 'X.....x...x.....', t4: '........x.....o.', rim: '..o...o...o...o.', shk: 'o.o.o.o.o.o.o.o.' },
     news: { kick: 'x.....x.x.......', snare: '....x.......x...', hat: 'x.x.x.x.x.x.x.x.', clap: '....x.......x...' },
+    marchS: { bd: 'x.......x.......', sn: ['x..x.xx.x..x.xx.', 'x..x.xx.x..xxxxx'] }, warS: { bd: 'x..x..x.x..x..x.', sn: '....x.......x...' },
   };
   const FILLS = {
     snare: { snare: '............xxxx', ramp: [0.5, 1] },
+    snS: { sn: '............xxxx', ramp: [0.5, 1] }, rollS: { sn: '........xxxxxxxx', ramp: [0.35, 1] }, bigS: { sn: '........xxxxxxxx', bd: '............x.x.', ramp: [0.4, 1] },
     tom: { t1: '........x.......', t2: '.........x......', t3: '..........x.....', t4: '...........x....', snare: '............x.x.', kick: '............x..x', ramp: [0.8, 1] },
     roll: { snare: '........xxxxxxxx', ramp: [0.35, 1] },
   };
@@ -258,7 +327,7 @@
 
   // ================================================================== track registry
   function Track(id, def) { def.id = id; TRACKS[id] = def; return def; }
-  const DEFAULT_TRIM = 1;
+  const DEFAULT_TRIM = 1, MIX_TRIM = 2.4;   // MIX_TRIM: the producer's master fader, set from the headless loudness report
 
   // ---------------------------------------------------------------- prepare (parse + validate once per track)
   function resolveInst(spec, fallback) {
@@ -292,7 +361,7 @@
     def.sec.forEach(function (s, idx) {
       const R = { n: s.n || 'S' + idx, bars: s.bars, lv: num(s.lv, 1), lv1: s.cres ? s.cres[1] : num(s.lv, 1), lv0: s.cres ? s.cres[0] : num(s.lv, 1), L: {}, raw: s };
       R.segs = expandProg(s.prog, s.bars, meter, tpc);
-      for (const key of ['pad', 'bass', 'arp', 'arp2', 'drums', 'perc', 'timp', 'lead', 'lead2', 'bell', 'bell2', 'choir']) {
+      for (const key of ['pad', 'pad2', 'bass', 'arp', 'arp2', 'drums', 'perc', 'timp', 'lead', 'lead2', 'bell', 'bell2', 'choir', 'choir2']) {
         let v = s[key] !== undefined ? s[key] : base[key];
         if (v === true) v = base[key];
         if (v) R.L[key] = v;
@@ -301,6 +370,7 @@
       P.secs.push(R);
     });
     if (def.loopFrom) { const i = P.secs.findIndex(s => s.n === def.loopFrom); if (i < 0) throw new Error(def.id + ': loopFrom not found'); P.loopIdx = i; }
+    if (def.forms) for (const f of def.forms) for (const n of f) if (!P.secs.some(s => s.n === n)) throw new Error(def.id + ': form section "' + n + '" not found');
     def._p = P;
     return P;
   }
@@ -309,7 +379,8 @@
   function emit(C, ly, inst, beat, midi, beats, vel, ex) {
     if (beat < 0 || beat >= C.totalBeats) return null;
     const o = Object.assign({}, inst);
-    o.f = mtof(midi); o.dur = Math.max(0.03, beats * C.spb * (ex && ex.art !== undefined ? ex.art : 1)); o.vel = vel * (inst.lvl === undefined ? 1 : inst.lvl) * C.lvAt(beat);
+    o.f = mtof(midi); o.dur = Math.max(0.03, beats * C.spb * (ex && ex.art !== undefined ? ex.art : 1)); o.vel = vel * (inst.lvl === undefined ? 1 : inst.lvl) * C.lvAt(beat); o.dyn = clamp(vel * C.lvAt(beat), 0, 1);
+    if (inst.v === 'sample' && beats >= 1.5) { const d1 = clamp(vel * C.lvAt(beat + beats), 0, 1); if (Math.abs(d1 - o.dyn) > 0.04) o.swell = d1; }   // long notes swell with the section's crescendo
     // struck/ringing voices (bells, chimes) keep their own ring time; it only stretches a little with the written length
     if ((inst.v === 'bell' || inst.v === 'chime') && inst.dur) o.dur = inst.dur * clamp(0.7 + 0.15 * beats, 0.7, 1.4);
     if (ex) for (const k in ex) if (k !== 'art' && k !== 'dt' && ex[k] !== undefined) o[k] = ex[k];
@@ -320,7 +391,7 @@
   }
   function emitDrum(C, ly, dv, beat, vel, ex) {
     if (beat < 0 || beat >= C.totalBeats) return;
-    const o = Object.assign({}, dv); o.vel = vel * C.lvAt(beat); if (ex) Object.assign(o, ex);
+    const o = Object.assign({}, dv); o.vel = vel * C.lvAt(beat) * (dv.lvl === undefined ? 1 : dv.lvl); if (dv.dyn === undefined) o.dyn = clamp(vel * C.lvAt(beat), 0, 1); if (ex) Object.assign(o, ex);
     C.ev.push({ t: beat * C.spb, v: dv.v, ly, o, m: 0, b: beat, bt: 0, k: C.key });
   }
   function stepMidi(C, step, acc) {
@@ -334,10 +405,11 @@
   }
 
   // ---------------------------------------------------------------- generators
-  function genPad(C, s, cfg) {
-    const inst = resolveInst(cfg.inst, C.def.inst && C.def.inst.pad || DEF_INST.pad);
+  function genPad(C, s, cfg, key) {
+    key = key || 'pad';
+    const inst = resolveInst(cfg.inst, C.inst[key] || DEF_INST[key]);
     const style = cfg.style || cfg.p || 'sus', reg = cfg.reg || [50, 72], n = cfg.n || 4, vel = num(cfg.vel, 1), rng = C.vrng;
-    let prev = C.prevPad;
+    let prev = C.prevPad[key];
     const segs = s.R.segs.slice();
     for (let i = 0; i < segs.length; i++) {
       const sg = segs[i], notes = voiceChord(sg.ch, prev, reg[0], reg[1], n, (reg[0] + reg[1]) / 2);
@@ -350,15 +422,17 @@
         notes.forEach(function (m, j) { emit(C, 'pad', inst, b0, m, L, vel * (j === 0 ? 1 : 0.9), { pan: (j / Math.max(1, notes.length - 1) - 0.5) * 0.8 * num(cfg.width, 1), att: att, dt: (rng() - 0.5) * 0.02, rel: cfg.rel }); });
       } else if (style === 'pulse' || style === 'stab') {
         const grid = cleanPat(cfg.pat || (style === 'pulse' ? 'x.x.x.x.' : 'x.......')), step = C.meter / grid.length;
-        for (let k = 0; k < grid.length; k++) {
-          const ch = grid[k]; if (ch === '.' || ch === '-') continue;
-          const bb = sg.b0 + k * step; if (bb < sg.b0 - 1e-9 || bb >= sg.b1 - 1e-9) continue;
-          const vv = (VEL[ch] || 0.7) * vel;
-          notes.forEach(function (m, j) { emit(C, 'pad', inst, s.start + bb, m, step * num(cfg.gate, 0.8), vv, { pan: (j / Math.max(1, notes.length - 1) - 0.5) * 0.6 }); });
+        for (let bar0 = sg.b0; bar0 < sg.b1 - 1e-9; bar0 += C.meter) {      // the pattern is one bar; repeat it across the chord
+          for (let k = 0; k < grid.length; k++) {
+            const ch = grid[k]; if (ch === '.' || ch === '-') continue;
+            const bb = bar0 + k * step; if (bb < sg.b0 - 1e-9 || bb >= sg.b1 - 1e-9) continue;
+            const vv = (VEL[ch] || 0.7) * vel;
+            notes.forEach(function (m, j) { emit(C, 'pad', inst, s.start + bb, m, step * num(cfg.gate, 0.8), vv, { pan: (j / Math.max(1, notes.length - 1) - 0.5) * 0.6 }); });
+          }
         }
       }
     }
-    C.prevPad = prev;
+    C.prevPad[key] = prev;
   }
 
   function bassPitch(C, ch, tok, pedal) {
@@ -374,7 +448,7 @@
     return m;
   }
   function genBass(C, s, cfg) {
-    const P = norm(cfg, BASS, 'bass'), inst = resolveInst(cfg.inst, C.def.inst && C.def.inst.bass || DEF_INST.bass);
+    const P = norm(cfg, BASS, 'bass'), inst = resolveInst(cfg.inst, C.inst.bass || DEF_INST.bass);
     const pats = [].concat(P.pat), gate = num(P.gate, 0.88), vel = num(P.vel, 1);
     for (let bar = 0; bar < s.bars; bar++) {
       const pt = parseSteps(pats[bar % pats.length]), stepB = C.meter / pt.n;
@@ -389,7 +463,7 @@
   }
 
   function genArp(C, s, cfg, key) {
-    const P = norm(cfg, ARPS, 'arp'), inst = resolveInst(cfg.inst, C.def.inst && C.def.inst[key] || DEF_INST[key]), reg = P.reg || [55, 84];
+    const P = norm(cfg, ARPS, 'arp'), inst = resolveInst(cfg.inst, C.inst[key] || DEF_INST[key]), reg = P.reg || [55, 84];
     const pats = [].concat(P.pat || P.seq), vel = num(P.vel, 0.6), gate = num(P.gate, 0.7), jump = num(P.jump, 0), rng = C.vrng, cache = {};
     for (let bar = 0; bar < s.bars; bar++) {
       const raw = cleanPat(pats[bar % pats.length]);
@@ -446,7 +520,13 @@
     const rollBars = P.roll !== undefined ? P.roll : 0;
     for (let bar = 0; bar < s.bars; bar++) {
       let pat = pats[bar % pats.length], ramp = P.ramp;
-      if (rollBars && bar >= s.bars - rollBars) { pat = 'xxxxxxxxxxxxxxxx'; ramp = [0.2 + 0.1 * (bar - (s.bars - rollBars)), 1]; }
+      if (rollBars && bar >= s.bars - rollBars) {
+        const sg0 = segAt(s.R.segs, bar * C.meter), m0 = nearestPc(sg0.ch.bassPc, num(P.center, 40)), k = bar - (s.bars - rollBars);
+        const d0 = 0.25 + 0.55 * k / rollBars, d1 = 0.25 + 0.55 * (k + 1) / rollBars;
+        // a real roll (looped) rising through the bar; the synth timpani keeps the old 16th-note roll when the samples are not in
+        emitDrum(C, 'drums', { v: 'sample', smp: 'timpRoll', fb: 'timp', fbo: { f: mtof(m0), dur: 1.8 }, f: mtof(m0), dur: C.meter * C.spb, dyn: d0, swell: d1, hum: 0, lvl: 0.9 }, s.start + bar * C.meter, vel0 * d1);
+        pat = bar === s.bars - 1 ? '...............x' : '................'; ramp = null;
+      }
       const stepB = C.meter / pat.length, hits = pat.split('').filter(c => c !== '.' && c !== '-').length;
       let hi = 0;
       for (let i = 0; i < pat.length; i++) {
@@ -456,29 +536,63 @@
         if (ramp) v *= ramp[0] + (ramp[1] - ramp[0]) * (hits > 1 ? hi / (hits - 1) : 1);
         hi++;
         const m = nearestPc(sg.ch.bassPc, num(P.center, 40));
-        emitDrum(C, 'drums', { v: 'timp', f: mtof(m), dur: num(P.dur, 1.8) }, s.start + beat, v);
+        emitDrum(C, 'drums', { v: 'sample', smp: 'timpani', fb: 'timp', fbo: { f: mtof(m), dur: num(P.dur, 1.8) }, f: mtof(m), lvl: 1.0, sub: 0.18, dur: 1.6 }, s.start + beat, v);
+        if (v > 0.6) emitDrum(C, 'drums', { v: 'sample', smp: 'bassDrum', fb: 'kick', fbo: { f: 44, f0: 120, dur: 0.4 }, lvl: 0.4 }, s.start + beat, v);
       }
     }
   }
 
-  function genChoir(C, s, cfg) {
-    const inst = resolveInst(cfg.inst, C.def.inst && C.def.inst.choir || DEF_INST.choir), reg = cfg.reg || [55, 77], n = cfg.n || 3, vel = num(cfg.vel, 1);
-    let prev = C.prevChoir;
-    const segs = s.R.segs;
+  // The choir is written as parts, not as chords: a voice that keeps its pitch across a chord change holds it (a tie, no new attack); a
+  // voice that has to jump a third or more walks to its new note through a diatonic passing tone in the last beat; at a phrase start
+  // the voices enter one after another; and a chord longer than a breath is sung as breath-length phrases that swell. `soft` sings low
+  // and slow (the supportive role). The melody, when a piece gives the choir one, is a separate line layer (lead2 / bell2) in the choir's voice.
+  function genChoir(C, s, cfg, key) {
+    key = key || 'choir';
+    const inst = resolveInst(cfg.inst, C.inst[key] || DEF_INST[key]), reg = cfg.reg || [55, 77], n = cfg.n || 3, vel = num(cfg.vel, 1);
+    let prev = C.prevChoir[key];
+    const segs = s.R.segs, soft = !!cfg.soft, rng = C.vrng, spb = C.spb;
+    const breathBeats = Math.max(2, Math.round((soft ? 8.0 : 5.2) / spb));
+    const sampled = inst.v === 'sample';
+    const scaleHas = m => C.scale.indexOf(mod12(m - C.tonic)) >= 0;
+    const voices = [];                                   // per part: { m, ev } of the note currently sounding
+    const base = { v1: cfg.v1 || inst.v1, v2: cfg.v2 || inst.v2, att: cfg.att, rel: cfg.rel };
+    const sing = (j, m, beat, L, k, first) => {           // one phrase of one voice: staggered entry, a small swell, breath-length
+      const dyn0 = (soft ? 0.3 : 0.55) + (soft ? 0.12 : 0.2) * (k % 2), dt = first ? j * 0.16 + rng() * 0.08 : j * 0.04 + rng() * 0.05;
+      return emit(C, 'choir', inst, s.start + beat, m, Math.max(0.5, L), vel * (0.9 + 0.1 * (k % 2)), Object.assign({}, base, { pan: (j - (n - 1) / 2) * 0.35, dt, dyn: dyn0, swell: dyn0 + (soft ? 0.22 : 0.18) }));
+    };
     for (let i = 0; i < segs.length; i++) {
       const sg = segs[i], notes = voiceChord(sg.ch, prev, reg[0], reg[1], n, (reg[0] + reg[1]) / 2);
       prev = notes;
       let L = sg.b1 - sg.b0;
       while (i + 1 < segs.length && segs[i + 1].ch.sym === sg.ch.sym) { i++; L = segs[i].b1 - sg.b0; }
-      notes.forEach(function (m, j) { emit(C, 'choir', inst, s.start + sg.b0, m, L, vel, { pan: (j - (notes.length - 1) / 2) * 0.35, v1: cfg.v1 || inst.v1, v2: cfg.v2 || inst.v2, att: cfg.att, rel: cfg.rel }); });
+      notes.forEach(function (m, j) {
+        const cur = voices[j];
+        if (!sampled) { emit(C, 'choir', inst, s.start + sg.b0, m, L, vel, Object.assign({}, base, { pan: (j - (n - 1) / 2) * 0.35 })); return; }
+        // a held common tone: extend the sounding note instead of re-attacking (up to a breath)
+        if (cur && cur.m === m && cur.ev && (cur.ev.o.dur / spb) + L <= breathBeats * 1.4) { cur.ev.o.dur += L * spb; cur.len += L; return; }
+        // a leap: walk into the new note through a passing tone in the last beat of the old one
+        if (cur && cur.ev && Math.abs(m - cur.m) >= 3 && cur.len >= 2 && cur.ev.o.dur > 1.6 * spb) {
+          const dir = m > cur.m ? 1 : -1; let pt = m - dir;
+          while (Math.abs(pt - cur.m) > 0 && !scaleHas(pt)) pt -= dir;
+          if (pt !== cur.m && pt !== m) { cur.ev.o.dur -= spb; emit(C, 'choir', inst, s.start + sg.b0 - 1, pt, 0.98, vel * 0.85, Object.assign({}, base, { pan: (j - (n - 1) / 2) * 0.35, dyn: 0.5, leg: true })); }
+        }
+        // the new note, in breath-length phrases if it is long
+        let b = 0, k = 0, first = !cur;
+        while (b < L) {
+          const len = Math.min(L - b, breathBeats + Math.round((rng() - 0.5) * 2)), gap = b + len < L ? 0.35 : 0;
+          const ev = sing(j, m, sg.b0 + b, len - gap, k, first && b === 0);
+          voices[j] = { m, ev, len };
+          b += len; k++;
+        }
+      });
     }
-    C.prevChoir = prev;
+    C.prevChoir[key] = prev;
   }
 
   // melodic lines from hand-written phrases (lead, lead2, bell, bell2)
   function genLine(C, s, cfg, key) {
     const spec = typeof cfg === 'string' ? { ph: cfg } : cfg;
-    const ly = BUS[key], inst = resolveInst(spec.inst, C.def.inst && C.def.inst[key] || DEF_INST[key]);
+    const ly = BUS[key], inst = resolveInst(spec.inst, C.inst[key] || DEF_INST[key]);
     const vel = num(spec.vel, key === 'lead' ? 0.9 : 0.7), art = num(spec.art, inst.v === 'pluck' || inst.v === 'bell' || inst.v === 'chime' ? 1 : 0.97);
     const harm = spec.harm || 0, oct = spec.oct || 0, rng = C.vrng, brassy = inst.v === 'brass' || inst.v === 'flute', graceP = num(spec.grace, brassy ? 0.18 : 0), echoP = num(spec.echo, brassy ? 0 : 0.07);
     const toks = String(spec.ph === '@' ? (s.R.L.lead.ph || s.R.L.lead) : spec.ph).trim().split(/\s+/).filter(Boolean);
@@ -518,8 +632,8 @@
 
   // generative bell sparkle (seeded by the composition RNG: identical every loop, a few notes dropped per pass)
   function genSparkle(C, s, cfg, key) {
-    const ly = BUS[key], inst = resolveInst(cfg.inst, C.def.inst && C.def.inst[key] || DEF_INST[key]);
-    const reg = cfg.reg || [72, 91], res = cfg.res || 2, dens = num(cfg.dens, 0.5), vel = num(cfg.vel, 0.55), rng = C.crng, vr = C.vrng;
+    const ly = BUS[key], inst = resolveInst(cfg.inst, C.inst[key] || DEF_INST[key]);
+    const reg = cfg.reg || [72, 91], res = cfg.res || 2, dens = num(cfg.dens, 0.5) * 0.5, vel = num(cfg.vel, 0.55) * 0.7, rng = C.crng, vr = C.vrng;
     const pent = cfg.pent !== false, scaleIdx = pent ? [0, 1, 2, 4, 5] : [0, 1, 2, 3, 4, 5, 6];
     const pool = [];
     for (let o = -1; o <= 3; o++) for (const i of scaleIdx) { if (i >= C.scale.length) continue; const m = C.tonic + C.scale[i] + 12 * o; if (m >= reg[0] && m <= reg[1]) pool.push(m); }
@@ -542,7 +656,7 @@
     }
   }
 
-  const GEN = { pad: genPad, bass: genBass, arp: genArp, arp2: genArp, drums: genDrums, perc: genDrums, timp: genTimp, choir: genChoir, lead: genLine, lead2: genLine };
+  const GEN = { pad: genPad, pad2: genPad, bass: genBass, arp: genArp, arp2: genArp, drums: genDrums, perc: genDrums, timp: genTimp, choir: genChoir, choir2: genChoir, lead: genLine, lead2: genLine };
 
   // ---------------------------------------------------------------- tension overlays (layers x1..x3, gated by setIntensity)
   function genTension(C, s) {
@@ -573,7 +687,7 @@
       const inst = resolveInst(t.hit || 'brassStab', 'brassStab');
       for (let bar = 0; bar < s.bars; bar++) {
         const beat = bar * C.meter, sg = segAt(s.R.segs, beat);
-        emitDrum(C, 'x3', { v: 'timp', f: mtof(nearestPc(sg.ch.bassPc, 40)), dur: 1.4 }, s.start + beat, 0.9);
+        emitDrum(C, 'x3', { v: 'sample', smp: 'timpani', fb: 'timp', fbo: { f: mtof(nearestPc(sg.ch.bassPc, 40)), dur: 1.4 }, f: mtof(nearestPc(sg.ch.bassPc, 40)), lvl: 1.0 }, s.start + beat, 0.9);
         if (bar % 2 === 0) {
           const notes = voiceChord(sg.ch, null, 55, 74, 3, 64);
           notes.forEach(function (m) { emit(C, 'x3', inst, s.start + beat, m, 1.4, 0.55, {}); });
@@ -587,24 +701,38 @@
     for (let i = 0; i < wraps.length; i++) {
       const cur = wraps[i], prev = i > 0 ? wraps[i - 1] : (C.pass > 0 ? wraps[wraps.length - 1] : null);
       C.curW = cur;
-      if (cur.R.hit) emitDrum(C, 'fx', { v: 'boom' }, cur.start, 0.85);
-      if (!prev) continue;
+      if (cur.R.hit) { emitDrum(C, 'fx', { v: 'boom' }, cur.start, 0.3); emitDrum(C, 'fx', { v: 'sample', smp: 'bassDrum', fb: 'kick', fbo: { f: 40, f0: 110, dur: 0.5 } }, cur.start, 0.95); if (cur.R.hit === 'tam') emitDrum(C, 'fx', { v: 'sample', smp: 'gong', fb: 'crash', fbo: { dur: 3 } }, cur.start, 0.8); }
+      if (!prev || C.def.gentle) continue;
       const up = cur.R.lv0 - prev.R.lv1;
-      if (cur.R.cr === true || (cur.R.cr !== false && up >= 0.12)) emitDrum(C, 'fx', { v: 'crash', dur: 2.8 }, cur.start, 0.6);
+      if (cur.R.cr === true || (cur.R.cr !== false && up >= 0.12)) emitDrum(C, 'fx', { v: 'sample', smp: 'crash', fb: 'crash', fbo: { dur: 2.8 } }, cur.start, 0.6);
       const rise = prev.R.rise !== undefined ? prev.R.rise : (up >= 0.15 ? 1 : 0);
       if (rise) {
         // the riser sits in the last bar(s) of the previous section; across the loop seam it lives at the end of this pass
         const st = i > 0 ? cur.start - rise * C.meter : C.totalBeats - rise * C.meter;
-        if (st >= 0) { C.curW = i > 0 ? prev : cur; emitDrum(C, 'fx', { v: 'swell', dur: rise * C.meter * C.spb }, st, 0.55); }
+        if (st >= 0) { C.curW = i > 0 ? prev : cur; const dur = rise * C.meter * C.spb; emitDrum(C, 'fx', { v: 'swell', dur }, st, 0.15); emitDrum(C, 'fx', { v: 'sample', smp: 'cymSwell', fb: 'swell', fbo: { dur }, alignEnd: true, dur, dyn: dur > 5 ? 0.9 : dur > 3 ? 0.5 : 0.15 }, st, 0.55); }
       }
     }
   }
 
   // ---------------------------------------------------------------- compile one pass of a track
-  function compilePass(def, pass) {
-    const P = prepare(def), secs = pass === 0 ? P.secs : P.secs.slice(P.loopIdx);
+  // the sections one pass plays: without `forms`, the intro then the loop (pass 0) or the loop (later passes); with `forms` (arrays
+  // of section names, each a block of five minutes or more), the intro then block form0, then the blocks in turn, so a piece that
+  // stays on for twenty minutes is heard as two or three long, differently ordered blocks rather than one loop
+  function passSections(def, P, pass, form0) {
+    if (!def.forms || !def.forms.length) return pass === 0 ? P.secs : P.secs.slice(P.loopIdx);
+    const names = def.forms[((form0 || 0) + pass) % def.forms.length];
+    const block = names.map(n => { const sec = P.secs.find(x => x.n === n); if (!sec) throw new Error(def.id + ': form section "' + n + '" not found'); return sec; });
+    return pass === 0 ? P.secs.slice(0, P.loopIdx).concat(block) : block;
+  }
+  function loopBars(def, P) {
+    const secs = def.forms && def.forms.length ? passSections(def, P, 1, 0) : P.secs.slice(P.loopIdx);
+    return secs.reduce((a, s) => a + s.bars, 0);
+  }
+  function compilePass(def, pass, form0, alt0) {
+    const P = prepare(def), secs = passSections(def, P, pass, form0);
     const C = {
-      def, P, pass, meter: P.meter, spb: P.spb, scale: P.scale, tonic: P.tonic, ev: [], bassC: def.bassC || 38, prevPad: null, prevChoir: null,
+      def, P, pass, meter: P.meter, spb: P.spb, scale: P.scale, tonic: P.tonic, ev: [], bassC: def.bassC || 38, prevPad: {}, prevChoir: {},
+      inst: Object.assign({}, def.inst || {}, def.alts && def.alts.length ? def.alts[((alt0 || 0) + pass) % def.alts.length] : {}),   // per-pass instrument alternation, from a random start
       snaps: 0, crng: makeRng(def.id + ':c'), vrng: makeRng(def.id + ':v' + (pass % 4)), warn: m => { if (P.warn.indexOf(m) < 0) P.warn.push(m); }, lvAt: null, totalBeats: 0,
     };
     const wraps = []; let beat = 0;
@@ -631,7 +759,22 @@
     C.key = 'trans';
     genTransitions(C, wraps);
     C.ev.sort((a, b) => a.t - b.t);
+    markLegato(C.ev);
     return { events: C.ev, beats: C.totalBeats, len: C.totalBeats * P.spb, wraps, pass, snaps: C.snaps };
+  }
+  // phrasing: in a melodic line, a note that follows straight on from the previous one is played legato (the sampler then starts past the
+  // bow / breath attack and the previous note is held a little into it, like a player who does not re-attack every note)
+  function markLegato(evs) {
+    const last = Object.create(null);
+    for (const ev of evs) {
+      if (ev.v !== 'sample' || !LINES[ev.ly] || !ev.o || ev.o.ring || ev.o.oneShot) continue;
+      const prev = last[ev.ly];
+      if (prev && ev.m !== prev.m && Math.abs(ev.t - (prev.t + prev.o.dur)) < 0.09 && ev.o.dur > 0.25) {
+        ev.o.leg = true;
+        prev.o.dur = Math.max(prev.o.dur, ev.t - prev.t + 0.07);       // overlap into the new note; the old one releases under it
+      }
+      last[ev.ly] = ev;
+    }
   }
 
   // ================================================================== player
@@ -644,62 +787,85 @@
       this.P = prepare(def); this.nodes = []; this.live = new Set(); this.disposed = false; this.stopped = false; this.finished = false;
       this.loop = this.o.loop !== false; this.intensity = num(this.o.intensity, 0);
       const ctx = eng.ctx, mk = n => { this.nodes.push(n); eng.nodeCount++; return n; };
-      this.bus = mk(ctx.createGain()); this.bus.connect(eng.musicBus);
-      this.verb = mk(ctx.createGain()); this.verb.connect(eng.hallIn);
+      this.bus = mk(ctx.createGain());
+      if (def.tone && (def.tone.hi || def.tone.lo)) {       // the piece's own tone: the exploration pieces sit darker than the dramatic cues
+        let n = this.bus;
+        if (def.tone.hi) { const f = mk(ctx.createBiquadFilter()); f.type = 'highshelf'; f.frequency.value = 5000; f.gain.value = def.tone.hi; n.connect(f); n = f; }
+        if (def.tone.lo) { const f = mk(ctx.createBiquadFilter()); f.type = 'lowshelf'; f.frequency.value = 120; f.gain.value = def.tone.lo; n.connect(f); n = f; }
+        n.connect(eng.musicBus);
+      } else this.bus.connect(eng.musicBus);
+      this.verb = mk(ctx.createGain());
+      const pre = mk(ctx.createDelay(0.2)); pre.delayTime.value = clamp((60 / def.bpm) / 16, 0.02, 0.09); this.verb.connect(pre); pre.connect(eng.hallIn);   // the room breathes with the bar
+      this.stage = mk(ctx.createGain()); if (eng.stageIn) this.stage.connect(eng.stageIn);
       const spb = this.P.spb;
-      this.delay = eng.makeDelay(spb * 0.75, spb, 0.34, 2800);
+      this.delay = eng.makeDelay(spb * 0.75, spb, 0.42, 3200);
       this.delay.out.connect(this.bus);
       const dv = mk(ctx.createGain()); dv.gain.value = 0.3; this.delay.out.connect(dv); dv.connect(this.verb);
       this.layers = {};
       const fx = def.fx || {}, mix = def.mix || {};
+      this.choruses = [];
       for (const name in LAYERS) {
-        const L = LAYERS[name], inG = mk(ctx.createGain()), sv = mk(ctx.createGain()), sd = mk(ctx.createGain());
-        sv.gain.value = L.verb * num(fx.verb, 1); sd.gain.value = L.dly * num(fx.dly, 1);
-        inG.connect(this.bus); inG.connect(sv); sv.connect(this.verb); inG.connect(sd); sd.connect(this.delay.in);
+        const L = LAYERS[name], inG = mk(ctx.createGain()), sv = mk(ctx.createGain()), sd = mk(ctx.createGain()), ss = mk(ctx.createGain());
+        sv.gain.value = L.verb * num(fx.verb, 1); sd.gain.value = L.dly * num(fx.dly, 1); ss.gain.value = num(L.stage, 0) * num(fx.stage, 1);
+        const strip = eng.makeStrip ? eng.makeStrip(name) : null, post = strip ? strip.out : inG;
+        if (strip) { inG.connect(strip.in); this.choruses.push(strip); }
+        post.connect(this.bus); post.connect(sv); sv.connect(this.verb); post.connect(sd); sd.connect(this.delay.in); post.connect(ss); ss.connect(this.stage);
+        const chAmt = num(L.chorus, 0) * num(fx.chorus, 1);
+        if (chAmt > 0 && eng.makeChorus) {              // ensemble chorus: wet copy beside the dry signal (also feeds the hall a little)
+          const ch = eng.makeChorus(), cg = mk(ctx.createGain()); cg.gain.value = chAmt;
+          post.connect(ch.in); ch.out.connect(cg); cg.connect(this.bus); cg.connect(sv);
+          this.choruses.push(ch);
+        }
         this.layers[name] = { in: inG, level: L.lvl * num(mix[name], 1), i0: L.i0 };
         inG.gain.value = this.layers[name].i0 !== undefined ? 0 : this.layers[name].level;
       }
-      this.trim = num(def.trim, DEFAULT_TRIM);
+      const gate = def.gate || {};
+      for (const name in gate) { const L = this.layers[name]; if (L && L.i0 === undefined && gate[name] > 0) { L.i0 = gate[name]; L.in.gain.value = 0; } }
+      this.trim = num(def.trim, DEFAULT_TRIM) * MIX_TRIM;
       this.applyIntensity(this.intensity, true);
       this.pass = null; this.passNo = -1; this.idx = 0; this.t0 = 0; this.skipBefore = -1e9; this.shift = 0;
+      this.form0 = def.forms && def.forms.length ? Math.floor((eng.offline ? eng.rand() : Math.random()) * def.forms.length) : 0;   // which long block opens this performance
+      this.alt0 = def.alts && def.alts.length ? Math.floor((eng.offline ? eng.rand() : Math.random()) * def.alts.length) : 0;        // and which instrumentation
       this.schedDone = false; this.endAt = Infinity;
     }
     now() { return this.eng.now(); }
+    // the next bar (or beat) boundary of this performance, capped so a switch never waits more than a few seconds
+    nextBoundary(kind) {
+      const now = this.eng.ctx.currentTime, unit = kind === 'beat' ? this.P.spb : this.P.meter * this.P.spb;
+      if (!this.pass || this.stopped) return now;
+      const base = this.pass.start - this.shift, k = Math.ceil((now - base + 0.06) / unit);
+      return Math.min(base + k * unit, now + (kind === 'beat' ? 1.5 : 4.5));
+    }
     applyIntensity(x, immediate) {
       this.intensity = x;
       const t = this.eng.ctx.currentTime;
+      // the room dries up as the fight escalates (full intensity keeps a third less hall); the stage stays
+      if (!this.stopped) { try { const vg = this.verb.gain; vg.cancelScheduledValues(t); vg.setTargetAtTime(1 - 0.33 * x, t, immediate ? 0.01 : 2.0); } catch (e) { /* ignore */ } }
       for (const name in this.layers) {
         const L = this.layers[name]; if (L.i0 === undefined) continue;
         const target = L.level * smooth((x - L.i0) / 0.25), g = L.in.gain;
-        try { g.cancelScheduledValues(t); if (immediate) g.setValueAtTime(target, t); else g.setTargetAtTime(target, t, 0.5); } catch (e) { g.value = target; }
+        try { g.cancelScheduledValues(t); if (immediate) g.setValueAtTime(target, t); else g.setTargetAtTime(target, t, 1.6); } catch (e) { g.value = target; }   // layers swell in over seconds, never per hit
       }
     }
     fadeIn(sec) {
-      const g = this.bus.gain, t = this.eng.ctx.currentTime;
-      this.verb.gain.cancelScheduledValues(t);
-      if (sec > 0.01) {
-        const cv = new Float32Array(48), cw = new Float32Array(48);
-        for (let i = 0; i < 48; i++) { cv[i] = Math.sin(i / 47 * Math.PI / 2) * this.trim; cw[i] = Math.sin(i / 47 * Math.PI / 2); }
-        g.cancelScheduledValues(t); g.setValueAtTime(0, t); g.setValueCurveAtTime(cv, t, sec);
-        this.verb.gain.setValueAtTime(0, t); this.verb.gain.setValueCurveAtTime(cw, t, sec);
-      } else { g.setValueAtTime(this.trim, t); this.verb.gain.setValueAtTime(1, t); }
+      const t = this.eng.ctx.currentTime;
+      K.fadeParam(this.bus.gain, 0, this.trim, t, sec, 'in');
+      K.fadeParam(this.verb.gain, 0, 1 - 0.33 * this.intensity, t, sec, 'in'); K.fadeParam(this.stage.gain, 0, 1, t, sec, 'in');
     }
     fadeOut(sec) {
       if (this.stopped) return;
       this.stopped = true;
-      const t = this.eng.ctx.currentTime, g = this.bus.gain, cur = g.value, vcur = this.verb.gain.value;
+      const t = this.eng.ctx.currentTime;
       sec = Math.max(0.03, sec);
-      const cv = new Float32Array(48), cw = new Float32Array(48);
-      for (let i = 0; i < 48; i++) { const c = Math.cos(i / 47 * Math.PI / 2); cv[i] = cur * c; cw[i] = vcur * c; }
-      g.cancelScheduledValues(t); g.setValueAtTime(cur, t); g.setValueCurveAtTime(cv, t, sec);
-      this.verb.gain.cancelScheduledValues(t); this.verb.gain.setValueAtTime(vcur, t); this.verb.gain.setValueCurveAtTime(cw, t, sec);
+      K.fadeParam(this.bus.gain, this.bus.gain.value, 0, t, sec, 'out');
+      K.fadeParam(this.verb.gain, this.verb.gain.value, 0, t, sec, 'out'); K.fadeParam(this.stage.gain, this.stage.gain.value, 0, t, sec, 'out');
       this.killAt = t + sec + 0.15;
     }
     begin(t0) { this.t0 = t0; this.nextPass(); }
     nextPass() {
       this.passNo++;
       const prevEnd = this.pass ? this.pass.start + this.pass.len : this.t0;
-      this.pass = compilePass(this.def, this.passNo); this.pass.start = prevEnd; this.idx = 0;
+      this.pass = compilePass(this.def, this.passNo, this.form0, this.alt0); this.pass.start = prevEnd; this.idx = 0;
     }
     fire(ev, T) {
       const L = this.layers[ev.ly]; if (!L) return;
@@ -707,6 +873,15 @@
       if (L.i0 !== undefined && this.intensity < L.i0 - 0.02) return;
       const v = V[ev.v](this.eng, L.in, T, ev.o);
       if (v) this.live.add(v);
+      if (ev.ly === 'lead' && ev.o && ev.o.dur > 0.2) this.duckBeds(T, ev.o.dur);
+    }
+    // the mixer's hand on the faders: while the melody sounds, the pad and choir beds sit 2 dB back and come up again after it
+    duckBeds(T, dur) {
+      for (const name of ['pad', 'pad2', 'choir', 'choir2', 'arp', 'arp2']) {
+        const L = this.layers[name]; if (!L || L.i0 !== undefined) continue;
+        const g = L.in.gain, lv = L.level, k = name.indexOf('arp') === 0 ? 0.84 : 0.79;
+        try { g.setTargetAtTime(lv * k, T, 0.06); g.setTargetAtTime(lv, T + dur, 0.3); } catch (e) { /* ignore */ }
+      }
     }
     // schedule every event whose (shifted) time is < wEnd
     scheduleUntil(wEnd) {
@@ -741,16 +916,27 @@
       for (const n of this.nodes) { try { n.disconnect(); } catch (e) { /* ignore */ } }
       this.eng.nodeCount -= this.nodes.length; this.nodes.length = 0;
       this.delay.dispose();
+      for (const ch of this.choruses || []) ch.dispose();
     }
   }
 
   // ================================================================== scheduler + public API
-  function ensureTimer() { if (!S.timer) S.timer = setInterval(tickAll, 25); }
+  // Lookahead: 180 ms while the tab is visible (25 ms timer). Hidden tabs get their timers throttled to >= 1 Hz (and to one
+  // wake-up a minute after five minutes in Chrome), so we schedule 2.5 s ahead while hidden, re-tick at once on visibilitychange,
+  // and after any late tick keep a bigger window for a while (the gap we just saw, times 1.5).
+  const LOOK_VISIBLE = 0.18, LOOK_HIDDEN = 2.5;
+  let lastTickMs = 0, lookBoost = 0, lookBoostUntil = 0;
+  function ensureTimer() { if (!S.timer) { S.timer = setInterval(tickAll, 25); lastTickMs = 0; } }
+  if (typeof document !== 'undefined') document.addEventListener('visibilitychange', () => { if (S.timer) tickAll(); });
   function tickAll() {
     try {
       const eng = A.engine;
       if (!eng) return;
-      const now = eng.ctx.currentTime, look = (typeof document !== 'undefined' && document.hidden) ? 1.5 : 0.16;
+      const ms = Date.now();
+      if (lastTickMs && ms - lastTickMs > 400) { lookBoost = Math.min(3, (ms - lastTickMs) / 1000 * 1.5); lookBoostUntil = ms + 10000; }
+      else if (ms > lookBoostUntil) lookBoost = 0;
+      lastTickMs = ms;
+      const now = eng.ctx.currentTime, look = Math.max((typeof document !== 'undefined' && document.hidden) ? LOOK_HIDDEN : LOOK_VISIBLE, lookBoost);
       S.ticks++;
       if (S.cur) {
         S.cur.tick(now, look);
@@ -759,8 +945,9 @@
       }
       for (let i = S.old.length - 1; i >= 0; i--) { const p = S.old[i]; p.tick(now, look); if (p.finished) { p.dispose(); S.old.splice(i, 1); } }
       if (S.ticks % 40 === 0) eng.sweep(now);
-      if (S.plWait && now >= S.plWait.at) { const w = S.plWait; S.plWait = null; startTrack(w.id, { fade: w.fade, loop: false, keepPlaylist: true }); }
-      if (!S.cur && !S.old.length && !S.plWait) { clearInterval(S.timer); S.timer = null; }
+      if (S.plWait && now >= S.plWait.at) { const w = S.plWait; S.plWait = null; startTrack(w.id, { fade: w.fade, loop: false, keepPlaylist: true, quantize: false }); }
+      if (S.switchAt && now >= S.switchAt.at - 0.03) { const w = S.switchAt; S.switchAt = null; startTrack(w.id, w.opts); }
+      if (!S.cur && !S.old.length && !S.plWait && !S.switchAt) { clearInterval(S.timer); S.timer = null; }
     } catch (e) { console.warn('[music] tick failed', e); }
   }
 
@@ -773,13 +960,20 @@
       if (pl.i === 0 && pl.shuffle) pl.order = shuffled(pl.ids);
       const id = pl.order[pl.i];
       if (pl.gap > 0) { p.fadeOut(Math.max(0.5, p.endAt - now)); S.old.push(p); S.cur = null; S.plWait = { at: p.endAt + pl.gap, id: id, fade: 0.4 }; }
-      else startTrack(id, { fade: pl.fade, loop: false, keepPlaylist: true });
+      else startTrack(id, { fade: pl.fade, loop: false, keepPlaylist: true, quantize: false });
     }
   }
   function shuffled(ids) { const a = ids.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); const t = a[i]; a[i] = a[j]; a[j] = t; } return a; }
 
+  // Switches happen on the bar (opts.quantize 'bar', the default; 'beat' for urgent cues; false = now) with long crossfades, so a
+  // change of scene reads as a phrase ending rather than a jump cut.
   function startTrack(id, opts) {
-    const def = TRACKS[id], eng = A.engine, fade = num(opts.fade, 2);
+    const def = TRACKS[id], eng = A.engine, fade = num(opts.fade, 3.5);
+    if (opts.quantize !== false && S.cur && !S.cur.stopped && S.cur.id !== id) {
+      const at = S.cur.nextBoundary(opts.quantize || 'bar');
+      if (at - eng.ctx.currentTime > 0.1) { S.switchAt = { id, opts: Object.assign({}, opts, { quantize: false }), at }; if (!opts.keepPlaylist) { S.playlist = null; S.plWait = null; } ensureTimer(); return true; }
+    }
+    S.switchAt = null;
     if (!opts.keepPlaylist) { S.playlist = null; S.plWait = null; }
     const p = new Player(eng, def, { loop: opts.loop !== false, intensity: S.intensity });
     if (S.cur) { S.cur.fadeOut(fade); S.old.push(S.cur); }
@@ -800,22 +994,22 @@
         A.onReady(() => { const p = S.pending; if (p) { S.pending = null; Music.play(p.id, p.opts); } });
         return 'pending';
       }
-      if (S.cur && S.cur.id === id && !S.cur.stopped && !opts.restart) return true;
+      if (S.cur && S.cur.id === id && !S.cur.stopped && !opts.restart) { S.switchAt = null; return true; }
       return startTrack(id, opts);
     } catch (e) { console.warn('[music] play failed', e); return false; }
   };
   Music.stop = function (opts) {
     try {
       opts = opts || {};
-      S.pending = null; S.playlist = null; S.plWait = null;
-      if (S.cur) { S.cur.fadeOut(num(opts.fade, 1.5)); S.old.push(S.cur); S.cur = null; }
+      S.pending = null; S.playlist = null; S.plWait = null; S.switchAt = null;
+      if (S.cur) { S.cur.fadeOut(num(opts.fade, 3)); S.old.push(S.cur); S.cur = null; }
       return true;
     } catch (e) { console.warn('[music] stop failed', e); return false; }
   };
-  Music.current = () => (S.cur && !S.cur.stopped ? S.cur.id : (S.pending ? S.pending.id : null));
+  Music.current = () => (S.switchAt ? S.switchAt.id : S.cur && !S.cur.stopped ? S.cur.id : (S.pending ? S.pending.id : null));
   Music.list = function () {
     return Object.keys(TRACKS).filter(id => !TRACKS[id].hidden).map(id => {
-      const d = TRACKS[id], P = prepare(d), bars = P.secs.slice(P.loopIdx).reduce((a, s) => a + s.bars, 0), intro = P.secs.slice(0, P.loopIdx).reduce((a, s) => a + s.bars, 0);
+      const d = TRACKS[id], P = prepare(d), bars = loopBars(d, P), intro = P.secs.slice(0, P.loopIdx).reduce((a, s) => a + s.bars, 0);
       return { id, desc: d.desc, bpm: d.bpm, seconds: Math.round(bars * P.meter * P.spb), introSeconds: Math.round(intro * P.meter * P.spb) };
     });
   };
@@ -825,6 +1019,10 @@
       ids = (ids || Object.keys(TRACKS)).filter(id => TRACKS[id]);
       if (!ids.length) return false;
       const pl = { ids, shuffle: !!opts.shuffle, gap: num(opts.gap, 1.5), fade: num(opts.fade, 3), order: opts.shuffle ? shuffled(ids) : ids.slice(), i: 0, advancing: false };
+      if (opts.start && pl.order.indexOf(opts.start) >= 0) {           // begin with a given track (the rest keeps its order / shuffle)
+        const k = pl.order.indexOf(opts.start);
+        pl.order = pl.shuffle ? [opts.start].concat(pl.order.filter(id => id !== opts.start)) : pl.order.slice(k).concat(pl.order.slice(0, k));
+      }
       const first = pl.order[0];
       if (!A.isReady()) { S.pending = { id: first, opts: { loop: false } }; S.playlist = pl; A.onReady(() => { const p = S.pending; if (p) { S.pending = null; startTrack(p.id, { fade: 1, loop: false, keepPlaylist: true }); } }); return 'pending'; }
       S.playlist = pl;
@@ -838,14 +1036,41 @@
     for (const p of S.old) p.applyIntensity(x, false);
   };
   Music.getIntensity = () => S.intensity;
+  Music.has = id => !!TRACKS[id];
+  Music.onSamplesReady = function () {
+    const p = S.cur; if (!p || p.stopped || !A.engine) return;
+    const elapsed = A.engine.ctx.currentTime - p.t0;
+    if (elapsed >= 0 && elapsed < 14) startTrack(p.id, { fade: 2.5, loop: p.loop, keepPlaylist: true, quantize: false });
+  };
+
+  // A scene that borrows the music (GNN, lab, spy panels) takes a snapshot first and restores it afterwards: a running playlist
+  // (the galaxy rotation) comes back as a playlist, a single looping track as that track, silence as silence.
+  Music.snapshot = function () {
+    const pl = S.playlist;
+    return { id: Music.current(), playlist: pl ? { ids: pl.ids.slice(), shuffle: pl.shuffle, gap: pl.gap, fade: pl.fade, start: (S.plWait && S.plWait.id) || pl.order[pl.i] } : null };
+  };
+  Music.restore = function (snap, opts) {
+    try {
+      opts = opts || {};
+      const fade = num(opts.fade, 1.5);
+      if (!snap) return Music.stop({ fade });
+      if (snap.playlist) { const pl = snap.playlist; return Music.playlist(pl.ids, { shuffle: pl.shuffle, gap: pl.gap, fade: pl.fade, start: pl.start, firstFade: fade }); }
+      if (snap.id) return Music.play(snap.id, { fade });
+      return Music.stop({ fade });
+    } catch (e) { console.warn('[music] restore failed', e); return false; }
+  };
 
   // Moods: game-level names -> tracks (lists rotate so repeated requests do not replay the same piece)
   const MOODS = {
-    title: 'title', menu: 'title', explore: ['galaxy1', 'galaxy2', 'galaxy3'], galaxy: ['galaxy1', 'galaxy2', 'galaxy3'], map: ['galaxy1', 'galaxy2', 'galaxy3'],
-    calm: ['galaxy1', 'galaxy2', 'galaxy3'], wonder: 'galaxy1', patient: 'galaxy2', determined: 'galaxy3', design: 'design', research: 'research', tech: 'research',
-    combat: ['combat1', 'combat2'], battle: ['combat1', 'combat2'], tension: 'ground', ground: 'ground', news: 'gnn', gnn: 'gnn', council: 'council',
-    orion: 'orion', antarans: 'antarans', victory: 'victory', defeat: 'defeat',
+    title: 'title', menu: 'title', explore: ['galaxy4', 'galaxy1', 'galaxy2', 'galaxy3'], galaxy: ['galaxy4', 'galaxy1', 'galaxy2', 'galaxy3'], map: ['galaxy4', 'galaxy1', 'galaxy2', 'galaxy3'],
+    calm: ['galaxy4', 'galaxy1', 'galaxy2', 'galaxy3'], wonder: 'galaxy1', patient: 'galaxy2', determined: 'galaxy3', deep: 'galaxy4', design: 'design', research: 'research', tech: 'research',
+    combat: ['combat3', 'combat1', 'combat2'], battle: ['combat3', 'combat1', 'combat2'], tension: 'ground', ground: 'ground', news: 'gnn', gnn: 'gnn', council: 'council',
+    orion: 'orion', antarans: 'antarans', victory: 'victory', defeat: 'defeat', spy: 'spy', espionage: 'spy', intrigue: 'spy',
   };
+  // array moods listed here play as a shuffled playlist with a pause between pieces (the original's map was silent; a breath between
+  // tracks keeps the exploration music from looping one piece for an hour). Others pick the next track of the list on each request.
+  MOODS.galaxyWar = ['galaxy3', 'ground', 'galaxy2', 'spy'];        // at war: the determined and uneasy pieces carry the map
+  const MOOD_ROTATE = { explore: { gap: 26, fade: 5 }, galaxy: { gap: 26, fade: 5 }, galaxyWar: { gap: 14, fade: 4 }, map: { gap: 26, fade: 5 }, calm: { gap: 26, fade: 5 } };   // silence is an instrument: a long breath between pieces
   let moodTick = 0;
   Music.moods = () => Object.keys(MOODS).concat(Object.keys(TRACKS).filter(id => id.indexOf('race:') === 0));
   // setMood('combat' | 'explore' | 'council' | 'human' | 'race:human' | any track id, {fade, loop}) -> id of the track chosen (or false)
@@ -853,7 +1078,11 @@
     try {
       let pick = MOODS[mood] || (TRACKS[mood] ? mood : (TRACKS['race:' + mood] ? 'race:' + mood : null));
       if (!pick) { console.warn('[music] unknown mood "' + mood + '"'); return false; }
-      if (Array.isArray(pick)) { const cur = pick.indexOf(Music.current()); pick = pick[cur >= 0 ? (cur + 1) % pick.length : (moodTick++) % pick.length]; }
+      if (Array.isArray(pick)) {
+        const cur = pick.indexOf(Music.current()), next = pick[cur >= 0 ? (cur + 1) % pick.length : (moodTick++) % pick.length], rot = MOOD_ROTATE[mood];
+        if (rot) { const r = Music.playlist(pick, { shuffle: true, gap: rot.gap, fade: rot.fade, start: next, firstFade: num(opts && opts.fade, 2) }); return r === false ? false : next; }
+        pick = next;
+      }
       const r = Music.play(pick, opts);
       return r === false ? false : pick;
     } catch (e) { console.warn('[music] setMood failed', e); return false; }
@@ -869,7 +1098,7 @@
     return A.renderWindowed(seconds, { sampleRate: opts.sampleRate || 44100, window: 1.5, seed: opts.seed || 1, teardown: eng => { stats = eng.stats; } }, function (eng, t0, t1) {
       if (!pl) {
         pl = new Player(eng, def, { loop: true, intensity: num(opts.intensity, S.intensity) });
-        pl.trim = num(def.trim, DEFAULT_TRIM) * num(opts.gain, 1);
+        pl.trim = num(def.trim, DEFAULT_TRIM) * MIX_TRIM * num(opts.gain, 1);
         pl.bus.gain.value = pl.trim; pl.verb.gain.value = 1;
         pl.shift = num(opts.from, 0); pl.skipBefore = 0;
         if (opts.only) { pl.only = {}; for (const k of [].concat(opts.only)) pl.only[k] = 1; }
@@ -924,55 +1153,126 @@
 
   // @@TRACKS-BEGIN
   Track('title', {
-    desc: 'Epic, majestic, slow build: horns over a deep orchestral pad, timpani, a rising theme',
-    bpm: 66, root: 'D', mode: 'minor', loopFrom: 'A1', trim: 1,
-    inst: { pad: 'warm', bass: 'deep', lead: 'horn', lead2: 'brass', bell: 'glass', choir: 'ooh', arp: 'arp' },
+    desc: 'Main theme — a hymn that opens on the organ with the men low beneath it and ends with the men’s choir carrying everything, the analogue synth around them, a pedal that sinks to the very deep octave; no drums',
+    bpm: 70, root: 'D', mode: 'minor', loopFrom: 'A1', trim: 2.34, tens: false, tone: { lo: 1.0 }, mix: { choir: 1.45, pad: 1.0, lead: 0.75, bass: 1.15 },
+    forms: [['A1', 'B', 'C', 'A2', 'E', 'C', 'A1', 'E'], ['A1', 'C', 'B', 'A2', 'C', 'E', 'A1', 'B', 'E']],
+    alts: [{}, { choir2: 'choirWomen' }],
+    inst: { pad: 'organ', pad2: 'analog', bass: 'deep', lead: 'horn', lead2: 'strings', bell: 'glass', choir: 'ooh', choir2: 'aah', arp: 'strOst' },
     ph: {
-      A: '5:2 8:1.5 7:.5 | 6:1.5 5:.5 3:2 | 5:2 7:1 8:1 | 9:2 8:1 7:1',
-      Ab: '5:2 8:1.5 9:.5 | 10:1.5 9:.5 8:2 | 7:1 6:1 4:2 | 7#:1 8:1 9:2',
-      Ac: '8:2 7:1 6:1 | 6:2 8:1 10:1 | 9:2 7#:1 8:1 | 8:3 r:1',
-      B: '10:3 8:1 | 9:2 7:1 8:1 | 10:1.5 9:.5 8:1 6:1 | 5:4',
-      Bb: '6:1.5 8:.5 10:2 | 12:2 11:1 10:1 | 9:1.5 10:.5 11:2 | 12:2 11:1 9:1',
-      C: '8:2 6:2 | 5:3 3:1 | 4:2 6:2 | 5:4',
-      Cb: '8:2 10:2 | 9:2 7:2 | 6:2 7:2 | 7#:3 5:1',
+      H1: '5:3 8:1 | 7:2 6:2 | 5:3 3:1 | 4:2 5:2',             // the hymn: rising fourth, falling step (the game's leitmotif), noble descent, half cadence
+      H2: '5:3 8:1 | 9:2 10:2 | 8:2 7:1 6:1 | 5:4',
+      H3: '8:2 10:2 | 12:3 11:1 | 10:2 9:1 8:1 | 7:2 5:2',      // the answer, a fifth higher
+      H4: '6:2 8:2 | 10:2 9:1 8:1 | 5:3 6:1 | 8:4',
+      CT: '1:2 3:2 | 2:2 1:2 | 4:2 3:2 | 2:3 r:1',             // low-brass counter-line under the march
+      F1: '5:1 8:1 7:1 5:1 | 6:1 5:1 3:1 5:1 | 4:2 5:2 | 8:4', // flute, the interlude
     },
     sec: [
-      { n: 'intro', bars: 8, lv: 0.42, prog: 'i:4 bVI:2 bVII:2', hit: true, pad: { p: 'swell', vel: 0.8 }, choir: { n: 3, vel: 0.55 }, bell: { dens: 0.2, res: 1, vel: 0.5 }, timp: { p: 'hits', vel: 0.6, roll: 1 } },
-      { n: 'A1', bars: 8, lv: 0.62, prog: 'i bVI bIII bVII | i bVI iv V', pad: 'sus', bass: 'half', lead: 'A Ab', timp: 'two', bell: { dens: 0.22, res: 2, vel: 0.5 } },
-      { n: 'A2', bars: 8, cres: [0.7, 0.86], prog: 'i bVI bIII bVII | i bVI iv V', pad: { p: 'sus', inst: 'strings' }, bass: 'half', lead: { ph: 'A Ab', inst: 'brass', harm: -2 }, timp: 'beats', arp: { p: 'up', vel: 0.32, reg: [57, 79] }, choir: { vel: 0.7 }, bell: { dens: 0.28, res: 2, vel: 0.5 } },
-      { n: 'B', bars: 8, lv: 0.9, prog: 'bIII bVII i v | bVI bIII iv V', pad: { p: 'sus', inst: 'strings' }, bass: 'walk', lead: 'B Bb', bell: { ph: 'B Bb', inst: 'glass', oct: 1, vel: 0.45 }, timp: 'beats', choir: { v1: 'a', v2: 'a', vel: 0.8 }, fill: 'tom', drums: { kick: 'x.......x.......', snare: '....x.......x...' } },
-      { n: 'C', bars: 8, lv: 0.5, prog: 'bVI v iv i | bVI v bVII V', pad: { p: 'sus', inst: 'airPad' }, bass: 'whole', lead: { ph: 'C Cb', inst: 'flute' }, choir: { v1: 'a', v2: 'o', vel: 0.55 }, bell: { dens: 0.3, res: 2, vel: 0.5 }, drums: false, timp: false },
-      { n: 'A3', bars: 8, cres: [0.92, 1.05], prog: 'i bVI bIII bVII | iv bVI V i', pad: { p: 'sus', inst: 'strings' }, bass: 'half', lead: { ph: 'A Ac', inst: 'brass', harm: -2 }, lead2: { ph: 'A Ac', inst: 'glass', oct: 1, vel: 0.5 }, timp: 'beats', drums: { kick: 'x.......x.......', snare: '....x.......x...' }, arp: { p: 'up8', vel: 0.35, reg: [55, 79] }, choir: { v1: 'a', v2: 'a', vel: 0.9 }, fill: 'roll', hit: false },
+      { n: 'intro', bars: 8, cres: [0.56, 0.7], prog: 'i:2 bVI:2 i:2 bVII:1 V:1', pad: { p: 'swell', inst: 'organ', n: 4, reg: [45, 72], vel: 1.0 }, pad2: { p: 'swell', inst: 'analog', n: 3, reg: [38, 60], vel: 0.5 }, bass: { pat: ['1---', '1---', '1---', 'c---'], pedal: true, inst: { p: 'deep', sub: 0.7, att: 0.6, rel: 1.8 } }, choir: { inst: 'choirMen', n: 3, reg: [38, 55], vel: 0.42, soft: true },
+        lead: { ph: 'r4 H1', inst: 'hornSolo', vel: 0.55 }, bell: { dens: 0.08, res: 1, reg: [72, 96], vel: 0.38 } },
+      { n: 'A1', bars: 16, cres: [0.62, 0.8], prog: 'i bVII:.5 bVI:.5 i iv:.5 V:.5 | i V:.5 bIII:.5 i:.5 bVII:.5 V | i:.5 bVI:.5 i bIII:.5 V:.5 bVII:.5 V:.5 | bVI bIII:.5 V:.5 i i',
+        pad: { p: 'sus', inst: 'organ', n: 4, reg: [45, 72], vel: 0.95 }, pad2: { p: 'sus', inst: 'analog', n: 3, reg: [38, 60], vel: 0.6 }, bass: { pat: ['1---', '1---', 'c---', 'c---'], inst: { p: 'deep', sub: 0.7, att: 0.4, rel: 1.6 } }, lead: { ph: 'H1 H2 H3 H4', vel: 0.7 },
+        lead2: { ph: 'r8 H3 H4', inst: 'choirMen', oct: -1, vel: 0.55 }, choir: { inst: 'choirMen', n: 3, reg: [38, 57], vel: 0.6 }, bell: { dens: 0.07, res: 1, reg: [72, 96], vel: 0.36 } },
+      { n: 'B', bars: 8, lv: 0.9, prog: 'i bVI bVII i iv bVI V V', cr: true, pad: { p: 'sus', inst: 'organ', n: 4, reg: [50, 76], vel: 0.7 }, pad2: { p: 'sus', inst: 'analog', n: 3, reg: [43, 64], vel: 0.85 }, bass: { pat: ['1---', 'c---'], inst: { p: 'deep', sub: 0.75, att: 0.3, rel: 1.4 } },
+        arp: { pat: '0.......2.......', res: 2, vel: 0.4, reg: [55, 79], gate: 0.9 },
+        lead: { ph: 'CT CT', inst: 'cello', oct: -1, vel: 0.6, art: 0.95 }, lead2: { ph: 'H1 H2', inst: 'choirMen', oct: -1, vel: 0.7 }, choir: { inst: 'choirMen', n: 3, reg: [38, 57], vel: 0.8 }, choir2: { inst: 'aah', n: 3, reg: [57, 74], vel: 0.5 } },
+      { n: 'C', bars: 8, lv: 0.5, prog: 'bVI:2 iv:2 i:2 V:2', pad: { p: 'swell', inst: 'organSoft', n: 4, reg: [55, 79], vel: 0.6 }, pad2: { p: 'sus', inst: 'analog', n: 3, reg: [43, 62], vel: 0.7 }, bass: { pat: ['c---', '1---'], inst: { p: 'deep', sub: 0.8, att: 1.2, rel: 2.4 } },
+        lead: { ph: 'F1 F1', inst: 'flute', vel: 0.6 }, arp: { inst: 'harp', p: 'up8', vel: 0.5, reg: [55, 84] }, choir: { inst: 'choirMen', n: 3, reg: [38, 55], vel: 0.55 }, bell: { dens: 0.12, res: 1, reg: [72, 96], vel: 0.4 }, drums: false, timp: false, rise: 2 },
+      { n: 'A2', bars: 16, cres: [0.95, 1.08], prog: 'i bVII:.5 bVI:.5 i iv:.5 V:.5 | i V:.5 bIII:.5 i:.5 bVII:.5 V | i:.5 bVI:.5 i bIII:.5 V:.5 bVII:.5 V:.5 | bVI bIII:.5 V:.5 i i', cr: true,
+        pad: { p: 'sus', inst: 'organ', n: 4, reg: [45, 72], vel: 0.5 }, pad2: { p: 'sus', inst: 'analog', n: 3, reg: [43, 64], vel: 0.9 }, bass: { pat: ['c---', 'c---', '1---', 'c---'], inst: { p: 'deep', sub: 0.85, att: 0.3, rel: 1.4 } }, arp: { pat: '0.......2.......', res: 2, vel: 0.4, reg: [55, 79], gate: 0.9 },
+        lead: { ph: 'H1 H2 H3 H4', inst: 'horn', vel: 0.7, harm: -2 }, lead2: { ph: 'H1 H2 H3 H4', inst: 'choirMen', oct: -1, vel: 0.9 }, choir: { inst: 'choirMen', n: 3, reg: [38, 57], vel: 0.95 }, choir2: { inst: 'aah', n: 3, reg: [57, 76], vel: 0.6 },
+        bell: { dens: 0.15, res: 1, reg: [76, 100], vel: 0.5 } },
+      { n: 'E', bars: 8, lv: 0.68, prog: 'i bVI bVII i iv bVI V i', pad: { p: 'sus', n: 4, reg: [50, 76] }, pad2: { p: 'sus', inst: 'warm', n: 3, reg: [38, 60], vel: 0.6 }, bass: { pat: ['1---', 'c---'], inst: { p: 'deep', sub: 0.7, att: 0.6, rel: 2.0 } },
+        lead: { ph: 'H4 H4', inst: 'hornSolo', vel: 0.6 }, choir: { inst: 'choirMen', n: 3, reg: [38, 57], vel: 0.7 }, bell: { dens: 0.07, res: 1, reg: [72, 96], vel: 0.36 } },
+    ],
+  });
+
+  Track('galaxy4', {
+    desc: 'Deep field — slow analogue pads under a high air pad, distant women’s voices, high strings that swell and fade, a celeste and harp as single points of light, a lone flute: the planetarium, in the Serrie manner',
+    bpm: 50, trim: 4.48, tone: { hi: -2.5 }, root: 'A', mode: 'lydian', loopFrom: 'A1', tens: false, gentle: true, mix: { bass: 0.7 }, fx: { dly: 2.4, verb: 1.25 },
+    alts: [{}, { lead: 'cello', lead2: 'flute', choir: 'choirMen' }, { lead: 'clarinet', lead2: 'cello', choir: 'cellos' }],
+    inst: { pad: 'strings', pad2: 'analog', bass: 'deep', lead: 'flute', lead2: 'glass', bell: 'glass', arp: 'harp', choir: 'choirWomen', choir2: 'ooh' },
+    ph: {
+      S1: '5:4 | 8:4 | 7:4 | 5:4', S2: '6:4 | 8:2 9:2 | 8:4 | 5:4', S3: '10:4 | 9:4 | 8:2 7:2 | 5:4', S4: '5:2 8:2 | 7:3 6:1 | 5:4 | 3:4',
+      FL: '4:6 r:2 | 1:6 r:2 | 2:6 r:2 | 7:8',          // four slow notes, the Shine On shape, with the delay answering in the rests
+      CL: '1:8 | 3:8 | 2:6 1:2 | 5:8',
+      CM: '1:8 | 2:8 | 3:6 2:2 | 1:8',                    // the men, one sung phrase, low and slow                    // the cello: long, low, patient
+    },
+    sec: [
+      { n: 'intro', bars: 8, cres: [0.45, 0.58], prog: 'IM7:4 II:4', pad: { p: 'swell', n: 3, reg: [48, 70] }, pad2: { p: 'swell', n: 3, reg: [43, 64], vel: 0.62 }, bass: { pat: '1---', pedal: true, inst: { p: 'deep', att: 1.4, rel: 2.6, sub: 0.55 } }, bell: { dens: 0.08, res: 1, reg: [76, 100], vel: 0.35 } },
+      { n: 'A1', bars: 16, lv: 0.56, prog: 'IM7:4 II:4 | IM7:4 vi:4 | IM7:4 II:4 | V:4 IM7:4', pad: { p: 'sus', n: 3, reg: [48, 70] }, pad2: { p: 'swell', n: 3, reg: [43, 64], vel: 0.62 }, bass: { pat: '1---', inst: { p: 'deep', att: 1.4, rel: 2.6, sub: 0.55 } },
+        lead: { ph: 'S1 r8 S2 r12 S3 r8 S4', vel: 0.45 }, choir: { n: 2, reg: [67, 81], vel: 0.35, soft: true }, choir2: { inst: 'choirMen', n: 3, reg: [38, 55], vel: 0.32, soft: true }, arp: { pat: '0...2...1...3...', res: 1, vel: 0.4, reg: [57, 84] }, bell: { dens: 0.1, res: 1, reg: [76, 100], vel: 0.35 } },
+      { n: 'breath1', bars: 2, lv: 0.3, prog: 'IM7:8', tens: false, bell: { dens: 0.05, res: 1, reg: [76, 100], vel: 0.32 } },   // nothing but the hall and, perhaps, one bell
+      { n: 'B', bars: 16, lv: 0.58, prog: 'vi:4 II:4 | IM7:4 V:4 | vi:4 II:4 | IM7:4 II:4', pad: { p: 'sus', n: 4, reg: [48, 74] }, pad2: { p: 'swell', inst: 'air', n: 2, reg: [72, 88], vel: 0.5 }, bass: { pat: '1---', inst: { p: 'deep', att: 1.4, rel: 2.6, sub: 0.55 } },
+        lead: { ph: 'r4 FL r8 S4 r8 FL', inst: 'glass', vel: 0.45, echo: 0.3 }, lead2: { ph: 'r16 CL r8 CL', inst: 'cello', oct: -1, vel: 0.5 }, choir: { n: 2, reg: [67, 81], vel: 0.35, soft: true }, choir2: { inst: 'choirMen', n: 3, reg: [38, 55], vel: 0.36, soft: true }, bell2: { ph: 'r16 CM r16 CM', inst: 'choirMen', oct: -1, vel: 0.36 }, arp: { pat: '0.......2.......', res: 1, vel: 0.38, reg: [57, 84] }, bell: { dens: 0.14, res: 1, reg: [76, 100], vel: 0.38 } },
+      { n: 'breath2', bars: 2, lv: 0.3, prog: 'IM7:8', tens: false, bell: { dens: 0.05, res: 1, reg: [76, 100], vel: 0.32 } },   // nothing but the hall and, perhaps, one bell
+      { n: 'C', bars: 8, lv: 0.38, prog: 'IM7:4 II:4', pad: { p: 'swell', inst: 'strings', n: 3, reg: [52, 76] }, pad2: { p: 'swell', inst: 'air', n: 2, reg: [72, 88], vel: 0.5 }, bass: false, choir: { n: 2, reg: [67, 81], vel: 0.3, soft: true }, choir2: { inst: 'choirMen', n: 3, reg: [38, 55], vel: 0.3, soft: true }, bell: { dens: 0.16, res: 1, reg: [76, 100], vel: 0.4 } },
+      { n: 'breath3', bars: 1, lv: 0.3, prog: 'IM7:4', tens: false },
+      { n: 'E', bars: 8, lv: 0.5, prog: 'IM7:4 II:4 | IM7:4 V:4', pad: { p: 'sus', n: 3, reg: [48, 70] }, pad2: { p: 'swell', n: 3, reg: [43, 64], vel: 0.62 }, bass: { pat: '1---', inst: { p: 'deep', att: 1.4, rel: 2.6, sub: 0.55 } },
+        lead: { ph: 'r4 S1 r12 FL', vel: 0.42 }, lead2: { ph: 'r8 CL r16', inst: 'cello', oct: -1, vel: 0.45 }, arp: { pat: '0...2...1...3...', res: 1, vel: 0.36, reg: [57, 84] }, bell: { dens: 0.1, res: 1, reg: [76, 100], vel: 0.35 } },
+    ],
+  });
+
+  Track('combat3', {
+    desc: 'Battle — driving spiccato string ostinato, low-brass stabs, bass drum and snare, men’s choir, and the main theme hammered out by horns and full brass as the fight escalates',
+    bpm: 118, trim: 1.49, tone: { hi: 1.0, lo: 1.0 }, mix: { drums: 1.2, choir: 1.15 }, root: 'D', mode: 'minor', loopFrom: 'A1', tens: false, gate: { drums: 0.2, choir: 0.3, lead: 0.42, bell: 0.6 },
+    forms: [['A1', 'B1', 'A2', 'C', 'B2', 'A1', 'C', 'B1', 'A2', 'B2', 'C'], ['A1', 'C', 'B1', 'A2', 'B2', 'C', 'A1', 'B1', 'B2', 'A2', 'C']],
+    inst: { pad: 'lowBrass', pad2: 'analog', bass: 'deep', lead: 'horn', lead2: 'brass', arp: 'strOst', bell: 'bell', choir: 'ooh' },
+    ph: {
+      B1: '5:1.5 8:.5 7:1 6:1 | 5:2 3:2 | 4:1.5 5:.5 6:1 4:1 | 5:4',
+      B2: '5:1.5 8:.5 9:1 10:1 | 8:2 7:1 6:1 | 5:1.5 6:.5 5:1 4:1 | 3:2 5:2',
+      B3: '8:.5 8:.5 8:1 10:1 7:1 | 8:.5 8:.5 8:1 5:1 3:1 | 4:1 5:1 6:1 8:1 | 7:2 5:2',
+    },
+    sec: [
+      { n: 'intro', bars: 4, lv: 0.62, prog: 'i', hit: 'tam', pad2: { p: 'sus', inst: 'analog', n: 3, reg: [38, 57], vel: 0.9 }, bass: { pat: '1---', pedal: true }, arp: { pat: '0.0.0.0.0.0.0.0.', res: 4, vel: 0.6, reg: [50, 62], gate: 0.7 }, drums: { bd: 'x.......x.......' }, timp: 'hits' },
+      { n: 'A1', bars: 16, lv: 0.8, prog: 'i i bVI bVII | i bII i V | i i bVI bVII | i bII bVI V', pad: { p: 'stab', pat: 'x.......x...x...', n: 2, reg: [38, 55], vel: 0.9, gate: 0.5 }, pad2: { p: 'sus', inst: 'strings', n: 4, reg: [55, 79], vel: 0.7 },
+        bass: 'oct8', arp: { pat: '0.1.0.2.0.1.0.3.', res: 4, vel: 0.72, reg: [55, 79], gate: 0.9 }, drums: 'warS', timp: 'beats', lead: { ph: 'B1 B2 B1 B2', vel: 0.85 }, choir: { inst: 'choirMen', n: 3, reg: [38, 57], vel: 0.75 }, fill: 'rollS' },
+      { n: 'B1', bars: 16, lv: 1.08, hit: 'tam', prog: 'bVI bVII i i | bVI bVII V i | bVI bVII i i | bVI bVII V i', pad: { p: 'stab', pat: 'x.......x.x.....', n: 2, reg: [38, 55], vel: 0.95, gate: 0.5 }, pad2: { p: 'sus', inst: 'strings', n: 4, reg: [55, 79], vel: 0.75 },
+        bass: 'oct8', arp: { pat: '0.1.0.2.0.1.0.3.', res: 4, vel: 0.75, reg: [55, 79], gate: 0.9, jump: 0.05 }, drums: 'marchS', timp: 'gallop', lead: { ph: 'B3 B3 B3 B3', inst: 'brass', vel: 1.0, harm: -2 },
+        lead2: { ph: 'B1 B2 B1 B2', inst: 'strings', oct: 1, vel: 0.55 }, choir: { inst: 'choirMen', n: 3, reg: [38, 57], vel: 1.0 }, choir2: { inst: 'aah', n: 3, reg: [57, 74], vel: 0.75 }, fill: 'bigS' },
+      { n: 'A2', bars: 16, lv: 0.88, prog: 'i i bVI bVII | i bII i V | i i bVI bVII | i bII bVI V', pad: { p: 'stab', pat: 'x.......x...x...', n: 2, reg: [38, 55], vel: 0.9, gate: 0.5 }, pad2: { p: 'sus', inst: 'strings', n: 4, reg: [55, 79], vel: 0.7 },
+        bass: 'oct8', arp: { pat: '0.1.0.2.0.1.0.3.', res: 4, vel: 0.72, reg: [55, 79], gate: 0.9, jump: 0.06 }, drums: 'warS', timp: 'beats', lead: { ph: 'B1 B2 B1 B2', vel: 0.88, harm: -2 }, choir: { inst: 'choirMen', n: 3, reg: [38, 57], vel: 0.75 }, bell: { dens: 0.2, res: 2, reg: [72, 91], vel: 0.5 }, fill: 'rollS' },
+      { n: 'C', bars: 8, lv: 0.45, prog: 'i:2 bVI:2 bVII:2 V:2', pad2: { p: 'sus', inst: 'strTrem', n: 4, reg: [55, 79], vel: 0.65 }, bass: { pat: '1---', pedal: true }, arp: { pat: '0.0.0.0.0.0.0.0.', res: 4, vel: 0.5, reg: [50, 62], gate: 0.7 },
+        drums: { bdSoft: 'x...............', t5: '........x.......' }, timp: { p: 'hits', roll: 2 }, choir: { inst: 'choirMen', n: 3, reg: [40, 57], vel: 0.6 }, rise: 2 },
+      { n: 'B2', bars: 16, lv: 1.15, prog: 'bVI bVII i i | bVI bVII V i | bVI bVII i i | bVI bVII V i', hit: true, cr: true, pad: { p: 'stab', pat: 'x.......x.x.....', n: 2, reg: [38, 55], vel: 1.0, gate: 0.5 }, pad2: { p: 'sus', inst: 'strings', n: 4, reg: [55, 81], vel: 0.8 },
+        bass: 'oct8', arp: { pat: '0.1.0.2.0.1.0.3.', res: 4, vel: 0.78, reg: [55, 81], gate: 0.9, jump: 0.08 }, drums: 'marchS', timp: 'gallop', lead: { ph: 'B3 B3 B1 B2', inst: 'brass', vel: 1.0, harm: -2 },
+        lead2: { ph: 'B3 B3 B1 B2', inst: 'strings', oct: 1, vel: 0.6 }, choir: { inst: 'choirMen', n: 3, reg: [38, 57], vel: 1.05 }, choir2: { inst: 'aah', n: 3, reg: [57, 74], vel: 0.8 }, bell: { dens: 0.25, res: 2, reg: [72, 91], vel: 0.5 }, fill: 'bigS' },
     ],
   });
 
   Track('galaxy1', {
     desc: 'Calm exploration, wonder: airy flute, glassy bells and a floating lydian pad',
-    bpm: 76, trim: 1.1, root: 'G', mode: 'lydian', loopFrom: 'A1',
-    inst: { pad: 'glassPad', bass: 'deep', lead: 'flute', lead2: 'glass', bell: 'glass', arp: 'vibes', choir: 'ooh' },
+    bpm: 56, trim: 2.25, tone: { hi: -2.5 }, root: 'G', mode: 'lydian', loopFrom: 'A1', gentle: true, fx: { dly: 2.2, verb: 1.25 },
+    alts: [{}, { lead: 'cello', lead2: 'flute', choir: 'choirMen' }, { lead: 'oboe', lead2: 'cello', arp: 'harp' }],
+    inst: { pad: 'strings', pad2: 'analog', bass: 'deep', lead: 'flute', lead2: 'glass', bell: 'glass', arp: 'vibes', choir: 'choirWomen' },
     ph: {
       W1: '5:3 8:1 | 7:2 5:2 | 6:3 5:1 | 4:2 3:2',
       W2: '5:2 7:1 8:1 | 10:3 8:1 | 8:2! 7:1 5:1 | 5:4',
       W3: '6:3 8:1 | 10:2 9:1 8:1 | 7:3 6:1 | 4:4',
       W4: '8:2 5:2 | 7:3 5:1 | 5:2 6:1 7:1 | 7:4',
       C1: '10:4 | 9:4 | 8:4! | 7:4',
+      FL: '4:6 r:2 | 1:6 r:2 | 2:6 r:2 | 7:8',
+      CM: '1:8 | 2:8 | 3:6 2:2 | 1:8',
       C2: '5:4 | 7:4 | 6:4 | 4:4',
     },
     sec: [
-      { n: 'intro', bars: 4, lv: 0.45, prog: 'IM7:2 II:2', pad: { p: 'swell' }, bell: { dens: 0.3, res: 1, vel: 0.5 } },
-      { n: 'A1', bars: 8, lv: 0.66, prog: 'IM7:2 II:2 iii:2 V:2', pad: 'sus', bass: 'whole', lead: 'W1 W2', bell: { dens: 0.25, res: 2, vel: 0.7 } },
-      { n: 'A2', bars: 8, lv: 0.76, prog: 'IM7:2 II:2 iii:2 V:2', pad: 'sus', bass: 'whole', arp: { p: 'updown8', vel: 0.6, reg: [62, 86] }, lead: 'W1 W2', bell: { dens: 0.3, res: 2, vel: 0.7 }, choir: { vel: 0.6 } },
-      { n: 'B', bars: 8, lv: 0.86, prog: 'vi:2 II:2 IM7:2 V:2', pad: 'sus', bass: 'half', arp: { p: 'up8', vel: 0.36, reg: [64, 91] }, lead: 'W3 W4', lead2: { ph: 'W3 W4', inst: 'glass', oct: 1, vel: 0.4 }, bell: { dens: 0.25, res: 2 } },
-      { n: 'C', bars: 8, lv: 0.5, prog: 'vi:2 V:2 IM7:2 II:2', pad: { p: 'swell' }, bass: false, lead: { ph: 'C1 C2', inst: 'glass', vel: 0.62 }, bell: { dens: 0.18, res: 1, vel: 0.4 }, choir: { v1: 'u', v2: 'o', vel: 0.5 } },
-      { n: 'A3', bars: 8, lv: 0.9, prog: 'IM7:2 II:2 iii:2 V:2', pad: { p: 'sus', inst: 'strings' }, bass: 'half', arp: { p: 'updown', vel: 0.38, reg: [62, 88] }, lead: { ph: 'W1 W2', harm: -2 }, lead2: { ph: 'W1 W2', inst: 'glass', oct: 1, vel: 0.4 }, choir: { vel: 0.7 }, bell: { dens: 0.3, res: 2 } },
-      { n: 'B2', bars: 8, lv: 1.0, prog: 'vi:2 II:2 IM7:2 V:2', pad: { p: 'sus', inst: 'strings' }, bass: 'half', arp: { p: 'up', vel: 0.38, reg: [64, 93] }, lead: { ph: 'W3 W4', harm: -2 }, lead2: { ph: 'W3 W4', inst: 'glass', oct: 1, vel: 0.45 }, choir: { v1: 'a', v2: 'a', vel: 0.75 }, bell: { dens: 0.35, res: 2 } },
-      { n: 'E', bars: 8, lv: 0.6, prog: 'IM7:2 II:2 IM7:2 V:2', pad: 'sus', bass: 'whole', lead: 'W1 W4', bell: { dens: 0.2, res: 2, vel: 0.45 } },
+      { n: 'intro', bars: 4, lv: 0.45, prog: 'IM7:2 II:2', pad: { p: 'swell' }, pad2: { p: 'swell', n: 3, reg: [43, 64], vel: 0.62 }, bell: { dens: 0.14, res: 1, vel: 0.4 } },
+      { n: 'A1', bars: 8, lv: 0.66, prog: 'IM7:2 II:2 iii:2 V:2', pad: 'sus', bass: { pat: '1---', inst: { p: 'deep', att: 1.4, rel: 2.6, sub: 0.55 } }, lead: 'W1 r4 W2 r4', bell: { dens: 0.12, res: 1, vel: 0.45 } },
+      { n: 'A2', bars: 8, lv: 0.76, prog: 'IM7:2 II:2 iii:2 V:2', pad: 'sus', bass: { pat: '1---', inst: { p: 'deep', att: 1.4, rel: 2.6, sub: 0.55 } }, arp: { pat: '0.2.1.3.', res: 1, vel: 0.4, reg: [62, 86] }, lead: 'W1 W2', bell: { dens: 0.14, res: 1, vel: 0.45 }, choir: { vel: 0.4, soft: true } },
+      { n: 'breath1', bars: 1, lv: 0.3, prog: 'IM7:4', tens: false, bell: { dens: 0.08, res: 1, vel: 0.35 } },
+      { n: 'B', bars: 8, lv: 0.66, prog: 'vi:2 II:2 IM7:2 V:2', pad: 'sus', bass: 'whole', arp: { pat: '0...2...', res: 2, vel: 0.3, reg: [64, 91] }, lead: 'W3 W4', lead2: { ph: 'W3 W4', inst: 'glass', oct: 1, vel: 0.4 }, bell: { dens: 0.12, res: 1, vel: 0.45 } },
+      { n: 'C', bars: 8, lv: 0.5, prog: 'vi:2 V:2 IM7:2 II:2', pad: { p: 'swell' }, pad2: { p: 'swell', inst: 'cellos', n: 2, reg: [43, 60], vel: 0.6 }, bass: false, lead: { ph: 'FL C2', inst: 'cello', oct: -1, vel: 0.62 }, bell2: { ph: 'r8 CM', inst: 'choirMen', oct: -1, vel: 0.34 }, choir: { inst: 'choirMen', n: 3, reg: [38, 55], vel: 0.32, soft: true }, bell: { dens: 0.18, res: 1, vel: 0.4 }, choir: { v1: 'u', v2: 'o', vel: 0.5 } },
+      { n: 'breath2', bars: 2, lv: 0.3, prog: 'IM7:8', tens: false },
+      { n: 'A3', bars: 8, lv: 0.7, prog: 'IM7:2 II:2 iii:2 V:2', pad: 'sus', pad2: { p: 'swell', inst: 'air', n: 2, reg: [72, 88], vel: 0.42 }, bass: 'whole', arp: { pat: '0...2...1...3...', res: 1, vel: 0.34, reg: [62, 88] }, lead: { ph: 'W1 W2', harm: -2 }, lead2: { ph: 'W1 W2', inst: 'glass', oct: 1, vel: 0.4 }, choir: { vel: 0.7 }, bell: { dens: 0.3, res: 2 } },
+      { n: 'B2', bars: 8, lv: 0.72, prog: 'vi:2 II:2 IM7:2 V:2', pad: 'sus', pad2: { p: 'swell', inst: 'air', n: 2, reg: [72, 88], vel: 0.42 }, bass: 'whole', arp: { pat: '0.......2.......', res: 1, vel: 0.32, reg: [64, 93] }, lead: { ph: 'W3 W4', harm: -2 }, lead2: { ph: 'W3 W4', inst: 'glass', oct: 1, vel: 0.45 }, choir: { v1: 'a', v2: 'a', vel: 0.75 }, bell: { dens: 0.35, res: 2 } },
+      { n: 'breath3', bars: 1, lv: 0.3, prog: 'IM7:4', tens: false },
+      { n: 'E', bars: 8, lv: 0.6, prog: 'IM7:2 II:2 IM7:2 V:2', pad: 'sus', bass: { pat: '1---', inst: { p: 'deep', att: 1.4, rel: 2.6, sub: 0.55 } }, lead: 'W1 W4', bell: { dens: 0.2, res: 2, vel: 0.45 } },
     ],
   });
 
   Track('galaxy2', {
     desc: 'Calm exploration, patience: marimba ostinato, plucked reed melody, warm dorian pad',
-    bpm: 70, trim: 1.4, root: 'D', mode: 'dorian', loopFrom: 'A1',
+    bpm: 60, trim: 1.97, tone: { hi: -2.5 }, root: 'D', mode: 'dorian', loopFrom: 'A1', gentle: true, fx: { dly: 2.0, verb: 1.2 },
+    alts: [{}, { lead: 'cello', lead2: 'glass' }, { lead: 'clarinet', lead2: 'cello' }],
     inst: { pad: 'warm', bass: 'deep', lead: 'reed', lead2: 'vibes', bell: 'vibes', arp: 'marimba' },
     ph: {
       P1: '5:1.5 6:.5 8:2 | 8:1.5 7:.5 6:2 | 5:2 3:2 | 4:1 5:1 6:2',
@@ -981,22 +1281,25 @@
       P4: '8:2 10:2 | 9:2 7:2 | 8:2 6:2 | 5:2 1:2',
       Q1: '5:4 | 6:4 | 8:4 | 5:4',
       Q2: '4:4 | 3:4 | 5:4 | 1:4',
+      CM: '1:8 | 2:8 | 3:6 2:2 | 1:8',
     },
     sec: [
-      { n: 'intro', bars: 4, lv: 0.5, prog: 'i:2 IV:2', pad: { p: 'swell' }, arp: { pat: '0210', res: 2, vel: 0.4, reg: [57, 76] } },
-      { n: 'A1', bars: 8, lv: 0.68, prog: 'i:1 IV:1 i:1 IV:1 bVII:1 IV:1 i:2', pad: 'sus', bass: 'half', arp: { pat: '0210', res: 2, vel: 0.48, reg: [57, 76] }, lead: 'P1 P2' },
-      { n: 'A2', bars: 8, lv: 0.78, prog: 'i:1 IV:1 i:1 IV:1 bVII:1 IV:1 i:2', pad: 'sus', bass: 'half', arp: { pat: '0210', res: 2, vel: 0.48, reg: [57, 76] }, lead: 'P1 P2', drums: { kick: 'x...............', shk: 'o.o.o.o.o.o.o.o.' }, bell: { dens: 0.25, res: 2, reg: [76, 93], vel: 0.45 } },
-      { n: 'B', bars: 8, lv: 0.88, prog: 'bVII:2 IV:2 i:1 v:1 IV:1 i:1', pad: { p: 'sus', inst: 'strings' }, bass: 'walk', arp: { pat: '0120', res: 2, vel: 0.46, reg: [57, 78] }, lead: 'P3 P4', lead2: { ph: 'P3 P4', inst: 'vibes', oct: 1, vel: 0.4 }, drums: { kick: 'x.......x.......', rim: '....x.......x...', shk: 'o.o.o.o.o.o.o.o.' } },
-      { n: 'C', bars: 8, lv: 0.5, prog: 'i:2 bVII:2 IV:2 i:2', pad: { p: 'swell' }, bass: 'whole', arp: false, lead: { ph: 'Q1 Q2', inst: 'vibes', vel: 0.62 }, bell: { dens: 0.2, res: 1, reg: [76, 93], vel: 0.4 }, choir: { v1: 'u', v2: 'o', vel: 0.45 } },
-      { n: 'A3', bars: 8, lv: 0.9, prog: 'i:1 IV:1 i:1 IV:1 bVII:1 IV:1 i:2', pad: { p: 'sus', inst: 'strings' }, bass: 'half', arp: { pat: '0210', res: 2, vel: 0.5, reg: [57, 78] }, lead: { ph: 'P1 P2', harm: -2 }, drums: { kick: 'x.......x.......', rim: '....x.......x...', shk: 'o.o.o.o.o.o.o.o.' }, bell: { dens: 0.3, res: 2, reg: [76, 93] } },
-      { n: 'B2', bars: 8, lv: 0.98, prog: 'bVII:2 IV:2 i:1 v:1 IV:1 i:1', pad: { p: 'sus', inst: 'strings' }, bass: 'walk', arp: { pat: '0120', res: 2, vel: 0.5, reg: [57, 80] }, lead: { ph: 'P3 P4', inst: 'horn', vel: 0.8 }, lead2: { ph: 'P3 P4', inst: 'vibes', oct: 1, vel: 0.45 }, drums: { kick: 'x.......x.......', rim: '....x.......x...', shk: 'o.o.o.o.o.o.o.o.' }, choir: { vel: 0.6 } },
+      { n: 'intro', bars: 4, lv: 0.5, prog: 'i:2 IV:2', pad: { p: 'swell' }, arp: { pat: '0.2.', res: 1, vel: 0.36, reg: [57, 76] } },
+      { n: 'A1', bars: 8, lv: 0.68, prog: 'i:1 IV:1 i:1 IV:1 bVII:1 IV:1 i:2', pad: 'sus', bass: 'half', arp: { pat: '0.2.', res: 1, vel: 0.4, reg: [57, 76] }, lead: 'P1 P2' },
+      { n: 'A2', bars: 8, lv: 0.78, prog: 'i:1 IV:1 i:1 IV:1 bVII:1 IV:1 i:2', pad: 'sus', bass: 'half', arp: { pat: '0.2.', res: 1, vel: 0.4, reg: [57, 76] }, lead: 'P1 P2', bell: { dens: 0.25, res: 2, reg: [76, 93], vel: 0.45 } },
+      { n: 'B', bars: 8, lv: 0.68, prog: 'bVII:2 IV:2 i:1 v:1 IV:1 i:1', pad: { p: 'sus', inst: 'strings' }, pad2: { p: 'swell', inst: 'cellos', n: 2, reg: [43, 60], vel: 0.6 }, bass: 'whole', arp: { pat: '0.1.', res: 1, vel: 0.38, reg: [57, 78] }, lead: 'P3 P4', lead2: { ph: 'P3 P4', inst: 'vibes', oct: 1, vel: 0.4 } },
+      { n: 'C', bars: 8, lv: 0.5, prog: 'i:2 bVII:2 IV:2 i:2', pad: { p: 'swell' }, bass: 'whole', arp: false, lead: { ph: 'Q1 Q2', inst: 'vibes', vel: 0.62 }, bell: { dens: 0.2, res: 1, reg: [76, 93], vel: 0.4 }, choir: { inst: 'choirMen', n: 3, reg: [38, 55], vel: 0.34, soft: true }, bell2: { ph: 'r8 CM', inst: 'choirMen', oct: -1, vel: 0.34 } },
+      { n: 'breath', bars: 1, lv: 0.3, prog: 'i:4', tens: false },
+      { n: 'A3', bars: 8, lv: 0.7, prog: 'i:1 IV:1 i:1 IV:1 bVII:1 IV:1 i:2', pad: { p: 'sus', inst: 'strings' }, bass: 'half', arp: { pat: '0.2.', res: 1, vel: 0.4, reg: [57, 78] }, lead: { ph: 'P1 P2', harm: -2 }, bell: { dens: 0.3, res: 2, reg: [76, 93] } },
+      { n: 'B2', bars: 8, lv: 0.72, prog: 'bVII:2 IV:2 i:1 v:1 IV:1 i:1', pad: { p: 'sus', inst: 'strings' }, pad2: { p: 'swell', inst: 'organSoft', n: 3, reg: [55, 74], vel: 0.6 }, bass: 'whole', arp: { pat: '0.1.', res: 1, vel: 0.38, reg: [57, 80] }, lead: { ph: 'P3 P4', inst: 'cello', vel: 0.65 }, lead2: { ph: 'P3 P4', inst: 'vibes', oct: 1, vel: 0.45 }, choir: { vel: 0.6 } },
     ],
   });
 
   Track('galaxy3', {
     desc: 'Calm exploration, determination: steady pulse, strings and a resolute horn theme',
-    bpm: 88, trim: 1.05, root: 'A', mode: 'minor', oct: 1, loopFrom: 'A1',
-    inst: { pad: 'strings', bass: 'pulse', lead: 'horn', lead2: 'bell', bell: 'glass', arp: 'arp', choir: 'aah' },
+    bpm: 72, trim: 1.64, tone: { hi: -2.5 }, root: 'A', mode: 'minor', oct: 1, loopFrom: 'A1', gentle: true, fx: { dly: 1.6, verb: 1.2 },
+    alts: [{}, { lead: 'cello', lead2: 'flute' }],
+    inst: { pad: 'strings', pad2: 'analog', bass: 'pulse', lead: 'horn', lead2: 'bell', bell: 'glass', arp: 'arp', choir: 'aah' },
     ph: {
       D1: '1:1.5 3:.5 5:1 3:1 | 6:1.5 5:.5 3:2 | 7:1.5 5:.5 2:2 | 1:3 r:1',
       D2: '5:1.5 6:.5 8:1 6:1 | 8:1.5 6:.5 3:2 | 4:1.5 6:.5 8:2 | 7#:2 5:2',
@@ -1004,22 +1307,25 @@
       D4: '10:2 8:2 | 9:2 7:2 | 7#:2 9:2 | 5:4',
       D5: '8:4 | 6:4 | 5:4 | 3:4',
       D6: '6:4 | 8:4 | 7#:4 | 5:4',
+      CM: '1:8 | 3:8 | 2:6 1:2 | 1:8',
     },
     sec: [
-      { n: 'intro', bars: 4, lv: 0.5, prog: 'i:2 bVI:1 bVII:1', pad: { p: 'swell' }, bass: { pat: '1---', pedal: true }, drums: { hat: 'o.o.o.o.o.o.o.o.' } },
-      { n: 'A1', bars: 8, lv: 0.66, prog: 'i bVI bVII i | i bVI bVII i', pad: 'sus', bass: 'pulse8', lead: 'D1 D1', drums: { kick: 'x.......x.......', hat: 'o.o.o.o.o.o.o.o.' } },
-      { n: 'A2', bars: 8, lv: 0.78, prog: 'i bVI bVII i | i bVI iv V', pad: 'sus', bass: 'pulse8', lead: 'D1 D2', arp: { p: 'up8', vel: 0.34, reg: [57, 81] }, drums: 'walk' },
-      { n: 'B', bars: 8, lv: 0.9, prog: 'bVI bVII i i | bVI bVII V V', pad: 'sus', bass: 'oct8', lead: 'D3 D4', lead2: { ph: 'D3 D4', inst: 'bell', oct: 1, vel: 0.4 }, arp: { p: 'up8', vel: 0.34, reg: [57, 81] }, drums: 'walk', timp: 'two' },
-      { n: 'C', bars: 8, lv: 0.5, prog: 'iv:2 i:2 bVI:2 V:2', pad: { p: 'swell' }, bass: { pat: '1---', pedal: false }, lead: { ph: 'D5 D6', inst: 'flute', vel: 0.7 }, bell: { dens: 0.2, res: 1, vel: 0.45 }, choir: { vel: 0.55 }, drums: false },
-      { n: 'A3', bars: 8, lv: 0.88, prog: 'i bVI bVII i | i bVI iv V', pad: 'sus', bass: 'pulse8', lead: { ph: 'D1 D2', harm: -2 }, arp: { p: 'up', vel: 0.34, reg: [57, 84] }, drums: 'walk', timp: 'two', choir: { vel: 0.7 } },
-      { n: 'B2', bars: 8, lv: 1.0, prog: 'bVI bVII i i | bVI bVII V V', pad: 'sus', bass: 'oct8', lead: { ph: 'D3 D4', harm: -2 }, lead2: { ph: 'D3 D4', inst: 'bell', oct: 1, vel: 0.45 }, arp: { p: 'up', vel: 0.36, reg: [57, 84] }, drums: { kick: 'x...x...x...x...', rim: '....x.......x...', hat: 'x.x.x.x.x.x.x.x.' }, timp: 'beats', choir: { vel: 0.8 }, fill: 'snare' },
-      { n: 'E', bars: 8, lv: 0.64, prog: 'i bVI bVII i | i bVI iv V', pad: 'sus', bass: 'pulse8', lead: 'D1 D2', drums: { kick: 'x.......x.......', hat: 'o.o.o.o.o.o.o.o.' } },
+      { n: 'intro', bars: 4, lv: 0.5, prog: 'i:2 bVI:1 bVII:1', pad: { p: 'swell' }, bass: { pat: '1---', pedal: true } },
+      { n: 'A1', bars: 8, lv: 0.66, prog: 'i bVI bVII i | i bVI bVII i', pad: 'sus', pad2: { p: 'sus', n: 3, reg: [43, 62], vel: 0.45 }, bass: 'half', lead: 'D1 D1' },
+      { n: 'A2', bars: 8, lv: 0.78, prog: 'i bVI bVII i | i bVI iv V', pad: 'sus', pad2: { p: 'sus', n: 3, reg: [43, 62], vel: 0.45 }, bass: 'half', lead: 'D1 D2', arp: { p: 'up8', vel: 0.34, reg: [57, 81] } },
+      { n: 'B', bars: 8, lv: 0.7, prog: 'bVI bVII i i | bVI bVII V V', pad: 'sus', bass: 'half', lead: 'D3 D4', lead2: { ph: 'D3 D4', inst: 'bell', oct: 1, vel: 0.4 }, arp: { p: 'up8', vel: 0.34, reg: [57, 81] } },
+      { n: 'C', bars: 8, lv: 0.5, prog: 'iv:2 i:2 bVI:2 V:2', pad: { p: 'swell' }, bass: { pat: '1---', pedal: false }, lead: { ph: 'D5 D6', inst: 'flute', vel: 0.7 }, bell: { dens: 0.2, res: 1, vel: 0.45 }, choir: { vel: 0.38, soft: true } },
+      { n: 'breath', bars: 1, lv: 0.3, prog: 'i:4', tens: false },
+      { n: 'A3', bars: 8, lv: 0.7, prog: 'i bVI bVII i | i bVI iv V', pad: 'sus', pad2: { p: 'sus', n: 3, reg: [43, 62], vel: 0.45 }, bass: 'half', lead: { ph: 'D1 D2', harm: -2 }, arp: { p: 'up', vel: 0.34, reg: [57, 84] }, choir: { inst: 'choirMen', n: 3, reg: [38, 57], vel: 0.38, soft: true }, bell2: { ph: 'r8 CM', inst: 'choirMen', oct: -1, vel: 0.34 } },
+      { n: 'B2', bars: 8, lv: 0.74, prog: 'bVI bVII i i | bVI bVII V V', pad: 'sus', bass: 'half', lead: { ph: 'D3 D4', harm: -2 }, lead2: { ph: 'D3 D4', inst: 'bell', oct: 1, vel: 0.45 }, arp: { p: 'up', vel: 0.36, reg: [57, 84] }, choir: { vel: 0.8 }, fill: 'snare' },
+      { n: 'E', bars: 8, lv: 0.64, prog: 'i bVI bVII i | i bVI iv V', pad: 'sus', pad2: { p: 'sus', n: 3, reg: [43, 62], vel: 0.45 }, bass: 'half', lead: 'D1 D2' },
     ],
   });
 
   Track('design', {
     desc: 'Technical, light: bubbling marimba and sequenced plucks over a springy bass',
-    bpm: 112, trim: 1.26, root: 'G', mode: 'major', loopFrom: 'A1',
+    bpm: 112, trim: 1.47, root: 'G', mode: 'major', loopFrom: 'A1',
+    forms: [['A1', 'A2', 'B', 'C', 'A3', 'B2', 'D', 'E', 'A1', 'B', 'C', 'A2', 'D', 'B2', 'E', 'A3', 'C', 'E'], ['A1', 'B', 'A2', 'D', 'C', 'A3', 'B2', 'E', 'A1', 'C', 'B', 'A2', 'E', 'D', 'B2', 'A3', 'C', 'E']],
     inst: { pad: 'glassPad', bass: 'pulse', lead: 'marimba', lead2: 'vibes', bell: 'vibes', arp: 'seq', choir: 'ooh' },
     ph: {
       T1: '5:.5 8:.5 5:.5 3:.5 5:1 r:1 | 6:.5 8:.5 6:.5 3:.5 6:1 r:1 | 4:.5 6:.5 4:.5 2:.5 4:1 r:1 | 5:.5 7:.5 5:.5 3:.5 2:1 r:1',
@@ -1041,7 +1347,8 @@
 
   Track('research', {
     desc: 'Shimmering discovery: crystal bells, rising sequences and a glassy lydian wash',
-    bpm: 84, trim: 1.06, root: 'E', mode: 'lydian', loopFrom: 'A1',
+    bpm: 84, trim: 1.37, root: 'E', mode: 'lydian', loopFrom: 'A1',
+    forms: [['A1', 'A2', 'B', 'C', 'A3', 'B2', 'E', 'C', 'A1', 'B', 'A2', 'B2', 'E', 'A3'], ['A1', 'B', 'A2', 'C', 'B2', 'E', 'A3', 'C', 'A1', 'A2', 'B', 'B2', 'E', 'A3']],
     inst: { pad: 'glassPad', bass: 'deep', lead: 'crystal', lead2: 'glass', bell: 'crystal', arp: 'shimmer', choir: 'eeh' },
     ph: {
       R1: '5:1 8:.5 7:.5 5:1 3:1 | 6:1 8:.5 9:.5 8:1 6:1 | 5:1.5 6:.5 8:1 6:1 | 7:1 5:1 7:1 9:1',
@@ -1062,7 +1369,8 @@
   });
   Track('combat1', {
     desc: 'Driving percussive tension: galloping bass, fast saw arps, timpani and a brass riff',
-    bpm: 142, trim: 0.7, root: 'E', mode: 'minor', loopFrom: 'A1', tens: false,
+    bpm: 142, trim: 1.92, tone: { hi: 1.0, lo: 1.0 }, mix: { drums: 1.2, choir: 1.15 }, root: 'E', mode: 'minor', loopFrom: 'A1', tens: false, gate: { drums: 0.2, lead: 0.4, bell: 0.55 },
+    forms: [['A1', 'B1', 'A2', 'C', 'B2', 'A3', 'C', 'A1', 'B1', 'A2', 'B2', 'A3'], ['A1', 'C', 'B1', 'A2', 'B2', 'A3', 'A1', 'B1', 'C', 'A2', 'B2', 'A3']],
     inst: { pad: 'dark', bass: 'moog', lead: 'synth', lead2: 'brass', arp: 'arpSaw', bell: 'bell' },
     ph: {
       M1: '1:.5 1:.5 3:.5 1:.5 5:1 4:.5 3:.5 | 1:.5 1:.5 3:.5 1:.5 5:1 6:.5 5:.5',
@@ -1072,7 +1380,7 @@
     sec: [
       { n: 'intro', bars: 4, lv: 0.6, prog: 'i', hit: true, pad: 'sus', bass: { pat: '1---', pedal: true }, timp: { p: 'roll', roll: 0 }, arp: { pat: '0.2.', res: 4, vel: 0.35, reg: [52, 76], gate: 0.5 } },
       { n: 'A1', bars: 16, lv: 0.85, prog: 'i:2 bVI:2 i:2 bVII:2 i:2 bVI:2 bII:2 bVII:2', pad: 'sus', bass: 'gallop', arp: { p: 'run', vel: 0.5, reg: [52, 79], gate: 0.6 }, drums: 'drive', timp: 'hits', lead: 'M1 M1-2 M1 M1-1 M1 M1-2 M1 M1-1', fill: 'tom' },
-      { n: 'B1', bars: 16, lv: 1.0, prog: 'i bVI bVII i | bVI bVII i V | i bVI bVII i | bVI bVII i V', pad: { p: 'sus', inst: 'strings' }, bass: 'gallop', arp: { p: 'run', vel: 0.5, reg: [52, 79], gate: 0.6, jump: 0.06 }, drums: 'drive', timp: 'beats', lead: { ph: 'M2 M3 M2 M3', inst: 'brass', harm: -2 }, fill: 'snare' },
+      { n: 'B1', bars: 16, lv: 1.08, hit: 'tam', prog: 'i bVI bVII i | bVI bVII i V | i bVI bVII i | bVI bVII i V', pad: { p: 'sus', inst: 'strings' }, bass: 'gallop', arp: { p: 'run', vel: 0.5, reg: [52, 79], gate: 0.6, jump: 0.06 }, drums: 'drive', timp: 'beats', lead: { ph: 'M2 M3 M2 M3', inst: 'brass', harm: -2 }, fill: 'snare' },
       { n: 'A2', bars: 16, lv: 0.92, prog: 'i:2 bVI:2 i:2 bVII:2 i:2 bVI:2 bII:2 bVII:2', pad: 'sus', bass: 'gallop', arp: { p: 'run', vel: 0.5, reg: [52, 79], gate: 0.6, jump: 0.06 }, drums: 'drive', timp: 'hits', lead: 'M1 M1-2 M1 M1-1 M1 M1-2 M1 M1-1', lead2: { ph: 'r8 M1 M1-2 M1 M1-1', inst: 'brassStab', oct: -1, vel: 0.5 }, fill: 'tom' },
       { n: 'C', bars: 8, lv: 0.55, prog: 'i:2 bVI:2 bVII:2 V:2', pad: { p: 'swell' }, bass: { pat: '1---', pedal: true }, arp: { pat: '0.2.', res: 4, vel: 0.3, reg: [52, 76], gate: 0.5 }, drums: { t5: 'X...............', t4: '........o.......', rim: '..o...o...o...o.' }, timp: { p: 'hits', roll: 2 }, bell: { dens: 0.2, res: 2, reg: [76, 93], vel: 0.5 }, rise: 2 },
       { n: 'B2', bars: 16, lv: 1.06, prog: 'i bVI bVII i | bVI bVII i V | i bVI bVII i | bVI bVII i V', pad: { p: 'sus', inst: 'strings' }, bass: 'gallop', arp: { p: 'run', vel: 0.52, reg: [52, 81], gate: 0.6, jump: 0.08 }, drums: 'drive', timp: 'beats', lead: { ph: 'M2 M3 M2+3 M3', inst: 'brass', harm: -2 }, lead2: { ph: 'M2 M3 M2 M3', inst: 'bell', oct: 1, vel: 0.4 }, fill: 'roll' },
@@ -1082,7 +1390,8 @@
 
   Track('combat2', {
     desc: 'Heavy half-time assault: syncopated stabs, chromatic phrygian bass, metal hits and a rapid pulse arp',
-    bpm: 152, trim: 0.7, root: 'C#', mode: 'minor', loopFrom: 'A1', tens: false,
+    bpm: 152, trim: 1.76, tone: { hi: 1.0, lo: 1.0 }, mix: { drums: 1.2, choir: 1.15 }, root: 'C#', mode: 'minor', loopFrom: 'A1', tens: false, gate: { drums: 0.2, lead: 0.4, bell: 0.55 },
+    forms: [['A1', 'B1', 'A2', 'C', 'B2', 'A3', 'C', 'A1', 'B1', 'A2', 'B2', 'A3', 'B2'], ['A1', 'C', 'B1', 'A2', 'B2', 'A3', 'A1', 'B1', 'C', 'A2', 'B2', 'A3', 'A3']],
     inst: { pad: 'dark', bass: 'pulse', lead: 'brass', lead2: 'horn', arp: 'seq', bell: 'bell' },
     ph: {
       N1: '1:1.5 1:1.5 3:1 | 2b:1.5 2b:1.5 4:1 | 5:1.5 3:1.5 1:1 | 7:1.5 5:1.5 4:1',
@@ -1093,7 +1402,7 @@
     sec: [
       { n: 'intro', bars: 4, lv: 0.6, prog: 'i', hit: true, pad: { p: 'swell' }, bass: { pat: '1---', pedal: true }, drums: { t5: 'X.......x.......', metal2: '..........o.....' }, timp: 'two' },
       { n: 'A1', bars: 16, lv: 0.86, prog: 'i bII i bVII | i bII bVII i | i bII i bVII | i bII bVII i', pad: 'sus', bass: 'sync', arp: { pat: '0201 3231', res: 4, vel: 0.46, reg: [49, 76], gate: 0.5 }, drums: 'heavy', timp: 'hits', lead: 'N1 N2 N1 N2', fill: 'tom' },
-      { n: 'B1', bars: 16, lv: 1.0, prog: 'bVI bVII i i | bVI bVII V i | bVI bVII i i | bVI bVII V i', pad: { p: 'sus', inst: 'strings' }, bass: 'oct8', arp: { pat: '0201 3231', res: 4, vel: 0.46, reg: [49, 76], gate: 0.5, jump: 0.06 }, drums: 'heavy', timp: 'two', lead: { ph: 'N3 N4 N3 N4', harm: -2 }, fill: 'snare' },
+      { n: 'B1', bars: 16, lv: 1.08, hit: 'tam', prog: 'bVI bVII i i | bVI bVII V i | bVI bVII i i | bVI bVII V i', pad: { p: 'sus', inst: 'strings' }, bass: 'oct8', arp: { pat: '0201 3231', res: 4, vel: 0.46, reg: [49, 76], gate: 0.5, jump: 0.06 }, drums: 'heavy', timp: 'two', lead: { ph: 'N3 N4 N3 N4', harm: -2 }, fill: 'snare' },
       { n: 'A2', bars: 16, lv: 0.94, prog: 'i bII i bVII | i bII bVII i | i bII i bVII | i bII bVII i', pad: 'sus', bass: 'sync', arp: { pat: '0201 3231', res: 4, vel: 0.46, reg: [49, 76], gate: 0.5, jump: 0.06 }, drums: 'heavy', timp: 'hits', lead: { ph: 'N1 N2 N1 N2', inst: 'horn' }, lead2: { ph: 'N1 N2 N1 N2', inst: 'brassStab', oct: -1, vel: 0.5 }, fill: 'tom' },
       { n: 'C', bars: 8, lv: 0.55, prog: 'i:2 bII:2 bVII:2 V:2', pad: { p: 'swell' }, bass: { pat: '1---', pedal: true }, drums: { t5: 'X...............', t4: '........o.......', metal2: '..o...o...o...o.' }, timp: { p: 'hits', roll: 2 }, bell: { dens: 0.22, res: 2, reg: [76, 93], vel: 0.5 }, rise: 2 },
       { n: 'B2', bars: 16, lv: 1.06, prog: 'bVI bVII i i | bVI bVII V i | bVI bVII i i | bVI bVII V i', pad: { p: 'sus', inst: 'strings' }, bass: 'oct8', arp: { pat: '0201 3231', res: 4, vel: 0.48, reg: [49, 78], gate: 0.5, jump: 0.08 }, drums: 'heavy', timp: 'beats', lead: { ph: 'N3 N4 N3 N4', harm: -2 }, lead2: { ph: 'N3 N4 N3 N4', inst: 'bell', oct: 1, vel: 0.4 }, fill: 'roll' },
@@ -1103,7 +1412,8 @@
 
   Track('ground', {
     desc: 'Tense ground assault: low toms, a menacing plucked ostinato and brass swells in phrygian',
-    bpm: 100, trim: 0.91, root: 'A', mode: 'phrygian', loopFrom: 'A1', tens: { x1: false },
+    bpm: 100, trim: 2.99, root: 'A', mode: 'phrygian', loopFrom: 'A1', tens: { x1: false },
+    forms: [['A1', 'B1', 'A2', 'C', 'B2', 'D', 'E', 'A1', 'C', 'B1', 'A2', 'D', 'B2', 'E', 'A1', 'E'], ['A1', 'C', 'B1', 'A2', 'D', 'B2', 'E', 'A1', 'B1', 'C', 'A2', 'B2', 'D', 'E', 'A1', 'E']],
     inst: { pad: 'dark', bass: 'moog', lead: 'horn', lead2: 'brass', arp: 'seq', bell: 'chime' },
     ph: {
       G1: '8:3 7:1 | 5:2 3:2 | 9:3 8:1 | 6:2 4:2',
@@ -1123,7 +1433,8 @@
 
   Track('gnn', {
     desc: 'Galactic News Network: a confident, upbeat broadcast bed with brass stabs and a bright ident theme',
-    bpm: 120, trim: 0.93, root: 'C', mode: 'major', loopFrom: 'A1',
+    bpm: 120, trim: 0.95, root: 'C', mode: 'major', loopFrom: 'A1',
+    forms: [['A1', 'A2', 'B', 'C', 'A3', 'B2', 'D', 'E', 'A1', 'B', 'C', 'A2', 'D', 'B2', 'E', 'A3', 'C', 'A1', 'B', 'E'], ['A1', 'B', 'A2', 'D', 'C', 'A3', 'B2', 'E', 'A1', 'C', 'B', 'A2', 'E', 'D', 'B2', 'A3', 'A1', 'C', 'B', 'E']],
     inst: { pad: 'organ', bass: 'pulse', lead: 'synth', lead2: 'bell', arp: 'seq', bell: 'vibes' },
     ph: {
       G1: '5:.5 5:.5 8:1.5 5:.5 8:1 | 7:.5 7:.5 9:1.5 7:.5 9:1 | 8:.5 8:.5 10:1.5 8:.5 10:1 | 6:.5 6:.5 8:1 9:.5 10:.5 11:1',
@@ -1144,7 +1455,8 @@
 
   Track('council', {
     desc: 'Galactic Council: grand ceremonial brass fanfare, hymn-like choir and timpani',
-    bpm: 72, trim: 0.91, root: 'Bb', mode: 'major', oct: 1, loopFrom: 'A1',
+    bpm: 72, trim: 1.53, root: 'Bb', mode: 'major', oct: 1, loopFrom: 'A1',
+    forms: [['A1', 'A2', 'B', 'C', 'A3', 'B2', 'E', 'C', 'A1', 'B', 'E', 'A2', 'B2', 'E'], ['A1', 'B', 'A2', 'C', 'B2', 'E', 'A3', 'C', 'A1', 'A2', 'B', 'B2', 'E']],
     inst: { pad: 'organ', bass: 'deep', lead: 'horn', lead2: 'brass', arp: 'harp', bell: 'bell', choir: 'aah' },
     ph: {
       F1: '1:1 5:1 8:2 | 8:1.5 6:.5 5:1 3:1 | 5:2 7:2 | 7:3 r:1',
@@ -1156,8 +1468,8 @@
       { n: 'intro', bars: 4, lv: 0.7, prog: 'I:2 V:2', hit: true, pad: { p: 'sus', inst: 'strings' }, bass: 'whole', lead: { ph: 'F1', inst: 'brass' }, timp: { p: 'beats', vel: 0.8 }, choir: { vel: 0.5 } },
       { n: 'A1', bars: 8, lv: 0.8, prog: 'I V vi iii | IV I IV V', pad: { p: 'sus', inst: 'strings' }, bass: 'half', lead: 'CA', timp: 'two', choir: { vel: 0.5 } },
       { n: 'A2', bars: 8, lv: 0.9, prog: 'I V vi iii | IV V I I', pad: { p: 'sus', inst: 'strings' }, bass: 'walk', lead: { ph: 'CB', inst: 'brass', harm: -2 }, timp: 'beats', choir: { vel: 0.7 }, drums: { snare: ['x..x.xx.x..x.xx.', 'x..x.xx.x..xxxxx'], kick: 'x.......x.......' }, fill: 'roll' },
-      { n: 'B', bars: 8, lv: 0.72, prog: 'vi IV I V | vi IV V I', pad: { p: 'sus', inst: 'organ' }, bass: 'half', lead: { ph: 'CC', inst: 'horn' }, choir: { v1: 'o', v2: 'a', vel: 0.9 }, bell: { dens: 0.2, res: 1, reg: [72, 91], vel: 0.5 }, timp: 'two' },
-      { n: 'C', bars: 8, lv: 0.5, prog: 'vi:2 IV:2 I:2 V:2', pad: { p: 'swell' }, bass: 'whole', lead: false, choir: { v1: 'u', v2: 'o', vel: 0.8 }, bell: { dens: 0.3, res: 1, reg: [72, 91], vel: 0.55 }, arp: { p: 'up8', vel: 0.3, reg: [57, 81] } },
+      { n: 'B', bars: 8, lv: 0.72, prog: 'vi IV I V | vi IV V I', pad: { p: 'sus', inst: 'organ' }, bass: 'half', lead: { ph: 'CC', inst: 'horn' }, choir: { inst: 'choirMen', n: 3, reg: [38, 57], vel: 0.85 }, choir2: { inst: 'aah', n: 3, reg: [57, 74], vel: 0.6 }, bell: { dens: 0.2, res: 1, reg: [72, 91], vel: 0.5 }, timp: 'two' },
+      { n: 'C', bars: 8, lv: 0.5, prog: 'vi:2 IV:2 I:2 V:2', pad: { p: 'swell' }, bass: 'whole', lead: false, choir: { inst: 'choirMen', n: 3, reg: [38, 57], vel: 0.75 }, bell: { dens: 0.3, res: 1, reg: [72, 91], vel: 0.55 }, arp: { p: 'up8', vel: 0.3, reg: [57, 81] } },
       { n: 'A3', bars: 8, lv: 0.98, prog: 'I V vi iii | IV I IV V', pad: { p: 'sus', inst: 'strings' }, bass: 'walk', lead: { ph: 'CA', harm: -2 }, lead2: { ph: 'CA', inst: 'brass', oct: -1, vel: 0.6 }, timp: 'beats', choir: { vel: 0.9 }, drums: { snare: ['x..x.xx.x..x.xx.', 'x..x.xx.x..xxxxx'], kick: 'x.......x.......' }, fill: 'roll' },
       { n: 'B2', bars: 8, lv: 1.0, prog: 'vi IV I V | vi IV V I', pad: { p: 'sus', inst: 'strings' }, bass: 'half', lead: { ph: 'CC', inst: 'brass', harm: -2 }, choir: { v1: 'a', v2: 'a', vel: 1.0 }, bell: { dens: 0.25, res: 2, reg: [72, 91], vel: 0.5 }, timp: 'beats' },
       { n: 'E', bars: 8, lv: 0.82, prog: 'I V vi iii | IV V I I', pad: { p: 'sus', inst: 'strings' }, bass: 'half', lead: 'CB', timp: 'two', choir: { vel: 0.6 } },
@@ -1165,7 +1477,8 @@
   });
   Track('orion', {
     desc: 'Ancient and mysterious, awe: deep drones, metallic chimes and a double-harmonic melody',
-    bpm: 54, trim: 1.17, root: 'D', mode: 'dblHarm', loopFrom: 'A1',
+    bpm: 54, trim: 3.19, root: 'D', mode: 'dblHarm', loopFrom: 'A1',
+    forms: [['A1', 'A2', 'B', 'C', 'A3', 'B', 'C', 'A1', 'A3'], ['A1', 'B', 'A2', 'C', 'A3', 'A1', 'B', 'C', 'A3']],
     inst: { pad: 'drone', bass: 'deep', lead: 'harp', lead2: 'chime', bell: 'chime', choir: 'ooh' },
     ph: {
       O1: '5:4 | 3:2 2:2! | 1:3! 2:1 | 4:4',
@@ -1185,7 +1498,8 @@
 
   Track('antarans', {
     desc: 'Menacing and dissonant: tritone brass, cluster chords, whispers and metal hits in an unsettled 5/4',
-    bpm: 72, trim: 1.17, meter: 5, root: 'C#', mode: 'octaH', loopFrom: 'A1', lintMin: 0.7, tens: { x1: false },
+    bpm: 72, trim: 2.6, meter: 5, root: 'C#', mode: 'octaH', loopFrom: 'A1', lintMin: 0.7, tens: { x1: false },
+    forms: [['A1', 'A2', 'B', 'C', 'A3', 'D', 'A1', 'B', 'C', 'A2', 'D', 'A3'], ['A1', 'B', 'A2', 'C', 'D', 'A3', 'A1', 'C', 'B', 'A2', 'A3', 'D']],
     inst: { pad: 'dark', bass: 'moog', lead: 'horn', lead2: 'brass', arp: 'seq', bell: 'chime', choir: 'uuh' },
     ph: {
       X1: '1:3 2:2! | 1:3 5:2! | 2:3 1:2! | 2:5',
@@ -1204,7 +1518,8 @@
 
   Track('victory', {
     desc: 'Triumphant: brass fanfares, rolling timpani and a soaring major theme',
-    bpm: 100, trim: 0.81, root: 'D', mode: 'major', loopFrom: 'A1',
+    bpm: 100, trim: 1.69, root: 'D', mode: 'major', loopFrom: 'A1',
+    forms: [['A1', 'B', 'A2', 'C', 'B2', 'D', 'A3', 'C', 'A1', 'B', 'A2', 'D', 'B2', 'A3', 'C', 'A3'], ['A1', 'C', 'B', 'A2', 'D', 'B2', 'A3', 'A1', 'B', 'C', 'A2', 'B2', 'D', 'A3', 'C', 'A3']],
     inst: { pad: 'strings', bass: 'sub', lead: 'brass', lead2: 'bell', arp: 'arp', bell: 'glass', choir: 'aah' },
     ph: {
       V1: '5:1 8:1 10:2 | 9:1.5 8:.5 7:1 5:1 | 10:1.5 8:.5 6:2 | 4:1 6:1 8:2',
@@ -1227,7 +1542,8 @@
 
   Track('defeat', {
     desc: 'Somber defeat: slow falling lines, mourning strings and a lone bell',
-    bpm: 56, trim: 1.45, root: 'F', mode: 'minor', loopFrom: 'A1',
+    bpm: 56, trim: 2.73, root: 'F', mode: 'minor', loopFrom: 'A1',
+    forms: [['A1', 'A2', 'B', 'C', 'A3', 'E', 'C', 'A1', 'E'], ['A1', 'B', 'A2', 'C', 'E', 'A3', 'C', 'A1', 'E']],
     inst: { pad: 'strings', bass: 'deep', lead: 'flute', lead2: 'bell', bell: 'glass', choir: 'uuh' },
     ph: {
       L1: '5:2 3:1 1:1 | 6:2 4:1 3:1 | 5:2 3:1 5:1 | 7:2 5:2',
@@ -1247,7 +1563,8 @@
   // ================================================================== diplomacy race themes (45-70 s loops)
   Track('race:alkari', {
     desc: 'Alkari: airy flute over harp-like plucks, soaring major pentatonic and wind chimes',
-    bpm: 88, trim: 1.08, root: 'G', mode: 'major', tens: false,
+    bpm: 88, trim: 1.98, root: 'G', mode: 'major', tens: false,
+    forms: [['A', 'B', 'A2', 'A', 'B', 'A2', 'A', 'B', 'A2', 'A', 'B', 'A2', 'A', 'B', 'A2'], ['A', 'A2', 'B', 'A', 'A2', 'B', 'A', 'A2', 'B', 'A', 'A2', 'B', 'A', 'A2', 'B']],
     inst: { pad: 'airPad', bass: 'deep', lead: 'flute', lead2: 'chime', arp: 'kora', bell: 'chime' },
     ph: {
       AL1: '5:1.5 8:.5 6:1 5:1 | 9:1.5 8:.5 6:1 5:1 | 10:1.5 9:.5 8:1 6:1 | 5:1.5 6:.5 8:2',
@@ -1264,7 +1581,8 @@
 
   Track('race:bulrathi', {
     desc: 'Bulrathi: deep stomping drums and low, heavy brass in D minor',
-    bpm: 76, trim: 0.81, root: 'D', mode: 'minor', tonic: 50, tens: false,
+    bpm: 76, trim: 1.45, root: 'D', mode: 'minor', tonic: 50, tens: false,
+    forms: [['A', 'B', 'C', 'A', 'B', 'C', 'A', 'B', 'C', 'A', 'B', 'C', 'A', 'B', 'C'], ['A', 'C', 'B', 'A', 'C', 'B', 'A', 'C', 'B', 'A', 'C', 'B', 'A', 'C', 'B']],
     inst: { pad: 'dark', bass: 'deep', lead: 'horn', lead2: 'brass', bell: 'chime', choir: 'uuh' },
     ph: {
       B1: '1:2 3:1 5:1 | 6:2 4:2 | 5:2 7:2 | 1:4',
@@ -1279,7 +1597,8 @@
 
   Track('race:darlok', {
     desc: 'Darlok: eerie minor pads, whispering noise swells and plucked shadows',
-    bpm: 66, trim: 1.36, root: 'F#', mode: 'harmonic', tens: false,
+    bpm: 66, trim: 2.61, root: 'F#', mode: 'harmonic', tens: false,
+    forms: [['A', 'B', 'A', 'B', 'A', 'B', 'A', 'B', 'A', 'B', 'A', 'B'], ['A', 'A', 'B', 'B', 'A', 'A', 'B', 'B', 'A', 'A', 'B', 'B']],
     inst: { pad: 'airPad', bass: 'deep', lead: 'pizz', lead2: 'flute', bell: 'chime', choir: 'uuh' },
     ph: {
       DK1: '5:1.5 6:.5 5:1 3:1 | 1:2 3:2 | 4:2 6:2 | 6:3 4:1',
@@ -1293,7 +1612,8 @@
 
   Track('race:human', {
     desc: 'Human: a noble orchestral-synth march with snare, strings and brass',
-    bpm: 108, trim: 0.78, root: 'F', mode: 'major', tens: false,
+    bpm: 108, trim: 1.02, root: 'F', mode: 'major', tens: false,
+    forms: [['A', 'B', 'A2', 'C', 'A', 'B', 'A2', 'C', 'A', 'B', 'A2', 'C', 'A', 'B', 'A2', 'C', 'A', 'B', 'A2', 'C'], ['A', 'C', 'A2', 'B', 'A', 'C', 'A2', 'B', 'A', 'C', 'A2', 'B', 'A', 'C', 'A2', 'B', 'A', 'C', 'A2', 'B']],
     inst: { pad: 'strings', bass: 'sub', lead: 'horn', lead2: 'brass', arp: 'stab', bell: 'glass' },
     ph: {
       HM1: '5:1.5 5:.5 8:2 | 8:1.5 6:.5 4:2 | 5:1.5 7:.5 9:2 | 8:3 r:1',
@@ -1311,8 +1631,9 @@
 
   Track('race:klackon', {
     desc: 'Klackon: chittering insect clicks in whole-tone buzzing ostinati and skittering rhythms',
-    bpm: 132, trim: 0.96, root: 'C', mode: 'wholetone', tens: false,
-    inst: { pad: 'glassPad', bass: 'pulse', lead: 'seq', lead2: 'marimba', arp: 'seq', bell: 'vibes' },
+    bpm: 132, trim: 1.39, root: 'C', mode: 'wholetone', tens: false,
+    forms: [['A', 'B', 'A2', 'B2', 'A', 'B', 'A2', 'B2', 'A', 'B', 'A2', 'B2', 'A', 'B', 'A2', 'B2', 'A', 'B', 'A2', 'B2', 'A', 'B', 'A2', 'B2'], ['A', 'B2', 'A2', 'B', 'A', 'B2', 'A2', 'B', 'A', 'B2', 'A2', 'B', 'A', 'B2', 'A2', 'B', 'A', 'B2', 'A2', 'B', 'A', 'B2', 'A2', 'B']],
+    inst: { pad: 'glassPad', bass: 'pulseSyn', lead: 'seqSyn', lead2: 'marimba', arp: 'seqSyn', bell: 'vibes' },
     ph: {
       KL1: '1:.25 2:.25 1:.25 2:.25 1:.25 2:.25 3:.5 r:2 | 3:.25 4:.25 3:.25 4:.25 3:.25 4:.25 5:.5 r:2 | 5:.25 6:.25 5:.25 6:.25 5:.25 6:.25 7:.5 r:.5 7:.5 6:.5 5:.5 | 5:1 3:1 1:2',
       KL2: '1:.5 7:.5 1:.5 7:.5 3:.5 9:.5 3:.5 9:.5 | 2:.5 8:.5 2:.5 8:.5 4:.5 10:.5 4:.5 10:.5 | 3:.5 9:.5 3:.5 9:.5 5:.5 11:.5 5:.5 11:.5 | 6:1 5:1 4:1 2:1',
@@ -1327,8 +1648,9 @@
 
   Track('race:meklar', {
     desc: 'Meklar: cold industrial sequencer arps, four-on-the-floor machine pulse and metal strikes',
-    bpm: 128, trim: 0.8, root: 'B', mode: 'minor', tens: false,
-    inst: { pad: 'dark', bass: 'moog', lead: 'synth', lead2: 'seq', arp: 'arpSaw', bell: 'bell' },
+    bpm: 128, trim: 0.96, root: 'B', mode: 'minor', tens: false,
+    forms: [['A', 'B', 'A2', 'B2', 'A', 'B', 'A2', 'B2', 'A', 'B', 'A2', 'B2', 'A', 'B', 'A2', 'B2', 'A', 'B', 'A2', 'B2'], ['A', 'B2', 'A2', 'B', 'A', 'B2', 'A2', 'B', 'A', 'B2', 'A2', 'B', 'A', 'B2', 'A2', 'B', 'A', 'B2', 'A2', 'B']],
+    inst: { pad: 'dark', bass: 'moogSyn', lead: 'synthSyn', lead2: 'seqSyn', arp: 'arpSawSyn', bell: 'bell' },
     ph: {
       MK1: '1:.5 5:.5 1:.5 4:.5 1:.5 3:.5 1:.5 2:.5',
       MK2: '1:.5 3:.5 5:.5 8:.5 5:.5 3:.5 1:.5 3:.5 | -1:.5 1:.5 3:.5 6:.5 3:.5 1:.5 -1:.5 1:.5 | 0:.5 2:.5 4:.5 7:.5 4:.5 2:.5 0:.5 2:.5 | 1:2 5:1 8:1',
@@ -1343,7 +1665,8 @@
 
   Track('race:mrrshan', {
     desc: 'Mrrshan: tribal polyrhythmic percussion under a snaking phrygian-dominant reed line',
-    bpm: 112, trim: 0.85, root: 'G', mode: 'phrygDom', tens: false,
+    bpm: 112, trim: 1.34, root: 'G', mode: 'phrygDom', tens: false,
+    forms: [['A', 'B', 'A2', 'C', 'A', 'B', 'A2', 'C', 'A', 'B', 'A2', 'C', 'A', 'B', 'A2', 'C', 'A', 'B', 'A2', 'C'], ['A', 'C', 'A2', 'B', 'A', 'C', 'A2', 'B', 'A', 'C', 'A2', 'B', 'A', 'C', 'A2', 'B', 'A', 'C', 'A2', 'B']],
     inst: { pad: 'dark', bass: 'moog', lead: 'reed', lead2: 'flute', arp: 'kora', bell: 'chime', choir: 'uuh' },
     ph: {
       MR1: '1:.5 2:.5 3:1 2:.5 1:.5 3:1 | 6:1.5 5:.5 4:1 2:1 | 1:.5 2:.5 3:1 2:.5 1:.5 3:1 | 6:2 4:1 3:1',
@@ -1357,9 +1680,10 @@
     ],
   });
 
-  Track('race:psilon', {
+  Track('race:psilon', { trim: 1.65,
     desc: 'Psilon: crystalline FM bells and glass-harmonica overtones in a cool lydian shimmer',
     bpm: 90, root: 'C', mode: 'lydian', oct: 1, tens: false,
+    forms: [['A', 'B', 'A2', 'A', 'B', 'A2', 'A', 'B', 'A2', 'A', 'B', 'A2', 'A', 'B', 'A2'], ['A', 'A2', 'B', 'A', 'A2', 'B', 'A', 'A2', 'B', 'A', 'A2', 'B', 'A', 'A2', 'B']],
     inst: { pad: 'glassPad', bass: 'deep', lead: 'crystal', lead2: 'harp', arp: 'shimmer', bell: 'crystal' },
     ph: {
       PS1: '8:.5 7:.5 5:.5 3:.5 5:1 1:1 | 9:.5 8:.5 6:.5 4:.5 6:1 2:1 | 8:.5 7:.5 5:.5 7:.5 8:1 5:1 | 7:1 5:1 2:1 5:1',
@@ -1372,9 +1696,10 @@
     ],
   });
 
-  Track('race:sakkra', {
+  Track('race:sakkra', { trim: 1.66,
     desc: 'Sakkra: hissing percussion and dry skins under a dorian-pentatonic kora line',
     bpm: 100, root: 'A', mode: 'dorian', oct: 1, tens: false,
+    forms: [['A', 'B', 'A2', 'A', 'B', 'A2', 'A', 'B', 'A2', 'A', 'B', 'A2', 'A', 'B', 'A2', 'A', 'B', 'A2'], ['A', 'A2', 'B', 'A', 'A2', 'B', 'A', 'A2', 'B', 'A', 'A2', 'B', 'A', 'A2', 'B', 'A', 'A2', 'B']],
     inst: { pad: 'airPad', bass: 'pulse', lead: 'kora', lead2: 'flute', arp: 'pizz', bell: 'vibes' },
     ph: {
       SK1: '1:.5 3:.5 5:1 3:1 2:1 | 5:1.5 6:.5 5:1 3:1 | 6:1.5 5:.5 3:1 2:1 | 1:4',
@@ -1389,7 +1714,8 @@
 
   Track('race:silicoid', {
     desc: 'Silicoid: vast resonant drones with slow metallic chimes and deep geologic pulses',
-    bpm: 50, trim: 1.45, root: 'C#', mode: 'minor', tens: false,
+    bpm: 50, trim: 2.54, root: 'C#', mode: 'minor', tens: false,
+    forms: [['A', 'B', 'C', 'A', 'B', 'C', 'A', 'B', 'C', 'A', 'B', 'C', 'A', 'B', 'C', 'A', 'B', 'C'], ['A', 'C', 'B', 'A', 'C', 'B', 'A', 'C', 'B', 'A', 'C', 'B', 'A', 'C', 'B', 'A', 'C', 'B']],
     inst: { pad: 'drone', bass: 'deep', lead: 'chime', lead2: 'chime', bell: 'chime', choir: 'uuh' },
     ph: {
       SL1: '5:4 | 3:4 | 4:4 | 2:4',
@@ -1403,5 +1729,102 @@
     ],
   });
   // @@TRACKS-END
+
+  // ================================================================== espionage (spy panels borrow the music, see js/ui/spyscenes.js)
+  Track('spy', {
+    desc: 'Espionage: noir intrigue — walking sub-bass, clock ticks and rim clicks, muted horn phrases, hushed pads in harmonic minor',
+    bpm: 94, trim: 1.87, root: 'C', mode: 'harmonic', loopFrom: 'A1', tens: false,
+    forms: [['A1', 'A2', 'B', 'C', 'A3', 'E', 'C', 'A1', 'B', 'A2', 'E', 'A3', 'C', 'E', 'A1'], ['A1', 'B', 'A2', 'C', 'E', 'A3', 'A1', 'C', 'B', 'A2', 'E', 'A3', 'C', 'A1', 'E']],
+    inst: { pad: 'dark', bass: 'deep', lead: 'horn', lead2: 'vibes', arp: 'pizz', bell: 'vibes', choir: 'uuh' },
+    ph: {
+      Y1: '5:1.5 6:.5 5:1 3:1 | 1:2 2:1 1:1 | 4:1.5 3:.5 2:1 7:1 | 1:3 r:1',
+      Y2: '3:1.5 5:.5 6:1 5:1 | 8:2 10:2 | 6:1.5 5:.5 4:1 3:1 | 2:2 7:2',
+      Y3: '8:1 7:1 6:2 | 6:1 5:1 4:2 | 3:2 8:2 | 10:4',
+      Y4: '6:4 | 4:2 2:2 | 7:4 | 2:2 7:2',
+    },
+    sec: [
+      { n: 'intro', bars: 4, lv: 0.5, prog: 'i:2 iv:2', pad: { p: 'swell', n: 3, reg: [48, 67] }, bass: 'half', drums: { click3: 'x...x...x...x...', hat: 'o...o...o...o...' } },
+      { n: 'A1', bars: 8, lv: 0.68, prog: 'i iv i V7 | i bVI iiø V7', pad: { p: 'sus', n: 3, reg: [48, 67] }, bass: 'walk', lead: 'Y1 Y2', drums: { click3: 'x...x...x...x...', hat: 'o.o.o.o.o.o.o.o.', rim: '....x.......x...' } },
+      { n: 'A2', bars: 8, lv: 0.76, prog: 'i iv i V7 | i bVI iiø V7', pad: { p: 'sus', n: 3, reg: [48, 67] }, bass: 'walk', lead: 'Y1 Y2', lead2: { ph: 'Y1 Y2', inst: 'vibes', oct: 1, vel: 0.35 }, arp: { pat: '0.2.', res: 2, vel: 0.3, reg: [55, 76] }, drums: { click3: 'x...x...x...x...', hat: 'o.o.o.o.o.o.o.o.', rim: '....x.......x...', shk: '..o...o...o...o.' } },
+      { n: 'B', bars: 8, lv: 0.85, prog: 'iv:2 bVI:2 iiø:2 V7:2', pad: { p: 'sus', inst: 'strings', n: 3, reg: [50, 69] }, bass: 'walk', lead: { ph: 'Y3 Y4', inst: 'brass', vel: 0.75 }, choir: { v1: 'u', v2: 'o', vel: 0.45 }, bell: { dens: 0.2, res: 2, reg: [72, 91], vel: 0.45 }, drums: { click3: 'x...x...x...x...', hat: 'o.o.o.o.o.o.o.o.', rim: '....x.......x...', kick: 'x.......x.......' } },
+      { n: 'C', bars: 8, lv: 0.5, prog: 'i:2 bVI:2 iv:2 V7:2', pad: { p: 'swell', n: 3, reg: [48, 67] }, bass: 'whole', lead: false, bell: { dens: 0.25, res: 1, reg: [67, 88], vel: 0.5 }, choir: { v1: 'u', v2: 'o', vel: 0.5 }, drums: { click3: 'x...x...x...x...', whisper2: ['................', '........x.......'] } },
+      { n: 'A3', bars: 8, lv: 0.82, prog: 'i iv i V7 | i bVI iiø V7', pad: { p: 'sus', inst: 'strings', n: 3, reg: [50, 69] }, bass: 'walk', lead: { ph: 'Y2 Y1', harm: -2 }, arp: { pat: '0.2.', res: 2, vel: 0.3, reg: [55, 76] }, drums: { click3: 'x...x...x...x...', hat: 'o.o.o.o.o.o.o.o.', rim: '....x.......x...', kick: 'x.......x.......', shk: '..o...o...o...o.' } },
+      { n: 'E', bars: 8, lv: 0.6, prog: 'i iv i V7 | i bVI iiø V7', pad: { p: 'sus', n: 3, reg: [48, 67] }, bass: 'half', lead: 'Y1 Y4', drums: { click3: 'x...x...x...x...', hat: 'o...o...o...o...' } },
+    ],
+  });
+
+  // ================================================================== hostile race themes (derived)
+  // The angry-ambassador variant of each race theme (research/06 §12.5: "same motif, lower register, faster, harsher timbre") keeps the
+  // motifs and the form but turns the mode dark, drops the key a few semitones, speeds up, swaps the timbres for brass / saws and adds
+  // martial drums. Chords are re-spelled diatonically in the new mode so the harmony keeps following the melody. js/ui/audience.js
+  // plays 'race:<id>:war' whenever the ambassador is angry.
+  const PC_NAMES = ['C', 'Db', 'D', 'Eb', 'E', 'F', 'Gb', 'G', 'Ab', 'A', 'Bb', 'B'];
+  const DEG_NAME = ['I', 'bII', 'II', 'bIII', 'III', 'IV', 'bV', 'V', 'bVI', 'VI', 'bVII', 'VII'];
+  const DARK_MODE = {
+    major: 'minor', lydian: 'phrygian', mixolydian: 'minor', dorian: 'phrygian', minor: 'phrygian', melodic: 'harmonic', harmonic: 'dblHarm',
+    phrygian: 'locrian', phrygDom: 'dblHarm', dblHarm: 'octaH', wholetone: 'octatonic', octatonic: 'octaH', octaH: 'octaH', locrian: 'locrian',
+    majPent: 'minPent', minPent: 'hirajoshi', dorPent: 'minPent', hirajoshi: 'hirajoshi',
+  };
+  // re-spell one progression token ('IM7:2', 'vi', 'bVII') as the diatonic chord on the same scale degree of the new scale
+  function respell(tok, oldScale, newScale) {
+    const parts = tok.split(':'), m = CHORD_RE.exec(parts[0]);
+    if (!m) return tok;
+    const has = x => newScale.indexOf(mod12(x)) >= 0;
+    let root = romanRoot(m[1] + m[2]);
+    const di = oldScale.indexOf(root);
+    if (di >= 0 && di < newScale.length) root = newScale[di];
+    const third = has(root + 3) ? 3 : has(root + 4) ? 4 : has(root + 2) ? 2 : 5;
+    const fifth = has(root + 7) ? 7 : has(root + 6) ? 6 : has(root + 8) ? 8 : 7;
+    let q = third === 2 ? 'sus2' : third === 5 ? 'sus4' : third === 3 ? (fifth === 6 ? 'o' : 'm') : (fifth === 8 ? '+' : '');
+    let suf = '';
+    if (/7|9|ø/.test(m[3]) && (q === 'm' || q === '' || q === 'o')) {
+      if (q === 'o') suf = has(root + 9) ? 'o7' : has(root + 10) ? 'ø' : '';
+      else if (has(root + 10)) suf = '7'; else if (has(root + 11)) suf = 'M7';
+    }
+    const lower = q === 'm' || q === 'o';
+    let name = DEG_NAME[mod12(root)]; if (lower) name = name.toLowerCase();
+    const qs = suf === 'ø' || suf === 'o7' ? suf : (q === 'm' ? '' : q) + suf;
+    return name + qs + (parts[1] ? ':' + parts[1] : '');
+  }
+  const SOFT_LEADS = { flute: 1, reed: 1, kora: 1, pizz: 1, harp: 1, chime: 1, crystal: 1, glass: 1, seq: 1, marimba: 1, vibes: 1 };
+  function warVariant(baseId, o) {
+    const base = TRACKS[baseId]; if (!base) return null;
+    o = o || {};
+    const d = JSON.parse(JSON.stringify(base)); delete d._p; delete d.id;
+    const oldScale = SCALES[base.mode || 'major'], newMode = o.mode || DARK_MODE[base.mode || 'major'] || 'phrygian', newScale = SCALES[newMode];
+    const tpc = PCS[base.root], down = o.down === undefined ? 3 : o.down;
+    const baseTonic = base.tonic !== undefined ? base.tonic : 57 + mod12(tpc - 57) + 12 * (base.oct || 0);
+    d.root = PC_NAMES[mod12(tpc - down)]; d.mode = newMode; d.tonic = baseTonic - down; delete d.oct;
+    d.bpm = Math.round(base.bpm * (o.tempo || 1.12));
+    d.desc = String(base.desc || baseId).split(':')[0] + ', hostile: the same theme in ' + newMode + ', ' + Math.round((o.tempo || 1.12) * 100 - 100) + '% faster, a ' + (o.down === undefined ? 3 : o.down) + ' semitone lower key, brass leads and martial drums';
+    d.inst = Object.assign({}, base.inst || {}, { pad: 'dark', bass: 'moog', lead: 'brass', lead2: 'brassStab', bell: 'bell', choir: 'choirMen' }, o.inst || {});
+    d.tens = false; d.lintMin = o.lintMin || 0.6; d.trim = num(base.trim, DEFAULT_TRIM) * 1.16;   // measured at battle intensity: the war variants land on -14.5 LUFS
+    const drums = o.drums || { kick: 'x.......x.......', snare: ['x..x.xx.x..x.xx.', 'x..x.xx.x..xxxxx'] };
+    for (const sct of d.sec) {
+      sct.prog = String(sct.prog).replace(/\|/g, ' ').trim().split(/\s+/).map(t => respell(t, oldScale, newScale)).join(' ');
+      const had = typeof sct.drums === 'string' ? DRUMS[sct.drums] : sct.drums;
+      sct.drums = Object.assign({}, had && typeof had === 'object' ? had : {}, drums);
+      if (!sct.timp) sct.timp = 'two';
+      if (typeof sct.lead === 'string') sct.lead = { ph: sct.lead, harm: -2 };
+      else if (sct.lead && typeof sct.lead === 'object') { if (SOFT_LEADS[sct.lead.inst]) delete sct.lead.inst; if (sct.lead.harm === undefined) sct.lead.harm = -2; }
+      if (sct.lead2 && typeof sct.lead2 === 'object' && sct.lead2.inst) sct.lead2.inst = 'brassStab';
+      if (sct.pad && typeof sct.pad === 'object' && sct.pad.inst) sct.pad.inst = 'dark';
+    }
+    return Track(baseId + ':war', d);
+  }
+  const WAR = {
+    alkari: { tempo: 1.2, inst: { lead: 'synth' } },                                                            // screeching, rapid
+    bulrathi: { tempo: 1.1, down: 2 },                                                                           // pounding, lower still
+    darlok: { tempo: 1.08, inst: { lead: 'horn' }, drums: { kick: 'x..x....x..x....', rim: '......o.......o.', hiss: '....x.......x...' } },   // heartbeat pulse
+    human: {},                                                                                                   // the march in minor, snare + brass
+    klackon: { tempo: 1.1, inst: { lead: 'synth', arp: 'arpSaw' } },                                             // buzzing saw swarms
+    meklar: { inst: { lead: 'synth' }, drums: { kick: 'x...x...x...x...', metal2: 'x.x.x.x.x.x.x.x.', click2: 'xx.xxx.x.xx.x.xx' } },   // harsh clock
+    mrrshan: { tempo: 1.15, down: 5 },                                                                           // growling low brass
+    psilon: { inst: { lead: 'crystal' }, drums: { t5: 'X.......x.......', click3: 'o.o.o.o.o.o.o.o.' } },         // cold clusters, tremolo bells
+    sakkra: { tempo: 1.18, drums: { t3: 'x..x..x.x..x..x.', t4: '....x.......x...', kick: 'x.......x.......', shk: 'x.x.x.x.x.x.x.x.' } },   // fast tribal toms
+    silicoid: { tempo: 1.15, down: 2, inst: { lead: 'horn' }, drums: { t5: 'X.......X.......', metal: 'x.......x.......', hiss: '....x.......x...' } },   // grinding pulses
+  };
+  for (const r in WAR) warVariant('race:' + r, WAR[r]);
+  Music._warVariant = warVariant; Music._respell = respell;
 
 })(window.MOO);
