@@ -3,6 +3,64 @@
 Versions follow `MAJOR.MINOR.PATCH`; the live version is the `VERSION` file.
 `scripts/upgrade.sh` refuses to move to an older `VERSION` unless told to.
 
+## 1.1.3 — 2026-10-17
+
+- GNN (`tools/handoff/gnn-logistics-2026-10.md`): a broadcast no longer closes on its own. The last story stays on air until
+  Space / click / Continue (the Next button turns into Continue); before, a one-story newscast left the screen 3.5 s after the
+  headline finished typing. Stories before the last hold for their reading time (about 16 characters a second, 4–11 s) instead of
+  a 2.8–3.5 s cap, rankings 5.5 s. Input in the first 0.6 s is ignored, so the key or click that ended the turn cannot skip the
+  news it opened. The stuck-turn Skip float is not offered while a broadcast is on air (it has its own controls). The anchor is
+  one race for the whole game, chosen from the races not playing it where possible, instead of a random race every broadcast.
+- Photo portraits hold still: no zoom on portraits under 220 device pixels, a 0.35 % slow push on large ones, no zoom "pump"
+  while talking (talking is the flicker only). The Races screen redrew its photos at 10–20 fps with a 1–2 % breathing zoom and
+  pulsed all five with a brightness / glow filter in Report / Audience pick mode; the pick highlight is now a steady ring.
+  The audience envoy's sway is a third of what it was.
+- Stargates: a violet ring with four notches marks every stargate on the galaxy map (own ones, foreign ones in scanner range);
+  the colony panel shows "stargate"; route previews between two gates read "Stargate · ETA 1 turn" in violet; the Trans panel
+  ETA now uses the stargate like the launch does (it showed the normal transport ETA and the colonists then arrived in one turn).
+- Rally points (RELOC): thin blue-grey rally lines with drifting chevrons from each colony to its rally point (violet when it is a
+  stargate pair); the colony panel shows "Rally → Sol · 3 turns (stargate)"; the Reloc panel previews the route and ETA and asks
+  for Accept (Space), with "All colonies" and "Stay here"; Alt+R on a selected colony points every colony at it (again: clears
+  them), the original's hotkey; a rally point that is captured or lost points back home (`Fleet.fixReloc`, every turn and before
+  ships are dispatched) instead of staying as a stale target. New `relocAll` order. Tests: `tools/rules/88-logistics.test.js`.
+- Waiting-for-input lights (`UI.attention` / `UI.attentionGroup`, css/kit.css): whenever the turn waits on the player, the control that
+  moves it on pulses gold (Continue / OK / the card's default answer), now also in modals opened during a turn (event cards, spy
+  reports, alerts: their primary or lone affirmative button), the audience's lone Continue and the Council's Continue cards. Real
+  decisions with no safe default light ALL their options with a softer blue pulse instead of recommending one: the Council vote and
+  accept/defy, AI treaty offers in an audience, spy steal / sabotage / frame targets, the fallback research choice. A modal opened over
+  a waiting card hands the light back to the card when it closes. Modals the player opens outside a turn stay unlit.
+- Galactic Council chamber art: the delegates' photographs are graded into the painted hall (studio black lifted to the alcove's dusk
+  tone, warmed toward the hall light, lit from above) and stand in their alcoves at a believable scale instead of filling two-storey
+  arches; idle seats dim warm instead of under a navy veil. The speaker hologram crushes the photo's grey backdrop and fades to nothing
+  inside its box (it read as a pasted rectangle), floats in a soft projection beam, and its floor glow is an ellipse. Light shafts in
+  every scene (`Scenes` `beam()`) have soft edges (four nested layers) instead of one hard-sided trapezoid. A voted seat lights a desk
+  lamp instead of an unshaded "ballot chip"; name plates show an empire-colour gem instead of a thumbnail of the same photo.
+- GNN broadcasts only what changes the player's game (`News` `broadcastFilter`; everything is still archived): a war between two AI
+  empires the player has met, if the pair is still at war when the bulletin is compiled (the AI pass could declare war and make peace,
+  or go from war to an instant alliance, in one turn: the "at war, then not" newscast), once per pair per 20 turns, two new wars per
+  bulletin at most; empires destroyed, Orion colonised, the Guardian slain, planets destroyed / novas, the stars report, the human's own
+  coup, the rankings filler. Archived only: AI peace / alliances / treaties / trade / conquests, wars the human is party to (the audience
+  already said so), other empires' local random events, event cards already shown, Council outcomes, AI coups. Measured over six
+  headless games: 1.19 → 0.46 newscasts per 10 turns. The GNN ticker draws from its own random stream: drawing it from the game's RNG
+  only when a bulletin aired made the simulation depend on what was broadcast. `86-ai-fixes` scrap measurement now sums three seeds.
+- A colony wiped out in a war (bombed or depopulated) is archived like a conquest: over a 450-turn game the late wars aired 10–25 such
+  newscasts per 50 turns (one every two to five turns). A comet strike or a nova still airs.
+
+## 1.1.2 — 2026-10-17
+
+- Smoother animation, higher frame rates (`tools/handoff/frame-pacing-2026-10.md`): every screen that draws slower than the
+  frame loop now gates with `MOO.UI.pace()` (kit.js), an even-cadence divider of the measured display rate (`UI.displayHz()`,
+  shown in the F3 overlay), instead of its own "accumulate, draw when >= 1/fps, reset" timer — those drew the scenes at
+  48 fps on 144 Hz monitors, 37.5 on 75 Hz, 45 on 90 Hz, 55 on 165 Hz, and the 40 / 24 fps pictures at 30 / 20 on 60 Hz,
+  slipping a frame whenever rAF jittered. The galaxy map paints its static backdrop (sky, galaxy cloud, parallax star tiles)
+  into an offscreen canvas and re-paints it only when the camera, size or quality changes (idle frames draw 7 instead of 18
+  megapixels of blended images at 1600×900, dpr 1); the tactical screen repaints its graded scene backdrop (a dozen
+  full-screen passes plus a filtered copy) at 24 Hz into a cache and blits it. The adaptive-quality governor no longer climbs
+  back into a tier it dropped from for slow frames for five minutes (it did after ~20 s, because a 30 fps-gated loop always
+  looks fast, so a slightly-too-slow machine alternated between two looks and two frame rates), and judges "slow" against
+  the display rate rather than a fixed 60. Hidden-tab gaps and one-off stalls are ignored by the governor again (the loop's
+  0.1 s clamp had hidden them).
+
 ## 1.1.1 — 2026-10-17
 
 - Fun audit (`tools/handoff/fun-audit-2026-10.md`): the GNN now broadcasts only what the original treats as news (events, wars,

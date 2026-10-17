@@ -686,7 +686,7 @@
     @media (min-aspect-ratio:3/2) { .tch-xtra { display:none; } .tch-proj .pn { font-size:1.3rem; } }
   `);
 
-  const st = { el: null, E: null, field: 0, view: 'field', sel: null, from: 'galaxy', rows: [], tabs: [], listKey: '', detailKey: '', picDirty: true, acc: 0, tree: null, ready: false };
+  const st = { el: null, E: null, field: 0, view: 'field', sel: null, from: 'galaxy', rows: [], tabs: [], listKey: '', detailKey: '', picDirty: true, pace: {}, tree: null, ready: false };
 
   function closeTech() { const to = st.from && UI.Screens.has(st.from) ? st.from : 'galaxy'; UI.Screens.go(to); }
   function toastFail(r) { if (r && !r.ok) UI.toast(r.msg || 'That did not work', 'bad'); return r && r.ok; }
@@ -964,10 +964,10 @@
     leave() { UI.hideTip(); },
     update(dt, t) {
       if (!st.ready || st.view !== 'field') return;
-      st.acc += dt;
       const fps = reduced() ? 1 : ((PQ().animFps || 60) > 59 ? 40 : 24);
-      if (!st.picDirty && st.acc < 1 / fps) return;
-      st.acc = 0; drawPic(t);
+      const due = UI.pace(st.pace, fps, dt);
+      if (!due && !st.picDirty) return;
+      drawPic(t);
     },
     resize() { st.picDirty = true; },
   });
@@ -1466,7 +1466,7 @@
     const talking = !R.rm && (busy || R.talkTail > 0);
     if (talking !== R.talking) { R.talking = talking; R.dirty = true; }
     const fps = min(60, PQ().animFps || 60);                       // the lab is a big painting: never repaint it faster than 60 per second
-    const due = R.rm ? R.dirty : R.acc >= 1 / fps - 0.002;
+    const due = R.rm ? R.dirty : UI.pace(R.pace || (R.pace = {}), fps, dt);
     if (!due) return;
     R.acc = 0; R.dirty = false;
     paintLab(R);

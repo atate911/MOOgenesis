@@ -135,7 +135,7 @@
     colony ? { title: 'The colony panel', text: 'Every colony divides its output among five sliders that always add up to 100%.', items: [
       { sel: hp('colony.stats', '.sc-stats'), text: '<b>Population, bases, factories, waste, production.</b> Production is what the colony can spend after upkeep (the number in brackets is its gross output).' },
       { sel: hp('colony.sliders', '.sc-sliders'), text: '<b>Ship · Def · Ind · Eco · Tech.</b> Click or drag; the padlock fixes a slider while the others rebalance. Eco never drops below the level that keeps the planet clean.' },
-      { sel: hp('colony.build', '.sc-build'), text: '<b>Build box.</b> What the Ship slider builds. <b>Ships</b> chooses a design, <b>Reloc</b> sets the rally point for new ships, <b>Trans</b> moves up to half the population to another colony.' }] }
+      { sel: hp('colony.build', '.sc-build'), text: '<b>Build box.</b> What the Ship slider builds. <b>Ships</b> chooses a design, <b>Reloc</b> sets the rally point for new ships (thin lines on the map; <b>Alt+R</b> points every colony at the selected one), <b>Trans</b> moves up to half the population to another colony.' }] }
       : { title: 'Select a colony', text: 'Click one of your own stars to see its five sliders (Ship, Def, Ind, Eco, Tech), its build box and the Ships / Reloc / Trans buttons.', items: [] },
     { title: 'Keys on the control screen', text: 'Mouse-only play works everywhere; these make it fast.', items: [
       { at: [0.3, 0.45], text: '<b>G D F M R P T</b> open Game, Design, Fleet, Map, Races, Planets and Tech. <b>N</b> ends the turn. <b>Home</b> centres on your capital, <b>C</b> on the selection.' },

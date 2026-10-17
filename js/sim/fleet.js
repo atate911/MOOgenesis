@@ -70,6 +70,20 @@ MOO.def(function (M) {
 
   // can both ends use a stargate?
   F.gateLink = (S, E, a, b) => !!(S.planets[a].owner === E.id && S.planets[b].owner === E.id && S.planets[a].stargate && S.planets[b].stargate);
+  // ETA of a population transport as it will actually launch (stargate pair = 1 turn), for the Trans panel
+  F.transEta = (S, E, from, to) => F.eta(S, from, to, F.gateLink(S, E, from, to) ? STARGATE_SPEED : F.transSpeed(E), true);
+  // where ships finished at planet p will go and how long they take: {to, eta, gate, warp} | null (no rally point). Uses the design in the
+  // build box (its warp), or the slowest existing design while a stargate is being built.
+  F.relocRoute = function (S, E, p, to) {
+    if (to === undefined) to = p.reloc;
+    if (to === undefined || to < 0 || to === p.starId || !S.planets[to] || S.planets[to].owner !== E.id) return null;
+    const gate = F.gateLink(S, E, p.starId, to);
+    let warp = 0;
+    if (p.build >= 0 && E.designs[p.build]) warp = stats(S, E, p.build).warp;
+    else for (let i = 0; i < 6; i++) if (E.designs[i]) { const w = stats(S, E, i).warp; warp = warp ? Math.min(warp, w) : w; }
+    const speed = gate ? STARGATE_SPEED : Math.max(1, warp || 1);
+    return { to, gate, warp: speed, eta: F.eta(S, p.starId, to, speed, false) };
+  };
 
   // ---- sending ---------------------------------------------------------------------------------------------------------------------------
   // counts = [6] ships per design slot to send from the orbit group at `fromStar`. Returns {ok, fleet, eta} | {ok:false,msg}
@@ -237,6 +251,25 @@ MOO.def(function (M) {
     const q = S.planets[o.to]; if (!q || q.owner !== E.id) return O.fail('rally point must be one of your planets');
     p.reloc = o.to; return O.ok();
   });
+  // the original's Alt-R: point EVERY colony's rally line at one of your planets (the target itself keeps its ships), or with to < 0 reset them all
+  O.register('relocAll', function (S, E, o) {
+    const to = o.to === undefined || o.to === null ? -1 : o.to | 0;
+    if (to >= 0) { const q = S.planets[to]; if (!q || q.owner !== E.id) return O.fail('rally point must be one of your planets'); }
+    let n = 0;
+    for (const p of S.planets) { if (p.owner !== E.id) continue; const v = to < 0 || p.id === to ? p.starId : to; if (p.reloc !== v) { p.reloc = v; n++; } }
+    return O.ok({ changed: n });
+  });
+  // a rally point that is no longer one of the empire's planets (captured, destroyed, abandoned) points back at the colony itself (research/04 §5.6).
+  // Run after ownership changes each turn and before ship dispatch; returns the number of rally lines reset.
+  F.fixReloc = function (S) {
+    let n = 0;
+    for (const p of S.planets) {
+      if (p.owner < 0) continue;
+      const q = p.reloc >= 0 ? S.planets[p.reloc] : null;
+      if (p.reloc !== p.starId && (!q || q.owner !== p.owner)) { p.reloc = p.starId; n++; }
+    }
+    return n;
+  };
   O.register('colonize', function (S, E, o) {
     const fleet = S.fleets.find(f => f.id === o.fleet && f.owner === E.id), planet = S.planets[o.planet];
     if (!fleet || fleet.star !== o.planet || !planet) return O.fail('no such colony ship');

@@ -772,15 +772,28 @@
       return s ? '#e8504d' : '#4a90e8';
     }
 
-    function drawBackdrop(t) {
+    // The scene backdrop (nebula, three drifting star layers, sun, lens ghosts and the colour grade: a dozen full-screen passes plus a
+    // filtered copy of the frame) is repainted at 24 Hz into an offscreen canvas and blitted every frame. Its star layers drift under
+    // 0.25 px between repaints and the film grain already steps at 24 Hz, so nothing visible changes; the per-frame cost of the screen
+    // is now the units and the effects.
+    const bdc = { c: null, g: null, key: '', pace: {}, bdObj: null, bkey: '' };
+    function drawBackdrop(dt, t) {
       let ok = false;
       const Sc = G.Scenes && G.Scenes.battle;
       if (Sc) {
-        try {
-          const r = Sc.draw(ctx, W, H, t, { starKind: backdrop.star, seed: backdrop.seed, nebula: backdrop.nebula, planet: backdrop.decor ? { desc: backdrop.decor, size: 0.85 } : null });
-          if (r && r.star) { star.x = r.star.x; star.y = r.star.y; }
-          ok = true;
-        } catch (err) { if (!view._bdWarn) { view._bdWarn = 1; console.warn('[CombatFx] backdrop failed', err); } }
+        if (bdc.bdObj !== backdrop) { bdc.bdObj = backdrop; bdc.bkey = JSON.stringify([backdrop.star, backdrop.seed, backdrop.nebula, backdrop.decor]); }
+        const key = W + 'x' + H + '@' + dpr + '|' + bdc.bkey;
+        const paced = UI.pace ? UI.pace(bdc.pace, 24, dt) : true;
+        if (paced || key !== bdc.key || !bdc.c) {
+          try {
+            if (!bdc.c || bdc.c.width !== canvas.width || bdc.c.height !== canvas.height) { bdc.c = mk(canvas.width, canvas.height); bdc.g = bdc.c.getContext('2d', { alpha: false }); }
+            const g = bdc.g; g.setTransform(dpr, 0, 0, dpr, 0, 0); g.globalAlpha = 1; g.globalCompositeOperation = 'source-over';
+            const r = Sc.draw(g, W, H, t, { starKind: backdrop.star, seed: backdrop.seed, nebula: backdrop.nebula, planet: backdrop.decor ? { desc: backdrop.decor, size: 0.85 } : null });
+            if (r && r.star) { star.x = r.star.x; star.y = r.star.y; }
+            bdc.key = key; ok = true;
+          } catch (err) { bdc.key = ''; if (!view._bdWarn) { view._bdWarn = 1; console.warn('[CombatFx] backdrop failed', err); } }
+        } else ok = true;
+        if (ok) ctx.drawImage(bdc.c, 0, 0, W, H);
       }
       if (!ok) {
         const gr = ctx.createRadialGradient(W * 0.5, H * 0.5, 0, W * 0.5, H * 0.5, hypot(W, H) * 0.6);
@@ -1075,7 +1088,7 @@
       stepSeq(dt); update(dt);
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
       ctx.globalAlpha = 1; ctx.globalCompositeOperation = 'source-over';
-      drawBackdrop(t);
+      drawBackdrop(dt, t);
       const sh = fx && fx.shake > 0.3 ? fx.shake : 0;
       ctx.save();
       if (sh) ctx.translate((Math.random() - 0.5) * sh * 0.9, (Math.random() - 0.5) * sh * 0.9);

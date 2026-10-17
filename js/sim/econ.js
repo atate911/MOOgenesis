@@ -46,6 +46,7 @@ MOO.def(function (M) {
 
   X.stepShips = function (S) {
     const built = [];
+    if (F.fixReloc) F.fixReloc(S);                                       // rally lines to a lost planet point home again before ships are dispatched
     for (const E of S.empires) if (E.alive && M.Sim.Design.refresh) M.Sim.Design.refresh(S, E);
     for (const p of S.planets) {
       if (p.owner < 0) continue;

@@ -147,7 +147,7 @@
       const r = Q.route(S, E, this.star, this.dest, this.sel);
       UI.mount(this.route, h('div.sm-route' + (r.ok ? '' : '.bad'), h('b', S.stars[this.dest].name), ' — ', r.ok ? 'ETA ' + r.eta + (r.eta === 1 ? ' turn' : ' turns') + (r.stargate ? ' (stargate)' : '') + ' · ' + r.parsecs + ' parsecs' : r.reason));
       this.acc.disabled = !r.ok; this.acc.classList.toggle('disabled', !r.ok);
-      if (UI.Galaxy.map) UI.Galaxy.map.setRoutePreview({ from: this.star, to: this.dest, eta: r.eta, valid: r.ok, reason: r.reason });
+      if (UI.Galaxy.map) UI.Galaxy.map.setRoutePreview({ from: this.star, to: this.dest, eta: r.eta, valid: r.ok, reason: r.reason, gate: r.ok && r.stargate });
     },
     accept(ctx, quiet) {
       if (!this.sel.some(n => n > 0)) return true;

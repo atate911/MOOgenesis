@@ -1016,11 +1016,17 @@
     g.fillRect(x0, y0, ww, hh);
   }
   /* soft volumetric beam (trapezoid with an along-axis alpha ramp), drawn additively */
+  // A shaft of light. Four nested trapezoids add up to the full intensity `a` along the axis and fade toward the sides, so the shaft has soft
+  // edges; a single hard-sided trapezoid (the old shape) read as a pasted translucent panel (the Council's oculus shaft looked like a glass box).
+  const BEAM_LAYERS = [[1, 0.14], [0.74, 0.2], [0.5, 0.28], [0.27, 0.38]];
   function beam(g, x0, y0, x1, y1, w0, w1, col, a) {
     const dx = x1 - x0, dy = y1 - y0, l = hypot(dx, dy) || 1, nx = -dy / l, ny = dx / l;
     g.save(); g.globalCompositeOperation = 'lighter';
-    g.fillStyle = lgr(g, x0, y0, x1, y1, [0, rgba(col, a), 0.5, rgba(col, a * 0.45), 1, rgba(col, 0)]);
-    g.beginPath(); g.moveTo(x0 + nx * w0 / 2, y0 + ny * w0 / 2); g.lineTo(x1 + nx * w1 / 2, y1 + ny * w1 / 2); g.lineTo(x1 - nx * w1 / 2, y1 - ny * w1 / 2); g.lineTo(x0 - nx * w0 / 2, y0 - ny * w0 / 2); g.closePath(); g.fill();
+    for (let i = 0; i < BEAM_LAYERS.length; i++) {
+      const k = BEAM_LAYERS[i][0], b = a * BEAM_LAYERS[i][1], v0 = w0 * k / 2, v1 = w1 * k / 2;
+      g.fillStyle = lgr(g, x0, y0, x1, y1, [0, rgba(col, b), 0.5, rgba(col, b * 0.45), 1, rgba(col, 0)]);
+      g.beginPath(); g.moveTo(x0 + nx * v0, y0 + ny * v0); g.lineTo(x1 + nx * v1, y1 + ny * v1); g.lineTo(x1 - nx * v1, y1 - ny * v1); g.lineTo(x0 - nx * v0, y0 - ny * v0); g.closePath(); g.fill();
+    }
     g.restore();
   }
   /* drifting dust motes (stateless): n motes inside a rect */
@@ -1772,12 +1778,20 @@
         if (seat) {
           ctx.save();
           ctx.beginPath(); ctx.moveTo(ox - Ri, oy - deskH); ctx.lineTo(ox - Ri, oy - yc); ctx.arc(ox, oy - yc, Ri, PI, TAU); ctx.lineTo(ox + Ri, oy - deskH); ctx.closePath(); ctx.clip();
-          const pbh = openH * 1.02, pbw = pbh * 0.8, pbx = ox - pbw / 2, pby = oy - deskH - pbh + 0.01 * u;
+          // the delegate stands in the alcove at human scale (head well below the arch crown), not as a bust filling a two-storey opening
+          const pbh = openH * 0.84, pbw = pbh * 0.8, pbx = ox - pbw / 2, pby = oy - deskH - pbh + 0.01 * u, ah = openH + Ri;
           drawPortrait(ctx, seat.race || 'human', pbx, pby, pbw, pbh, { t: t, mood: speaking ? 'neutral' : st === 'winner' ? 'pleased' : abst ? 'worried' : 'neutral', talking: speaking, color: seat.color, bg: false, key: 'council' + B.i });
-          // state grading inside the arch
-          if (abst) { ctx.globalCompositeOperation = 'saturation'; ctx.fillStyle = 'rgba(128,128,128,0.8)'; ctx.fillRect(px, pyTop, openW, openH + Ri); ctx.globalCompositeOperation = 'source-over'; ctx.fillStyle = 'rgba(8,10,34,0.32)'; ctx.fillRect(px, pyTop, openW, openH + Ri); }
-          else if (!speaking && !winner) { ctx.fillStyle = 'rgba(6,9,32,' + (voted ? 0.1 : 0.22) + ')'; ctx.fillRect(px, pyTop, openW, openH + Ri); }
-          else { ctx.globalCompositeOperation = 'lighter'; ctx.fillStyle = winner ? 'rgba(255,200,80,0.09)' : 'rgba(255,240,200,0.06)'; ctx.fillRect(px, pyTop, openW, openH + Ri); }
+          // Tie the photograph into the painted hall. Each photo keeps its own cool studio light and grey-black backdrop; here its black is lifted
+          // to the alcove's own dusk tone (sampled from the hall: ~rgb 40,28,26), the picture is warmed toward the hall's lamplight, and it is lit
+          // from above (the oculus) so faces catch the light and coats fall into the same shadow as the woodwork.
+          ctx.globalCompositeOperation = 'lighten'; ctx.fillStyle = 'rgb(36,25,22)'; ctx.fillRect(px, pyTop, openW, ah);
+          ctx.globalCompositeOperation = 'multiply'; ctx.fillStyle = lgr(ctx, 0, pyTop, 0, pyTop + ah, [0, 'rgb(255,240,218)', 0.55, 'rgb(246,218,188)', 1, 'rgb(186,148,120)']); ctx.fillRect(px, pyTop, openW, ah);
+          ctx.globalCompositeOperation = 'soft-light'; ctx.fillStyle = 'rgba(255,172,104,0.38)'; ctx.fillRect(px, pyTop, openW, ah);
+          ctx.globalCompositeOperation = 'lighter'; ctx.fillStyle = rgr(ctx, ox, pby + pbh * 0.26, 0, pbw * 0.6, [0, 'rgba(255,214,160,0.16)', 1, 'rgba(255,214,160,0)']); ctx.fillRect(px, pyTop, openW, ah);
+          // state grading inside the arch: idle seats sink into warm shadow (not a cold navy veil), abstainers lose their colour
+          if (abst) { ctx.globalCompositeOperation = 'saturation'; ctx.fillStyle = 'rgba(128,128,128,0.8)'; ctx.fillRect(px, pyTop, openW, ah); ctx.globalCompositeOperation = 'multiply'; ctx.fillStyle = 'rgb(150,140,132)'; ctx.fillRect(px, pyTop, openW, ah); }
+          else if (!speaking && !winner) { ctx.globalCompositeOperation = 'multiply'; ctx.fillStyle = voted ? 'rgb(240,232,224)' : 'rgb(214,202,190)'; ctx.fillRect(px, pyTop, openW, ah); }
+          else { ctx.globalCompositeOperation = 'lighter'; ctx.fillStyle = winner ? 'rgba(255,200,80,0.09)' : 'rgba(255,240,200,0.06)'; ctx.fillRect(px, pyTop, openW, ah); }
           // inner shade at the arch edge
           ctx.globalCompositeOperation = 'source-over';
           ctx.fillStyle = rgr(ctx, ox, oy - yc * 0.9, Ri * 0.55, Ri * 1.5, [0, 'rgba(2,3,16,0)', 1, 'rgba(2,3,16,0.55)']); ctx.fillRect(px, pyTop, openW, openH + Ri);
@@ -1801,9 +1815,13 @@
           const fs = clamp(u * 0.04, 9, 20), nm = String(seat.name || RACE_NAMES[seat.race] || ''), hasV = seat.votes != null && isFinite(seat.votes);
           let f2 = fs; const maxW = pl.w - (hasV ? pl.h * 1.2 : 0) - pl.h * 0.9;
           while (f2 > 8 && textW(ctx, nm, f2, FONT_D, 400, 0.4) > maxW) f2 -= 0.5;
-          const tx = pl.x + pl.h * 0.95;
-          if (seat.race && G.Portraits && G.Portraits.drawBadge) drawBadge(ctx, seat.race, pl.x + pl.h * 0.5, pl.y + pl.h * 0.5, pl.h * 0.42, { t: t, color: seat.color, key: 'cb' + B.i });
-          else { ctx.fillStyle = col; ctx.beginPath(); ctx.arc(pl.x + pl.h * 0.5, pl.y + pl.h * 0.5, pl.h * 0.22, 0, TAU); ctx.fill(); }
+          const tx = pl.x + pl.h * 0.85;
+          // a small gem in the empire's colour: the delegate's photo is already in the alcove above, and a thumbnail of it here only muddied the plate
+          const gx = pl.x + pl.h * 0.48, gy = pl.y + pl.h * 0.5, gr = pl.h * 0.19;
+          ctx.save(); ctx.globalCompositeOperation = 'lighter'; glow(ctx, col, gx, gy, gr * 3.2, 0.32); ctx.restore();
+          ctx.beginPath(); ctx.moveTo(gx, gy - gr); ctx.lineTo(gx + gr * 0.78, gy); ctx.lineTo(gx, gy + gr); ctx.lineTo(gx - gr * 0.78, gy); ctx.closePath();
+          ctx.fillStyle = col; ctx.fill(); ctx.lineWidth = 1; ctx.strokeStyle = 'rgba(255,240,210,0.65)'; ctx.stroke();
+          ctx.beginPath(); ctx.moveTo(gx, gy - gr); ctx.lineTo(gx + gr * 0.78, gy); ctx.lineTo(gx, gy); ctx.closePath(); ctx.fillStyle = 'rgba(255,255,255,0.35)'; ctx.fill();
           text(ctx, nm, tx, pl.y + pl.h * 0.5 + f2 * 0.2, f2, abst ? C.fog : C.ivory, 'left', FONT_D, 400, 0.4);
           if (hasV) {
             const vs = clamp(u * 0.062, 11, 26);
@@ -1813,10 +1831,10 @@
           if (abst) text(ctx, 'ABSTAIN', pl.x + pl.w / 2, pl.y - u * 0.02, clamp(u * 0.028, 8, 14), C.mist, 'center', FONT_U, 600, 1.5);
           if (voted) { ctx.save(); ctx.globalCompositeOperation = 'lighter'; glow(ctx, col, pl.x + pl.w - pl.h * 1.0, pl.y + pl.h * 0.5, pl.h * 0.8, 0.28); ctx.restore(); }
         }
-        if (voted) { // ballot chip floating above the desk
-          const by = oy - deskH - u * 0.03 - u * 0.012 * sin(t * 2 + B.i), bx = ox + bw * 0.34;
-          ctx.save(); ctx.globalCompositeOperation = 'lighter'; glow(ctx, col, bx, by, u * 0.1, 0.5);
-          ctx.restore(); ctx.fillStyle = C.ivory; ctx.fillRect(bx - u * 0.035, by - u * 0.022, u * 0.07, u * 0.044); ctx.fillStyle = col; ctx.fillRect(bx - u * 0.035, by - u * 0.022, u * 0.07, u * 0.01);
+        if (voted) { // the seat has voted: a lamp on the desk lights in its colour (was an unshaded paper "ballot chip" that read as a rendering glitch)
+          const lx = ox + bw * 0.36, ly = oy - deskH - u * 0.014, lr = max(2, u * 0.013), pul = 0.85 + 0.15 * sin(t * 2.2 + B.i);
+          ctx.save(); ctx.globalCompositeOperation = 'lighter'; glow(ctx, col, lx, ly, u * 0.09, 0.5 * pul); glow(ctx, '#fff6e0', lx, ly, u * 0.03, 0.55 * pul); ctx.restore();
+          ctx.fillStyle = mixc(col, '#ffffff', 0.55); ctx.beginPath(); ctx.arc(lx, ly, lr, 0, TAU); ctx.fill();
         }
         if (winner) {
           glow(ctx, '#ffd870', ox, oy - BH * u - u * 0.02, u * 0.5, 0.35 + 0.15 * sin(t * 2));       // the elected seat glows; no drawn crown over the portrait
