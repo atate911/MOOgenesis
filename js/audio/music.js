@@ -228,6 +228,7 @@
     warm: smp('strEns', 0.14, { att: 0.25, rel: 1.0, hp: 110, eq: [[250, -2.5, 1], [1600, -1.5, 1.2], [8000, 1.5, 'hs']] }, 'warm'),
     strings: smp('strEns', 0.14, { att: 0.2, rel: 0.9, hp: 110, eq: [[250, -2.5, 1], [8000, 1.5, 'hs']] }, 'strings'),
     strTrem: smp('strEnsTrem', 0.15, { att: 0.12, hp: 90, eq: [[8000, 2, 'hs']] }, 'strings'),
+    tremHi: smp('vln1Trem', 0.13, { att: 1.2, rel: 2.2, hp: 300, eq: [[3000, -2, 1], [9000, 1.5, 'hs']] }, 'strings'),   // the eerie voice of a late era
     cello: smp('vcSus', 0.3, { att: 0.18, rel: 1.0, hp: 60, leg: true, eq: [[250, -2, 1], [2800, 1.5, 0.8], [7000, 1, 'hs']] }, 'strings'),   // the cello section as a singing line
     cellos: smp('vcSus', 0.24, { att: 0.3, rel: 1.2, hp: 60, eq: [[250, -2, 1], [6000, 2, 'hs']] }, 'warm'),   // cellos as a low bed
     airPad: smp('strEns', 0.12, { att: 0.45, rel: 1.3, cut: 5000 }, 'airPad'),
@@ -716,6 +717,33 @@
     }
   }
 
+  // ---------------------------------------------------------------- the eerie voice of a contentious era
+  // Past about two thirds of the arc an exploration piece gains, now and then, something not quite natural, far back in the hall: a high
+  // violin tremolo holding a note a half step off the chord, swelling in and fading over a few bars; a bowed-cymbal shimmer; very rarely a
+  // breath of whispered noise. Quiet, sparse, and more frequent as the era rises; never in the cadence bars.
+  function genEerie(C, s, rng) {
+    const E = C.era, k = (E - 0.65) / 0.35; if (k <= 0) return;
+    const inst = resolveInst('tremHi', 'strings'), bars = s.bars, perBar = 0.12 + 0.3 * k;   // chance per bar of something
+    for (let bar = 0; bar < bars - 1; bar++) {
+      if (rng() >= perBar) continue;
+      const beat = bar * C.meter, sg = segAt(s.R.segs, beat), kind = rng();
+      if (kind < 0.62) {                                            // the tremolo: a chord tone's neighbour, high, swelling across two to four bars
+        const tones = chordTones(sg.ch, 79, 91); if (!tones.length) continue;
+        const ct = tones[Math.floor(rng() * tones.length)], m = ct + (rng() < 0.5 ? -1 : 1), L = Math.min((bars - 1 - bar) * C.meter, C.meter * (2 + Math.floor(rng() * 3)));
+        if (L < C.meter) continue;
+        const dyn = 0.18 + 0.22 * k;
+        emit(C, 'fx', inst, s.start + beat, m, L, 0.26 + 0.2 * k, { pan: (rng() - 0.5) * 1.2, dyn, swell: dyn + 0.2, att: Math.min(L * C.spb * 0.4, 4), rel: 2.5 });
+        bar += Math.round(L / C.meter);
+      } else if (kind < 0.9) {                                      // a bowed cymbal, low and slow, ending on a bar line
+        const dur = C.meter * C.spb * 2;
+        emitDrum(C, 'fx', { v: 'sample', smp: 'cymSwell', fb: 'swell', fbo: { dur, f0: 300, f1: 4000 }, alignEnd: true, dur, dyn: 0.12 + 0.2 * k, hum: 0, lvl: 0.5 }, s.start + beat, 0.22 + 0.18 * k);
+        bar += 1;
+      } else {                                                      // a whisper, barely there
+        emitDrum(C, 'fx', { v: 'whisper', dur: 2.2 + rng() * 1.5, lvl: 0.4 }, s.start + beat + rng() * C.meter, 0.16 + 0.14 * k);
+      }
+    }
+  }
+
   // ---------------------------------------------------------------- transitions (auto crashes / risers / booms)
   function genTransitions(C, wraps) {
     for (let i = 0; i < wraps.length; i++) {
@@ -792,6 +820,7 @@
       }
       C.key = 'tens';
       if (w.R.tens !== false) genTension(C, s);
+      if (E > 0.65 && w.bars >= 4) { C.key = 'eerie'; genEerie(C, s, erng); }
     }
     C.key = 'trans';
     genTransitions(C, wraps);
@@ -820,7 +849,8 @@
   // The era (Music.setEra, 0..1): how contentious the game has become. It is read only when a new performance of an exploration piece
   // (def.gentle) is compiled, never mid-piece, and every step it takes is a few percent — the arc is felt in hindsight, not heard happening:
   // chords gain ninths and sevenths, then a few turn minor; the pads voice one more note and sit a little closer; the echoes tighten (the hall
-  // stays: it is what makes the recordings real); the tempo lifts up to three percent; recorded low strings and the men stand in more often.
+  // stays: it is what makes the recordings real); the tempo lifts a little; recorded low strings and the men stand in more often; past two
+  // thirds something eerie appears now and then, far back (genEerie).
   const eraOf = (def, era) => (def.gentle && def.eraSens !== false ? clamp(num(era, 0), 0, 1) : 0);
   const TENSE_P = era => Math.max(0, era - 0.25) * 0.65;         // share of chords coloured at this era (0 below 0.25, about half at 1)
   function tenseChord(sym, era, r) {
