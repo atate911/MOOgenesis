@@ -931,7 +931,7 @@
       if (p < 3.6) {
         const k = easeOut(p / 3.6), x = lerp(w * 1.04, tx, k), y = lerp(-hh * 0.08, ty, k) - sin(k * PI) * hh * 0.1, sz = lerp(hh * 0.15, hh * 0.05, k);
         glow(g, '#8fe0ff', x, y, sz * 1.1, 0.5 * (1 - k * 0.6));
-        drawShipSafe(g, { race: it.race || 'human', hull: 'frigate', x: x, y: y, size: sz, angle: atan2(ty - y, tx - x) + 0.15, color: it.race ? raceColor(it.race) : steel('#d6b36a'), t: t, thrust: 0.9, flags: { colony: true } });
+        drawShipSafe(g, { race: it.race || 'human', hull: 'frigate', x: x, y: y, size: sz, angle: atan2(ty - y, tx - x) + 0.15, color: it.race ? raceColor(it.race) : steel('#d6b36a'), t: t, thrust: 0.9, flags: { colony: true }, view: '3q' });
       } else {
         const q = p - 3.6;
         for (let i = 0; i < 3; i++) { const u = fract(q / 1.5 + i / 3); g.strokeStyle = rgba('#5fdc8f', (1 - u) * 0.8); g.lineWidth = 1.2 + (1 - u) * 1.6; g.beginPath(); g.ellipse(tx, ty, pr * 0.55 * u + 2, pr * 0.28 * u + 1, -0.9, 0, TAU); g.stroke(); }
@@ -1049,7 +1049,7 @@
     const order = s.fleet.slice().sort((a, b) => a.ny - b.ny);
     for (const f of order) {
       const p = shipAt(f, t, w, hh);
-      drawShipSafe(g, { race: f.race, hull: f.hull, x: p.x, y: p.y, size: p.len / (HULL_LEN[f.hull] || 1), angle: f.side < 0 ? 0 : PI, color: f.col, t: t, thrust: 0.75, seed: f.ph });
+      drawShipSafe(g, { race: f.race, hull: f.hull, x: p.x, y: p.y, size: p.len / (HULL_LEN[f.hull] || 1), angle: f.side < 0 ? 0 : PI, color: f.col, t: t, thrust: 0.75, seed: f.ph, view: '3q' });
     }
     // volleys
     while (lt >= s.next) {

@@ -37,5 +37,20 @@ modules (colony pod, troop pods, bomb bay) are still vector-painted on the art's
 damage, shields and cloak use the existing dynamic layers. The lighting is baked into the art, so one bake serves every
 heading (no light buckets). Pixels are never read back, so this works from file://.
 
+**Second view (October 2026, code ready, art pending):** `docs/IMAGE-GEN-SPRITES.md` asks for a 3/4 cutout of each of the
+nine picks above. The build takes any source whose name contains the class and the token `3q` (`frigate-3q.png`,
+`frigate-2-3q.png` for variant 2; one image per class serves every variant), keys / crops / splits it the same way, writes
+`ship-<class>-<n>-3q.webp` + `-3q-team.webp` and records `q: {ext, hw, hl, eng, lights, sites, dir}` on the variant.
+Units for the 3q view: the longer visible side = 1. Engines: white-cyan blobs whose projection on the ship axis (nose to
+the lower right, `Q_AXIS_DEG` = 30° below the horizontal) lies in the rear 40 %; the nozzle is the blob's rear edge along
+that axis; `dir` (radians, 210°) is the direction the flames point. `Gfx.Ships.draw / sprite / prewarm` take
+`view: '3q'` (also `vo.view`); the 3q render is never rotated, only mirrored when the heading points left (`cos(angle) < 0`,
+which also mirrors the baked key light), engine flames and lights come from `q`, hardpoints are the top view's stretched
+to the 3q extents (callouts only), the vector add-on modules (pods, bomb bay) are not drawn on it, and while the images
+are missing or loading the call falls back to the top view. `Ships.hasView(hull, '3q')` / `photoReady(hull, '3q')` tell
+callers which path is live. Wired: design hologram + library thumbs, GNN ship graphics, the pre-battle card; other
+screens pass `view: '3q'` from their own modules. Verified with a synthetic 3q frigate (rotated top view) in the
+sandbox; no 3q art is in the repo yet, so today's output is byte-identical to before.
+
 **Known limits:** races no longer differ by silhouette, only by color. The art's lighting rotates with the ship. Hardpoints
 are sampled from the alpha mask, not hand-placed. `assets/ships` is in `MOO_DEPLOY_PATHS`.
