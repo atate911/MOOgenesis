@@ -42,18 +42,42 @@
   let early = false;
   const galaxyMood = () => (war ? 'galaxyWar' : (early || era < 0.3) ? 'galaxyEarly' : 'galaxy');
 
-  // The era: how contentious the galaxy has become for the player, 0..1. The target is read from the state (how many empires are met, how
-  // many of them are cold or hostile, open wars, how far the game has run); the value follows it slowly, a few hundredths a turn, so over a
-  // whole game the music tightens without anyone hearing it move. It only reaches the music when the next exploration piece is compiled.
+  // The era: how contentious the galaxy has become for the player, 0..1. The target is read from the state and starts moving about halfway
+  // through a game, when the player's space is being crowded by foreign colonies, more races have been met than the first one or two, and
+  // the fleets around the player are growing; cold relations and open wars push it on. The value follows the target slowly, a few
+  // hundredths a turn, so the music tightens without anyone hearing it move; it reaches the music only when the next piece is compiled.
   let era = 0, eraSeeded = false;
+  const HULL_W = [1, 5, 25, 125];
   function eraTarget() {
     try {
       const S = M.Game && M.Game.S; if (!S) return 0;
       const me = S.empires[S.playerId]; if (!me || !me.relations) return 0;
       const others = S.empires.filter(e => e && e.alive !== false && e.id !== me.id), n = Math.max(1, others.length);
+      // who is met, who is cold, who is at war
       let met = 0, cold = 0, wars = 0;
       for (const e of others) { const r = me.relations[e.id]; if (!r || !(r.met || r.contact)) continue; met++; if (r.treaty >= 3) wars++; else if ((r.rel1 || 0) < -24) cold++; }
-      const t = 0.3 * (met / n) + 0.3 * (met ? cold / met : 0) + 0.35 * Math.min(1, wars / 2) + 0.1 * Math.min(1, (S.turn || 0) / 250);
+      const metK = Math.max(0, (met - 1) / Math.max(1, n - 1));                  // the first contact is wonder, not pressure
+      // crowding: how many of the player's colonies have a foreign colony close by, and how many foreign colonies press on them
+      let crowd = 0;
+      if (S.stars && S.planets) {
+        let xs = 0, ys = 0, xe = 0, ye = 0; for (const s of S.stars) { if (s.x < xs || !xs) xs = s.x; if (s.y < ys || !ys) ys = s.y; if (s.x > xe) xe = s.x; if (s.y > ye) ye = s.y; }
+        const R = Math.hypot(xe - xs, ye - ys) * 0.16, mine = [], theirs = [];
+        S.planets.forEach((p, i) => { if (p.owner === me.id) mine.push(S.stars[i]); else if (p.owner >= 0 && p.owner !== me.id) theirs.push(S.stars[i]); });
+        if (mine.length && theirs.length) {
+          let near = 0; const pressing = new Set();
+          for (const a of mine) { let hit = false; theirs.forEach((b, j) => { if (Math.hypot(a.x - b.x, a.y - b.y) < R) { hit = true; pressing.add(j); } }); if (hit) near++; }
+          crowd = Math.min(1, 0.5 * near / mine.length + 0.5 * Math.min(1, pressing.size / mine.length));
+        }
+      }
+      // the arms race: the fleets of the empires the player has met, against the player's own and in absolute size
+      let myFleet = 0, theirFleet = 0;
+      for (const f of S.fleets || []) {
+        const E = S.empires[f.owner]; if (!E || !f.ships) continue;
+        let w = 0; for (let i = 0; i < 6; i++) if (f.ships[i]) { const d = E.designs && E.designs[i]; w += f.ships[i] * (d ? HULL_W[d.hull] || 1 : 1); }
+        if (f.owner === me.id) myFleet += w; else if (me.relations[f.owner] && (me.relations[f.owner].met || me.relations[f.owner].contact)) theirFleet += w;
+      }
+      const arms = Math.min(1, 0.6 * theirFleet / (theirFleet + myFleet + 20) + 0.4 * Math.min(1, theirFleet / (60 * n)));
+      const t = 0.2 * metK + 0.28 * crowd + 0.2 * arms + 0.12 * (met ? cold / met : 0) + 0.4 * Math.min(1, wars / 2);
       return Math.max(0, Math.min(1, t));
     } catch (e) { return 0; }
   }

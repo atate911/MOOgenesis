@@ -91,8 +91,11 @@ Versions follow `MAJOR.MINOR.PATCH`; the live version is the `VERSION` file.
   included. Fixed: galaxy4's cello and men's lines in section B were written 16 bars late and never sounded; galaxy1's section C
   had two `choir` keys.
 - The era: a slow arc under the exploration music that is felt in hindsight, never heard moving. `soundscape.js` reads a target from
-  the state each turn (empires met, how many are cold or hostile, open wars, how far the game has run) and lets a value follow it a few
-  hundredths a turn (`Music.setEra`); a new performance of an exploration piece reads it once when it is compiled, never mid-piece. As
+  the state each turn and lets a value follow it a few hundredths a turn (`Music.setEra`). The target starts moving about halfway
+  through a game: it is built from how many of the player's colonies have foreign colonies pressing close, how many races have been
+  met beyond the first, the size of the fleets around the player against their own (the arms race), cold relations and open wars —
+  a lone empire with five colonies reads 0, a first contact far away 0.05, three races met with one on the border 0.3, a crowded
+  frontier with growing fleets 0.65, one war 0.9; a new performance of an exploration piece reads it once when it is compiled, never mid-piece. As
   it rises: chords gain ninths and sevenths (about half of them at the top), then major sevenths and minor ninths, a fourth chord turning
   minor and the tonic gaining its seventh near the top (never the cadence, never a suspension), the pads voice one more note past the
   midpoint and sit closer (stage width −30 %), the delay echoes tighten by half while the hall stays (it is what makes the recordings
