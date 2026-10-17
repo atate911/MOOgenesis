@@ -11,6 +11,9 @@
     .gx-side { grid-column:2; grid-row:1; min-height:0; padding:.55rem .55rem .35rem .35rem; display:flex; flex-direction:column; background:linear-gradient(90deg, rgba(6,9,25,.0), rgba(6,9,25,.9) 12%); }
     .gx-side .panel { flex:1 1 auto; min-height:0; display:flex; flex-direction:column; overflow:hidden; }
     .gx-sidebody { min-height:0; overflow-y:auto; flex:1 1 auto; padding-right:.2rem; }
+    .gx-sidebody.reveal { animation: gx-reveal .16s ease-out; }                /* panel change: a short settle, never on refresh (immersion review, Phase C) */
+    @keyframes gx-reveal { from { opacity:.35; transform:translateX(6px); } to { opacity:1; transform:none; } }
+    :root[data-reduce-motion] .gx-sidebody.reveal { animation:none; }
     .gx-bar { grid-column:1 / -1; grid-row:2; display:flex; gap:.4rem; align-items:center; padding:.45rem .6rem; background:linear-gradient(180deg, rgba(14,20,52,.96), rgba(6,9,25,.98)); border-top:1px solid rgba(214,179,106,.45); }
     .gx-bar .btn { padding:.4em 1em; }
     .gx-bar .gx-spacer { flex:1; }
@@ -97,7 +100,9 @@
       if (UI.Side.held && _hd !== UI.Side.held) return;                      // the prompt stays; the player may still click around the map (selection highlights, no panel change)
       const def = panels[name]; if (!def) { console.warn('no side panel', name); return; }
       if (cur && cur.def.dispose) { try { cur.def.dispose(); } catch (e) { console.error(e); } }
+      const changed = !cur || cur.name !== name || (cur.params && params && cur.params.star !== params.star);
       UI.clear(host);
+      if (changed && !(M.Settings && M.Settings.get && M.Settings.get('reduceMotion'))) { host.classList.remove('reveal'); void host.offsetWidth; host.classList.add('reveal'); }
       cur = { name, params: params || {}, def };
       try { def.render(host, ctx(cur.params)); }
       catch (e) {
