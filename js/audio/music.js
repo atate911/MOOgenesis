@@ -315,8 +315,8 @@
     ominous: { t5: 'X.....x...x.....', t4: '........x.....o.', rim: '..o...o...o...o.', shk: 'o.o.o.o.o.o.o.o.' },
     news: { kick: 'x.....x.x.......', snare: '....x.......x...', hat: 'x.x.x.x.x.x.x.x.', clap: '....x.......x...' },
     marchS: { bd: 'x.......x.......', sn: ['x..x.xx.x..x.xx.', 'x..x.xx.x..xxxxx'] }, warS: { bd: 'x..x..x.x..x..x.', sn: '....x.......x...' },
-    // the field-drum kit (the council procession): snare accents on the step, ghosted drags leading into the beats, a 16th roll into every second bar, a soft bass drum on the downbeat
-    field: { bd: 'o...............', sn: ['x...x.o.x...x.oo', 'x..ox...x..oxxxx', 'x...x.o.x...x.o.', 'x..ox..ox...xxxx'] },
+    // the field-drum kit (the council procession): a march cadence — a firm one on the bass drum, snare accents on the beats with drags leading into two and four, a roll into every other bar
+    field: { bd: 'X.......x.......', sn: ['X..ox.o.x..ox.o.', 'X..ox.o.x.oxxxxx', 'X.o.x..ox.o.x..o', 'X..ox...x..oxxxx'] },
     // the Mutiny kit: processed booms and synthetic kick / snare with an anvil, sparse, over two bars
     mutiny: { boom: ['x...............', '........x.......'], kickSyn: ['x.......x.......', 'x.......x...x...'], snareSyn: ['........x.......', '....x.......x...'], metal: ['....x...........', '............x...'], boomHi: ['............x...', '................'], hiss: ['........x.......', '................'] },
   };
@@ -836,7 +836,8 @@
       this.choruses = [];
       for (const name in LAYERS) {
         const L = LAYERS[name], inG = mk(ctx.createGain()), sv = mk(ctx.createGain()), sd = mk(ctx.createGain()), ss = mk(ctx.createGain());
-        sv.gain.value = L.verb * num(fx.verb, 1); sd.gain.value = L.dly * num(fx.dly, 1); ss.gain.value = num(L.stage, 0) * num(fx.stage, 1);
+        const ov = (def.sends && def.sends[name]) || {};                                   // a piece's own send levels for one layer (dry drums for a march)
+        sv.gain.value = num(ov.verb, L.verb) * num(fx.verb, 1); sd.gain.value = num(ov.dly, L.dly) * num(fx.dly, 1); ss.gain.value = num(ov.stage, num(L.stage, 0)) * num(fx.stage, 1);
         const strip = eng.makeStrip ? eng.makeStrip(name) : null, post = strip ? strip.out : inG;
         if (strip) { inG.connect(strip.in); this.choruses.push(strip); }
         post.connect(this.bus); post.connect(sv); sv.connect(this.verb); post.connect(sd); sd.connect(this.delay.in); post.connect(ss); ss.connect(this.stage);
@@ -1864,34 +1865,38 @@
     ],
   });
   Track('council2', {
-    desc: 'Galactic Council, the procession: a slow processional march — the snare alone carries the march, a solo horn the tune low in its warm register over tuba and trombones, the organ and choir of the chamber; the drums fall away while the votes are cast and return with the tam-tam for the result',
-    bpm: 80, trim: 2.9, tone: { lo: 0.8 }, root: 'Eb', mode: 'major', loopFrom: 'P1', tens: false, rubato: 0.015, fx: { stage: 0.7 }, mix: { drums: 1.0, lead: 1.15, bass: 1.1, choir: 1.0 },
-    forms: [['P1', 'P2', 'D', 'R', 'E'], ['P1', 'D', 'P2', 'R', 'E'], ['P1', 'P2', 'E', 'D', 'R'], ['P1', 'D', 'R', 'P2', 'E']],
-    alts: [{}, { bell: 'glass', lead2: 'horn' }, { pad: 'organSoft', choir: 'choirWomen' }],
-    // a solo horn carries the tune an octave down (E2-F5 is what was recorded; the line sits around Eb3-Bb4), tuba and trombones take the step
-    inst: { pad: 'organ', pad2: 'lowBrass', bass: 'lowBrass', lead: 'hornSolo', lead2: 'cello', arp: 'harp', bell: 'bell', choir: 'aah', choir2: 'choirMen' },
+    desc: 'Galactic Council, the procession: a processional march in the nobilmente manner — a solo horn carries a long-breathed theme over tuba and trombones on the step, the snare alone keeps the march with a firm bass drum on the one, strings and the organ of the chamber behind, the choir entering as the theme returns; the flat-sixth lift for the big phrase, a lyrical trio, the drums fall away while the votes are cast and the full chamber answers the result',
+    bpm: 84, trim: 2.6, tone: { lo: 0.8 }, root: 'F', mode: 'major', loopFrom: 'A1', tens: false, rubato: 0.01, mix: { drums: 1.0, lead: 1.15, bass: 1.1, choir: 1.1 },
+    fx: { stage: 0.7 }, sends: { drums: { stage: 0.06, verb: 0.03, dly: 0 } },
+    forms: [['A1', 'A2', 'B', 'T', 'D', 'R', 'E'], ['A1', 'B', 'T', 'A2', 'D', 'R', 'E'], ['A1', 'A2', 'T', 'B', 'D', 'R', 'E'], ['A1', 'T', 'A2', 'B', 'D', 'R', 'E']],
+    alts: [{}, { bell: 'glass', pad2: 'cellos' }, { pad: 'organSoft', choir: 'choirWomen' }],
+    inst: { pad: 'strings', pad2: 'lowBrass', bass: 'lowBrass', lead: 'hornSolo', lead2: 'horn', arp: 'harp', bell: 'bell', choir: 'aah', choir2: 'choirMen' },
     ph: {
-      M1: '5:1.5 5:.5 6:1 8:1 | 10:2 8:2 | 9:1.5 8:.5 7:1 5:1 | 6:2 5:2',       // the processional tune
-      M2: '3:1.5 3:.5 4:1 5:1 | 8:2 7:1 6:1 | 5:1.5 4:.5 3:1 2:1 | 1:4',
-      M3: '8:1.5 8:.5 9:1 10:1 | 12:2 10:2 | 11:1.5 10:.5 9:1 8:1 | 7:2 5:2',   // its answer, higher
-      M4: '6:1.5 6:.5 7:1 8:1 | 10:2 9:1 8:1 | 7:1.5 6:.5 5:1 4:1 | 5:4',
-      F1: '1:1 5:1 8:2 | 8:1.5 6:.5 5:1 3:1 | 5:2 7:2 | 7:3 r:1',               // the fanfare (the council's own)
-      CT: '1:2 3:2 | 2:2 1:2 | 4:2 3:2 | 2:3 r:1',                                // the counter-line beneath
-      CH: '5:4 | 6:4 | 5:2 4:2 | 3:4', CH2: '3:4 | 4:4 | 5:2 6:2 | 5:4',         // the hymn while the votes are cast
+      A1: '1:3 2:1 | 3:2 5:2 | 6:3 5:1 | 3:2 2:2', A2: '1:3 2:1 | 3:2 5:2 | 8:3 7:1 | 5:4',             // the theme: a slow climb from the tonic, and its answer to the octave
+      B1: '5:2 6:1 8:1 | 10:3 9:1 | 8:2 6:2 | 5:4', B2: '6:2 5:1 6:1 | 8:3 10:1 | 9:2 8:1 7:1 | 8:4',  // the big phrase, over the flat-sixth lift
+      CD: '4:2 3:1 2:1 | 5:3 4:1 | 3:2 2:2 | 1:4',                                                     // the cadence
+      T1: '3:3 4:1 | 5:2 8:2 | 7:3 6:1 | 5:4', T2: '6:3 5:1 | 4:2 3:2 | 2:3 3:1 | 1:4',                  // the trio, lyrical
+      CT: '1:2 3:2 | 4:2 5:2 | 6:2 4:2 | 5:4',                                                          // the low brass beneath
+      HY: '5:4 | 6:4 | 5:2 4:2 | 3:4', HY2: '3:4 | 4:4 | 5:2 6:2 | 5:4',                                // the hymn while the votes are cast
+      CL: '5:3 8:1 | 7:2 6:2 | 5:4 | r:4',                                                            // the call (the game's leitmotif) that opens
     },
     sec: [
-      { n: 'intro', bars: 4, cres: [0.55, 0.8], prog: 'I:2 V:2', pad: { p: 'swell', n: 4, reg: [50, 74], vel: 0.7 }, bass: { p: 'whole', inst: { p: 'lowBrass', att: 0.1 }, vel: 0.9 },
-        drums: { bd: 'x.......x.......', sn: ['o...o...o...o...', 'o.o.o.o.o.o.o.o.', 'x.o.x.o.x.o.x.o.', 'x.x.x.x.x.x.x.x.'] }, fill: 'rollS', lead: { ph: 'r2 F1', oct: -1, vel: 0.75 } },
-      { n: 'P1', bars: 16, lv: 0.8, prog: 'I V vi IV | I IV V I | I vi IV V | ii V I I', pad: { p: 'sus', n: 4, reg: [50, 74], vel: 0.7 }, pad2: { p: 'stab', pat: 'x.......x.......', n: 2, reg: [38, 55], vel: 0.7, gate: 0.7 }, bass: { p: 'half', inst: { p: 'lowBrass', att: 0.06 }, vel: 1.0 },
-        lead: { ph: ['M1 M2 M3 M4', 'M1 M2 M1 M2', 'M3 M4 M1 M2'], oct: -1, vel: 0.85 }, lead2: { ph: ['CT CT CT CT', 'r4 CT r4 CT'], oct: -1, vel: 0.5, skip: 0.3 }, drums: { p: 'field', vel: 0.85 }, choir: { vel: 0.45 }, bell: { dens: 0.08, res: 1, reg: [72, 96], vel: 0.4 }, fill: 'snS' },
-      { n: 'P2', bars: 16, lv: 0.88, prog: 'I V vi IV | I IV V I | I vi IV V | ii V I I', pad: { p: 'sus', n: 4, reg: [50, 74], vel: 0.7 }, pad2: { p: 'stab', pat: 'x.......x...x...', n: 2, reg: [38, 55], vel: 0.8, gate: 0.7 }, bass: { p: 'walk', inst: { p: 'lowBrass', att: 0.06 }, vel: 1.0 },
-        lead: { ph: ['M1 M2 M3 M4', 'M3 M4 M1 M2'], oct: -1, vel: 0.9, harm: -2 }, lead2: { ph: '@', inst: 'strings', vel: 0.4, skip: 0.4 }, drums: { p: 'field', vel: 0.95 }, timp: 'two', choir: { vel: 0.6 }, choir2: { n: 3, reg: [38, 57], vel: 0.55 }, bell: { dens: 0.1, res: 1, reg: [72, 96], vel: 0.4 }, fill: 'bigS' },
-      { n: 'D', bars: 8, lv: 0.5, prog: 'IV:2 I:2 | vi:2 V:2', pad: { p: 'swell', inst: 'organSoft', n: 4, reg: [50, 76], vel: 0.7 }, pad2: { p: 'sus', inst: 'strings', n: 3, reg: [55, 76], vel: 0.55 }, bass: { p: 'whole', inst: 'deep' },
-        lead: { ph: ['CH CH2', 'r4 CH2', 'CH r4'], oct: -1, vel: 0.6 }, arp: { p: 'up8', vel: 0.3, reg: [57, 81], skip: 0.3 }, drums: { bd: 'x...............', sn: '........o.......', vel: 0.5 }, choir2: { n: 3, reg: [38, 55], vel: 0.5, soft: true }, bell: { dens: 0.15, res: 1, reg: [72, 96], vel: 0.45 }, rise: 2 },
-      { n: 'R', bars: 8, lv: 1.02, hit: 'tam', cr: true, prog: 'I V | vi IV | ii V | I I', pad: { p: 'sus', n: 4, reg: [50, 74], vel: 0.75 }, pad2: { p: 'stab', pat: 'x.......x...x...', n: 3, reg: [38, 57], vel: 0.95, gate: 0.65 }, bass: { p: 'half', inst: { p: 'lowBrass', att: 0.05 }, vel: 1.0 },
-        lead: { ph: ['F1 F1', 'F1 M3'], oct: -1, vel: 1.0, harm: -2 }, lead2: { ph: '@', inst: 'brass', oct: -1, vel: 0.45 }, drums: { p: 'field', vel: 1.0 }, timp: 'beats', choir: { v1: 'a', v2: 'a', vel: 0.85 }, choir2: { n: 3, reg: [38, 57], vel: 0.75 }, bell: { dens: 0.18, res: 2, reg: [72, 96], vel: 0.5 }, fill: 'bigS' },
-      { n: 'E', bars: 8, lv: 0.7, prog: 'I V vi IV | I IV V I', pad: { p: 'sus', n: 4, reg: [50, 74], vel: 0.7 }, pad2: { p: 'sus', inst: 'strings', n: 4, reg: [55, 79], vel: 0.5 }, bass: { p: 'half', inst: { p: 'lowBrass', att: 0.08 }, vel: 0.8 },
-        lead: { ph: ['M1 M2', 'M4 M2'], oct: -1, vel: 0.75 }, drums: { p: 'field', vel: 0.7 }, choir: { vel: 0.45 }, bell: { dens: 0.08, res: 1, reg: [72, 96], vel: 0.4 } },
+      { n: 'intro', bars: 4, cres: [0.55, 0.8], prog: 'I:2 V:2', pad: { p: 'swell', n: 4, reg: [50, 76], vel: 0.7 }, bass: { p: 'whole', inst: { p: 'lowBrass', att: 0.1 }, vel: 0.9 },
+        drums: { bd: 'X.......x.......', sn: ['o...o...o...o...', 'o.o.o.o.o.o.o.o.', 'X.o.x.o.x.o.x.o.', 'X.x.x.x.x.x.xxxx'] }, lead: { ph: 'CL', oct: -1, vel: 0.75 } },
+      { n: 'A1', bars: 16, lv: 0.78, prog: 'I I IV V | I vi ii V | I IV I V | vi IV V I', pad: { p: 'sus', n: 4, reg: [50, 76], vel: 0.7 }, pad2: { p: 'stab', pat: 'x.......x.......', n: 2, reg: [38, 55], vel: 0.65, gate: 0.7 }, bass: { p: 'half', inst: { p: 'lowBrass', att: 0.06 }, vel: 1.0 },
+        lead: { ph: ['A1 A2 A1 CD', 'A1 A2 B1 CD'], oct: -1, vel: 0.85 }, drums: { p: 'field', vel: 0.85 }, bell: { dens: 0.06, res: 1, reg: [72, 96], vel: 0.38 }, fill: 'snS' },
+      { n: 'A2', bars: 16, lv: 0.86, prog: 'I I IV V | I vi ii V | I IV I V | vi IV V I', pad: { p: 'sus', n: 4, reg: [50, 78], vel: 0.8 }, pad2: { p: 'stab', pat: 'x.......x...x...', n: 2, reg: [38, 55], vel: 0.75, gate: 0.7 }, bass: { p: 'walk', inst: { p: 'lowBrass', att: 0.06 }, vel: 1.0 },
+        lead: { ph: ['A1 A2 A1 CD', 'A2 A1 A2 CD'], oct: -1, vel: 0.9 }, lead2: { ph: ['CT CT CT CT', 'r4 CT r4 CT'], inst: 'lowBrass', oct: -1, vel: 0.6, skip: 0.3 }, drums: { p: 'field', vel: 0.95 }, timp: 'two', choir: { n: 3, reg: [60, 76], vel: 0.6 }, choir2: { n: 3, reg: [38, 57], vel: 0.5 }, bell: { dens: 0.08, res: 1, reg: [72, 96], vel: 0.4 }, fill: 'bigS' },
+      { n: 'B', bars: 16, cres: [0.9, 1.0], prog: 'IV V | iii vi | bVI bVII | I I | IV V | iii vi | bVI bVII | V I', pad: { p: 'sus', n: 4, reg: [50, 78], vel: 0.85 }, pad2: { p: 'stab', pat: 'x.......x...x...', n: 3, reg: [38, 57], vel: 0.85, gate: 0.65 }, bass: { p: 'half', inst: { p: 'lowBrass', att: 0.05 }, vel: 1.0 },
+        lead: { ph: ['B1 B2 B1 CD', 'B1 B2 B2 CD'], oct: -1, vel: 0.95 }, lead2: { ph: '@', inst: 'horn', oct: -1, vel: 0.5 }, drums: { p: 'field', vel: 1.0 }, timp: 'beats', choir: { v1: 'a', v2: 'a', n: 3, reg: [60, 78], vel: 0.8 }, choir2: { n: 3, reg: [38, 57], vel: 0.7 }, bell: { dens: 0.12, res: 1, reg: [72, 96], vel: 0.42 }, fill: 'bigS' },
+      { n: 'T', bars: 16, lv: 0.6, prog: 'vi IV | I V | vi ii | V I | vi IV | I V | ii V | I I', pad: { p: 'sus', n: 4, reg: [50, 76], vel: 0.65 }, pad2: { p: 'swell', inst: 'cellos', n: 2, reg: [43, 60], vel: 0.55 }, bass: { p: 'whole', inst: { p: 'lowBrass', att: 0.12 }, vel: 0.7 },
+        lead: { ph: ['T1 T2 T1 T2', 'T1 T2 A1 CD', 'r4 T1 T2 CD'], oct: -1, vel: 0.75 }, arp: { p: 'up8', vel: 0.3, reg: [55, 81], skip: 0.3 }, drums: { bd: 'X...............', sn: ['x...............', 'o...o...........', 'x...............', 'o.o.o.o.o.o.xxxx'], vel: 0.6 }, bell: { dens: 0.1, res: 1, reg: [72, 96], vel: 0.4 } },
+      { n: 'D', bars: 8, lv: 0.48, prog: 'ii:2 V:2 | iii:2 vi:2', pad: { p: 'swell', inst: 'organSoft', n: 4, reg: [50, 76], vel: 0.7 }, pad2: { p: 'sus', inst: 'strings', n: 3, reg: [55, 76], vel: 0.5 }, bass: { p: 'whole', inst: 'deep' },
+        lead: { ph: ['HY HY2', 'r4 HY2', 'HY r4'], oct: -1, vel: 0.6 }, arp: { p: 'up8', vel: 0.28, reg: [57, 81], skip: 0.3 }, choir2: { n: 3, reg: [38, 55], vel: 0.5, soft: true }, bell: { dens: 0.14, res: 1, reg: [72, 96], vel: 0.44 }, rise: 2 },
+      { n: 'R', bars: 8, lv: 1.04, hit: 'tam', cr: true, prog: 'bVI bVII | I I | IV V | I I', pad: { p: 'sus', n: 4, reg: [50, 78], vel: 0.85 }, pad2: { p: 'stab', pat: 'x.......x...x...', n: 3, reg: [38, 57], vel: 0.95, gate: 0.65 }, bass: { p: 'half', inst: { p: 'lowBrass', att: 0.05 }, vel: 1.0 },
+        lead: { ph: ['B1 CD', 'B2 CD'], oct: -1, vel: 1.0 }, lead2: { ph: '@', inst: 'horn', oct: -1, vel: 0.55 }, drums: { p: 'field', vel: 1.0 }, timp: 'beats', choir: { v1: 'a', v2: 'a', n: 3, reg: [60, 78], vel: 0.9 }, choir2: { n: 3, reg: [38, 57], vel: 0.8 }, bell: { dens: 0.18, res: 2, reg: [72, 96], vel: 0.5 }, fill: 'bigS' },
+      { n: 'E', bars: 8, lv: 0.68, prog: 'I IV I V | vi IV V I', pad: { p: 'sus', n: 4, reg: [50, 76], vel: 0.7 }, pad2: { p: 'stab', pat: 'x.......x.......', n: 2, reg: [38, 55], vel: 0.55, gate: 0.7 }, bass: { p: 'half', inst: { p: 'lowBrass', att: 0.08 }, vel: 0.8 },
+        lead: { ph: ['A1 CD', 'A2 CD'], oct: -1, vel: 0.75 }, drums: { p: 'field', vel: 0.7 }, choir: { n: 3, reg: [60, 76], vel: 0.45 }, bell: { dens: 0.08, res: 1, reg: [72, 96], vel: 0.38 } },
     ],
   });
   Track('orion', {
