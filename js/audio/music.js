@@ -419,7 +419,7 @@
   function genPad(C, s, cfg, key) {
     key = key || 'pad';
     const inst = resolveInst(cfg.inst, C.inst[key] || DEF_INST[key]);
-    const style = cfg.style || cfg.p || 'sus', reg = cfg.reg || [50, 72], n = (cfg.n || 4) + (C.era > 0.7 ? 1 : 0), vel = num(cfg.vel, 1), rng = C.vrng;
+    const style = cfg.style || cfg.p || 'sus', reg = cfg.reg || [50, 72], n = (cfg.n || 4) + (C.era > 0.55 ? 1 : 0), vel = num(cfg.vel, 1), rng = C.vrng;
     let prev = C.prevPad[key];
     const segs = s.R.segs.slice();
     for (let i = 0; i < segs.length; i++) {
@@ -753,12 +753,12 @@
   function compilePass(def, pass, form0, alt0, take, era) {
     const P = prepare(def), secs = passSections(def, P, pass, form0), E = eraOf(def, era);
     const C = {
-      def, P, pass, take: take || 0, era: E, widthK: 1 - 0.2 * E, meter: P.meter, spb: P.spb, scale: P.scale, tonic: P.tonic, ev: [], bassC: def.bassC || 38, prevPad: {}, prevChoir: {},
+      def, P, pass, take: take || 0, era: E, widthK: 1 - 0.3 * E, meter: P.meter, spb: P.spb, scale: P.scale, tonic: P.tonic, ev: [], bassC: def.bassC || 38, prevPad: {}, prevChoir: {},
       inst: Object.assign({}, def.inst || {}, def.alts && def.alts.length ? def.alts[((alt0 || 0) + pass) % def.alts.length] : {}),   // per-pass instrument alternation, from a random start
       snaps: 0, crng: makeRng(def.id + ':c'), vrng: makeRng(def.id + ':v' + ((pass + (take || 0)) % 8)), warn: m => { if (P.warn.indexOf(m) < 0) P.warn.push(m); }, lvAt: null, totalBeats: 0,
     };
     const erng = makeRng(def.id + ':e' + ((pass + (take || 0)) % 8));
-    if (E > 0.5 && def.eraAlts) for (const k in def.eraAlts) if (erng() < (E - 0.5) * 1.6) C.inst[k] = def.eraAlts[k];   // darker alternates stand in more often
+    if (E > 0.4 && def.eraAlts) for (const k in def.eraAlts) if (erng() < (E - 0.4) * 1.5) C.inst[k] = def.eraAlts[k];   // darker alternates stand in more often (90 % at the top)
     const tenseP = TENSE_P(E);
     const wraps = []; let beat = 0;
     for (const R0 of secs) {
@@ -822,14 +822,15 @@
   // chords gain ninths and sevenths, then a few turn minor; the pads voice one more note and sit a little closer; the echoes tighten (the hall
   // stays: it is what makes the recordings real); the tempo lifts up to three percent; recorded low strings and the men stand in more often.
   const eraOf = (def, era) => (def.gentle && def.eraSens !== false ? clamp(num(era, 0), 0, 1) : 0);
-  const TENSE_P = era => Math.max(0, era - 0.3) * 0.45;          // share of chords coloured at this era (0 below 0.3, about 30 % at 1)
+  const TENSE_P = era => Math.max(0, era - 0.25) * 0.65;         // share of chords coloured at this era (0 below 0.25, about half at 1)
   function tenseChord(sym, era, r) {
     const m = CHORD_RE.exec(sym); if (!m) return sym;
     const q = m[3], slash = m[4] ? '/' + m[4] : '', lower = m[2] === m[2].toLowerCase();
     if (q !== '' && q !== '7') return sym;                          // only plain triads and dominants are touched; written colours stay
-    if (q === '7') return era > 0.75 && r < 0.5 ? m[1] + m[2] + '9' + slash : sym;
-    if (era > 0.8 && !lower && r < 0.25 && m[2] === 'IV') return m[1] + 'iv' + slash;      // the subdominant turns minor, now and then
-    if (era > 0.6 && r < 0.4) return m[1] + m[2] + (lower ? 'm9' : 'M7') + slash;          // richer sevenths and ninths, never suspensions
+    if (q === '7') return era > 0.65 && r < 0.6 ? m[1] + m[2] + '9' + slash : sym;
+    if (era > 0.7 && !lower && r < 0.35 && m[2] === 'IV') return m[1] + 'iv' + slash;      // the subdominant turns minor, now and then
+    if (era > 0.85 && !lower && r < 0.5 && m[2] === 'I') return m[1] + 'IM7' + slash;       // the tonic itself gains its seventh at the top
+    if (era > 0.5 && r < 0.5) return m[1] + m[2] + (lower ? 'm9' : 'M7') + slash;          // richer sevenths and ninths, never suspensions
     return m[1] + m[2] + (lower ? 'm7' : 'add9') + slash;
   }
 
@@ -860,7 +861,7 @@
         const L = LAYERS[name], inG = mk(ctx.createGain()), sv = mk(ctx.createGain()), sd = mk(ctx.createGain()), ss = mk(ctx.createGain());
         const ov = (def.sends && def.sends[name]) || {};                                   // a piece's own send levels for one layer (dry drums for a march)
         const eraE = eraOf(def, this.o.era !== undefined ? this.o.era : S.era);                 // the room stays (it is what makes the recordings real); the echoes tighten
-        sv.gain.value = num(ov.verb, L.verb) * num(fx.verb, 1) * (1 - 0.08 * eraE); sd.gain.value = num(ov.dly, L.dly) * num(fx.dly, 1) * (1 - 0.4 * eraE); ss.gain.value = num(ov.stage, num(L.stage, 0)) * num(fx.stage, 1);
+        sv.gain.value = num(ov.verb, L.verb) * num(fx.verb, 1) * (1 - 0.08 * eraE); sd.gain.value = num(ov.dly, L.dly) * num(fx.dly, 1) * (1 - 0.55 * eraE); ss.gain.value = num(ov.stage, num(L.stage, 0)) * num(fx.stage, 1);
         const strip = eng.makeStrip ? eng.makeStrip(name) : null, post = strip ? strip.out : inG;
         if (strip) { inG.connect(strip.in); this.choruses.push(strip); }
         post.connect(this.bus); post.connect(sv); sv.connect(this.verb); post.connect(sd); sd.connect(this.delay.in); post.connect(ss); ss.connect(this.stage);
@@ -883,7 +884,7 @@
       this.alt0 = def.alts && def.alts.length ? Math.floor(rnd() * def.alts.length) : 0;        // and which instrumentation
       this.take = Math.floor(rnd() * 8);                                                        // and which reading of the small variations
       this.era = eraOf(def, this.o.era !== undefined ? this.o.era : S.era);                       // how contentious the game is, read once per performance
-      this.stretch = (def.rubato ? 1 + (rnd() * 2 - 1) * def.rubato : 1) * (1 + 0.03 * this.era);  // a performance is never at exactly the written tempo; tenser eras lift it a little
+      this.stretch = (def.rubato ? 1 + (rnd() * 2 - 1) * def.rubato : 1) * (1 + 0.045 * this.era); // a performance is never at exactly the written tempo; tenser eras lift it a little
       this.schedDone = false; this.endAt = Infinity;
     }
     now() { return this.eng.now(); }
@@ -1058,7 +1059,7 @@
     const a = shuffled(pl.ids, last);
     if (pl.rare) {
       const isRare = id => id !== undefined && pl.rare.ids.indexOf(id) >= 0;
-      const pOf = id => (typeof pl.rare.p === 'object' ? num(pl.rare.p[id], 0.35) : pl.rare.p) * (0.5 + S.era);   // rarer in a quiet galaxy, likelier in a contentious one
+      const pOf = id => (typeof pl.rare.p === 'object' ? num(pl.rare.p[id], 0.35) : pl.rare.p) * (0.4 + 1.2 * S.era);   // rarer in a quiet galaxy, likelier in a contentious one
       for (const id of pl.rare.ids) if (Math.random() < pOf(id)) for (let tries = 0; tries < 10; tries++) {
         const k = 1 + Math.floor(Math.random() * a.length);
         if (!isRare(a[k - 1]) && !isRare(a[k]) && !(k === 1 && last === id)) { a.splice(k, 0, id); break; }
