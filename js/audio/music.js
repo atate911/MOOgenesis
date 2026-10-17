@@ -419,7 +419,7 @@
   function genPad(C, s, cfg, key) {
     key = key || 'pad';
     const inst = resolveInst(cfg.inst, C.inst[key] || DEF_INST[key]);
-    const style = cfg.style || cfg.p || 'sus', reg = cfg.reg || [50, 72], n = cfg.n || 4, vel = num(cfg.vel, 1), rng = C.vrng;
+    const style = cfg.style || cfg.p || 'sus', reg = cfg.reg || [50, 72], n = (cfg.n || 4) + (C.era > 0.55 ? 1 : 0), vel = num(cfg.vel, 1), rng = C.vrng;
     let prev = C.prevPad[key];
     const segs = s.R.segs.slice();
     for (let i = 0; i < segs.length; i++) {
@@ -430,7 +430,7 @@
         let L = len;
         if (cfg.merge !== false) { while (i + 1 < segs.length && segs[i + 1].ch.sym === sg.ch.sym) { i++; L = segs[i].b1 - sg.b0; } }
         const att = style === 'swell' ? Math.min(L * C.spb * 0.6, 3.5) : undefined;
-        notes.forEach(function (m, j) { emit(C, 'pad', inst, b0, m, L, vel * (j === 0 ? 1 : 0.9), { pan: (j / Math.max(1, notes.length - 1) - 0.5) * 0.8 * num(cfg.width, 1), att: att, dt: (rng() - 0.5) * 0.02, rel: cfg.rel }); });
+        notes.forEach(function (m, j) { emit(C, 'pad', inst, b0, m, L, vel * (j === 0 ? 1 : 0.9), { pan: (j / Math.max(1, notes.length - 1) - 0.5) * 0.8 * num(cfg.width, 1) * C.widthK, att: att, dt: (rng() - 0.5) * 0.02, rel: cfg.rel }); });
       } else if (style === 'pulse' || style === 'stab') {
         const grid = cleanPat(cfg.pat || (style === 'pulse' ? 'x.x.x.x.' : 'x.......')), step = C.meter / grid.length;
         for (let bar0 = sg.b0; bar0 < sg.b1 - 1e-9; bar0 += C.meter) {      // the pattern is one bar; repeat it across the chord
@@ -750,19 +750,26 @@
   }
   // take: which of eight readings of the small variations this performance plays (phrase choices, rests, breath lengths, ornaments);
   // the composition RNG (crng) is the piece itself and never changes, the variation RNG (vrng) is seeded by pass and take
-  function compilePass(def, pass, form0, alt0, take) {
-    const P = prepare(def), secs = passSections(def, P, pass, form0);
+  function compilePass(def, pass, form0, alt0, take, era) {
+    const P = prepare(def), secs = passSections(def, P, pass, form0), E = eraOf(def, era);
     const C = {
-      def, P, pass, take: take || 0, meter: P.meter, spb: P.spb, scale: P.scale, tonic: P.tonic, ev: [], bassC: def.bassC || 38, prevPad: {}, prevChoir: {},
+      def, P, pass, take: take || 0, era: E, widthK: 1 - 0.35 * E, meter: P.meter, spb: P.spb, scale: P.scale, tonic: P.tonic, ev: [], bassC: def.bassC || 38, prevPad: {}, prevChoir: {},
       inst: Object.assign({}, def.inst || {}, def.alts && def.alts.length ? def.alts[((alt0 || 0) + pass) % def.alts.length] : {}),   // per-pass instrument alternation, from a random start
       snaps: 0, crng: makeRng(def.id + ':c'), vrng: makeRng(def.id + ':v' + ((pass + (take || 0)) % 8)), warn: m => { if (P.warn.indexOf(m) < 0) P.warn.push(m); }, lvAt: null, totalBeats: 0,
     };
+    const erng = makeRng(def.id + ':e' + ((pass + (take || 0)) % 8));
+    if (E > 0.5 && def.eraAlts) for (const k in def.eraAlts) if (erng() < (E - 0.5) * 1.6) C.inst[k] = def.eraAlts[k];   // darker alternates stand in more often
+    const tenseP = TENSE_P(E);
     const wraps = []; let beat = 0;
     for (const R0 of secs) {
       let R = R0;
       if (R0.barsVar) {                                   // a breath is not always the same length: the next phrase waits a little longer, or less
         const bars = Math.max(1, R0.barsVar[0] + C.vrng.int(0, R0.barsVar[1] - R0.barsVar[0]));
         if (bars !== R0.bars) R = Object.assign(Object.create(R0), { bars, segs: expandProg(R0.raw.prog, bars, P.meter, P.tpc) });
+      }
+      if (tenseP > 0) {                                   // the era colours some of the chords (the same ones every time at a given era, per take)
+        const segs = R.segs.map((sg, i, arr) => { const r = erng(); if (r >= tenseP || i === arr.length - 1) return sg; const sym = tenseChord(sg.ch.sym, E, erng()); return sym === sg.ch.sym ? sg : { ch: parseChord(sym, P.tpc), b0: sg.b0, b1: sg.b1 }; });   // never the cadence
+        R = Object.assign(Object.create(R), { segs });
       }
       wraps.push({ R, start: beat, beats: R.bars * P.meter, bars: R.bars }); beat += R.bars * P.meter;
     }
@@ -809,7 +816,22 @@
 
   // ================================================================== player
   const smooth = x => { x = clamp(x, 0, 1); return x * x * (3 - 2 * x); };
-  const S = { cur: null, old: [], timer: null, intensity: 0, pending: null, playlist: null, ticks: 0, plWait: null };
+  const S = { cur: null, old: [], timer: null, intensity: 0, era: 0, pending: null, playlist: null, ticks: 0, plWait: null };
+  // The era (Music.setEra, 0..1): how contentious the game has become. It is read only when a new performance of an exploration piece
+  // (def.gentle) is compiled, never mid-piece, and every step it takes is a few percent — the arc is felt in hindsight, not heard happening:
+  // chords gain ninths and sevenths, then a few turn minor; the pads voice one more note and sit a little closer; the hall dries a little;
+  // the tempo lifts up to three percent; darker alternates (tremolo strings, the dark pad, the men) stand in more often.
+  const eraOf = (def, era) => (def.gentle && def.eraSens !== false ? clamp(num(era, 0), 0, 1) : 0);
+  const TENSE_P = era => Math.max(0, era - 0.3) * 0.45;          // share of chords coloured at this era (0 below 0.3, about 30 % at 1)
+  function tenseChord(sym, era, r) {
+    const m = CHORD_RE.exec(sym); if (!m) return sym;
+    const q = m[3], slash = m[4] ? '/' + m[4] : '', lower = m[2] === m[2].toLowerCase();
+    if (q !== '' && q !== '7') return sym;                          // only plain triads and dominants are touched; written colours stay
+    if (q === '7') return era > 0.75 && r < 0.5 ? m[1] + m[2] + '9' + slash : sym;
+    if (era > 0.8 && !lower && r < 0.25 && m[2] === 'IV') return m[1] + 'iv' + slash;      // the subdominant turns minor, now and then
+    if (era > 0.6 && r < 0.4) return m[1] + m[2] + (lower ? 'm7' : 'sus2') + slash;
+    return m[1] + m[2] + 'add9' + slash;
+  }
 
   class Player {
     constructor(eng, def, o) {
@@ -837,7 +859,8 @@
       for (const name in LAYERS) {
         const L = LAYERS[name], inG = mk(ctx.createGain()), sv = mk(ctx.createGain()), sd = mk(ctx.createGain()), ss = mk(ctx.createGain());
         const ov = (def.sends && def.sends[name]) || {};                                   // a piece's own send levels for one layer (dry drums for a march)
-        sv.gain.value = num(ov.verb, L.verb) * num(fx.verb, 1); sd.gain.value = num(ov.dly, L.dly) * num(fx.dly, 1); ss.gain.value = num(ov.stage, num(L.stage, 0)) * num(fx.stage, 1);
+        const eraK = 1 - 0.25 * eraOf(def, this.o.era !== undefined ? this.o.era : S.era);     // the hall dries a little as the era tightens
+        sv.gain.value = num(ov.verb, L.verb) * num(fx.verb, 1) * eraK; sd.gain.value = num(ov.dly, L.dly) * num(fx.dly, 1); ss.gain.value = num(ov.stage, num(L.stage, 0)) * num(fx.stage, 1);
         const strip = eng.makeStrip ? eng.makeStrip(name) : null, post = strip ? strip.out : inG;
         if (strip) { inG.connect(strip.in); this.choruses.push(strip); }
         post.connect(this.bus); post.connect(sv); sv.connect(this.verb); post.connect(sd); sd.connect(this.delay.in); post.connect(ss); ss.connect(this.stage);
@@ -859,7 +882,8 @@
       this.form0 = def.forms && def.forms.length ? Math.floor(rnd() * def.forms.length) : 0;   // which long block opens this performance
       this.alt0 = def.alts && def.alts.length ? Math.floor(rnd() * def.alts.length) : 0;        // and which instrumentation
       this.take = Math.floor(rnd() * 8);                                                        // and which reading of the small variations
-      this.stretch = def.rubato ? 1 + (rnd() * 2 - 1) * def.rubato : 1;                          // a performance is never at exactly the written tempo
+      this.era = eraOf(def, this.o.era !== undefined ? this.o.era : S.era);                       // how contentious the game is, read once per performance
+      this.stretch = (def.rubato ? 1 + (rnd() * 2 - 1) * def.rubato : 1) * (1 + 0.03 * this.era);  // a performance is never at exactly the written tempo; tenser eras lift it a little
       this.schedDone = false; this.endAt = Infinity;
     }
     now() { return this.eng.now(); }
@@ -906,7 +930,7 @@
     nextPass() {
       this.passNo++;
       const prevEnd = this.pass ? this.pass.start + this.pass.len : this.t0;
-      this.pass = compilePass(this.def, this.passNo, this.form0, this.alt0, this.take); this.pass.start = prevEnd; this.idx = 0;
+      this.pass = compilePass(this.def, this.passNo, this.form0, this.alt0, this.take, this.era); this.pass.start = prevEnd; this.idx = 0;
       if (this.stretch !== 1) this.pass.len *= this.stretch;
     }
     fire(ev, T) {
@@ -1034,7 +1058,7 @@
     const a = shuffled(pl.ids, last);
     if (pl.rare) {
       const isRare = id => id !== undefined && pl.rare.ids.indexOf(id) >= 0;
-      const pOf = id => (typeof pl.rare.p === 'object' ? num(pl.rare.p[id], 0.35) : pl.rare.p);
+      const pOf = id => (typeof pl.rare.p === 'object' ? num(pl.rare.p[id], 0.35) : pl.rare.p) * (0.5 + S.era);   // rarer in a quiet galaxy, likelier in a contentious one
       for (const id of pl.rare.ids) if (Math.random() < pOf(id)) for (let tries = 0; tries < 10; tries++) {
         const k = 1 + Math.floor(Math.random() * a.length);
         if (!isRare(a[k - 1]) && !isRare(a[k]) && !(k === 1 && last === id)) { a.splice(k, 0, id); break; }
@@ -1157,6 +1181,9 @@
     for (const p of S.old) p.applyIntensity(x, false);
   };
   Music.getIntensity = () => S.intensity;
+  // the era: 0 alone and early .. 1 contentious; read when the next exploration performance is compiled, never applied to a running one
+  Music.setEra = function (x) { S.era = clamp(Number(x) || 0, 0, 1); };
+  Music.getEra = () => S.era;
   Music.has = id => !!TRACKS[id];
   Music.onSamplesReady = function () {
     const p = S.cur; if (!p || p.stopped || !A.engine) return;
@@ -1216,7 +1243,7 @@
       return r === false ? false : pick;
     } catch (e) { console.warn('[music] setMood failed', e); return false; }
   };
-  Music.state = function () { return { cur: S.cur && S.cur.id, old: S.old.length, timer: !!S.timer, intensity: S.intensity, pending: S.pending && S.pending.id, playlist: !!S.playlist }; };
+  Music.state = function () { return { cur: S.cur && S.cur.id, old: S.old.length, timer: !!S.timer, intensity: S.intensity, era: S.era, pending: S.pending && S.pending.id, playlist: !!S.playlist }; };
 
   // Offline render of a track (windowed so the node graph stays small). opts: {from, intensity, sampleRate}
   Music.renderOffline = function (id, seconds, opts) {
@@ -1226,7 +1253,7 @@
     let pl = null, stats = null;
     return A.renderWindowed(seconds, { sampleRate: opts.sampleRate || 44100, window: 1.5, seed: opts.seed || 1, teardown: eng => { stats = eng.stats; } }, function (eng, t0, t1) {
       if (!pl) {
-        pl = new Player(eng, def, { loop: opts.loop !== false, intensity: num(opts.intensity, S.intensity) });
+        pl = new Player(eng, def, { loop: opts.loop !== false, intensity: num(opts.intensity, S.intensity), era: opts.era });
         pl.trim = num(def.trim, DEFAULT_TRIM) * MIX_TRIM * num(opts.gain, 1);
         pl.bus.gain.value = pl.trim; pl.verb.gain.value = 1;
         pl.shift = num(opts.from, 0); pl.skipBefore = 0;
@@ -1276,7 +1303,7 @@
     out.snaps = r0.snaps;
     return out;
   };
-  Music._compile = (id, pass, form0, alt0, take) => compilePass(TRACKS[id], pass || 0, form0, alt0, take);
+  Music._compile = (id, pass, form0, alt0, take, era) => compilePass(TRACKS[id], pass || 0, form0, alt0, take, era);
   Music._define = Track;                          // test hook: register a (hidden) track at run time
   Music._tracks = TRACKS; Music._INST = INST; Music._parseChord = parseChord;
 
@@ -1319,7 +1346,7 @@
     desc: 'Deep field — slow analogue pads under a high air pad, distant women’s voices, high strings that swell and fade, a celeste and harp as single points of light, a lone flute: the planetarium, in the Serrie manner',
     bpm: 50, trim: 4.48, tone: { hi: -2.5 }, root: 'A', mode: 'lydian', loopFrom: 'A1', tens: false, gentle: true, rubato: 0.03, mix: { bass: 0.7 }, fx: { dly: 2.4, verb: 1.25 },
     forms: [['A1', 'breath1', 'B', 'breath2', 'C', 'breath3', 'E'], ['A1', 'breath1', 'C', 'breath2', 'B', 'breath3', 'E'], ['A1', 'breath2', 'B', 'breath1', 'E', 'breath3', 'C'], ['A1', 'C', 'breath1', 'B', 'E']],
-    alts: [{}, { lead: 'cello', lead2: 'flute', choir: 'choirMen' }, { lead: 'clarinet', lead2: 'cello', choir: 'cellos' }],
+    alts: [{}, { lead: 'cello', lead2: 'flute', choir: 'choirMen' }, { lead: 'clarinet', lead2: 'cello', choir: 'cellos' }], eraAlts: { pad: 'strTrem', pad2: 'dark', choir: 'choirMen' },
     inst: { pad: 'strings', pad2: 'analog', bass: 'deep', lead: 'flute', lead2: 'glass', bell: 'glass', arp: 'harp', choir: 'choirWomen', choir2: 'ooh' },
     ph: {
       S1: '5:4 | 8:4 | 7:4 | 5:4', S2: '6:4 | 8:2 9:2 | 8:4 | 5:4', S3: '10:4 | 9:4 | 8:2 7:2 | 5:4', S4: '5:2 8:2 | 7:3 6:1 | 5:4 | 3:4',
@@ -1373,7 +1400,7 @@
     desc: 'Calm exploration, wonder: airy flute, glassy bells and a floating lydian pad',
     bpm: 56, trim: 2.25, tone: { hi: -2.5 }, root: 'G', mode: 'lydian', loopFrom: 'A1', tens: false, gentle: true, rubato: 0.03, fx: { dly: 2.2, verb: 1.25 },
     forms: [['A1', 'A2', 'breath1', 'B', 'C', 'breath2', 'A3', 'B2', 'breath3', 'E'], ['A1', 'B', 'breath1', 'C', 'breath2', 'A2', 'B2', 'E'], ['A1', 'A2', 'C', 'breath2', 'B', 'breath1', 'A3', 'E'], ['A1', 'breath1', 'B', 'A2', 'breath2', 'C', 'breath3', 'B2', 'E']],
-    alts: [{}, { lead: 'cello', lead2: 'flute', choir: 'choirMen' }, { lead: 'oboe', lead2: 'cello', arp: 'harp' }],
+    alts: [{}, { lead: 'cello', lead2: 'flute', choir: 'choirMen' }, { lead: 'oboe', lead2: 'cello', arp: 'harp' }], eraAlts: { pad: 'strTrem', choir: 'choirMen', pad2: 'dark' },
     inst: { pad: 'strings', pad2: 'analog', bass: 'deep', lead: 'flute', lead2: 'glass', bell: 'glass', arp: 'vibes', choir: 'choirWomen' },
     ph: {
       W1: '5:3 8:1 | 7:2 5:2 | 6:3 5:1 | 4:2 3:2',
@@ -1404,7 +1431,7 @@
     desc: 'Calm exploration, patience: marimba ostinato, plucked reed melody, warm dorian pad',
     bpm: 60, trim: 1.97, tone: { hi: -2.5 }, root: 'D', mode: 'dorian', loopFrom: 'A1', tens: false, gentle: true, rubato: 0.03, fx: { dly: 2.0, verb: 1.2 },
     forms: [['A1', 'A2', 'B', 'C', 'breath', 'A3', 'B2'], ['A1', 'B', 'C', 'breath', 'A2', 'B2'], ['A1', 'A2', 'C', 'breath', 'B', 'A3'], ['A1', 'C', 'breath', 'A2', 'B2', 'A3']],
-    alts: [{}, { lead: 'cello', lead2: 'glass' }, { lead: 'clarinet', lead2: 'cello' }],
+    alts: [{}, { lead: 'cello', lead2: 'glass' }, { lead: 'clarinet', lead2: 'cello' }], eraAlts: { pad: 'dark', lead: 'cello' },
     inst: { pad: 'warm', bass: 'deep', lead: 'reed', lead2: 'vibes', bell: 'vibes', arp: 'marimba' },
     ph: {
       P1: '5:1.5 6:.5 8:2 | 8:1.5 7:.5 6:2 | 5:2 3:2 | 4:1 5:1 6:2',
@@ -1431,7 +1458,7 @@
     desc: 'Calm exploration, determination: steady pulse, strings and a resolute horn theme',
     bpm: 72, trim: 1.64, tone: { hi: -2.5 }, root: 'A', mode: 'minor', oct: 1, loopFrom: 'A1', tens: false, gentle: true, rubato: 0.03, fx: { dly: 1.6, verb: 1.2 },
     forms: [['A1', 'A2', 'B', 'C', 'breath', 'A3', 'B2', 'E'], ['A1', 'B', 'C', 'breath', 'A2', 'B2', 'E'], ['A1', 'A2', 'C', 'breath', 'B', 'A3', 'E'], ['A1', 'C', 'breath', 'A2', 'B', 'B2', 'E']],
-    alts: [{}, { lead: 'cello', lead2: 'flute' }],
+    alts: [{}, { lead: 'cello', lead2: 'flute' }], eraAlts: { pad: 'strTrem', choir: 'choirMen', pad2: 'dark' },
     inst: { pad: 'strings', pad2: 'analog', bass: 'pulse', lead: 'horn', lead2: 'bell', bell: 'glass', arp: 'arp', choir: 'aah' },
     ph: {
       D1: '1:1.5 3:.5 5:1 3:1 | 6:1.5 5:.5 3:2 | 7:1.5 5:.5 2:2 | 1:3 r:1',
@@ -1459,7 +1486,7 @@
     desc: 'Calm exploration, the veil: a slow waltz of the spheres — harp arpeggios, an oboe singing over the strings, women far back, celeste points of light; in three',
     bpm: 54, meter: 3, trim: 3.12, tone: { hi: -2.5 }, root: 'Eb', mode: 'major', loopFrom: 'A1', tens: false, gentle: true, rubato: 0.03, fx: { dly: 2.0, verb: 1.25 },
     forms: [['A1', 'A2', 'B', 'C', 'breath', 'A3', 'E'], ['A1', 'B', 'C', 'breath', 'A2', 'B2', 'E'], ['A1', 'C', 'breath', 'A3', 'B2', 'A2', 'E'], ['A1', 'B', 'A2', 'breath', 'C', 'E']],
-    alts: [{}, { lead: 'flute', lead2: 'cello' }, { lead: 'clarinet', arp: 'vibes', choir: 'aah' }],
+    alts: [{}, { lead: 'flute', lead2: 'cello' }, { lead: 'clarinet', arp: 'vibes', choir: 'aah' }], eraAlts: { pad: 'strTrem', lead: 'cello', choir: 'choirMen' },
     inst: { pad: 'strings', pad2: 'air', bass: 'deep', lead: 'oboe', lead2: 'glass', bell: 'glass', arp: 'harp', choir: 'choirWomen', choir2: 'choirMen' },
     ph: {
       V1: '5:2 6:1 | 8:3 | 7:2 5:1 | 6:3', V1b: '5:1 6:1 8:1 | 8:3 | 7:1 6:1 5:1 | 6:3',          // the waltz tune and a more flowing reading of it
@@ -1493,7 +1520,7 @@
     desc: 'Calm exploration, the abyss: the dark between the stars — cellos on a sunken pedal, a bassoon far below, an alto flute far above, the men chanting the phrygian step; sparse, uneasy, patient',
     bpm: 46, trim: 3.85, tone: { hi: -3 }, root: 'E', mode: 'phrygian', loopFrom: 'A1', tens: false, gentle: true, rubato: 0.03, mix: { bass: 0.8 }, fx: { dly: 2.4, verb: 1.3 },
     forms: [['A1', 'breath1', 'B', 'C', 'breath2', 'A2', 'E'], ['A1', 'C', 'breath1', 'B', 'breath2', 'E'], ['A1', 'B', 'breath2', 'C', 'A2', 'breath1', 'E'], ['A1', 'breath1', 'C', 'A2', 'E']],
-    alts: [{}, { lead: 'altoFlute', lead2: 'cello' }, { lead: 'cello', lead2: 'bassoon', pad: 'organSoft' }],
+    alts: [{}, { lead: 'altoFlute', lead2: 'cello' }, { lead: 'cello', lead2: 'bassoon', pad: 'organSoft' }], eraAlts: { pad: 'strTrem', lead2: 'cello' },
     inst: { pad: 'cellos', pad2: 'dark', bass: 'deep', lead: 'bassoon', lead2: 'altoFlute', bell: 'chime', arp: 'harp', choir: 'choirMen', choir2: 'uuh' },
     ph: {
       Z1: '5:4 | 6:4 | 5:2 4:2 | 3:4', Z1b: '5:6 6:2 | 5:2 4:2 3:4',                      // the bassoon: a step up, a slow fall
@@ -1526,7 +1553,7 @@
     desc: 'Calm exploration, the cradle: a lullaby in six — a rocking harp, a clarinet humming the tune, glockenspiel points, the women humming, the men beneath; the ship asleep between the stars',
     bpm: 156, meter: 6, trim: 3.2, tone: { hi: -2.5 }, root: 'F', mode: 'major', loopFrom: 'A1', tens: false, gentle: true, rubato: 0.03, fx: { dly: 1.6, verb: 1.2 },
     forms: [['A1', 'A2', 'B', 'C', 'breath', 'A3', 'E'], ['A1', 'B', 'C', 'breath', 'A2', 'B2', 'E'], ['A1', 'C', 'breath', 'A2', 'B2', 'E'], ['A1', 'B', 'breath', 'A3', 'C', 'E']],
-    alts: [{}, { lead: 'flute', lead2: 'vibes' }, { lead: 'cello', arp: 'vibes', bell: 'glass' }],
+    alts: [{}, { lead: 'flute', lead2: 'vibes' }, { lead: 'cello', arp: 'vibes', bell: 'glass' }], eraAlts: { pad: 'dark', lead: 'cello', choir: 'choirMen' },
     inst: { pad: 'warm', pad2: 'air', bass: 'deep', lead: 'clarinet', lead2: 'glass', bell: 'bell', arp: 'harp', choir: 'choirWomen', choir2: 'choirMen' },
     ph: {
       L1: '5:2 6:1 8:3 | 7:2 6:1 5:3 | 3:2 4:1 5:3 | 6:6', L1b: '5:3 8:3 | 7:2 6:1 5:3 | 3:3 5:3 | 6:6',     // the lullaby, and a simpler reading
@@ -1560,7 +1587,7 @@
     desc: 'Calm exploration, the beacon: a glass synth and strings on a sunken pedal, slow pizzicato, a horn calling the leitmotif from very far away, crotales and tubular bells answered by the delay; a signal from the edge',
     bpm: 52, trim: 3.79, tone: { hi: -2.5 }, root: 'C', mode: 'mixolydian', loopFrom: 'A1', tens: false, gentle: true, rubato: 0.03, mix: { bass: 0.85 }, fx: { dly: 2.6, verb: 1.3 },
     forms: [['A1', 'B', 'C', 'breath', 'A2', 'E'], ['A1', 'C', 'breath', 'B', 'A2', 'E'], ['A1', 'breath', 'A2', 'C', 'E'], ['A1', 'B', 'breath', 'C', 'E']],
-    alts: [{}, { lead: 'flute', lead2: 'glass' }, { lead: 'cello', pad: 'strings', pad2: 'analog' }],
+    alts: [{}, { lead: 'flute', lead2: 'glass' }, { lead: 'cello', pad: 'strings', pad2: 'analog' }], eraAlts: { pad2: 'strTrem', pad: 'dark', choir: 'choirMen' },
     inst: { pad: 'padGlass', pad2: 'strings', bass: 'deep', lead: 'hornSolo', lead2: 'crystal', bell: 'crystal', bell2: 'chime', arp: 'pizz', choir: 'ooh' },
     ph: {
       K1: '5:3 8:1 | 7:2 6:2 | 5:4 | r:4', K1b: '5:4 | 8:2 7:2 | 6:2 5:2 | r:4',          // the leitmotif head (rising fourth, falling step) as a distant call
