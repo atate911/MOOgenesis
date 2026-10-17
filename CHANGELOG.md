@@ -20,7 +20,8 @@ Versions follow `MAJOR.MINOR.PATCH`; the live version is the `VERSION` file.
   varying length (`barsVar`) and a small tempo rubato (`rubato`), on top of the per-pass instrumentation `alts`; a per-performance
   `take` seeds the variation RNG so no two performances of a piece are the same. The music never stops on the map: a piece
   crossfades into a one-minute interlude (five hidden templates — drift, harp, voices, horizon, pulse — re-rooted to the key and
-  mode of the piece that follows, never the same one twice running) and the interlude into the next piece; reshuffles never repeat
+  mode of the piece that follows, never the same one twice running) and the interlude into the next piece — each newcomer enters on the last bar line of the piece before it and fades in equal-power
+  over up to six seconds while the outgoing piece plays its final chord to the end and decays beneath it; reshuffles never repeat
   the piece just heard and keep pieces in the same key apart; `Music.snapshot()/restore()` carry the whole rotation, rare pieces
   included. Fixed: galaxy4's cello and men's lines in section B were written 16 bars late and never sounded; galaxy1's section C
   had two `choir` keys.

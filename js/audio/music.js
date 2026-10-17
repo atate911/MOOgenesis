@@ -870,6 +870,13 @@
       const base = this.pass.start - this.shift, k = Math.ceil((now - base + 0.06) / unit);
       return Math.min(base + k * unit, now + (kind === 'beat' ? 1.5 : 4.5));
     }
+    // the first bar line at or after `time` in this performance (never past its end): where the next piece enters
+    boundaryAfter(time) {
+      if (!this.pass) return time;
+      const unit = this.P.meter * this.P.spb * this.stretch, base = this.pass.start - this.shift, end = this.pass.start + this.pass.len - this.shift;
+      const k = Math.ceil((time - base - 0.02) / unit);
+      return Math.min(end, Math.max(time, base + k * unit));
+    }
     applyIntensity(x, immediate) {
       this.intensity = x;
       const t = this.eng.ctx.currentTime;
@@ -994,7 +1001,8 @@
   function playlistCheck(now) {
     const pl = S.playlist, p = S.cur;
     if (!pl || !p || !p.schedDone || pl.advancing) return;
-    if (p.endAt - now <= pl.fade) {
+    if (S.switchAt) return;
+    if (p.endAt - now <= pl.fade + 5) {
       pl.advancing = true;
       let id, gap = pl.gap;
       if (pl.queued) { id = pl.queued; pl.queued = null; gap = pl.gapIn; }      // the piece the interlude was leading into
@@ -1009,7 +1017,15 @@
       }
       const g = pickGap(gap);
       if (g > 0) { p.fadeOut(Math.max(0.5, p.endAt - now)); S.old.push(p); S.cur = null; S.plWait = { at: p.endAt + g, id: id, fade: 0.4 }; }
-      else startTrack(id, { fade: pl.fade, loop: false, keepPlaylist: true, quantize: false });
+      else {
+        // the seam: the new piece enters on a bar line of the old one, `fade` seconds (or less) before it ends, and fades in over that time;
+        // the old piece is not cut — it plays its last bar and its final chord decays under the newcomer (a long fade that mostly happens
+        // after its last note), so the cadence is heard and the hall carries one piece into the next
+        const at = Math.min(p.endAt, p.boundaryAfter(Math.max(now + 0.1, p.endAt - pl.fade)));
+        const inFade = clamp(p.endAt - at + 1.5, 2.5, pl.fade), oldFade = (p.endAt - at) + 6;
+        S.switchAt = { id, opts: { fade: pl.fade, inFade, oldFade, loop: false, keepPlaylist: true, quantize: false }, at };
+        ensureTimer();
+      }
     }
   }
   const pickGap = g => (Array.isArray(g) ? g[0] + Math.random() * (g[1] - g[0]) : num(g, 0));
@@ -1074,9 +1090,9 @@
     S.switchAt = null;
     if (!opts.keepPlaylist) { S.playlist = null; S.plWait = null; }
     const p = new Player(eng, def, { loop: opts.loop !== false, intensity: S.intensity });
-    if (S.cur) { S.cur.fadeOut(fade); S.old.push(S.cur); }
+    if (S.cur) { S.cur.fadeOut(num(opts.oldFade, fade)); S.old.push(S.cur); }    // oldFade: let a piece that is ending ring out under the next one
     S.cur = p;
-    p.fadeIn(fade);
+    p.fadeIn(num(opts.inFade, fade));
     p.begin(eng.ctx.currentTime + 0.1);
     if (S.playlist) S.playlist.advancing = false;
     ensureTimer();
@@ -1181,8 +1197,8 @@
   // the music never stops on the map: every piece crossfades into an interlude in the next piece's key, and that into the next piece
   const INTERLUDES = ['drift', 'drift2', 'drift3', 'drift4', 'drift5'];
   // the rare pieces (the tide, the chorale) are slipped into a cycle about a third of the time each; at war their readings with the synthetic hits, more often
-  const CALM_ROT = { gap: 0, gapIn: 0, fade: 7, between: INTERLUDES, betweenP: 1, rare: { ids: ['galaxy9', 'galaxy10', 'procession'], p: { galaxy9: 0.35, galaxy10: 0.35, procession: 0.25 } } };   // the procession rarer still: an occasion
-  const EARLY_ROT = { gap: 0, gapIn: 0, fade: 8, between: ['drift', 'drift2', 'drift4', 'drift5'], betweenP: 1 };
+  const CALM_ROT = { gap: 0, gapIn: 0, fade: 6, between: INTERLUDES, betweenP: 1, rare: { ids: ['galaxy9', 'galaxy10', 'procession'], p: { galaxy9: 0.35, galaxy10: 0.35, procession: 0.25 } } };   // the procession rarer still: an occasion
+  const EARLY_ROT = { gap: 0, gapIn: 0, fade: 7, between: ['drift', 'drift2', 'drift4', 'drift5'], betweenP: 1 };
   const MOOD_ROTATE = { explore: CALM_ROT, galaxy: CALM_ROT, map: CALM_ROT, calm: CALM_ROT, galaxyEarly: EARLY_ROT, galaxyWar: { gap: 0, gapIn: 0, fade: 5, between: INTERLUDES, betweenP: 0.6, rare: { ids: ['galaxy9:war', 'galaxy10:war'], p: 0.6 } } };
   let moodTick = 0;
   Music.moods = () => Object.keys(MOODS).concat(Object.keys(TRACKS).filter(id => id.indexOf('race:') === 0));
