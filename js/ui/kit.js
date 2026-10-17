@@ -291,7 +291,7 @@
       if (entry.closed) return; entry.closed = true;
       U.remove(modalStack, entry);
       scrim.style.transition = 'opacity .15s'; scrim.style.opacity = '0';
-      setTimeout(() => scrim.remove(), 150);
+      setTimeout(() => { scrim.remove(); restoreAttention(); }, 150);       // the card / scene underneath gets its pulsing light back
       if (o.onClose) o.onClose(v);
       resolve(v);
     }
@@ -299,20 +299,52 @@
     modalStack.push(entry);
     overlay.appendChild(scrim);
     if (o.onOpen) o.onOpen(modal, close);
+    // a modal the turn is waiting on (event card, spy report, …) lights its default button: the primary one, or a lone affirmative one
+    // (never a lone Cancel / Abort). Modals the player opened (options, menus) stay quiet unless o.attention === true.
+    if (foot && o.attention !== false && (o.attention === true || (M.Game && M.Game.busy)) && !modal.querySelector('.needs-answer')) {
+      const bs = Array.from(foot.querySelectorAll('.btn')), lone = bs.length === 1 && o.buttons[0] && o.buttons[0].value;
+      const def = bs.find(b => b.classList.contains('primary')) || (lone ? bs[0] : null);
+      if (def) UI.attention(def, { focus: false });
+    }
+    if (o.choices) UI.attentionGroup(body.querySelectorAll(o.choices));      // o.choices: selector of the options of a real decision (soft group light)
     const first = modal.querySelector('.btn.primary') || modal.querySelector('input,select,textarea');
     if (first && o.autofocus !== false) setTimeout(() => first.focus && first.focus(), 30);
     p.close = close; p.el = modal;
     return p;
   };
   UI.modalOpen = () => modalStack.length > 0;
-  // Mark the control that moves the game forward (the "answer" of a card/scene): pulsing highlight + keyboard focus, so Enter/Space act on it.
-  UI.attention = function (btn) {
+  // Waiting-for-input lights (css/kit.css):
+  //   UI.attention(el, {focus})  the ONE control that moves the game on (Continue / OK / Next / the card's default answer): a pulsing gold
+  //                              light + keyboard focus so Enter/Space act on it (focus:false leaves focus alone). One at a time.
+  //   UI.attentionGroup(els)     every option of a real decision with no safe default (Council vote, accept/defy, a treaty offer, a spy
+  //                              target): a softer pulse on all of them, so it is clear the game waits without recommending one.
+  //   UI.attentionClear(els)     drop the group light once the choice is made (removed elements need nothing).
+  // A modal opened over a waiting card takes the light; when it closes the light returns to the control the turn still waits on.
+  const attnStack = [];
+  UI.attention = function (btn, o) {
     if (!btn) return btn;
-    try { doc.querySelectorAll('.needs-answer').forEach(x => x.classList.remove('needs-answer')); } catch (e) { /* ignore */ }
+    try { doc.querySelectorAll('.needs-answer').forEach(x => { if (x !== btn) x.classList.remove('needs-answer'); }); } catch (e) { /* ignore */ }
     btn.classList.add('needs-answer');
-    setTimeout(() => { try { if (btn.isConnected && !btn.disabled && !(doc.activeElement && doc.activeElement.closest && doc.activeElement.closest('.modal') && !btn.closest('.modal'))) btn.focus({ preventScroll: true }); } catch (e) { /* ignore */ } }, 30);
+    const i = attnStack.indexOf(btn); if (i >= 0) attnStack.splice(i, 1);
+    attnStack.push(btn); if (attnStack.length > 16) attnStack.shift();
+    if (!o || o.focus !== false) setTimeout(() => { try { if (btn.isConnected && !btn.disabled && !(doc.activeElement && doc.activeElement.closest && doc.activeElement.closest('.modal') && !btn.closest('.modal'))) btn.focus({ preventScroll: true }); } catch (e) { /* ignore */ } }, 30);
     return btn;
   };
+  UI.attentionGroup = function (els) {
+    const list = Array.from(els || []).filter(e => e && !e.disabled);
+    list.forEach(e => e.classList.add('needs-choice'));
+    return list;
+  };
+  UI.attentionClear = function (els) { Array.from(els || []).forEach(e => e && e.classList.remove('needs-choice', 'needs-answer')); };
+  function restoreAttention() {
+    if (doc.querySelector('.needs-answer')) return;
+    for (let i = attnStack.length - 1; i >= 0; i--) {
+      const e = attnStack[i];
+      if (!e.isConnected || e.disabled || e.offsetParent === null) { attnStack.splice(i, 1); continue; }
+      e.classList.add('needs-answer'); return;
+    }
+  }
+  UI.restoreAttention = restoreAttention;
   UI.closeAllModals = () => modalStack.slice().forEach(m => m.close(null));
   UI.alert = (msg, o) => UI.modal(Object.assign({ title: 'Notice', body: typeof msg === 'string' ? h('p', msg) : msg, buttons: [{ label: 'OK', value: true, primary: true }] }, o));
   UI.confirm = (msg, o) => UI.modal(Object.assign({ title: 'Confirm', body: typeof msg === 'string' ? h('p', msg) : msg, buttons: [{ label: 'Cancel', value: false }, { label: 'OK', value: true, primary: true }] }, o)).then(v => !!v);

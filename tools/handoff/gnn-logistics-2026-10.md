@@ -38,3 +38,13 @@ races, setup, help, GNN badges) pass the right empire's race; the visible mismat
 - Colony panel: "stargate" chip, "Rally → X · n turns (stargate)" line (click centres the map); Reloc panel: preview + Accept (Space),
   All colonies, Stay here, Cancel; Alt+R on the galaxy screen (toggle all → selected / clear).
 Tests: `tools/rules/88-logistics.test.js` (4). Not changed: the AI's stargate policy (`js/ai/designs.js`, 50 % per planet once it has the tech).
+
+## Waiting-for-input lights
+`js/ui/kit.js`: `UI.attention(el, {focus})` (one gold pulse, keeps a stack so a closed modal hands it back via `restoreAttention`),
+`UI.attentionGroup(els)` / `UI.attentionClear(els)` (soft blue pulse on every option of a real decision), `UI.modal` lights its primary or
+lone affirmative button when `Game.busy` (or `o.attention === true`) and takes `o.choices` (a selector for a decision's options).
+Applied in: audience (`choose()`), Council (Continue, vote, verdict), spy prompts, the fallback research modal. Already lit before:
+side-panel cards, pre-battle, combat result, landing/bombard, tech scenes, endings, GNN. Deliberately NOT lit: tactical combat orders
+(the lit grid cells already show the moves; pulsing Done would invite skipping turns) and Next Turn while nothing is pending.
+Verified with Playwright: player modal unlit; card default lit; event modal takes the light and returns it; AI offer and Council vote /
+verdict light all options; `tools/qa/turns.js`, `tools/qa/spy.js` clean.

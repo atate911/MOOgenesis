@@ -23,6 +23,12 @@ Versions follow `MAJOR.MINOR.PATCH`; the live version is the `VERSION` file.
   for Accept (Space), with "All colonies" and "Stay here"; Alt+R on a selected colony points every colony at it (again: clears
   them), the original's hotkey; a rally point that is captured or lost points back home (`Fleet.fixReloc`, every turn and before
   ships are dispatched) instead of staying as a stale target. New `relocAll` order. Tests: `tools/rules/88-logistics.test.js`.
+- Waiting-for-input lights (`UI.attention` / `UI.attentionGroup`, css/kit.css): whenever the turn waits on the player, the control that
+  moves it on pulses gold (Continue / OK / the card's default answer), now also in modals opened during a turn (event cards, spy
+  reports, alerts: their primary or lone affirmative button), the audience's lone Continue and the Council's Continue cards. Real
+  decisions with no safe default light ALL their options with a softer blue pulse instead of recommending one: the Council vote and
+  accept/defy, AI treaty offers in an audience, spy steal / sabotage / frame targets, the fallback research choice. A modal opened over
+  a waiting card hands the light back to the card when it closes. Modals the player opens outside a turn stay unlit.
 
 ## 1.1.2 — 2026-10-17
 

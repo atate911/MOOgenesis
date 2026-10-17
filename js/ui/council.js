@@ -387,7 +387,7 @@
     return new Promise((res, rej) => {
       const done = () => { if (R.prompt && R.prompt.type === 'continue') { R.prompt = null; clearCards(); res(); } };
       R.prompt = { type: 'continue', done, abort: () => rej(ABORT) };
-      showCards([{ cls: 'go big', t1: label || 'Continue', t2: 'Space', pick: done }]);
+      const els = showCards([{ cls: 'go big', t1: label || 'Continue', t2: 'Space', pick: done }]); UI.attention(els[0], { focus: false });
       setHint([['Space', 'continue']]);
     });
   }
@@ -397,6 +397,7 @@
       let settled = false;
       const choose = vote => {
         if (settled) return; settled = true; R.prompt = null;
+        UI.attentionClear(els);
         els.forEach((e, i) => e.classList.add(cards[i].vote === vote ? 'picked' : 'dim'));
         res(vote);
       };
@@ -406,7 +407,7 @@
         return { key: String(c.key), vote: c.empire, badge: { race: e.race, color: empHex(e.color) }, color: empHex(e.color), t1: self ? 'Yourself' : leaderOf(e), t2: self ? e.leader + ' of the ' + e.name : 'of the ' + e.name + ' · ' + votesText(e.votes), cnt: R.cast[c.empire] | 0,
           tip: self ? 'Cast your votes for your own claim.' : 'Backing a candidate warms them to you and cools the other candidate.', pick: () => choose(c.empire) };
       });
-      const els = showCards(cards);
+      const els = showCards(cards); UI.attentionGroup(els);              // your vote: every candidate (and Abstain) glows; none is recommended
       R.prompt = { type: 'vote', cards, choose, armed: false, abort: () => rej(ABORT) };
       setTimeout(() => { if (R.prompt && R.prompt.type === 'vote') R.prompt.armed = true; }, 700);
       setHint([['1', 'first'], ['2', 'second'], ['0', 'abstain'], ['Esc', 'abstain']]);
@@ -420,6 +421,7 @@
       let settled = false;
       const choose = yes => {
         if (settled) return; settled = true; R.prompt = null;
+        UI.attentionClear(els);
         els.forEach((e, i) => e.classList.add((i === 0) === yes ? 'picked' : 'dim'));
         resolve(yes);
       };
@@ -427,7 +429,7 @@
         { key: 'Y', cls: 'big', color: '#f3dca0', t1: mine ? 'Accept the crown' : 'Accept the ruling', t2: mine ? 'You become ruler of the galaxy and the game ends in victory.' : leaderOf(W) + ' rules. You go into exile and the game ends.', pick: () => choose(true) },
         { key: 'N', cls: 'big bad', color: '#ff5c6a', t1: 'Defy the Council', t2: 'Final War: every other empire unites against you and pools its technology.', pick: () => choose(false) },
       ];
-      const els = showCards(cards);
+      const els = showCards(cards); UI.attentionGroup(els);              // accept / defy: both glow, the game waits for the player's call
       R.prompt = { type: 'verdict', choose, cards, els, abort: () => rej(ABORT) };
       setHint([['Y', 'accept'], ['N', 'defy']]);
       sfx('open');

@@ -87,7 +87,7 @@
       }
       return new Promise(res => {
         const rows = it.choices.map(c => UI.button((c.tech ? c.tech.name : 'Level ' + c.level) + ' — ' + M.Util.fmt(c.cost) + ' RP', () => pr.close(c.level), { block: true }));
-        const pr = UI.modal({ title: 'Choose the next ' + Q.FIELD_NAMES[it.field] + ' research', body: h('div.col', rows), buttons: [], closable: false, width: '28rem' });
+        const pr = UI.modal({ title: 'Choose the next ' + Q.FIELD_NAMES[it.field] + ' research', body: h('div.col', rows), buttons: [], closable: false, width: '28rem', choices: '.btn' });
         pr.then(v => res(v));
       });
     };

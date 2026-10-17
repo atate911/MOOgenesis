@@ -191,6 +191,11 @@
         A.menuEl.appendChild(b);
       });
       setFocus(A.focus);
+      // waiting-for-input light: a lone Continue / OK gets the gold light; an offer the turn is waiting on (an AI-initiated audience) lights
+      // all its answers softly — accepting or refusing a treaty is the player's call, the light only says "the game waits here"
+      const bs = Array.from(A.menuEl.querySelectorAll('.au-item'));
+      if (items.length === 1 && bs[0]) UI.attention(bs[0], { focus: false });
+      else if (A.mode === 'ai' && M.Game && M.Game.busy) UI.attentionGroup(bs);
     });
   }
   function setFocus(i) {
