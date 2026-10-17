@@ -93,9 +93,10 @@ Versions follow `MAJOR.MINOR.PATCH`; the live version is the `VERSION` file.
 - The era: a slow arc under the exploration music that is felt in hindsight, never heard moving. `soundscape.js` reads a target from
   the state each turn (empires met, how many are cold or hostile, open wars, how far the game has run) and lets a value follow it a few
   hundredths a turn (`Music.setEra`); a new performance of an exploration piece reads it once when it is compiled, never mid-piece. As
-  it rises: some chords gain ninths and sevenths, later a few turn suspended or minor (never the cadence), the pads voice one more note
-  and sit closer together (stage width −35 % at the top), the hall dries a quarter, the tempo lifts up to 3 %, and darker alternates
-  (tremolo strings, the dark pad, the men) stand in more often (`eraAlts`); the rare pieces grow likelier. Below 0.3 the planetarium
+  it rises: some chords gain ninths and sevenths, later major sevenths and minor ninths and a fourth chord turning minor now and then
+  (never the cadence, never a suspension), the pads voice one more note near the top and sit a little closer (stage width −20 %), the
+  delay echoes tighten while the hall stays (it is what makes the recordings real), the tempo lifts up to 3 %, and recorded low strings
+  and the men stand in more often (`eraAlts`); the rare pieces grow likelier. Below 0.3 the planetarium
   rotation plays; war still takes the war rotation.
 - The underscore senses the game's phase: in the first years, before anyone has been met (and before turn 70), the map plays the
   planetarium rotation only (`galaxyEarly`: deep field, beacon, wonder, veil, cradle, with the pad and harp interludes — big sky, no
