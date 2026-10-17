@@ -73,3 +73,20 @@ auto-answered; per 50-turn bucket):
 - Game length with competent players (`soak.js --games 16 --turns 450`, all slots AI): 15/16 end by the Galactic Council, median T175
   (p10 T91, p90 T340). Faithful to the original (research/05 §7: first session at 2/3 colonised, then every 25 years), but half the
   length the user expects a game to last. A "Council pacing" option is a design decision for the user (Options already has Council on/off).
+
+### Game length by galaxy size and difficulty (user plays Huge / Easy; the game must also suit short games)
+`soak.js` (all slots AI, 4 opponents, cap 600), end turn of each game — every finished game ended at the Galactic Council:
+| size / difficulty | games | end turns | median |
+|---|---|---|---|
+| small / hard | 10 | 26–300 | 175 |
+| small / easy | 10 | 100–600 | 225 |
+| small / average | 10 | 48–600 | 275 |
+| medium / easy | 6 | 175–400 | 325 |
+| huge / average | 4 | 125, 175, 200, cap 600 | ~190 |
+| huge / easy | 4 | 200, 250, 300, 375 | ~275 |
+Length scales by itself (the Council needs 2/3 of the stars colonised; Easy AIs expand slower). Nothing added here assumes a game length:
+the GNN rules are per turn (war cool-down 20 turns, 2 wars per bulletin) and the stars report / Council use fractions of the galaxy.
+Huge / Easy stand-in (`longgame huge lgH1 600 easy`): 11–36 prompts and 1–3 newscasts per 50 turns all game, 11–24 ms per turn headless,
+save 269 KB at T325. **AI stargates: 20 built by T300, 31 by T350 (≈93,000 BC plus ~3,100 BC a turn upkeep), 0 fleet jumps through any
+gate** — the AI builds them on a coin flip per planet (`js/ai/designs.js`) but its fleets never move between two of its own gated
+planets. Open item, recommended fix. Also still open: AI-vs-AI peace undone the same turn by alliance call-ups (8 of 12 same-turn cases).
