@@ -82,7 +82,7 @@ Versions follow `MAJOR.MINOR.PATCH`; the live version is the `VERSION` file.
   Every galaxy piece now has `forms` (three or four orderings of its sections, so a performance opens differently each time),
   alternative written readings of its melodies (`ph: [...]`, chosen per performance; a doubling that says `ph: '@'` follows the
   other line's choice), parts that sit out some performances (`skip`), phrases the player leaves out (`rest`), breath sections of
-  varying length (`barsVar`) and a small tempo rubato (`rubato`), on top of the per-pass instrumentation `alts`; a per-performance
+  varying length (`barsVar`; at most two bars, with a faint high pad so a breath is never a hole in a long programme) and a small tempo rubato (`rubato`), on top of the per-pass instrumentation `alts`; a per-performance
   `take` seeds the variation RNG so no two performances of a piece are the same. The music never stops on the map: a piece
   crossfades into a one-minute interlude (five hidden templates — drift, harp, voices, horizon, pulse — re-rooted to the key and
   mode of the piece that follows, never the same one twice running) and the interlude into the next piece — each newcomer enters on the last bar line of the piece before it and fades in equal-power
