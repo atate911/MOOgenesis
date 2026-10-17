@@ -11,7 +11,7 @@ Browser-pane tip: animations use requestAnimationFrame, so in the built-in brows
 Pass 3 (`briefs/graphics-pass-3.md`) is implemented on the code side: Phase 0 (map glyphs, wordmark, exile, troop
 silhouettes, bombard overlay, combat cheap wins, system plates and sun, unused plates consumed), Phase 1 (the 3/4 ship
 view through `tools/build-ship-art.py` and `Gfx.Ships` `view:'3q'`, rock / debris / base cutout loaders) and Phase 2
-(combat FX pass, map ambience). **Waiting on art:** generate `docs/IMAGE-GEN-SPRITES.md` (27 cutouts and skies) and
+(combat FX pass, map ambience). **Waiting on art** (checklist with drop-in steps: `ART-NEEDED.md`): generate `docs/IMAGE-GEN-SPRITES.md` (27 cutouts and skies) and
 items 26-30, 41, 48, 52 of `docs/IMAGE-GEN-OTHER.md`; drop ship cutouts into `MOOg images/ship-variants/` and run
 `python3 -I tools/build-ship-art.py`; convert the rest to webp under `assets/art/{fx,system-sky,battle,still}/`
 (paths in `js/gfx/worldart.js`). Until then each consumer logs one 404 per missing file and keeps its fallback.
