@@ -1,5 +1,8 @@
 # Graphics pass 3 — finishing the object layer (plan)
 
+> **Status (session 6):** Phases 0, 1 (code side) and 2 are implemented; the art of part A and the trimmed part B is
+> still to be generated, and Phase 3 is not started. See `HANDOFF.md` for the drop-in steps.
+
 Input: `tools/handoff/graphics-inventory-2026-10.md` (what is still flat or procedural, with screenshots from
 `tools/qa/art-shots.js`). The character/scene layer is done; this pass finishes ships, the battlefield, the system view,
 the map glyphs and the flat markers, and it consumes the delivered-but-unused plates.

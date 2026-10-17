@@ -7,7 +7,17 @@ Docs: `PROGRESS.md` (plan/status/25-feature acceptance checklist) · `CONVENTION
 Commands: `node tools/check.js` (syntax of every manifest file) · `node tools/rules-test.js [area]` · `node tools/soak.js` (24-thread AI-vs-AI soak/balance; `tools/SOAK.md`) · `node tools/headless.js`.
 Browser-pane tip: animations use requestAnimationFrame, so in the built-in browser pane a tab must be fronted (`tabs_select`) for anything animated (GNN, audiences, scenes, combat) to advance.
 
-## Session 6 (October 2026) — graphics audit, branch `claude/admiring-tesla-v9gcy3`
+## Session 6 (October 2026) — graphics audit + pass 3, branch `claude/admiring-tesla-v9gcy3`
+Pass 3 (`briefs/graphics-pass-3.md`) is implemented on the code side: Phase 0 (map glyphs, wordmark, exile, troop
+silhouettes, bombard overlay, combat cheap wins, system plates and sun, unused plates consumed), Phase 1 (the 3/4 ship
+view through `tools/build-ship-art.py` and `Gfx.Ships` `view:'3q'`, rock / debris / base cutout loaders) and Phase 2
+(combat FX pass, map ambience). **Waiting on art:** generate `docs/IMAGE-GEN-SPRITES.md` (27 cutouts and skies) and
+items 26-30, 41, 48, 52 of `docs/IMAGE-GEN-OTHER.md`; drop ship cutouts into `MOOg images/ship-variants/` and run
+`python3 -I tools/build-ship-art.py`; convert the rest to webp under `assets/art/{fx,system-sky,battle,still}/`
+(paths in `js/gfx/worldart.js`). Until then each consumer logs one 404 per missing file and keeps its fallback.
+Still owed: the real-hardware GPU check (`tools/test-hw.html?auto=1`) and Phase 3 (move the PNG masters out of git).
+Verify with `node tools/qa/art-shots.js` (both tiers).
+
 `tools/handoff/graphics-inventory-2026-10.md`: every screen captured through the real UI (`node tools/qa/art-shots.js`,
 `TIER=medium` for the GL look) and each element traced to its renderer. The illustrated layer (portraits, halls, labs, GNN,
 surfaces, orbit plates, three endings) is done; still flat or procedural: ships (top-down only, no 3/4 view, no race

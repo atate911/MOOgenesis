@@ -1461,18 +1461,20 @@ void main() {
     pp += nzV(P * uP.x * 0.45 + uSd.yzx).xyz * 0.7;
     vec3 w1 = worleyA(pp, tm);
     float lane = sst(0.0, 0.42, w1.y - w1.x);
-    float B = mix(0.66, 1.0, lane) * (0.84 + 0.26 * w1.z);          // v2: low-contrast granulation (was cracked-plate look)
+    float B = mix(0.84, 1.0, lane) * (0.93 + 0.09 * w1.z);          // v3: fine, low-contrast granulation (the cells barely read; no plates, no cracks)
     if (uP.w > 0.5) {
       vec3 w2 = worleyA(pp * 3.0 + 5.3, tm * 1.6);
-      B *= mix(0.84, 1.06, sst(0.0, 0.3, w2.y - w2.x));
+      B *= mix(0.94, 1.03, sst(0.0, 0.3, w2.y - w2.x));
     }
-    B *= 1.0 + 0.55 * fbm(P * 1.7 + uSd.zxy, 3.0);
+    B *= 1.0 + 0.14 * fbm(P * 1.7 + uSd.zxy, 3.0);                  // gentle large-scale mottling (was 0.55: blotches)
     float sn = fbm(P * 1.3 + uSd.yzx * 0.7, 3.0) * 1.6 + 0.4 * nz(P * 3.1 + uSd).x;
-    float thr = mix(0.62, 0.05, uP.z);
-    B *= mix(1.0, 0.72, sst(thr, thr + 0.12, sn)) * mix(1.0, 0.25, sst(thr + 0.10, thr + 0.22, sn));
+    float thr = mix(0.80, 0.42, uP.z);                               // sunspots: rarer and smaller
+    B *= mix(1.0, 0.82, sst(thr, thr + 0.10, sn)) * mix(1.0, 0.45, sst(thr + 0.10, thr + 0.20, sn));
     vec3 c = B < 0.55 ? mix(uCl, uCm, B / 0.55) : mix(uCm, uCh, clamp((B - 0.55) / 0.55, 0.0, 1.0));
-    vec3 ld = clamp(1.0 - uLimb * (1.0 - mu), 0.0, 1.0);
-    c *= ld * 1.6 * pulse;
+    // limb darkening I = 1 - u (1 - mu), per channel (the blue channel darkens most: the limb reddens); a touch of extra
+    // falloff in the last 10 % so the disc reads as a sphere, not a plate
+    vec3 ld = clamp(1.0 - uLimb * (1.0 - mu), 0.0, 1.0) * (0.82 + 0.18 * sst(0.0, 0.12, mu));
+    c *= ld * 1.18 * pulse;                                           // was 1.6: the tone map clipped the whole disc to one flat colour
     float edge = clamp((1.0 - rr) / pxw + 0.5, 0.0, 1.0);
     base = over(vec4(grade(c) * edge, edge), base);
   }
@@ -1586,9 +1588,9 @@ void main() {
 
   const STAR_KINDS = ['yellow', 'orange', 'red', 'blue', 'white', 'green', 'purple', 'blackhole'];
   const STAR = {
-    yellow: { cl: '#c8681e', cm: '#ffb440', ch: '#fff0c0', cor: '#ffd070', limb: [0.55, 0.85, 1.2], spots: 0.3, freq: 9.0, glow: 0.85, tight: 1.0, streak: 0.5, prom: 0 },
-    orange: { cl: '#8a2e06', cm: '#f07a1c', ch: '#ffc468', cor: '#ff9438', limb: [0.5, 0.8, 1.2], spots: 0.5, freq: 8.0, glow: 0.8, tight: 0.9, streak: 0.5, prom: 0 },
-    red: { cl: '#4a0a04', cm: '#d8300e', ch: '#ff7a44', cor: '#ff4a28', limb: [0.45, 0.8, 1.3], spots: 0.8, freq: 7.0, glow: 0.8, tight: 0.85, streak: 0.4, prom: 2 },
+    yellow: { cl: '#c8681e', cm: '#ffb440', ch: '#fff0c0', cor: '#ffd070', limb: [0.55, 0.85, 1.2], spots: 0.12, freq: 9.0, glow: 0.85, tight: 1.0, streak: 0.5, prom: 0 },
+    orange: { cl: '#8a2e06', cm: '#f07a1c', ch: '#ffc468', cor: '#ff9438', limb: [0.5, 0.8, 1.2], spots: 0.25, freq: 8.0, glow: 0.8, tight: 0.9, streak: 0.5, prom: 0 },
+    red: { cl: '#4a0a04', cm: '#d8300e', ch: '#ff7a44', cor: '#ff4a28', limb: [0.45, 0.8, 1.3], spots: 0.45, freq: 7.0, glow: 0.8, tight: 0.85, streak: 0.4, prom: 2 },
     blue: { cl: '#2c58c8', cm: '#7ab4ff', ch: '#e6f4ff', cor: '#6ea6ff', limb: [0.35, 0.5, 0.7], spots: 0.0, freq: 7.0, glow: 1.5, tight: 1.4, streak: 0.8, prom: 1 },
     white: { cl: '#9aaad8', cm: '#e6ecff', ch: '#ffffff', cor: '#cfdcff', limb: [0.4, 0.55, 0.75], spots: 0.08, freq: 6.5, glow: 1.2, tight: 1.2, streak: 0.6, prom: 1 },
     green: { cl: '#14762c', cm: '#52e07c', ch: '#e0ffd0', cor: '#58f08c', limb: [0.5, 0.55, 0.9], spots: 0.2, freq: 5.5, glow: 1.1, tight: 1.1, streak: 0.6, prom: 2 },

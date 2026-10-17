@@ -16,6 +16,9 @@
     .sv-own { margin-top:.5rem; display:inline-flex; align-items:center; gap:.5rem; padding:.2rem .9rem; font-size:1.02rem; color:var(--ivory); background:rgba(4,6,22,.62); border:1px solid rgba(214,179,106,.4); }
     .sv-own .empire-dot { margin-right:0; } .sv-own .dim { color:var(--mist); opacity:1; }
     .sv-tl { position:absolute; top:3.2%; left:2.2%; display:flex; flex-direction:column; gap:.45rem; max-width:24rem; pointer-events:none; }
+    .sv.plate .sv-tl { left:auto; right:2.2%; align-items:flex-end; text-align:right; }      /* illustrated sky: its star is upper-left, so the notes go right */
+    .sv.plate .sv-fleets { top:34%; }
+    .sv.plate .sv-star { transform:none; text-align:left; }
     .sv-lab { display:flex; align-items:center; gap:.55rem; padding:.3rem .8rem; font:400 1.12rem var(--font-display); letter-spacing:.05em; color:var(--azure); background:rgba(4,6,22,.7); border:1px solid rgba(91,140,255,.55); }
     .sv-lab .ico { width:1.2em; height:1.2em; } .sv-lab.gate { color:var(--violet); border-color:rgba(169,139,255,.55); } .sv-lab.warn { color:var(--rose); border-color:rgba(255,92,106,.55); }
     .sv-note { padding:.35rem .75rem; background:rgba(4,6,22,.7); border-left:3px solid var(--mist); font-size:.98rem; line-height:1.3; color:var(--ivory); }
@@ -83,7 +86,17 @@
   const empCol = E => css('--emp' + E.color) || EMP[E.color % 6];
 
   let el, cv, ctx, W = 0, H = 0, dpr = 1, bg = null, bgKey = '', tt = 0, acc = 0, enterAt = 0, sizeDirty = true;
-  const st = { star: 0, from: 'galaxy', info: null, tiles: [], geo: null };
+  const st = { star: 0, from: 'galaxy', info: null, tiles: [], geo: null, plate: null };
+  // Illustrated skies (Gfx.WorldArt). 'sky' = the planet-free batch-4 plate (star upper right, as the procedural layout); 'plate' = the
+  // batch-1 system plate, whose own star (upper left) becomes the sun and whose baked-in planet is hidden behind the live planet.
+  // Star centre / radius as fractions of the image width (y of the height), measured on the 1672x941 masters.
+  const PLATE_STAR = { yellow: { x: 0.045, y: 0.245, r: 0.11 }, red: { x: 0.173, y: 0.28, r: 0.09 }, blue: { x: 0.045, y: 0.14, r: 0.12 },
+    green: { x: 0.036, y: 0.20, r: 0.108 }, white: { x: 0.123, y: 0.24, r: 0.066 }, purple: { x: 0.066, y: 0.276, r: 0.13 } };
+  const SKY_STAR = { x: 0.86, y: 0.16, r: 0.06 };
+  // the painted planet of each plate as a circle (px on the 1672-wide master; the limb arcs fitted through their top and right end):
+  // it is masked out before the live planet is drawn, so no second planet shows beside it
+  const PLATE_PLANET = { yellow: { x: 330, y: 1037, r: 637 }, red: { x: 300, y: 992, r: 522 }, blue: { x: 280, y: 950, r: 520 },
+    green: { x: 260, y: 1037, r: 647 }, white: { x: 260, y: 1014, r: 604 }, purple: { x: 250, y: 1325, r: 825 } };
 
   // ---- what do we know? ------------------------------------------------------------------------------------------------------------------------
   function notesFor(p) {
@@ -162,7 +175,7 @@
         const stt = M.Sim.Design.stats(S, E, slot), hull = clamp(d.hull | 0, 0, 3), c = h('canvas');
         const fl_ = { colony: stt.colonyMin > 0, beams: (stt.weapons || []).some(w => w.kind === 'beam'), missiles: (stt.weapons || []).some(w => w.kind === 'missile' || w.kind === 'torpedo'), bomb: (stt.bombs | 0) + (stt.bio | 0) > 0 };
         const tile = { c, ctx: c.getContext('2d'), sized: false, w: 0, h: 0, dpr: 1, ph: slot * 1.7 + g.owner, fit: [0.55, 0.66, 0.78, 0.88][hull],
-          o: { race: E.race, hull, size: 40, color: empCol(E), flags: fl_, angle: 0, t: 0, x: 0, y: 0, thrust: 0.45, shadow: false } };      // draw options are reused every frame
+          o: { race: E.race, hull, size: 40, color: empCol(E), flags: fl_, angle: 0, t: 0, x: 0, y: 0, thrust: 0.45, shadow: false, view: '3q' } };      // draw options are reused every frame
         st.tiles.push(tile);
         rowEl.appendChild(h('div.sv-tile' + (g.mine ? '' : '.foe'), { tip: g.mine ? '<b>' + d.name + '</b><br>' + HULL_NAME[hull] + ' hull · ' + n + (n === 1 ? ' ship' : ' ships') : HULL_NAME[hull] + ' hull · ' + n + (n === 1 ? ' ship' : ' ships') }, c, h('span.n', U.fmt(n)), h('span.nm', g.mine ? d.name : HULL_NAME[hull] + ' hull')));
       }
@@ -210,33 +223,73 @@
   // ---- art -------------------------------------------------------------------------------------------------------------------------------------
   const Gfx = () => M.Gfx || {};
   const glOk = () => { try { return !!(Gfx().GL && Gfx().GL.supported()); } catch (e) { return false; } };
+  function skyFor(i) {                                            // which illustration can carry this system, or null
+    const WA = Gfx().WorldArt; if (!WA || !WA.enabled) return null;
+    const sky = WA.systemSky && WA.systemSky(i.kind);
+    if (sky && WA.ready(sky)) return { path: sky, mode: 'sky', star: SKY_STAR };
+    const plate = WA.system(i.kind), ok = i.explored && i.p.type !== 'none';   // the plate shows a planet: only when the live planet can cover it
+    if (plate && ok && WA.ready(plate)) return { path: plate, mode: 'plate', star: PLATE_STAR[i.kind] || PLATE_STAR.yellow, planet: PLATE_PLANET[i.kind] || PLATE_PLANET.yellow };
+    for (const p of [sky, ok ? plate : null]) if (p && !WA.ready(p)) WA.whenReady(p, () => { bgKey = ''; });   // rebuild when it lands
+    return null;
+  }
   function makeBackdrop() {
     const i = st.info, key = i.kind + ':' + i.id + ':' + W + 'x' + H;
     if (key === bgKey && bg) return;
     bgKey = key; bg = null;
     const gpu = glOk() && Gfx().GLSpace && Gfx().GLSpace.makeBackdrop, k = gpu ? Math.min(dpr, 1.5) : 1;      // the GPU renders the sky at screen resolution, the CPU one at CSS pixels
     const w = Math.max(64, Math.min(Math.round(W * k), gpu ? 2560 : 1600)), hh = Math.max(64, Math.round(w * H / W)), seed = 'sys' + i.id + i.kind;
-    try {
-      const o = { palette: BACKDROP[i.kind] || BACKDROP.yellow, intensity: 0.6, stars: 1, vignette: true };
-      const Sp = Gfx().Space;
-      bg = gpu ? Gfx().GLSpace.makeBackdrop(w, hh, seed, o) : (Sp && Sp.makeBackdrop ? Sp.makeBackdrop(w, hh, seed, o) : null);
-    } catch (e) { console.warn('[system] backdrop', e); bg = null; }
+    const sky = skyFor(i), hadPlate = !!st.plate;
+    st.plate = null;
+    if (sky) {
+      try {
+        const WA = Gfx().WorldArt, im = WA.get(sky.path), c = document.createElement('canvas'); c.width = w; c.height = hh;
+        const g = c.getContext('2d'), fx = sky.mode === 'plate' ? 0 : 0.5, fy = 0.35;
+        if (WA.draw(g, im, 0, 0, w, hh, { fx, fy })) {
+          // where the plate's star landed after the cover crop (same arithmetic as WorldArt.draw)
+          const iw = im.naturalWidth, ih = im.naturalHeight, sc = Math.max(w / iw, hh / ih), sw = w / sc, sh = hh / sc;
+          const sx0 = Math.max(0, Math.min(iw - sw, fx * iw - sw * fx)), sy0 = Math.max(0, Math.min(ih - sh, fy * ih - sh * fy));
+          const scr = sc / (w / W);                                                                  // image px -> CSS px
+          st.plate = { mode: sky.mode, sx: (sky.star.x * iw - sx0) * scr, sy: (sky.star.y * ih - sy0) * scr, sr: sky.star.r * iw * scr };
+          if (sky.planet) {                                                                          // mask the painted planet (+ its rim light) in the bg itself
+            const q = iw / 1672, mx = (sky.planet.x * q - sx0) * sc, my = (sky.planet.y * q - sy0) * sc, mr = sky.planet.r * q * sc + 48 * sc;
+            const gr = g.createRadialGradient(mx, my, Math.max(1, mr - 24 * sc), mx, my, mr + 70 * sc);
+            gr.addColorStop(0, 'rgba(3,4,12,1)'); gr.addColorStop(0.5, 'rgba(3,4,12,.85)'); gr.addColorStop(1, 'rgba(3,4,12,0)');
+            g.fillStyle = gr; g.fillRect(0, 0, w, hh);
+            st.plate.mask = { x: mx / (w / W), y: my / (w / W), r: mr / (w / W) };
+          }
+          bg = c;
+        }
+      } catch (e) { console.warn('[system] sky plate', e); bg = null; st.plate = null; }
+    }
+    if (!bg) {
+      try {
+        const o = { palette: BACKDROP[i.kind] || BACKDROP.yellow, intensity: 0.6, stars: 1, vignette: true };
+        const Sp = Gfx().Space;
+        bg = gpu ? Gfx().GLSpace.makeBackdrop(w, hh, seed, o) : (Sp && Sp.makeBackdrop ? Sp.makeBackdrop(w, hh, seed, o) : null);
+      } catch (e) { console.warn('[system] backdrop', e); bg = null; }
+    }
+    if (el) el.classList.toggle('plate', !!(st.plate && st.plate.mode === 'plate'));
+    if (hadPlate || st.plate) { geometry(); placeCaption(); }
   }
   function geometry() {
     const i = st.info, k = i.explored && i.p.type !== 'none' ? 0.84 + 0.16 * clamp(i.p.maxPop / 120, 0, 1) : 0.9;
-    const pr = Math.min(H * 0.4, W * 0.27) * k, px = W * 0.25, py = H * 0.8, sx = W * 0.86, sy = H * 0.15, sr = Math.min(H * 0.13, W * 0.09);
+    const pl = st.plate, big = !!(pl && pl.mode === 'plate');                     // over the system plate the live planet grows to cover the painted one
+    const pr = (big ? Math.min(H * 0.5, W * 0.3) : Math.min(H * 0.4, W * 0.27)) * k, px = big ? W * 0.27 : W * 0.25, py = big ? H * 0.86 : H * 0.8;
+    const sx = pl ? pl.sx : W * 0.86, sy = pl ? pl.sy : H * 0.15, sr = pl ? pl.sr : Math.min(H * 0.13, W * 0.09);
     const la = Math.atan2(sy - py, sx - px), base = { dpr, lightAngle: la, lightElev: 0.5, clouds: true, atmosphere: true, lights: true, cloudShadows: true };
     st.geo = { pr, px, py, sx, sy, sr, la, starOpts: { dpr }, optsGL: Object.assign({ spin: 0.018 }, base), optsCPU: Object.assign({ spin: 0.004 }, base) };
   }
   function drawStar(t) {
-    const g = st.geo, kind = st.info.kind, Sp = Gfx().Space;
-    // wide soft bloom over the whole scene
+    const g = st.geo, kind = st.info.kind, Sp = Gfx().Space, painted = !!st.plate;
+    // wide soft bloom over the whole scene (over an illustrated sky only a faint breathing glow: the plate carries its own star)
     try {
       if (Sp && Sp.starSprite) {
         const spr = Sp.starSprite(kind, 512, BLOOM), bs = Math.max(W, H) * 1.25;
-        ctx.globalCompositeOperation = 'lighter'; ctx.globalAlpha = 0.5; ctx.drawImage(spr, g.sx - bs / 2, g.sy - bs / 2, bs, bs); ctx.globalAlpha = 1; ctx.globalCompositeOperation = 'source-over';
+        ctx.globalCompositeOperation = 'lighter'; ctx.globalAlpha = painted ? 0.16 + 0.05 * Math.sin(t * 0.7) : 0.5;
+        ctx.drawImage(spr, g.sx - bs / 2, g.sy - bs / 2, bs, bs); ctx.globalAlpha = 1; ctx.globalCompositeOperation = 'source-over';
       }
     } catch (e) { /* optional */ }
+    if (painted) return;
     let ok = false;
     const GP = Gfx().GLPlanets;
     if (glOk() && GP && GP.supported && GP.supported() && GP.drawStar) { try { ok = GP.drawStar(ctx, kind, g.sx, g.sy, g.sr, t, g.starOpts); } catch (e) { ok = false; } }
@@ -256,6 +309,11 @@
     if (look === 'asteroids') {
       try { P.drawAsteroids(ctx, desc, g.px + g.pr * 0.5, g.py - g.pr * 0.25, W * 0.8, H * 0.7, t, { count: 60, lightAngle: g.la }); } catch (e) { /* optional */ }
       return;
+    }
+    if (st.plate && st.plate.mode === 'plate') {                // hide the plate's own painted planet and its rim light behind the live one
+      const gr = ctx.createRadialGradient(g.px, g.py, g.pr * 0.96, g.px, g.py, g.pr * 1.14);
+      gr.addColorStop(0, 'rgba(2,3,8,.9)'); gr.addColorStop(0.4, 'rgba(2,3,8,.5)'); gr.addColorStop(1, 'rgba(2,3,8,0)');
+      ctx.fillStyle = gr; ctx.fillRect(g.px - g.pr * 1.16, g.py - g.pr * 1.16, g.pr * 2.32, g.pr * 2.32);
     }
     let ok = false;
     if (gl) { try { ok = GP.draw(ctx, desc, g.px, g.py, g.pr, t, g.optsGL); } catch (e) { ok = false; } }
@@ -297,7 +355,9 @@
   }
   function placeCaption() {                                           // "<Colour> star" label sits right under the glowing star
     const cap = el.querySelector('.sv-star'), g = st.geo;
-    if (cap && g) { cap.style.left = g.sx + 'px'; cap.style.top = (g.sy + g.sr * 1.3) + 'px'; }
+    if (!cap || !g) return;
+    if (st.plate && st.plate.mode === 'plate') { cap.style.left = (g.sx + g.sr * 1.08) + 'px'; cap.style.top = (g.sy + g.sr * 0.3) + 'px'; }   // beside the plate's star (it may be cut by the left edge, and the big planet sits under it)
+    else { cap.style.left = g.sx + 'px'; cap.style.top = (g.sy + g.sr * 1.3) + 'px'; }
   }
 
   UI.Screens.register('system', {
@@ -320,10 +380,11 @@
       build(); sizeCanvas();
       UI.sfx('open');
     },
-    leave() { st.tiles = []; bg = null; bgKey = ''; },
+    leave() { st.tiles = []; bg = null; bgKey = ''; st.plate = null; if (el) el.classList.remove('plate'); },
     update(dt) {
       if (!ctx || !st.info) return;
       if (sizeDirty) sizeCanvas();
+      else if (!bgKey) makeBackdrop();                              // an illustrated sky finished loading: rebuild with it
       tt += dt;
       const fps = Math.min(glOk() ? 60 : 30, (M.Perf && M.Perf.q && M.Perf.q.animFps) || 60);
       acc += dt; if (acc < 1 / fps - 0.002) return; acc = 0;

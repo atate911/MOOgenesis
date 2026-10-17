@@ -499,13 +499,13 @@
         spots.push({ x: cl2 * sin(lo), y: sin(lat + q * 0.02), z: cl2 * cos(lo), r: rho * (q ? 0.7 : 1), ph: rnd() * TAU });
       }
     }
-    var fq = cfg.freq;
+    var fq = cfg.freq * 1.5;                                        // finer granulation than v1 (freq is per-kind; the cells were plate-sized)
     function gran(cell, px, py, pz) {
       cell(px * fq, py * fq, pz * fq);
       var lane = sstep(0.03, 0.30, _cf.f2 - _cf.f1), ctr = 1 - sstep(0.0, 0.85, _cf.f1) * 0.55, rv = ((_cf.h >>> 5) & 255) / 255 - 0.5;
-      var g = 0.30 + 0.70 * lane * (0.58 + 0.42 * ctr) + rv * 0.26 * lane;
+      var g = 0.62 + 0.38 * lane * (0.70 + 0.30 * ctr) + rv * 0.10 * lane;   // low contrast: the lanes are a few percent darker, not cracks
       cell(px * fq * 2.2 + 11, py * fq * 2.2, pz * fq * 2.2);
-      var l2 = sstep(0.04, 0.30, _cf.f2 - _cf.f1), g2 = 0.40 + 0.60 * l2 * (0.62 + 0.38 * (1 - sstep(0, 0.85, _cf.f1)));
+      var l2 = sstep(0.04, 0.30, _cf.f2 - _cf.f1), g2 = 0.70 + 0.30 * l2 * (0.70 + 0.30 * (1 - sstep(0, 0.85, _cf.f1)));
       return g * 0.66 + g2 * 0.34;
     }
     function row(y) {
@@ -515,14 +515,14 @@
         var v0 = gran(c0, px, py, pz) + 0.06 * nz.n(px * 40, py * 40, pz * 40);
         var v1 = gran(c1, px + 3.7, py - 1.2, pz + 2.1) + 0.06 * nz.n(px * 40 + 9, py * 40, pz * 40);
         g0[i] = clamp(v0, 0, 1) * 255; g1[i] = clamp(v1, 0, 1) * 255;
-        var m = 0.5 + 0.30 * nz.fbm(px * 2.6 + 7, py * 2.6, pz * 2.6, 4) + 0.10 * nz.fbm(px * 8 + 3, py * 8, pz * 8, 3);
+        var m = 0.5 + 0.14 * nz.fbm(px * 2.6 + 7, py * 2.6, pz * 2.6, 4) + 0.06 * nz.fbm(px * 8 + 3, py * 8, pz * 8, 3);   // gentle mottling (was 0.30: blotches)
         for (k = 0; k < spots.length; k++) {
           var sp = spots[k], dx = px - sp.x, dy = py - sp.y, dz = pz - sp.z, d2 = dx * dx + dy * dy + dz * dz;
           if (d2 < sp.r * sp.r * 6) {
             var u = sqrt(d2) / sp.r;
-            if (u < 0.42) m -= 0.55;
-            else if (u < 1.0) { var fib = 0.65 + 0.35 * cos(atan2(dy * 3 + dz, dx * 3 - dz) * 13 + sp.ph); m -= 0.38 * (1 - (u - 0.42) / 0.58) * fib; }
-            else m += 0.10 * exp(-(u - 1) * 1.4);
+            if (u < 0.42) m -= 0.34;
+            else if (u < 1.0) { var fib = 0.65 + 0.35 * cos(atan2(dy * 3 + dz, dx * 3 - dz) * 13 + sp.ph); m -= 0.22 * (1 - (u - 0.42) / 0.58) * fib; }
+            else m += 0.06 * exp(-(u - 1) * 1.4);
           }
         }
         mm[i] = clamp(m, 0, 1) * 255;
@@ -603,8 +603,8 @@
       var v00 = (1 - fx2) * (1 - fy), v10 = fx2 * (1 - fy), v01 = (1 - fx2) * fy, v11 = fx2 * fy;
       var gb = v00 * G1[a0 + y0] + v10 * G1[a0 + y1] + v01 * G1[a1 + y0] + v11 * G1[a1 + y1];
       var gg = 0.5 + ((cw * ga + (1 - cw) * gb) * i255 - 0.5) * nrm;
-      var mu = nzA[k], limb = 1 - ld * (1 - pow(mu, 0.55));
-      var B = (0.16 + 0.54 * gg + 0.46 * (mv * i255 - 0.5)) * limb + (mu - 0.5) * 0.10;
+      var mu = nzA[k], limb = (1 - ld * (1 - mu)) * (0.84 + 0.16 * (mu < 0.12 ? mu / 0.12 : 1));   // I = 1 - u(1 - mu), a little extra in the last 12 %
+      var B = (0.30 + 0.46 * gg + 0.30 * (mv * i255 - 0.5)) * limb + (mu - 0.5) * 0.06;
       B = B < 0 ? 0 : B > 1 ? 1 : B;
       var ri = ((B * 255 + 0.5) | 0) * 3, r = ramp[ri], gc = ramp[ri + 1], b = ramp[ri + 2], cv = cov[k];
       var A = cv;

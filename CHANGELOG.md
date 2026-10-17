@@ -3,6 +3,22 @@
 Versions follow `MAJOR.MINOR.PATCH`; the live version is the `VERSION` file.
 `scripts/upgrade.sh` refuses to move to an older `VERSION` unless told to.
 
+## Unreleased
+
+- Graphics pass 3 (`briefs/graphics-pass-3.md`, audit in `tools/handoff/graphics-inventory-2026-10.md`): the object layer
+  catches up with the illustrated layer. Galaxy map: unexplored stars are lit sprites in their own tint (no discs or
+  rings), subtle twinkle, drifting dust, engine trails on moving fleets, a short settle when the side panel changes.
+  Title: a lit metallic wordmark. Endings: exile plays on the galaxy plate with the homeworld receding and the ship as a
+  dark silhouette. Landing: troopers are photo-treated silhouettes, the bombardment shield is a limb glow and the reticle
+  is lit; event cards carry their plate. Tactical combat: plate backdrop, grid only near the cursor, brick-red selection,
+  ring missile bases, planet limb glow, darker cratered rocks, bloomed beams, staged explosions, missile plumes,
+  shockwaves and a camera nudge. Star system: the system plate is the backdrop with its own star as the sun and the live
+  planet in front; the GPU and CPU suns have limb darkening and fine granulation. The unused plates are consumed (Races
+  "Not Present" slabs, ledger thumbnails, the build box). Ships: the build and the renderer take a second, 3/4 view
+  (`ship-<class>-<n>-3q.webp`) that the design hologram, cards, lander, bombers, title and exile ask for; until that art
+  exists (`docs/IMAGE-GEN-SPRITES.md`) every screen keeps the top-down hull. Rocks, debris, the base platform, the
+  planet-free system skies, the battle backdrops and the exile / spaceport stills load the same way when they land.
+
 ## 1.1.0 — 2026-10-17
 
 - Fun audit (`tools/handoff/fun-audit-2026-10.md`): the GNN now broadcasts only what the original treats as news (events, wars,
