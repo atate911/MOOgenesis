@@ -707,7 +707,7 @@
       if (A.moodUntil && t > A.moodUntil) { A.mood = baseMood(); A.moodUntil = 0; }
       if (A.recall > 0) A.recall = Math.min(1, A.recall + dt * 1.1);
       const fps = Math.max(24, Math.min(60, M.Perf && M.Perf.q ? M.Perf.q.animFps : 60));
-      if (t - A.lastDraw >= 1 / fps - 0.002) { A.lastDraw = t; paint(t); }
+      if (UI.pace(A.pace || (A.pace = {}), fps, dt)) { A.lastDraw = t; paint(t); }
     },
     resize() { fit(); },
   });

@@ -3,6 +3,21 @@
 Versions follow `MAJOR.MINOR.PATCH`; the live version is the `VERSION` file.
 `scripts/upgrade.sh` refuses to move to an older `VERSION` unless told to.
 
+## 1.1.2 — 2026-10-17
+
+- Smoother animation, higher frame rates (`tools/handoff/frame-pacing-2026-10.md`): every screen that draws slower than the
+  frame loop now gates with `MOO.UI.pace()` (kit.js), an even-cadence divider of the measured display rate (`UI.displayHz()`,
+  shown in the F3 overlay), instead of its own "accumulate, draw when >= 1/fps, reset" timer — those drew the scenes at
+  48 fps on 144 Hz monitors, 37.5 on 75 Hz, 45 on 90 Hz, 55 on 165 Hz, and the 40 / 24 fps pictures at 30 / 20 on 60 Hz,
+  slipping a frame whenever rAF jittered. The galaxy map paints its static backdrop (sky, galaxy cloud, parallax star tiles)
+  into an offscreen canvas and re-paints it only when the camera, size or quality changes (idle frames draw 7 instead of 18
+  megapixels of blended images at 1600×900, dpr 1); the tactical screen repaints its graded scene backdrop (a dozen
+  full-screen passes plus a filtered copy) at 24 Hz into a cache and blits it. The adaptive-quality governor no longer climbs
+  back into a tier it dropped from for slow frames for five minutes (it did after ~20 s, because a 30 fps-gated loop always
+  looks fast, so a slightly-too-slow machine alternated between two looks and two frame rates), and judges "slow" against
+  the display rate rather than a fixed 60. Hidden-tab gaps and one-off stalls are ignored by the governor again (the loop's
+  0.1 s clamp had hidden them).
+
 ## 1.1.1 — 2026-10-17
 
 - Fun audit (`tools/handoff/fun-audit-2026-10.md`): the GNN now broadcasts only what the original treats as news (events, wars,

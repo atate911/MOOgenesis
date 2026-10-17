@@ -1623,8 +1623,8 @@
       if (R.tkT > 6) { R.tkT = 0; R.tkIdx = (R.tkIdx + 1) % R.tkLines.length; UI.clear(tkTrack); tkTrack.appendChild(h('span.gnn-tk-i', R.tkLines[R.tkIdx])); }
     }
     const fps = PQ().animFps || 60;
-    if (fps < 59 && R.accDt < 1 / fps - 0.002) return;
-    const gdt = R.accDt; R.accDt = 0;
+    if (!UI.pace(R.pace, fps, dt) && !R.redraw) return;
+    R.redraw = false; const gdt = R.accDt; R.accDt = 0;
     drawFrame(gdt);
   }
   function drawFrame(gdt) {
@@ -1666,7 +1666,7 @@
     root.classList.toggle('rm', reduced());
     stopWipe();
     R = {
-      pending: pend, intr: intr, segs: buildSegments(intr), idx: -1, t: 0, accDt: 0, segT: 0, phase: 'play', cut: null, paused: false, finishing: false, fadeT: 0, fadeDur: 0.5,
+      pending: pend, intr: intr, segs: buildSegments(intr), idx: -1, t: 0, accDt: 0, pace: {}, redraw: false, segT: 0, phase: 'play', cut: null, paused: false, finishing: false, fadeT: 0, fadeDur: 0.5,
       speed: animSpeed(), rm: reduced(), anchor: pickAnchor(intr), mood: 'neutral', tone: 'normal', talkTail: 0, wasTyping: false, hold: 0, holdSet: false, titleDur: 2.5, titleK: 0,
       hl: new Typer(hlT, hlR, hlBox), sub: new Typer(subT, subR, subBox), gfx: null, rk: null, curPlanet: null, L: null, shown: 0, skipped: false, leaving: false,
       tkLines: tickerLines(intr), tkIdx: 0, tkT: 0, tkU: 0, anims: null, prevTrack: musicCur(), prevSnap: musicSnap(), musicStarted: false,
@@ -1707,7 +1707,7 @@
       }
     },
     update(dt) { frame(dt); },
-    resize() { layKey = ''; if (R) R.accDt = 1; },
+    resize() { layKey = ''; if (R) R.redraw = true; },
   });
   UI.bindKey('space', e => { if (!e || !e.repeat) act('next'); }, { screen: 'gnn' });
   UI.bindKey('enter', e => { if (!e || !e.repeat) act('next'); }, { screen: 'gnn' });

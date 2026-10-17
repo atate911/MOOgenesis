@@ -1178,8 +1178,8 @@
   function frame(dt, t) {
     if (!PV.cv || !st.draft || !PV.cv.offsetParent) return;
     const fps = (M.Perf && M.Perf.q && M.Perf.q.animFps) || 60;
-    PV.acc += dt; if (fps < 60 && PV.acc < 1 / fps - 0.002) return;
-    const step = Math.min(PV.acc, 0.1); PV.acc = 0;
+    if (!UI.pace(PV.pace || (PV.pace = {}), fps, dt)) return;
+    const step = Math.min(PV.pace.dt, 0.1);
     drawPreview(step, t);
   }
 

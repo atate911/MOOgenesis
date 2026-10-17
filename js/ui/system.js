@@ -82,7 +82,7 @@
   const css = n => { try { return getComputedStyle(document.documentElement).getPropertyValue(n).trim(); } catch (e) { return ''; } };
   const empCol = E => css('--emp' + E.color) || EMP[E.color % 6];
 
-  let el, cv, ctx, W = 0, H = 0, dpr = 1, bg = null, bgKey = '', tt = 0, acc = 0, enterAt = 0, sizeDirty = true;
+  let el, cv, ctx, W = 0, H = 0, dpr = 1, bg = null, bgKey = '', tt = 0, pace = {}, enterAt = 0, sizeDirty = true;
   const st = { star: 0, from: 'galaxy', info: null, tiles: [], geo: null };
 
   // ---- what do we know? ------------------------------------------------------------------------------------------------------------------------
@@ -316,7 +316,7 @@
       st.from = params.from || 'galaxy';
       st.star = params.star !== undefined && params.star >= 0 ? params.star : (G.sel.star >= 0 ? G.sel.star : G.player().capital);
       if (!G.S.stars[st.star]) st.star = G.player().capital;
-      enterAt = performance.now(); tt = 0; acc = 0; bgKey = '';
+      enterAt = performance.now(); tt = 0; pace.n = pace.since = 0; bgKey = '';
       build(); sizeCanvas();
       UI.sfx('open');
     },
@@ -326,7 +326,7 @@
       if (sizeDirty) sizeCanvas();
       tt += dt;
       const fps = Math.min(glOk() ? 60 : 30, (M.Perf && M.Perf.q && M.Perf.q.animFps) || 60);
-      acc += dt; if (acc < 1 / fps - 0.002) return; acc = 0;
+      if (!UI.pace(pace, fps, dt)) return;
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
       ctx.globalCompositeOperation = 'source-over'; ctx.globalAlpha = 1;
       if (bg) ctx.drawImage(bg, 0, 0, W, H); else { ctx.fillStyle = '#04061a'; ctx.fillRect(0, 0, W, H); }

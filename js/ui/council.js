@@ -668,7 +668,7 @@
     dt = min(dt, 0.1); R.t += dt; R.acc += dt;
     if (R.speaker >= 0) R.speakT += dt;
     const fps = R.rm ? 0 : (PQ().animFps || 60);
-    if (R.rm ? !CN.dirty : (fps < 59 && R.acc < 1 / fps - 0.002)) return;
+    if (R.rm ? !CN.dirty : !UI.pace(R.pace || (R.pace = {}), fps, dt)) return;
     const d = R.acc; R.acc = 0; CN.dirty = false;
     paint(R, d);
   }

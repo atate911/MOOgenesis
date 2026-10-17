@@ -359,8 +359,38 @@
   const frameFns = [];
   let lastT = 0, looping = false;
   UI.onFrame = fn => { frameFns.push(fn); return () => U.remove(frameFns, fn); };
+  UI.rawDt = 0;                                   // the last rAF interval before the 0.1 s clamp (MOO.Perf ignores hidden-tab gaps with it)
+  // Display refresh estimate (UI.displayHz()): the 25th percentile of one second of rAF intervals is one display period on any machine that
+  // keeps up at least a quarter of the time; on a machine that never keeps up it is the rate frames actually arrive at, which is what the
+  // pacer should divide anyway. 60 until the first second is in, then smoothed; clamped to 24..360.
+  let hz = 60, hzSeen = false, hzSum = 0; const hzBuf = []; 
+  UI.displayHz = () => hz;
+  function noteInterval(dt) {
+    if (!(dt > 0.001) || dt > 0.25) return;
+    hzBuf.push(dt); hzSum += dt;
+    if (hzSum < 1 || hzBuf.length < 8) return;
+    hzBuf.sort((a, b) => a - b);
+    const cand = Math.min(360, Math.max(24, 1 / hzBuf[Math.floor(hzBuf.length * 0.25)]));
+    hz = hzSeen ? Math.round((hz + (cand - hz) * 0.5) * 10) / 10 : Math.round(cand * 10) / 10; hzSeen = true;
+    hzBuf.length = 0; hzSum = 0;
+  }
+  // UI.pace(st, fps, dt) → true when this frame should be drawn. st is the caller's own {} (it keeps acc/since); fps the wanted draw rate;
+  // dt the loop's frame interval. Draws every display frame when fps is at or above the display rate, otherwise every k-th display frame
+  // with k = round(displayHz / fps): an even cadence at the nearest achievable rate. (The former "accumulate, draw when >= 1/fps, reset"
+  // gates drew at 48 fps on a 144 Hz monitor, 37.5 on 75 Hz, 45 on 90 Hz, and 30 / 20 for 40 / 24 fps targets on 60 Hz, with the
+  // remainder thrown away each draw.) st.dt is the time since the previous draw, for callers that step animations per draw.
+  UI.pace = function (st, fps, dt) {
+    st.since = (st.since || 0) + dt;
+    if (!(fps > 0) || fps >= hz * 0.92) { st.n = 0; st.dt = st.since; st.since = 0; return true; }
+    const k = Math.max(1, Math.round(hz / fps));
+    st.n = (st.n || 0) + Math.max(1, Math.round(dt * hz));   // display frames elapsed (a missed frame counts as two; rAF jitter rounds away)
+    if (st.n < k) return false;
+    st.n = 0; st.dt = st.since; st.since = 0;                // surplus after a stall is dropped: one draw, then the cadence again
+    return true;
+  };
   function loop(ts) {
-    const t = ts / 1000, dt = Math.min(0.1, t - lastT); lastT = t;
+    const t = ts / 1000, raw = t - lastT, dt = Math.min(0.1, raw); lastT = t;
+    UI.rawDt = raw; noteInterval(raw);
     for (const fn of frameFns.slice()) { try { fn(dt, t); } catch (e) { console.error('[frame]', e); } }
     requestAnimationFrame(loop);
   }

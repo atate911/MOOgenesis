@@ -108,12 +108,10 @@
     pics.add(p);
     return p;
   }
-  let picClock = 0;
+  const picPace = {};
   function drawPics(dt, t, root) {
-    picClock += dt;
-    const step = 1 / Math.max(10, Math.min(30, (M.Perf && M.Perf.q ? M.Perf.q.animFps : 60) / 3));
-    if (picClock < step) return;
-    picClock = 0;
+    const fps = Math.max(10, Math.min(30, (M.Perf && M.Perf.q ? M.Perf.q.animFps : 60) / 3));
+    if (!UI.pace(picPace, fps, dt)) return;
     for (const p of pics) if (p.cv.isConnected && root.contains(p.cv)) p.draw(t);
   }
   function fitPics(root) { for (const p of pics) { if (p.cv.isConnected && root.contains(p.cv)) { p.fit(); p.draw(performance.now() / 1000); } else if (!p.cv.isConnected) pics.delete(p); } }

@@ -554,7 +554,8 @@
 
     // ---------------------------------------------------------------- state
     let S = null, me = null, destroyed = false, pcU = PC_DEFAULT, gw = 100, gh = 100, galaxyKey = '';
-    let W = 0, H = 0, dpr = 1, ctx = null, uk = 1, sizeDirty = true, accDt = 0, clock = 0, lastFrameT = 0;
+    let W = 0, H = 0, dpr = 1, ctx = null, uk = 1, sizeDirty = true, clock = 0, lastFrameT = 0;
+    const pace = {}, paceFn = UI.pace || ((st, fps, dt) => { st.dt = dt; return true; });   // UI.pace: even-cadence frame gate (kit.js); tool pages without it draw every frame
     let mode = 'normal', prevMode = 'normal', modeT = 1, wCol = 0, wEnv = 0, wMin = 0;
     let fog = opts.fog !== false, reachSet = null, reachAnim = false;
     const habSetting = () => !(M.Settings && M.Settings.get('mapIcons') === false);
@@ -979,42 +980,27 @@
         }
       }
     }
+    // The static part of the backdrop (ambient sky, galaxy cloud, parallax star tiles: five or six overlapping full-screen 'lighter' draws,
+    // the biggest fill-rate item of a map frame) changes only with the camera, the canvas size, the quality knobs or a new sky image, so
+    // it is painted into an offscreen canvas when one of those changes and blitted with one opaque draw every frame. A 4X camera rests
+    // most of the time; while it moves the cost is the old one plus the copy.
+    const bdc = { c: null, g: null, key: '' };
     function drawBackdrop(t) {
       const pf = stats.profile, prof = stats.passes; let tq = pf ? performance.now() : 0;
       const lq = k => { if (pf) { const n = performance.now(); prof[k] = (prof[k] || 0) * 0.92 + (n - tq) * 0.08; tq = n; } };
       ensureAmbient(); lq('bd_ensure');
       const z = cam.z, px = (cam.x - gw / 2) * fitZ, py = (cam.y - gh / 2) * fitZ, zr = clamp(Math.log2(z / fitZ), -1, 5);
-      const par = Q.parallax;
+      const par = Q.parallax, nl = par === 0 ? 1 : par === 1 ? 1 : 2;
+      const key = W + 'x' + H + '@' + dpr + '|' + cam.x + ',' + cam.y + ',' + z + '|' + par + '|' + nl + '|' + Q.nebula + '|' + (amb.ext ? amb.extKey + '@' + amb.extAt : '-') + '|' + amb.key + '|' + amb.tileDpr;
       ctx.globalCompositeOperation = 'source-over'; ctx.globalAlpha = 1;
-      if (amb.ext) {
-        const mx = W * 0.04, my = H * 0.04, ox = par ? clamp(-px * 0.05, -mx, mx) : 0, oy = par ? clamp(-py * 0.05, -my, my) : 0;
-        ctx.drawImage(amb.ext, -mx + ox, -my + oy, W + mx * 2, H + my * 2);
-      } else {
-        const gk = W + 'x' + H;
-        if (amb.gradKey !== gk) { const g = ctx.createRadialGradient(W * 0.5, H * 0.46, 0, W * 0.5, H * 0.5, Math.hypot(W, H) * 0.62); g.addColorStop(0, '#0c1442'); g.addColorStop(0.55, '#070c2b'); g.addColorStop(1, '#03051a'); amb.grad = g; amb.gradKey = gk; }
-        ctx.fillStyle = amb.grad; ctx.fillRect(0, 0, W, H);
-        // far dust layer (parallax)
-        const far = amb.far, s = Math.max(W / far.width, H / far.height) * 1.14, dw = far.width * s, dh = far.height * s;
-        const ox = par ? clamp(-px * 0.07, -(dw - W) / 2, (dw - W) / 2) : 0, oy = par ? clamp(-py * 0.07, -(dh - H) / 2, (dh - H) / 2) : 0;
-        ctx.globalCompositeOperation = 'lighter'; ctx.globalAlpha = clamp(0.95 * Q.nebula, 0, 1);
-        ctx.drawImage(far, (W - dw) / 2 + ox, (H - dh) / 2 + oy, dw, dh);
+      if (key !== bdc.key || !bdc.c) {
+        if (!bdc.c || bdc.c.width !== canvas.width || bdc.c.height !== canvas.height) { bdc.c = mk(canvas.width, canvas.height); bdc.g = bdc.c.getContext('2d', { alpha: false }); amb.gradKey = ''; }
+        const g = bdc.g; g.setTransform(dpr, 0, 0, dpr, 0, 0); g.globalCompositeOperation = 'source-over'; g.globalAlpha = 1;
+        paintBackdropStatic(g, z, px, py, zr, par, nl);
+        bdc.key = key;
       }
+      ctx.drawImage(bdc.c, 0, 0, W, H);
       lq('bd_base');
-      // galaxy-anchored ambient cloud
-      const wd = amb.world, wx = (wd.x0 - cam.x) * z + W / 2, wy = (wd.y0 - cam.y) * z + H / 2;
-      ctx.globalCompositeOperation = 'lighter'; ctx.globalAlpha = clamp((amb.ext ? 0.32 : 0.85) * Q.nebula, 0, 1);
-      ctx.drawImage(wd.canvas, wx, wy, wd.w * z, wd.h * z);
-      lq('bd_world');
-      // parallax star layers
-      ctx.globalCompositeOperation = 'lighter';
-      const nl = Q.parallax === 0 ? 1 : Q.parallax === 1 ? 1 : 2;
-      for (let li = 0; li < nl; li++) {
-        const L = amb.tiles[li], f = par ? L.f : 0, sT = 512 * (1 + zr * (0.04 + f * 0.55) * 0.35), ox = W / 2 - px * f, oy = H / 2 - py * f;
-        ctx.globalAlpha = (li === 0 ? 0.9 : 1) * (amb.ext ? 0.6 : 1);
-        const i0 = Math.floor((0 - ox) / sT), i1 = Math.floor((W - ox) / sT), j0 = Math.floor((0 - oy) / sT), j1 = Math.floor((H - oy) / sT);
-        for (let i = i0; i <= i1; i++) for (let j = j0; j <= j1; j++) ctx.drawImage(L.c, Math.round(ox + i * sT), Math.round(oy + j * sT), Math.ceil(sT) + 1, Math.ceil(sT) + 1);
-      }
-      lq('bd_tiles');
       // twinkling sparkles
       if (Q.sparkles > 0) {
         const P = Math.max(W, H) * 1.5, n = Math.min(Q.sparkles, amb.sparks.length);
@@ -1028,6 +1014,34 @@
       }
       ctx.globalAlpha = 1; ctx.globalCompositeOperation = 'source-over';
       lq('bd_spark');
+    }
+    function paintBackdropStatic(g, z, px, py, zr, par, nl) {
+      if (amb.ext) {
+        const mx = W * 0.04, my = H * 0.04, ox = par ? clamp(-px * 0.05, -mx, mx) : 0, oy = par ? clamp(-py * 0.05, -my, my) : 0;
+        g.drawImage(amb.ext, -mx + ox, -my + oy, W + mx * 2, H + my * 2);
+      } else {
+        const gk = W + 'x' + H;
+        if (amb.gradKey !== gk) { const gr = g.createRadialGradient(W * 0.5, H * 0.46, 0, W * 0.5, H * 0.5, Math.hypot(W, H) * 0.62); gr.addColorStop(0, '#0c1442'); gr.addColorStop(0.55, '#070c2b'); gr.addColorStop(1, '#03051a'); amb.grad = gr; amb.gradKey = gk; }
+        g.fillStyle = amb.grad; g.fillRect(0, 0, W, H);
+        // far dust layer (parallax)
+        const far = amb.far, s = Math.max(W / far.width, H / far.height) * 1.14, dw = far.width * s, dh = far.height * s;
+        const ox = par ? clamp(-px * 0.07, -(dw - W) / 2, (dw - W) / 2) : 0, oy = par ? clamp(-py * 0.07, -(dh - H) / 2, (dh - H) / 2) : 0;
+        g.globalCompositeOperation = 'lighter'; g.globalAlpha = clamp(0.95 * Q.nebula, 0, 1);
+        g.drawImage(far, (W - dw) / 2 + ox, (H - dh) / 2 + oy, dw, dh);
+      }
+      // galaxy-anchored ambient cloud
+      const wd = amb.world, wx = (wd.x0 - cam.x) * z + W / 2, wy = (wd.y0 - cam.y) * z + H / 2;
+      g.globalCompositeOperation = 'lighter'; g.globalAlpha = clamp((amb.ext ? 0.32 : 0.85) * Q.nebula, 0, 1);
+      g.drawImage(wd.canvas, wx, wy, wd.w * z, wd.h * z);
+      // parallax star layers
+      g.globalCompositeOperation = 'lighter';
+      for (let li = 0; li < nl; li++) {
+        const L = amb.tiles[li], f = par ? L.f : 0, sT = 512 * (1 + zr * (0.04 + f * 0.55) * 0.35), ox = W / 2 - px * f, oy = H / 2 - py * f;
+        g.globalAlpha = (li === 0 ? 0.9 : 1) * (amb.ext ? 0.6 : 1);
+        const i0 = Math.floor((0 - ox) / sT), i1 = Math.floor((W - ox) / sT), j0 = Math.floor((0 - oy) / sT), j1 = Math.floor((H - oy) / sT);
+        for (let i = i0; i <= i1; i++) for (let j = j0; j <= j1; j++) g.drawImage(L.c, Math.round(ox + i * sT), Math.round(oy + j * sT), Math.ceil(sT) + 1, Math.ceil(sT) + 1);
+      }
+      g.globalAlpha = 1; g.globalCompositeOperation = 'source-over';
     }
     function drawNebulae(t) {
       if (!gnebs.length) return;
@@ -1889,9 +1903,8 @@
       if (destroyed || !root.isConnected || (doc.hidden && !force)) return;
       const tf0 = performance.now();
       readQuality();
-      accDt += dtRaw;
-      if (Q.fps < 55 && accDt < 1 / Q.fps - 0.002) return;
-      const dt = Math.min(0.1, accDt); accDt = 0;
+      if (!paceFn(pace, Q.fps, dtRaw)) return;
+      const dt = Math.min(0.1, pace.dt);
       if (!fitCv()) return;
       if (S && pendingView !== null) applyInitialView();
       queueWarmup();

@@ -7,7 +7,11 @@ Docs: `PROGRESS.md` (plan/status/25-feature acceptance checklist) · `CONVENTION
 Commands: `node tools/check.js` (syntax of every manifest file) · `node tools/rules-test.js [area]` · `node tools/soak.js` (24-thread AI-vs-AI soak/balance; `tools/SOAK.md`) · `node tools/headless.js`.
 Browser-pane tip: animations use requestAnimationFrame, so in the built-in browser pane a tab must be fronted (`tabs_select`) for anything animated (GNN, audiences, scenes, combat) to advance.
 
-## Session 5 (October 2026) — fun audit, branch `claude/optimistic-franklin-bvqmi3`
+## Session 6 (October 2026) — frame pacing, branch `claude/zealous-bohr-fxv562`
+`tools/handoff/frame-pacing-2026-10.md`: what was measured (headless rAF pacing, per-frame canvas pass counts, CPU profile), what
+changed (`UI.pace()` + `UI.displayHz()` in kit.js replace every per-screen frame gate; cached galaxy backdrop; combat backdrop at
+24 Hz; governor hysteresis) and what still needs a real GPU (frame rates per tier, the F3 overlay now shows the display Hz and cap).
+
 `tools/handoff/fun-audit-2026-10.md`: what the original's fun is, how the remake was measured (player's-eye headless transcript +
 Playwright click-through), what changed (GNN news policy, end-of-turn planet reports, discovery cards, combat card layout, map camera)
 and what is still open (ship art, one-press GNN, tutor pop-ups, report sounds, tech adjust dialogs).
