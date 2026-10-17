@@ -30,10 +30,15 @@ Versions follow `MAJOR.MINOR.PATCH`; the live version is the `VERSION` file.
 - The procession (`procession`): a march in the nobilmente manner — a solo horn carries a long-breathed theme over tuba and
   trombones on the step, the snare alone keeps a march cadence with a firm bass drum on the one, bone dry (`def.sends` lets a
   piece override one layer's reverb / stage / delay sends), strings and organ behind, the choir entering as the theme returns,
-  the flat-sixth lift for the big phrase, a lyrical trio, a hymn and the full chamber's answer. It is a rare piece of the map
-  programme once the empire stands among others and a regular piece at war. The Galactic Council plays an abbreviated reading
-  of it (`council2`: the long sections halved, the big phrase within the first quarter minute) alternating with the original
-  `council`. `Music.renderOffline(id, secs, { loop: false })` lets a performance end naturally instead of running into its next pass.
+  the flat-sixth lift for the big phrase, a lyrical trio, a hymn and the full chamber's answer. On the map it wears the family
+  tone (dark top, more hall) and grows out of the interlude through an eight-bar approach (strings and the horn call, harp, ghosted
+  snare under the horn, the cadence only with the theme); it is the rarest of the rare pieces in peacetime (`rare.p` may be a map
+  of id → probability) and a regular piece at war. The Galactic Council plays the same composition in state (`council2`, derived
+  at registration): abbreviated (long sections halved, the big phrase within the first quarter minute), slower, and ceremonial —
+  tam-tam and a timpani roll under a brass fanfare on the call, the organ of the chamber spread wide, the horn section and brass
+  doubling the solo horn over a sustained brass bed, cymbals on the entries, timpani on the step, the choir forward, a brighter
+  room; it alternates with the original `council`. `Music.renderOffline(id, secs, { loop: false })` lets a performance end
+  naturally instead of running into its next pass.
 - Fun audit (`tools/handoff/fun-audit-2026-10.md`): the GNN now broadcasts only what the original treats as news (events, wars,
   peace, alliances, eliminations, council, stars reports, rankings) — battles, fleet losses, first contacts and treaties go to the
   archive only (83 → 21 newscasts in a 200-turn game); AI empires' random events reach the news (their headlines were dropped);

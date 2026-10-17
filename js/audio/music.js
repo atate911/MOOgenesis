@@ -1018,7 +1018,8 @@
     const a = shuffled(pl.ids, last);
     if (pl.rare) {
       const isRare = id => id !== undefined && pl.rare.ids.indexOf(id) >= 0;
-      for (const id of pl.rare.ids) if (Math.random() < pl.rare.p) for (let tries = 0; tries < 10; tries++) {
+      const pOf = id => (typeof pl.rare.p === 'object' ? num(pl.rare.p[id], 0.35) : pl.rare.p);
+      for (const id of pl.rare.ids) if (Math.random() < pOf(id)) for (let tries = 0; tries < 10; tries++) {
         const k = 1 + Math.floor(Math.random() * a.length);
         if (!isRare(a[k - 1]) && !isRare(a[k]) && !(k === 1 && last === id)) { a.splice(k, 0, id); break; }
       }
@@ -1120,7 +1121,7 @@
         between: opts.between ? [].concat(opts.between).filter(t => TRACKS[t]) : null, betweenP: num(opts.betweenP, 0.5), gapIn: Array.isArray(opts.gapIn) ? opts.gapIn.slice() : num(opts.gapIn, 0), queued: null, lastTpl: null,
       };
       if (pl.between && !pl.between.length) pl.between = null;
-      if (opts.rare) { const ids = [].concat(opts.rare.ids || opts.rare).filter(id => TRACKS[id] && pl.ids.indexOf(id) < 0); pl.rare = ids.length ? { ids, p: num(opts.rare.p, 0.35) } : null; }
+      if (opts.rare) { const ids = [].concat(opts.rare.ids || opts.rare).filter(id => TRACKS[id] && pl.ids.indexOf(id) < 0); pl.rare = ids.length ? { ids, p: typeof opts.rare.p === 'object' ? Object.assign({}, opts.rare.p) : num(opts.rare.p, 0.35) } : null; }
       if (pl.shuffle) pl.order = composeOrder(pl);
       if (opts.start && pl.rare && pl.rare.ids.indexOf(opts.start) >= 0 && pl.order.indexOf(opts.start) < 0) pl.order.unshift(opts.start);   // restored mid-rare-piece: come back to it
       if (opts.start && pl.order.indexOf(opts.start) >= 0) {           // begin with a given track (the rest keeps its order / shuffle)
@@ -1180,7 +1181,7 @@
   // the music never stops on the map: every piece crossfades into an interlude in the next piece's key, and that into the next piece
   const INTERLUDES = ['drift', 'drift2', 'drift3', 'drift4', 'drift5'];
   // the rare pieces (the tide, the chorale) are slipped into a cycle about a third of the time each; at war their readings with the synthetic hits, more often
-  const CALM_ROT = { gap: 0, gapIn: 0, fade: 7, between: INTERLUDES, betweenP: 1, rare: { ids: ['galaxy9', 'galaxy10', 'procession'], p: 0.35 } };
+  const CALM_ROT = { gap: 0, gapIn: 0, fade: 7, between: INTERLUDES, betweenP: 1, rare: { ids: ['galaxy9', 'galaxy10', 'procession'], p: { galaxy9: 0.35, galaxy10: 0.35, procession: 0.25 } } };   // the procession rarer still: an occasion
   const EARLY_ROT = { gap: 0, gapIn: 0, fade: 8, between: ['drift', 'drift2', 'drift4', 'drift5'], betweenP: 1 };
   const MOOD_ROTATE = { explore: CALM_ROT, galaxy: CALM_ROT, map: CALM_ROT, calm: CALM_ROT, galaxyEarly: EARLY_ROT, galaxyWar: { gap: 0, gapIn: 0, fade: 5, between: INTERLUDES, betweenP: 0.6, rare: { ids: ['galaxy9:war', 'galaxy10:war'], p: 0.6 } } };
   let moodTick = 0;
@@ -1866,8 +1867,8 @@
   });
   Track('procession', {
     desc: 'The procession: a processional march in the nobilmente manner — a solo horn carries a long-breathed theme over tuba and trombones on the step, the snare alone keeps the march with a firm bass drum on the one, strings and the organ of the chamber behind, the choir entering as the theme returns; the flat-sixth lift for the big phrase, a lyrical trio, the drums fall away for a hymn and the full chamber answers it; rare on the map once the empire stands among others, regular at war',
-    bpm: 84, trim: 2.6, tone: { lo: 0.8 }, root: 'F', mode: 'major', loopFrom: 'A1', tens: false, rubato: 0.01, mix: { drums: 1.0, lead: 1.15, bass: 1.1, choir: 1.1 },
-    fx: { stage: 0.7 }, sends: { drums: { stage: 0.06, verb: 0.03, dly: 0 } },
+    bpm: 84, trim: 2.6, tone: { lo: 0.8, hi: -2.5 }, root: 'F', mode: 'major', loopFrom: 'A1', tens: false, rubato: 0.01, mix: { drums: 1.0, lead: 1.15, bass: 1.1, choir: 1.1 },
+    fx: { stage: 0.7, verb: 1.2 }, sends: { drums: { stage: 0.06, verb: 0.03, dly: 0 } },
     forms: [['A1', 'A2', 'B', 'T', 'D', 'R', 'E'], ['A1', 'B', 'T', 'A2', 'D', 'R', 'E'], ['A1', 'A2', 'T', 'B', 'D', 'R', 'E'], ['A1', 'T', 'A2', 'B', 'D', 'R', 'E']],
     alts: [{}, { bell: 'glass', pad2: 'cellos' }, { pad: 'organSoft', choir: 'choirWomen' }],
     inst: { pad: 'strings', pad2: 'lowBrass', bass: 'lowBrass', lead: 'hornSolo', lead2: 'horn', arp: 'harp', bell: 'bell', choir: 'aah', choir2: 'choirMen' },
@@ -1881,8 +1882,10 @@
       CL: '5:3 8:1 | 7:2 6:2 | 5:4 | r:4',                                                            // the call (the game's leitmotif) that opens
     },
     sec: [
-      { n: 'intro', bars: 4, cres: [0.55, 0.8], prog: 'I:2 V:2', pad: { p: 'swell', n: 4, reg: [50, 76], vel: 0.7 }, bass: { p: 'whole', inst: { p: 'lowBrass', att: 0.1 }, vel: 0.9 },
-        drums: { bd: 'X.......x.......', sn: ['o...o...o...o...', 'o.o.o.o.o.o.o.o.', 'X.o.x.o.x.o.x.o.', 'X.x.x.x.x.x.xxxx'] }, lead: { ph: 'CL', oct: -1, vel: 0.75 } },
+      // the approach grows out of the interlude: strings and the horn call alone, the harp, then ghosted snare strokes under the horn, the cadence only with the theme
+      { n: 'intro', bars: 8, cres: [0.5, 0.78], prog: 'I:2 IV:2 | I:2 V:2', pad: { p: 'swell', n: 4, reg: [50, 76], vel: 0.7 }, pad2: { p: 'swell', inst: 'cellos', n: 2, reg: [43, 60], vel: 0.5 }, bass: { pat: ['....', '....', '....', '....', '1---', '1---', '1---', '1---'], inst: { p: 'lowBrass', att: 0.14 }, vel: 0.75 },
+        arp: { pat: '0...2...1...3...', res: 1, vel: 0.3, reg: [55, 81] }, lead: { ph: ['CL r2 CL', 'r2 CL r2'], oct: -1, vel: 0.72 },
+        drums: { bd: ['................', '................', '................', '................', 'o...............', 'o...............', 'X.......o.......', 'X.......x.......'], sn: ['................', '................', '................', '................', 'o.......o.......', 'o...o...o...o...', 'o.o.o.o.o.o.o.o.', 'X.o.x.o.x.x.xxxx'] } },
       { n: 'A1', bars: 16, lv: 0.78, prog: 'I I IV V | I vi ii V | I IV I V | vi IV V I', pad: { p: 'sus', n: 4, reg: [50, 76], vel: 0.7 }, pad2: { p: 'stab', pat: 'x.......x.......', n: 2, reg: [38, 55], vel: 0.65, gate: 0.7 }, bass: { p: 'half', inst: { p: 'lowBrass', att: 0.06 }, vel: 1.0 },
         lead: { ph: ['A1 A2 A1 CD', 'A1 A2 B1 CD'], oct: -1, vel: 0.85 }, drums: { p: 'field', vel: 0.85 }, bell: { dens: 0.06, res: 1, reg: [72, 96], vel: 0.38 }, fill: 'snS' },
       { n: 'A2', bars: 16, lv: 0.86, prog: 'I I IV V | I vi ii V | I IV I V | vi IV V I', pad: { p: 'sus', n: 4, reg: [50, 78], vel: 0.8 }, pad2: { p: 'stab', pat: 'x.......x...x...', n: 2, reg: [38, 55], vel: 0.75, gate: 0.7 }, bass: { p: 'walk', inst: { p: 'lowBrass', att: 0.06 }, vel: 1.0 },
@@ -1899,14 +1902,36 @@
         lead: { ph: ['A1 CD', 'A2 CD'], oct: -1, vel: 0.75 }, drums: { p: 'field', vel: 0.7 }, choir: { n: 3, reg: [60, 76], vel: 0.45 }, bell: { dens: 0.08, res: 1, reg: [72, 96], vel: 0.38 } },
     ],
   });
-  // The council chamber is rarely open for more than a minute, so it plays an abbreviated reading of the procession: the long sections halved
-  // (their phrase lists and progressions truncate with them) and forms that reach the big phrase within the first quarter minute.
+  // The council chamber is rarely open for more than a minute, so it plays an abbreviated, ceremonial reading of the procession: the same
+  // composition with the long sections halved (phrase lists and progressions truncate with them) and forms that reach the big phrase within
+  // the first quarter minute — but with the pomp of the chamber: a tam-tam and a timpani roll under a brass fanfare on the call, the organ
+  // instead of the strings, the horn section and the brass doubling the solo horn, timpani on the step, the choir forward, a brighter room.
   (function () {
     const d = JSON.parse(JSON.stringify(TRACKS.procession)); delete d._p; delete d.id;
-    d.desc = 'Galactic Council: the procession, abbreviated — the big phrase on the solo horn within the first quarter minute, then the march, the hymn while the votes are cast and the result';
+    d.desc = 'Galactic Council: the procession in state — the same march, abbreviated and ceremonial: tam-tam and timpani under a brass fanfare on the call, the organ of the chamber, horns and brass doubling the theme, the big phrase within the first quarter minute, the hymn while the votes are cast, the full chamber for the result';
+    d.bpm = 78; d.tone = { lo: 1.0 }; d.fx = { stage: 0.8, verb: 1.25 }; d.sends = { drums: { stage: 0.15, verb: 0.08, dly: 0 } };
+    d.mix = Object.assign({}, d.mix, { choir: 1.3, lead: 1.1, drums: 1.0, pad: 1.1 });
     d.forms = [['B', 'A1', 'R', 'D', 'E'], ['B', 'A2', 'D', 'R', 'E'], ['A1', 'B', 'R', 'T', 'E'], ['B', 'T', 'A2', 'R', 'E']];
-    for (const s of d.sec) if (s.n === 'A1' || s.n === 'A2' || s.n === 'B' || s.n === 'T') s.bars = 8;
-    for (const s of d.sec) if (s.n === 'intro') { s.bars = 2; s.cres = [0.62, 0.84]; s.drums = { bd: 'X.......x.......', sn: ['X.o.x.o.x.o.x.o.', 'X.x.x.x.x.x.xxxx'] }; s.lead = { ph: 'CL', oct: -1, vel: 0.8 }; }
+    for (const s of d.sec) {
+      if (s.n === 'A1' || s.n === 'A2' || s.n === 'B' || s.n === 'T') s.bars = 8;
+      if (s.pad && s.pad.inst === 'strings') s.pad = { p: 'sus', inst: 'organ', n: 4, reg: [50, 76], vel: 0.8, width: 1.3 };      // the chamber's organ carries the harmony, spread wide
+      else if (s.pad) s.pad.width = 1.3;
+      if (s.choir) s.choir.vel = Math.min(1.0, (s.choir.vel || 0.6) * 1.2);
+      if (s.n === 'A1') { s.lead2 = { ph: '@', inst: 'horn', oct: -1, vel: 0.45 }; s.timp = 'two'; }
+      if (s.n === 'A2') s.timp = 'two';
+      // the military orchestra: a sustained brass-section bed under the big phrase and the result (the low brass keeps the step), cymbals on the entries
+      if (s.n === 'B') { s.lead2 = { ph: '@', inst: 'brass', oct: -1, vel: 0.5 }; s.timp = 'beats'; s.pad2 = { p: 'sus', inst: 'brass', n: 4, reg: [45, 69], vel: 0.55, width: 1.3 }; s.bass = { p: 'half', inst: { p: 'lowBrass', att: 0.05 }, vel: 1.0 }; s.cr = true; }
+      if (s.n === 'R') { s.lead2 = { ph: '@', inst: 'brass', oct: -1, vel: 0.6 }; s.bell = { dens: 0.22, res: 2, reg: [72, 96], vel: 0.5 }; s.pad2 = { p: 'sus', inst: 'brass', n: 4, reg: [45, 69], vel: 0.65, width: 1.3 }; s.choir2 = { n: 3, reg: [38, 57], vel: 0.85 }; s.cr = true; }
+      if (s.n === 'A2') { s.pad2 = { p: 'stab', inst: 'lowBrass', pat: 'x.......x...x...', n: 3, reg: [38, 57], vel: 0.8, gate: 0.7 }; s.choir2 = { n: 3, reg: [38, 57], vel: 0.6 }; }
+      if (s.n === 'intro') {
+        s.bars = 4; s.cres = [0.7, 0.92]; s.hit = 'tam'; s.prog = 'I:2 V:2';
+        s.pad = { p: 'swell', inst: 'organ', n: 4, reg: [50, 76], vel: 0.85 }; s.pad2 = { p: 'sus', inst: 'strings', n: 4, reg: [55, 79], vel: 0.6 }; s.arp = undefined;
+        s.bass = { p: 'whole', inst: { p: 'lowBrass', att: 0.08 }, vel: 0.9 };
+        s.lead = { ph: ['CL', 'r1 CL'], inst: 'brass', oct: -1, vel: 0.85 }; s.lead2 = { ph: '@', inst: 'horn', oct: -1, vel: 0.55 };
+        s.timp = { p: 'two', roll: 2 }; s.choir = { n: 3, reg: [60, 76], vel: 0.55 };
+        s.drums = { bd: 'X.......x.......', sn: ['o...o...o...o...', 'o.o.o.o.o.o.o.o.', 'X.o.x.o.x.o.x.o.', 'X.x.x.x.x.x.xxxx'] };
+      }
+    }
     d.loopFrom = 'A1';
     Track('council2', d);
   })();
