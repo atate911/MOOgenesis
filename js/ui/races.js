@@ -176,10 +176,12 @@
     .rc-spy .rd { display:flex; flex-direction:column; align-items:flex-end; line-height:1.15; font-size:.88rem; color:var(--mist); white-space:nowrap; } .rc-spy .rd b { color:var(--ivory); font-weight:600; } .rc-spy .rd .nx { color:var(--fog); }
     .rc-modes { display:flex; gap:.35rem; align-items:center; } .rc-modes .lbl { color:var(--fog); font-size:.82rem; margin-right:.1rem; text-transform:uppercase; letter-spacing:.08em; }
     .rc-modes .btn { padding:.18em .75em; font-size:.88rem; }
-    .rc-void { position:absolute; inset:0; --ch:.6rem; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:.3rem; text-align:center; color:var(--fog);
+    .rc-void { position:absolute; inset:0; isolation:isolate; --ch:.6rem; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:.3rem; text-align:center; color:var(--fog);
       background:linear-gradient(135deg, rgba(93,106,150,.5), rgba(42,50,96,.4) 50%, rgba(93,106,150,.5)); isolation:isolate; }
     .rc-void::before { content:""; position:absolute; inset:1px; z-index:-1; clip-path:var(--poly); background:repeating-linear-gradient(135deg, rgba(255,255,255,.022) 0 .5rem, transparent .5rem 1rem), rgba(5,8,24,.72); }
     .rc-void .big { font:400 1.5rem var(--font-display); letter-spacing:.14em; text-transform:uppercase; } .rc-void .sm { font-size:.9rem; color:var(--fog); opacity:.85; } .rc-void .ico { width:2rem; height:2rem; opacity:.55; }
+    .rc-void .hw { position:absolute; inset:1px; z-index:-1; clip-path:var(--poly); opacity:.35; filter:saturate(.7) brightness(.8); pointer-events:none; } .rc-void .hw canvas { position:absolute; inset:0; width:100%; height:100%; display:block; }
+    .rc-void .hw::after { content:""; position:absolute; inset:0; background:radial-gradient(ellipse at 50% 50%, rgba(5,8,24,.1), rgba(5,8,24,.75) 100%); }
     .rc-void.gone .big { color:var(--rose); } .rc-void .gpic { position:absolute; left:.8rem; top:.7rem; bottom:.7rem; aspect-ratio:4 / 5; opacity:.55; filter:grayscale(1) brightness(.7); } .rc-void .gpic canvas { position:absolute; inset:0; width:100%; height:100%; }
     .rc-sec { position:absolute; inset:0; --ch:.6rem; display:flex; flex-direction:column; justify-content:space-between; padding:.6rem .85rem .65rem; isolation:isolate; background:linear-gradient(135deg, var(--brass-lo), #2a3260 40%, #2a3260 60%, var(--brass-lo)); }
     .rc-sec::before { content:""; position:absolute; inset:1px; z-index:-1; clip-path:var(--poly); background:linear-gradient(180deg, rgba(19,28,70,.96), rgba(7,11,30,.97)); }
@@ -363,7 +365,11 @@
           cell.el.appendChild(h('div.rc-void.ch.gone', gp, h('div.big', 'Destroyed'), h('div.sm', 'The ' + E.name + ' empire is no more'), h('i.rc-acc', { style: { background: bannerOf(E), position: 'absolute', left: 0, top: 0, bottom: 0, width: '.3rem' } })));
           cell.ref = { kind, emp, i, pic };
         } else if (kind === 'nocontact') { cell.el.appendChild(mkVoid('', 'No Contact', 'Not yet within range', 'galaxy')); cell.ref = { kind, emp, i }; }
-        else { cell.el.appendChild(mkVoid('', 'Not Present', '', null)); cell.ref = { kind, emp, i }; }
+        else {
+          const v = mkVoid('', 'Not Present', '', null), WA = M.Gfx && M.Gfx.WorldArt, hp = WA && WA.enabled ? WA.race(me.race, 'homeworld-square') : null;   // the player's own world, dimmed, instead of an empty slab
+          if (hp) v.insertBefore(h('div.hw', WA.canvas(hp, 640, 400, { fx: 0.5, fy: 0.45 })), v.firstChild);
+          cell.el.appendChild(v); cell.ref = { kind, emp, i };
+        }
         fitPics(R.el);
       }
       if (kind === 'active') paintActive(cell.ref, E, pv);
