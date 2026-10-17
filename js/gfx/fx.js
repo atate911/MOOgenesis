@@ -8,6 +8,7 @@
      beam(x1,y1,x2,y2,kind,dur,o) -> handle{done,x1,y1,x2,y2}   kinds: laser neutron disruptor phasor plasma deathray mass
      missile(x1,y1,x2,y2,speed,kind,o) -> handle{done,x,y,onHit}  kinds: nuclear hyperx merculite scatter stinger torpedo antimatter
      shieldHit(x,y,r,angle,color) · warpFlash(x,y,size,o) · novaBlast(x,y,r) · planetImpact(x,y,r) · pulse(x,y,r,color)
+     shockwave(x,y,r,color)  — kill ring: a bright expanding rim with a dark refraction band behind it (normal blend), a flash and sparks
    Design: every visual is a pre-baked white/tinted sprite drawn with additive blending ('lighter');
    particles and entities live in fixed pools (no allocation in update/draw).
    ========================================================================== */
@@ -215,7 +216,7 @@
     this.acc = 0; this.acc2 = 0; this.n = 0; this.m = 0; this.flag = 0; this.sc = 1; this.pts = null; this.t0 = 0;
     this.ix = null; this.iy = null; this.it = null; this.css0 = ''; this.css1 = '';
   }
-  const E_RING = 1, E_FLASH = 2, E_FLARE = 3, E_BEAM = 4, E_MISSILE = 5, E_SHIELD = 6, E_WARP = 7, E_PULSE = 8, E_PLANET = 9, E_GLOW = 10, E_RAYS = 11;
+  const E_RING = 1, E_FLASH = 2, E_FLARE = 3, E_BEAM = 4, E_MISSILE = 5, E_SHIELD = 6, E_WARP = 7, E_PULSE = 8, E_PLANET = 9, E_GLOW = 10, E_RAYS = 11, E_SHOCK = 12;
 
   function create(opts) {
     opts = opts || NO;
@@ -277,9 +278,10 @@
       const s = (size || 40) * (o.scale || 1), kind = o.kind || 'fire', q = quality;
       const R = ramp(kind), nR = R.length;
       const energy = kind === 'energy', nova = kind === 'nova';
-      addFlash(x, y, s * (nova ? 2.4 : 1.7), R[1], nova ? 0.34 : 0.2, 0.95);
-      addFlash(x, y, s * 0.7, R[0], 0.12, 1);
-      addRing(x, y, s * 0.18, s * (nova ? 2.6 : 1.9), R[2], nova ? 0.8 : 0.55, 0.9);
+      addFlash(x, y, s * (nova ? 2.4 : 1.7), R[1], nova ? 0.34 : 0.16, 0.95);   // stage 1: the flash (~60 ms core)
+      addFlash(x, y, s * 0.7, R[0], 0.06, 1);
+      addRing(x, y, s * 0.18, s * (nova ? 2.6 : 1.9), R[2], nova ? 0.8 : 0.55, 0.9);   // stage 4 (ring) overlaps the fireball
+      if (s >= 46) { const pl = newE(E_GLOW, 0.4); if (pl) { pl.x = x; pl.y = y; pl.r = s * 2.2; pl.set = R[2]; pl.a = 0.4; } }   // point light on nearby hulls
       if (energy) addRing(x, y, s * 0.1, s * 1.5, R[1], 0.45, 0.7, 0.05);
       if (nova) { addRing(x, y, s * 0.1, s * 1.9, R[1], 0.7, 0.8, 0.1); addRing(x, y, s * 0.1, s * 1.2, R[0], 0.55, 0.8, 0.2); }
       if (s >= 46) addFlare(x, y, s * (nova ? 4.5 : 3), R[1], 0.4, 0.7, rand() * 0.3);
@@ -373,6 +375,15 @@
       const e = newE(E_PULSE, 1.5); if (!e) return;
       e.x = x; e.y = y; e.r = r || 120; e.set = set;
     }
+    function shockwave(x, y, r, color) {
+      r = r || 80;
+      const set = colorSet(parseColor(color || [255, 220, 160]));
+      addRing(x, y, r * 0.12, r, set, 0.42, 0.95);
+      addFlash(x, y, r * 0.45, WHITE, 0.08, 0.85);
+      const e = newE(E_SHOCK, 0.46); if (e) { e.x = x; e.y = y; e.r = r; e.set = set; }
+      for (let i = 0; i < min(14, (12 * quality) | 0); i++) { const a = rand() * TAU, sp = r * rr(1.6, 3.2); addSpark(x, y, cos(a) * sp, sin(a) * sp, rr(0.2, 0.45), rr(8, 18), 1.8, 0.9, [WHITE, set], 1.6); }
+      shakeAdd(r * 0.04);
+    }
     function warpFlash(x, y, size, o) {
       o = o || NO;
       const set = colorSet(parseColor(o.color || [190, 225, 255])), s = (size || 50) * (o.scale || 1);
@@ -444,7 +455,9 @@
       const age = e.age, dur = e.dur;
       const fadeT = min(0.22, dur * 0.35), fade = age > dur - fadeT ? max(0, (dur - age) / fadeT) : 1;
       const grow = min(1, age / min(0.07, dur * 0.25)), Lh = L * grow;
-      const pul = 1 + 0.12 * sin(age * 52 + e.t0), w = cfg.w * sc, gw = cfg.glow * sc;
+      const pul = 1 + 0.12 * sin(age * 52 + e.t0), w = cfg.w * sc, gw = cfg.glow * sc, flk = 0.9 + 0.1 * sin(age * 73 + e.t0 * 3);   // slight flicker on the core
+      // bloom: a wide, faint halo of the beam colour under everything (the 1/4-res blurred copy of the emissive layer, done cheaply)
+      if (kind !== 'disruptor' && kind !== 'mass') { ctx.globalAlpha = fade * 0.14; stripe(ctx, bt, set.beam, x1, y1, a, Lh, gw * 2.8 * pul); }
       // muzzle + impact glows
       ctx.globalAlpha = fade * max(0, 1 - age * 4.5);
       ctx.drawImage(set.glow, x1 - cfg.muz * sc, y1 - cfg.muz * sc, cfg.muz * sc * 2, cfg.muz * sc * 2);
@@ -548,7 +561,7 @@
         default: { // laser
           ctx.globalAlpha = fade * 0.5; stripe(ctx, bt, set.beam, x1, y1, a, Lh, gw * pul);
           ctx.globalAlpha = fade * 0.95; stripe(ctx, bt, set.beam, x1, y1, a, Lh, w * 3.4 * pul);
-          ctx.globalAlpha = fade; stripe(ctx, bt, WHITE.beam, x1, y1, a, Lh, w * 1.2);
+          ctx.globalAlpha = fade * flk; stripe(ctx, bt, WHITE.beam, x1, y1, a, Lh, w * 1.2);
         }
       }
     }
@@ -623,7 +636,10 @@
         ctx.setTransform(bt.a, bt.b, bt.c, bt.d, bt.e, bt.f);
         ctx.globalAlpha = 0.95;
         ctx.drawImage(set.glow, x - 11 * sz * fl2, y - 11 * sz * fl2, 22 * sz * fl2, 22 * sz * fl2);
-        const len = 30 * sz * (0.8 + 0.4 * fl2);
+        const len = 30 * sz * (0.8 + 0.4 * fl2), plume = 64 * sz * (0.75 + 0.35 * fl2);
+        ctx.globalAlpha = 0.32;                                                   // exhaust plume: long, faint, flickering
+        xf(ctx, bt, x - ca * plume * 0.5, y - sa * plume * 0.5, a, plume, 7 * sz);
+        ctx.drawImage(e.ramp[min(3, e.ramp.length - 1)].streak, -0.5, -0.5, 1, 1);
         ctx.globalAlpha = 0.85;
         xf(ctx, bt, x - ca * len * 0.5, y - sa * len * 0.5, a, len, 9 * sz);
         ctx.drawImage(e.ramp[min(2, e.ramp.length - 1)].streak, -0.5, -0.5, 1, 1);
@@ -850,6 +866,12 @@
       const rs = clamp(bt.a, 1, 2);
       ctx.globalCompositeOperation = 'source-over';
       drawNormal(ctx, bt);
+      for (let i = 0; i < ents.length; i++) {                                  // shockwave: dark band just inside the bright rim (fakes refraction)
+        const e = ents[i]; if (e.type !== E_SHOCK || e.delay > 0) continue;
+        const p = e.age / e.dur, k = 1 - (1 - p) * (1 - p) * (1 - p), rk = e.r * (0.12 + 0.88 * k);
+        ctx.globalAlpha = 0.5 * pow(1 - p, 1.3); ctx.lineWidth = max(2, e.r * 0.11 * (1 - p * 0.5)); ctx.strokeStyle = 'rgb(4,6,16)';
+        ctx.beginPath(); ctx.arc(e.x, e.y, max(1, rk - ctx.lineWidth * 0.55), 0, TAU); ctx.stroke();
+      }
       ctx.setTransform(bt.a, bt.b, bt.c, bt.d, bt.e, bt.f);
       ctx.globalCompositeOperation = 'lighter';
       drawAdditive(ctx, bt, rs);
@@ -866,7 +888,7 @@
 
     sys.update = update; sys.draw = draw; sys.clear = clear; sys.count = count;
     sys.explosion = explosion; sys.debris = debris; sys.sparks = sparks; sys.beam = beam; sys.missile = missile;
-    sys.shieldHit = shieldHit; sys.warpFlash = warpFlash; sys.novaBlast = novaBlast; sys.planetImpact = planetImpact; sys.pulse = pulse;
+    sys.shieldHit = shieldHit; sys.warpFlash = warpFlash; sys.novaBlast = novaBlast; sys.planetImpact = planetImpact; sys.pulse = pulse; sys.shockwave = shockwave;
     sys.ring = function (x, y, r0, r1, color, dur) { return addRing(x, y, r0, r1, colorSet(parseColor(color)), dur || 0.6, 0.85); };
     sys.flashAt = function (x, y, r, color, dur) { return addFlash(x, y, r, colorSet(parseColor(color)), dur || 0.25, 1); };
     sys.setQuality = function (q) { quality = clamp(q, 0.2, 1); sys.quality = quality; };

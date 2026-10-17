@@ -9,7 +9,7 @@
 //   fx.missile(x1, y1, x2, y2, speed, kind, {onHit, scale, arc}) → handle {done, x, y, tx, ty, onHit, stop()}
 //                                                        kinds nuclear hyperx merculite scatter stinger torpedo antimatter
 //   fx.shieldHit(x, y, r, angle, color)  fx.warpFlash(x, y, size, {color, mode:'in'|'out', angle})  fx.novaBlast(x, y, r)
-//   fx.planetImpact(x, y, r)  fx.pulse(x, y, r, color)  fx.ring(x, y, r0, r1, color, dur)  fx.flashAt(x, y, r, color, dur)
+//   fx.planetImpact(x, y, r)  fx.pulse(x, y, r, color)  fx.ring(x, y, r0, r1, color, dur)  fx.flashAt(x, y, r, color, dur)  fx.shockwave(x, y, r, color)
 //   fx.shake / fx.flash (decaying camera-shake / white-flash values, same as the CPU system)   fx.setQuality(q)   fx.stats()
 //   GPU extras: fx.stress(n, {w, h}) (spawn n particles at once), fx.bloom (true/false/undefined=Perf), fx.gain, fx.resScale, fx.dispose()
 // Particles live in one typed-array ring buffer (64 bytes each, ≥131,072 slots) and are integrated analytically in the vertex shader
@@ -1084,6 +1084,15 @@
     sys.update = update; sys.draw = draw; sys.clear = clear; sys.count = count;
     sys.explosion = explosion; sys.debris = debris; sys.sparks = sparks; sys.beam = beam; sys.missile = missile;
     sys.shieldHit = shieldHit; sys.warpFlash = warpFlash; sys.novaBlast = novaBlast; sys.planetImpact = planetImpact; sys.pulse = pulse;
+    // kill shockwave: same identity as the CPU system's bright rim + flash + sparks; the dark refraction band is CPU-only (additive buffer here)
+    sys.shockwave = function (x, y, r, color) {
+      r = r || 80;
+      const c = parseColor(color || [255, 220, 160]), pc = pkc(c), pw = pkc([255, 255, 255]), q = quality;
+      ring(x, y, r * 0.12, r, pc, 0.42, 0.95);
+      flash(x, y, r * 0.45, pw, 0.08, 0.85);
+      for (let i = 0; i < min(14, (12 * q) | 0); i++) { const a = rand() * TAU, sp = r * rr(1.6, 3.2); spark(x, y, cos(a) * sp, sin(a) * sp, rr(0.2, 0.45), rr(8, 18), 1.8, 0.9, [pw, pc], 1.6); }
+      shakeAdd(r * 0.04);
+    };
     sys.ring = function (x, y, r0, r1, color, dur) { ring(x, y, r0, r1, pkc(parseColor(color)), dur || 0.6, 0.85); };
     sys.flashAt = function (x, y, r, color, dur) { flash(x, y, r, pkc(parseColor(color)), dur || 0.25, 1); };
     sys.setQuality = function (q) { quality = clamp(q, 0.2, 1); sys.quality = quality; };
