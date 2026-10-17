@@ -29,6 +29,12 @@ Versions follow `MAJOR.MINOR.PATCH`; the live version is the `VERSION` file.
   decisions with no safe default light ALL their options with a softer blue pulse instead of recommending one: the Council vote and
   accept/defy, AI treaty offers in an audience, spy steal / sabotage / frame targets, the fallback research choice. A modal opened over
   a waiting card hands the light back to the card when it closes. Modals the player opens outside a turn stay unlit.
+- Galactic Council chamber art: the delegates' photographs are graded into the painted hall (studio black lifted to the alcove's dusk
+  tone, warmed toward the hall light, lit from above) and stand in their alcoves at a believable scale instead of filling two-storey
+  arches; idle seats dim warm instead of under a navy veil. The speaker hologram crushes the photo's grey backdrop and fades to nothing
+  inside its box (it read as a pasted rectangle), floats in a soft projection beam, and its floor glow is an ellipse. Light shafts in
+  every scene (`Scenes` `beam()`) have soft edges (four nested layers) instead of one hard-sided trapezoid. A voted seat lights a desk
+  lamp instead of an unshaded "ballot chip"; name plates show an empire-colour gem instead of a thumbnail of the same photo.
 
 ## 1.1.2 — 2026-10-17
 
