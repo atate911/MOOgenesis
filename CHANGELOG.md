@@ -7,11 +7,12 @@ Versions follow `MAJOR.MINOR.PATCH`; the live version is the `VERSION` file.
 
 - Music, the end of the game: a crowning cue (`triumph`) that takes the council's own music (the procession's call, climbing theme and
   big phrase, in its key of F) and steps it up to a military band in the throne-room manner — a brass chorale on the call (trumpets and
-  horns in parts over a brass bed) over the chamber's organ with the cadence soft beneath; a two-bar swell (timpani and snare rolls, tremolo strings, the brass
+  horns in parts, trombones and baritones in chords, tuba under, an oboe on top) over the chamber's organ with the cadence soft beneath; a two-bar swell (timpani and snare rolls, tremolo strings, the brass
   opening, the cymbal rising); the cut, tam-tam, bass drum, boom and crash, and the horn section takes the climbing theme in two parts with
-  harmonized trumpet fanfare figures in the gaps, the men beneath, the march cadence and timpani on the step; the big phrase in trumpets and horns with
-  the whole chorus, brass chords on every beat, the full cadence with toms and a crash every other bar; the lift, a fanfare carried up
-  over IV-V-bVI-bVII-I with brass stabs on every beat and a crash on every bar; the chord; two bars of snare and timpani rolls out of
+  the flutes an octave above, harmonized trumpet fanfare figures in the gaps, bassoons and baritones walking, trombones on the step,
+  the men beneath, the march cadence and timpani; the big phrase in trumpets and horns with
+  the whole chorus, flutes above and clarinet runs, brass chords on every beat, trombones on the step, the full cadence with toms and a crash every other bar; the lift, a fanfare carried up
+  over IV-V-bVI-bVII-I with trumpet and trombone stabs on every beat, piccolo-style flute runs and a crash on every bar; the chord; two bars of snare and timpani rolls out of
   the quiet; the last blast the hall carries (F major, 108 bpm, about 71 s, ≈ -10 LUFS with the limiter untouched: the loudest cue in
   the score, as measured). New band presets: `tbn`, `tuba`, `tptStab`, `hornStab`, `tbnStab`. It plays once and hands over to the
   victory loop under its last chord (`Music.finale('victory')`; `finale('defeat')` goes to the dirge). The Galactic Council fires it
