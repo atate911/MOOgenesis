@@ -19,7 +19,7 @@ Versions follow `MAJOR.MINOR.PATCH`; the live version is the `VERSION` file.
   exists (`docs/IMAGE-GEN-SPRITES.md`) every screen keeps the top-down hull. Rocks, debris, the base platform, the
   planet-free system skies, the battle backdrops and the exile / spaceport stills load the same way when they land.
 
-## 1.1.0 — 2026-10-17
+## 1.1.1 — 2026-10-17
 
 - Fun audit (`tools/handoff/fun-audit-2026-10.md`): the GNN now broadcasts only what the original treats as news (events, wars,
   peace, alliances, eliminations, council, stars reports, rankings) — battles, fleet losses, first contacts and treaties go to the
