@@ -306,7 +306,7 @@
     const iw = im.naturalWidth, ih = im.naturalHeight;
     const cw = Math.round(W * 0.4), ch = H;                                             // the envoy occupies the left 40 %, feathered into the hall
     const fh = H * 1.75, fw = fh * iw / ih;                                            // 2:3 figure plate: head at the upper left, cropped at the waist
-    const sway = Math.sin(t * 0.7) * W * 0.002, breathe = 1 + Math.sin(t * 1.25) * 0.003;
+    const sway = Math.sin(t * 0.35) * W * 0.0006, breathe = 1 + Math.sin(t * 0.5) * 0.0012;   // barely-there life: a photo that sways reads as jumping
     const x = -fw * 0.22 + sway, y = H * 0.05;
     if (!A.envoyCv || A.envoyCv.width !== cw || A.envoyCv.height !== ch) { A.envoyCv = document.createElement('canvas'); A.envoyCv.width = cw; A.envoyCv.height = ch; }
     const c = A.envoyCv, e = c.getContext('2d');

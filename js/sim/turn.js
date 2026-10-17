@@ -144,6 +144,7 @@ MOO.def(function (M) {
 
     // deaths & victory
     T.checkDeaths(S);
+    Sim.Fleet.fixReloc(S);                                                   // planets lost this turn (invasion, events): rally lines pointing at them reset
     const over = T.victory(S) || councilOver;
     // (31) year advances; (30,32,33) recompute displays, tech levels, ranges, visibility
     S.year += 1; S.turn += 1;

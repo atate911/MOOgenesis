@@ -585,7 +585,7 @@
     function newSD(id) {
       const r = rng32(hashInt(id * 7919 + 13));
       return { id, st: null, pl: null, x: 0, y: 0, vis: 0, known: false, live: false, stale: false, owner: -1, mine: false, capital: false, kind: 'unknown', vkind: 'unknown', orion: false, guard: false, env: -1, min: -1, nebula: false, name: '', pri: 0,
-        art: false, pop: 0, maxPop: 0, hab: 0, rk: 1, rkT: 1, ph: r() * TAU, ph2: r() * TAU, fr: 0.8 + r() * 1.2, ang: r() * TAU,
+        art: false, gate: false, reloc: -1, pop: 0, maxPop: 0, hab: 0, rk: 1, rkT: 1, ph: r() * TAU, ph2: r() * TAU, fr: 0.8 + r() * 1.2, ang: r() * TAU,
         sx: 0, sy: 0, r: 3, on: false, glowA: 1, coreA: 1, lblA: 0, lblSlot: 0, lblX: 0, lblY: 0, pipY: 0 };
     }
     function readGalaxy() {
@@ -629,6 +629,8 @@
         sd.hab = habKind(sd, pl, st); if (reachSet !== null) { sd.rkT = (typeof reachSet === 'function' ? reachSet(sd.id) : reachSet.has(sd.id)) ? 1 : 0.2; reachAnim = true; }
         sd.nebula = !!(st.inNebula || st.nebula);
         sd.pop = vis === 2 ? (pl ? pl.pop || 0 : 0) : (seen ? seen.pop || 0 : 0); sd.maxPop = sd.known && pl ? pl.maxPop || 0 : 0;
+        sd.gate = !!pl && !!pl.stargate && vis === 2 && sd.owner >= 0;              // stargates: own ones, and foreign ones while in scanner range
+        sd.reloc = sd.mine && pl && pl.reloc >= 0 && pl.reloc !== st.id && planets[pl.reloc] && planets[pl.reloc].owner === pid ? planets[pl.reloc].starId : -1;
         sd.name = st.name || ('Star ' + st.id); if (sd.lblName !== sd.name) { sd.lbl = null; sd.lblName = sd.name; }
         sd.pri = (sd.orion ? 100 : 0) + (sd.capital ? 40 : 0) + (sd.mine ? 30 : sd.owner >= 0 ? 20 : 0) + (vis === 2 ? 4 : vis === 1 ? 2 : 0);
         SD.push(sd); sdById[st.id] = sd;
@@ -1158,6 +1160,45 @@
       lbl('range ' + me.range + ' pc', -PI * 0.5, rr * ep + 11 * uk, rgba(th.rgb.brassHi, 0.9)); lbl('scan ' + scanOf() + ' pc', PI * 0.5, sr * ep + 13 * uk, rgba(th.rgb.cyan, 0.9));
       ctx.textAlign = 'left';
     }
+    // ------------------------------------------------------------------ logistics: rally lines (RELOC) and stargates
+    // The original drew thin blue-grey lines from each colony to its rally point (research/06 §3); several colonies pointing at one world read as a
+    // fan converging on it. Chevrons drift toward the target so the direction is clear without arrowheads cluttering a busy hub.
+    const GATE_RGB = [199, 166, 255];
+    function drawRelocs(t) {
+      const n = SD.length; if (M.Settings && M.Settings.get('mapReloc') === false) return;
+      ctx.lineCap = 'round';
+      for (let i = 0; i < n; i++) {
+        const s = SD[i]; if (s.reloc < 0) continue;
+        const b = sdById[s.reloc]; if (!b) continue;
+        if ((s.sx < -40 && b.sx < -40) || (s.sx > W + 40 && b.sx > W + 40) || (s.sy < -40 && b.sy < -40) || (s.sy > H + 40 && b.sy > H + 40)) continue;
+        const dx = b.sx - s.sx, dy = b.sy - s.sy, len = Math.hypot(dx, dy); if (len < 12) continue;
+        const ux = dx / len, uy = dy / len, r0 = s.r * 2 + 4, r1 = b.r * 2 + 6, gate = s.gate && b.gate;
+        const x0 = s.sx + ux * r0, y0 = s.sy + uy * r0, x1 = b.sx - ux * r1, y1 = b.sy - uy * r1, col = gate ? GATE_RGB : [150, 172, 214];
+        ctx.beginPath(); ctx.moveTo(x0, y0); ctx.lineTo(x1, y1); ctx.lineWidth = 1.1 * uk; ctx.strokeStyle = rgba(col, s.id === selStar || s.reloc === selStar ? 0.75 : 0.42);
+        ctx.setLineDash(gate ? [2, 5] : [6, 5]); ctx.lineDashOffset = Q.flow ? -t * 10 : 0; ctx.stroke(); ctx.setLineDash([]);
+        // chevrons every ~70 px, drifting toward the rally point
+        const L = Math.hypot(x1 - x0, y1 - y0), step = 70 * uk, cs = 4 * uk; if (L < step * 0.6) continue;
+        ctx.strokeStyle = rgba(col, 0.6); ctx.lineWidth = 1.2 * uk; ctx.beginPath();
+        const off = Q.flow ? mod(t * 18, step) : step / 2;
+        for (let d = off; d < L - 6; d += step) { const cx = x0 + ux * d, cy = y0 + uy * d; ctx.moveTo(cx - ux * cs - uy * cs, cy - uy * cs + ux * cs); ctx.lineTo(cx, cy); ctx.lineTo(cx - ux * cs + uy * cs, cy - uy * cs - ux * cs); }
+        ctx.stroke();
+      }
+      ctx.lineCap = 'butt';
+    }
+    // a stargate: a thin violet ring with four bright notches, turning slowly (static with Reduce motion)
+    function drawGates(t) {
+      ctx.save();
+      for (let i = 0; i < SD.length; i++) {
+        const s = SD[i]; if (!s.gate || !s.on) continue;
+        const rr = s.r * 2.2 + 12 * uk, a0 = Q.reduce ? 0 : t * 0.35 + s.ph;              // outside the owner ring
+        ctx.globalAlpha = 0.85 * s.rk; ctx.lineWidth = 1 * uk; ctx.strokeStyle = rgba(GATE_RGB, 0.7);
+        ctx.beginPath(); ctx.arc(s.sx, s.sy, rr, 0, TAU); ctx.stroke();
+        ctx.lineWidth = 3 * uk; ctx.strokeStyle = rgba([226, 210, 255], 0.95); ctx.beginPath();
+        for (let k = 0; k < 4; k++) { const a = a0 + k * PI / 2; ctx.moveTo(s.sx + Math.cos(a - 0.24) * rr, s.sy + Math.sin(a - 0.24) * rr); ctx.arc(s.sx, s.sy, rr, a - 0.24, a + 0.24); }
+        ctx.stroke();
+      }
+      ctx.restore();
+    }
     function drawLanes(t) {
       const z = cam.z, hw = W / 2, hh = H / 2, pid = pidOf();
       ctx.lineCap = 'round';
@@ -1609,7 +1650,7 @@
     }
     function drawRoute(x0, y0, x1, y1, valid, text, col) {
       const dx = x1 - x0, dy = y1 - y0, len = Math.hypot(dx, dy); if (len < 4) return;
-      const ux = dx / len, uy = dy / len, c = valid ? th.rgb.cyan : th.rgb.rose, ex = x1 - ux * 12, ey = y1 - uy * 12;
+      const ux = dx / len, uy = dy / len, c = col || (valid ? th.rgb.cyan : th.rgb.rose), ex = x1 - ux * 12, ey = y1 - uy * 12;
       ctx.lineCap = 'round';
       ctx.beginPath(); ctx.moveTo(x0, y0); ctx.lineTo(ex, ey); ctx.lineWidth = 5; ctx.strokeStyle = rgba(c, 0.16); ctx.setLineDash([]); ctx.stroke();
       ctx.beginPath(); ctx.moveTo(x0, y0); ctx.lineTo(ex, ey); ctx.lineWidth = 1.8; ctx.strokeStyle = rgba(c, 0.95); if (!valid) ctx.setLineDash([6, 5]); else ctx.setLineDash([9, 5]); ctx.lineDashOffset = -clock * 22; ctx.stroke(); ctx.setLineDash([]);
@@ -1656,7 +1697,11 @@
       // route preview (supplied by the screen) or the built-in one while choosing a destination
       if (routePrev && sdById[routePrev.to]) {
         const a = routePrev.from !== undefined && routePrev.from !== null ? sdById[routePrev.from] : null, b = sdById[routePrev.to];
-        if (a) { const pc = Math.ceil(Math.hypot(b.x - a.x, b.y - a.y) / pcU); const txt = routePrev.valid === false ? (routePrev.reason || 'Out of range') : (pc + ' pc' + (routePrev.eta ? ' · ETA ' + routePrev.eta + ' ' + plural(routePrev.eta, 'turn') : '')); drawRoute(a.sx, a.sy, b.sx, b.sy, routePrev.valid !== false, txt); }
+        if (a) {
+          const pc = Math.ceil(Math.hypot(b.x - a.x, b.y - a.y) / pcU), ok = routePrev.valid !== false, eta = routePrev.eta ? ' · ETA ' + routePrev.eta + ' ' + plural(routePrev.eta, 'turn') : '';
+          const txt = !ok ? (routePrev.reason || 'Out of range') : (routePrev.kind === 'reloc' ? 'Rally · ' : '') + (routePrev.gate ? 'Stargate' + eta : pc + ' pc' + eta);
+          drawRoute(a.sx, a.sy, b.sx, b.sy, ok, txt, ok && routePrev.gate ? GATE_RGB : null);
+        }
       } else if (routeFleet !== null && hoverStar !== null) {
         const fd = FD.get(routeFleet), b = sdById[hoverStar];
         if (fd && b) {
@@ -1891,8 +1936,8 @@
       lap('rebuild');
       if (reachAnim) { let any = false; const k = Math.min(1, dt * 9); for (let i = 0; i < SD.length; i++) { const q = SD[i]; if (q.rk !== q.rkT) { q.rk += (q.rkT - q.rk) * k; if (Math.abs(q.rkT - q.rk) < 0.01) q.rk = q.rkT; else any = true; } } reachAnim = any; }
       computeScreen(t, dt); updateFleets(dt); updateHover(); lap('update');
-      drawBackdrop(t); lap('backdrop'); drawNebulae(t); lap('nebulae'); drawBounds(); lap('bounds'); drawTerritory(t); lap('territory'); drawGrid(t); lap('grid'); drawRanges(t); drawLanes(t); lap('lanes');
-      drawStarsPass(t, dt); lap('stars'); drawSystems(t); lap('systems'); drawLabels(t, dt); lap('labels'); drawFleets(t); lap('fleets'); drawOverlays(t, dt); drawHud(t); lap('overlays');
+      drawBackdrop(t); lap('backdrop'); drawNebulae(t); lap('nebulae'); drawBounds(); lap('bounds'); drawTerritory(t); lap('territory'); drawGrid(t); lap('grid'); drawRanges(t); drawRelocs(t); drawLanes(t); lap('lanes');
+      drawStarsPass(t, dt); drawGates(t); lap('stars'); drawSystems(t); lap('systems'); drawLabels(t, dt); lap('labels'); drawFleets(t); lap('fleets'); drawOverlays(t, dt); drawHud(t); lap('overlays');
       drawMini(); lap('mini');
       if (dirty.legend) buildLegend();
       lap('legend');
@@ -1948,7 +1993,7 @@
       },
       fit(o) { if (!W) { pendingCmd = () => api.fit({ animate: false }); return api; } pendingView = null; flyTo(gw / 2, gh / 2, fitZ, !(o && o.animate === false)); return api; },
       home(o) { if (!W) { pendingCmd = () => api.home({ animate: false }); return api; } pendingView = null; const c = capitalStar(); if (!c) return api.fit(o); flyTo(c.x, c.y, clamp(Math.max(W / 200, fitZ * 1.4), minZ, maxZ), !(o && o.animate === false)); return api; },
-      setRoutePreview(p) { routePrev = p ? { from: p.from, to: p.to, eta: p.eta, valid: p.valid !== false, reason: p.reason } : null; return api; },
+      setRoutePreview(p) { routePrev = p ? { from: p.from, to: p.to, eta: p.eta, valid: p.valid !== false, reason: p.reason, gate: !!p.gate, kind: p.kind || '' } : null; return api; },
       beginRoute(fid) { if (!FD.has(fid)) return api; if (selFleet !== fid) setSelFleet(fid, false); setRouteMode(fid); return api; },
       endRoute() { setRouteMode(null); return api; },
       highlightStars(ids, o) { hiSpec = ids && ids.length ? { ids: ids.slice(), col: o && o.color ? hex(o.color) : null } : null; return api; },

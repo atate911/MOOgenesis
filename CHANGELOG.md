@@ -3,6 +3,27 @@
 Versions follow `MAJOR.MINOR.PATCH`; the live version is the `VERSION` file.
 `scripts/upgrade.sh` refuses to move to an older `VERSION` unless told to.
 
+## 1.1.3 — 2026-10-17
+
+- GNN (`tools/handoff/gnn-logistics-2026-10.md`): a broadcast no longer closes on its own. The last story stays on air until
+  Space / click / Continue (the Next button turns into Continue); before, a one-story newscast left the screen 3.5 s after the
+  headline finished typing. Stories before the last hold for their reading time (about 16 characters a second, 4–11 s) instead of
+  a 2.8–3.5 s cap, rankings 5.5 s. Input in the first 0.6 s is ignored, so the key or click that ended the turn cannot skip the
+  news it opened. The stuck-turn Skip float is not offered while a broadcast is on air (it has its own controls). The anchor is
+  one race for the whole game, chosen from the races not playing it where possible, instead of a random race every broadcast.
+- Photo portraits hold still: no zoom on portraits under 220 device pixels, a 0.35 % slow push on large ones, no zoom "pump"
+  while talking (talking is the flicker only). The Races screen redrew its photos at 10–20 fps with a 1–2 % breathing zoom and
+  pulsed all five with a brightness / glow filter in Report / Audience pick mode; the pick highlight is now a steady ring.
+  The audience envoy's sway is a third of what it was.
+- Stargates: a violet ring with four notches marks every stargate on the galaxy map (own ones, foreign ones in scanner range);
+  the colony panel shows "stargate"; route previews between two gates read "Stargate · ETA 1 turn" in violet; the Trans panel
+  ETA now uses the stargate like the launch does (it showed the normal transport ETA and the colonists then arrived in one turn).
+- Rally points (RELOC): thin blue-grey rally lines with drifting chevrons from each colony to its rally point (violet when it is a
+  stargate pair); the colony panel shows "Rally → Sol · 3 turns (stargate)"; the Reloc panel previews the route and ETA and asks
+  for Accept (Space), with "All colonies" and "Stay here"; Alt+R on a selected colony points every colony at it (again: clears
+  them), the original's hotkey; a rally point that is captured or lost points back home (`Fleet.fixReloc`, every turn and before
+  ships are dispatched) instead of staying as a stale target. New `relocAll` order. Tests: `tools/rules/88-logistics.test.js`.
+
 ## 1.1.2 — 2026-10-17
 
 - Smoother animation, higher frame rates (`tools/handoff/frame-pacing-2026-10.md`): every screen that draws slower than the

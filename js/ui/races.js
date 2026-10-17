@@ -150,8 +150,9 @@
     .rc-slot[data-t="3"], .rc-slot[data-t="4"] { --e1:var(--rose); --e2:#5a2436; }
     .rc-slot[data-t="4"] { animation:rc-war 1.6s ease-in-out infinite; } @keyframes rc-war { 50% { filter:brightness(1.25) saturate(1.2); } }
     .rc-slot.sel { filter:brightness(1.12); } .rc-slot.sel::after { content:""; position:absolute; inset:3px; pointer-events:none; border:1px solid var(--brass-hi); clip-path:var(--poly); opacity:.7; }
-    .rc-slot.pickable .rc-pic { animation:rc-pick 1s ease-in-out infinite; }
-    @keyframes rc-pick { 50% { filter:brightness(1.35) drop-shadow(0 0 .7rem rgba(243,220,160,.8)); } }
+    .rc-slot.pickable .rc-pic { animation:rc-pick 1.4s ease-in-out infinite; }
+    @keyframes rc-pick { 0%, 100% { box-shadow:0 0 0 2px rgba(243,220,160,.55); } 50% { box-shadow:0 0 0 2px rgba(243,220,160,.95), 0 0 .9rem rgba(243,220,160,.55); } }
+    @media (prefers-reduced-motion: reduce) { .rc-slot.pickable .rc-pic { animation:none; box-shadow:0 0 0 2px rgba(243,220,160,.85); } }
     .rc-pic { --ch:.4rem; position:relative; flex:none; height:100%; aspect-ratio:4 / 5; cursor:pointer; background:linear-gradient(135deg, var(--brass-hi), var(--c) 30%, #12183e 60%, var(--c)); }
     .rc-pic canvas { position:absolute; left:3px; top:3px; width:calc(100% - 6px); height:calc(100% - 6px); background:#050818; }
     .rc-pic .rc-key { position:absolute; left:.2rem; top:.15rem; z-index:2; min-width:1.15rem; padding:0 .3rem; text-align:center; font:700 .8rem/1.3rem var(--font-ui); color:var(--brass-hi); background:rgba(5,8,24,.78); border:1px solid rgba(214,179,106,.5); }

@@ -181,7 +181,8 @@
         // a scene or a prompt is up and carries its own controls; only if the SAME step is still pending much later is the floating Skip offered there (a hung scene must not be a dead end)
         clearTimeout(lateSkip);
         const p = G.pending;
-        lateSkip = setTimeout(() => { if (G.busy && G.pending === p) UI.Galaxy.floatSkip(); }, 45000);
+        const live = () => type === 'gnn' && UI.GNN && UI.GNN.isOnAir && UI.GNN.isOnAir();   // a GNN on air waits for the player by design (its last story never times out) and has its own Continue / Skip
+        lateSkip = setTimeout(() => { if (G.busy && G.pending === p && !live()) UI.Galaxy.floatSkip(); }, 45000);
         return;
       }
       UI.Galaxy.busy(true, 'Year ' + Q.year(G.S) + ' … waiting on “' + type + '”'); UI.Galaxy.skipBtn(true);
@@ -215,6 +216,16 @@
     offs.push(UI.bindKey('Escape', () => { if (UI.gameMenu) UI.gameMenu(); }, scr));
     offs.push(UI.bindKey('Home', () => { if (map) map.centerOn(G.player().capital, { animate: true }); }, scr));
     offs.push(UI.bindKey('c', () => { if (map && G.sel.star >= 0) map.centerOn(G.sel.star, { animate: true }); }, { screen: 'galaxy' }));
+    // the original's Alt-R (research/06 §4.6): point every colony's rally line at the selected colony; pressed again (all already point there) it resets them all
+    offs.push(UI.bindKey('alt+r', () => {
+      if (G.busy || !G.S) return;
+      const S = G.S, E = G.player(), id = G.sel.star, q = id >= 0 ? S.planets[id] : null;
+      if (!q || q.owner !== E.id) { UI.sfx('error'); UI.toast('Select one of your colonies first: Alt+R sends every colony\'s new ships there.', 'warn'); return; }
+      const others = S.planets.filter(p => p.owner === E.id && p.id !== q.id), already = others.length && others.every(p => p.reloc === q.id);
+      const r = G.order({ t: 'relocAll', to: already ? -1 : q.id }); if (!r.ok) { UI.toast(r.msg, 'bad'); return; }
+      UI.sfx('click'); UI.toast(already ? 'Rally points cleared: new ships stay where they are built.' : 'Every colony now sends its new ships to ' + S.stars[q.starId].name + '. Alt+R again clears them.', 'ok');
+      UI.Galaxy.refresh();
+    }, scr));
   }
 
   UI.Screens.register('galaxy', {

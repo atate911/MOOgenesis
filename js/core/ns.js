@@ -11,7 +11,7 @@
   var g = typeof window !== 'undefined' ? window : globalThis;
   var M = g.MOO = g.MOO || {};
   ['Data', 'Sim', 'AI', 'Gfx', 'Audio', 'UI', 'Util'].forEach(function (k) { M[k] = M[k] || {}; });
-  M.VERSION = '1.1.2';   // kept equal to the VERSION file (CI checks; moo_make_release re-stamps it per release)
+  M.VERSION = '1.1.3';   // kept equal to the VERSION file (CI checks; moo_make_release re-stamps it per release)
   M.BUILD = typeof g.MOO_BUILD === 'string' ? g.MOO_BUILD : '';   // release name stamped into js/manifest.js, '' in a checkout
   M.SAVE_VERSION = 1;
   M.HEADLESS = typeof document === 'undefined';
