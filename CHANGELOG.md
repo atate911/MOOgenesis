@@ -27,12 +27,13 @@ Versions follow `MAJOR.MINOR.PATCH`; the live version is the `VERSION` file.
 - The underscore senses the game's phase: in the first years, before anyone has been met (and before turn 70), the map plays the
   planetarium rotation only (`galaxyEarly`: deep field, beacon, wonder, veil, cradle, with the pad and harp interludes — big sky, no
   choir or drums); contact, or time, opens the full programme, and war the war rotation (`soundscape.js`, on the bar at turn end).
-- Galactic Council: a second piece, `council2` (the procession, a march in the nobilmente manner: a solo horn carries a
-  long-breathed theme over tuba and trombones on the step, the snare alone keeps a march cadence with a firm bass drum on the one,
-  bone dry (`def.sends` lets a piece override one layer's reverb / stage / delay sends), strings and the organ of the chamber behind,
-  the choir entering as the theme returns, the flat-sixth lift for the big phrase, a lyrical trio; the drums fall away while the
-  votes are cast and the full chamber answers the result with the tam-tam); the original `council` is kept and the two alternate
-  between visits.
+- The procession (`procession`): a march in the nobilmente manner — a solo horn carries a long-breathed theme over tuba and
+  trombones on the step, the snare alone keeps a march cadence with a firm bass drum on the one, bone dry (`def.sends` lets a
+  piece override one layer's reverb / stage / delay sends), strings and organ behind, the choir entering as the theme returns,
+  the flat-sixth lift for the big phrase, a lyrical trio, a hymn and the full chamber's answer. It is a rare piece of the map
+  programme once the empire stands among others and a regular piece at war. The Galactic Council plays an abbreviated reading
+  of it (`council2`: the long sections halved, the big phrase within the first quarter minute) alternating with the original
+  `council`. `Music.renderOffline(id, secs, { loop: false })` lets a performance end naturally instead of running into its next pass.
 - Fun audit (`tools/handoff/fun-audit-2026-10.md`): the GNN now broadcasts only what the original treats as news (events, wars,
   peace, alliances, eliminations, council, stars reports, rankings) — battles, fleet losses, first contacts and treaties go to the
   archive only (83 → 21 newscasts in a 200-turn game); AI empires' random events reach the news (their headlines were dropped);

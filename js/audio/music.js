@@ -1171,16 +1171,16 @@
   const MOODS = {
     title: 'title', menu: 'title', explore: GALAXY, galaxy: GALAXY, map: GALAXY, galaxyEarly: GALAXY_EARLY,
     calm: GALAXY, wonder: 'galaxy1', patient: 'galaxy2', determined: 'galaxy3', deep: 'galaxy4', veil: 'galaxy5', abyss: 'galaxy6', cradle: 'galaxy7', beacon: 'galaxy8', tide: 'galaxy9', chorale: 'galaxy10', design: 'design', research: 'research', tech: 'research',
-    combat: ['combat3', 'combat1', 'combat2'], battle: ['combat3', 'combat1', 'combat2'], tension: 'ground', ground: 'ground', news: 'gnn', gnn: 'gnn', council: ['council2', 'council'], procession: 'council2',
+    combat: ['combat3', 'combat1', 'combat2'], battle: ['combat3', 'combat1', 'combat2'], tension: 'ground', ground: 'ground', news: 'gnn', gnn: 'gnn', council: ['council2', 'council'], procession: 'procession',
     orion: 'orion', antarans: 'antarans', victory: 'victory', defeat: 'defeat', spy: 'spy', espionage: 'spy', intrigue: 'spy',
   };
   // array moods listed here play as a shuffled playlist with a pause between pieces (the original's map was silent; a breath between
   // tracks keeps the exploration music from looping one piece for an hour). Others pick the next track of the list on each request.
-  MOODS.galaxyWar = ['galaxy3', 'ground', 'galaxy6', 'galaxy2', 'spy'];        // at war: the determined and uneasy pieces carry the map
+  MOODS.galaxyWar = ['galaxy3', 'ground', 'procession', 'galaxy6', 'galaxy2', 'spy'];        // at war: the determined and uneasy pieces carry the map
   // the music never stops on the map: every piece crossfades into an interlude in the next piece's key, and that into the next piece
   const INTERLUDES = ['drift', 'drift2', 'drift3', 'drift4', 'drift5'];
   // the rare pieces (the tide, the chorale) are slipped into a cycle about a third of the time each; at war their readings with the synthetic hits, more often
-  const CALM_ROT = { gap: 0, gapIn: 0, fade: 7, between: INTERLUDES, betweenP: 1, rare: { ids: ['galaxy9', 'galaxy10'], p: 0.35 } };
+  const CALM_ROT = { gap: 0, gapIn: 0, fade: 7, between: INTERLUDES, betweenP: 1, rare: { ids: ['galaxy9', 'galaxy10', 'procession'], p: 0.35 } };
   const EARLY_ROT = { gap: 0, gapIn: 0, fade: 8, between: ['drift', 'drift2', 'drift4', 'drift5'], betweenP: 1 };
   const MOOD_ROTATE = { explore: CALM_ROT, galaxy: CALM_ROT, map: CALM_ROT, calm: CALM_ROT, galaxyEarly: EARLY_ROT, galaxyWar: { gap: 0, gapIn: 0, fade: 5, between: INTERLUDES, betweenP: 0.6, rare: { ids: ['galaxy9:war', 'galaxy10:war'], p: 0.6 } } };
   let moodTick = 0;
@@ -1209,7 +1209,7 @@
     let pl = null, stats = null;
     return A.renderWindowed(seconds, { sampleRate: opts.sampleRate || 44100, window: 1.5, seed: opts.seed || 1, teardown: eng => { stats = eng.stats; } }, function (eng, t0, t1) {
       if (!pl) {
-        pl = new Player(eng, def, { loop: true, intensity: num(opts.intensity, S.intensity) });
+        pl = new Player(eng, def, { loop: opts.loop !== false, intensity: num(opts.intensity, S.intensity) });
         pl.trim = num(def.trim, DEFAULT_TRIM) * MIX_TRIM * num(opts.gain, 1);
         pl.bus.gain.value = pl.trim; pl.verb.gain.value = 1;
         pl.shift = num(opts.from, 0); pl.skipBefore = 0;
@@ -1864,8 +1864,8 @@
       { n: 'E', bars: 8, lv: 0.82, prog: 'I V vi iii | IV V I I', pad: { p: 'sus', inst: 'strings' }, bass: 'half', lead: 'CB', timp: 'two', choir: { vel: 0.6 } },
     ],
   });
-  Track('council2', {
-    desc: 'Galactic Council, the procession: a processional march in the nobilmente manner — a solo horn carries a long-breathed theme over tuba and trombones on the step, the snare alone keeps the march with a firm bass drum on the one, strings and the organ of the chamber behind, the choir entering as the theme returns; the flat-sixth lift for the big phrase, a lyrical trio, the drums fall away while the votes are cast and the full chamber answers the result',
+  Track('procession', {
+    desc: 'The procession: a processional march in the nobilmente manner — a solo horn carries a long-breathed theme over tuba and trombones on the step, the snare alone keeps the march with a firm bass drum on the one, strings and the organ of the chamber behind, the choir entering as the theme returns; the flat-sixth lift for the big phrase, a lyrical trio, the drums fall away for a hymn and the full chamber answers it; rare on the map once the empire stands among others, regular at war',
     bpm: 84, trim: 2.6, tone: { lo: 0.8 }, root: 'F', mode: 'major', loopFrom: 'A1', tens: false, rubato: 0.01, mix: { drums: 1.0, lead: 1.15, bass: 1.1, choir: 1.1 },
     fx: { stage: 0.7 }, sends: { drums: { stage: 0.06, verb: 0.03, dly: 0 } },
     forms: [['A1', 'A2', 'B', 'T', 'D', 'R', 'E'], ['A1', 'B', 'T', 'A2', 'D', 'R', 'E'], ['A1', 'A2', 'T', 'B', 'D', 'R', 'E'], ['A1', 'T', 'A2', 'B', 'D', 'R', 'E']],
@@ -1899,6 +1899,18 @@
         lead: { ph: ['A1 CD', 'A2 CD'], oct: -1, vel: 0.75 }, drums: { p: 'field', vel: 0.7 }, choir: { n: 3, reg: [60, 76], vel: 0.45 }, bell: { dens: 0.08, res: 1, reg: [72, 96], vel: 0.38 } },
     ],
   });
+  // The council chamber is rarely open for more than a minute, so it plays an abbreviated reading of the procession: the long sections halved
+  // (their phrase lists and progressions truncate with them) and forms that reach the big phrase within the first quarter minute.
+  (function () {
+    const d = JSON.parse(JSON.stringify(TRACKS.procession)); delete d._p; delete d.id;
+    d.desc = 'Galactic Council: the procession, abbreviated — the big phrase on the solo horn within the first quarter minute, then the march, the hymn while the votes are cast and the result';
+    d.forms = [['B', 'A1', 'R', 'D', 'E'], ['B', 'A2', 'D', 'R', 'E'], ['A1', 'B', 'R', 'T', 'E'], ['B', 'T', 'A2', 'R', 'E']];
+    for (const s of d.sec) if (s.n === 'A1' || s.n === 'A2' || s.n === 'B' || s.n === 'T') s.bars = 8;
+    for (const s of d.sec) if (s.n === 'intro') { s.bars = 2; s.cres = [0.62, 0.84]; s.drums = { bd: 'X.......x.......', sn: ['X.o.x.o.x.o.x.o.', 'X.x.x.x.x.x.xxxx'] }; s.lead = { ph: 'CL', oct: -1, vel: 0.8 }; }
+    d.loopFrom = 'A1';
+    Track('council2', d);
+  })();
+
   Track('orion', {
     desc: 'Ancient and mysterious, awe: deep drones, metallic chimes and a double-harmonic melody',
     bpm: 54, trim: 3.19, root: 'D', mode: 'dblHarm', loopFrom: 'A1',
