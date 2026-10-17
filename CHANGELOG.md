@@ -3,6 +3,23 @@
 Versions follow `MAJOR.MINOR.PATCH`; the live version is the `VERSION` file.
 `scripts/upgrade.sh` refuses to move to an older `VERSION` unless told to.
 
+## Unreleased
+
+- The era: a slow arc under the exploration music that is felt in hindsight, never heard moving. `soundscape.js` reads a target from
+  the state each turn and lets a value follow it a few hundredths a turn (`Music.setEra`). The target starts moving about halfway
+  through a game: it is built from how many of the player's colonies have foreign colonies pressing close, how many races have been
+  met beyond the first, the size of the fleets around the player against their own (the arms race), cold relations and open wars —
+  a lone empire with five colonies reads 0, a first contact far away 0.05, three races met with one on the border 0.3, a crowded
+  frontier with growing fleets 0.65, one war 0.9; a new performance of an exploration piece reads it once when it is compiled, never mid-piece. As
+  it rises: chords gain ninths and sevenths (about half of them at the top), then major sevenths and minor ninths, a fourth chord turning
+  minor and the tonic gaining its seventh near the top (never the cadence, never a suspension), the pads voice one more note past the
+  midpoint and sit closer (stage width −30 %), the delay echoes tighten by half while the hall stays (it is what makes the recordings
+  real), the tempo lifts up to 4.5 %, and recorded low strings and the men stand in more and more often (`eraAlts`, 90 % at the top);
+  past two thirds of the arc something eerie appears now and then, far back in the hall — a high violin tremolo holding a note a half
+  step off the chord and swelling over a few bars, a bowed-cymbal shimmer, very rarely a breath of whispered noise (`genEerie`, the
+  `tremHi` preset on the `fx` layer); the rare pieces grow likelier. Below 0.3 the planetarium
+  rotation plays; war still takes the war rotation.
+
 ## 1.2.0 — 2026-10-17
 
 - GNN (`tools/handoff/gnn-logistics-2026-10.md`): a broadcast no longer closes on its own. The last story stays on air until
@@ -90,20 +107,6 @@ Versions follow `MAJOR.MINOR.PATCH`; the live version is the `VERSION` file.
   the piece just heard and keep pieces in the same key apart; `Music.snapshot()/restore()` carry the whole rotation, rare pieces
   included. Fixed: galaxy4's cello and men's lines in section B were written 16 bars late and never sounded; galaxy1's section C
   had two `choir` keys.
-- The era: a slow arc under the exploration music that is felt in hindsight, never heard moving. `soundscape.js` reads a target from
-  the state each turn and lets a value follow it a few hundredths a turn (`Music.setEra`). The target starts moving about halfway
-  through a game: it is built from how many of the player's colonies have foreign colonies pressing close, how many races have been
-  met beyond the first, the size of the fleets around the player against their own (the arms race), cold relations and open wars —
-  a lone empire with five colonies reads 0, a first contact far away 0.05, three races met with one on the border 0.3, a crowded
-  frontier with growing fleets 0.65, one war 0.9; a new performance of an exploration piece reads it once when it is compiled, never mid-piece. As
-  it rises: chords gain ninths and sevenths (about half of them at the top), then major sevenths and minor ninths, a fourth chord turning
-  minor and the tonic gaining its seventh near the top (never the cadence, never a suspension), the pads voice one more note past the
-  midpoint and sit closer (stage width −30 %), the delay echoes tighten by half while the hall stays (it is what makes the recordings
-  real), the tempo lifts up to 4.5 %, and recorded low strings and the men stand in more and more often (`eraAlts`, 90 % at the top);
-  past two thirds of the arc something eerie appears now and then, far back in the hall — a high violin tremolo holding a note a half
-  step off the chord and swelling over a few bars, a bowed-cymbal shimmer, very rarely a breath of whispered noise (`genEerie`, the
-  `tremHi` preset on the `fx` layer); the rare pieces grow likelier. Below 0.3 the planetarium
-  rotation plays; war still takes the war rotation.
 - The underscore senses the game's phase: in the first years, before anyone has been met (and before turn 70), the map plays the
   planetarium rotation only (`galaxyEarly`: deep field, beacon, wonder, veil, cradle, with the pad and harp interludes — big sky, no
   choir or drums); contact, or time, opens the full programme, and war the war rotation (`soundscape.js`, on the bar at turn end).
