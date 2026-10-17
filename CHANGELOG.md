@@ -43,6 +43,8 @@ Versions follow `MAJOR.MINOR.PATCH`; the live version is the `VERSION` file.
   already said so), other empires' local random events, event cards already shown, Council outcomes, AI coups. Measured over six
   headless games: 1.19 → 0.46 newscasts per 10 turns. The GNN ticker draws from its own random stream: drawing it from the game's RNG
   only when a bulletin aired made the simulation depend on what was broadcast. `86-ai-fixes` scrap measurement now sums three seeds.
+- A colony wiped out in a war (bombed or depopulated) is archived like a conquest: over a 450-turn game the late wars aired 10–25 such
+  newscasts per 50 turns (one every two to five turns). A comet strike or a nova still airs.
 
 ## 1.1.2 — 2026-10-17
 

@@ -50,7 +50,7 @@ MOO.def(function (M) {
   //  * a war between two AI empires the player has met — and only if the pair is STILL at war when the bulletin is compiled (the AI-vs-AI
   //    pass can declare war and make peace, or jump from war straight into an "instant alliance", within one turn), at most once per pair
   //    in WAR_COOLDOWN turns (flapping pairs), at most WAR_MAX new wars per bulletin (alliance call-ups cascade);
-  //  * empires destroyed, Orion colonised, the Guardian slain, a planet destroyed / a star gone nova, the stars report, the human's own coup,
+  //  * empires destroyed, Orion colonised, the Guardian slain, a planet destroyed by a comet / a star gone nova, the stars report, the human's own coup,
   //    the rare rankings filler.
   // Archived only: AI-vs-AI peace, alliances, treaties, trade and conquests; wars the human is party to (the audience already told them);
   // other empires' local random events (quakes, accidents, finds, plague…); event cards the human already saw; Council outcomes (the human
@@ -63,6 +63,9 @@ MOO.def(function (M) {
   function broadcastFilter(S, ev, imp, st) {
     if (!(imp >= 1)) return imp;
     if (SEEN_BY_HUMAN[ev.cat] || ev.cat === 'invasionSuccess') return 0;
+    // a colony wiped out in a war (bombed / depopulated: ground.js destroyedBy, combat.js) is war news like a conquest; in a 400-turn game the
+    // late wars produced 10-25 of these per 50 turns. A comet strike (an event, kind 'comet') still airs below.
+    if (ev.cat === 'planetDestroyed' && ev.kind === undefined) return 0;
     if (PAIR_CATS[ev.cat]) {
       if (ev.cat !== 'warDeclared' || isHuman(S, ev.empire) || isHuman(S, ev.empire2)) return 0;
       const a = ev.empire, b = ev.empire2, D = M.Sim.Diplo, me = S.playerId;

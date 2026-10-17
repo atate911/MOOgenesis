@@ -61,3 +61,15 @@ empire destroyed, planet destroyed; 0 contradictions. The ticker now uses `RNG.c
 game outcomes (state hashes diverged at turn 40). Verified identical hashes with the filter on and with its war cool-down disabled.
 Tests: `tools/rules/89-news-policy.test.js` (6), three `87-fun-audit` assertions updated to the new policy; `86-ai-fixes` scrap test sums
 three seeds (fixed 706 vs original 1606 over six seeds; the single seed had become an outlier after the RNG stream change).
+
+## Pacing over a full game (user: a player game runs 350-450 turns, little done early, more later)
+Measured with 450-turn headless games (`longgame` script in the session scratchpad: slot 0 human, moves planned by the AI, prompts
+auto-answered; per 50-turn bucket):
+- Prompts the player answers: ~30 per 50 turns early (tech choices, explore cards), 35-50 in war stretches (battles, bombard, ground).
+- GNN: after the filter ~1-2 per 50 turns all game. Before the war-wipe rule the late wars aired 10-25 "planet destroyed" per 50 turns.
+- Turn time 5-40 ms headless, save 150-220 KB at T300: no late-game performance problem found (the browser map was not measured here).
+- AI stargates: none built by T319 (Propulsion stalls around level 15-17; stargates need 27), so the AI gate policy is untested.
+- The stand-in player never grew past 1-3 colonies and lost between T154 and T319: these runs say nothing about game LENGTH.
+- Game length with competent players (`soak.js --games 16 --turns 450`, all slots AI): 15/16 end by the Galactic Council, median T175
+  (p10 T91, p90 T340). Faithful to the original (research/05 §7: first session at 2/3 colonised, then every 25 years), but half the
+  length the user expects a game to last. A "Council pacing" option is a design decision for the user (Options already has Council on/off).

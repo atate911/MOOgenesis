@@ -56,4 +56,12 @@ module.exports = function (M, t) {
     Ev.push(S, { type: 'news', cat: 'plague', kind: 'plague', stage: 'start', empire: 3, planet: S.empires[3].capital, importance: 1, headline: 'Plague strikes.' });
     t.eq(cats(N.compile(S, R(S))).join(','), 'systemNova', 'the nova only; the AI plague is archived');
   });
+
+  t.test('a colony wiped out in a war is archived (late wars produced 10-25 a stretch); a comet strike still airs', () => {
+    const S = game('np7'); meetAll(S);
+    Ev.push(S, { type: 'news', cat: 'planetDestroyed', empire: 1, empire2: 2, planet: S.empires[2].capital, star: S.empires[2].capital });
+    t.eq(N.compile(S, R(S)), null, 'war wipe archived');
+    Ev.push(S, { type: 'news', cat: 'planetDestroyed', kind: 'comet', stage: 'end', empire: 3, planet: S.empires[3].capital, importance: 2, headline: 'The comet strikes.' });
+    t.eq(cats(N.compile(S, R(S))).join(','), 'planetDestroyed', 'the comet strike airs');
+  });
 };
