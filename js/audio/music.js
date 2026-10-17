@@ -1245,7 +1245,7 @@
       const cur = Music.current();
       if (!opts.restart && cur && (cur === F.stinger || cur === F.then)) return cur;
       if (!F.stinger) return Music.play(F.then, Object.assign({ fade: 4.5, quantize: 'bar' }, opts)) ? F.then : false;
-      return Music.play(F.stinger, Object.assign({ fade: 1.2, quantize: 'beat', loop: false, then: F.then, thenFade: 5 }, opts)) ? F.stinger : false;
+      return Music.play(F.stinger, Object.assign({ fade: 1.2, quantize: 'beat', loop: false, then: F.then, thenFade: 4 }, opts)) ? F.stinger : false;
     } catch (e) { console.warn('[music] finale failed', e); return false; }
   };
   Music.finales = () => Object.keys(FINALES);
@@ -2049,38 +2049,65 @@
     ],
   });
 
-  // The crowning — the end-game swell. Played once, cut to on the beat over whatever the chamber was playing (either council piece,
-  // Bb or F) and handed over to the victory loop under its last chord (Music.finale). A dominant pedal under a timpani roll and a
-  // cymbal rise for one bar so the key change reads as a lift, then the tutti on the downbeat: tam-tam, bass drum and crash, the
-  // game's call (the title leitmotif the procession opens with) in full brass with the horn section beneath, the procession's big
-  // phrase as a hymn in brass and horns with the whole chorus over the flat-sixth lift, the field drums and timpani on the step,
-  // bells and harp over the top, and a last chord with a harp run and the bell tree that the hall carries on. D major, the key of
-  // the victory piece that follows.
+  // The crowning — the end of the film. Played once, cut to on the beat over whatever the chamber was playing (either council piece,
+  // Bb or F) and handed over to the victory loop under its last chord (Music.finale). The final scene of an epic: two bars of swell
+  // on the dominant (timpani and snare rolls, tremolo strings, the brass opening, the cymbal rising), the cut — tam-tam, bass drum and
+  // crash, the game's call (the title leitmotif the procession opens with) in trumpets and full brass with the horns answering and
+  // brass chords on the big beats; then the heroes' shot: a long-breathed theme in the horn section with the violins an octave above,
+  // the chorus and the brass bed beneath, timpani and bass drum on the big beats, snare rolls into the peaks, a crash at the top of
+  // each phrase; the lift — the theme carried up by the trumpets over IV-V-bVI-bVII-I with a crash on every bar; and the button: the
+  // chord, the rolls, the last hit, the hall. D major, the key of the victory piece that follows.
   Track('triumph', {
-    desc: 'The crowning — the end-game swell: a dominant roll and cymbal rise out of whatever was playing, then the tutti on the downbeat — tam-tam, bass drum and crash, the game’s call in full brass with the horns beneath, the procession’s big phrase as a hymn in brass, horns and the whole chorus over the flat-sixth lift, field drums and timpani on the step, bells and harp over it all, and a last chord the hall carries; plays once and hands over to the victory loop',
-    bpm: 84, trim: 1.7, root: 'D', mode: 'major', tens: false, lintMin: 0.8, tone: { hi: 1.5, lo: 1.0 },
-    fx: { verb: 1.3, stage: 1.1 }, mix: { choir: 1.35, drums: 1.1, lead: 1.1, bell: 1.15, pad: 1.05, bass: 1.1 },
-    inst: { pad: 'strings', pad2: 'brass', bass: 'lowBrass', lead: 'brass', lead2: 'horn', arp: 'harp', bell: 'bell', choir: 'aah', choir2: 'choirMen' },
+    desc: 'The crowning — the end of the film: a swell on the dominant out of near silence (timpani and snare rolls, tremolo strings, the brass opening, the cymbal rising), then the cut — tam-tam, bass drum, booms and crash, the game’s call in trumpets and full brass with the horns answering and brass blasts on the beats; the heroes’ shot — a long soaring theme in the horn section with the violins an octave above, the chorus and the brass bed beneath, timpani and bass drum on the big beats, snare rolls into the peaks, a crash at the top of each phrase; the hymn — the drums fall away and the chorus sings it, the people saved, cellos beneath the voices, strings, the chamber’s organ, harp and celeste, the rolls returning under the last line; the lift — the theme carried up by trumpets and full brass over tremolo strings with brass stabs on every beat and a crash on every bar; the chord; a breath — two bars of snare and timpani rolls out of the quiet; and the last blast the hall carries; plays once and hands over to the victory loop',
+    bpm: 80, trim: 3.4, root: 'D', mode: 'major', tens: false, lintMin: 0.8, tone: { hi: 3.0, lo: 2.0 },
+    fx: { verb: 1.4, stage: 1.25 }, sends: { drums: { verb: 0.28, stage: 0.55, dly: 0 } }, mix: { choir: 1.45, drums: 1.7, lead: 1.3, bell: 1.15, pad: 1.05, bass: 1.25 },
+    inst: { pad: 'strings', pad2: 'brass', bass: 'lowBrass', lead: 'horn', lead2: 'strings', arp: 'harp', bell: 'bell', choir: 'aah', choir2: 'choirMen' },
     ph: {
-      CL: '5:3 8:1 | 7:2 6:2 | 5:4 | 4:2 7:2',          // the call (the game's leitmotif); its last bar rises into the hymn instead of resting
-      B1: '5:2 6:1 8:1 | 10:3 9:1 | 8:2 6:2 | 5:4',       // the procession's big phrase
-      CD: '4:2 3:1 2:1 | 5:3 4:1 | 3:2 2:2 | 1:4',        // and its cadence
-      FIN: '8:12', FIN3: '3:12',                          // the last chord: octave in the brass, the third in the horns
+      CL: '5:3 8:1 | 7:2 6:2 | 5:4 | 4:2 7:2',              // the call (the game's leitmotif); its last bar rises into the theme instead of resting
+      H1: '1:1 5:2 8:1 | 10:2 9:1 8:1 | 6:2 8:1 9:1 | 5:4',  // the heroes' theme: up from the tonic to the octave, a reach to the tenth, back to the fifth
+      H2: '1:1 5:2 8:1 | 10:2 9:1 8:1 | 9:2 11:1 10:1 | 8:4', // and its answer, climbing to the eleventh and settling on the octave
+      L1: '8:2 9:1 11:1 | 12:2 11:1 10:1 | 8:2 9:2 | 10:4',   // the lift: the theme carried up, over the flat sixth and seventh, ending on the high third
+      Y1: '3:2 4:1 5:1 | 6:2 5:2 | 4:2 3:1 2:1 | 3:2 1:2',   // the hymn: stepwise, suspensions that resolve — the people are safe
+      Y2: '5:2 6:1 8:1 | 7:2 6:2 | 5:2 4:2 | 3:4',          // and its second verse, settling on the warm third
+      FIN: '8:8', FIN3: '10:8',                               // the last chord: the octave in the horns, the high third in the violins
     },
     sec: [
-      { n: 'rise', bars: 1, cres: [0.45, 1.0], prog: 'V', rise: 1, pad: { p: 'swell', inst: 'strTrem', n: 4, reg: [50, 76], vel: 0.9, width: 1.3 }, choir2: { n: 3, reg: [38, 57], vel: 0.8 },
-        bass: { p: 'whole', inst: { p: 'lowBrass', att: 0.1 }, vel: 0.8 }, timp: { p: 'roll', roll: 1, vel: 1.0 }, drums: { sn: 'o.o.o.x.x.xxxxxx', vel: 0.9 } },
-      { n: 'call', bars: 4, lv: 1.0, hit: 'tam', cr: true, prog: 'I | V | I | ii:.5 V:.5', pad: { p: 'sus', n: 4, reg: [50, 78], vel: 0.9, width: 1.3 }, pad2: { p: 'sus', inst: 'brass', n: 4, reg: [45, 69], vel: 0.6, width: 1.3 },
-        bass: { p: 'half', inst: { p: 'lowBrass', att: 0.05 }, vel: 1.0 }, lead: { ph: 'CL', vel: 1.0 }, lead2: { ph: 'CL', inst: 'horn', oct: -1, vel: 0.65 }, drums: { p: 'field', vel: 1.0 }, timp: 'beats',
-        choir: { v1: 'a', v2: 'a', n: 4, reg: [57, 79], vel: 0.9 }, choir2: { n: 3, reg: [38, 57], vel: 0.85 }, bell: { dens: 0.2, res: 2, reg: [74, 96], vel: 0.5 }, fill: 'bigS' },
-      { n: 'hymn', bars: 8, cres: [1.0, 1.08], prog: 'I:.5 IV:.5 | I:.5 vi:.5 | bVI:.5 V:.5 | I | IV:.5 V:.5 | I | vi:.5 V:.5 | I', rise: 1, pad: { p: 'sus', n: 4, reg: [50, 78], vel: 0.95, width: 1.3 }, pad2: { p: 'sus', inst: 'brass', n: 4, reg: [45, 69], vel: 0.7, width: 1.3 },
-        bass: { p: 'half', inst: { p: 'lowBrass', att: 0.05 }, vel: 1.0 }, lead: { ph: 'B1 CD', vel: 1.0 }, lead2: { ph: 'B1 CD', inst: 'horn', oct: -1, vel: 0.7 }, drums: { p: 'field', vel: 1.0 }, timp: { p: 'beats', roll: 1 },
-        choir: { v1: 'a', v2: 'a', n: 4, reg: [57, 79], vel: 1.0 }, choir2: { n: 3, reg: [38, 57], vel: 0.9 }, bell: { dens: 0.25, res: 2, reg: [74, 96], vel: 0.52 }, arp: { p: 'up8', vel: 0.45, reg: [57, 86] }, fill: 'bigS' },
-      { n: 'crown', bars: 3, lv: 1.1, hit: 'tam', cr: true, prog: 'I', pad: { p: 'sus', n: 4, reg: [50, 81], vel: 1.0, width: 1.4 }, pad2: { p: 'sus', inst: 'brass', n: 4, reg: [45, 69], vel: 0.8, width: 1.3 },
-        bass: { p: 'whole', inst: { p: 'lowBrass', att: 0.06 }, vel: 1.0 }, lead: { ph: 'FIN', vel: 1.0 }, lead2: { ph: 'FIN3', inst: 'horn', vel: 0.8 }, timp: { kick: ['X...............', '................', '................'], vel: 1.0 },
-        drums: { bd: ['X...............', '................', '................'], bellTree: ['x...............', '................', '................'] },
-        choir: { v1: 'a', v2: 'a', n: 4, reg: [57, 81], vel: 1.0 }, choir2: { n: 3, reg: [38, 57], vel: 0.95 }, bell: { dens: 0.3, res: 2, reg: [74, 98], vel: 0.55 },
-        arp: { pat: ['0123456789012345', '................', '................'], res: 4, vel: 0.5, reg: [50, 93], gate: 0.9 } },
+      // the swell: two bars on the dominant out of near silence, everything rising — timpani and snare rolls, tremolo strings, the men, the brass opening, the cymbal
+      { n: 'rise', bars: 2, cres: [0.2, 1.0], prog: 'V', rise: 2, pad: { p: 'swell', inst: 'strTrem', n: 4, reg: [50, 76], vel: 1.0, width: 1.3 }, pad2: { p: 'swell', inst: 'brass', n: 4, reg: [45, 69], vel: 0.75, width: 1.3 }, choir2: { n: 3, reg: [38, 57], vel: 0.95 },
+        bass: { p: 'whole', inst: { p: 'lowBrass', att: 0.1 }, vel: 0.9 }, timp: { p: 'roll', roll: 2, vel: 1.0 }, drums: { sn: ['o.o.o.o.o.o.o.o.', 'x.x.x.xxxxxxxxxx'], snRoll: ['x...............', 'x.......x.......'], bd: ['................', '........x...x.x.'], boomHi: ['................', '............x.x.'], vel: 1.0 } },
+      // the cut: the call in trumpets and full brass, the horns answering an octave below, brass blasts on the big beats, booms under the bass drum, crashes on the bar
+      { n: 'call', bars: 4, lv: 1.05, hit: 'tam', cr: true, prog: 'I | V | I | ii:.5 V:.5', pad: { p: 'sus', n: 4, reg: [50, 78], vel: 0.95, width: 1.3 }, pad2: { p: 'stab', inst: 'brassStab', pat: 'x.......x.......', n: 4, reg: [50, 72], vel: 1.0, gate: 0.6 },
+        bass: { p: 'half', inst: { p: 'lowBrass', att: 0.03 }, vel: 1.0 }, lead: { ph: 'CL', inst: 'tpt', vel: 1.0 }, lead2: { ph: 'CL', inst: 'horn', oct: -1, vel: 0.9 }, timp: { p: 'beats', vel: 1.0 },
+        drums: { bd: 'X.......X.......', boom: ['x...............', '................', 'x...............', '................'], kickSyn: 'x.......x.......', crashS: ['x...............', '................'], t5: '............x.x.', vel: 1.0 },
+        choir: { v1: 'a', v2: 'a', n: 5, reg: [55, 81], vel: 1.0 }, choir2: { n: 3, reg: [38, 57], vel: 0.95 }, bell: { dens: 0.2, res: 2, reg: [74, 96], vel: 0.5 }, fill: 'bigS' },
+      // the heroes' shot: the theme in the horn section, the violins an octave above it, the chorus and a sustained brass bed beneath, timpani and bass drum on the big beats, booms on the dark chords, snare rolls into the peaks, a crash at the top of each phrase
+      { n: 'theme', bars: 8, cres: [0.9, 1.12], prog: 'I | vi | IV | V | I | vi | IV:.5 V:.5 | I', pad: { p: 'sus', n: 4, reg: [50, 78], vel: 1.0, width: 1.3 }, pad2: { p: 'sus', inst: 'brass', n: 4, reg: [45, 69], vel: 0.8, width: 1.3 },
+        bass: { p: 'half', inst: { p: 'lowBrass', att: 0.06 }, vel: 1.0 }, lead: { ph: 'H1 H2', oct: -1, vel: 1.0 }, lead2: { ph: 'H1 H2', inst: 'strings', vel: 0.85 }, timp: { p: 'beats', vel: 1.0 },
+        drums: { bd: 'X.......x.......', kickSyn: 'x...............', boom: ['................', 'x...............', '................', '................'], crashS: ['x...............', '................', '................', '................'], sn: ['................', '................', '................', '....xxxxxxxxxxxx'], t5: ['................', '............x.x.'], vel: 1.0 },
+        choir: { v1: 'a', v2: 'a', n: 5, reg: [55, 81], vel: 1.0 }, choir2: { n: 3, reg: [38, 57], vel: 1.0 }, bell: { dens: 0.22, res: 2, reg: [74, 96], vel: 0.5 }, arp: { p: 'up8', vel: 0.45, reg: [57, 86] }, fill: 'bigS' },
+      // the hymn — we won, and the people are safe: the drums fall away, the chorus sings the hymn with the cellos an octave below, strings and the chamber's organ behind, harp and celeste, a soft timpani; the rolls return under the last line and rise into the lift
+      { n: 'hymn', bars: 8, cres: [0.7, 1.0], prog: 'I:.5 IV:.5 | IV | V:.5 I:.5 | I | vi | V:.5 IV:.5 | I:.5 IV:.5 | I', rise: 1, pad: { p: 'sus', n: 4, reg: [50, 76], vel: 0.85, width: 1.3 }, pad2: { p: 'swell', inst: 'organSoft', n: 4, reg: [45, 69], vel: 0.6, width: 1.3 },
+        bass: { p: 'whole', inst: 'deep', vel: 0.85 }, lead: { ph: 'Y1 Y2', inst: 'aah', vel: 1.0 }, lead2: { ph: 'Y1 Y2', inst: 'cello', oct: -1, vel: 0.75 }, timp: { p: 'two', vel: 0.5 },
+        drums: { bdSoft: 'x...............', sn: ['................', '................', '................', '................', '................', '................', 'o...o...o...o...', 'x.x.x.xxxxxxxxxx'], snRoll: ['................', '................', '................', '................', '................', '................', '................', 'x.......x.......'], vel: 0.9 },
+        choir: { v1: 'a', v2: 'a', n: 4, reg: [57, 79], vel: 0.85 }, choir2: { n: 3, reg: [38, 57], vel: 0.8 }, bell: { inst: 'glass', dens: 0.2, res: 2, reg: [72, 96], vel: 0.5 }, arp: { p: 'up8', vel: 0.4, reg: [57, 84] } },
+      // the lift: trumpets and the full brass carry the theme up over IV-V-bVI-bVII-I, the horns beneath, tremolo strings, brass stabs on every beat, a crash on every bar, booms on the flat sixth, the rolls
+      { n: 'lift', bars: 4, cres: [1.1, 1.2], prog: 'IV | V | bVI:.5 bVII:.5 | I', rise: 1, pad: { p: 'sus', inst: 'strTrem', n: 4, reg: [50, 81], vel: 1.0, width: 1.3 }, pad2: { p: 'stab', inst: 'brassStab', pat: 'x...x...x...x...', n: 4, reg: [48, 72], vel: 1.0, gate: 0.7 },
+        bass: { p: 'half', inst: { p: 'lowBrass', att: 0.03 }, vel: 1.0 }, lead: { ph: 'L1', inst: 'tpt', vel: 1.0 }, lead2: { ph: 'L1', inst: 'brass', vel: 0.8 }, timp: { p: 'beats', roll: 1, vel: 1.0 },
+        drums: { bd: 'X...x...X...x...', kickSyn: 'x.......x.......', crashS: 'x...............', sn: ['........xxxxxxxx', '........xxxxxxxx', 'x...x...xxxxxxxx', 'X.xxxxxxxxxxxxxx'], t5: '......x.......x.', boom: ['................', '................', 'x.......x.......', '................'], vel: 1.0 },
+        choir: { v1: 'a', v2: 'a', n: 5, reg: [55, 83], vel: 1.0 }, choir2: { n: 3, reg: [38, 57], vel: 1.0 }, bell: { dens: 0.28, res: 2, reg: [74, 98], vel: 0.55 }, arp: { p: 'up8', vel: 0.5, reg: [57, 88] } },
+      // the chord: tam-tam, crash, boom, the bell tree and the harp run, the brass re-blasting it, two bars to ring
+      { n: 'chord', bars: 2, lv: 1.2, hit: 'tam', cr: true, prog: 'I', pad: { p: 'sus', n: 4, reg: [50, 81], vel: 1.0, width: 1.4 }, pad2: { p: 'stab', inst: 'brass', pat: ['x...............', '................'], n: 4, reg: [45, 69], vel: 1.0, gate: 0.98, width: 1.3 },
+        bass: { pat: '1---', inst: { p: 'lowBrass', att: 0.04 }, vel: 1.0 }, lead: { ph: 'FIN', vel: 1.0 }, lead2: { ph: 'FIN3', inst: 'strings', vel: 0.9 }, timp: { kick: ['X...............', '................'], vel: 1.0 },
+        drums: { bd: ['X...............', '................'], kickSyn: ['x...............', '................'], crashS: ['x...............', '................'], boom: ['x...............', '................'], bellTree: ['x...............', '................'], vel: 1.0 },
+        choir: { v1: 'a', v2: 'a', n: 5, reg: [55, 83], vel: 1.0 }, choir2: { n: 3, reg: [38, 57], vel: 1.0 }, bell: { dens: 0.3, res: 2, reg: [74, 98], vel: 0.55 }, arp: { pat: ['0123456789012345', '................'], res: 4, vel: 0.5, reg: [50, 93], gate: 0.9 } },
+      // the breath: everything falls away but the tremolo strings, the men and the rolls, rising out of the quiet into the last blast
+      { n: 'breath', bars: 2, cres: [0.25, 1.0], prog: 'I', rise: 2, pad: { p: 'swell', inst: 'strTrem', n: 4, reg: [50, 76], vel: 1.0, width: 1.3 }, choir2: { n: 3, reg: [38, 57], vel: 0.9 }, bass: { p: 'whole', inst: { p: 'lowBrass', att: 0.12 }, vel: 0.7 },
+        timp: { p: 'roll', roll: 2, vel: 1.0 }, drums: { sn: ['o...o...o.o.o.o.', 'x.x.x.xxxxxxxxxx'], snRoll: ['................', 'x.......x.......'], bd: ['................', '........x...x.x.'], vel: 1.0 } },
+      // the last blast: everything at once — tam-tam, bass drum, boom, crash, the bell tree, the brass stab under the held chord, the harp run — and the hall carries it under the victory loop
+      { n: 'blast', bars: 2, lv: 1.25, hit: 'tam', cr: true, prog: 'I', pad: { p: 'sus', n: 4, reg: [50, 81], vel: 1.0, width: 1.4 }, pad2: { p: 'stab', inst: 'brass', pat: ['x...............', '................'], n: 4, reg: [45, 69], vel: 1.0, gate: 0.98, width: 1.3 },
+        bass: { pat: '1---', inst: { p: 'lowBrass', att: 0.03 }, vel: 1.0 }, lead: { ph: 'FIN', vel: 1.0 }, lead2: { ph: 'FIN3', inst: 'strings', vel: 0.9 }, timp: { kick: ['X...............', '................'], vel: 1.0 },
+        drums: { bd: ['X...............', '................'], kickSyn: ['x...............', '................'], crashS: ['x...............', '................'], boom: ['x...............', '................'], tam: ['x...............', '................'], bellTree: ['x...............', '................'], vel: 1.0 },
+        choir: { v1: 'a', v2: 'a', n: 5, reg: [55, 83], vel: 1.0 }, choir2: { n: 3, reg: [38, 57], vel: 1.0 }, bell: { dens: 0.3, res: 2, reg: [74, 98], vel: 0.55 }, arp: { pat: ['0123456789012345', '................'], res: 4, vel: 0.55, reg: [50, 93], gate: 0.9 } },
     ],
   });
 
