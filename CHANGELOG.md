@@ -5,20 +5,21 @@ Versions follow `MAJOR.MINOR.PATCH`; the live version is the `VERSION` file.
 
 ## Unreleased
 
-- Music, the end of the game: a crowning cue (`triumph`) written from scratch as a victory parade for brass band and drumline, in the
-  trumpet's key — a lone trumpet plays a bugle call; the horn section takes it up in three parts as the drums fall in; the whole brass
-  band (trumpets on the call, horn fanfares answering between the phrases, trombones on the step, tuba under, the glockenspiel doubling
-  the tune) over the full cadence with the marching tenors and a crash every other bar; a broad second strain for trumpets and horns
-  together with brass chords on every beat; the lift, the call carried up over vi-V-bVI-bVII-I with trumpet and trombone stabs on every
-  beat and a crash on every bar; the drumline alone for two bars; the chord with tam-tam, bell tree and a glockenspiel run; two bars of
-  snare and timpani rolls out of the quiet; the last blast the hall carries (Bb major, 108 bpm, about 80 s, ≈ -10 LUFS with the limiter
-  untouched: the loudest cue in the score, as measured; no strings, no choir). New band presets: `tbn`, `tuba`, `tptStab`, `hornStab`,
-  `tbnStab`. It plays once and hands over to the victory loop under its last chord (`Music.finale('victory')`; `finale('defeat')` goes
-  to the dirge). The Galactic Council fires it the moment the player is crowned, before the Accept / Defy question, so it is already
-  under way when the ending opens; a refused crown cuts it under the war alarm. Every ending (council, conquest) goes through the same
-  call, so a future end-game scene gets the same sound. Engine: a one-shot cue may name the piece that follows it (`Music.play(id,
-  { loop: false, then, thenFade })`; `chainCheck` enters the follow-up under the cue's last chord with the long tail the rotation seams
-  use; `play()` of the chained piece while the cue is up is a no-op).
+- Music, the end of the game: a crowning cue (`triumph`) that takes the council's own music (the procession's call, climbing theme and
+  big phrase, in its key of F) and steps it up to a military band in the throne-room manner — the solo trumpet plays the call over the
+  chamber's organ and strings with the cadence soft beneath; a two-bar swell (timpani and snare rolls, tremolo strings, the brass
+  opening, the cymbal rising); the cut, tam-tam, bass drum, boom and crash, and the horn section takes the climbing theme with trumpet
+  fanfare figures in the gaps, the men beneath, the march cadence and timpani on the step; the big phrase in trumpets and horns with
+  the whole chorus, brass chords on every beat, the full cadence with toms and a crash every other bar; the lift, a fanfare carried up
+  over IV-V-bVI-bVII-I with brass stabs on every beat and a crash on every bar; the chord; two bars of snare and timpani rolls out of
+  the quiet; the last blast the hall carries (F major, 108 bpm, about 71 s, ≈ -10 LUFS with the limiter untouched: the loudest cue in
+  the score, as measured). New band presets: `tbn`, `tuba`, `tptStab`, `hornStab`, `tbnStab`. It plays once and hands over to the
+  victory loop under its last chord (`Music.finale('victory')`; `finale('defeat')` goes to the dirge). The Galactic Council fires it
+  the moment the player is crowned, before the Accept / Defy question, so it is already under way when the ending opens; a refused crown
+  cuts it under the war alarm. Every ending (council, conquest) goes through the same call, so a future end-game scene gets the same
+  sound. Engine: a one-shot cue may name the piece that follows it (`Music.play(id, { loop: false, then, thenFade })`; `chainCheck`
+  enters the follow-up under the cue's last chord with the long tail the rotation seams use; `play()` of the chained piece while the cue
+  is up is a no-op).
 - Council music: the chamber no longer starts the original `council` piece itself over the Soundscape's choice, so the two council
   readings (`council2`, the procession in state, and `council`) alternate between visits as intended; before, the direct call made
   the glue always land on `council2`.
