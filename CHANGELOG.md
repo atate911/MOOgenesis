@@ -3,7 +3,7 @@
 Versions follow `MAJOR.MINOR.PATCH`; the live version is the `VERSION` file.
 `scripts/upgrade.sh` refuses to move to an older `VERSION` unless told to.
 
-## Unreleased
+## 1.1.0 — 2026-10-17
 
 - Fun audit (`tools/handoff/fun-audit-2026-10.md`): the GNN now broadcasts only what the original treats as news (events, wars,
   peace, alliances, eliminations, council, stars reports, rankings) — battles, fleet losses, first contacts and treaties go to the
