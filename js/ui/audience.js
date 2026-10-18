@@ -115,6 +115,13 @@
       key = pers + '/' + sit;
     }
     if (!set || !set.length) return '…';
+    // a line that names a third race ("I'd expect this from the Darloks") makes no sense said to that race: skip lines naming the player's people
+    const me0 = G.player(), E0 = RL ? (G.S.empires[spec && spec.from !== undefined ? spec.from : A.empire] || null) : null;
+    if (RL && me0 && E0 && me0.race !== E0.race) {
+      const R0 = (M.Data.races && M.Data.races[me0.race]) || {}, names = [me0.plural, me0.name, R0.name, R0.adj, R0.plural, me0.race].filter(Boolean).map(x => String(x).toLowerCase());
+      const kept = set.filter(x => { const l = x.toLowerCase(); return !names.some(n => n.length > 2 && new RegExp('\\b' + n + '\\b').test(l)); });
+      if (kept.length) set = kept;
+    }
     let i = Math.floor(Math.random() * set.length);
     if (set.length > 1 && lastPick[key] === i) i = (i + 1 + Math.floor(Math.random() * (set.length - 1))) % set.length;
     lastPick[key] = i;
@@ -770,6 +777,7 @@
   }
 
   const Audience = UI.Audience = {
+    line: (spec, extra) => line(spec, extra),            // a say-spec → the line the leader speaks (race voice, else personality); used by the QA scripts
     // player-initiated; resolves when the audience is over and the previous screen is back
     open(aiId, o) {
       o = o || {};

@@ -5,6 +5,13 @@ Versions follow `MAJOR.MINOR.PATCH`; the live version is the `VERSION` file.
 
 ## Unreleased
 
+- Diplomacy in each race's own voice: 2,100 new lines (`js/data/diplo/<race>.js` → `Data.diploRace`), six for each of 35
+  situations per race. That covers first contact, greetings (neutral, allied, frosty, at war), offers, sweeteners, answers, war,
+  tribute, threats, peace, broken treaties, spies caught either way, border warnings, gifts, insults, calls to arms and Council
+  votes. Human dealmakers, Mrrshan hunters, geological Silicoids, hungry Sakkra, condescending Psilons, Alkari clan-lords, the
+  Klackon Hive, gruff Bulrathi gardeners, Meklar cost-benefit reviews and Darlok denials. The audience screen speaks the race's
+  line first and falls back to the personality lines. A line that names a third race is skipped when the player is that race.
+  `tools/rules/93-diplo-race-lines.test.js` checks every set: complete, ASCII, and the right placeholders.
 - Fixed: several ship ETAs counted the whole trip instead of the turns still to go: the Fleet screen's list, the panel for
   another empire's fleet, and the map's ETAs (and so its tooltips and raid warnings) for foreign fleets and troop transports.
   All now count from where the ships are (`F.etaLeft`, which also handles transports).
