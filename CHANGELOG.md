@@ -5,6 +5,8 @@ Versions follow `MAJOR.MINOR.PATCH`; the live version is the `VERSION` file.
 
 ## Unreleased
 
+- Transport panel: the colonists on the origin and destination worlds now → after the move, against each world's maximum
+  (amber when the destination would be over it), updated as the slider moves.
 - Fleet deployment opens in the sidebar when you click your fleet, keeping the map clear while you look for a destination;
   it moves beside the destination once you click one (a right-click send still opens it there at once).
 - Colonies needing attention (`Q.attention`): the Planets screen's warnings (rebellion or unrest, events, shrinking population,
