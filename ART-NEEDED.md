@@ -35,8 +35,8 @@ Full prompts for the ships, rocks, debris and platform: `docs/IMAGE-GEN-SHIPS-AN
 - [ ] optional, later: `<class>-<n>-3q.png` for the other 14 top-down variants so every design's two views match
 
 ### Asteroids and debris, top-down cutouts (11) — unlock: combat board rocks and kill debris
-- [ ] `rock-1.png` … `rock-8.png` (eight distinct shapes)
-- [ ] `debris-1.png`, `debris-2.png`, `debris-3.png`
+- [x] `rock-1.png` … `rock-8.png` (eight distinct shapes; cut from `MOOg images/fx/fx-sheet.png`)
+- [x] `debris-1.png`, `debris-2.png`, `debris-3.png`
 
 ### Missile platform (1) — unlock: missile bases around the planet on the combat board
 - [ ] `base-platform.png`
