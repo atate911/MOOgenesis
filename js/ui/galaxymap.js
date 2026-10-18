@@ -1229,6 +1229,15 @@
           const fx = (fd.dx - cam.x) * z + hw, fy = (fd.dy - cam.y) * z + hh;
           if ((fx < -50 && to.sx < -50) || (fx > W + 50 && to.sx > W + 50) || (fy < -50 && to.sy < -50) || (fy > H + 50 && to.sy > H + 50)) continue;
           (byOwner[fd.owner] || (byOwner[fd.owner] = [])).push(fx, fy, to.sx, to.sy, fd.a);
+          if (f.legs) {                                              // own fleets routed through stargates: the legs still ahead
+            let px = to.sx, py = to.sy;
+            for (const l of f.legs) {
+              const q = sdById[l.star]; if (!q) break;
+              ctx.beginPath(); ctx.moveTo(px, py); ctx.lineTo(q.sx, q.sy); ctx.lineWidth = 1.3;
+              ctx.strokeStyle = l.gate ? rgba(GATE_RGB, 0.6) : rgba(empCol(fd.owner), 0.35); ctx.setLineDash(l.gate ? [2, 5] : [5, 6]); ctx.lineDashOffset = Q.flow ? -t * 16 : 0; ctx.stroke(); ctx.setLineDash([]);
+              px = q.sx; py = q.sy;
+            }
+          }
         }
         for (const o in byOwner) {
           const arr = byOwner[o], col = empCol(+o);
@@ -1720,7 +1729,10 @@
         if (a) {
           const pc = Math.ceil(Math.hypot(b.x - a.x, b.y - a.y) / pcU), ok = routePrev.valid !== false, eta = routePrev.eta ? ' · ETA ' + routePrev.eta + ' ' + plural(routePrev.eta, 'turn') : '';
           const txt = !ok ? (routePrev.reason || 'Out of range') : (routePrev.kind === 'reloc' ? 'Rally · ' : '') + (routePrev.gate ? 'Stargate' + eta : pc + ' pc' + eta);
-          drawRoute(a.sx, a.sy, b.sx, b.sy, ok, txt, ok && routePrev.gate ? GATE_RGB : null);
+          if (ok && routePrev.legs) {                                // a stargate route: each leg in turn (violet for the jump), the label on the last one
+            let px = a.sx, py = a.sy;
+            routePrev.legs.forEach((l, k) => { const q = sdById[l.star]; if (!q) return; const last = k === routePrev.legs.length - 1; drawRoute(px, py, q.sx, q.sy, true, last ? (routePrev.kind === 'reloc' ? 'Rally · ' : '') + 'via stargate' + eta : '', l.gate ? GATE_RGB : null); px = q.sx; py = q.sy; });
+          } else drawRoute(a.sx, a.sy, b.sx, b.sy, ok, txt, ok && routePrev.gate ? GATE_RGB : null);
         }
       } else if (routeFleet !== null && hoverStar !== null) {
         const fd = FD.get(routeFleet), b = sdById[hoverStar];
@@ -2013,7 +2025,7 @@
       },
       fit(o) { if (!W) { pendingCmd = () => api.fit({ animate: false }); return api; } pendingView = null; flyTo(gw / 2, gh / 2, fitZ, !(o && o.animate === false)); return api; },
       home(o) { if (!W) { pendingCmd = () => api.home({ animate: false }); return api; } pendingView = null; const c = capitalStar(); if (!c) return api.fit(o); flyTo(c.x, c.y, clamp(Math.max(W / 200, fitZ * 1.4), minZ, maxZ), !(o && o.animate === false)); return api; },
-      setRoutePreview(p) { routePrev = p ? { from: p.from, to: p.to, eta: p.eta, valid: p.valid !== false, reason: p.reason, gate: !!p.gate, kind: p.kind || '' } : null; return api; },
+      setRoutePreview(p) { routePrev = p ? { from: p.from, to: p.to, eta: p.eta, valid: p.valid !== false, reason: p.reason, gate: !!p.gate, kind: p.kind || '', legs: Array.isArray(p.legs) && p.legs.length > 1 ? p.legs : null } : null; return api; },
       beginRoute(fid) { if (!FD.has(fid)) return api; if (selFleet !== fid) setSelFleet(fid, false); setRouteMode(fid); return api; },
       endRoute() { setRouteMode(null); return api; },
       highlightStars(ids, o) { hiSpec = ids && ids.length ? { ids: ids.slice(), col: o && o.color ? hex(o.color) : null } : null; return api; },

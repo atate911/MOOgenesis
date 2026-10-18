@@ -67,10 +67,12 @@ MOO.def(function (M) {
     const F = M.Sim.Fleet; let withTanks = true, speed = 99, any = 0;
     for (let i = 0; i < 6; i++) { if (!(counts[i] > 0)) continue; any += counts[i]; const st = M.Sim.Design.stats(S, E, i); if (!st.tanks) withTanks = false; speed = Math.min(speed, st.warp); }
     const pc = Geo.parsecs(S, from, to), flag = E.frange ? E.frange[to] : 0;
-    const gate = F.gateLink(S, E, from, to); if (gate) speed = 35;
     const ok = any > 0 && from !== to && F.canReach(S, E, to, withTanks);
     let reason = ''; if (!any) reason = 'No ships selected'; else if (from === to) reason = 'Already there'; else if (!ok) reason = flag === 2 ? 'Needs Reserve Fuel Tanks' : 'Out of range';
-    return { ok, parsecs: pc, eta: any && speed < 99 ? F.eta(S, from, to, speed, false) : 0, speed: speed === 99 ? 0 : speed, stargate: gate, flag, reason };
+    // the route F.send will fly: straight, or through the empire's stargates when that is quicker (via = the waypoints before `to`)
+    const pl = any && from !== to && speed < 99 ? F.plan(S, E, from, to, speed) : null, gate = !!pl && pl.legs.some(l => l.gate);
+    return { ok, parsecs: pc, eta: pl ? pl.eta : 0, speed: speed === 99 ? 0 : gate && pl.legs.length === 1 ? 35 : speed, stargate: gate, flag, reason,
+      via: pl && pl.legs.length > 1 ? pl.legs.slice(0, -1).map(l => l.star) : null, legs: pl ? pl.legs : null };
   };
   Q.distToNearestOwn = function (S, eid, star) { let best = 99; for (const p of S.planets) if (p.owner === eid) best = Math.min(best, p.starId === star ? 0 : Geo.parsecs(S, p.starId, star)); return best; };
 
@@ -80,7 +82,9 @@ MOO.def(function (M) {
     for (const f of S.fleets) {
       if (f.ships.reduce((a, b) => a + b, 0) <= 0) continue;
       if (f.owner !== eid && !V.canSee(S, E, f)) continue;
-      out.push({ id: f.id, owner: f.owner, star: f.star, from: f.from, to: f.to, x: f.x, y: f.y, speed: f.speed, ships: f.ships.slice(), kind: Q.fleetKind(S, f), eta: f.star < 0 ? M.Sim.Fleet.eta(S, f.from, f.to, f.speed, false) : 0 });
+      out.push({ id: f.id, owner: f.owner, star: f.star, from: f.from, to: f.to, x: f.x, y: f.y, speed: f.speed, ships: f.ships.slice(), kind: Q.fleetKind(S, f),
+        eta: f.star < 0 ? (f.owner === eid ? M.Sim.Fleet.etaLeft(S, f) : M.Sim.Fleet.eta(S, f.from, f.to, f.speed, false)) : 0,
+        legs: f.owner === eid && f.legs ? f.legs.map(l => ({ star: l.star, gate: !!l.gate })) : null });   // own routed fleets: the stops after f.to
     }
     for (const t of (S.trans || [])) {
       if (t.owner !== eid && !(E.explored[t.to] && V.canSee(S, E, { owner: t.owner, star: -1, x: t.x, y: t.y }))) continue;

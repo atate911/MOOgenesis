@@ -224,7 +224,7 @@
         const ok = st.to >= 0 && st.to !== p.starId, r = ok ? M.Sim.Fleet.relocRoute(S, E, p, st.to) : null;
         UI.mount(msg, ok && r ? [h('b', S.stars[st.to].name), ' · ETA ' + turnsTxt(r.eta) + (r.gate ? ' by stargate' : ' at warp ' + r.warp)] : 'No rally point: new ships stay in orbit here.');
         for (const b of [acc, all]) { b.disabled = !ok; b.classList.toggle('disabled', !ok); }
-        if (UI.Galaxy.map) UI.Galaxy.map.setRoutePreview(ok && r ? { from: p.starId, to: st.to, eta: r.eta, valid: true, gate: r.gate, kind: 'reloc' } : null);
+        if (UI.Galaxy.map) UI.Galaxy.map.setRoutePreview(ok && r ? { from: p.starId, to: st.to, eta: r.eta, valid: true, gate: r.gate, kind: 'reloc', legs: r.legs } : null);
         if (ok) UI.attention(acc);
       };
       host.appendChild(msg);

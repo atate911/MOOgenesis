@@ -5,6 +5,10 @@ Versions follow `MAJOR.MINOR.PATCH`; the live version is the `VERSION` file.
 
 ## Unreleased
 
+- Stargate routing: a fleet sent anywhere takes the quickest route, straight or through your stargates (fly to the nearest gate, jump
+  in one turn to the gate nearest the target, fly on), when that saves turns. Player orders, rally-point ships and the computer
+  opponents all route this way (`F.plan`, legs carried in `fleet.legs`; a gate lost on the way re-plans from the waypoint). The route
+  preview and the line behind a fleet in flight show each leg (violet for the jump), and its ETA counts the turns still to go.
 - Galaxy map: a colony with a stargate shows the original's marker, a small dark box with four blue squares beside the star (also in
   the map key). A new route button with the map controls (or L) turns fleet route lines and colony rally lines off for a busy late-game
   map; the selected fleet's or colony's line still shows. Rally lines are blue-grey, violet and dotted when they run through stargates.
