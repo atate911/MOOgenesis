@@ -509,23 +509,12 @@
     r.x = (a) => p.cx + p.f * p.Rx * sin(a) / (p.D + p.Rz * cos(a));
     r.s = (a) => p.f / (p.D + p.Rz * cos(a));
     r.y = (a, Y) => p.hy + (p.Hc - Y) * r.s(a);
-    /* wall angle at screen x */
-    r.angleAt = (sx) => {
-      let lo = -1.5, hi = 1.5;
-      for (let i = 0; i < 28; i++) { const m = (lo + hi) / 2; if (r.x(m) < sx) lo = m; else hi = m; }
-      return (lo + hi) / 2;
-    };
     return r;
   }
   /* affine map of a wall-mounted rectangle: returns [a,b,c,d,e,f] sending local (0..mw, 0..mh) to the wall quad */
   function wallXform(room, aL, aR, yTop, yBot, mw, mh) {
     const p0 = room.wall(aL, yTop), p1 = room.wall(aR, yTop), p2 = room.wall(aL, yBot);
     return [(p1[0] - p0[0]) / mw, (p1[1] - p0[1]) / mw, (p2[0] - p0[0]) / mh, (p2[1] - p0[1]) / mh, p0[0], p0[1]];
-  }
-  /* bilinear quad on the wall between angles a0..a1 and heights y0..y1 (world) -> 8 numbers (TL,TR,BR,BL) */
-  function wallQuad(room, a0, a1, y0, y1) {
-    const tl = room.wall(a0, y1), tr = room.wall(a1, y1), br = room.wall(a1, y0), bl = room.wall(a0, y0);
-    return [tl[0], tl[1], tr[0], tr[1], br[0], br[1], bl[0], bl[1]];
   }
   function wallPoly(g, room, a0, a1, y0, y1, n) {
     n = n || 6;

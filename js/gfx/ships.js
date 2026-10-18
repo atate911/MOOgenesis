@@ -77,14 +77,12 @@
     c.width = max(1, w | 0); c.height = max(1, h | 0);
     return c;
   }
-  function flipY(pts) { const o = new Array(pts.length); for (let i = 0; i < pts.length; i++) o[i] = (i & 1) ? -pts[i] : pts[i]; return o; }
   // half outline (axis → axis, y ≥ 0) → closed symmetric loop
   function symPts(half) {
     const n = half.length / 2, out = half.slice();
     for (let i = n - 2; i >= 1; i--) out.push(half[2 * i], -half[2 * i + 1]);
     return out;
   }
-  function scalePts(pts, sx, sy) { const o = new Array(pts.length); for (let i = 0; i < pts.length; i += 2) { o[i] = pts[i] * sx; o[i + 1] = pts[i + 1] * (sy === undefined ? sx : sy); } return o; }
 
 
   // dense Catmull-Rom sampling of an open polyline (flat array), `seg` samples per span
@@ -652,32 +650,6 @@
     return sh;
   };
   PP.facet = function (a, b, c, base, o) { return this.facetPoly([a, b, c], base, o); };
-  // hexagonal crystal prism with a pyramid tip, from base centre (x0,y0) to tip (x1,y1); w = full width
-  PP.prism = function (x0, y0, x1, y1, w, base, o) {
-    o = o || NO;
-    const dx = x1 - x0, dy = y1 - y0, len = hypot(dx, dy) || 1e-6, ax = dx / len, ay = dy / len, nx = -ay, ny = ax;
-    const tl = min(len * 0.5, w * (o.tip || 1.2)), sl = len - tl, zt = w * 0.6 * (o.z || 1);
-    const lat = [-0.5, -0.17, 0.17, 0.5], hz = [0, zt, zt, 0], B = [], S = [];
-    for (let i = 0; i < 4; i++) {
-      B.push([x0 + nx * lat[i] * w, y0 + ny * lat[i] * w, hz[i]]);
-      S.push([x0 + ax * sl + nx * lat[i] * w, y0 + ay * sl + ny * lat[i] * w, hz[i]]);
-    }
-    const T = [x1, y1, zt * 0.55];
-    if (o.lift !== false) {
-      this.drop(this.poly([B[0][0], B[0][1], S[0][0], S[0][1], x1, y1, S[3][0], S[3][1], B[3][0], B[3][1]]), o.lift || 0.012, 0.5);
-    }
-    const fo = { k: o.k || 1.7, hiMax: o.hiMax || 0.6, loMax: o.loMax || 0.5, a: o.a, edge: o.edge === undefined ? 0.55 : o.edge, nonote: o.nonote };
-    for (let i = 0; i < 3; i++) this.facetPoly([B[i], B[i + 1], S[i + 1], S[i]], base, fo);
-    for (let i = 0; i < 3; i++) this.facetPoly([S[i], S[i + 1], T], base, fo);
-    // glinting edges
-    const g = this.g;
-    g.save(); g.lineCap = 'round'; g.strokeStyle = rgba(o.edgeC || [225, 255, 250], o.edgeA === undefined ? 0.55 : o.edgeA); g.lineWidth = max(w * 0.025, 0.002);
-    g.beginPath();
-    g.moveTo(S[1][0], S[1][1]); g.lineTo(T[0], T[1]); g.moveTo(S[2][0], S[2][1]); g.lineTo(T[0], T[1]);
-    g.moveTo(B[1][0], B[1][1]); g.lineTo(S[1][0], S[1][1]); g.moveTo(B[2][0], B[2][1]); g.lineTo(S[2][0], S[2][1]);
-    g.stroke(); g.restore();
-    return { sx: x0 + ax * sl, sy: y0 + ay * sl, ax: ax, ay: ay, nx: nx, ny: ny };
-  };
   // double-terminated hexagonal crystal centred at (cx,cy), axis angle rot, length len, full width w
   PP.gem = function (cx, cy, rot, len, w, base, o) {
     o = o || NO;

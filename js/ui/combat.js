@@ -453,7 +453,6 @@
     hover: null, overlay: null, auto: false, roundOrder: [], logIdx: 0, hp0: [1, 1], tickT: 0, offKeys: [], ready: false, summary: false,
   };
   let el = null, ui = null;
-  const sfxOn = () => { try { return M.Settings.get('animSpeed') !== 0; } catch (e) { return true; } };
 
   function buildScreen(root) {
     const canvas = h('canvas.cb-canvas');

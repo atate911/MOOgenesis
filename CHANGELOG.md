@@ -12,6 +12,9 @@ Versions follow `MAJOR.MINOR.PATCH`; the live version is the `VERSION` file.
   bust in `scenes.js` is gone. The procedural painter itself is deleted (`portraits.js` ~4800 → ~330 lines), with its dev pages
   `tools/test-portraits.html` / `test-portraits-v2.html` and `tools/handoff/portraits.md`; the API members only it used
   (`procedural`, `prewarm`, `v2`, `converted`, `light`) are gone.
+- Dead code removed: `flipY`, `scalePts` and the uncalled `prism` painter method in `ships.js`, `wallQuad` and the room helper
+  `angleAt` in `scenes.js`, an unused `sfxOn` in `ui/combat.js`. `tools/test-scenes.html` loads `gfx/pick.js` again (every scene threw
+  `G.pick is not a function` there since the GPU picker arrived).
 
 - The era: a slow arc under the exploration music that is felt in hindsight, never heard moving. `soundscape.js` reads a target from
   the state each turn and lets a value follow it a few hundredths a turn (`Music.setEra`). The target starts moving about halfway
