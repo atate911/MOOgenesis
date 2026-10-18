@@ -5,6 +5,12 @@ Versions follow `MAJOR.MINOR.PATCH`; the live version is the `VERSION` file.
 
 ## Unreleased
 
+- The Galactic Council meets in an illustrated chamber (`assets/art/scene/scene-council-chamber.webp`): the leader photos stand in its six
+  alcoves, graded to its lamplight, every delegate turned towards the pedestal (`Portraits.facing`: a photo whose leader looks away from
+  the centre is mirrored), names and votes on the brass lectern panels, the galaxy and speaker holograms over the emitter. The two
+  candidates take the inner alcoves; with fewer than six empires the outer alcoves stand vacant. The scene asks for a lighter colour pass
+  over the plate (new `plate` grade preset) so the bronze stays warm. The drawn chamber remains until the image has loaded.
+  `tools/test-scenes.html` now loads `gfx/worldart.js`.
 - The old procedural (vector) race leaders are never shown in the game any more. While a race photo is still loading, or if it
   cannot load, portraits show a quiet stand-in card: a dark panel in the race's accent colour with a monogram ring and the race name
   (badges: the monogram inside the usual ring); a portrait set over a scene (`bg:false`) stays empty instead. The UI checks in

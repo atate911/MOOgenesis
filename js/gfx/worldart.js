@@ -19,7 +19,7 @@
   const SYSTEM = ['blue', 'green', 'purple', 'red', 'white', 'yellow'];
   const EVENTS = ['bombarded', 'comet', 'devastated', 'nova', 'pirates', 'plague', 'planet-destroyed', 'rebellion'];
   const COLONY = ['barren-mining', 'dome-hostile', 'fortress', 'industrial', 'polluted', 'terran-city'];
-  const SCENES = ['first-landing', 'galaxy', 'ground-battle'];
+  const SCENES = ['first-landing', 'galaxy', 'ground-battle', 'council-chamber'];
   const RACES = ['human', 'mrrshan', 'silicoid', 'sakkra', 'psilon', 'alkari', 'klackon', 'bulrathi', 'meklar', 'darlok'];
   const PURPOSES = ['audience', 'scientist', 'figure', 'homeworld', 'council', 'homeworld-square'];
   // Batch-4 sprites / skies (docs/IMAGE-GEN-SPRITES.md) and batch-3 stills (docs/IMAGE-GEN-OTHER.md): looked up by the same rules,

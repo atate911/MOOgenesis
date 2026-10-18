@@ -49,8 +49,8 @@ Detailed prompts + layout guide: `docs/IMAGE-GEN-COUNCIL-AND-SKIES.md` §2.
 - [ ] `system-sky-purple.png`
 
 ## Council chamber (`docs/IMAGE-GEN-COUNCIL-AND-SKIES.md` §1), 1 file — unlock: a photoreal Galactic Council hall
-- [ ] `scene-council-chamber.png` → `assets/world-art/scene/`, webp into `assets/art/scene/`. Needs code after it lands
-      (alcove map + `Scenes.council` drawing the plate with the race photos in its alcoves, see §1.5 of the brief).
+- [x] `scene-council-chamber.png` — delivered and wired in (`Scenes.council` draws it with the race photos in its alcoves; alcove map
+      `CPLATE` in `js/gfx/scenes.js`). A replacement image needs its alcoves re-measured into `CPLATE`.
 
 ## Batch 3 — stills (`docs/IMAGE-GEN-OTHER.md`), 8 files now
 

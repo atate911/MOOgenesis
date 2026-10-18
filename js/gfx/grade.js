@@ -1,7 +1,7 @@
 // Gfx.Grade — the v2 "serious sci-fi" colour grade: a cheap Canvas2D post pass applied on top of finished scene / portrait / backdrop frames.
 //   Gfx.Grade.apply(ctx, w, h, t, preset | opts)   draws over the CURRENT ctx state area (0,0,w,h in the ctx's own units); safe to call every frame
 //   opts: sat (0..1 desaturation), cool (0..1 multiply by a cool neutral = lower exposure, bluer shadows), vig (0..1 edge darkening), grain (0..1), lift (0..1 black lift toward deep blue), bloom (0..1 soft highlight glow, needs ctx.filter)
-//   presets: 'scene' (default) 'room' (sunlit interiors: stronger) 'space' (light touch) 'portrait'
+//   presets: 'scene' (default) 'room' (sunlit interiors: stronger) 'space' (light touch) 'portrait' 'plate' (pre-graded illustrations)
 // Does nothing when theme v1 is active (<html data-theme> absent), when Settings.reduceMotion/Perf tier 'low' (grain only) or opts.off.
 (function (M) {
   'use strict';
@@ -11,6 +11,7 @@
     room: { tone: [1.3, 0.66, 0.45], sat: 0.6, cool: 0.4, dark: 0.55, vig: 0.66, grain: 0.028, lift: 0.0, bloom: 0.0 },
     space: { sat: 0.12, cool: 0.10, vig: 0.38, grain: 0.035, lift: 0.0, bloom: 0.0 },
     portrait: { sat: 0.26, cool: 0.2, dark: 0.1, vig: 0.34, grain: 0, lift: 0.0, bloom: 0.0 },
+    plate: { sat: 0.1, cool: 0.08, vig: 0.3, grain: 0.02, lift: 0.0, bloom: 0.0 },   // an illustrated plate that carries its own grade (council chamber)
   };
   let noise = null, tmp = null, pat = null;
   const VIG = new Map();                                   // (w,h,vig) -> radial gradient; rebuilding one every frame cost a few ms per pass

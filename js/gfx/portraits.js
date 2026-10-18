@@ -1,7 +1,7 @@
 /* Master of Orion - Reborn : js/gfx/portraits.js
    Leader portraits for the ten races: photoreal art in assets/races/race-<id>-portrait.webp.
    Self-contained: exports only through window.MOO.Gfx.Portraits
-     RACES, MOODS, NAMES, draw(ctx, race, x, y, w, h, o), canvas(race, w, h, o), drawBadge(ctx, race, cx, cy, r, o), photo, accent(race)
+     RACES, MOODS, NAMES, draw(ctx, race, x, y, w, h, o), canvas(race, w, h, o), drawBadge(ctx, race, cx, cy, r, o), photo, accent(race), facing(race)
    See tools/handoff/portraits-photo.md
 */
 (function (M) {
@@ -11,6 +11,9 @@
   const sin = Math.sin, cos = Math.cos;
   const RACES = ['alkari', 'bulrathi', 'darlok', 'human', 'klackon', 'meklar', 'mrrshan', 'psilon', 'sakkra', 'silicoid'];
   const MOODS = ['neutral', 'pleased', 'angry', 'worried', 'scheming'];
+  // which way each photo's leader looks (1 = towards the viewer's right, -1 = left, 0 = straight ahead): scenes that seat several leaders
+  // around a centre mirror the ones that would look away from it (Portraits.facing)
+  const FACING = { meklar: -1, darlok: 0 };
   const ACCENT = { alkari: '#ffa94d', bulrathi: '#e0a070', darlok: '#a58bff', human: '#79a8d8', klackon: '#c4e05a', meklar: '#ff6a4a', mrrshan: '#ffb35a', psilon: '#46e6d4', sakkra: '#3be28b', silicoid: '#ffc04a' };
 
   /* ======================================================================= small helpers */
@@ -320,6 +323,7 @@
     photo: { ready: function (r) { return PH.state[r] === 'ok'; }, load: phLoad, loadAll: function () { RACES.forEach(phLoad); }, onLoad: function (f) { PH.subs.push(f); },
       whenReady: function (race, f) { if (PH.state[race] === 'ok') { f(); return; } if (!PH.state[race]) phLoad(race); if (PH.state[race] === 'bad') return; PH.subs.push(function w(r) { if (r === race) { const i = PH.subs.indexOf(w); if (i >= 0) PH.subs.splice(i, 1); f(); } }); }, cacheBytes: function () { return PH.bytes; } },
     accent: phAccent,
+    facing: function (race) { return race in FACING ? FACING[race] : 1; },
     clearCache: function () { _pcc.clear(); PH.cache.clear(); PH.bytes = 0; _states.clear(); }
   };
 })(window.MOO);
