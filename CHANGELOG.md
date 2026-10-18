@@ -9,7 +9,9 @@ Versions follow `MAJOR.MINOR.PATCH`; the live version is the `VERSION` file.
   cannot load, portraits show a quiet stand-in card: a dark panel in the race's accent colour with a monogram ring and the race name
   (badges: the monogram inside the usual ring); a portrait set over a scene (`bg:false`) stays empty instead. The UI checks in
   `setup.js` and `gnn.js` no longer paint the old figure off screen to decide whether a race has a portrait, and the cartoon stand-in
-  bust in `scenes.js` is gone. The procedural painter remains only for the dev page `tools/test-portraits.html`.
+  bust in `scenes.js` is gone. The procedural painter itself is deleted (`portraits.js` ~4800 → ~330 lines), with its dev pages
+  `tools/test-portraits.html` / `test-portraits-v2.html` and `tools/handoff/portraits.md`; the API members only it used
+  (`procedural`, `prewarm`, `v2`, `converted`, `light`) are gone.
 
 - The era: a slow arc under the exploration music that is felt in hindsight, never heard moving. `soundscape.js` reads a target from
   the state each turn and lets a value follow it a few hundredths a turn (`Music.setEra`). The target starts moving about halfway
