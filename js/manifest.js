@@ -94,6 +94,7 @@ window.MOO_MANIFEST = {
     'js/ui/side-colony.js',
     'js/ui/side-misc.js',
     'js/ui/flow.js',
+    'js/ui/turnlog.js',
     'js/ui/gnn.js',
     'js/ui/ledger-planets.js',
     'js/ui/ledger-fleets.js',

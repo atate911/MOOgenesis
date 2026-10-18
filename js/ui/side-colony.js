@@ -146,6 +146,10 @@
       // title (click to rename)
       UI.mount(st.title, h('span.nm', { style: { cursor: 'pointer' }, tip: 'Click to rename', onclick: async () => { const n = await UI.prompt('Rename this planet', c.name, { maxlength: 11 }); if (n) { G.order({ t: 'rename', planet: c.id, name: n }); } } }, c.name),
         h('span.own', h('span.empire-dot', { style: { '--c': 'var(--emp' + E.color + ')' } }), E.plural));
+      if (S.planets.filter(p => p.owner === S.playerId).length > 1) {                 // ◀ ▶ step through your colonies without the map (F2 / F3)
+        const cyc = (dir, tip) => h('button.cyc' + (dir > 0 ? '.nx' : ''), { type: 'button', 'aria-label': tip.replace(/<[^>]+>/g, ''), tip, onclick: () => UI.Galaxy.cycleColony(dir) });
+        st.title.insertBefore(cyc(-1, 'Previous colony <b>F2</b>'), st.title.firstChild); st.title.appendChild(cyc(1, 'Next colony <b>F3</b>'));
+      }
       // planet card
       const key = c.type + c.growth + c.id;
       if (st.cardKey !== key) {
@@ -178,7 +182,8 @@
       const boxInner = b.stargate ? [h('div.bn', 'Stargate'), h('div.bc', U.fmt(Math.floor(b.progress)) + ' / 3000 BC')] : [shipCanvas(E, b.slot, 58, 48), h('div', h('div.bn', b.name), h('div.bc', b.cost + ' BC' + (b.progress ? ' · ' + U.fmt(b.progress) + ' stored' : '')))];
       const yard = yardPlate(); if (yard) boxInner.unshift(yard);                              // the shipyard behind the design (the original's gantry picture)
       UI.mount(st.build,
-        h('div.sc-bbox', { tip: 'Click to cycle ship designs', onclick: () => cycleBuild(c, E) }, boxInner),
+        h('div.sc-bbox', { tip: 'Click (or wheel) to cycle ship designs · right-click goes back', onclick: () => cycleBuild(c, E), oncontextmenu: e => { e.preventDefault(); e.stopPropagation(); cycleBuild(c, E, -1); },
+          onwheel: e => { const d = e.deltaY || e.deltaX; if (!d) return; e.preventDefault(); cycleBuild(c, E, d > 0 ? 1 : -1); } }, boxInner),
         h('div.sc-btns', UI.button('Ships', () => chooseBuild(c, E), { small: true }), UI.button('Reloc', () => ctx.show('reloc', { planet: c.id }), { small: true, tip: 'Set the rally point for newly built ships' }),
           UI.button('Trans', () => ctx.show('trans', { planet: c.id }), { small: true, tip: 'Send up to half of the population to another colony', disabled: c.pop < 2 })),
         rallyLine(c, E));
@@ -186,14 +191,21 @@
     dispose() { this.st = null; },
   });
 
-  function cycleBuild(c, E) {
+  function cycleBuild(c, E, dir) {
     const slots = E.designs.map((d, i) => d ? i : -1).filter(i => i >= 0); if (E.mods.stargate && !G.S.planets[c.id].stargate) slots.push(-1);
-    const i = slots.indexOf(c.build.stargate ? -1 : c.build.slot); G.order({ t: 'build', planet: c.id, design: slots[(i + 1) % slots.length] });
+    const i = slots.indexOf(c.build.stargate ? -1 : c.build.slot), n = slots.length; G.order({ t: 'build', planet: c.id, design: slots[(i + (dir || 1) + n) % n] });
   }
+  // the choice list: the current build is focused, so Enter keeps it; 1–6 pick a design directly
   async function chooseBuild(c, E) {
-    const rows = E.designs.map((d, i) => d ? UI.button(d.name + ' — ' + c.designs[i].cost + ' BC', () => { G.order({ t: 'build', planet: c.id, design: i }); pr.close(true); }, { block: true, active: !c.build.stargate && c.build.slot === i }) : null).filter(Boolean);
-    if (E.mods.stargate && !c.stargate) rows.push(UI.button('Stargate — 3000 BC', () => { G.order({ t: 'build', planet: c.id, design: -1 }); pr.close(true); }, { block: true, active: !!c.build.stargate }));
+    const pick = [], rows = [];
+    E.designs.forEach((d, i) => { if (!d) return; const n = pick.push(i); rows.push(UI.button(n + '. ' + d.name + ' — ' + c.designs[i].cost + ' BC', () => choose(i), { block: true, active: !c.build.stargate && c.build.slot === i })); });
+    if (E.mods.stargate && !c.stargate) { const n = pick.push(-1); rows.push(UI.button(n + '. Stargate — 3000 BC', () => choose(-1), { block: true, active: !!c.build.stargate })); }
+    const choose = i => { G.order({ t: 'build', planet: c.id, design: i }); pr.close(true); };
     const pr = UI.modal({ title: 'Build at ' + c.name, body: h('div.col', rows), buttons: [{ label: 'Close', value: false }], width: '22rem' });
+    const cur = pick.indexOf(c.build.stargate ? -1 : c.build.slot); if (rows[cur]) setTimeout(() => rows[cur].focus(), 0);
+    const onKey = e => { const k = +e.key; if (k >= 1 && k <= pick.length && !e.ctrlKey && !e.altKey && !e.metaKey) { e.preventDefault(); e.stopPropagation(); choose(pick[k - 1]); } };
+    document.addEventListener('keydown', onKey, true);
+    pr.then(() => document.removeEventListener('keydown', onKey, true));
   }
 
   // where this colony's new ships go: "Rally → Sol · 3 turns (stargate)", or nothing when they stay in orbit
@@ -210,10 +222,10 @@
   UI.Side.register('reloc', {
     render(host, ctx) {
       const S = G.S, E = G.player(), pid = ctx.params.planet, p = S.planets[pid];
-      const st = { to: p.reloc !== p.starId && S.planets[p.reloc] && S.planets[p.reloc].owner === E.id ? p.reloc : -1 };
+      const st = { to: ctx.params.to !== undefined ? ctx.params.to : p.reloc !== p.starId && S.planets[p.reloc] && S.planets[p.reloc].owner === E.id ? p.reloc : -1 };
       const back = () => { UI.Galaxy.pick = null; if (UI.Galaxy.map) UI.Galaxy.map.setRoutePreview(null); ctx.show('colony', { star: pid }); };
       host.appendChild(UI.Side.title(pid, S.playerId));
-      host.appendChild(h('div.sc-pickhint', 'Click one of your colonies on the map: ships finished at ' + (p.name || S.stars[p.starId].name) + ' will fly there automatically.'));
+      host.appendChild(h('div.sc-pickhint', 'Click one of your colonies on the map: ships finished at ' + (p.name || S.stars[p.starId].name) + ' will fly there automatically. Enter accepts · Esc cancels.'));
       const msg = h('div.sc-relocmsg');
       const acc = UI.button('Accept', () => { const r = G.order({ t: 'reloc', planet: pid, to: st.to }); if (!r.ok) { UI.toast(r.msg, 'bad'); return; } UI.sfx('click'); back(); }, { primary: true, kbd: 'Space' });
       const all = UI.button('All colonies', () => {
@@ -224,7 +236,7 @@
         const ok = st.to >= 0 && st.to !== p.starId, r = ok ? M.Sim.Fleet.relocRoute(S, E, p, st.to) : null;
         UI.mount(msg, ok && r ? [h('b', S.stars[st.to].name), ' · ETA ' + turnsTxt(r.eta) + (r.gate ? ' by stargate' : ' at warp ' + r.warp)] : 'No rally point: new ships stay in orbit here.');
         for (const b of [acc, all]) { b.disabled = !ok; b.classList.toggle('disabled', !ok); }
-        if (UI.Galaxy.map) UI.Galaxy.map.setRoutePreview(ok && r ? { from: p.starId, to: st.to, eta: r.eta, valid: true, gate: r.gate, kind: 'reloc' } : null);
+        if (UI.Galaxy.map) UI.Galaxy.map.setRoutePreview(ok && r ? { from: p.starId, to: st.to, eta: r.eta, valid: true, gate: r.gate, kind: 'reloc', legs: r.legs } : null);
         if (ok) UI.attention(acc);
       };
       host.appendChild(msg);
@@ -233,8 +245,11 @@
       UI.Galaxy.pick = id => {
         const q = S.planets[id];
         if (!q || q.owner !== S.playerId) { UI.sfx('error'); UI.toast('The rally point must be one of your colonies', 'warn'); return; }
-        st.to = id === p.starId ? -1 : id; upd();
+        const to = id === p.starId ? -1 : id;
+        if (ctx.follow({ to })) return;                                                                  // the panel comes to the colony just clicked
+        st.to = to; upd(); if (ctx.params.float && UI.Side.place) UI.Side.place();
       };
+      ctx.keys(() => { if (!acc.disabled) acc.click(); }, back);
       upd();
     },
     dispose() { UI.Galaxy.pick = null; if (UI.Galaxy.map) UI.Galaxy.map.setRoutePreview(null); },
@@ -244,7 +259,7 @@
   UI.Side.register('trans', {
     render(host, ctx) {
       const pid = ctx.params.planet, S = G.S, p = S.planets[pid], E = G.player(), max = Math.floor(p.pop / 2);
-      const st = { to: p.trans ? p.trans.to : -1, n: p.trans ? p.trans.n : Math.min(max, 1) };
+      const st = { to: ctx.params.to !== undefined ? ctx.params.to : p.trans ? p.trans.to : -1, n: ctx.params.n !== undefined ? ctx.params.n : p.trans ? p.trans.n : Math.min(max, 1) };
       this.st = st;
       const info = h('div.sc-pickhint'), big = h('div.big'), msg = h('div.small');
       const sl = UI.slider({ label: 'Pop', color: 'var(--c-eco)', min: 0, max: Math.max(1, max), step: 1, value: st.n, lockable: false, fmt: v => v + 'M', onChange: v => { st.n = v; upd(); } });
@@ -253,12 +268,15 @@
         if (st.to >= 0) { const chk = M.Sim.Fleet.canTransportTo(S, E, p, st.to); ok = chk.ok && st.n > 0; if (!chk.ok) t = chk.msg; else { eta = M.Sim.Fleet.transEta(S, E, p.starId, st.to); const q = S.planets[st.to]; if (q.owner === E.id && q.pop + st.n > q.mp3) t = 'Warning: above maximum population'; } }
         big.textContent = 'Moving ' + st.n + ' Million'; msg.textContent = st.to >= 0 ? (S.stars[st.to].name + (ok ? ' — ETA ' + turnsTxt(eta) + (M.Sim.Fleet.gateLink(S, E, p.starId, st.to) ? ' by stargate' : '') : '') + (t ? ' · ' + t : '')) : 'Choose a destination on the map';
         acc.disabled = !ok; acc.classList.toggle('disabled', !ok);
+        if (ok && ctx.params.float) UI.attention(acc);
       };
       const acc = UI.button('Accept', () => { const r = G.order({ t: 'trans', planet: pid, to: st.to, n: st.n }); if (!r.ok) UI.toast(r.msg, 'bad'); UI.Galaxy.pick = null; ctx.show('colony', { star: pid }); }, { primary: true });
-      host.appendChild(UI.Side.title(pid, S.playerId)); host.appendChild(h('div.sc-trans', h('div.sc-pickhint', 'Choose number of colonists to transport, then click the destination colony.'), big, sl, msg));
+      host.appendChild(UI.Side.title(pid, S.playerId)); host.appendChild(h('div.sc-trans', h('div.sc-pickhint', 'Choose number of colonists to transport, then click the destination colony. Enter accepts · Esc cancels.'), big, sl, msg));
       host.appendChild(h('div.row', { style: { marginTop: '.6rem' } }, UI.button('Cancel', () => { UI.Galaxy.pick = null; ctx.show('colony', { star: pid }); }), UI.button('Clear order', () => { G.order({ t: 'trans', planet: pid, n: 0 }); UI.Galaxy.pick = null; ctx.show('colony', { star: pid }); }), acc));
-      UI.Galaxy.pick = id => { st.to = id; upd(); const ok = M.Sim.Fleet.canTransportTo(S, E, p, id).ok; if (UI.Galaxy.map) UI.Galaxy.map.setRoutePreview({ from: p.starId, to: id, eta: ok ? M.Sim.Fleet.transEta(S, E, p.starId, id) : 0, valid: ok, gate: ok && M.Sim.Fleet.gateLink(S, E, p.starId, id) }); };
-      upd(); void info;
+      const preview = () => { const id = st.to; if (id < 0 || !UI.Galaxy.map) return; const ok = M.Sim.Fleet.canTransportTo(S, E, p, id).ok; UI.Galaxy.map.setRoutePreview({ from: p.starId, to: id, eta: ok ? M.Sim.Fleet.transEta(S, E, p.starId, id) : 0, valid: ok, gate: ok && M.Sim.Fleet.gateLink(S, E, p.starId, id) }); };
+      UI.Galaxy.pick = id => { if (ctx.follow({ to: id, n: st.n })) return; st.to = id; upd(); preview(); if (ctx.params.float && UI.Side.place) UI.Side.place(); };   // the panel comes to the destination clicked
+      ctx.keys(() => { if (!acc.disabled) acc.click(); }, () => { UI.Galaxy.pick = null; ctx.show('colony', { star: pid }); });
+      upd(); preview(); void info;
     },
     dispose() { UI.Galaxy.pick = null; if (UI.Galaxy.map) UI.Galaxy.map.setRoutePreview(null); },
   });

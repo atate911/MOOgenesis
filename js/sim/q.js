@@ -55,6 +55,35 @@ MOO.def(function (M) {
     function pct(x) { return Math.round(x * 1000) / 10; }
   };
 
+  // colonies that want a look this turn → {starId: {issues:[{t, k:'bad'|'warn'}], threat:{eta, ships, troops, owners:[eid]}|null}} (only colonies with something to report).
+  // Issues are the Planets screen's warnings (unrest, events, shrinking, waste, idle factories); a threat is a visible hostile fleet or troop transport
+  // flying to the colony (its soonest arrival). Read by the galaxy map badges, the attention hotkey and the turn log.
+  Q.attention = function (S, eid) {
+    const E = S.empires[eid], C = M.Sim.Colony, oper = C.oper(E), out = {}, Cb = M.Sim.Combat;
+    const at = star => out[star] || (out[star] = { issues: [], threat: null });
+    for (const p of S.planets) {
+      if (p.owner !== eid) continue;
+      const is = [];
+      if (p.unrest === 2) is.push({ t: 'Rebellion', k: 'bad' }); else if (p.unrest === 1) is.push({ t: 'Unrest', k: 'bad' });
+      if (p.event) is.push({ t: String(p.event.type || 'Event').replace(/^./, c => c.toUpperCase()), k: 'bad' });
+      if (p.pop > 0 && Q.growthTenths(S, E, p) < 0) is.push({ t: 'Shrinking', k: 'bad' });
+      if (C.readouts(S, E, p).eco.text === 'WASTE') is.push({ t: 'Waste building up', k: 'warn' });
+      if (p.factories - Math.min(p.factories, Math.max(0, p.pop - (p.rebels | 0)) * oper) > 0) is.push({ t: 'Idle factories', k: 'warn' });
+      if (is.length) at(p.starId).issues = is;
+    }
+    const mine = star => S.planets[star] && S.planets[star].owner === eid;
+    const hostile = o => o !== eid && (!Cb || !Cb.hostile || Cb.hostile(S, o, eid, eid));
+    for (const f of Q.mapFleets(S, eid)) {
+      if (f.star >= 0 || f.owner === eid || !mine(f.to) || !hostile(f.owner)) continue;
+      if (f.kind !== 'transport' && f.kind !== 'war' && f.kind !== 'mixed') continue;
+      const a = at(f.to), t = a.threat || (a.threat = { eta: 99, ships: 0, troops: 0, owners: [] });
+      t.eta = Math.min(t.eta, Math.max(1, f.eta | 0));
+      if (f.kind === 'transport') t.troops += f.n | 0; else t.ships += f.ships.reduce((x, y) => x + y, 0);
+      if (t.owners.indexOf(f.owner) < 0) t.owners.push(f.owner);
+    }
+    return out;
+  };
+
   // ---- fleets & routes ---------------------------------------------------------------------------------------------------------------------------------
   Q.fleetsAt = function (S, eid, star) {                     // the empire's stationary stack at a star → [{slot, name, count}]
     const f = M.Sim.Fleet.at(S, star, eid); if (!f) return [];
@@ -67,10 +96,12 @@ MOO.def(function (M) {
     const F = M.Sim.Fleet; let withTanks = true, speed = 99, any = 0;
     for (let i = 0; i < 6; i++) { if (!(counts[i] > 0)) continue; any += counts[i]; const st = M.Sim.Design.stats(S, E, i); if (!st.tanks) withTanks = false; speed = Math.min(speed, st.warp); }
     const pc = Geo.parsecs(S, from, to), flag = E.frange ? E.frange[to] : 0;
-    const gate = F.gateLink(S, E, from, to); if (gate) speed = 35;
     const ok = any > 0 && from !== to && F.canReach(S, E, to, withTanks);
     let reason = ''; if (!any) reason = 'No ships selected'; else if (from === to) reason = 'Already there'; else if (!ok) reason = flag === 2 ? 'Needs Reserve Fuel Tanks' : 'Out of range';
-    return { ok, parsecs: pc, eta: any && speed < 99 ? F.eta(S, from, to, speed, false) : 0, speed: speed === 99 ? 0 : speed, stargate: gate, flag, reason };
+    // the route F.send will fly: straight, or through the empire's stargates when that is quicker (via = the waypoints before `to`)
+    const pl = any && from !== to && speed < 99 ? F.plan(S, E, from, to, speed) : null, gate = !!pl && pl.legs.some(l => l.gate);
+    return { ok, parsecs: pc, eta: pl ? pl.eta : 0, speed: speed === 99 ? 0 : gate && pl.legs.length === 1 ? 35 : speed, stargate: gate, flag, reason,
+      via: pl && pl.legs.length > 1 ? pl.legs.slice(0, -1).map(l => l.star) : null, legs: pl ? pl.legs : null };
   };
   Q.distToNearestOwn = function (S, eid, star) { let best = 99; for (const p of S.planets) if (p.owner === eid) best = Math.min(best, p.starId === star ? 0 : Geo.parsecs(S, p.starId, star)); return best; };
 
@@ -80,7 +111,9 @@ MOO.def(function (M) {
     for (const f of S.fleets) {
       if (f.ships.reduce((a, b) => a + b, 0) <= 0) continue;
       if (f.owner !== eid && !V.canSee(S, E, f)) continue;
-      out.push({ id: f.id, owner: f.owner, star: f.star, from: f.from, to: f.to, x: f.x, y: f.y, speed: f.speed, ships: f.ships.slice(), kind: Q.fleetKind(S, f), eta: f.star < 0 ? M.Sim.Fleet.eta(S, f.from, f.to, f.speed, false) : 0 });
+      out.push({ id: f.id, owner: f.owner, star: f.star, from: f.from, to: f.to, x: f.x, y: f.y, speed: f.speed, ships: f.ships.slice(), kind: Q.fleetKind(S, f),
+        eta: f.star < 0 ? (f.owner === eid ? M.Sim.Fleet.etaLeft(S, f) : M.Sim.Fleet.eta(S, f.from, f.to, f.speed, false)) : 0,
+        legs: f.owner === eid && f.legs ? f.legs.map(l => ({ star: l.star, gate: !!l.gate })) : null });   // own routed fleets: the stops after f.to
     }
     for (const t of (S.trans || [])) {
       if (t.owner !== eid && !(E.explored[t.to] && V.canSee(S, E, { owner: t.owner, star: -1, x: t.x, y: t.y }))) continue;

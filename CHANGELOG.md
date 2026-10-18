@@ -5,6 +5,50 @@ Versions follow `MAJOR.MINOR.PATCH`; the live version is the `VERSION` file.
 
 ## Unreleased
 
+- Colonies needing attention (`Q.attention`): the Planets screen's warnings (rebellion or unrest, events, shrinking population,
+  waste building up, idle factories) now show on the galaxy map as a small "!" badge at the colony (red or amber), and a hostile
+  warfleet or troop transport you can see flying at one of your colonies draws a pulsing red ring with the turns until it arrives.
+  The top bar counts them (⚠ raids, ! problems); a click or I steps through them, raids first (Shift+I goes back).
+- Hovering one of your colonies on the map shows its production and factories, what the shipyard is building and how often,
+  its research, and the reasons behind any badge or raid ring.
+- The "Last turn" log gains a "Coming up" part read from the live state: raids on the way (with arrival), your fleets and
+  transports landing next turn, and colony ships sitting in orbit. It updates as you give orders, and shows on its own when
+  nothing happened last turn.
+- Galaxy map: a star's tooltip flips to the corner of the pointer that keeps it clear of a panel floating over the map (fleet
+  deployment, rally point, transport), so it is never hidden underneath while picking a destination.
+- Combat: the Special devices menu opens beside the acting ship over a lightly dimmed board instead of mid-screen, its devices
+  numbered (1–9 pick).
+- Fewer trips across the screen: ◀ ▶ arrows on a colony's title step through your colonies (as F2 / F3); the ship box cycles
+  designs with the wheel and backwards with a right-click; the Ships list opens on the current design and takes 1–6; the end-of-turn
+  warnings name each colony as a link that cancels the end of turn and opens it (the unfunded-research line opens Tech).
+- Galaxy map declutter (a lit button with the map controls, or V), after the DCLTR key on aviation displays: hides the grid, the
+  standing range rings, names of stars that aren't yours, habitability marks, your fleets' ETA labels and every route or rally line
+  but the selected one. A panel's own range rings (e.g. while picking a destination) still show. Remembered between games.
+- Fleet deployment steppers restyled to match the sliders: steel bevelled buttons with drawn red arrows and a lime readout.
+- "Last turn" log under the galaxy sidebar (`js/ui/turnlog.js`): what happened to you during the turn just played, most urgent first
+  (battles won or lost, bombardments, invasions; random events; colony notices such as population or factories at maximum, terraforming,
+  shields, stargates; exploration as one line of star links; ships built; breakthroughs). Each star name is a link that selects the star
+  and centres the map; six lines show until "All N"; the header folds it away (remembered). Fed by a new `turn:item` bus event from the
+  turn driver, so every interrupt and its answer reaches it.
+- Stargate routing: a fleet sent anywhere takes the quickest route, straight or through your stargates (fly to the nearest gate, jump
+  in one turn to the gate nearest the target, fly on), when that saves turns. Player orders, rally-point ships and the computer
+  opponents all route this way (`F.plan`, legs carried in `fleet.legs`; a gate lost on the way re-plans from the waypoint). The route
+  preview and the line behind a fleet in flight show each leg (violet for the jump), and its ETA counts the turns still to go.
+- Galaxy map: a colony with a stargate shows the original's marker, a small dark box with four blue squares beside the star (also in
+  the map key). A new route button with the map controls (or L) turns fleet route lines and colony rally lines off for a busy late-game
+  map; the selected fleet's or colony's line still shows. Rally lines are blue-grey, violet and dotted when they run through stargates.
+- Less mouse travel:
+  - Every slider takes the mouse wheel (one step a notch, Shift five) and Shift-click on − / + jumps to the end (colony, research,
+    tax, security, transport and spy sliders).
+  - Rally point (Reloc), population transport (Trans) and fleet deployment opened from the sidebar move beside the map click as soon
+    as you pick a destination (the sidebar goes back to the colony). Enter accepts and Esc cancels in all three.
+  - The wheel over a fleet row sets the count one ship at a time (Shift: a tenth).
+  - Tactical combat: a right-click on the field is Done when nothing is open to cancel, and a double-click on the acting group is Wait.
+  - Fixed: clicking the star that is already selected did nothing, so it could not be picked as a destination.
+- Fleet deployment opens beside the click: clicking (or right-clicking a destination for) your fleet on the map shows the ship rows,
+  steppers, route and Accept in a floating panel next to the cursor instead of in the sidebar across the screen, placed on the side
+  of the click that hides the fewest reachable stars. It moves beside each destination you click, Enter sends and Esc cancels.
+  Opening it from the sidebar button or the Fleets screen keeps the sidebar. (`UI.Side.show(..., { float: true })`, `UI.Side.place`.)
 - The combat board has illustrated backdrops by situation (`assets/art/battle/`): deep space, high orbit (the defended world's
   glow and a debris ring just off-frame), an asteroid belt (dust and light shafts at the edges) and the inside of a nebula.
   They are painted dark for the board, so the game only veils them lightly (12 % instead of the 45 % the stand-in system plate

@@ -11,6 +11,9 @@
     .gx-side { grid-column:2; grid-row:1; min-height:0; padding:.55rem .55rem .35rem .35rem; display:flex; flex-direction:column; background:linear-gradient(90deg, rgba(6,9,25,.0), rgba(6,9,25,.9) 12%); }
     .gx-side .panel { flex:1 1 auto; min-height:0; display:flex; flex-direction:column; overflow:hidden; }
     .gx-sidebody { min-height:0; overflow-y:auto; flex:1 1 auto; padding-right:.2rem; }
+    /* a side panel opened from a map click floats beside the cursor instead (fleet deployment): the controls are where the hand already is */
+    .gx-float { position:absolute; grid-column:auto; grid-row:auto; z-index:8; width:min(24rem, calc(100% - 1rem)); max-height:min(72%, 36rem); display:none; padding:0; background:none; filter:drop-shadow(0 10px 26px rgba(0,0,0,.65)); }
+    .gx-float.on { display:flex; }
     .gx-sidebody.reveal { animation: gx-reveal .16s ease-out; }                /* panel change: a short settle, never on refresh (immersion review, Phase C) */
     @keyframes gx-reveal { from { opacity:.35; transform:translateX(6px); } to { opacity:1; transform:none; } }
     :root[data-reduce-motion] .gx-sidebody.reveal { animation:none; }
@@ -22,6 +25,8 @@
     .gx-hud .y { font:400 1.3rem var(--font-display); color:var(--brass-hi); letter-spacing:.04em; }
     .gx-hud .k { color:var(--mist); font-size:.82rem; margin-right:.3em; }
     .gx-hud b { font-weight:600; font-variant-numeric:tabular-nums; }
+    .gx-att { display:flex; gap:.45rem; cursor:pointer; font-weight:600; font-variant-numeric:tabular-nums; } .gx-att span { padding:.05rem .4rem; border:1px solid currentColor; border-radius:.2rem; }
+    .gx-att .r { color:#ff7a6a; } .gx-att .w { color:var(--ember, #f0a040); } .gx-att:hover span { background:rgba(255,255,255,.08); }
     .gx-msg { pointer-events:auto; margin-left:auto; max-width:28rem; display:flex; flex-direction:column; gap:.3rem; }
     .gx-msg .m { padding:.3rem .7rem; background:rgba(8,12,34,.78); border-left:3px solid var(--brass); font-size:.9rem; }
     .gx-msg .m.bad { border-left-color:var(--rose); } .gx-msg .m.ok { border-left-color:var(--leaf); }
@@ -69,12 +74,26 @@
       background:linear-gradient(180deg, #3d4780 0%, #2a3263 55%, #202750 100%); box-shadow:inset 1px 1px 0 rgba(255,255,255,.25), inset -1px -1px 0 rgba(0,0,0,.6), 0 0 0 1px rgba(0,0,0,.7); }
     .side-title .nm { font:400 1.35rem/1.1 var(--font-title); letter-spacing:.06em; color:#e8c850; text-shadow:0 1px 0 #6b4f12, 0 0 12px rgba(232,200,80,.25); }
     .side-title .own { margin-left:0; font-size:.8rem; letter-spacing:.06em; text-transform:uppercase; color:#cfd6ee; }
+    .side-title .cyc { flex:none; width:1.35rem; height:1.35rem; padding:0; border:0; background:none; cursor:pointer; color:#cfd6ee; opacity:.7; }
+    .side-title .cyc:first-child { margin-right:auto; } .side-title .cyc:last-child { margin-left:auto; }
+    .side-title .cyc:hover { opacity:1; color:#e8c850; }
+    .side-title .cyc::after { content:''; display:block; width:.55rem; height:.7rem; margin:auto; background:currentColor; clip-path:polygon(100% 0,0 50%,100% 100%); }
+    .side-title .cyc.nx::after { clip-path:polygon(0 0,100% 50%,0 100%); }
     .gx-side h3 { font:600 .95rem var(--font-display); letter-spacing:.14em; text-transform:uppercase; color:#e0553a; margin:.2rem 0 .4rem; text-align:center; }
   `));
 
   // ---- side-panel registry ------------------------------------------------------------------------------------------------------------------
-  const panels = {}; let cur = null, host = null;
-  const ctx = params => ({ S: G.S, E: G.player(), Q, G, params: params || {}, show: (n, p) => UI.Side.show(n, p), defaultPanel: () => UI.Galaxy.showDefault(), map: UI.Galaxy.map, UI });
+  const panels = {}; let cur = null, host = null, floatEl = null, floatHost = null, lastPt = null;
+  const ctx = params => ({ S: G.S, E: G.player(), Q, G, params: params || {}, show: (n, p) => UI.Side.show(n, p), defaultPanel: () => UI.Galaxy.showDefault(), map: UI.Galaxy.map, UI,
+    // Enter / Esc answer the panel while it is up (unbound by the next show); the newest binding wins, so they shadow the screen's Esc = game menu
+    keys: (enter, esc) => { if (!cur) return; const o = { screen: 'galaxy' }; cur.keyOffs = [enter && UI.bindKey('enter', enter, o), esc && UI.bindKey('Escape', esc, o)].filter(Boolean); },
+    // a pick on the map moves the panel beside that click (re-rendered there with `extra` merged into its params); true when it moved
+    follow: extra => {
+      if (!cur || cur.params.float || !floatHost) return false;
+      const name = cur.name, p = Object.assign({}, cur.params, extra, { float: true });
+      UI.Galaxy.showDefault();                                                                              // the sidebar goes back to the star / colony it was showing
+      UI.Side.show(name, p); return true;
+    } });
   UI.Side = {
     register(name, def) { panels[name] = def; },
     has: n => !!panels[n],
@@ -99,18 +118,42 @@
       if (!host) return;
       if (UI.Side.held && _hd !== UI.Side.held) return;                      // the prompt stays; the player may still click around the map (selection highlights, no panel change)
       const def = panels[name]; if (!def) { console.warn('no side panel', name); return; }
+      if (cur && cur.keyOffs) { cur.keyOffs.forEach(off => off()); cur.keyOffs = null; }
       if (cur && cur.def.dispose) { try { cur.def.dispose(); } catch (e) { console.error(e); } }
+      // params.float: render beside the last map click (UI.Side.place) and leave the sidebar as it is; any other panel closes the float
+      const float = !!(params && params.float && floatHost), tgt = float ? floatHost : host;
+      if (floatEl && (float || floatEl.classList.contains('on'))) { UI.clear(floatHost); floatEl.classList.toggle('on', float); }
       const changed = !cur || cur.name !== name || (cur.params && params && cur.params.star !== params.star);
-      UI.clear(host);
-      if (changed && !(M.Settings && M.Settings.get && M.Settings.get('reduceMotion'))) { host.classList.remove('reveal'); void host.offsetWidth; host.classList.add('reveal'); }
-      cur = { name, params: params || {}, def };
-      try { def.render(host, ctx(cur.params)); }
+      if (!float) UI.clear(host);
+      if (changed && !(M.Settings && M.Settings.get && M.Settings.get('reduceMotion'))) { tgt.classList.remove('reveal'); void tgt.offsetWidth; tgt.classList.add('reveal'); }
+      cur = { name, params: params || {}, def, host: tgt };
+      if (float) delete floatEl.dataset.placed;
+      try { def.render(tgt, ctx(cur.params)); if (float && !floatEl.dataset.placed) UI.Side.place(); }   // a panel that placed itself (with its own avoid list) keeps that spot
       catch (e) {
         console.error('[side panel ' + name + ']', e);
-        if (name !== 'star' && name !== 'colony') { cur = null; UI.clear(host); try { UI.Galaxy.showDefault(); } catch (e2) { console.error(e2); } }
+        if (float) floatEl.classList.remove('on');
+        if (name !== 'star' && name !== 'colony') { cur = null; UI.clear(tgt); try { UI.Galaxy.showDefault(); } catch (e2) { console.error(e2); } }
       }
     },
-    refresh() { if (cur && cur.def.refresh && host) { try { cur.def.refresh(host, ctx(cur.params)); } catch (e) { console.error('[side refresh]', e); } } },
+    refresh() { if (cur && cur.def.refresh && cur.host) { try { cur.def.refresh(cur.host, ctx(cur.params)); } catch (e) { console.error('[side refresh]', e); } } },
+    // move the floating panel beside the last click on the map, inside the map. avoid: points (map px) it should not cover, e.g. the stars the
+    // fleet can reach: of the four sides of the click (right, left, below, above) it takes the one hiding the fewest, preferring the right
+    place(avoid) {
+      if (!floatEl || !floatEl.classList.contains('on') || !mapWrap) return;
+      const W = mapWrap.clientWidth, H = mapWrap.clientHeight, pw = floatEl.offsetWidth, ph = floatEl.offsetHeight, gap = 30, m = 8, pad = 14;
+      const p = lastPt || { x: W / 2, y: H / 2 };
+      const fit = (x, y) => ({ x: Math.max(m, Math.min(W - pw - m, x)), y: Math.max(m, Math.min(H - ph - m, y)) });
+      const cands = [fit(p.x + gap, p.y - ph * 0.4), fit(p.x - gap - pw, p.y - ph * 0.4), fit(p.x - pw * 0.4, p.y + gap), fit(p.x - pw * 0.4, p.y - gap - ph)];
+      const covers = (c, q) => q.x > c.x - pad && q.x < c.x + pw + pad && q.y > c.y - pad && q.y < c.y + ph + pad;
+      let best = cands[0], bs = Infinity;
+      cands.forEach((c, i) => {
+        let sc = i * 0.1 + (covers(c, p) ? 1000 : 0);                                                         // never over the click itself
+        for (const q of avoid || []) if (covers(c, q)) sc += 1;
+        if (sc < bs) { bs = sc; best = c; }
+      });
+      floatEl.style.left = Math.round(best.x) + 'px'; floatEl.style.top = Math.round(best.y) + 'px'; floatEl.dataset.placed = '1';
+    },
+    floating: () => !!(floatEl && floatEl.classList.contains('on')),
     title(star, owner) {                    // common header: planet/star name + owner banner
       const E = owner !== undefined && owner >= 0 ? G.S.empires[owner] : null;
       return h('div.side-title', h('span.nm', G.S.stars[star].name), E ? h('span.own', h('span.empire-dot', { style: { '--c': 'var(--emp' + E.color + ')' } }), E.plural) : null);
@@ -126,6 +169,7 @@
   function go(screen, params) { if (turnLocked()) return; if (UI.Screens.has(screen)) UI.Screens.go(screen, Object.assign({ from: 'galaxy' }, params)); else UI.toast('That screen is not built yet', 'warn'); }
   UI.Galaxy = {
     map: null, go, pick: null,                    // pick: temporary star-click handler used by Reloc / Trans / fleet destination selection
+    cycleColony: (dir, pred) => cycleColony(dir, pred),
     refresh() { if (!el || !G.S) return; if (map) { map.setState(G.S); map.refresh(); } updateHud(); UI.Side.refresh(); },
     selectStar(id, opts) {
       if (!G.S || id < 0) return; G.sel.star = id; if (map) map.select(id);
@@ -163,7 +207,15 @@
       h('span', h('span.k', 'Reserve'), h('b.t-gold', U.fmt(E.bc)), ' ', h('span.t-gold', 'BC'), f.taxToReserve ? h('span.t-leaf.small', ' +' + f.taxToReserve) : null),
       h('span', h('span.k', 'Income'), h('b' + ((f.net | 0) < (f.gross | 0) * 0.6 ? '.t-rose' : '.t-leaf'), U.fmt(f.net | 0)), h('span.k', ' of ' + U.fmt(f.gross | 0))),
       h('span', h('span.k', 'Research'), h('b.t-cyan', U.fmt(rp)), h('span.t-cyan', ' RP')),
-      h('span', h('span.k', 'Colonies'), h('b', colonies)));
+      h('span', h('span.k', 'Colonies'), h('b', colonies)), attentionChips());
+  }
+  // the HUD's count of colonies needing a look: a click (or I) steps through them, most urgent first
+  function attentionChips() {
+    let L = []; try { L = attentionList(); } catch (e) { return null; }
+    if (!L.length) return null;
+    const raids = L.filter(x => x.a.threat).length, rest = L.length - raids;
+    return h('span.gx-att', { tip: 'Colonies that need a look: raids on the way, unrest, shrinking population, waste, idle factories. Click or press <b>I</b> to step through them (Shift+I back).', onclick: () => cycleAttention(1) },
+      raids ? h('span.r', '⚠ ' + raids) : null, rest ? h('span.w', '! ' + rest) : null);
   }
 
   async function endTurn() {
@@ -172,9 +224,12 @@
     if (UI.Galaxy.pendingSend && UI.Galaxy.pendingSend() === false) return;      // a queued fleet move is accepted automatically (an invalid one stops the turn with its message)
     if (M.Settings.get('confirmEndTurn')) {
       const S = G.S, E = G.player(), issues = [];
-      for (const p of S.planets) if (p.owner === E.id && p.sliders[0] > 0 && !(p.build === -1 || (p.build >= 0 && E.designs[p.build]))) issues.push(p.name + ' spends on ships with no design to build');
-      if (E.research && E.research.slider.every(v => !v) && (E.research.total | 0) > 0) issues.push('no research field is funded');
-      if (issues.length) { const ok = await UI.confirm(h('div', h('p', 'End the turn anyway?'), h('ul', issues.slice(0, 6).map(t => h('li', t)))), { title: 'Before you end the turn' }); if (!ok) return; }
+      for (const p of S.planets) if (p.owner === E.id && p.sliders[0] > 0 && !(p.build === -1 || (p.build >= 0 && E.designs[p.build]))) issues.push([p.starId, p.name, ' spends on ships with no design to build']);
+      if (E.research && E.research.slider.every(v => !v) && (E.research.total | 0) > 0) issues.push([-2, 'No research field', ' is funded']);
+      // each named colony is a link: it cancels the end of turn and opens that colony (the research line opens the Tech screen)
+      const fix = id => { UI.closeAllModals(); if (id === -2) UI.Screens.go('tech', { from: 'galaxy' }); else { UI.Galaxy.selectStar(id); if (map) map.centerOn(id, { animate: true }); } };
+      const li = ([id, name, rest]) => h('li', h('span.tl-a', { tip: id === -2 ? 'Open the Tech screen' : 'Go to this colony', onclick: () => fix(id) }, name), rest);
+      if (issues.length) { const ok = await UI.confirm(h('div', h('p', 'End the turn anyway?'), h('ul', issues.slice(0, 6).map(li))), { title: 'Before you end the turn' }); if (!ok) return; }
     }
     UI.Galaxy.busy(true, 'Year ' + Q.year(G.S) + ' …');
     // 10 s without an answer is normal while the player reads a scene (combat, GNN, council, audience, landing), a modal or a held side-panel prompt:
@@ -209,6 +264,17 @@
     if (i < 0) i = 0;
     const id = mine[i].starId; UI.Galaxy.selectStar(id); if (map) map.centerOn(id, { animate: true });
   }
+  // colonies needing a look (Q.attention), most urgent first: raids by arrival, then red warnings, then amber ones
+  function attentionList() {
+    const S = G.S, A = Q.attention(S, S.playerId), rank = a => a.threat ? a.threat.eta : a.issues.some(x => x.k === 'bad') ? 100 : 200;
+    return Object.keys(A).map(Number).sort((a, b) => rank(A[a]) - rank(A[b]) || a - b).map(id => ({ star: id, a: A[id] }));
+  }
+  function cycleAttention(dir) {
+    if (G.busy || !G.S) return;
+    const L = attentionList(); if (!L.length) { UI.toast('Nothing needs your attention right now.', 'ok', 2200); return; }
+    let i = L.findIndex(x => x.star === G.sel.star); i = i < 0 ? (dir > 0 ? 0 : L.length - 1) : (i + dir + L.length) % L.length;
+    const id = L[i].star; UI.Galaxy.selectStar(id); if (map) map.centerOn(id, { animate: true });
+  }
   function bindKeys() {
     const scr = { screen: 'galaxy' };
     NAV.forEach(([name, key, fn]) => offs.push(UI.bindKey(key, fn, scr)));
@@ -217,6 +283,7 @@
     offs.push(UI.bindKey('F2', () => cycleColony(-1), scr)); offs.push(UI.bindKey('F3', () => cycleColony(1), scr));
     const withShips = p => !!M.Sim.Fleet.at(G.S, p.starId, G.S.playerId);
     offs.push(UI.bindKey('F4', () => cycleColony(1, withShips), scr)); offs.push(UI.bindKey('F5', () => cycleColony(-1, withShips), scr));
+    offs.push(UI.bindKey('i', e => cycleAttention(e && e.shiftKey ? -1 : 1), scr));
     offs.push(UI.bindKey('F10', () => { if (G.saveSlot('auto')) UI.toast('Game saved', 'ok'); else UI.toast('The game could not be saved (browser storage full or blocked). Use Game › Save › Export to a file.', 'bad', 8000); }, scr));
     offs.push(UI.bindKey('Escape', () => { if (UI.gameMenu) UI.gameMenu(); }, scr));
     offs.push(UI.bindKey('Home', () => { if (map) map.centerOn(G.player().capital, { animate: true }); }, scr));
@@ -239,7 +306,9 @@
       hudEl = h('div.gx-hud'); msgEl = h('div.gx-msg');
       busyEl = h('div.gx-busy', h('div.box'));
       host = h('div.gx-sidebody');
-      const side = h('aside.gx-side', h('div.panel', host));
+      const logEl = h('div');
+      const side = h('aside.gx-side', h('div.panel', host), logEl);
+      if (UI.TurnLog) UI.TurnLog.mount(logEl);                                                              // "Last turn": links to where things happened
       const navBtns = NAV.map(([name, key, fn]) => UI.button(name, fn, { kbd: key.toUpperCase() }));
     const nextBtn = UI.button('Next turn', () => endTurn(), { primary: true, big: true, kbd: 'N' });
     const bar = h('nav.gx-bar', navBtns, h('span.gx-spacer'), nextBtn);
@@ -256,6 +325,11 @@
       el = h('div.gx', mapWrap, side, bar);
       root.appendChild(el);
       mapWrap.appendChild(h('div.gx-top', hudEl, msgEl)); mapWrap.appendChild(busyEl);
+      floatHost = h('div.gx-sidebody'); floatEl = h('aside.gx-side.gx-float', h('div.panel', floatHost)); mapWrap.appendChild(floatEl);
+      mapWrap.addEventListener('pointerdown', e => {                                                       // where the hand is: the floating panel opens beside it
+        if (floatEl.contains(e.target)) return;
+        const r = mapWrap.getBoundingClientRect(); lastPt = { x: e.clientX - r.left, y: e.clientY - r.top };
+      }, true);
       bindKeys();
       M.Bus.on('state', () => { if (UI.Screens.current && UI.Screens.current.id === 'galaxy') { updateHud(); UI.Side.refresh(); } });
       M.Bus.on('turn:aborted', () => UI.Side.drop()); M.Bus.on('turn:skipped', () => UI.Side.drop());    // the prompt is moot: let it resolve and go
@@ -269,11 +343,11 @@
         map = UI.Galaxy.map = M.UI.GalaxyMap.create(mapWrap, {});
         map.on('selectStar', id => { if (UI.Galaxy.pick) UI.Galaxy.pick(id); else UI.Galaxy.selectStar(id); });
         map.on('dblStar', id => { G.sel.star = id; if (UI.Screens.has('system')) UI.Screens.go('system', { star: id, from: 'galaxy' }); });
-        map.on('selectFleet', fid => { G.sel.fleet = fid; const f = G.S.fleets.find(x => x.id === fid); if (f && f.owner === G.S.playerId) UI.Side.show(f.star >= 0 ? 'fleetDeploy' : 'fleetInfo', { star: f.star, fleet: fid }); else if (f) UI.Side.show('fleetInfo', { fleet: fid }); });
+        map.on('selectFleet', fid => { G.sel.fleet = fid; const f = G.S.fleets.find(x => x.id === fid); if (f && f.owner === G.S.playerId) UI.Side.show(f.star >= 0 ? 'fleetDeploy' : 'fleetInfo', { star: f.star, fleet: fid, float: f.star >= 0 }); else if (f) UI.Side.show('fleetInfo', { fleet: fid }); });
         map.on('moveOrder', o => {
           const f = G.S.fleets.find(x => x.id === o.fleetId); if (!f || f.star < 0 || f.owner !== G.S.playerId) return;
           if (UI.Side.current() === 'fleetDeploy' && UI.Galaxy.pick) { UI.Galaxy.pick(o.toStar); return; }      // the panel is open with the player's own counts: just set the destination
-          UI.Side.show('fleetDeploy', { star: f.star, dest: o.toStar, send: true });                              // otherwise a right-click is "send the fleet there"
+          UI.Side.show('fleetDeploy', { star: f.star, dest: o.toStar, send: true, float: true });                              // otherwise a right-click is "send the fleet there"
         });
       }
       UI.Galaxy.refresh();

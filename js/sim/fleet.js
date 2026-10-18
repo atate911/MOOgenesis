@@ -77,13 +77,55 @@ MOO.def(function (M) {
   F.relocRoute = function (S, E, p, to) {
     if (to === undefined) to = p.reloc;
     if (to === undefined || to < 0 || to === p.starId || !S.planets[to] || S.planets[to].owner !== E.id) return null;
-    const gate = F.gateLink(S, E, p.starId, to);
     let warp = 0;
     if (p.build >= 0 && E.designs[p.build]) warp = stats(S, E, p.build).warp;
     else for (let i = 0; i < 6; i++) if (E.designs[i]) { const w = stats(S, E, i).warp; warp = warp ? Math.min(warp, w) : w; }
-    const speed = gate ? STARGATE_SPEED : Math.max(1, warp || 1);
-    return { to, gate, warp: speed, eta: F.eta(S, p.starId, to, speed, false) };
+    const pl = F.plan(S, E, p.starId, to, Math.max(1, warp || 1)), gate = pl.legs.some(l => l.gate);   // the route the new ships will fly (stargates included)
+    return { to, gate, warp: gate && pl.legs.length === 1 ? STARGATE_SPEED : Math.max(1, warp || 1), eta: pl.eta, via: pl.legs.length > 1 ? pl.legs.slice(0, -1).map(l => l.star) : null, legs: pl.legs };
   };
+
+  // ---- stargate routing ---------------------------------------------------------------------------------------------------------------------
+  // The quickest way from star `from` to star `to` at warp `speed`: straight there, or fly to one of the empire's stargates, jump (one turn)
+  // to another and fly on. With g gates that is g² candidate routes, each a sum of straight legs, so no general path search is needed.
+  // Returns {eta, legs:[{star, gate}]}: the stops after `from` in order, the last one `to`; gate = that leg is a stargate jump.
+  F.plan = function (S, E, from, to, speed) {
+    const link = F.gateLink(S, E, from, to);
+    let best = { eta: link ? 1 : F.eta(S, from, to, speed, false), legs: [{ star: to, gate: link }] };
+    if (link || from === to) return best;
+    const gates = []; for (const p of S.planets) if (p.owner === E.id && p.stargate) gates.push(p.starId);
+    if (gates.length < 2) return best;
+    const toA = gates.map(a => F.eta(S, from, a, speed, false)), fromB = gates.map(b => F.eta(S, b, to, speed, false));
+    let bi = -1, bj = -1;
+    for (let i = 0; i < gates.length; i++) for (let j = 0; j < gates.length; j++) {
+      if (i === j) continue;
+      const e = toA[i] + 1 + fromB[j];
+      if (e < best.eta) { best.eta = e; bi = i; bj = j; }
+    }
+    if (bi < 0) return best;
+    const legs = [];
+    if (gates[bi] !== from) legs.push({ star: gates[bi], gate: false });
+    legs.push({ star: gates[bj], gate: true });
+    if (gates[bj] !== to) legs.push({ star: to, gate: false });
+    best.legs = legs;
+    return best;
+  };
+  // turns left for a fleet under way: from where it is now to its current stop, plus the stops still ahead (f.legs)
+  F.etaLeft = function (S, f) {
+    if (f.star >= 0 || f.to < 0) return 0;
+    const B = S.stars[f.to]; let x = f.x, y = f.y, n = 0;
+    while ((x !== B.x || y !== B.y) && n < 200) { const p = stepTurn(S, x, y, B.x, B.y, Math.max(1, f.speed), false); x = p[0]; y = p[1]; n++; }
+    let at = f.to;
+    for (const l of f.legs || []) { n += l.gate ? 1 : F.eta(S, at, l.star, f.warp || 1, false); at = l.star; }
+    return n;
+  };
+  // start the next leg of a routed fleet that has reached a waypoint. A jump whose gates are gone (lost colony) is re-planned from here.
+  function nextLeg(S, f) {
+    const E = S.empires[f.owner], at = f.to, warp = f.warp || 1;
+    let nx = f.legs.shift();
+    if (nx.gate && !F.gateLink(S, E, at, nx.star)) { const fin = f.legs.length ? f.legs[f.legs.length - 1].star : nx.star, pl = F.plan(S, E, at, fin, warp); nx = pl.legs[0]; f.legs = pl.legs.slice(1); }
+    f.from = at; f.to = nx.star; f.speed = nx.gate ? STARGATE_SPEED : warp;
+    if (!f.legs.length) { delete f.legs; delete f.warp; }
+  }
 
   // ---- sending ---------------------------------------------------------------------------------------------------------------------------
   // counts = [6] ships per design slot to send from the orbit group at `fromStar`. Returns {ok, fleet, eta} | {ok:false,msg}
@@ -101,16 +143,19 @@ MOO.def(function (M) {
     }
     if (!any) return O.fail('no ships selected');
     if (!F.canReach(S, E, toStar, withTanks)) return O.fail('out of range');
-    if (F.gateLink(S, E, fromStar, toStar)) speed = STARGATE_SPEED;
+    // the quickest route, through the empire's stargates when that saves turns: the fleet flies its first leg, the rest wait in f.legs
+    const plan = F.plan(S, E, fromStar, toStar, speed), first = plan.legs[0], warp = speed;
+    speed = first.gate ? STARGATE_SPEED : warp;
     const st = S.stars[fromStar];
-    const moving = { id: nextId(S), owner: E.id, star: -1, from: fromStar, to: toStar, x: st.x, y: st.y, speed, ships: counts.slice() };
+    const moving = { id: nextId(S), owner: E.id, star: -1, from: fromStar, to: first.star, x: st.x, y: st.y, speed, ships: counts.slice() };
+    if (plan.legs.length > 1) { moving.legs = plan.legs.slice(1); moving.warp = warp; }
     for (let i = 0; i < 6; i++) g.ships[i] -= counts[i];
-    // merge with an identical in-flight group (same owner/origin/destination/speed)
-    const twin = S.fleets.find(f => f.star < 0 && f.owner === E.id && f.from === fromStar && f.to === toStar && f.speed === speed && f.x === st.x && f.y === st.y);
+    // merge with an identical in-flight group (same owner/origin/destination/speed; never a routed one)
+    const twin = !moving.legs && S.fleets.find(f => f.star < 0 && !f.legs && f.owner === E.id && f.from === fromStar && f.to === first.star && f.speed === speed && f.x === st.x && f.y === st.y);
     let fleet = moving;
     if (twin) { for (let i = 0; i < 6; i++) twin.ships[i] += counts[i]; fleet = twin; } else S.fleets.push(moving);
     F.cleanup(S);
-    return { ok: true, fleet, eta: F.eta(S, fromStar, toStar, speed, false) };
+    return { ok: true, fleet, eta: plan.eta, legs: plan.legs };
   };
 
   // ---- the movement step ---------------------------------------------------------------------------------------------------------------
@@ -121,7 +166,7 @@ MOO.def(function (M) {
       if (f.star >= 0) continue;
       const B = S.stars[f.to];
       const p = stepTurn(S, f.x, f.y, B.x, B.y, f.speed, false); f.x = p[0]; f.y = p[1];
-      if (f.x === B.x && f.y === B.y) arrived.push(f);
+      if (f.x === B.x && f.y === B.y) { if (f.legs && f.legs.length) nextLeg(S, f); else arrived.push(f); }   // a waypoint (stargate) of a routed fleet: on to the next leg
     }
     for (const f of arrived) {
       f.star = f.to; f.from = f.to; f.to = -1; f.speed = 0;

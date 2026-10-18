@@ -179,8 +179,9 @@
     let value = U.clamp(o.value, o.min, o.max), locked = !!o.locked, max = o.max;
     const fill = h('i.s-fill'), knob = h('b.s-knob'), val = h('div.s-val');
     const track = h('div.s-track', { tabindex: 0 }, fill, knob);
-    const minus = h('button.s-btn', { type: 'button', onclick: () => user(value - o.step) }, '−');
-    const plus = h('button.s-btn', { type: 'button', onclick: () => user(value + o.step) }, '+');
+    // Shift-click on − / + jumps to the end (min / max) instead of one step
+    const minus = h('button.s-btn', { type: 'button', onclick: e => user(e && e.shiftKey ? o.min : value - o.step) }, '−');
+    const plus = h('button.s-btn', { type: 'button', onclick: e => user(e && e.shiftKey ? max : value + o.step) }, '+');
     const lock = o.lockable ? h('button.s-lock', { type: 'button', tip: 'Lock this slider', onclick: () => { locked = !locked; draw(); if (o.onLock) o.onLock(locked); } }, UI.icon('lock')) : h('span');
     const root = h('div.slider', { style: { '--c': o.color } },
       h('div.s-label', o.icon ? UI.icon(o.icon) : null, o.label), minus, track, plus, val, lock);
@@ -200,6 +201,12 @@
     track.addEventListener('pointerdown', e => { if (locked) return; track.setPointerCapture(e.pointerId); fromEvent(e); track.onpointermove = fromEvent; });
     track.addEventListener('pointerup', () => { track.onpointermove = null; });
     track.addEventListener('pointercancel', () => { track.onpointermove = null; });
+    // the wheel anywhere over the slider: one step per notch (up / right = more), Shift five steps; the page does not scroll meanwhile
+    root.addEventListener('wheel', e => {
+      if (locked) return;
+      const d = -(e.deltaY || e.deltaX); if (!d) return;                     // Shift+wheel arrives as deltaX in most browsers: same direction as plain wheel
+      e.preventDefault(); user(value + Math.sign(d) * o.step * (e.shiftKey ? 5 : 1));
+    }, { passive: false });
     track.addEventListener('keydown', e => {
       const k = e.key;
       if (k === 'ArrowLeft' || k === 'ArrowDown') { user(value - o.step); e.preventDefault(); }

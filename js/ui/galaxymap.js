@@ -488,6 +488,8 @@
     .gmap-btn { --ch:.3rem; position:relative; isolation:isolate; width:2rem; height:2rem; padding:0; border:0; cursor:pointer; color:var(--brass-hi); display:grid; place-items:center;
       background:linear-gradient(180deg,var(--brass),var(--brass-lo)); transition:filter .15s; }
     .gmap-btn::before { content:""; position:absolute; inset:1px; z-index:-1; clip-path:var(--poly); background:linear-gradient(180deg,#27336d,#161e4a); transition:background .15s; }
+    .gmap-btn.lit { color:#fff4c8; filter:drop-shadow(0 0 6px rgba(243,220,160,.75)); } .gmap-btn.lit::before { background:linear-gradient(180deg,#8a6a24,#4a3410); }
+    .gmap-btn.off { opacity:.5; } .gmap-btn.off svg { stroke-dasharray:none; }
     .gmap-btn:hover { filter:brightness(1.15); } .gmap-btn:hover::before { background:linear-gradient(180deg,#34448c,#1c2760); } .gmap-btn:active { transform:translateY(1px); }
     .gmap-btn svg { width:1.05rem; height:1.05rem; fill:none; stroke:currentColor; stroke-width:2; stroke-linecap:square; stroke-linejoin:miter; }
     .gmap-mini { --ch:.55rem; position:absolute; z-index:3; padding:1px; background:linear-gradient(135deg,var(--brass),var(--brass-lo) 50%,var(--brass)); }
@@ -542,12 +544,26 @@
     const miniCv = h('canvas');
     const miniEl = h('div.gmap-mini.ch', miniCv);
     const svgBtn = (path, tip, fn) => { const b = h('button.gmap-btn.ch', { type: 'button', 'aria-label': tip, onclick: e => { fn(e); root.focus({ preventScroll: true }); } }); b.innerHTML = '<svg viewBox="0 0 24 24">' + path + '</svg>'; if (UI.setTip) UI.setTip(b, tip); return b; };
+    // DECLUTTER (like an avionics map's DCLTR): drops what is rarely needed at a glance (grid, range rings, route and rally lines but the
+    // selected one, foreign and unowned star names, planet-type icons, ETA tags but the selected fleet's); ships, stars and territory stay
+    const dcOn = () => !!(M.Settings && M.Settings.get('mapDeclutter') === true);
+    const dcBtn = svgBtn('<path d="M4 7h16M7 12h10M10 17h4"/>', 'Declutter: hide grid, rings, names and lines you rarely need <b>V</b>',
+      () => { if (M.Settings) M.Settings.set('mapDeclutter', !dcOn()); syncDcBtn(); });
+    const syncDcBtn = () => { dcBtn.classList.toggle('lit', dcOn()); dcBtn.setAttribute('aria-pressed', String(dcOn())); };
+    syncDcBtn();
+    // fleet route lines and rally lines on / off (a busy late-game map); off still shows the selected fleet's or colony's line
+    const routesOn = () => !(M.Settings && M.Settings.get('mapRoutes') === false);
+    const routesBtn = svgBtn('<circle cx="5" cy="18" r="2"/><circle cx="19" cy="6" r="2"/><path d="M6.6 16.6C10 13 9 9 12.5 8.2S17 7 17.4 7.2" stroke-dasharray="2.4 2.2"/>', 'Fleet routes and rally lines on / off <b>L</b>',
+      () => { if (M.Settings) M.Settings.set('mapRoutes', !routesOn()); syncRoutesBtn(); });
+    const syncRoutesBtn = () => routesBtn.classList.toggle('off', !routesOn());
+    syncRoutesBtn();
     const ctrlEl = h('div.gmap-ctrl',
       svgBtn('<path d="M12 5v14M5 12h14"/>', 'Zoom in <b>+</b>', () => zoomStep(1.45)),
       svgBtn('<path d="M5 12h14"/>', 'Zoom out <b>−</b>', () => zoomStep(1 / 1.45)),
       svgBtn('<path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/>', 'Show the whole galaxy', () => api.fit()),
       svgBtn('<path d="M12 3l9 9-9 9-9-9z"/><circle cx="12" cy="12" r="2.2"/>', 'Centre on your capital <b>Home</b>', () => api.home()),
-      svgBtn('<circle cx="7" cy="7" r="2.6"/><path d="M13 7h8M13 17h8M4.4 14.4l5 5M9.4 14.4l-5 5"/>', 'Map key and planet icons <b>K</b>', () => api.showLegend(!legendShown())));
+      svgBtn('<circle cx="7" cy="7" r="2.6"/><path d="M13 7h8M13 17h8M4.4 14.4l5 5M9.4 14.4l-5 5"/>', 'Map key and planet icons <b>K</b>', () => api.showLegend(!legendShown())),
+      routesBtn, dcBtn);
     const root = h('div.gmap', { tabindex: 0, role: 'application', 'aria-label': 'Galaxy map' }, canvas, miniEl, ctrlEl, legendEl, hintEl, tipEl);
     if (opts.controls === false) ctrlEl.style.display = 'none';
     container.appendChild(root);
@@ -609,6 +625,7 @@
       const visArr = fog && me && me.vis ? me.vis : null, seenMap = me && me.seen && typeof me.seen === 'object' ? me.seen : null;
       const guardianAlive = !!S.guardian && (S.guardian === true || S.guardian.alive !== false);
       SD.length = 0; sdById.length = 0;
+      let att = {}; try { if (me && M.Sim && M.Sim.Q && M.Sim.Q.attention && planets.length) att = M.Sim.Q.attention(S, pid); } catch (e) { att = {}; }   // badges: colonies needing a look, raids inbound
       for (let i = 0; i < stars.length; i++) {
         const st = stars[i], sd = sdPool[st.id] || (sdPool[st.id] = newSD(st.id));
         const pl = planets[st.planets && st.planets.length ? st.planets[0] : st.id] || null;
@@ -630,6 +647,7 @@
         sd.nebula = !!(st.inNebula || st.nebula);
         sd.pop = vis === 2 ? (pl ? pl.pop || 0 : 0) : (seen ? seen.pop || 0 : 0); sd.maxPop = sd.known && pl ? pl.maxPop || 0 : 0;
         sd.gate = !!pl && !!pl.stargate && vis === 2 && sd.owner >= 0;              // stargates: own ones, and foreign ones while in scanner range
+        sd.att = att[st.id] || null;
         sd.reloc = sd.mine && pl && pl.reloc >= 0 && pl.reloc !== st.id && planets[pl.reloc] && planets[pl.reloc].owner === pid ? planets[pl.reloc].starId : -1;
         sd.name = st.name || ('Star ' + st.id); if (sd.lblName !== sd.name) { sd.lbl = null; sd.lblName = sd.name; }
         sd.pri = (sd.orion ? 100 : 0) + (sd.capital ? 40 : 0) + (sd.mine ? 30 : sd.owner >= 0 ? 20 : 0) + (vis === 2 ? 4 : vis === 1 ? 2 : 0);
@@ -902,7 +920,9 @@
         const id = p.sd.id;
         if (lastClick.id === id && now - lastClick.t < 380) { emit('dblStar', id); lastClick.t = 0; }
         else lastClick = { t: now, id };
-        setSelStar(id, true); return;
+        const was = selStar; setSelStar(id, true);
+        if (was === id) emit('selectStar', id);              // a click on the star already selected still counts: it may be the destination a panel waits for
+        return;
       }
       if (lastClick.id === -1 && now - lastClick.t < 380) { zoomAt(x, y, 1.9); lastClick.t = 0; return; }
       lastClick = { t: now, id: -1 };
@@ -921,6 +941,8 @@
       else if (k === 'Home') api.home();
       else if (k === 'End') api.fit();
       else if (k === 'k' || k === 'K') api.showLegend(!legendShown());
+      else if (k === 'l' || k === 'L') routesBtn.click();
+      else if (k === 'v' || k === 'V') dcBtn.click();
       else if (k === 'Escape') {
         if (routeFleet !== null) { const fid = routeFleet; setRouteMode(null); emit('routeCancel', fid); }
         else if (selFleet !== null) setSelFleet(null, true);
@@ -1086,7 +1108,7 @@
 
     // ------------------------------------------------------------------ star-chart graticule + parsec ruler
     function drawGrid(t) {
-      if (M.Settings && M.Settings.get('mapGrid') === false) return;
+      if ((M.Settings && M.Settings.get('mapGrid') === false) || dcOn()) return;
       const z = cam.z, pcPx = z * pcU, hw = W / 2, hh = H / 2;
       let ST = GRID_STEPS[GRID_STEPS.length - 1];
       for (const s of GRID_STEPS) if (s.M * pcPx >= 84) { ST = s; break; }
@@ -1146,7 +1168,7 @@
         for (const id of rangesSpec.stars) { const s = sdById[id]; if (!s || !s.on && Math.hypot(s.sx - W / 2, s.sy - H / 2) > rr + Math.max(W, H)) continue; ring(s.sx, s.sy, rr, col, 0.55, 1.3, [7, 6], -t * 6); ctx.fillStyle = rgba(col, 0.035); ctx.beginPath(); ctx.arc(s.sx, s.sy, rr, 0, TAU); ctx.fill(); }
         return;
       }
-      if (!me) return;
+      if (!me || dcOn()) return;                                     // decluttered: no standing range rings (a panel's own rangesSpec above still shows)
       let cx = 0, cy = 0, have = false;
       if (selStar !== null) { const s = sdById[selStar]; if (s && s.mine) { cx = s.sx; cy = s.sy; have = true; } }
       else if (selFleet !== null) { const fd = FD.get(selFleet); if (fd && fd.owner === pidOf() && fd.a > 0.05) { cx = (fd.dx - cam.x) * z + hw; cy = (fd.dy - cam.y) * z + hh; have = true; } }
@@ -1168,10 +1190,10 @@
     // fan converging on it. Chevrons drift toward the target so the direction is clear without arrowheads cluttering a busy hub.
     const GATE_RGB = [199, 166, 255];
     function drawRelocs(t) {
-      const n = SD.length; if (M.Settings && M.Settings.get('mapReloc') === false) return;
+      const n = SD.length, all = !dcOn() && !(M.Settings && (M.Settings.get('mapRoutes') === false || M.Settings.get('mapReloc') === false));   // off: only the selected colony's rally line
       ctx.lineCap = 'round';
       for (let i = 0; i < n; i++) {
-        const s = SD[i]; if (s.reloc < 0) continue;
+        const s = SD[i]; if (s.reloc < 0 || (!all && s.id !== selStar && s.reloc !== selStar)) continue;
         const b = sdById[s.reloc]; if (!b) continue;
         if ((s.sx < -40 && b.sx < -40) || (s.sx > W + 40 && b.sx > W + 40) || (s.sy < -40 && b.sy < -40) || (s.sy > H + 40 && b.sy > H + 40)) continue;
         const dx = b.sx - s.sx, dy = b.sy - s.sy, len = Math.hypot(dx, dy); if (len < 12) continue;
@@ -1188,31 +1210,71 @@
       }
       ctx.lineCap = 'butt';
     }
-    // a stargate: a thin violet ring with four bright notches, turning slowly (static with Reduce motion)
+    // a stargate: the original's marker, a small dark box holding four blue squares, at the star's lower right (clear of the planet on the
+    // left and the name below); the squares glow softly in turn (static with Reduce motion)
     function drawGates(t) {
       ctx.save();
       for (let i = 0; i < SD.length; i++) {
         const s = SD[i]; if (!s.gate || !s.on) continue;
-        const rr = s.r * 2.2 + 12 * uk, a0 = Q.reduce ? 0 : t * 0.35 + s.ph;              // outside the owner ring
-        ctx.globalAlpha = 0.85 * s.rk; ctx.lineWidth = 1 * uk; ctx.strokeStyle = rgba(GATE_RGB, 0.7);
-        ctx.beginPath(); ctx.arc(s.sx, s.sy, rr, 0, TAU); ctx.stroke();
-        ctx.lineWidth = 3 * uk; ctx.strokeStyle = rgba([226, 210, 255], 0.95); ctx.beginPath();
-        for (let k = 0; k < 4; k++) { const a = a0 + k * PI / 2; ctx.moveTo(s.sx + Math.cos(a - 0.24) * rr, s.sy + Math.sin(a - 0.24) * rr); ctx.arc(s.sx, s.sy, rr, a - 0.24, a + 0.24); }
-        ctx.stroke();
+        const bs = Math.round(Math.max(10, 13 * uk)), ro = s.r * 1.95 + 7 * uk + bs * 0.45, x = Math.round(s.sx + ro * 0.74 - bs / 2), y = Math.round(s.sy + ro * 0.62 - bs / 2), gap = Math.max(1, Math.round(bs * 0.13));   // outside the owner ring
+        ctx.globalAlpha = s.rk;
+        ctx.fillStyle = 'rgba(6,10,26,0.92)'; ctx.fillRect(x, y, bs, bs);
+        ctx.lineWidth = 1; ctx.strokeStyle = 'rgba(150,190,240,0.85)'; ctx.strokeRect(x + 0.5, y + 0.5, bs - 1, bs - 1);
+        const cell = (bs - gap * 3) / 2;
+        for (let k = 0; k < 4; k++) {
+          const cx = x + gap + (k % 2) * (cell + gap), cy = y + gap + ((k / 2) | 0) * (cell + gap);
+          const pulse = Q.reduce ? 0.85 : 0.65 + 0.35 * Math.max(0, Math.sin(t * 2.2 + s.ph + k * 1.57));
+          ctx.fillStyle = 'rgba(92,170,255,' + pulse.toFixed(3) + ')'; ctx.fillRect(cx, cy, cell, cell);
+        }
+      }
+      ctx.restore();
+    }
+    // your colonies that need a look: a small "!" badge at the star's lower left (red: unrest, events, shrinking; amber: waste, idle factories);
+    // a hostile fleet or troop transport seen flying at one: a pulsing red ring and the turns until it arrives, at the star's right
+    function drawAlerts(t) {
+      ctx.save(); ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      for (let i = 0; i < SD.length; i++) {
+        const s = SD[i], a = s.att; if (!a || !s.on) continue;
+        ctx.globalAlpha = s.rk;
+        const ro = s.r * 1.95 + 7 * uk;
+        if (a.issues.length) {
+          const bad = a.issues.some(x => x.k === 'bad'), rr = Math.max(5.5, 7 * uk), x = s.sx - ro * 0.74, y = s.sy + ro * 0.62;
+          ctx.beginPath(); ctx.arc(x, y, rr, 0, TAU); ctx.fillStyle = bad ? 'rgba(200,40,48,0.95)' : 'rgba(214,150,30,0.95)'; ctx.fill();
+          ctx.lineWidth = 1; ctx.strokeStyle = 'rgba(10,6,4,0.9)'; ctx.stroke();
+          ctx.fillStyle = '#fff6e0'; ctx.font = '700 ' + Math.round(rr * 1.45) + 'px ' + th.fontUi; ctx.fillText('!', x, y + 0.5);
+        }
+        if (a.threat) {
+          const pulse = Q.reduce ? 0.8 : 0.55 + 0.45 * Math.abs(Math.sin(t * 3 + s.ph)), rr = ro + 4 * uk;
+          ctx.lineWidth = 2 * uk; ctx.strokeStyle = 'rgba(255,60,60,' + pulse.toFixed(3) + ')'; ctx.setLineDash([5 * uk, 4 * uk]);
+          ctx.beginPath(); ctx.arc(s.sx, s.sy, rr, 0, TAU); ctx.stroke(); ctx.setLineDash([]);
+          const txt = '⚠ ' + a.threat.eta, fx = s.sx + rr + 4 * uk;
+          ctx.font = '600 ' + Math.round(11 * uk) + 'px ' + th.fontUi; ctx.textAlign = 'left';
+          ctx.lineWidth = 3; ctx.lineJoin = 'round'; ctx.strokeStyle = 'rgba(3,5,18,0.9)'; ctx.strokeText(txt, fx, s.sy);
+          ctx.fillStyle = '#ff7a6a'; ctx.fillText(txt, fx, s.sy); ctx.textAlign = 'center';
+        }
       }
       ctx.restore();
     }
     function drawLanes(t) {
-      const z = cam.z, hw = W / 2, hh = H / 2, pid = pidOf();
+      const z = cam.z, hw = W / 2, hh = H / 2, pid = pidOf(), all = !dcOn() && !(M.Settings && M.Settings.get('mapRoutes') === false);   // off: only the selected fleet's line
       ctx.lineCap = 'round';
       for (let pass = 0; pass < 2; pass++) {              // pass 0: foreign (dimmer), pass 1: own
         const byOwner = {};
         for (let i = 0; i < movers.length; i++) {
-          const fd = movers[i], f = fd.f; if (f.to < 0 || fd.a < 0.03 || (fd.owner === pid) !== (pass === 1)) continue;
+          const fd = movers[i], f = fd.f; if (f.to < 0 || fd.a < 0.03 || (fd.owner === pid) !== (pass === 1) || (!all && fd.id !== selFleet)) continue;
           const to = sdById[f.to]; if (!to) continue;
           const fx = (fd.dx - cam.x) * z + hw, fy = (fd.dy - cam.y) * z + hh;
           if ((fx < -50 && to.sx < -50) || (fx > W + 50 && to.sx > W + 50) || (fy < -50 && to.sy < -50) || (fy > H + 50 && to.sy > H + 50)) continue;
           (byOwner[fd.owner] || (byOwner[fd.owner] = [])).push(fx, fy, to.sx, to.sy, fd.a);
+          if (f.legs) {                                              // own fleets routed through stargates: the legs still ahead
+            let px = to.sx, py = to.sy;
+            for (const l of f.legs) {
+              const q = sdById[l.star]; if (!q) break;
+              ctx.beginPath(); ctx.moveTo(px, py); ctx.lineTo(q.sx, q.sy); ctx.lineWidth = 1.3;
+              ctx.strokeStyle = l.gate ? rgba(GATE_RGB, 0.6) : rgba(empCol(fd.owner), 0.35); ctx.setLineDash(l.gate ? [2, 5] : [5, 6]); ctx.lineDashOffset = Q.flow ? -t * 16 : 0; ctx.stroke(); ctx.setLineDash([]);
+              px = q.sx; py = q.sy;
+            }
+          }
         }
         for (const o in byOwner) {
           const arr = byOwner[o], col = empCol(+o);
@@ -1394,7 +1456,7 @@
     }
     // ---- colonisation glyphs: circle = settle now, triangle = needs a special colony base, hollow square = no planet (shape + lightness differ, so they read without colour)
     const HAB_COL = ['', '#5cc8ff', '#ffa534', '#a9b4e0'];
-    const habOn = znv => habIcons && znv >= 34 && !(wEnv > 0.5 || wMin > 0.5);
+    const habOn = znv => habIcons && !dcOn() && znv >= 34 && !(wEnv > 0.5 || wMin > 0.5);
     function habPos(s, znv) { const rad = clamp(3.6 + znv * 0.014, 4.2, 7.4) * uk, rr = s.r * 1.6 + 4; return { x: s.sx - rr * 0.78 - rad * 0.6, y: s.sy + rr * 0.78 + rad * 0.6, r: rad }; }
     function pathHab(g, kind, x, y, r) {
       g.beginPath();
@@ -1490,6 +1552,7 @@
         let want = false, force = false;
         if (s.orion || (hot && named)) { want = true; force = true; }
         else if (!named) want = false;
+        else if (dcOn()) want = s.owner >= 0 && s.owner === pidOf();                       // decluttered: your own colonies only
         else if (lm === 'owned') want = s.owner >= 0;
         else if (lm === 'all') want = true;
         else want = s.owner >= 0 || (s.known && znv >= 40);
@@ -1630,7 +1693,7 @@
         if ((sel && !ext) || (hov && !sel)) { ctx.globalAlpha = 1; drawBrackets(x, y, sz * 0.8, t, sel ? 1 : 0.6, sel ? th.rgb.brassHi : th.rgb.cyan, sel ? selT : 1); }
         fd.sx = x; fd.sy = y; fd.sz = sz;
         // ETA label
-        if ((fd.owner === pid || sel || hov) && f.eta > 0 && (znv >= 60 || sel || hov) && !fd.tw) {
+        if (((fd.owner === pid && !dcOn()) || sel || hov) && f.eta > 0 && (znv >= 60 || sel || hov) && !fd.tw) {
           const etaPx = Math.round(10 * uk), etaTone = fd.owner === pid ? toneFor('ivory') : toneFor('mist');
           let e = fd.etaL; if (!e || fd.etaV !== f.eta || fd.etaPx !== etaPx || fd.etaTone !== etaTone || fd.etaDpr !== dpr) { e = fd.etaL = labelSprite('ETA ' + f.eta, etaPx, etaTone, dpr, th.fontUi); fd.etaV = f.eta; fd.etaPx = etaPx; fd.etaTone = etaTone; fd.etaDpr = dpr; }
           ctx.globalAlpha = a * (sel || hov ? 1 : 0.85); ctx.drawImage(e.c, Math.round(x - e.w / 2), Math.round(y + sz * 0.62), e.w, e.h); ctx.globalAlpha = 1;
@@ -1704,7 +1767,10 @@
         if (a) {
           const pc = Math.ceil(Math.hypot(b.x - a.x, b.y - a.y) / pcU), ok = routePrev.valid !== false, eta = routePrev.eta ? ' · ETA ' + routePrev.eta + ' ' + plural(routePrev.eta, 'turn') : '';
           const txt = !ok ? (routePrev.reason || 'Out of range') : (routePrev.kind === 'reloc' ? 'Rally · ' : '') + (routePrev.gate ? 'Stargate' + eta : pc + ' pc' + eta);
-          drawRoute(a.sx, a.sy, b.sx, b.sy, ok, txt, ok && routePrev.gate ? GATE_RGB : null);
+          if (ok && routePrev.legs) {                                // a stargate route: each leg in turn (violet for the jump), the label on the last one
+            let px = a.sx, py = a.sy;
+            routePrev.legs.forEach((l, k) => { const q = sdById[l.star]; if (!q) return; const last = k === routePrev.legs.length - 1; drawRoute(px, py, q.sx, q.sy, true, last ? (routePrev.kind === 'reloc' ? 'Rally · ' : '') + 'via stargate' + eta : '', l.gate ? GATE_RGB : null); px = q.sx; py = q.sy; });
+          } else drawRoute(a.sx, a.sy, b.sx, b.sy, ok, txt, ok && routePrev.gate ? GATE_RGB : null);
         }
       } else if (routeFleet !== null && hoverStar !== null) {
         const fd = FD.get(routeFleet), b = sdById[hoverStar];
@@ -1739,12 +1805,12 @@
       const emps = (S && S.empires) || [], pid = pidOf();
       const row = (cls, col, text, sub, n) => h('div.gl-row' + (n === 0 ? '.dim' : ''), h('i.gl-sw' + cls, { style: { '--c': col } }), h('span.gl-txt', text, sub ? h('span.gl-sub', sub) : null), n !== undefined && n !== null ? h('span.gl-n', String(n)) : null);
       const kids = []; let sub = '';
-      const GSV = ['', '<circle cx="8" cy="8" r="5.6" fill="#5cc8ff" stroke="#040618" stroke-width="1"/><circle cx="8" cy="8" r="1.7" fill="#040618" fill-opacity=".75"/>', '<path d="M8 2 L14 13 L2 13 Z" fill="#ffa534" stroke="#040618" stroke-width="1"/>', '<rect x="3.2" y="3.2" width="9.6" height="9.6" fill="none" stroke="#a9b4e0" stroke-width="1.4" stroke-dasharray="2.4 1.6"/>'];
+      const GSV = ['', '<circle cx="8" cy="8" r="5.6" fill="#5cc8ff" stroke="#040618" stroke-width="1"/><circle cx="8" cy="8" r="1.7" fill="#040618" fill-opacity=".75"/>', '<path d="M8 2 L14 13 L2 13 Z" fill="#ffa534" stroke="#040618" stroke-width="1"/>', '<rect x="3.2" y="3.2" width="9.6" height="9.6" fill="none" stroke="#a9b4e0" stroke-width="1.4" stroke-dasharray="2.4 1.6"/>', '<rect x="3" y="3" width="10" height="10" fill="#060a1a" stroke="#96bef0"/><rect x="4.6" y="4.6" width="3" height="3" fill="#5caaff"/><rect x="8.4" y="4.6" width="3" height="3" fill="#5caaff"/><rect x="4.6" y="8.4" width="3" height="3" fill="#5caaff"/><rect x="8.4" y="8.4" width="3" height="3" fill="#5caaff"/>'];
       const glyphRows = () => {
-        const cnt = [0, 0, 0, 0]; for (const q of SD) cnt[q.hab]++;
+        const cnt = [0, 0, 0, 0, 0]; for (const q of SD) { cnt[q.hab]++; if (q.gate) cnt[4]++; }
         const gr = (k, text, sub2) => { const i = h('i.gl-gl'); i.innerHTML = '<svg viewBox="0 0 16 16" width="16" height="16">' + GSV[k] + '</svg>'; return h('div.gl-row' + (cnt[k] === 0 ? '.dim' : ''), i, h('span.gl-txt', text, h('span.gl-sub', sub2)), h('span.gl-n', String(cnt[k]))); };
         const tg = h('button.gl-tog', { type: 'button', 'aria-pressed': String(habIcons), onclick: e => { e.stopPropagation(); api.setPlanetIcons(!habIcons); root.focus({ preventScroll: true }); } }, 'Planet icons: ' + (habIcons ? 'on' : 'off'));
-        return [h('div.gl-sep'), gr(1, 'Can colonise now', 'colony ship can settle'), gr(2, 'Needs special base', 'toxic · radiated · inferno · dead · tundra · barren'), gr(3, 'No planet', 'asteroids / empty'), tg];
+        return [h('div.gl-sep'), gr(1, 'Can colonise now', 'colony ship can settle'), gr(2, 'Needs special base', 'toxic · radiated · inferno · dead · tundra · barren'), gr(3, 'No planet', 'asteroids / empty'), gr(4, 'Stargate', 'your ships jump between gates in one turn'), tg];
       };
       const total = SD.length, unknown = SD.filter(s => !s.known).length;
       if (mode === 'colonies') {
@@ -1801,8 +1867,27 @@
         else if (pl.special === 'artifacts') out += '<div class="gt-r gt-v">Ancient artifacts: boosts research</div>';
       } else { out += '<div class="gt-r gt-d">Not yet explored. Send a ship to survey it.</div>'; if (s.orion) out += '<div class="gt-r gt-v">The Orion system</div>'; }
       if (E) out += '<div class="gt-r"><i class="sw" style="--c:' + empHex(s.owner) + '"></i><b>' + esc(E.name || E.race || 'Empire') + '</b>' + (s.capital ? ' · capital' : '') + (s.known ? ' · pop <b>' + Math.round(s.pop) + '</b>/' + s.maxPop : '') + (s.stale ? ' <span class="gt-d">(last report)</span>' : '') + '</div>';
+      if (s.mine && pl) out += colonyTip(s, pl);
       if (s.nebula) out += '<div class="gt-r gt-v">Inside a nebula: ships slow, shields fail</div>';
       if (!s.mine) { const d = distToMine(s); if (d !== null) out += '<div class="gt-r gt-d">' + d + ' pc from your nearest colony</div>'; }
+      return out;
+    }
+    // your colony at a glance: output, the shipyard, research, and what needs a look (the attention badges' reasons, a raid inbound)
+    function colonyTip(s, pl) {
+      let c = null; try { c = M.Sim.Q.colony(S, pl.id); } catch (e) { c = null; }
+      let out = '';
+      if (c) {
+        out += '<div class="gt-r">Production <b>' + c.production + '</b> BC · factories <b>' + c.factories + '</b>/' + c.maxFactories + '</div>';
+        const yrs = parseInt(c.readouts.ship.text, 10);
+        out += '<div class="gt-r">' + (c.readouts.ship.text === 'NONE' ? '<span class="gt-d">Shipyard idle</span>' : 'Building <b>' + esc(c.build.name) + '</b> · ' + (yrs > 1 ? 'one every ' + yrs + ' turns' : 'each turn')) + '</div>';
+        if (c.readouts.tech.rp > 0) out += '<div class="gt-r">Research <b>' + c.readouts.tech.rp + '</b> RP</div>';
+      }
+      const a = s.att;
+      if (a) {
+        for (const x of a.issues) out += '<div class="gt-r" style="color:' + (x.k === 'bad' ? '#ff7a6a' : 'var(--ember)') + '">! ' + esc(x.t) + '</div>';
+        const tr = a.threat;
+        if (tr) out += '<div class="gt-r" style="color:#ff7a6a">⚠ ' + [tr.ships ? tr.ships + ' hostile ' + plural(tr.ships, 'ship') : '', tr.troops ? tr.troops + 'M troops' : ''].filter(Boolean).join(' and ') + ' arriving in <b>' + tr.eta + '</b> ' + plural(tr.eta, 'turn') + '</div>';
+      }
       return out;
     }
     function fleetTip(fd, grp) {
@@ -1843,6 +1928,13 @@
       if (tipEl.style.display !== 'block') return;
       const w = tipEl.offsetWidth, hh = tipEl.offsetHeight; let l = x + 18, t = y + 20;
       if (l + w > W - 6) l = x - w - 14; if (t + hh > H - 6) t = y - hh - 14;
+      // a panel floating over the map (fleet deployment, rally point) sits above the tip: take the corner of the pointer that keeps the tip clear of it
+      const fl = root.parentElement && root.parentElement.querySelector('.gx-float.on');
+      if (fl) {
+        const rr = root.getBoundingClientRect(), fr = fl.getBoundingClientRect(), f = { l: fr.left - rr.left, t: fr.top - rr.top, r: fr.right - rr.left, b: fr.bottom - rr.top };
+        const hit = (a, b) => a < f.r && a + w > f.l && b < f.b && b + hh > f.t, inside = (a, b) => a >= 4 && b >= 4 && a + w <= W - 4 && b + hh <= H - 4;
+        if (hit(l, t)) { const c = [[x + 18, y + 20], [x - w - 14, y + 20], [x + 18, y - hh - 14], [x - w - 14, y - hh - 14]].find(([a, b]) => inside(a, b) && !hit(a, b)); if (c) [l, t] = c; }
+      }
       tipEl.style.transform = 'translate(' + Math.round(Math.max(4, l)) + 'px,' + Math.round(Math.max(4, t)) + 'px)';
     }
     function hideTip() { if (tipEl.style.display !== 'none') tipEl.style.display = 'none'; tipKey = ''; }
@@ -1941,7 +2033,7 @@
       if (reachAnim) { let any = false; const k = Math.min(1, dt * 9); for (let i = 0; i < SD.length; i++) { const q = SD[i]; if (q.rk !== q.rkT) { q.rk += (q.rkT - q.rk) * k; if (Math.abs(q.rkT - q.rk) < 0.01) q.rk = q.rkT; else any = true; } } reachAnim = any; }
       computeScreen(t, dt); updateFleets(dt); updateHover(); lap('update');
       drawBackdrop(t); lap('backdrop'); drawNebulae(t); lap('nebulae'); drawBounds(); lap('bounds'); drawTerritory(t); lap('territory'); drawGrid(t); lap('grid'); drawRanges(t); drawRelocs(t); drawLanes(t); lap('lanes');
-      drawStarsPass(t, dt); drawGates(t); lap('stars'); drawSystems(t); lap('systems'); drawLabels(t, dt); lap('labels'); drawFleets(t); lap('fleets'); drawOverlays(t, dt); drawHud(t); lap('overlays');
+      drawStarsPass(t, dt); drawGates(t); drawAlerts(t); lap('stars'); drawSystems(t); lap('systems'); drawLabels(t, dt); lap('labels'); drawFleets(t); lap('fleets'); drawOverlays(t, dt); drawHud(t); lap('overlays');
       drawMini(); lap('mini');
       if (dirty.legend) buildLegend();
       lap('legend');
@@ -1997,7 +2089,7 @@
       },
       fit(o) { if (!W) { pendingCmd = () => api.fit({ animate: false }); return api; } pendingView = null; flyTo(gw / 2, gh / 2, fitZ, !(o && o.animate === false)); return api; },
       home(o) { if (!W) { pendingCmd = () => api.home({ animate: false }); return api; } pendingView = null; const c = capitalStar(); if (!c) return api.fit(o); flyTo(c.x, c.y, clamp(Math.max(W / 200, fitZ * 1.4), minZ, maxZ), !(o && o.animate === false)); return api; },
-      setRoutePreview(p) { routePrev = p ? { from: p.from, to: p.to, eta: p.eta, valid: p.valid !== false, reason: p.reason, gate: !!p.gate, kind: p.kind || '' } : null; return api; },
+      setRoutePreview(p) { routePrev = p ? { from: p.from, to: p.to, eta: p.eta, valid: p.valid !== false, reason: p.reason, gate: !!p.gate, kind: p.kind || '', legs: Array.isArray(p.legs) && p.legs.length > 1 ? p.legs : null } : null; return api; },
       beginRoute(fid) { if (!FD.has(fid)) return api; if (selFleet !== fid) setSelFleet(fid, false); setRouteMode(fid); return api; },
       endRoute() { setRouteMode(null); return api; },
       highlightStars(ids, o) { hiSpec = ids && ids.length ? { ids: ids.slice(), col: o && o.color ? hex(o.color) : null } : null; return api; },
