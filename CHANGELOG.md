@@ -5,6 +5,8 @@ Versions follow `MAJOR.MINOR.PATCH`; the live version is the `VERSION` file.
 
 ## Unreleased
 
+- Combat: the Special devices menu opens beside the acting ship over a lightly dimmed board instead of mid-screen, its devices
+  numbered (1–9 pick).
 - Fewer trips across the screen: ◀ ▶ arrows on a colony's title step through your colonies (as F2 / F3); the ship box cycles
   designs with the wheel and backwards with a right-click; the Ships list opens on the current design and takes 1–6; the end-of-turn
   warnings name each colony as a link that cancels the end of turn and opens it (the unfunded-research line opens Tech).

@@ -20,6 +20,7 @@
   UI.css('combat', `
     /* ---- tactical screen ------------------------------------------------------------------------------------------------------------------ */
     .cb { position:absolute; inset:0; display:grid; grid-template-rows:1fr auto; background:var(--void); }
+    :root .scrim.scrim:has(> .cb-spm) { background:rgba(2,4,14,.22); backdrop-filter:none; }   /* the Special menu beside the ship keeps the board in view */
     .cb-field { position:relative; min-height:0; overflow:hidden; }
     .cb-canvas { position:absolute; inset:0; width:100%; height:100%; touch-action:none; }
     .cb-canvas.hit { cursor:crosshair; } .cb-canvas.go { cursor:pointer; } .cb-canvas.wait { cursor:progress; }
@@ -768,11 +769,26 @@
     if (st.special) { cancelSpecial(); return; }
     if (!devs.length && !canTele) return;
     if (devs.length === 1 && !canTele) { chooseDevice(devs[0]); return; }
-    const list = h('div.col', { style: { gap: '.35rem', minWidth: '19rem' } });
-    for (const d of devs) list.appendChild(UI.button(d.label + (d.need === 'target' ? '  (range ' + d.range + ')' : ''), () => { pr.close(d); }, { block: true, tip: d.desc }));
+    // a small menu beside the acting ship (not mid-screen), its devices numbered: 1–9 pick, Esc / a click outside cancels
+    const list = h('div.col', { style: { gap: '.35rem' } });
+    devs.forEach((d, i) => list.appendChild(UI.button((i + 1) + '. ' + d.label + (d.need === 'target' ? '  (range ' + d.range + ')' : ''), () => { pr.close(d); }, { block: true, tip: d.desc })));
     if (canTele) list.appendChild(h('div.dim.small', { style: { marginTop: '.2rem' } }, 'Sub Space Teleporter: click any empty cell to jump there.'));
-    const pr = UI.modal({ title: 'Special devices', body: list, buttons: [{ label: 'Cancel', value: null }], width: '24rem' });
-    pr.then(d => { if (d) chooseDevice(d); });
+    const onKey = e => { const n = +e.key; if (n >= 1 && n <= devs.length && !e.ctrlKey && !e.altKey && !e.metaKey) { e.preventDefault(); e.stopPropagation(); pr.close(devs[n - 1]); } };
+    const pr = UI.modal({ title: 'Special devices', body: list, buttons: [{ label: 'Cancel', value: null }], width: '20rem', cls: 'cb-spm', onOpen: m => placeBeside(m, u) });
+    document.addEventListener('keydown', onKey, true);
+    pr.then(d => { document.removeEventListener('keydown', onKey, true); if (d) chooseDevice(d); });
+  }
+  // pin a popup next to a unit's cell: to its right, or its left when that side has no room; kept on screen
+  function placeBeside(m, u) {
+    if (!st.view || !ui || !ui.canvas || !st.view.cellRect) return;
+    const cv = ui.canvas.getBoundingClientRect(), c = st.view.cellRect(u.x, u.y), ov = m.parentElement.getBoundingClientRect();
+    m.style.position = 'absolute'; m.style.margin = '0';
+    requestAnimationFrame(() => {
+      const r = m.getBoundingClientRect(), gap = 12;
+      let x = cv.left + c.x + c.w + gap; if (x + r.width > ov.right - 8) x = cv.left + c.x - gap - r.width;
+      const y = Math.max(ov.top + 8, Math.min(ov.bottom - r.height - 8, cv.top + c.y + c.h / 2 - r.height / 2));
+      m.style.left = Math.max(ov.left + 8, x) - ov.left + 'px'; m.style.top = y - ov.top + 'px';
+    });
   }
   function chooseDevice(d) {
     const u = st.cur; if (!u) return;
