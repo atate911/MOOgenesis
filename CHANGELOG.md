@@ -5,6 +5,8 @@ Versions follow `MAJOR.MINOR.PATCH`; the live version is the `VERSION` file.
 
 ## Unreleased
 
+- Fleet deployment opens in the sidebar when you click your fleet, keeping the map clear while you look for a destination;
+  it moves beside the destination once you click one (a right-click send still opens it there at once).
 - Colonies needing attention (`Q.attention`): the Planets screen's warnings (rebellion or unrest, events, shrinking population,
   waste building up, idle factories) now show on the galaxy map as a small "!" badge at the colony (red or amber), and a hostile
   warfleet or troop transport you can see flying at one of your colonies draws a pulsing red ring with the turns until it arrives.
