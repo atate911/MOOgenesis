@@ -15,9 +15,10 @@ AI leaders that have personalities and objectives, spies, the Galactic Council, 
 * Double-click `index.html` (works from `file://` — no build step, no dependencies), **or** serve the folder: `python -m http.server 8765` → http://localhost:8765/
   (serve it to hear the sampled orchestra in `assets/audio/`; from `file://` the browser blocks those loads and the score plays on its built-in synth voices)
 * Chrome / Edge / Firefox (current). WebGL2 and Web Workers are used when available and are never required.
+* Server saves + password gate locally: `python3 server/moo-saves.py --dev` → http://localhost:8765/ (password `moopassword`; `--password ''` turns it off)
 
 ## Host it on your own server
-Static files behind nginx + Let's Encrypt on Ubuntu: `sudo bash scripts/install.sh --email you@example.com` (defaults to moo.dhlab.us), then `sudo bash scripts/upgrade.sh --pull` to update, `rollback.sh` to undo, `doctor.sh` to check. See [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md).
+Static files behind nginx + Let's Encrypt on Ubuntu: `sudo bash scripts/install.sh --email you@example.com` (defaults to moo.dhlab.us), then `sudo bash scripts/upgrade.sh --pull` to update, `rollback.sh` to undo, `doctor.sh` to check. A small save server asks for a password before the game loads (default `moopassword`, set in `/etc/moogenesis/moo.conf`; blank turns it off) and keeps server save slots. See [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md).
 
 ## Playing (original conventions)
 * **Control screen**: galaxy map (drag / wheel / arrows), side panel for the selected star/colony/fleet, bottom bar **Game · Design · Fleet · Map · Races · Planets · Tech · Next turn** (hotkeys G D F M R P T N).

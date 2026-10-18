@@ -35,8 +35,11 @@
   // ---- persistence --------------------------------------------------------------------------------------------------------------
   G.saveSlot = slot => { if (!G.S) return false; const ok = M.Save.save(slot, G.S); M.Bus.emit(ok ? 'saved' : 'save:failed', slot); return ok; };
   G.autosave = () => G.saveSlot('auto');
-  G.loadSlot = function (slot) {
-    const S = M.Save.load(slot); if (!S) return false;
+  G.loadSlot = slot => { const S = M.Save.load(slot); return S ? G.loadState(S) : false; };
+  // server slots (MOO.Save.Server): Promises; they reject with a message for the player
+  G.saveServer = slot => (G.S ? M.Save.Server.save(slot, G.S).then(() => { M.Bus.emit('saved', 'server:' + slot); return true; }) : Promise.resolve(false));
+  G.loadServer = slot => M.Save.Server.load(slot).then(S => G.loadState(S));
+  G.loadState = function (S) {
     G.abortTurn();                                                  // loading mid-turn would otherwise leave Game.busy stuck on the abandoned turn
     G.S = S; G.sel = { star: G.player().capital, fleet: -1 };
     Sim.Fleet.updateRange(S); Sim.Vis.update(S); Sim.Econ.refresh(S);

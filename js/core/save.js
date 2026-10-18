@@ -59,4 +59,57 @@
     },
     importFile(file) { return new Promise((res, rej) => { const r = new FileReader(); r.onload = () => { try { res(deserialize(r.result)); } catch (e) { rej(e); } }; r.onerror = rej; r.readAsText(file); }); },
   };
+
+  // Server slots (server/moo-saves.py, when the game is hosted with it). Browser-only and async: every call returns a Promise and
+  // rejects with an Error whose message can be shown to the player. Saves travel gzipped when the browser can (CompressionStream).
+  //   Server.probe() -> Promise<bool>   Server.list() -> [{slot, meta}]   Server.save(slot, S)   Server.load(slot) -> S   Server.remove(slot)
+  const API = 'api/';                                     // relative: works when the game is hosted under a sub-path
+  let probed = null, failedAt = 0;
+  const hosted = () => typeof fetch === 'function' && typeof location !== 'undefined' && /^https?:$/.test(location.protocol);
+  async function call(path, opts) {
+    let res;
+    try { res = await fetch(API + path, Object.assign({ credentials: 'same-origin', cache: 'no-store' }, opts)); } catch (e) { throw new Error('The save server could not be reached.'); }
+    if (res.status === 401) throw new Error('Your login has expired. Reload the page and enter the password again.');
+    if (!res.ok) { let msg = ''; try { msg = (await res.json()).error || ''; } catch (e) { /* not JSON */ } throw new Error('The save server refused (' + res.status + (msg ? ': ' + msg : '') + ').'); }
+    return res;
+  }
+  const streamBytes = (data, tx) => new Response(new Blob([data]).stream().pipeThrough(tx)).arrayBuffer();
+  M.Save.Server = {
+    SLOTS: ['1', '2', '3', '4', '5', '6'],
+    probe() {
+      if (!hosted()) return Promise.resolve(false);
+      if (probed && !(failedAt && Date.now() - failedAt > 30000)) return probed;      // a failed probe is retried after 30 s
+      failedAt = 0;
+      probed = fetch(API + 'status', { credentials: 'same-origin', cache: 'no-store' })
+        .then(r => (r.ok ? r.json() : null)).then(j => !!(j && j.saves)).catch(() => false)
+        .then(ok => { if (!ok) failedAt = Date.now(); return ok; });
+      return probed;
+    },
+    async list() {
+      const j = await (await call('saves')).json();
+      const by = {};
+      (j.saves || []).forEach(s => { by[s.slot] = s.meta || {}; });
+      return M.Save.Server.SLOTS.map(slot => ({ slot, meta: by[slot] || null }));
+    },
+    async save(slot, S) {
+      const text = serialize(S), gz = typeof CompressionStream === 'function';     // serialise now: S keeps changing while we compress
+      const body = gz ? await streamBytes(text, new CompressionStream('gzip')) : text;
+      await call('saves/' + encodeURIComponent(slot), {
+        method: 'PUT', body,
+        headers: { 'Content-Type': 'application/octet-stream', 'X-Requested-With': 'moo', 'X-Save-Encoding': gz ? 'gzip' : 'identity', 'X-Save-Meta': encodeURIComponent(JSON.stringify(meta(S))) },
+      });
+      return true;
+    },
+    async load(slot) {
+      const res = await call('saves/' + encodeURIComponent(slot));
+      const buf = await res.arrayBuffer();
+      let text;
+      if (res.headers.get('X-Save-Encoding') === 'gzip') {
+        if (typeof DecompressionStream !== 'function') throw new Error('This browser cannot unpack server saves (it is too old).');
+        text = new TextDecoder().decode(await streamBytes(buf, new DecompressionStream('gzip')));
+      } else text = new TextDecoder().decode(buf);
+      return deserialize(text);
+    },
+    async remove(slot) { await call('saves/' + encodeURIComponent(slot), { method: 'DELETE', headers: { 'X-Requested-With': 'moo' } }); return true; },
+  };
 })(window.MOO);

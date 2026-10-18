@@ -106,11 +106,27 @@
     bg = M.Gfx.pick('space').makeBackdrop(Math.min(w, 1600), Math.min(hh, 900), 'menu', { intensity: .9, stars: 1.3, palette: ['#3b1d86', '#14357a', '#7a2a86', '#0d5a7a'] });
   }
 
+  // Continue = the newest save, in this browser or on the save server (that list arrives a moment later and rebuilds the menu if newer)
+  let menuGen = 0;
   function buildMenu() {
+    const my = ++menuGen;
+    const local = M.Save.available() && M.Save.latest();
+    drawMenu(local);
+    M.Save.Server.probe().then(ok => (ok ? M.Save.Server.list() : [])).then(list => {
+      const remote = list.filter(e => e.meta).sort((a, b) => (b.meta.at || 0) - (a.meta.at || 0))[0];
+      if (my === menuGen && remote && (!local || (remote.meta.at || 0) > (local.meta.at || 0))) drawMenu(Object.assign({ server: true }, remote));
+    }).catch(() => { /* server slots are optional */ });
+  }
+  function cannotContinue(err) { if (err) console.error('[continue]', err); UI.alert((err && err.message) || 'The last save could not be loaded. It may be damaged or from an older version.', { title: 'Cannot continue' }); }
+  function drawMenu(latest) {
     UI.clear(listEl);
-    const latest = M.Save.available() && M.Save.latest();
     if (latest) {
-      listEl.appendChild(UI.button('Continue', () => { if (!(M.Game && M.Game.loadSlot)) { UI.toast('Game controller not ready yet', 'warn'); return; } let ok = false; try { ok = M.Game.loadSlot(latest.slot); } catch (e) { console.error('[continue]', e); } if (!ok) UI.alert('The last save could not be loaded. It may be damaged or from an older version.', { title: 'Cannot continue' }); }, { primary: true }));
+      listEl.appendChild(UI.button('Continue', () => {
+        if (!(M.Game && M.Game.loadSlot)) { UI.toast('Game controller not ready yet', 'warn'); return; }
+        if (latest.server) { M.Game.loadServer(latest.slot).then(ok => { if (!ok) cannotContinue(); }, cannotContinue); return; }
+        let ok = false; try { ok = M.Game.loadSlot(latest.slot); } catch (e) { console.error('[continue]', e); }
+        if (!ok) cannotContinue();
+      }, { primary: true }));
     }
     listEl.appendChild(UI.button('New game', () => UI.Screens.has('setup') ? UI.Screens.go('setup') : UI.toast('New game setup is not available yet', 'warn'), { primary: !latest }));
     listEl.appendChild(UI.button('Load game', () => UI.Screens.has('saveload') ? UI.Screens.go('saveload', { mode: 'load', from: 'menu' }) : UI.toast('Load screen is not available yet', 'warn')));

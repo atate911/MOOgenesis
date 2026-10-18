@@ -1,0 +1,17 @@
+# Master of Orion — Reborn — save server settings (server/moo-saves.py).
+# install.sh writes this file once and never overwrites it. Changes take effect immediately (the save
+# server re-reads the file); no restart is needed except for `listen` and `data_dir`.
+# Lines starting with # are comments; everything after `=` is the value (a password may contain #).
+
+# The password asked for before the game loads. Blank (`password =`) turns the gate off.
+# Changing it signs everyone out.
+password = moopassword
+
+# Where the save server listens. If you change it, re-run upgrade.sh so nginx/Caddy follow.
+#listen = 127.0.0.1:8766
+
+# Saves (saves/<slot>.save + .json) and the login-cookie key live here.
+#data_dir = /var/lib/moogenesis
+
+# Largest save accepted, in KB. A long game on a colossal map is ~50 KB compressed.
+#max_save_kb = 4096
