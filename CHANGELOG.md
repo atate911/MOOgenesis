@@ -5,6 +5,14 @@ Versions follow `MAJOR.MINOR.PATCH`; the live version is the `VERSION` file.
 
 ## Unreleased
 
+- Less mouse travel:
+  - Every slider takes the mouse wheel (one step a notch, Shift five) and Shift-click on − / + jumps to the end (colony, research,
+    tax, security, transport and spy sliders).
+  - Rally point (Reloc), population transport (Trans) and fleet deployment opened from the sidebar move beside the map click as soon
+    as you pick a destination (the sidebar goes back to the colony). Enter accepts and Esc cancels in all three.
+  - The wheel over a fleet row sets the count one ship at a time (Shift: a tenth).
+  - Tactical combat: a right-click on the field is Done when nothing is open to cancel, and a double-click on the acting group is Wait.
+  - Fixed: clicking the star that is already selected did nothing, so it could not be picked as a destination.
 - Fleet deployment opens beside the click: clicking (or right-clicking a destination for) your fleet on the map shows the ship rows,
   steppers, route and Accept in a floating panel next to the cursor instead of in the sidebar across the screen, placed on the side
   of the click that hides the fewest reachable stars. It moves beside each destination you click, Enter sends and Esc cancels.

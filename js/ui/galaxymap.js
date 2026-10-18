@@ -902,7 +902,9 @@
         const id = p.sd.id;
         if (lastClick.id === id && now - lastClick.t < 380) { emit('dblStar', id); lastClick.t = 0; }
         else lastClick = { t: now, id };
-        setSelStar(id, true); return;
+        const was = selStar; setSelStar(id, true);
+        if (was === id) emit('selectStar', id);              // a click on the star already selected still counts: it may be the destination a panel waits for
+        return;
       }
       if (lastClick.id === -1 && now - lastClick.t < 380) { zoomAt(x, y, 1.9); lastClick.t = 0; return; }
       lastClick = { t: now, id: -1 };

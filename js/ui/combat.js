@@ -471,13 +471,13 @@
       missile: btn('Missiles', 'M', () => toggleMissile(), { tip: 'Missiles and torpedoes on / off (M)' }),
       special: btn('Special', 'X', () => openSpecial(), { tip: 'Use a special device (X)' }),
       retreat: btn('Retreat', 'R', () => doRetreat(false), { tip: 'Retreat this group; it leaves next turn (R). Shift+R: the whole fleet' }),
-      wait: btn('Wait', 'W', () => submit({ type: 'wait' }), { tip: 'Act later this round (W)' }),
-      done: btn('Done', 'D', () => submit({ type: 'done' }), { primary: true, tip: 'End this group\'s turn (D, Esc or Space)' }),
+      wait: btn('Wait', 'W', () => submit({ type: 'wait' }), { tip: 'Act later this round (W, or double-click the acting group)' }),
+      done: btn('Done', 'D', () => submit({ type: 'done' }), { primary: true, tip: 'End this group\'s turn (D, Esc, Space or right-click the field)' }),
     };
     const btns = h('div.cb-btns', b.auto, b.planet, b.scan, b.missile, b.special, b.retreat, b.wait, b.done);
     const spd = {};
     const seg = h('div.cb-seg', [['1×', 1], ['2×', 2], ['Skip', 0]].map(([l, v]) => (spd[v] = UI.button(l, () => setSpeed(v), { small: true, tip: v === 0 ? 'Instant: no animation' : v === 2 ? 'Fast animation' : 'Normal animation' }))));
-    const right = h('div.cb-right', seg, h('div.hint', h('kbd', 'Space'), ' skips animation · click a lit cell to move, an enemy to fire'));
+    const right = h('div.cb-right', seg, h('div.hint', h('kbd', 'Space'), ' skips animation · click a lit cell to move, an enemy to fire · right-click = done'));
     const bar = h('div.cb-bar', info, btns, right);
     const wrap = h('div.cb', field, bar);
     root.appendChild(wrap);
@@ -494,6 +494,12 @@
       if (c) onClick(c, e);
     });
     canvas.addEventListener('contextmenu', e => { e.preventDefault(); onRight(); });
+    // double-click the acting group: Wait (act later this round)
+    canvas.addEventListener('dblclick', e => {
+      const B = st.B, c = st.view ? st.view.cellAt(e.clientX, e.clientY) : null; if (!B || !c || !st.cur) return;
+      const t = unitAtCell(B, c.x, c.y);
+      if (t && t.id === st.cur.id && ui.b && ui.b.wait && !ui.b.wait.disabled) ui.b.wait.click();
+    });
     root.addEventListener('contextmenu', e => e.preventDefault());
   }
 
@@ -803,7 +809,13 @@
       UI.sfx('error', { vol: 0.35 });
     }
   }
-  function onRight() { if (st.summary) { if (st.summaryBtn) st.summaryBtn.click(); return; } if (st.overlay) closeOverlay(); else if (st.special) cancelSpecial(); }
+  // right-click: close what is open (summary, overlay, special); with nothing open it is Done for the acting group, so a mouse player
+  // never travels to the bottom bar for the most repeated action of a battle
+  function onRight() {
+    if (st.summary) { if (st.summaryBtn) st.summaryBtn.click(); return; }
+    if (st.overlay) closeOverlay(); else if (st.special) cancelSpecial();
+    else if (ui.b && ui.b.done && !ui.b.done.disabled && !st.busy && st.waiter && st.cur && !(st.view && st.view.busy())) ui.b.done.click();
+  }
   function onHover(cell) {
     st.hover = cell;
     const B = st.B; if (!B || !st.view) return;

@@ -77,7 +77,16 @@
 
   // ---- side-panel registry ------------------------------------------------------------------------------------------------------------------
   const panels = {}; let cur = null, host = null, floatEl = null, floatHost = null, lastPt = null;
-  const ctx = params => ({ S: G.S, E: G.player(), Q, G, params: params || {}, show: (n, p) => UI.Side.show(n, p), defaultPanel: () => UI.Galaxy.showDefault(), map: UI.Galaxy.map, UI });
+  const ctx = params => ({ S: G.S, E: G.player(), Q, G, params: params || {}, show: (n, p) => UI.Side.show(n, p), defaultPanel: () => UI.Galaxy.showDefault(), map: UI.Galaxy.map, UI,
+    // Enter / Esc answer the panel while it is up (unbound by the next show); the newest binding wins, so they shadow the screen's Esc = game menu
+    keys: (enter, esc) => { if (!cur) return; const o = { screen: 'galaxy' }; cur.keyOffs = [enter && UI.bindKey('enter', enter, o), esc && UI.bindKey('Escape', esc, o)].filter(Boolean); },
+    // a pick on the map moves the panel beside that click (re-rendered there with `extra` merged into its params); true when it moved
+    follow: extra => {
+      if (!cur || cur.params.float || !floatHost) return false;
+      const name = cur.name, p = Object.assign({}, cur.params, extra, { float: true });
+      UI.Galaxy.showDefault();                                                                              // the sidebar goes back to the star / colony it was showing
+      UI.Side.show(name, p); return true;
+    } });
   UI.Side = {
     register(name, def) { panels[name] = def; },
     has: n => !!panels[n],
@@ -102,6 +111,7 @@
       if (!host) return;
       if (UI.Side.held && _hd !== UI.Side.held) return;                      // the prompt stays; the player may still click around the map (selection highlights, no panel change)
       const def = panels[name]; if (!def) { console.warn('no side panel', name); return; }
+      if (cur && cur.keyOffs) { cur.keyOffs.forEach(off => off()); cur.keyOffs = null; }
       if (cur && cur.def.dispose) { try { cur.def.dispose(); } catch (e) { console.error(e); } }
       // params.float: render beside the last map click (UI.Side.place) and leave the sidebar as it is; any other panel closes the float
       const float = !!(params && params.float && floatHost), tgt = float ? floatHost : host;

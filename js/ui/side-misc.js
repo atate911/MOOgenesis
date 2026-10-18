@@ -109,7 +109,7 @@
   // ---- fleet deployment (original: << < > >> steppers, click destination, Accept) ---------------------------------------------------------------------
   UI.Side.register('fleetDeploy', {
     render(host, ctx) {
-      const S = G.S, E = G.player(), star = ctx.params.star; this.star = star; this.rows = {}; this.sel = (M.Sim.Fleet.at(S, star, E.id) || { ships: [0, 0, 0, 0, 0, 0] }).ships.slice(); this.dest = ctx.params.dest !== undefined ? ctx.params.dest : -1;
+      const S = G.S, E = G.player(), star = ctx.params.star; this.star = star; this.rows = {}; this.sel = ctx.params.counts ? ctx.params.counts.slice() : (M.Sim.Fleet.at(S, star, E.id) || { ships: [0, 0, 0, 0, 0, 0] }).ships.slice(); this.dest = ctx.params.dest !== undefined ? ctx.params.dest : -1;
       const fl = M.Sim.Fleet.at(S, star, E.id);
       host.appendChild(UI.Side.title(star, S.playerId)); host.appendChild(h('h3', 'Fleet deployment'));
       if (!fl) { host.appendChild(h('p.dim', 'No ships in orbit.')); host.appendChild(UI.button('Close', () => ctx.defaultPanel())); return; }
@@ -118,18 +118,21 @@
         const total = fl.ships[i], step = Math.max(1, Math.floor(total / 10)), nEl = h('span.n', '0');
         const set = v => { this.sel[i] = Math.max(0, Math.min(total, v)); nEl.textContent = this.sel[i] + ' / ' + total; this.update(ctx); this.reach(); };
         nEl.textContent = this.sel[i] + ' / ' + total;
-        host.appendChild(h('div.sm-fleet', shipPic(E, i, 58, 42), h('div', h('div.nm', E.designs[i].name), h('div.ct', 'speed ' + M.Sim.Design.stats(S, E, i).warp + (M.Sim.Design.stats(S, E, i).tanks ? ' · extra fuel' : ''))),
-          h('div.sm-step', UI.button('◀◀', () => set(0), { small: true }), UI.button('◀', () => set(this.sel[i] - step), { small: true }), nEl, UI.button('▶', () => set(this.sel[i] + step), { small: true }), UI.button('▶▶', () => set(total), { small: true }))));
+        const row = h('div.sm-fleet', shipPic(E, i, 58, 42), h('div', h('div.nm', E.designs[i].name), h('div.ct', 'speed ' + M.Sim.Design.stats(S, E, i).warp + (M.Sim.Design.stats(S, E, i).tanks ? ' · extra fuel' : ''))),
+          h('div.sm-step', UI.button('◀◀', () => set(0), { small: true }), UI.button('◀', () => set(this.sel[i] - step), { small: true }), nEl, UI.button('▶', () => set(this.sel[i] + step), { small: true }), UI.button('▶▶', () => set(total), { small: true })));
+        // the wheel over a row: one ship per notch (Shift: a tenth of the group), so a count is set without hunting for the small arrows
+        row.addEventListener('wheel', e => { const d = -(e.deltaY || e.deltaX); if (!d) return; e.preventDefault(); set(this.sel[i] + Math.sign(d) * (e.shiftKey ? step : 1)); }, { passive: false });
+        host.appendChild(row);
       }
       const float = !!ctx.params.float;
-      this.hint = h('div.sc-pickhint', float ? 'Click a destination star · Enter sends · Esc cancels' : 'Choose destination and number to send.'); this.route = h('div'); this.acc = UI.button('Accept', () => this.accept(ctx), { primary: true, disabled: true });
+      this.hint = h('div.sc-pickhint', 'Click a destination star · Enter sends · Esc cancels'); this.route = h('div'); this.acc = UI.button('Accept', () => this.accept(ctx), { primary: true, disabled: true });
       const cancel = () => { UI.Galaxy.pick = null; if (UI.Galaxy.map) { UI.Galaxy.map.setRoutePreview(null); UI.Galaxy.map.setReach(null); } ctx.defaultPanel(); };
       host.appendChild(this.hint); host.appendChild(this.route);
       host.appendChild(h('div.sm-actions', UI.button('Cancel', cancel), this.acc));
       // floating beside the click (opened from the map): it follows the hand to each destination clicked, and Enter / Esc answer it from the keyboard
       const place = () => { if (float && UI.Side.place) UI.Side.place(this.avoid()); };
-      UI.Galaxy.pick = id => { this.dest = id; this.update(ctx); place(); };
-      this.keyOffs = float ? [UI.bindKey('enter', () => { if (this.dest >= 0 && !this.acc.disabled) this.accept(ctx); }, { screen: 'galaxy' }), UI.bindKey('Escape', cancel, { screen: 'galaxy' })] : [];
+      UI.Galaxy.pick = id => { if (ctx.follow({ dest: id, counts: this.sel.slice() })) return; this.dest = id; this.update(ctx); place(); };   // from the sidebar: the first map pick brings the panel to the hand
+      ctx.keys(() => { if (this.dest >= 0 && !this.acc.disabled) this.accept(ctx); }, cancel);
       this.reach(); place();
       UI.Galaxy.pendingSend = () => { if (this.dest < 0 || this.acc.disabled) return true; return this.accept(ctx, true); };   // Next turn auto-accepts the queued move
       this.update(ctx);
@@ -166,7 +169,7 @@
       UI.sfx('warp'); UI.Galaxy.pick = null; if (UI.Galaxy.map) { UI.Galaxy.map.setRoutePreview(null); UI.Galaxy.map.setReach(null); }
       ctx.defaultPanel(); UI.Galaxy.refresh(); return true;
     },
-    dispose() { (this.keyOffs || []).forEach(off => off()); this.keyOffs = null; UI.Galaxy.pendingSend = null; UI.Galaxy.pick = null; if (UI.Galaxy.map) { UI.Galaxy.map.setRoutePreview(null); UI.Galaxy.map.setReach(null); } },
+    dispose() { UI.Galaxy.pendingSend = null; UI.Galaxy.pick = null; if (UI.Galaxy.map) { UI.Galaxy.map.setRoutePreview(null); UI.Galaxy.map.setReach(null); } },
   });
 
   // ---- fleets in flight / foreign fleets ---------------------------------------------------------------------------------------------------------------
