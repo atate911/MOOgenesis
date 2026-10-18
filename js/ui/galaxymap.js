@@ -1881,6 +1881,13 @@
       if (tipEl.style.display !== 'block') return;
       const w = tipEl.offsetWidth, hh = tipEl.offsetHeight; let l = x + 18, t = y + 20;
       if (l + w > W - 6) l = x - w - 14; if (t + hh > H - 6) t = y - hh - 14;
+      // a panel floating over the map (fleet deployment, rally point) sits above the tip: take the corner of the pointer that keeps the tip clear of it
+      const fl = root.parentElement && root.parentElement.querySelector('.gx-float.on');
+      if (fl) {
+        const rr = root.getBoundingClientRect(), fr = fl.getBoundingClientRect(), f = { l: fr.left - rr.left, t: fr.top - rr.top, r: fr.right - rr.left, b: fr.bottom - rr.top };
+        const hit = (a, b) => a < f.r && a + w > f.l && b < f.b && b + hh > f.t, inside = (a, b) => a >= 4 && b >= 4 && a + w <= W - 4 && b + hh <= H - 4;
+        if (hit(l, t)) { const c = [[x + 18, y + 20], [x - w - 14, y + 20], [x + 18, y - hh - 14], [x - w - 14, y - hh - 14]].find(([a, b]) => inside(a, b) && !hit(a, b)); if (c) [l, t] = c; }
+      }
       tipEl.style.transform = 'translate(' + Math.round(Math.max(4, l)) + 'px,' + Math.round(Math.max(4, t)) + 'px)';
     }
     function hideTip() { if (tipEl.style.display !== 'none') tipEl.style.display = 'none'; tipKey = ''; }

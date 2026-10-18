@@ -5,6 +5,8 @@ Versions follow `MAJOR.MINOR.PATCH`; the live version is the `VERSION` file.
 
 ## Unreleased
 
+- Galaxy map: a star's tooltip flips to the corner of the pointer that keeps it clear of a panel floating over the map (fleet
+  deployment, rally point, transport), so it is never hidden underneath while picking a destination.
 - Combat: the Special devices menu opens beside the acting ship over a lightly dimmed board instead of mid-screen, its devices
   numbered (1–9 pick).
 - Fewer trips across the screen: ◀ ▶ arrows on a colony's title step through your colonies (as F2 / F3); the ship box cycles
