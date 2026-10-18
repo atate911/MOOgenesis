@@ -43,12 +43,12 @@ Full prompts for the ships, rocks, debris and platform: `docs/IMAGE-GEN-SHIPS-AN
 
 ### Star-system skies, 16:9, no planet (6) — unlock: the system screen backdrop with the star upper-right
 Detailed prompts + layout guide: `docs/IMAGE-GEN-COUNCIL-AND-SKIES.md` §2.
-- [ ] `system-sky-yellow.png`
-- [ ] `system-sky-red.png`
-- [ ] `system-sky-green.png`
-- [ ] `system-sky-blue.png`
-- [ ] `system-sky-white.png`
-- [ ] `system-sky-purple.png`
+- [x] `system-sky-yellow.png`
+- [x] `system-sky-red.png`
+- [x] `system-sky-green.png`
+- [x] `system-sky-blue.png`
+- [x] `system-sky-white.png`
+- [x] `system-sky-purple.png`
 
 ## Council chamber (`docs/IMAGE-GEN-COUNCIL-AND-SKIES.md` §1), 1 file — unlock: a photoreal Galactic Council hall
 - [x] `scene-council-chamber.png` — delivered and wired in (`Scenes.council` draws it with the race photos in its alcoves; alcove map

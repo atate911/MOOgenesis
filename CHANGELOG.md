@@ -5,6 +5,10 @@ Versions follow `MAJOR.MINOR.PATCH`; the live version is the `VERSION` file.
 
 ## Unreleased
 
+- The star-system screen has illustrated skies: six planet-free skies, one per star colour (`assets/art/system-sky/`), each with its
+  sun painted in the upper right (a red dwarf with starspots, a blue giant, a neutron star with jets …). The sun's position and size
+  are measured per image (`SKY_STAR` in `system.js`), so the planet is lit from the painted sun; the "<colour> star" label sits beside
+  it and the fleets-in-orbit tiles start below it.
 - Combat asteroids and wreckage are rendered cutouts: eight distinct dark, rugged rocks replace the grey procedural blobs on the
   battle board, sized from the planet (each rock 0.75-1.15 of the planet's radius, so about half its width), and a destroyed ship
   throws off small wreckage fragments (6-13 % of its length), each one of 24 pieces picked at random: hull sections, nacelles,

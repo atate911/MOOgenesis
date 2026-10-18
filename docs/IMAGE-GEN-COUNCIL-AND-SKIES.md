@@ -171,8 +171,9 @@ code expects it there (`SKY_STAR` in `js/ui/system.js`):
 | Star disc diameter | 12 % of the image width (≈ 230 px at 1920 wide) |
 | Format | 16:9, 2560×1440 preferred (1920×1080 minimum), cover-cropped with the focus at (50 %, 35 %) |
 
-If a result's star lands more than ~2 % off, either crop/shift the image when converting, or tell me and I'll make the
-star position per-image.
+Delivered: the six skies are in the game. Their suns came out lower and larger than asked (centres around y = 23-27 %,
+discs 9-22 % of the width), so the position is now measured per image (`SKY_STAR` in `js/ui/system.js`); a replacement
+sky needs its sun re-measured there.
 
 ### 2.2 Shared prompt (used by all six; paste it, then append the colour block from §2.3)
 

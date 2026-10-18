@@ -1,0 +1,51 @@
+{
+  "schema_version": 1,
+  "asset_id": "system-sky-purple",
+  "filename": "system-sky-purple.png",
+  "game": "Master of Orion — Reborn",
+  "category": "system-sky-background",
+  "star_color": "purple",
+  "description": "Neutron star/pulsar EXCEPTION to normal photosphere: a small intensely bright violet-white core at the specified x=.86,y=.16, surrounded by muted glowing violet accretion HAZE filling the 12%-of-image-width disc area. TWO THIN FAINT STRAIGHT POLAR JETS extend oppositely up-left and down-right, localized near star, not across the lower-left reserved area. No solid large sunlike photosphere, no orbital rings. Dark indigo/violet sky, faint magenta-violet nebula filaments near core, rest deep space. Exotic dangerous high-energy, restrained not neon.",
+  "intended_use": "Background layer behind the separately rendered system planet",
+  "selection_hint": {
+    "star.color": "purple"
+  },
+  "layer_order": [
+    "this sky plate",
+    "game-rendered planet",
+    "game interface"
+  ],
+  "requested_dimensions": [
+    2560,
+    1440
+  ],
+  "actual_dimensions": [
+    1672,
+    941
+  ],
+  "requested_composition": {
+    "star_center_normalized": [
+      0.86,
+      0.16
+    ],
+    "star_disc_diameter_fraction_of_width": 0.12,
+    "planet_overlay_region": "lower-left two thirds",
+    "dark_bottom_fraction": 0.15
+  },
+  "limitations": [
+    "Generator returned native dimensions below the requested resolution; not upscaled.",
+    "Star center and disc scale are approximate and do not exactly match requested coordinates.",
+    "No sky blocking guide was visible; the referenced council image was not used."
+  ],
+  "usage_constraints": [
+    "Contains no foreground planet, moon, asteroid, ring, ship or structure.",
+    "Render the planet separately over the dark lower-left area.",
+    "Featured star is baked into this image; do not draw a duplicate.",
+    "Preserve aspect ratio and inspect cropping before placing game overlays."
+  ],
+  "generation": {
+    "tool": "built-in image_gen",
+    "date": "2026-10-17",
+    "prompt": "Create ONE finished 2560x1440 PNG, exactly 16:9, a photoreal astrophotography/cinematic star-system SKY BACKGROUND PLATE for Master of Orion — Reborn. This is empty space behind a planet that the game composites later. STRICT COMPOSITION: one featured star centered at normalized x=0.86,y=0.16. Its visible disc diameter is 12% of the full image WIDTH (thus about 21.3% image HEIGHT), entire disc inside frame. Keep star at that position and scale, not centered or enlarged. Realistic photosphere with visible fine granulation, small active regions and limb darkening; edge dimmer than center, no flat white blown-out disc. Soft corona and glare taper smoothly into space.\nThe entire lower-left two thirds must be exceptionally DARK, calm, low contrast, with only sparse tiny distant stars and barely perceptible dust: reserve it for a large planet drawn later. Bottom 15% almost black. Faint muted nebula and natural background field of tiny stars with varied brightness, densest in upper middle, thinning to near-black at bottom and left. A few slightly brighter distant pinpoints allowed, no cross-shaped spikes. Featured star is only illuminating source and only large bright object.\nAbsolutely NO planets, moons, rings, asteroids, ships, stations, architecture, structures, silhouettes or foreground objects anywhere. No text, numbers, logos, watermark, border, UI, lens-flare hexagons, anamorphic streaks, cartoon, illustration, painterly strokes, rainbow colors, neon, fantasy galaxy spirals, saturated nebula, multiple suns or flat white disc. Physically plausible restrained filmic grade, subtle grain, deep blacks. Original artwork.\nSTAR VARIANT: Neutron star/pulsar EXCEPTION to normal photosphere: a small intensely bright violet-white core at the specified x=.86,y=.16, surrounded by muted glowing violet accretion HAZE filling the 12%-of-image-width disc area. TWO THIN FAINT STRAIGHT POLAR JETS extend oppositely up-left and down-right, localized near star, not across the lower-left reserved area. No solid large sunlike photosphere, no orbital rings. Dark indigo/violet sky, faint magenta-violet nebula filaments near core, rest deep space. Exotic dangerous high-energy, restrained not neon.\nDeliver one image only, filename system-sky-purple.png."
+  }
+}
