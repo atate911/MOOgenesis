@@ -39,7 +39,7 @@ Full prompts for the ships, rocks, debris and platform: `docs/IMAGE-GEN-SHIPS-AN
 - [x] `debris-1.png` … `debris-24.png` (24 wreckage pieces from two sheets; the game picks one at random per fragment)
 
 ### Missile platform (1) — unlock: missile bases around the planet on the combat board
-- [ ] `base-platform.png`
+- [x] `base-platform.png` (the empire-colour glow sits on its beacon lens, right edge)
 
 ### Star-system skies, 16:9, no planet (6) — unlock: the system screen backdrop with the star upper-right
 Detailed prompts + layout guide: `docs/IMAGE-GEN-COUNCIL-AND-SKIES.md` §2.

@@ -5,6 +5,9 @@ Versions follow `MAJOR.MINOR.PATCH`; the live version is the `VERSION` file.
 
 ## Unreleased
 
+- Missile bases on the combat board are a rendered orbital battery (`assets/art/fx/base-platform.webp`: a hexagonal platform with
+  six silos, two open): up to six orbit a defended planet, each with a pulsing light in the owner's colour on its beacon lens,
+  replacing the orange gear icons.
 - The star-system screen has illustrated skies: six planet-free skies, one per star colour (`assets/art/system-sky/`), each with its
   sun painted in the upper right (a red dwarf with starspots, a blue giant, a neutron star with jets …). The sun's position and size
   are measured per image (`SKY_STAR` in `system.js`), so the planet is lit from the painted sun; the "<colour> star" label sits beside

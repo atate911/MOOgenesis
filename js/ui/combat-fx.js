@@ -1138,7 +1138,7 @@
           ctx.save(); ctx.translate(bx, by); ctx.rotate(a * 0.5 + i);
           if (im) {
             const k = min(bs / im.naturalWidth, bs / im.naturalHeight); ctx.drawImage(im, -im.naturalWidth * k / 2, -im.naturalHeight * k / 2, im.naturalWidth * k, im.naturalHeight * k);
-            ctx.globalCompositeOperation = 'lighter'; const r2 = bs * 0.3, bl = 0.5 + 0.5 * sin(t * 3 + i); ctx.globalAlpha = 0.5 + 0.5 * bl; ctx.drawImage(glowSprite(u.color), bs * 0.3 - r2, -r2, r2 * 2, r2 * 2);
+            ctx.globalCompositeOperation = 'lighter'; const r2 = bs * 0.14, lx = bs * 0.41, bl = 0.5 + 0.5 * sin(t * 3 + i); ctx.globalAlpha = 0.5 + 0.5 * bl; ctx.drawImage(glowSprite(u.color), lx - r2, -r2, r2 * 2, r2 * 2);   // the beacon lens on the platform's right edge
           } else ctx.drawImage(spr, -bs / 2, -bs / 2, bs, bs);
           ctx.restore();
         }
