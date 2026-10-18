@@ -3418,7 +3418,7 @@
         ctx.translate(gx, sy); ctx.rotate(Math.PI / 2);
         if (landing < 0.99) { glow(ctx, '#ffb060', shs * 0.55, 0, shs * 1.4, 0.7 * (1 - touch * 0.6)); glow(ctx, '#ffffff', shs * 0.45, 0, shs * 0.5, 0.9 * (1 - touch)); }
         ctx.restore();
-        drawShip(ctx, { race: o.race || 'human', hull: 'cruiser', x: gx, y: sy, size: shs, angle: -PI / 2 + 0, color: o.color || '#8fb4ff', t: t, thrust: 1 - touch, flags: { colony: true } });
+        drawShip(ctx, { race: o.race || 'human', hull: 'cruiser', x: gx, y: sy, size: shs, angle: -PI / 2 + 0, view: '3q', color: o.color || '#8fb4ff', t: t, thrust: 1 - touch, flags: { colony: true } });   // seen from the beach, not from above
         // landing guide lights + beacon mast
         if (!photo) {
         const bx = gx - I.S0 * 1.8;

@@ -5,6 +5,11 @@ Versions follow `MAJOR.MINOR.PATCH`; the live version is the `VERSION` file.
 
 ## Unreleased
 
+- Ships have their 3/4 view: nine rendered 3/4 "beauty" cutouts (one per hull class, `MOOg images/ship-variants/*-3q.png`, built
+  into `assets/ships/ship-<class>-1-3q.webp` + team masks), recoloured to each empire's banner like the top-down set. They appear
+  wherever the camera is not overhead: the design hologram, the system and colony cards, the bombers over the planet, the exile
+  ending, the title fly-by, the tech blueprint and the GNN. The colonisation lander over the beach now uses it too (`scenes.js`).
+  Each class has one 3/4 render, shared by all its top-down variants.
 - The Galactic Council meets in an illustrated chamber (`assets/art/scene/scene-council-chamber.webp`): the leader photos stand in its six
   alcoves, graded to its lamplight, every delegate turned towards the pedestal (`Portraits.facing`: a photo whose leader looks away from
   the centre is mirrored), names and votes on the brass lectern panels, the galaxy and speaker holograms over the emitter. The two

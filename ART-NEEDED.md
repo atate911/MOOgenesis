@@ -23,15 +23,15 @@ Check the result with `node tools/qa/art-shots.js` (and `TIER=medium`): a missin
 Full prompts for the ships, rocks, debris and platform: `docs/IMAGE-GEN-SHIPS-AND-COMBAT.md`.
 
 ### Ship hulls, 3/4 view (9) — unlock: design hologram, fleet/system/pre-battle cards, lander, bombers, title fly-by, exile ending, GNN ship graphic, tech blueprint
-- [ ] `frigate-3q.png` (reference: `MOOg images/fleet-ai-evaluation/original--01-frigate.png`)
-- [ ] `destroyer-3q.png` (`revised--02-destroyer.png`)
-- [ ] `cruiser-3q.png` (`revised--03-cruiser.png`)
-- [ ] `battleship-3q.png` (`revised--04-battleship.png`)
-- [ ] `doomstar-3q.png` (`alternatives--05-doomstar-eclipse.png`)
-- [ ] `starbase-3q.png` (`original--06-starbase.png`)
-- [ ] `battlestation-3q.png` (`revised--07-battlestation.png`)
-- [ ] `star-fortress-3q.png` (`alternatives--08-star-fortress-crown.png`)
-- [ ] `stargate-3q.png` (`original--09-stargate.png`)
+- [x] `frigate-3q.png` (reference: `MOOg images/fleet-ai-evaluation/original--01-frigate.png`)
+- [x] `destroyer-3q.png` (`revised--02-destroyer.png`)
+- [x] `cruiser-3q.png` (`revised--03-cruiser.png`)
+- [x] `battleship-3q.png` (`revised--04-battleship.png`)
+- [x] `doomstar-3q.png` (`alternatives--05-doomstar-eclipse.png`)
+- [x] `starbase-3q.png` (`original--06-starbase.png`)
+- [x] `battlestation-3q.png` (`revised--07-battlestation.png`)
+- [x] `star-fortress-3q.png` (`alternatives--08-star-fortress-crown.png`)
+- [x] `stargate-3q.png` (`original--09-stargate.png`)
 - [ ] optional, later: `<class>-<n>-3q.png` for the other 14 top-down variants so every design's two views match
 
 ### Asteroids and debris, top-down cutouts (11) — unlock: combat board rocks and kill debris
