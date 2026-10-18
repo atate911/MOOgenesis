@@ -488,6 +488,7 @@
     .gmap-btn { --ch:.3rem; position:relative; isolation:isolate; width:2rem; height:2rem; padding:0; border:0; cursor:pointer; color:var(--brass-hi); display:grid; place-items:center;
       background:linear-gradient(180deg,var(--brass),var(--brass-lo)); transition:filter .15s; }
     .gmap-btn::before { content:""; position:absolute; inset:1px; z-index:-1; clip-path:var(--poly); background:linear-gradient(180deg,#27336d,#161e4a); transition:background .15s; }
+    .gmap-btn.off { opacity:.5; } .gmap-btn.off svg { stroke-dasharray:none; }
     .gmap-btn:hover { filter:brightness(1.15); } .gmap-btn:hover::before { background:linear-gradient(180deg,#34448c,#1c2760); } .gmap-btn:active { transform:translateY(1px); }
     .gmap-btn svg { width:1.05rem; height:1.05rem; fill:none; stroke:currentColor; stroke-width:2; stroke-linecap:square; stroke-linejoin:miter; }
     .gmap-mini { --ch:.55rem; position:absolute; z-index:3; padding:1px; background:linear-gradient(135deg,var(--brass),var(--brass-lo) 50%,var(--brass)); }
@@ -542,12 +543,19 @@
     const miniCv = h('canvas');
     const miniEl = h('div.gmap-mini.ch', miniCv);
     const svgBtn = (path, tip, fn) => { const b = h('button.gmap-btn.ch', { type: 'button', 'aria-label': tip, onclick: e => { fn(e); root.focus({ preventScroll: true }); } }); b.innerHTML = '<svg viewBox="0 0 24 24">' + path + '</svg>'; if (UI.setTip) UI.setTip(b, tip); return b; };
+    // fleet route lines and rally lines on / off (a busy late-game map); off still shows the selected fleet's or colony's line
+    const routesOn = () => !(M.Settings && M.Settings.get('mapRoutes') === false);
+    const routesBtn = svgBtn('<circle cx="5" cy="18" r="2"/><circle cx="19" cy="6" r="2"/><path d="M6.6 16.6C10 13 9 9 12.5 8.2S17 7 17.4 7.2" stroke-dasharray="2.4 2.2"/>', 'Fleet routes and rally lines on / off <b>L</b>',
+      () => { if (M.Settings) M.Settings.set('mapRoutes', !routesOn()); syncRoutesBtn(); });
+    const syncRoutesBtn = () => routesBtn.classList.toggle('off', !routesOn());
+    syncRoutesBtn();
     const ctrlEl = h('div.gmap-ctrl',
       svgBtn('<path d="M12 5v14M5 12h14"/>', 'Zoom in <b>+</b>', () => zoomStep(1.45)),
       svgBtn('<path d="M5 12h14"/>', 'Zoom out <b>−</b>', () => zoomStep(1 / 1.45)),
       svgBtn('<path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/>', 'Show the whole galaxy', () => api.fit()),
       svgBtn('<path d="M12 3l9 9-9 9-9-9z"/><circle cx="12" cy="12" r="2.2"/>', 'Centre on your capital <b>Home</b>', () => api.home()),
-      svgBtn('<circle cx="7" cy="7" r="2.6"/><path d="M13 7h8M13 17h8M4.4 14.4l5 5M9.4 14.4l-5 5"/>', 'Map key and planet icons <b>K</b>', () => api.showLegend(!legendShown())));
+      svgBtn('<circle cx="7" cy="7" r="2.6"/><path d="M13 7h8M13 17h8M4.4 14.4l5 5M9.4 14.4l-5 5"/>', 'Map key and planet icons <b>K</b>', () => api.showLegend(!legendShown())),
+      routesBtn);
     const root = h('div.gmap', { tabindex: 0, role: 'application', 'aria-label': 'Galaxy map' }, canvas, miniEl, ctrlEl, legendEl, hintEl, tipEl);
     if (opts.controls === false) ctrlEl.style.display = 'none';
     container.appendChild(root);
@@ -923,6 +931,7 @@
       else if (k === 'Home') api.home();
       else if (k === 'End') api.fit();
       else if (k === 'k' || k === 'K') api.showLegend(!legendShown());
+      else if (k === 'l' || k === 'L') routesBtn.click();
       else if (k === 'Escape') {
         if (routeFleet !== null) { const fid = routeFleet; setRouteMode(null); emit('routeCancel', fid); }
         else if (selFleet !== null) setSelFleet(null, true);
@@ -1170,10 +1179,10 @@
     // fan converging on it. Chevrons drift toward the target so the direction is clear without arrowheads cluttering a busy hub.
     const GATE_RGB = [199, 166, 255];
     function drawRelocs(t) {
-      const n = SD.length; if (M.Settings && M.Settings.get('mapReloc') === false) return;
+      const n = SD.length, all = !(M.Settings && (M.Settings.get('mapRoutes') === false || M.Settings.get('mapReloc') === false));   // off: only the selected colony's rally line
       ctx.lineCap = 'round';
       for (let i = 0; i < n; i++) {
-        const s = SD[i]; if (s.reloc < 0) continue;
+        const s = SD[i]; if (s.reloc < 0 || (!all && s.id !== selStar && s.reloc !== selStar)) continue;
         const b = sdById[s.reloc]; if (!b) continue;
         if ((s.sx < -40 && b.sx < -40) || (s.sx > W + 40 && b.sx > W + 40) || (s.sy < -40 && b.sy < -40) || (s.sy > H + 40 && b.sy > H + 40)) continue;
         const dx = b.sx - s.sx, dy = b.sy - s.sy, len = Math.hypot(dx, dy); if (len < 12) continue;
@@ -1190,27 +1199,32 @@
       }
       ctx.lineCap = 'butt';
     }
-    // a stargate: a thin violet ring with four bright notches, turning slowly (static with Reduce motion)
+    // a stargate: the original's marker, a small dark box holding four blue squares, at the star's lower right (clear of the planet on the
+    // left and the name below); the squares glow softly in turn (static with Reduce motion)
     function drawGates(t) {
       ctx.save();
       for (let i = 0; i < SD.length; i++) {
         const s = SD[i]; if (!s.gate || !s.on) continue;
-        const rr = s.r * 2.2 + 12 * uk, a0 = Q.reduce ? 0 : t * 0.35 + s.ph;              // outside the owner ring
-        ctx.globalAlpha = 0.85 * s.rk; ctx.lineWidth = 1 * uk; ctx.strokeStyle = rgba(GATE_RGB, 0.7);
-        ctx.beginPath(); ctx.arc(s.sx, s.sy, rr, 0, TAU); ctx.stroke();
-        ctx.lineWidth = 3 * uk; ctx.strokeStyle = rgba([226, 210, 255], 0.95); ctx.beginPath();
-        for (let k = 0; k < 4; k++) { const a = a0 + k * PI / 2; ctx.moveTo(s.sx + Math.cos(a - 0.24) * rr, s.sy + Math.sin(a - 0.24) * rr); ctx.arc(s.sx, s.sy, rr, a - 0.24, a + 0.24); }
-        ctx.stroke();
+        const bs = Math.round(Math.max(10, 13 * uk)), ro = s.r * 1.95 + 7 * uk + bs * 0.45, x = Math.round(s.sx + ro * 0.74 - bs / 2), y = Math.round(s.sy + ro * 0.62 - bs / 2), gap = Math.max(1, Math.round(bs * 0.13));   // outside the owner ring
+        ctx.globalAlpha = s.rk;
+        ctx.fillStyle = 'rgba(6,10,26,0.92)'; ctx.fillRect(x, y, bs, bs);
+        ctx.lineWidth = 1; ctx.strokeStyle = 'rgba(150,190,240,0.85)'; ctx.strokeRect(x + 0.5, y + 0.5, bs - 1, bs - 1);
+        const cell = (bs - gap * 3) / 2;
+        for (let k = 0; k < 4; k++) {
+          const cx = x + gap + (k % 2) * (cell + gap), cy = y + gap + ((k / 2) | 0) * (cell + gap);
+          const pulse = Q.reduce ? 0.85 : 0.65 + 0.35 * Math.max(0, Math.sin(t * 2.2 + s.ph + k * 1.57));
+          ctx.fillStyle = 'rgba(92,170,255,' + pulse.toFixed(3) + ')'; ctx.fillRect(cx, cy, cell, cell);
+        }
       }
       ctx.restore();
     }
     function drawLanes(t) {
-      const z = cam.z, hw = W / 2, hh = H / 2, pid = pidOf();
+      const z = cam.z, hw = W / 2, hh = H / 2, pid = pidOf(), all = !(M.Settings && M.Settings.get('mapRoutes') === false);   // off: only the selected fleet's line
       ctx.lineCap = 'round';
       for (let pass = 0; pass < 2; pass++) {              // pass 0: foreign (dimmer), pass 1: own
         const byOwner = {};
         for (let i = 0; i < movers.length; i++) {
-          const fd = movers[i], f = fd.f; if (f.to < 0 || fd.a < 0.03 || (fd.owner === pid) !== (pass === 1)) continue;
+          const fd = movers[i], f = fd.f; if (f.to < 0 || fd.a < 0.03 || (fd.owner === pid) !== (pass === 1) || (!all && fd.id !== selFleet)) continue;
           const to = sdById[f.to]; if (!to) continue;
           const fx = (fd.dx - cam.x) * z + hw, fy = (fd.dy - cam.y) * z + hh;
           if ((fx < -50 && to.sx < -50) || (fx > W + 50 && to.sx > W + 50) || (fy < -50 && to.sy < -50) || (fy > H + 50 && to.sy > H + 50)) continue;
@@ -1741,12 +1755,12 @@
       const emps = (S && S.empires) || [], pid = pidOf();
       const row = (cls, col, text, sub, n) => h('div.gl-row' + (n === 0 ? '.dim' : ''), h('i.gl-sw' + cls, { style: { '--c': col } }), h('span.gl-txt', text, sub ? h('span.gl-sub', sub) : null), n !== undefined && n !== null ? h('span.gl-n', String(n)) : null);
       const kids = []; let sub = '';
-      const GSV = ['', '<circle cx="8" cy="8" r="5.6" fill="#5cc8ff" stroke="#040618" stroke-width="1"/><circle cx="8" cy="8" r="1.7" fill="#040618" fill-opacity=".75"/>', '<path d="M8 2 L14 13 L2 13 Z" fill="#ffa534" stroke="#040618" stroke-width="1"/>', '<rect x="3.2" y="3.2" width="9.6" height="9.6" fill="none" stroke="#a9b4e0" stroke-width="1.4" stroke-dasharray="2.4 1.6"/>'];
+      const GSV = ['', '<circle cx="8" cy="8" r="5.6" fill="#5cc8ff" stroke="#040618" stroke-width="1"/><circle cx="8" cy="8" r="1.7" fill="#040618" fill-opacity=".75"/>', '<path d="M8 2 L14 13 L2 13 Z" fill="#ffa534" stroke="#040618" stroke-width="1"/>', '<rect x="3.2" y="3.2" width="9.6" height="9.6" fill="none" stroke="#a9b4e0" stroke-width="1.4" stroke-dasharray="2.4 1.6"/>', '<rect x="3" y="3" width="10" height="10" fill="#060a1a" stroke="#96bef0"/><rect x="4.6" y="4.6" width="3" height="3" fill="#5caaff"/><rect x="8.4" y="4.6" width="3" height="3" fill="#5caaff"/><rect x="4.6" y="8.4" width="3" height="3" fill="#5caaff"/><rect x="8.4" y="8.4" width="3" height="3" fill="#5caaff"/>'];
       const glyphRows = () => {
-        const cnt = [0, 0, 0, 0]; for (const q of SD) cnt[q.hab]++;
+        const cnt = [0, 0, 0, 0, 0]; for (const q of SD) { cnt[q.hab]++; if (q.gate) cnt[4]++; }
         const gr = (k, text, sub2) => { const i = h('i.gl-gl'); i.innerHTML = '<svg viewBox="0 0 16 16" width="16" height="16">' + GSV[k] + '</svg>'; return h('div.gl-row' + (cnt[k] === 0 ? '.dim' : ''), i, h('span.gl-txt', text, h('span.gl-sub', sub2)), h('span.gl-n', String(cnt[k]))); };
         const tg = h('button.gl-tog', { type: 'button', 'aria-pressed': String(habIcons), onclick: e => { e.stopPropagation(); api.setPlanetIcons(!habIcons); root.focus({ preventScroll: true }); } }, 'Planet icons: ' + (habIcons ? 'on' : 'off'));
-        return [h('div.gl-sep'), gr(1, 'Can colonise now', 'colony ship can settle'), gr(2, 'Needs special base', 'toxic · radiated · inferno · dead · tundra · barren'), gr(3, 'No planet', 'asteroids / empty'), tg];
+        return [h('div.gl-sep'), gr(1, 'Can colonise now', 'colony ship can settle'), gr(2, 'Needs special base', 'toxic · radiated · inferno · dead · tundra · barren'), gr(3, 'No planet', 'asteroids / empty'), gr(4, 'Stargate', 'your ships jump between gates in one turn'), tg];
       };
       const total = SD.length, unknown = SD.filter(s => !s.known).length;
       if (mode === 'colonies') {

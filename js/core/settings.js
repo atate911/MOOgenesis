@@ -16,6 +16,7 @@
     reduceMotion: false,    // less screen motion/particles
     mapLabels: 'auto',      // 'auto' | 'all' | 'owned'
     mapGrid: true,          // star-chart graticule on the galaxy map
+    mapRoutes: true,        // fleet route lines and colony rally lines on the galaxy map (the map's route button / L)
     uiScale: 1,             // multiplies the fluid UI scale (0.85–1.3)
     threads: 0,             // worker threads for AI/combat/texture jobs: 0 = auto (all logical threads - 1)
     graphics: 'auto',       // 'auto' | 'low' | 'medium' | 'high' | 'ultra' (see MOO.Perf)

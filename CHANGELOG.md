@@ -5,6 +5,9 @@ Versions follow `MAJOR.MINOR.PATCH`; the live version is the `VERSION` file.
 
 ## Unreleased
 
+- Galaxy map: a colony with a stargate shows the original's marker, a small dark box with four blue squares beside the star (also in
+  the map key). A new route button with the map controls (or L) turns fleet route lines and colony rally lines off for a busy late-game
+  map; the selected fleet's or colony's line still shows. Rally lines are blue-grey, violet and dotted when they run through stargates.
 - Less mouse travel:
   - Every slider takes the mouse wheel (one step a notch, Shift five) and Shift-click on − / + jumps to the end (colony, research,
     tax, security, transport and spy sliders).
