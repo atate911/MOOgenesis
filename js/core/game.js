@@ -145,6 +145,7 @@
         if (ans === ABORTED || !live()) { try { gen.return(); } catch (e) { /* ignore */ } return null; }
         if (ans === SKIPPED) { ans = skipAnswer(it, S); console.warn('[turn] interrupt "' + it.type + '" skipped by the player'); M.Bus.emit('turn:skipped', it.type); }
         seen.push(it.type);
+        try { M.Bus.emit('turn:item', it, ans); } catch (e) { console.warn('[turn:item]', e); }      // the galaxy's "Last turn" log (ui/turnlog.js)
         r = gen.next(ans);
       }
       over = r.value || null;

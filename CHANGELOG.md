@@ -5,6 +5,11 @@ Versions follow `MAJOR.MINOR.PATCH`; the live version is the `VERSION` file.
 
 ## Unreleased
 
+- "Last turn" log under the galaxy sidebar (`js/ui/turnlog.js`): what happened to you during the turn just played, most urgent first
+  (battles won or lost, bombardments, invasions; random events; colony notices such as population or factories at maximum, terraforming,
+  shields, stargates; exploration as one line of star links; ships built; breakthroughs). Each star name is a link that selects the star
+  and centres the map; six lines show until "All N"; the header folds it away (remembered). Fed by a new `turn:item` bus event from the
+  turn driver, so every interrupt and its answer reaches it.
 - Stargate routing: a fleet sent anywhere takes the quickest route, straight or through your stargates (fly to the nearest gate, jump
   in one turn to the gate nearest the target, fly on), when that saves turns. Player orders, rally-point ships and the computer
   opponents all route this way (`F.plan`, legs carried in `fleet.legs`; a gate lost on the way re-plans from the waypoint). The route

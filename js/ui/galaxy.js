@@ -275,7 +275,9 @@
       hudEl = h('div.gx-hud'); msgEl = h('div.gx-msg');
       busyEl = h('div.gx-busy', h('div.box'));
       host = h('div.gx-sidebody');
-      const side = h('aside.gx-side', h('div.panel', host));
+      const logEl = h('div');
+      const side = h('aside.gx-side', h('div.panel', host), logEl);
+      if (UI.TurnLog) UI.TurnLog.mount(logEl);                                                              // "Last turn": links to where things happened
       const navBtns = NAV.map(([name, key, fn]) => UI.button(name, fn, { kbd: key.toUpperCase() }));
     const nextBtn = UI.button('Next turn', () => endTurn(), { primary: true, big: true, kbd: 'N' });
     const bar = h('nav.gx-bar', navBtns, h('span.gx-spacer'), nextBtn);
