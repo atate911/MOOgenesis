@@ -56,11 +56,12 @@ Detailed prompts + layout guide: `docs/IMAGE-GEN-COUNCIL-AND-SKIES.md` §2.
 
 ## Batch 3 — stills (`docs/IMAGE-GEN-OTHER.md`), 8 files now
 
-### Battle backdrops §4.3 (5) — unlock: combat board backdrop per battle kind
+### Battle backdrops §4.3 (4) — unlock: combat board backdrop per battle kind
+Full prompts: `docs/IMAGE-GEN-BATTLE-BACKDROPS.md`.
 - [ ] `battle-planet.png` (#26)
 - [ ] `battle-nebula.png` (#27)
 - [ ] `battle-asteroids.png` (#28)
-- [ ] `battle-star.png` (#29)
+- [ ] ~~`battle-star.png` (#29)~~ not needed: nothing in the combat code selects it
 - [ ] `battle-deep.png` (#30)
 
 ### Stills — unlock: exile ending backdrop, colony build box, title backdrop
