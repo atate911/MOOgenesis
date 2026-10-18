@@ -5,6 +5,13 @@ Versions follow `MAJOR.MINOR.PATCH`; the live version is the `VERSION` file.
 
 ## Unreleased
 
+- Fixed the drop-out between pieces on the map: a player that had been told to fade stopped scheduling its notes, so the outgoing piece
+  lost its final bar and cadence the moment the newcomer began, and the seam was planned only once the outgoing piece's last note had
+  been scheduled, which for most pieces is the end itself — so the newcomer started at the end, fading in from nothing. Now a leaving
+  piece keeps playing to its end, its fade starts at its own end (6 s), a non-looping performance knows its end as soon as it is
+  compiled, and the newcomer enters on the last bar line within six seconds of the end; the interludes begin and close at a level that
+  meets the pieces instead of swelling from silence. Verified in real time (two short pieces in a gap-0 rotation: every note of the
+  first scheduled, the second entering two bars before its end).
 - The era: a slow arc under the exploration music that is felt in hindsight, never heard moving. `soundscape.js` reads a target from
   the state each turn and lets a value follow it a few hundredths a turn (`Music.setEra`). The target starts moving about halfway
   through a game: it is built from how many of the player's colonies have foreign colonies pressing close, how many races have been

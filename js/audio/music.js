@@ -948,10 +948,12 @@
       K.fadeParam(this.bus.gain, 0, this.trim, t, sec, 'in');
       K.fadeParam(this.verb.gain, 0, 1 - 0.33 * this.intensity, t, sec, 'in'); K.fadeParam(this.stage.gain, 0, 1, t, sec, 'in');
     }
-    fadeOut(sec) {
+    // fade out over sec seconds, starting at `at` (default now; the rotation starts it at the piece's own end so the cadence is heard at full level).
+    // The player keeps scheduling its notes until it is killed: a piece that is leaving still plays to its end under the newcomer.
+    fadeOut(sec, at) {
       if (this.stopped) return;
       this.stopped = true;
-      const t = this.eng.ctx.currentTime;
+      const now = this.eng.ctx.currentTime, t = Math.max(now, num(at, now));
       sec = Math.max(0.03, sec);
       K.fadeParam(this.bus.gain, this.bus.gain.value, 0, t, sec, 'out');
       K.fadeParam(this.verb.gain, this.verb.gain.value, 0, t, sec, 'out'); K.fadeParam(this.stage.gain, this.stage.gain.value, 0, t, sec, 'out');
@@ -963,6 +965,7 @@
       const prevEnd = this.pass ? this.pass.start + this.pass.len : this.t0;
       this.pass = compilePass(this.def, this.passNo, this.form0, this.alt0, this.take, this.era); this.pass.start = prevEnd; this.idx = 0;
       if (this.stretch !== 1) this.pass.len *= this.stretch;
+      if (!this.loop) this.endAt = this.pass.start + this.pass.len - this.shift;      // known from the start, so the rotation can plan the seam
     }
     fire(ev, T) {
       const L = this.layers[ev.ly]; if (!L) return;
@@ -1002,9 +1005,9 @@
     tick(now, look) {
       if (this.disposed) return;
       for (const v of this.live) if (v.dead) this.live.delete(v);
-      if (this.stopped) { if (now >= this.killAt) this.finished = true; return; }
-      this.scheduleUntil(now + look);
-      if (this.schedDone && now > this.endAt + 5) this.finished = true;
+      if (this.stopped && now >= this.killAt) { this.finished = true; return; }
+      this.scheduleUntil(Math.min(now + look, this.stopped ? this.killAt : Infinity));   // a leaving piece still plays its remaining notes (never past its kill time)
+      if (!this.stopped && this.schedDone && now > this.endAt + 5) this.finished = true;
     }
     dispose() {
       if (this.disposed) return;
@@ -1055,7 +1058,7 @@
   // keeps pieces in the same key apart.
   function playlistCheck(now) {
     const pl = S.playlist, p = S.cur;
-    if (!pl || !p || !p.schedDone || pl.advancing) return;
+    if (!pl || !p || !p.pass || p.loop || pl.advancing) return;
     if (S.switchAt) return;
     if (p.endAt - now <= pl.fade + 5) {
       pl.advancing = true;
@@ -1077,8 +1080,8 @@
         // the old piece is not cut — it plays its last bar and its final chord decays under the newcomer (a long fade that mostly happens
         // after its last note), so the cadence is heard and the hall carries one piece into the next
         const at = Math.min(p.endAt, p.boundaryAfter(Math.max(now + 0.1, p.endAt - pl.fade)));
-        const inFade = clamp(p.endAt - at + 1.5, 2.5, pl.fade), oldFade = (p.endAt - at) + 6;
-        S.switchAt = { id, opts: { fade: pl.fade, inFade, oldFade, loop: false, keepPlaylist: true, quantize: false }, at };
+        const inFade = clamp(p.endAt - at + 1.5, 2.5, pl.fade);
+        S.switchAt = { id, opts: { fade: pl.fade, inFade, oldFade: 6, oldFadeAt: p.endAt, loop: false, keepPlaylist: true, quantize: false }, at };
         ensureTimer();
       }
     }
@@ -1145,7 +1148,7 @@
     S.switchAt = null;
     if (!opts.keepPlaylist) { S.playlist = null; S.plWait = null; }
     const p = new Player(eng, def, { loop: opts.loop !== false, intensity: S.intensity });
-    if (S.cur) { S.cur.fadeOut(num(opts.oldFade, fade)); S.old.push(S.cur); }    // oldFade: let a piece that is ending ring out under the next one
+    if (S.cur) { S.cur.fadeOut(num(opts.oldFade, fade), opts.oldFadeAt); S.old.push(S.cur); }    // oldFade / oldFadeAt: a piece that is ending plays to its end and rings out under the next one
     S.cur = p;
     p.fadeIn(num(opts.inFade, fade));
     p.begin(eng.ctx.currentTime + 0.1);
@@ -1656,10 +1659,10 @@
     inst: { pad: 'air', pad2: 'strings', bass: 'deep', lead: 'glass', bell: 'glass', arp: 'harp', choir: 'ooh' },
     ph: { H: '5:3 8:1 | 7:2 6:2 | 5:4 | r:4', T: '8:4 | 5:4 | r:8', U: '3:4 | 5:4 | 4:4 | r:4' },
     sec: [
-      { n: 'in', bars: 2, cres: [0.38, 0.46], prog: 'I:2', pad: { p: 'swell', n: 2, reg: [64, 81] }, bass: { pat: '1---', pedal: true, inst: { p: 'deep', att: 2.2, rel: 3.2, sub: 0.5 } }, bell: { dens: 0.06, res: 1, reg: [76, 100], vel: 0.32 } },
+      { n: 'in', bars: 2, cres: [0.46, 0.5], prog: 'I:2', pad: { p: 'sus', n: 2, reg: [64, 81] }, bass: { pat: '1---', pedal: true, inst: { p: 'deep', att: 1.4, rel: 3.2, sub: 0.5 } }, bell: { dens: 0.06, res: 1, reg: [76, 100], vel: 0.32 } },
       { n: 'A', bars: 8, lv: 0.44, prog: 'I:2 IV:2 | vi:2 V:2', pad: { p: 'swell', n: 2, reg: [64, 81] }, pad2: { p: 'swell', n: 3, reg: [50, 72], vel: 0.5, skip: 0.3 }, bass: { pat: '1---', pedal: true, inst: { p: 'deep', att: 2.0, rel: 3.0, sub: 0.5 } },
         lead: { ph: ['r2 H', 'H r4', 'r2 T r2', 'r4 U', 'r8'], vel: 0.36, echo: 0.3 }, arp: { pat: '0.......2.......', res: 2, vel: 0.3, reg: [57, 84], skip: 0.5 }, choir: { n: 2, reg: [62, 76], vel: 0.3, soft: true, skip: 0.4 }, bell: { dens: 0.08, res: 1, reg: [76, 100], vel: 0.34 } },
-      { n: 'out', bars: 2, barsVar: [1, 2], lv: 0.3, prog: 'I:4', pad: { p: 'swell', n: 2, reg: [64, 81] }, bell: { dens: 0.05, res: 1, reg: [76, 100], vel: 0.3 } },
+      { n: 'out', bars: 2, barsVar: [1, 2], lv: 0.42, prog: 'I:4', pad: { p: 'swell', n: 2, reg: [64, 81] }, bell: { dens: 0.05, res: 1, reg: [76, 100], vel: 0.3 } },
     ],
   });
 
@@ -1671,10 +1674,10 @@
     inst: { pad: 'strings', pad2: 'air', bass: 'deep', lead: 'cello', bell: 'glass', arp: 'harp', choir: 'ooh' },
     ph: { C1: '1:8 | 3:8 | 2:6 1:2 | 5:8', C2: '5:8 | 6:8 | 5:6 4:2 | 3:8' },
     sec: [
-      { n: 'in', bars: 2, cres: [0.38, 0.48], prog: 'I:2', pad: { p: 'swell', n: 3, reg: [52, 74] }, bass: { pat: '1---', pedal: true, inst: { p: 'deep', att: 1.8, rel: 3.0, sub: 0.5 } }, arp: { pat: '0.1.2.3.', res: 2, vel: 0.34, reg: [55, 84] } },
+      { n: 'in', bars: 2, cres: [0.46, 0.5], prog: 'I:2', pad: { p: 'sus', n: 3, reg: [52, 74] }, bass: { pat: '1---', pedal: true, inst: { p: 'deep', att: 1.4, rel: 3.0, sub: 0.5 } }, arp: { pat: '0.1.2.3.', res: 2, vel: 0.34, reg: [55, 84] } },
       { n: 'A', bars: 8, lv: 0.46, prog: 'I:2 IV:2 | vi:2 V:2', pad: { p: 'swell', n: 3, reg: [52, 74] }, pad2: { p: 'swell', n: 2, reg: [72, 88], vel: 0.4, skip: 0.4 }, bass: { pat: '1---', pedal: true, inst: { p: 'deep', att: 1.8, rel: 3.0, sub: 0.5 } },
         arp: { pat: '0.1.2.3.', res: 2, vel: 0.36, reg: [55, 84] }, lead: { ph: ['C1', 'C2', 'r2 C1', 'r8'], oct: -1, vel: 0.5 }, bell: { dens: 0.06, res: 1, reg: [76, 100], vel: 0.32 } },
-      { n: 'out', bars: 2, barsVar: [1, 2], lv: 0.36, prog: 'I:2', pad: { p: 'swell', n: 3, reg: [52, 74] }, arp: { pat: '0...2...', res: 2, vel: 0.3, reg: [55, 84] }, bell: { dens: 0.05, res: 1, reg: [76, 100], vel: 0.3 } },
+      { n: 'out', bars: 2, barsVar: [1, 2], lv: 0.42, prog: 'I:2', pad: { p: 'swell', n: 3, reg: [52, 74] }, arp: { pat: '0...2...', res: 2, vel: 0.3, reg: [55, 84] }, bell: { dens: 0.05, res: 1, reg: [76, 100], vel: 0.3 } },
     ],
   });
 
@@ -1685,10 +1688,10 @@
     inst: { pad: 'air', pad2: 'strings', bass: 'deep', lead: 'flute', bell: 'glass', choir: 'choirWomen', choir2: 'choirMen' },
     ph: { F: '8:4 | 5:4 | r:8', G: '5:4 | 6:4 | 5:8' },
     sec: [
-      { n: 'in', bars: 2, cres: [0.38, 0.48], prog: 'I:2', pad: { p: 'swell', n: 2, reg: [64, 81] }, bass: { pat: '1---', pedal: true, inst: { p: 'deep', att: 2.0, rel: 3.0, sub: 0.5 } }, choir2: { n: 3, reg: [38, 55], vel: 0.34, soft: true } },
+      { n: 'in', bars: 2, cres: [0.46, 0.5], prog: 'I:2', pad: { p: 'sus', n: 2, reg: [64, 81] }, bass: { pat: '1---', pedal: true, inst: { p: 'deep', att: 1.4, rel: 3.0, sub: 0.5 } }, choir2: { n: 3, reg: [38, 55], vel: 0.34, soft: true } },
       { n: 'A', bars: 8, lv: 0.46, prog: 'I:2 IV:2 | vi:2 V:2', pad: { p: 'swell', n: 2, reg: [64, 81] }, pad2: { p: 'swell', n: 3, reg: [50, 72], vel: 0.45, skip: 0.3 }, bass: { pat: '1---', pedal: true, inst: { p: 'deep', att: 2.0, rel: 3.0, sub: 0.5 } },
         choir: { n: 2, reg: [65, 79], vel: 0.36, soft: true }, choir2: { n: 3, reg: [38, 55], vel: 0.36, soft: true }, lead: { ph: ['r2 F r2', 'r4 G', 'r8'], vel: 0.34, echo: 0.3 }, bell: { dens: 0.06, res: 1, reg: [76, 100], vel: 0.32 } },
-      { n: 'out', bars: 2, barsVar: [1, 2], lv: 0.36, prog: 'I:2', pad: { p: 'swell', n: 2, reg: [64, 81] }, choir2: { n: 3, reg: [38, 55], vel: 0.3, soft: true, skip: 0.3 }, bell: { dens: 0.05, res: 1, reg: [76, 100], vel: 0.3 } },
+      { n: 'out', bars: 2, barsVar: [1, 2], lv: 0.42, prog: 'I:2', pad: { p: 'swell', n: 2, reg: [64, 81] }, choir2: { n: 3, reg: [38, 55], vel: 0.3, soft: true, skip: 0.3 }, bell: { dens: 0.05, res: 1, reg: [76, 100], vel: 0.3 } },
     ],
   });
 
@@ -1699,10 +1702,10 @@
     inst: { pad: 'strings', pad2: 'analog', bass: 'deep', lead: 'hornSolo', bell: 'crystal', choir: 'ooh' },
     ph: { H: '5:3 8:1 | 7:2 6:2 | 5:4 | r:4', H2: '8:3 10:1 | 9:2 8:2 | 7:4 | 5:4' },
     sec: [
-      { n: 'in', bars: 2, cres: [0.38, 0.5], prog: 'I:2', pad: { p: 'swell', n: 3, reg: [48, 70] }, pad2: { p: 'swell', n: 3, reg: [43, 64], vel: 0.55 }, bass: { pat: '1---', pedal: true, inst: { p: 'deep', att: 1.8, rel: 3.0, sub: 0.55 } } },
+      { n: 'in', bars: 2, cres: [0.46, 0.52], prog: 'I:2', pad: { p: 'sus', n: 3, reg: [48, 70] }, pad2: { p: 'sus', n: 3, reg: [43, 64], vel: 0.55 }, bass: { pat: '1---', pedal: true, inst: { p: 'deep', att: 1.4, rel: 3.0, sub: 0.55 } } },
       { n: 'A', bars: 8, lv: 0.5, prog: 'I:2 IV:2 | vi:2 V:2', pad: { p: 'sus', n: 3, reg: [48, 70] }, pad2: { p: 'swell', n: 3, reg: [43, 64], vel: 0.55 }, bass: { pat: '1---', pedal: true, inst: { p: 'deep', att: 1.8, rel: 3.0, sub: 0.55 } },
         lead: { ph: ['r2 H r2', 'H r4', 'r4 H2', 'r8'], vel: 0.4 }, bell: { dens: 0.06, res: 1, reg: [76, 100], vel: 0.34 }, choir: { n: 2, reg: [60, 76], vel: 0.3, soft: true, skip: 0.4 } },
-      { n: 'out', bars: 2, barsVar: [1, 2], lv: 0.38, prog: 'I:2', pad: { p: 'swell', n: 3, reg: [48, 70] }, bell: { dens: 0.05, res: 1, reg: [76, 100], vel: 0.3 } },
+      { n: 'out', bars: 2, barsVar: [1, 2], lv: 0.42, prog: 'I:2', pad: { p: 'swell', n: 3, reg: [48, 70] }, bell: { dens: 0.05, res: 1, reg: [76, 100], vel: 0.3 } },
     ],
   });
 
@@ -1713,10 +1716,10 @@
     inst: { pad: 'warm', bass: 'deep', lead: 'glass', bell: 'vibes', arp: 'marimba', choir: 'ooh' },
     ph: { M: '5:2 8:2 | 7:4 | 6:2 5:2 | r:4' },
     sec: [
-      { n: 'in', bars: 2, cres: [0.38, 0.48], prog: 'I:2', pad: { p: 'swell', n: 3, reg: [50, 72] }, arp: { pat: '0.2.', res: 1, vel: 0.34, reg: [57, 78] } },
+      { n: 'in', bars: 2, cres: [0.46, 0.5], prog: 'I:2', pad: { p: 'sus', n: 3, reg: [50, 72] }, arp: { pat: '0.2.', res: 1, vel: 0.34, reg: [57, 78] } },
       { n: 'A', bars: 8, lv: 0.48, prog: 'I:2 IV:2 | vi:2 V:2', pad: { p: 'sus', n: 3, reg: [50, 72] }, bass: { pat: '1---', inst: { p: 'deep', att: 1.2, rel: 2.4, sub: 0.5 } }, arp: { pat: '0.2.', res: 1, vel: 0.36, reg: [57, 78] },
         lead: { ph: ['r2 M r2', 'r4 M', 'r8'], vel: 0.36 }, bell: { dens: 0.08, res: 1, reg: [76, 93], vel: 0.34 } },
-      { n: 'out', bars: 2, barsVar: [1, 2], lv: 0.38, prog: 'I:2', pad: { p: 'swell', n: 3, reg: [50, 72] }, arp: { pat: '0...', res: 1, vel: 0.3, reg: [57, 78] } },
+      { n: 'out', bars: 2, barsVar: [1, 2], lv: 0.42, prog: 'I:2', pad: { p: 'swell', n: 3, reg: [50, 72] }, arp: { pat: '0...', res: 1, vel: 0.3, reg: [57, 78] } },
     ],
   });
 
