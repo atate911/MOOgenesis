@@ -5,6 +5,10 @@ Versions follow `MAJOR.MINOR.PATCH`; the live version is the `VERSION` file.
 
 ## Unreleased
 
+- Galaxy map declutter (a lit button with the map controls, or V), after the DCLTR key on aviation displays: hides the grid, the
+  standing range rings, names of stars that aren't yours, habitability marks, your fleets' ETA labels and every route or rally line
+  but the selected one. A panel's own range rings (e.g. while picking a destination) still show. Remembered between games.
+- Fleet deployment steppers restyled to match the sliders: steel bevelled buttons with drawn red arrows and a lime readout.
 - "Last turn" log under the galaxy sidebar (`js/ui/turnlog.js`): what happened to you during the turn just played, most urgent first
   (battles won or lost, bombardments, invasions; random events; colony notices such as population or factories at maximum, terraforming,
   shields, stargates; exploration as one line of star links; ships built; breakthroughs). Each star name is a link that selects the star

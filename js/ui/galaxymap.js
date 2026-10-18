@@ -488,6 +488,7 @@
     .gmap-btn { --ch:.3rem; position:relative; isolation:isolate; width:2rem; height:2rem; padding:0; border:0; cursor:pointer; color:var(--brass-hi); display:grid; place-items:center;
       background:linear-gradient(180deg,var(--brass),var(--brass-lo)); transition:filter .15s; }
     .gmap-btn::before { content:""; position:absolute; inset:1px; z-index:-1; clip-path:var(--poly); background:linear-gradient(180deg,#27336d,#161e4a); transition:background .15s; }
+    .gmap-btn.lit { color:#fff4c8; filter:drop-shadow(0 0 6px rgba(243,220,160,.75)); } .gmap-btn.lit::before { background:linear-gradient(180deg,#8a6a24,#4a3410); }
     .gmap-btn.off { opacity:.5; } .gmap-btn.off svg { stroke-dasharray:none; }
     .gmap-btn:hover { filter:brightness(1.15); } .gmap-btn:hover::before { background:linear-gradient(180deg,#34448c,#1c2760); } .gmap-btn:active { transform:translateY(1px); }
     .gmap-btn svg { width:1.05rem; height:1.05rem; fill:none; stroke:currentColor; stroke-width:2; stroke-linecap:square; stroke-linejoin:miter; }
@@ -543,6 +544,13 @@
     const miniCv = h('canvas');
     const miniEl = h('div.gmap-mini.ch', miniCv);
     const svgBtn = (path, tip, fn) => { const b = h('button.gmap-btn.ch', { type: 'button', 'aria-label': tip, onclick: e => { fn(e); root.focus({ preventScroll: true }); } }); b.innerHTML = '<svg viewBox="0 0 24 24">' + path + '</svg>'; if (UI.setTip) UI.setTip(b, tip); return b; };
+    // DECLUTTER (like an avionics map's DCLTR): drops what is rarely needed at a glance (grid, range rings, route and rally lines but the
+    // selected one, foreign and unowned star names, planet-type icons, ETA tags but the selected fleet's); ships, stars and territory stay
+    const dcOn = () => !!(M.Settings && M.Settings.get('mapDeclutter') === true);
+    const dcBtn = svgBtn('<path d="M4 7h16M7 12h10M10 17h4"/>', 'Declutter: hide grid, rings, names and lines you rarely need <b>V</b>',
+      () => { if (M.Settings) M.Settings.set('mapDeclutter', !dcOn()); syncDcBtn(); });
+    const syncDcBtn = () => { dcBtn.classList.toggle('lit', dcOn()); dcBtn.setAttribute('aria-pressed', String(dcOn())); };
+    syncDcBtn();
     // fleet route lines and rally lines on / off (a busy late-game map); off still shows the selected fleet's or colony's line
     const routesOn = () => !(M.Settings && M.Settings.get('mapRoutes') === false);
     const routesBtn = svgBtn('<circle cx="5" cy="18" r="2"/><circle cx="19" cy="6" r="2"/><path d="M6.6 16.6C10 13 9 9 12.5 8.2S17 7 17.4 7.2" stroke-dasharray="2.4 2.2"/>', 'Fleet routes and rally lines on / off <b>L</b>',
@@ -555,7 +563,7 @@
       svgBtn('<path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/>', 'Show the whole galaxy', () => api.fit()),
       svgBtn('<path d="M12 3l9 9-9 9-9-9z"/><circle cx="12" cy="12" r="2.2"/>', 'Centre on your capital <b>Home</b>', () => api.home()),
       svgBtn('<circle cx="7" cy="7" r="2.6"/><path d="M13 7h8M13 17h8M4.4 14.4l5 5M9.4 14.4l-5 5"/>', 'Map key and planet icons <b>K</b>', () => api.showLegend(!legendShown())),
-      routesBtn);
+      routesBtn, dcBtn);
     const root = h('div.gmap', { tabindex: 0, role: 'application', 'aria-label': 'Galaxy map' }, canvas, miniEl, ctrlEl, legendEl, hintEl, tipEl);
     if (opts.controls === false) ctrlEl.style.display = 'none';
     container.appendChild(root);
@@ -932,6 +940,7 @@
       else if (k === 'End') api.fit();
       else if (k === 'k' || k === 'K') api.showLegend(!legendShown());
       else if (k === 'l' || k === 'L') routesBtn.click();
+      else if (k === 'v' || k === 'V') dcBtn.click();
       else if (k === 'Escape') {
         if (routeFleet !== null) { const fid = routeFleet; setRouteMode(null); emit('routeCancel', fid); }
         else if (selFleet !== null) setSelFleet(null, true);
@@ -1097,7 +1106,7 @@
 
     // ------------------------------------------------------------------ star-chart graticule + parsec ruler
     function drawGrid(t) {
-      if (M.Settings && M.Settings.get('mapGrid') === false) return;
+      if ((M.Settings && M.Settings.get('mapGrid') === false) || dcOn()) return;
       const z = cam.z, pcPx = z * pcU, hw = W / 2, hh = H / 2;
       let ST = GRID_STEPS[GRID_STEPS.length - 1];
       for (const s of GRID_STEPS) if (s.M * pcPx >= 84) { ST = s; break; }
@@ -1157,7 +1166,7 @@
         for (const id of rangesSpec.stars) { const s = sdById[id]; if (!s || !s.on && Math.hypot(s.sx - W / 2, s.sy - H / 2) > rr + Math.max(W, H)) continue; ring(s.sx, s.sy, rr, col, 0.55, 1.3, [7, 6], -t * 6); ctx.fillStyle = rgba(col, 0.035); ctx.beginPath(); ctx.arc(s.sx, s.sy, rr, 0, TAU); ctx.fill(); }
         return;
       }
-      if (!me) return;
+      if (!me || dcOn()) return;                                     // decluttered: no standing range rings (a panel's own rangesSpec above still shows)
       let cx = 0, cy = 0, have = false;
       if (selStar !== null) { const s = sdById[selStar]; if (s && s.mine) { cx = s.sx; cy = s.sy; have = true; } }
       else if (selFleet !== null) { const fd = FD.get(selFleet); if (fd && fd.owner === pidOf() && fd.a > 0.05) { cx = (fd.dx - cam.x) * z + hw; cy = (fd.dy - cam.y) * z + hh; have = true; } }
@@ -1179,7 +1188,7 @@
     // fan converging on it. Chevrons drift toward the target so the direction is clear without arrowheads cluttering a busy hub.
     const GATE_RGB = [199, 166, 255];
     function drawRelocs(t) {
-      const n = SD.length, all = !(M.Settings && (M.Settings.get('mapRoutes') === false || M.Settings.get('mapReloc') === false));   // off: only the selected colony's rally line
+      const n = SD.length, all = !dcOn() && !(M.Settings && (M.Settings.get('mapRoutes') === false || M.Settings.get('mapReloc') === false));   // off: only the selected colony's rally line
       ctx.lineCap = 'round';
       for (let i = 0; i < n; i++) {
         const s = SD[i]; if (s.reloc < 0 || (!all && s.id !== selStar && s.reloc !== selStar)) continue;
@@ -1219,7 +1228,7 @@
       ctx.restore();
     }
     function drawLanes(t) {
-      const z = cam.z, hw = W / 2, hh = H / 2, pid = pidOf(), all = !(M.Settings && M.Settings.get('mapRoutes') === false);   // off: only the selected fleet's line
+      const z = cam.z, hw = W / 2, hh = H / 2, pid = pidOf(), all = !dcOn() && !(M.Settings && M.Settings.get('mapRoutes') === false);   // off: only the selected fleet's line
       ctx.lineCap = 'round';
       for (let pass = 0; pass < 2; pass++) {              // pass 0: foreign (dimmer), pass 1: own
         const byOwner = {};
@@ -1419,7 +1428,7 @@
     }
     // ---- colonisation glyphs: circle = settle now, triangle = needs a special colony base, hollow square = no planet (shape + lightness differ, so they read without colour)
     const HAB_COL = ['', '#5cc8ff', '#ffa534', '#a9b4e0'];
-    const habOn = znv => habIcons && znv >= 34 && !(wEnv > 0.5 || wMin > 0.5);
+    const habOn = znv => habIcons && !dcOn() && znv >= 34 && !(wEnv > 0.5 || wMin > 0.5);
     function habPos(s, znv) { const rad = clamp(3.6 + znv * 0.014, 4.2, 7.4) * uk, rr = s.r * 1.6 + 4; return { x: s.sx - rr * 0.78 - rad * 0.6, y: s.sy + rr * 0.78 + rad * 0.6, r: rad }; }
     function pathHab(g, kind, x, y, r) {
       g.beginPath();
@@ -1515,6 +1524,7 @@
         let want = false, force = false;
         if (s.orion || (hot && named)) { want = true; force = true; }
         else if (!named) want = false;
+        else if (dcOn()) want = s.owner >= 0 && s.owner === pidOf();                       // decluttered: your own colonies only
         else if (lm === 'owned') want = s.owner >= 0;
         else if (lm === 'all') want = true;
         else want = s.owner >= 0 || (s.known && znv >= 40);
@@ -1655,7 +1665,7 @@
         if ((sel && !ext) || (hov && !sel)) { ctx.globalAlpha = 1; drawBrackets(x, y, sz * 0.8, t, sel ? 1 : 0.6, sel ? th.rgb.brassHi : th.rgb.cyan, sel ? selT : 1); }
         fd.sx = x; fd.sy = y; fd.sz = sz;
         // ETA label
-        if ((fd.owner === pid || sel || hov) && f.eta > 0 && (znv >= 60 || sel || hov) && !fd.tw) {
+        if (((fd.owner === pid && !dcOn()) || sel || hov) && f.eta > 0 && (znv >= 60 || sel || hov) && !fd.tw) {
           const etaPx = Math.round(10 * uk), etaTone = fd.owner === pid ? toneFor('ivory') : toneFor('mist');
           let e = fd.etaL; if (!e || fd.etaV !== f.eta || fd.etaPx !== etaPx || fd.etaTone !== etaTone || fd.etaDpr !== dpr) { e = fd.etaL = labelSprite('ETA ' + f.eta, etaPx, etaTone, dpr, th.fontUi); fd.etaV = f.eta; fd.etaPx = etaPx; fd.etaTone = etaTone; fd.etaDpr = dpr; }
           ctx.globalAlpha = a * (sel || hov ? 1 : 0.85); ctx.drawImage(e.c, Math.round(x - e.w / 2), Math.round(y + sz * 0.62), e.w, e.h); ctx.globalAlpha = 1;
