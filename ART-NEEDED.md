@@ -40,12 +40,17 @@ Check the result with `node tools/qa/art-shots.js` (and `TIER=medium`): a missin
 - [ ] `base-platform.png`
 
 ### Star-system skies, 16:9, no planet (6) — unlock: the system screen backdrop with the star upper-right
+Detailed prompts + layout guide: `docs/IMAGE-GEN-COUNCIL-AND-SKIES.md` §2.
 - [ ] `system-sky-yellow.png`
 - [ ] `system-sky-red.png`
 - [ ] `system-sky-green.png`
 - [ ] `system-sky-blue.png`
 - [ ] `system-sky-white.png`
 - [ ] `system-sky-purple.png`
+
+## Council chamber (`docs/IMAGE-GEN-COUNCIL-AND-SKIES.md` §1), 1 file — unlock: a photoreal Galactic Council hall
+- [ ] `scene-council-chamber.png` → `assets/world-art/scene/`, webp into `assets/art/scene/`. Needs code after it lands
+      (alcove map + `Scenes.council` drawing the plate with the race photos in its alcoves, see §1.5 of the brief).
 
 ## Batch 3 — stills (`docs/IMAGE-GEN-OTHER.md`), 8 files now
 

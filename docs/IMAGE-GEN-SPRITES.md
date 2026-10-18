@@ -51,6 +51,7 @@ ice or metal veins; transparent background. 1024 px.
 | 21 | `base-platform` | an orbital missile battery as seen from above: a hardened disc or hexagon with silo covers and radar masts, magenta livery panels, white nav lights; transparent. 1024 px |
 
 ### 3.4 Star-system skies — 6 images (16:9, 1920×1080, these DO have a background)
+Full per-colour prompts, exact star position and a layout guide: `docs/IMAGE-GEN-COUNCIL-AND-SKIES.md` §2 (use that instead).
 Purpose: the background of the star-system screen. The engine draws the planet itself (lower left, large) and its
 readouts (bottom), so the image must contain **no planet** and keep the lower-left quarter calm. The star sits in the
 **upper right**, about 12 % of the frame wide, with a soft corona and realistic limb; a faint nebula and star field
