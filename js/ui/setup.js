@@ -265,22 +265,10 @@
 
   // ---- portrait painter: Gfx.Portraits when available, otherwise a brass-ringed medallion with the race initial ---
   let portraitBroken = false;
-  const portraitProbe = {};
   function havePortrait(id) {
     const P = M.Gfx && M.Gfx.Portraits;
     if (!P || portraitBroken || typeof P.draw !== 'function' || (P.RACES && P.RACES.indexOf(id) < 0)) return false;
-    if (portraitProbe[id] === undefined) {                      // does this race actually paint anything yet?
-      let ok = false;
-      try {
-        const c = doc.createElement('canvas'); c.width = 20; c.height = 25;
-        const g = c.getContext('2d');
-        (P.procedural || P).draw(g, id, 0, 0, 20, 25, { t: 0, bg: false });
-        const d = g.getImageData(0, 0, 20, 25).data;
-        for (let i = 3; i < d.length; i += 4) if (d[i] > 8) { ok = true; break; }
-      } catch (e) { ok = false; }
-      portraitProbe[id] = ok;
-    }
-    return portraitProbe[id];
+    return true;
   }
   // o: {t, mood, talking, color, bg, still}.  `still` paints a cached static frame (thumbnails); otherwise animated.
   function drawPortrait(ctx, id, w, hh, o) {

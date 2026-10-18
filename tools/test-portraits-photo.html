@@ -22,7 +22,7 @@
 <script src="../js/gfx/portraits.js"></script>
 <script>
 /* Photo portraits: every race x (portrait 3:4, landscape 16:9, square, small strips, badges r=48/28/14) x moods.
-   ?races=human,mrrshan  &size=220  &anim=1 (animate talking)  &photos=0 (procedural fallback)  &mood=angry  */
+   ?races=human,mrrshan  &size=220  &anim=1 (animate talking)  &photos=0 (stand-in card shown while a photo loads)  &mood=angry  */
 (function () {
   'use strict';
   const q = new URLSearchParams(location.search), P = MOO.Gfx.Portraits, $ = (id) => document.getElementById(id);
@@ -31,7 +31,7 @@
   const races = (q.get('races') || P.RACES.join(',')).split(',').filter(Boolean);
   const size = +(q.get('size') || 200), anim = q.get('anim') === '1', mood = q.get('mood') || 'neutral';
   const dpr = Math.min(2, window.devicePixelRatio || 1), cells = [];
-  $('bar').innerHTML = 'photo ready: <b id="rdy"></b> <a href="?anim=1">animate</a> <a href="?photos=0">procedural</a> <a href="?mood=angry">angry</a> <a href="?races=human&size=360">big</a>';
+  $('bar').innerHTML = 'photo ready: <b id="rdy"></b> <a href="?anim=1">animate</a> <a href="?photos=0">stand-in</a> <a href="?mood=angry">angry</a> <a href="?races=human&size=360">big</a>';
   function cell(parent, label, w, h, fn) {
     const d = document.createElement('div'); d.className = 'c';
     const c = document.createElement('canvas'); c.width = Math.round(w * dpr); c.height = Math.round(h * dpr); c.style.width = w + 'px'; c.style.height = h + 'px';

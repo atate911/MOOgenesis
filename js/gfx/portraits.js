@@ -4595,8 +4595,9 @@
 
   /* ####################################################################################################################
      PHOTO PORTRAITS : assets/races/race-<id>-portrait.webp (square photoreal art) replace the procedural figures wherever a
-     portrait is shown.  Same public API; until an image has loaded (or if it fails / Portraits.photos === false) the call falls
-     through to the procedural renderer above.  Images are plain <img> (works from file://; pixels are never read back).
+     portrait is shown.  Same public API; until an image has loaded (or if it fails / Portraits.photos === false) a quiet
+     "channel" card is shown instead (dark panel in the race accent, monogram + name; nothing at all when placed on a scene).
+     The old procedural figures above are never shown in the game any more (only the dev page tools/test-portraits.html uses them).  Images are plain <img> (works from file://; pixels are never read back).
      Per (race, pixel size, crop tightness, feather) the cover-cropped, downscaled bitmap is cached (budget scales with
      MOO.HW.memoryGB).  Moods = cheap canvas grading; talking = slow breathing zoom + light flicker.   See tools/handoff/portraits-photo.md
      #################################################################################################################### */
@@ -4754,6 +4755,40 @@
     phGrade(ctx, x, y, w, h, o, t, ta);
     return true;
   }
+  /* stand-in while a photo loads (or if it cannot): a dark comm-channel card tinted with the race accent, monogram ring + name */
+  function phAccent(race) { const d = V2[race] || PAINT[race]; return d ? d.accent : '#d6b36a'; }
+  function phHold(ctx, race, x, y, w, h, o) {
+    if (o.bg === false) return;   // on a scene: leave the spot empty rather than show a stand-in figure
+    const ac = phAccent(race), m = Math.min(w, h);
+    ctx.save();
+    ctx.beginPath(); ctx.rect(x, y, w, h); ctx.clip();
+    ctx.fillStyle = lg(ctx, x, y, x, y + h, [0, mixc(ac, '#070a18', 0.82), 1, '#03040c']); ctx.fillRect(x, y, w, h);
+    ctx.fillStyle = rgd(ctx, x + w / 2, y + h * 0.42, 0, Math.max(w, h) * 0.7, [0, rgba(ac, 0.16), 1, rgba(ac, 0)]); ctx.fillRect(x, y, w, h);
+    if (m > 40) { ctx.fillStyle = 'rgba(255,255,255,.025)'; const st = Math.max(2, m / 90); for (let yy = y; yy < y + h; yy += st * 2) ctx.fillRect(x, yy, w, st); }
+    const cx = x + w / 2, cy = y + h * (m > 90 ? 0.44 : 0.5), r = m * 0.24;
+    ctx.lineWidth = Math.max(1, r * 0.05); ctx.strokeStyle = rgba(ac, 0.5);
+    ctx.beginPath(); ctx.arc(cx, cy, r, 0, TAU); ctx.stroke();
+    const nm = NAMES[race] || String(race || '?');
+    ctx.fillStyle = rgba(mixc(ac, '#ffffff', 0.55), 0.8); ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.font = '400 ' + Math.round(r * 1.05) + 'px "Marcellus SC", "Marcellus", Georgia, serif';
+    ctx.fillText(nm.charAt(0).toUpperCase(), cx, cy + r * 0.05);
+    if (m > 90) {
+      ctx.fillStyle = 'rgba(236,230,211,.6)'; ctx.font = '400 ' + Math.max(10, Math.round(m * 0.07)) + 'px "Marcellus SC", "Marcellus", Georgia, serif';
+      ctx.fillText(nm.toUpperCase(), cx, y + h * 0.8);
+    }
+    ctx.restore();
+  }
+  function phHoldBadge(ctx, race, cx, cy, r, o) {
+    const rw = Math.max(1.6, r * 0.09), fr = r - rw;
+    ctx.save(); ctx.beginPath(); ctx.arc(cx, cy, fr, 0, TAU); ctx.clip();
+    const ac = phAccent(race);
+    ctx.fillStyle = rgd(ctx, cx - fr * 0.3, cy - fr * 0.35, 0, fr * 1.4, [0, mixc(ac, '#0a0d1e', 0.6), 1, '#03040c']); ctx.fillRect(cx - fr, cy - fr, fr * 2, fr * 2);
+    ctx.fillStyle = rgba(mixc(ac, '#ffffff', 0.55), 0.85); ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.font = '400 ' + Math.round(fr * 1.05) + 'px "Marcellus SC", "Marcellus", Georgia, serif';
+    ctx.fillText((NAMES[race] || String(race || '?')).charAt(0).toUpperCase(), cx, cy + fr * 0.06);
+    ctx.restore();
+    badgeRing(ctx, cx, cy, r, rw, o);
+  }
   function zFor(px, badge) { return badge ? (px > 140 ? 0.74 : 0.62) : px <= 90 ? 0.6 : px <= 170 ? 0.8 : 1; }
   function photoDraw(ctx, race, x, y, w, h, o) {
     o = o || {};
@@ -4769,7 +4804,7 @@
         if (ok) return;
       } catch (e) { PH.state[race] = 'bad'; console.warn('[portraits photo] ' + race, e); }
     }
-    draw(ctx, race, x, y, w, h, o);
+    phHold(ctx, race, x, y, w, h, o);
   }
   function photoBadge(ctx, race, cx, cy, r, o) {
     o = o || {};
@@ -4782,12 +4817,12 @@
         if (ok) { badgeRing(ctx, cx, cy, r, rw, o); return; }
       } catch (e) { PH.state[race] = 'bad'; console.warn('[portraits photo badge] ' + race, e); }
     }
-    drawBadge(ctx, race, cx, cy, r, o);
+    phHoldBadge(ctx, race, cx, cy, r, o || {});
   }
   const _pcc = new Map();
   function photoCanvas(race, w, h, o) {
     o = o || {};
-    if (!phReady(race)) return canvas(race, w, h, o);
+    if (!phReady(race)) { const c = document.createElement('canvas'); c.width = w; c.height = h; phHold(c.getContext('2d'), race, 0, 0, w, h, o); return c; }   // not cached: the photo replaces it once loaded
     const key = [race, w, h, o.mood || '', o.color || '', o.bg === false ? 0 : 1, o.flip ? 1 : 0, o.t || 0].join('|');
     let c = _pcc.get(key); if (c) return c;
     c = document.createElement('canvas'); c.width = w; c.height = h;
@@ -4804,7 +4839,7 @@
   M.Gfx.Portraits = {
     RACES: RACES, MOODS: MOODS, NAMES: NAMES, light: LIGHT,
     draw: photoDraw, canvas: photoCanvas, drawBadge: photoBadge,
-    photos: true, procedural: { draw: draw, canvas: canvas, drawBadge: drawBadge },
+    photos: true, procedural: { draw: draw, canvas: canvas, drawBadge: drawBadge },   // dev pages only: never call these from the game
     photo: { ready: function (r) { return PH.state[r] === 'ok'; }, load: phLoad, loadAll: function () { RACES.forEach(phLoad); }, onLoad: function (f) { PH.subs.push(f); },
       whenReady: function (race, f) { if (PH.state[race] === 'ok') { f(); return; } if (!PH.state[race]) phLoad(race); if (PH.state[race] === 'bad') return; PH.subs.push(function w(r) { if (r === race) { const i = PH.subs.indexOf(w); if (i >= 0) PH.subs.splice(i, 1); f(); } }); }, cacheBytes: function () { return PH.bytes; } },
     accent: function (race) { const d = V2[race] || PAINT[race]; return d ? d.accent : '#d6b36a'; },

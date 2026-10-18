@@ -372,29 +372,10 @@
   function lookOf(d) { return LOOKS[d && d.look] || LOOKS.terran; }
 
   /* ======================================================================= safe wrappers around sibling modules */
-  function fbPortrait(g, race, x, y, w, h, o) {
-    const SK = { alkari: '#e8c27a', bulrathi: '#a8794a', darlok: '#6a5a86', human: '#e4b48c', klackon: '#c27a2a', meklar: '#9aa6b8', mrrshan: '#d6a05a', psilon: '#9ad0a8', sakkra: '#6aa860', silicoid: '#80c8e0' };
-    const t = o.t || 0, col = o.color || C.brass, skin = SK[race] || '#d8b090', sc = min(w / 400, h / 500);
-    g.save(); g.beginPath(); g.rect(x, y, w, h); g.clip();
-    g.translate(x + w / 2, y + h); g.scale(sc, sc);
-    g.fillStyle = lgr(g, 0, -170, 0, 0, [0, lite(col, 0.12), 1, dark(col, 0.6)]);
-    g.beginPath(); g.moveTo(-190, 0); g.quadraticCurveTo(-176, -140, -70, -168); g.lineTo(70, -168); g.quadraticCurveTo(176, -140, 190, 0); g.closePath(); g.fill();
-    g.strokeStyle = C.brass; g.lineWidth = 3; g.beginPath(); g.moveTo(-70, -168); g.lineTo(0, -120); g.lineTo(70, -168); g.stroke();
-    g.fillStyle = dark(skin, 0.3); g.fillRect(-30, -230, 60, 70);
-    g.fillStyle = lgr(g, -70, -400, 70, -200, [0, lite(skin, 0.2), 1, dark(skin, 0.35)]);
-    g.beginPath(); g.ellipse(0, -295, 78, 98, 0, 0, TAU); g.fill();
-    const bl = (sin(t * 0.9) > 0.985) ? 0.15 : 1;
-    g.fillStyle = '#10142c'; g.beginPath(); g.ellipse(-30, -305, 13, 9 * bl, 0, 0, TAU); g.ellipse(30, -305, 13, 9 * bl, 0, 0, TAU); g.fill();
-    g.fillStyle = C.cyan; g.beginPath(); g.arc(-30, -305, 4, 0, TAU); g.arc(30, -305, 4, 0, TAU); g.fill();
-    const mo = o.talking ? abs(sin(t * 9)) * 12 : 2;
-    g.fillStyle = '#1a0f18'; g.beginPath(); g.ellipse(0, -250, 22, 3 + mo, 0, 0, TAU); g.fill();
-    g.restore();
-  }
   function drawPortrait(g, race, x, y, w, h, o) {
     const P = G.Portraits;
     if (P && P.draw) { try { P.draw(g, race, x, y, w, h, o); return true; } catch (e) { warnOnce('Portraits.draw', e); } }
-    fbPortrait(g, race, x, y, w, h, o);
-    return false;
+    return false;   // no stand-in figure: an empty spot beats a crude drawing
   }
   function drawBadge(g, race, cx, cy, r, o) {
     const P = G.Portraits;
