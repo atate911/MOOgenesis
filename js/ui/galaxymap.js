@@ -625,6 +625,7 @@
       const visArr = fog && me && me.vis ? me.vis : null, seenMap = me && me.seen && typeof me.seen === 'object' ? me.seen : null;
       const guardianAlive = !!S.guardian && (S.guardian === true || S.guardian.alive !== false);
       SD.length = 0; sdById.length = 0;
+      let att = {}; try { if (me && M.Sim && M.Sim.Q && M.Sim.Q.attention && planets.length) att = M.Sim.Q.attention(S, pid); } catch (e) { att = {}; }   // badges: colonies needing a look, raids inbound
       for (let i = 0; i < stars.length; i++) {
         const st = stars[i], sd = sdPool[st.id] || (sdPool[st.id] = newSD(st.id));
         const pl = planets[st.planets && st.planets.length ? st.planets[0] : st.id] || null;
@@ -646,6 +647,7 @@
         sd.nebula = !!(st.inNebula || st.nebula);
         sd.pop = vis === 2 ? (pl ? pl.pop || 0 : 0) : (seen ? seen.pop || 0 : 0); sd.maxPop = sd.known && pl ? pl.maxPop || 0 : 0;
         sd.gate = !!pl && !!pl.stargate && vis === 2 && sd.owner >= 0;              // stargates: own ones, and foreign ones while in scanner range
+        sd.att = att[st.id] || null;
         sd.reloc = sd.mine && pl && pl.reloc >= 0 && pl.reloc !== st.id && planets[pl.reloc] && planets[pl.reloc].owner === pid ? planets[pl.reloc].starId : -1;
         sd.name = st.name || ('Star ' + st.id); if (sd.lblName !== sd.name) { sd.lbl = null; sd.lblName = sd.name; }
         sd.pri = (sd.orion ? 100 : 0) + (sd.capital ? 40 : 0) + (sd.mine ? 30 : sd.owner >= 0 ? 20 : 0) + (vis === 2 ? 4 : vis === 1 ? 2 : 0);
@@ -1223,6 +1225,32 @@
           const cx = x + gap + (k % 2) * (cell + gap), cy = y + gap + ((k / 2) | 0) * (cell + gap);
           const pulse = Q.reduce ? 0.85 : 0.65 + 0.35 * Math.max(0, Math.sin(t * 2.2 + s.ph + k * 1.57));
           ctx.fillStyle = 'rgba(92,170,255,' + pulse.toFixed(3) + ')'; ctx.fillRect(cx, cy, cell, cell);
+        }
+      }
+      ctx.restore();
+    }
+    // your colonies that need a look: a small "!" badge at the star's lower left (red: unrest, events, shrinking; amber: waste, idle factories);
+    // a hostile fleet or troop transport seen flying at one: a pulsing red ring and the turns until it arrives, at the star's right
+    function drawAlerts(t) {
+      ctx.save(); ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      for (let i = 0; i < SD.length; i++) {
+        const s = SD[i], a = s.att; if (!a || !s.on) continue;
+        ctx.globalAlpha = s.rk;
+        const ro = s.r * 1.95 + 7 * uk;
+        if (a.issues.length) {
+          const bad = a.issues.some(x => x.k === 'bad'), rr = Math.max(5.5, 7 * uk), x = s.sx - ro * 0.74, y = s.sy + ro * 0.62;
+          ctx.beginPath(); ctx.arc(x, y, rr, 0, TAU); ctx.fillStyle = bad ? 'rgba(200,40,48,0.95)' : 'rgba(214,150,30,0.95)'; ctx.fill();
+          ctx.lineWidth = 1; ctx.strokeStyle = 'rgba(10,6,4,0.9)'; ctx.stroke();
+          ctx.fillStyle = '#fff6e0'; ctx.font = '700 ' + Math.round(rr * 1.45) + 'px ' + th.fontUi; ctx.fillText('!', x, y + 0.5);
+        }
+        if (a.threat) {
+          const pulse = Q.reduce ? 0.8 : 0.55 + 0.45 * Math.abs(Math.sin(t * 3 + s.ph)), rr = ro + 4 * uk;
+          ctx.lineWidth = 2 * uk; ctx.strokeStyle = 'rgba(255,60,60,' + pulse.toFixed(3) + ')'; ctx.setLineDash([5 * uk, 4 * uk]);
+          ctx.beginPath(); ctx.arc(s.sx, s.sy, rr, 0, TAU); ctx.stroke(); ctx.setLineDash([]);
+          const txt = '⚠ ' + a.threat.eta, fx = s.sx + rr + 4 * uk;
+          ctx.font = '600 ' + Math.round(11 * uk) + 'px ' + th.fontUi; ctx.textAlign = 'left';
+          ctx.lineWidth = 3; ctx.lineJoin = 'round'; ctx.strokeStyle = 'rgba(3,5,18,0.9)'; ctx.strokeText(txt, fx, s.sy);
+          ctx.fillStyle = '#ff7a6a'; ctx.fillText(txt, fx, s.sy); ctx.textAlign = 'center';
         }
       }
       ctx.restore();
@@ -1839,8 +1867,27 @@
         else if (pl.special === 'artifacts') out += '<div class="gt-r gt-v">Ancient artifacts: boosts research</div>';
       } else { out += '<div class="gt-r gt-d">Not yet explored. Send a ship to survey it.</div>'; if (s.orion) out += '<div class="gt-r gt-v">The Orion system</div>'; }
       if (E) out += '<div class="gt-r"><i class="sw" style="--c:' + empHex(s.owner) + '"></i><b>' + esc(E.name || E.race || 'Empire') + '</b>' + (s.capital ? ' · capital' : '') + (s.known ? ' · pop <b>' + Math.round(s.pop) + '</b>/' + s.maxPop : '') + (s.stale ? ' <span class="gt-d">(last report)</span>' : '') + '</div>';
+      if (s.mine && pl) out += colonyTip(s, pl);
       if (s.nebula) out += '<div class="gt-r gt-v">Inside a nebula: ships slow, shields fail</div>';
       if (!s.mine) { const d = distToMine(s); if (d !== null) out += '<div class="gt-r gt-d">' + d + ' pc from your nearest colony</div>'; }
+      return out;
+    }
+    // your colony at a glance: output, the shipyard, research, and what needs a look (the attention badges' reasons, a raid inbound)
+    function colonyTip(s, pl) {
+      let c = null; try { c = M.Sim.Q.colony(S, pl.id); } catch (e) { c = null; }
+      let out = '';
+      if (c) {
+        out += '<div class="gt-r">Production <b>' + c.production + '</b> BC · factories <b>' + c.factories + '</b>/' + c.maxFactories + '</div>';
+        const yrs = parseInt(c.readouts.ship.text, 10);
+        out += '<div class="gt-r">' + (c.readouts.ship.text === 'NONE' ? '<span class="gt-d">Shipyard idle</span>' : 'Building <b>' + esc(c.build.name) + '</b> · ' + (yrs > 1 ? 'one every ' + yrs + ' turns' : 'each turn')) + '</div>';
+        if (c.readouts.tech.rp > 0) out += '<div class="gt-r">Research <b>' + c.readouts.tech.rp + '</b> RP</div>';
+      }
+      const a = s.att;
+      if (a) {
+        for (const x of a.issues) out += '<div class="gt-r" style="color:' + (x.k === 'bad' ? '#ff7a6a' : 'var(--ember)') + '">! ' + esc(x.t) + '</div>';
+        const tr = a.threat;
+        if (tr) out += '<div class="gt-r" style="color:#ff7a6a">⚠ ' + [tr.ships ? tr.ships + ' hostile ' + plural(tr.ships, 'ship') : '', tr.troops ? tr.troops + 'M troops' : ''].filter(Boolean).join(' and ') + ' arriving in <b>' + tr.eta + '</b> ' + plural(tr.eta, 'turn') + '</div>';
+      }
       return out;
     }
     function fleetTip(fd, grp) {
@@ -1986,7 +2033,7 @@
       if (reachAnim) { let any = false; const k = Math.min(1, dt * 9); for (let i = 0; i < SD.length; i++) { const q = SD[i]; if (q.rk !== q.rkT) { q.rk += (q.rkT - q.rk) * k; if (Math.abs(q.rkT - q.rk) < 0.01) q.rk = q.rkT; else any = true; } } reachAnim = any; }
       computeScreen(t, dt); updateFleets(dt); updateHover(); lap('update');
       drawBackdrop(t); lap('backdrop'); drawNebulae(t); lap('nebulae'); drawBounds(); lap('bounds'); drawTerritory(t); lap('territory'); drawGrid(t); lap('grid'); drawRanges(t); drawRelocs(t); drawLanes(t); lap('lanes');
-      drawStarsPass(t, dt); drawGates(t); lap('stars'); drawSystems(t); lap('systems'); drawLabels(t, dt); lap('labels'); drawFleets(t); lap('fleets'); drawOverlays(t, dt); drawHud(t); lap('overlays');
+      drawStarsPass(t, dt); drawGates(t); drawAlerts(t); lap('stars'); drawSystems(t); lap('systems'); drawLabels(t, dt); lap('labels'); drawFleets(t); lap('fleets'); drawOverlays(t, dt); drawHud(t); lap('overlays');
       drawMini(); lap('mini');
       if (dirty.legend) buildLegend();
       lap('legend');

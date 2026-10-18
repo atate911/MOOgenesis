@@ -25,6 +25,7 @@
     .tl-a { color:var(--ivory); cursor:pointer; text-decoration:underline; text-decoration-color:rgba(214,179,106,.35); text-underline-offset:2px; }
     .tl-a:hover { color:var(--brass-hi); text-decoration-color:var(--brass-hi); }
     .tl-a.seen { color:var(--mist); }
+    .tl-sub { margin:.25rem .55rem .1rem; padding-top:.2rem; border-top:1px solid rgba(214,179,106,.18); color:var(--brass-hi); font:400 .78rem var(--font-display); letter-spacing:.08em; text-transform:uppercase; }
     .tl-more { display:block; margin:.15rem .55rem .2rem; color:var(--brass-hi); cursor:pointer; font-size:.8rem; }
   `);
 
@@ -82,30 +83,55 @@
 
   function row(l) {
     const tx = h('span.tx');
-    if (l.cat === 'explore') { tx.appendChild(document.createTextNode('Explored: ')); l.stars.forEach((s, k) => { if (k) tx.appendChild(document.createTextNode(' · ')); tx.appendChild(link(s)); }); }
+    if (l.cat === 'explore') { tx.appendChild(document.createTextNode(l.label || 'Explored: ')); l.stars.forEach((s, k) => { if (k) tx.appendChild(document.createTextNode(' · ')); tx.appendChild(link(s)); }); }
     else if (l.screen) { const a = h('span.tl-a', l.text); a.addEventListener('click', () => { a.classList.add('seen'); if (!G.busy && UI.Screens.has(l.screen)) UI.Screens.go(l.screen, { from: 'galaxy' }); }); tx.appendChild(a); }
     else if (l.link !== undefined) tx.appendChild(l.link >= 0 ? link(l.link, l.text) : document.createTextNode(l.text));
     else { if (l.text) tx.appendChild(document.createTextNode(l.text)); if (l.star >= 0) tx.appendChild(link(l.star)); if (l.suffix) tx.appendChild(document.createTextNode(l.suffix)); }
     return h('div.tl-r', { style: { '--c': COL[l.pri] } }, h('i'), tx);
   }
 
+  // "Coming up": read from the live state, not the turn's events — raids seen flying at your colonies, your fleets and transports landing
+  // next turn, colony ships sitting in orbit
+  function upcoming() {
+    const S = S_(), E = me(), out = []; if (!S || !E || G.busy) return out;
+    const A = M.Sim.Q.attention(S, E.id);
+    Object.keys(A).map(Number).filter(k => A[k].threat).sort((a, b) => A[a].threat.eta - A[b].threat.eta).forEach(k => {
+      const t = A[k].threat, what = [t.ships ? t.ships + ' hostile ' + (t.ships === 1 ? 'ship' : 'ships') : '', t.troops ? t.troops + 'M troops' : ''].filter(Boolean).join(' and ');
+      out.push({ pri: 0, text: '⚠ ' + what + ' reach ', star: k, suffix: ' in ' + t.eta + (t.eta === 1 ? ' turn' : ' turns') });
+    });
+    const F = M.Sim.Fleet, land = [];
+    for (const f of S.fleets) if (f.owner === E.id && f.star < 0 && f.to >= 0 && F.etaLeft(S, f) === 1 && land.indexOf(f.to) < 0) land.push(f.to);
+    for (const t of (S.trans || [])) if (t.owner === E.id && F.eta(S, t.from, t.to, t.speed, true) <= 1 && land.indexOf(t.to) < 0) land.push(t.to);
+    if (land.length) out.push({ pri: 3, cat: 'explore', label: 'Arriving next turn: ', stars: land });
+    const col = [];
+    for (const f of S.fleets) if (f.owner === E.id && f.star >= 0 && f.ships.some((n, i) => n > 0 && E.designs[i] && M.Sim.Design.stats(S, E, i).colonyMin)) col.push(f.star);
+    if (col.length) out.push({ pri: 2, cat: 'explore', label: (col.length === 1 ? 'Colony ship' : 'Colony ships') + ' in orbit: ', stars: col });
+    return out.sort((a, b) => a.pri - b.pri);
+  }
+
   function render() {
     if (!el) return;
     UI.clear(el);
-    el.classList.toggle('empty', !log.length); el.classList.toggle('shut', !open());
-    if (!log.length) return;
+    let next = []; try { next = upcoming(); } catch (e) { console.warn('[turn log]', e); }
+    el.classList.toggle('empty', !log.length && !next.length); el.classList.toggle('shut', !open());
+    if (!log.length && !next.length) return;
     const list = log.slice().sort((a, b) => a.pri - b.pri), shown = expanded ? list : list.slice(0, SHOWN);
-    const head = h('div.tl-h', { title: 'Show or hide what happened last turn' }, h('span.car', '▾'), 'Last turn' + (year !== null ? ' · ' + year : ''), h('span.n', list.length + (list.length === 1 ? ' event' : ' events')));
+    const head = h('div.tl-h', { title: 'Show or hide what happened last turn and what is coming up' }, h('span.car', '▾'), (list.length ? 'Last turn' + (year !== null ? ' · ' + year : '') : 'Coming up'),
+      h('span.n', list.length ? list.length + (list.length === 1 ? ' event' : ' events') : next.length + ' ahead'));
     head.addEventListener('click', () => { if (M.Settings) M.Settings.set('turnLogOpen', !open()); render(); });
     const body = h('div.tl-b', shown.map(row));
     if (list.length > SHOWN) { const more = h('span.tl-more', expanded ? 'Fewer ‹' : 'All ' + list.length + ' ›'); more.addEventListener('click', () => { expanded = !expanded; render(); }); body.appendChild(more); }
+    if (next.length) { if (list.length) body.appendChild(h('div.tl-sub', 'Coming up')); next.forEach(l => body.appendChild(row(l))); }
     el.appendChild(head); el.appendChild(body);
   }
+  let pend = 0;
+  const soon = () => { if (pend) return; pend = setTimeout(() => { pend = 0; if (!G.busy) render(); }, 60); };   // orders change what is coming up
 
   TL.mount = function (host) { el = host; el.classList.add('tl'); render(); };
   TL.entries = () => log.slice();
   M.Bus.on('turn:processing', on => { if (!on) { render(); return; } log = []; expanded = false; year = null; render(); });
   M.Bus.on('turn:item', (it, ans) => { try { take(it, ans); } catch (e) { console.warn('[turn log]', e); } });
   M.Bus.on('turn:end', S => { try { year = M.Data.Config.displayYear(S) - 1; } catch (e) { year = null; } render(); });
+  M.Bus.on('state', soon);
   M.Bus.on('game:new', () => { log = []; render(); }); M.Bus.on('game:loaded', () => { log = []; render(); });
 })(window.MOO);

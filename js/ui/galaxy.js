@@ -25,6 +25,8 @@
     .gx-hud .y { font:400 1.3rem var(--font-display); color:var(--brass-hi); letter-spacing:.04em; }
     .gx-hud .k { color:var(--mist); font-size:.82rem; margin-right:.3em; }
     .gx-hud b { font-weight:600; font-variant-numeric:tabular-nums; }
+    .gx-att { display:flex; gap:.45rem; cursor:pointer; font-weight:600; font-variant-numeric:tabular-nums; } .gx-att span { padding:.05rem .4rem; border:1px solid currentColor; border-radius:.2rem; }
+    .gx-att .r { color:#ff7a6a; } .gx-att .w { color:var(--ember, #f0a040); } .gx-att:hover span { background:rgba(255,255,255,.08); }
     .gx-msg { pointer-events:auto; margin-left:auto; max-width:28rem; display:flex; flex-direction:column; gap:.3rem; }
     .gx-msg .m { padding:.3rem .7rem; background:rgba(8,12,34,.78); border-left:3px solid var(--brass); font-size:.9rem; }
     .gx-msg .m.bad { border-left-color:var(--rose); } .gx-msg .m.ok { border-left-color:var(--leaf); }
@@ -205,7 +207,15 @@
       h('span', h('span.k', 'Reserve'), h('b.t-gold', U.fmt(E.bc)), ' ', h('span.t-gold', 'BC'), f.taxToReserve ? h('span.t-leaf.small', ' +' + f.taxToReserve) : null),
       h('span', h('span.k', 'Income'), h('b' + ((f.net | 0) < (f.gross | 0) * 0.6 ? '.t-rose' : '.t-leaf'), U.fmt(f.net | 0)), h('span.k', ' of ' + U.fmt(f.gross | 0))),
       h('span', h('span.k', 'Research'), h('b.t-cyan', U.fmt(rp)), h('span.t-cyan', ' RP')),
-      h('span', h('span.k', 'Colonies'), h('b', colonies)));
+      h('span', h('span.k', 'Colonies'), h('b', colonies)), attentionChips());
+  }
+  // the HUD's count of colonies needing a look: a click (or I) steps through them, most urgent first
+  function attentionChips() {
+    let L = []; try { L = attentionList(); } catch (e) { return null; }
+    if (!L.length) return null;
+    const raids = L.filter(x => x.a.threat).length, rest = L.length - raids;
+    return h('span.gx-att', { tip: 'Colonies that need a look: raids on the way, unrest, shrinking population, waste, idle factories. Click or press <b>I</b> to step through them (Shift+I back).', onclick: () => cycleAttention(1) },
+      raids ? h('span.r', '⚠ ' + raids) : null, rest ? h('span.w', '! ' + rest) : null);
   }
 
   async function endTurn() {
@@ -254,6 +264,17 @@
     if (i < 0) i = 0;
     const id = mine[i].starId; UI.Galaxy.selectStar(id); if (map) map.centerOn(id, { animate: true });
   }
+  // colonies needing a look (Q.attention), most urgent first: raids by arrival, then red warnings, then amber ones
+  function attentionList() {
+    const S = G.S, A = Q.attention(S, S.playerId), rank = a => a.threat ? a.threat.eta : a.issues.some(x => x.k === 'bad') ? 100 : 200;
+    return Object.keys(A).map(Number).sort((a, b) => rank(A[a]) - rank(A[b]) || a - b).map(id => ({ star: id, a: A[id] }));
+  }
+  function cycleAttention(dir) {
+    if (G.busy || !G.S) return;
+    const L = attentionList(); if (!L.length) { UI.toast('Nothing needs your attention right now.', 'ok', 2200); return; }
+    let i = L.findIndex(x => x.star === G.sel.star); i = i < 0 ? (dir > 0 ? 0 : L.length - 1) : (i + dir + L.length) % L.length;
+    const id = L[i].star; UI.Galaxy.selectStar(id); if (map) map.centerOn(id, { animate: true });
+  }
   function bindKeys() {
     const scr = { screen: 'galaxy' };
     NAV.forEach(([name, key, fn]) => offs.push(UI.bindKey(key, fn, scr)));
@@ -262,6 +283,7 @@
     offs.push(UI.bindKey('F2', () => cycleColony(-1), scr)); offs.push(UI.bindKey('F3', () => cycleColony(1), scr));
     const withShips = p => !!M.Sim.Fleet.at(G.S, p.starId, G.S.playerId);
     offs.push(UI.bindKey('F4', () => cycleColony(1, withShips), scr)); offs.push(UI.bindKey('F5', () => cycleColony(-1, withShips), scr));
+    offs.push(UI.bindKey('i', e => cycleAttention(e && e.shiftKey ? -1 : 1), scr));
     offs.push(UI.bindKey('F10', () => { if (G.saveSlot('auto')) UI.toast('Game saved', 'ok'); else UI.toast('The game could not be saved (browser storage full or blocked). Use Game › Save › Export to a file.', 'bad', 8000); }, scr));
     offs.push(UI.bindKey('Escape', () => { if (UI.gameMenu) UI.gameMenu(); }, scr));
     offs.push(UI.bindKey('Home', () => { if (map) map.centerOn(G.player().capital, { animate: true }); }, scr));

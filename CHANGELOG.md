@@ -5,6 +5,15 @@ Versions follow `MAJOR.MINOR.PATCH`; the live version is the `VERSION` file.
 
 ## Unreleased
 
+- Colonies needing attention (`Q.attention`): the Planets screen's warnings (rebellion or unrest, events, shrinking population,
+  waste building up, idle factories) now show on the galaxy map as a small "!" badge at the colony (red or amber), and a hostile
+  warfleet or troop transport you can see flying at one of your colonies draws a pulsing red ring with the turns until it arrives.
+  The top bar counts them (⚠ raids, ! problems); a click or I steps through them, raids first (Shift+I goes back).
+- Hovering one of your colonies on the map shows its production and factories, what the shipyard is building and how often,
+  its research, and the reasons behind any badge or raid ring.
+- The "Last turn" log gains a "Coming up" part read from the live state: raids on the way (with arrival), your fleets and
+  transports landing next turn, and colony ships sitting in orbit. It updates as you give orders, and shows on its own when
+  nothing happened last turn.
 - Galaxy map: a star's tooltip flips to the corner of the pointer that keeps it clear of a panel floating over the map (fleet
   deployment, rally point, transport), so it is never hidden underneath while picking a destination.
 - Combat: the Special devices menu opens beside the acting ship over a lightly dimmed board instead of mid-screen, its devices
