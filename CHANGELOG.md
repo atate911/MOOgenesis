@@ -5,6 +5,8 @@ Versions follow `MAJOR.MINOR.PATCH`; the live version is the `VERSION` file.
 
 ## Unreleased
 
+- Galaxy map: the sky painting behind the stars is anchored to the galaxy as a far layer. It pans with the map (one to one at the
+  fit-all view) and zooms more slowly than the stars, instead of staying almost fixed on screen while the map moved over it.
 - Turn cards about a star (a new system explored, the colonise question, notices) have a "Go there ›" link that zooms the
   galaxy map in on that star and selects it; the card stays until answered.
 - Transport panel: the colonists on the origin and destination worlds now → after the move, against each world's maximum
