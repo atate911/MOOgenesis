@@ -5,9 +5,10 @@ Versions follow `MAJOR.MINOR.PATCH`; the live version is the `VERSION` file.
 
 ## Unreleased
 
-- Combat asteroids and wreckage are rendered cutouts: eight distinct rocks (cratered, split, clustered, icy, metallic …) replace the
-  grey procedural blobs on the battle board, and three wreckage pieces (hull plate, engine nacelle, truss) tumble away from kills.
-  Cut from one generated sheet (`MOOg images/fx/fx-sheet.png`) into `assets/art/fx/rock-*.webp` / `debris-*.webp`.
+- Combat asteroids and wreckage are rendered cutouts: eight distinct dark, rugged rocks replace the grey procedural blobs on the
+  battle board, and eight wreckage pieces (hull sections, a nacelle, a truss, a dish, a solar array …) tumble away from kills, picked
+  at random. Cut from one generated sheet (`MOOg images/fx/fx-sheet.png`) into `assets/art/fx/rock-*.webp` / `debris-*.webp`, colours
+  as delivered. Fixed on the way: the board only ever showed three of the rock designs (the variant was taken modulo 3).
 - Ships have their 3/4 view: nine rendered 3/4 "beauty" cutouts (one per hull class, `MOOg images/ship-variants/*-3q.png`, built
   into `assets/ships/ship-<class>-1-3q.webp` + team masks), recoloured to each empire's banner like the top-down set. They appear
   wherever the camera is not overhead: the design hologram, the system and colony cards, the bombers over the planet, the exile

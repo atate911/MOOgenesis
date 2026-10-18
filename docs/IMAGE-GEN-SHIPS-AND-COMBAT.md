@@ -136,8 +136,9 @@ What the game does with them (`js/ui/combat-fx.js`):
   would point the wrong way most of the time.
 - **Small on screen.** They show at roughly **40–120 px**, so a strong silhouette and mid-tone values matter more than
   fine detail.
-- **Rocks and debris come as one sheet.** One prompt makes all eleven, which keeps them consistent; I cut the sheet
-  into `rock-1` … `rock-8` and `debris-1` … `debris-3`.
+- **Rocks and debris come as one sheet.** One prompt makes them all, which keeps them consistent. The delivered sheet is a 4×4
+  grid (rows 1–2 rocks, rows 3–4 wreckage), cut into `rock-1` … `rock-8` and `debris-1` … `debris-8`; the game uses up to eight
+  of each.
 - **The platform gets no magenta.** The game draws a pulsing glow in the empire's colour at its right edge instead.
 
 **Drop-in.** Put the files in `MOOg images/fx/` and I'll cut and convert them into `assets/art/fx/`. The game uses

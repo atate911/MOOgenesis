@@ -186,7 +186,7 @@
       for (const d of DEBRIS) {
         if (d.on) continue;
         const a = Math.random() * TAU, sp = len * (0.25 + Math.random() * 0.6);
-        d.on = true; d.x = x; d.y = y; d.vx = cos(a) * sp; d.vy = sin(a) * sp; d.rot = Math.random() * TAU; d.vr = (Math.random() - 0.5) * 3; d.age = 0; d.life = 2.6 + Math.random() * 1.6; d.s = len * (0.14 + Math.random() * 0.14); d.v = 1 + (n % 3);
+        d.on = true; d.x = x; d.y = y; d.vx = cos(a) * sp; d.vy = sin(a) * sp; d.rot = Math.random() * TAU; d.vr = (Math.random() - 0.5) * 3; d.age = 0; d.life = 2.6 + Math.random() * 1.6; d.s = len * (0.14 + Math.random() * 0.14); d.v = 1 + ((Math.random() * 8) | 0);   // any of the eight wreckage cutouts
         if (++n >= 4) break;
       }
       return true;
@@ -304,7 +304,7 @@
         if (bu.kind === 'planet') planetU = du;
         else if (G.Ships && G.Ships.prewarm) { try { G.Ships.prewarm(du.race, monsterHull(du), 128, du.color, du.flags, du.vkey || null); } catch (e) { /* optional */ } }
       }
-      rocks = B.rocks.map((r, i) => ({ x: r.x, y: r.y, v: (r.x * 7 + r.y * 13 + i) % 3, rot: ((r.x * 31 + r.y * 17) % 60) / 60 * TAU, spin: (((r.x + r.y * 3) % 5) - 2) * 0.03 + 0.02 }));
+      rocks = B.rocks.map((r, i) => ({ x: r.x, y: r.y, v: (r.x * 7 + r.y * 13 + i) % 3, art: (r.x * 7 + r.y * 13 + i * 3) % 8, rot: ((r.x * 31 + r.y * 17) % 60) / 60 * TAU, spin: (((r.x + r.y * 3) % 5) - 2) * 0.03 + 0.02 }));
       const st = S && S.stars && S.stars[B.star];
       backdrop = { star: (st && st.color) || 'yellow', seed: (B.star | 0) * 131 + (B.bg | 0) * 17 + 5, nebula: !!B.nebula || ((B.bg | 0) % 2 === 0), decor: planetU ? null : decorPlanet(), key: '' };
       if (view.ready) layout();
@@ -904,7 +904,7 @@
     function drawRocks() {
       const px = max(16, min(grid.cw * 0.9, grid.ch * 1.35)) | 0;
       for (const r of rocks) {
-        const im = WAfx('rock-' + (r.v % 8 + 1)), x = cx(r.x), y = cy(r.y);
+        const im = WAfx('rock-' + (r.art + 1)), x = cx(r.x), y = cy(r.y);   // art (0..7): one of the eight rendered rocks; v (0..2) the procedural fallback
         ctx.save(); ctx.translate(x, y); ctx.rotate(r.rot);
         if (im) { const s = px * 1.15, k = min(s / im.naturalWidth, s / im.naturalHeight); ctx.drawImage(im, -im.naturalWidth * k / 2, -im.naturalHeight * k / 2, im.naturalWidth * k, im.naturalHeight * k); }
         else ctx.drawImage(rockSprite(r.v, px, dpr), -px / 2, -px / 2, px, px);
