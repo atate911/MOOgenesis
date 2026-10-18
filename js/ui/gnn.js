@@ -121,22 +121,10 @@
     if (p && /^#[0-9a-f]{3,6}$/i.test(p)) return toHex(p);
     return RACE_COL[id] || '#98a5cf';
   }
-  const probeCache = {};
-  // true when Gfx.Portraits actually paints this race (draw() silently ignores races without a painter)
+  // true when Gfx.Portraits knows this race (it shows the race's photo, or a plain stand-in card while that loads)
   function portraitReady(race) {
     const P = M.Gfx && M.Gfx.Portraits;
-    if (!P || typeof P.draw !== 'function' || !race) return false;
-    if (probeCache[race] !== undefined) return probeCache[race];
-    let ok = false;
-    try {
-      if (P.RACES && P.RACES.indexOf(race) < 0) throw new Error('unknown race');
-      const c = typeof P.canvas === 'function' ? (P.procedural || P).canvas(race, 12, 15, { t: 0, bg: false }) : null;
-      if (c) {
-        const d = c.getContext('2d').getImageData(0, 0, c.width, c.height).data;
-        for (let i = 3; i < d.length; i += 4) if (d[i] > 8) { ok = true; break; }
-      }
-    } catch (e) { ok = false; }
-    return (probeCache[race] = ok);
+    return !!(P && typeof P.draw === 'function' && race && (!P.RACES || P.RACES.indexOf(race) >= 0));
   }
   // round brass-ringed badge: Portraits.drawBadge or a plain medallion with the race initial
   function paintBadge(g, race, cx, cy, r, color) {

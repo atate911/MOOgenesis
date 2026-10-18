@@ -5,6 +5,45 @@ Versions follow `MAJOR.MINOR.PATCH`; the live version is the `VERSION` file.
 
 ## Unreleased
 
+- The combat board has illustrated backdrops by situation (`assets/art/battle/`): deep space, high orbit (the defended world's
+  glow and a debris ring just off-frame), an asteroid belt (dust and light shafts at the edges) and the inside of a nebula.
+  They are painted dark for the board, so the game only veils them lightly (12 % instead of the 45 % the stand-in system plate
+  needs) and the board stays readable.
+- Missile bases on the combat board are a rendered orbital battery (`assets/art/fx/base-platform.webp`: a hexagonal platform with
+  six silos, two open): up to six orbit a defended planet, each with a pulsing light in the owner's colour on its beacon lens,
+  replacing the orange gear icons.
+- The star-system screen has illustrated skies: six planet-free skies, one per star colour (`assets/art/system-sky/`), each with its
+  sun painted in the upper right (a red dwarf with starspots, a blue giant, a neutron star with jets …). The sun's position and size
+  are measured per image (`SKY_STAR` in `system.js`), so the planet is lit from the painted sun; the "<colour> star" label sits beside
+  it and the fleets-in-orbit tiles start below it.
+- Combat asteroids and wreckage are rendered cutouts: eight distinct dark, rugged rocks replace the grey procedural blobs on the
+  battle board, sized from the planet (each rock 0.75-1.15 of the planet's radius, so about half its width), and a destroyed ship
+  throws off small wreckage fragments (6-13 % of its length), each one of 24 pieces picked at random: hull sections, nacelles,
+  trusses, a turbine, a dish, a radiator, a gun barrel, a gearbox and more. Never rocks. Cut from two generated sheets
+  (`MOOg images/fx/fx-sheet.png`, `fx-sheet-2.png`) into `assets/art/fx/rock-*.webp` / `debris-*.webp`, colours as delivered.
+  Fixed on the way: the board only ever showed three of the rock designs (the variant was taken modulo 3).
+- Ships have their 3/4 view: nine rendered 3/4 "beauty" cutouts (one per hull class, `MOOg images/ship-variants/*-3q.png`, built
+  into `assets/ships/ship-<class>-1-3q.webp` + team masks), recoloured to each empire's banner like the top-down set. They appear
+  wherever the camera is not overhead: the design hologram, the system and colony cards, the bombers over the planet, the exile
+  ending, the title fly-by, the tech blueprint and the GNN. The colonisation lander over the beach now uses it too (`scenes.js`).
+  Each class has one 3/4 render, shared by all its top-down variants.
+- The Galactic Council meets in an illustrated chamber (`assets/art/scene/scene-council-chamber.webp`): the leader photos stand in its six
+  alcoves, graded to its lamplight, every delegate turned towards the pedestal (`Portraits.facing`: a photo whose leader looks away from
+  the centre is mirrored), names and votes on the brass lectern panels, the galaxy and speaker holograms over the emitter. The two
+  candidates take the inner alcoves; with fewer than six empires the outer alcoves stand vacant. The scene asks for a lighter colour pass
+  over the plate (new `plate` grade preset) so the bronze stays warm. The drawn chamber remains until the image has loaded.
+  `tools/test-scenes.html` now loads `gfx/worldart.js`.
+- The old procedural (vector) race leaders are never shown in the game any more. While a race photo is still loading, or if it
+  cannot load, portraits show a quiet stand-in card: a dark panel in the race's accent colour with a monogram ring and the race name
+  (badges: the monogram inside the usual ring); a portrait set over a scene (`bg:false`) stays empty instead. The UI checks in
+  `setup.js` and `gnn.js` no longer paint the old figure off screen to decide whether a race has a portrait, and the cartoon stand-in
+  bust in `scenes.js` is gone. The procedural painter itself is deleted (`portraits.js` ~4800 → ~330 lines), with its dev pages
+  `tools/test-portraits.html` / `test-portraits-v2.html` and `tools/handoff/portraits.md`; the API members only it used
+  (`procedural`, `prewarm`, `v2`, `converted`, `light`) are gone.
+- Dead code removed: `flipY`, `scalePts` and the uncalled `prism` painter method in `ships.js`, `wallQuad` and the room helper
+  `angleAt` in `scenes.js`, an unused `sfxOn` in `ui/combat.js`. `tools/test-scenes.html` loads `gfx/pick.js` again (every scene threw
+  `G.pick is not a function` there since the GPU picker arrived).
+
 - The era: a slow arc under the exploration music that is felt in hindsight, never heard moving. `soundscape.js` reads a target from
   the state each turn and lets a value follow it a few hundredths a turn (`Music.setEra`). The target starts moving about halfway
   through a game: it is built from how many of the player's colonies have foreign colonies pressing close, how many races have been

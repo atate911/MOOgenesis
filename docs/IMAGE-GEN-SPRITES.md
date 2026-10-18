@@ -26,6 +26,7 @@ text, watermark, logo, border, background, stars, nebula, planet, lens flare.
 ## 3. The 27 images
 
 ### 3.1 Hull classes, 3/4 view — 9 images (`ship-<class>-3q.png`)
+Full copy-paste prompts for §3.1–3.3: `docs/IMAGE-GEN-SHIPS-AND-COMBAT.md` (use those; note the missile platform takes **no** magenta).
 | # | File | Attach as reference | Notes |
 |---|---|---|---|
 | 1 | `frigate-3q` | `original--01-frigate.png` | small escort, one or two engines |
@@ -48,9 +49,10 @@ ice or metal veins; transparent background. 1024 px.
 | 18–20 | `debris-1` … `debris-3` | tumbling wreckage fragments: a hull plate with a torn edge, an engine nacelle, a bent truss — neutral grey, scorched |
 
 ### 3.3 Missile platform, top-down — 1 image
-| 21 | `base-platform` | an orbital missile battery as seen from above: a hardened disc or hexagon with silo covers and radar masts, magenta livery panels, white nav lights; transparent. 1024 px |
+| 21 | `base-platform` | an orbital missile battery as seen from above: a hardened disc or hexagon with silo covers and radar masts, no livery (the game adds an empire-colour glow at its right edge), white nav lights; transparent. 1024 px |
 
 ### 3.4 Star-system skies — 6 images (16:9, 1920×1080, these DO have a background)
+Full per-colour prompts, exact star position and a layout guide: `docs/IMAGE-GEN-COUNCIL-AND-SKIES.md` §2 (use that instead).
 Purpose: the background of the star-system screen. The engine draws the planet itself (lower left, large) and its
 readouts (bottom), so the image must contain **no planet** and keep the lower-left quarter calm. The star sits in the
 **upper right**, about 12 % of the frame wide, with a soft corona and realistic limb; a faint nebula and star field

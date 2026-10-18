@@ -186,7 +186,7 @@
       for (const d of DEBRIS) {
         if (d.on) continue;
         const a = Math.random() * TAU, sp = len * (0.25 + Math.random() * 0.6);
-        d.on = true; d.x = x; d.y = y; d.vx = cos(a) * sp; d.vy = sin(a) * sp; d.rot = Math.random() * TAU; d.vr = (Math.random() - 0.5) * 3; d.age = 0; d.life = 2.6 + Math.random() * 1.6; d.s = len * (0.14 + Math.random() * 0.14); d.v = 1 + (n % 3);
+        d.on = true; d.x = x; d.y = y; d.vx = cos(a) * sp; d.vy = sin(a) * sp; d.rot = Math.random() * TAU; d.vr = (Math.random() - 0.5) * 3; d.age = 0; d.life = 2.6 + Math.random() * 1.6; d.s = len * (0.06 + Math.random() * 0.07); d.v = 1 + ((Math.random() * 24) | 0);   // small fragments of the hull, any of the 24 wreckage cutouts
         if (++n >= 4) break;
       }
       return true;
@@ -304,7 +304,7 @@
         if (bu.kind === 'planet') planetU = du;
         else if (G.Ships && G.Ships.prewarm) { try { G.Ships.prewarm(du.race, monsterHull(du), 128, du.color, du.flags, du.vkey || null); } catch (e) { /* optional */ } }
       }
-      rocks = B.rocks.map((r, i) => ({ x: r.x, y: r.y, v: (r.x * 7 + r.y * 13 + i) % 3, rot: ((r.x * 31 + r.y * 17) % 60) / 60 * TAU, spin: (((r.x + r.y * 3) % 5) - 2) * 0.03 + 0.02 }));
+      rocks = B.rocks.map((r, i) => ({ x: r.x, y: r.y, v: (r.x * 7 + r.y * 13 + i) % 3, art: (r.x * 7 + r.y * 13 + i * 3) % 8, sz: 0.75 + ((r.x * 11 + r.y * 5 + i) % 5) * 0.1, rot: ((r.x * 31 + r.y * 17) % 60) / 60 * TAU, spin: (((r.x + r.y * 3) % 5) - 2) * 0.03 + 0.02 }));
       const st = S && S.stars && S.stars[B.star];
       backdrop = { star: (st && st.color) || 'yellow', seed: (B.star | 0) * 131 + (B.bg | 0) * 17 + 5, nebula: !!B.nebula || ((B.bg | 0) % 2 === 0), decor: planetU ? null : decorPlanet(), key: '' };
       if (view.ready) layout();
@@ -852,14 +852,15 @@
       const s = max(W / sw, H / sh) * 1.02, dw = sw * s, dh = sh * s, ox = (W - dw) / 2 + dx, oy = (H - dh) / 2 + dy;
       ctx.save(); ctx.imageSmoothingQuality = 'high';
       ctx.drawImage(im, sx, sy, sw, sh, ox, oy, dw, dh);
-      ctx.fillStyle = 'rgba(2,4,12,0.45)'; ctx.fillRect(0, 0, W, H);                                   // ~55 % brightness
+      // the stand-in system plate is a bright illustration and goes down to ~55 %; the battle backdrops are painted dark for the board already
+      ctx.fillStyle = mode === 'battle' ? 'rgba(2,4,12,0.12)' : 'rgba(2,4,12,0.45)'; ctx.fillRect(0, 0, W, H);
       if (B && B.nebula && mode === 'system') {                                                       // inside a nebula: a soft two-hue haze over the plate (shields are weaker here)
         const n1 = ctx.createRadialGradient(W * 0.3 + dx * 4, H * 0.6, 0, W * 0.3, H * 0.6, W * 0.5), n2 = ctx.createRadialGradient(W * 0.75, H * 0.3 + dy * 4, 0, W * 0.75, H * 0.3, W * 0.45);
         n1.addColorStop(0, 'rgba(120,70,190,0.26)'); n1.addColorStop(1, 'rgba(120,70,190,0)'); n2.addColorStop(0, 'rgba(60,150,170,0.2)'); n2.addColorStop(1, 'rgba(60,150,170,0)');
         ctx.fillStyle = n1; ctx.fillRect(0, 0, W, H); ctx.fillStyle = n2; ctx.fillRect(0, 0, W, H);
       }
       const vg = ctx.createRadialGradient(W * 0.5, H * 0.5, min(W, H) * 0.3, W * 0.5, H * 0.5, hypot(W, H) * 0.6);
-      vg.addColorStop(0, 'rgba(1,2,8,0)'); vg.addColorStop(1, 'rgba(1,2,8,0.5)'); ctx.fillStyle = vg; ctx.fillRect(0, 0, W, H);
+      vg.addColorStop(0, 'rgba(1,2,8,0)'); vg.addColorStop(1, mode === 'battle' ? 'rgba(1,2,8,0.3)' : 'rgba(1,2,8,0.5)'); ctx.fillStyle = vg; ctx.fillRect(0, 0, W, H);
       ctx.restore();
       star.x = ox + starU * dw; star.y = oy + starV * dh;
       return true;
@@ -902,11 +903,12 @@
     }
 
     function drawRocks() {
-      const px = max(16, min(grid.cw * 0.9, grid.ch * 1.35)) | 0;
+      const pr = min(grid.ch * 0.8, grid.cw * 0.42);              // the planet's radius (see layout): a rock is about half the planet's width
       for (const r of rocks) {
-        const im = WAfx('rock-' + (r.v % 8 + 1)), x = cx(r.x), y = cy(r.y);
+        const im = WAfx('rock-' + (r.art + 1)), x = cx(r.x), y = cy(r.y);   // art (0..7): one of the eight rendered rocks; v (0..2) the procedural fallback
+        const px = max(14, pr * r.sz) | 0;                         // sz 0.75..1.15 per rock
         ctx.save(); ctx.translate(x, y); ctx.rotate(r.rot);
-        if (im) { const s = px * 1.15, k = min(s / im.naturalWidth, s / im.naturalHeight); ctx.drawImage(im, -im.naturalWidth * k / 2, -im.naturalHeight * k / 2, im.naturalWidth * k, im.naturalHeight * k); }
+        if (im) { const k = min(px / im.naturalWidth, px / im.naturalHeight); ctx.drawImage(im, -im.naturalWidth * k / 2, -im.naturalHeight * k / 2, im.naturalWidth * k, im.naturalHeight * k); }
         else ctx.drawImage(rockSprite(r.v, px, dpr), -px / 2, -px / 2, px, px);
         ctx.restore();
       }
@@ -1137,7 +1139,7 @@
           ctx.save(); ctx.translate(bx, by); ctx.rotate(a * 0.5 + i);
           if (im) {
             const k = min(bs / im.naturalWidth, bs / im.naturalHeight); ctx.drawImage(im, -im.naturalWidth * k / 2, -im.naturalHeight * k / 2, im.naturalWidth * k, im.naturalHeight * k);
-            ctx.globalCompositeOperation = 'lighter'; const r2 = bs * 0.3, bl = 0.5 + 0.5 * sin(t * 3 + i); ctx.globalAlpha = 0.5 + 0.5 * bl; ctx.drawImage(glowSprite(u.color), bs * 0.3 - r2, -r2, r2 * 2, r2 * 2);
+            ctx.globalCompositeOperation = 'lighter'; const r2 = bs * 0.14, lx = bs * 0.41, bl = 0.5 + 0.5 * sin(t * 3 + i); ctx.globalAlpha = 0.5 + 0.5 * bl; ctx.drawImage(glowSprite(u.color), lx - r2, -r2, r2 * 2, r2 * 2);   // the beacon lens on the platform's right edge
           } else ctx.drawImage(spr, -bs / 2, -bs / 2, bs, bs);
           ctx.restore();
         }

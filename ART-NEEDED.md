@@ -20,41 +20,49 @@ Check the result with `node tools/qa/art-shots.js` (and `TIER=medium`): a missin
 
 ## Batch 4 — sprites and skies (`docs/IMAGE-GEN-SPRITES.md`), 27 files
 
+Full prompts for the ships, rocks, debris and platform: `docs/IMAGE-GEN-SHIPS-AND-COMBAT.md`.
+
 ### Ship hulls, 3/4 view (9) — unlock: design hologram, fleet/system/pre-battle cards, lander, bombers, title fly-by, exile ending, GNN ship graphic, tech blueprint
-- [ ] `frigate-3q.png` (reference: `MOOg images/fleet-ai-evaluation/original--01-frigate.png`)
-- [ ] `destroyer-3q.png` (`revised--02-destroyer.png`)
-- [ ] `cruiser-3q.png` (`revised--03-cruiser.png`)
-- [ ] `battleship-3q.png` (`revised--04-battleship.png`)
-- [ ] `doomstar-3q.png` (`alternatives--05-doomstar-eclipse.png`)
-- [ ] `starbase-3q.png` (`original--06-starbase.png`)
-- [ ] `battlestation-3q.png` (`revised--07-battlestation.png`)
-- [ ] `star-fortress-3q.png` (`alternatives--08-star-fortress-crown.png`)
-- [ ] `stargate-3q.png` (`original--09-stargate.png`)
+- [x] `frigate-3q.png` (reference: `MOOg images/fleet-ai-evaluation/original--01-frigate.png`)
+- [x] `destroyer-3q.png` (`revised--02-destroyer.png`)
+- [x] `cruiser-3q.png` (`revised--03-cruiser.png`)
+- [x] `battleship-3q.png` (`revised--04-battleship.png`)
+- [x] `doomstar-3q.png` (`alternatives--05-doomstar-eclipse.png`)
+- [x] `starbase-3q.png` (`original--06-starbase.png`)
+- [x] `battlestation-3q.png` (`revised--07-battlestation.png`)
+- [x] `star-fortress-3q.png` (`alternatives--08-star-fortress-crown.png`)
+- [x] `stargate-3q.png` (`original--09-stargate.png`)
 - [ ] optional, later: `<class>-<n>-3q.png` for the other 14 top-down variants so every design's two views match
 
 ### Asteroids and debris, top-down cutouts (11) — unlock: combat board rocks and kill debris
-- [ ] `rock-1.png` … `rock-8.png` (eight distinct shapes)
-- [ ] `debris-1.png`, `debris-2.png`, `debris-3.png`
+- [x] `rock-1.png` … `rock-8.png` (eight distinct shapes; cut from `MOOg images/fx/fx-sheet.png`)
+- [x] `debris-1.png` … `debris-24.png` (24 wreckage pieces from two sheets; the game picks one at random per fragment)
 
 ### Missile platform (1) — unlock: missile bases around the planet on the combat board
-- [ ] `base-platform.png`
+- [x] `base-platform.png` (the empire-colour glow sits on its beacon lens, right edge)
 
 ### Star-system skies, 16:9, no planet (6) — unlock: the system screen backdrop with the star upper-right
-- [ ] `system-sky-yellow.png`
-- [ ] `system-sky-red.png`
-- [ ] `system-sky-green.png`
-- [ ] `system-sky-blue.png`
-- [ ] `system-sky-white.png`
-- [ ] `system-sky-purple.png`
+Detailed prompts + layout guide: `docs/IMAGE-GEN-COUNCIL-AND-SKIES.md` §2.
+- [x] `system-sky-yellow.png`
+- [x] `system-sky-red.png`
+- [x] `system-sky-green.png`
+- [x] `system-sky-blue.png`
+- [x] `system-sky-white.png`
+- [x] `system-sky-purple.png`
+
+## Council chamber (`docs/IMAGE-GEN-COUNCIL-AND-SKIES.md` §1), 1 file — unlock: a photoreal Galactic Council hall
+- [x] `scene-council-chamber.png` — delivered and wired in (`Scenes.council` draws it with the race photos in its alcoves; alcove map
+      `CPLATE` in `js/gfx/scenes.js`). A replacement image needs its alcoves re-measured into `CPLATE`.
 
 ## Batch 3 — stills (`docs/IMAGE-GEN-OTHER.md`), 8 files now
 
-### Battle backdrops §4.3 (5) — unlock: combat board backdrop per battle kind
-- [ ] `battle-planet.png` (#26)
-- [ ] `battle-nebula.png` (#27)
-- [ ] `battle-asteroids.png` (#28)
-- [ ] `battle-star.png` (#29)
-- [ ] `battle-deep.png` (#30)
+### Battle backdrops §4.3 (4) — unlock: combat board backdrop per battle kind
+Full prompts: `docs/IMAGE-GEN-BATTLE-BACKDROPS.md`.
+- [x] `battle-planet.png` (#26)
+- [x] `battle-nebula.png` (#27)
+- [x] `battle-asteroids.png` (#28)
+- [ ] ~~`battle-star.png` (#29)~~ not needed: nothing in the combat code selects it
+- [x] `battle-deep.png` (#30)
 
 ### Stills — unlock: exile ending backdrop, colony build box, title backdrop
 - [ ] `end-exile.png` (#48)

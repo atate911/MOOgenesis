@@ -19,13 +19,14 @@
   const SYSTEM = ['blue', 'green', 'purple', 'red', 'white', 'yellow'];
   const EVENTS = ['bombarded', 'comet', 'devastated', 'nova', 'pirates', 'plague', 'planet-destroyed', 'rebellion'];
   const COLONY = ['barren-mining', 'dome-hostile', 'fortress', 'industrial', 'polluted', 'terran-city'];
-  const SCENES = ['first-landing', 'galaxy', 'ground-battle'];
+  const SCENES = ['first-landing', 'galaxy', 'ground-battle', 'council-chamber'];
   const RACES = ['human', 'mrrshan', 'silicoid', 'sakkra', 'psilon', 'alkari', 'klackon', 'bulrathi', 'meklar', 'darlok'];
   const PURPOSES = ['audience', 'scientist', 'figure', 'homeworld', 'council', 'homeworld-square'];
   // Batch-4 sprites / skies (docs/IMAGE-GEN-SPRITES.md) and batch-3 stills (docs/IMAGE-GEN-OTHER.md): looked up by the same rules,
   // so the callers below fall back to procedural art until the files exist in assets/art/.
   const BATTLE = ['planet', 'nebula', 'asteroids', 'star', 'deep'];
-  const FX = ['rock-1', 'rock-2', 'rock-3', 'rock-4', 'rock-5', 'rock-6', 'rock-7', 'rock-8', 'debris-1', 'debris-2', 'debris-3', 'base-platform'];
+  const FX = ['rock-1', 'rock-2', 'rock-3', 'rock-4', 'rock-5', 'rock-6', 'rock-7', 'rock-8', 'base-platform'];
+  for (let i = 1; i <= 24; i++) FX.push('debris-' + i);   // wreckage cutouts (fx-sheet.png rows 3-4, fx-sheet-2.png)
   const STILLS = ['end-exile', 'inst-spaceport', 'title-key-art'];
   const has = (a, k) => a.indexOf(k) >= 0;
 

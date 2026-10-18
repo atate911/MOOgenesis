@@ -1,0 +1,26 @@
+{
+  "asset_id": "battle-asteroids",
+  "filename": "battle-asteroids.png",
+  "game": "Master of Orion \u2014 Reborn",
+  "category": "tactical-combat-background",
+  "description": "Inside asteroid belt, visible ONLY as DISTANT small softly out-of-focus dark specks of rocks with dusty veil far behind, confined mostly to TOP and BOTTOM extreme edges. No sharp or large rocks, nothing in foreground. Upper-right star gently rakes dust with long extremely faint soft shafts, barely perceptible and peripheral. Middle dark and empty. Dangerous surroundings, clear playable area.",
+  "actual_dimensions": [
+    1672,
+    941
+  ],
+  "requested_dimensions": [
+    2560,
+    1440
+  ],
+  "usage": "Background beneath 10x8 tactical combat grid and separately rendered ships, planet, asteroids, debris and effects.",
+  "lighting": "Upper right",
+  "composition": "Dark clear central play area, detail toward edges",
+  "limitations": [
+    "Native output is below requested resolution and has not been upscaled.",
+    "Light position, brightness and star density are approximate and vary between plates."
+  ],
+  "generation": {
+    "tool": "built-in image_gen",
+    "prompt": "Create ONE standalone finished 16:9 PNG tactical combat background plate for Master of Orion \u00e2\u20ac\u201d Reborn, requested2560x1440. NOT collage or grid. The game overlays a10x8 combat grid and ships planets rocks debris explosions: keep ENTIRE image calm low contrast uncluttered, darkest in middle, visual interest only far edges and corners. No planet disc or limb, moons, ships, stations, large foreground rocks, text, logo, interface, grid, border. Lighting from UPPER RIGHT with a SMALL DISTANT dim star at84%width16%height, no large sun disc or overpowering bloom. Deep rich almost-black neutral/navy blacks with natural sparse tiny stars varying brightness, no spikes. Flat wide composition without perspective lines. All plates share restrained filmic grade, low exposure, subtle grain, muted color and same sparse star density. Central70% nearly black clean negative space with tiny faint stars, no focal object there. Photoreal astrophotography cinematic space, no illustration painting neon fantasy swirls lensflare hexagons anamorphic streaks. Inside asteroid belt, visible ONLY as DISTANT small softly out-of-focus dark specks of rocks with dusty veil far behind, confined mostly to TOP and BOTTOM extreme edges. No sharp or large rocks, nothing in foreground. Upper-right star gently rakes dust with long extremely faint soft shafts, barely perceptible and peripheral. Middle dark and empty. Dangerous surroundings, clear playable area."
+  }
+}

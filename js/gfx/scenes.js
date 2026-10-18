@@ -372,29 +372,10 @@
   function lookOf(d) { return LOOKS[d && d.look] || LOOKS.terran; }
 
   /* ======================================================================= safe wrappers around sibling modules */
-  function fbPortrait(g, race, x, y, w, h, o) {
-    const SK = { alkari: '#e8c27a', bulrathi: '#a8794a', darlok: '#6a5a86', human: '#e4b48c', klackon: '#c27a2a', meklar: '#9aa6b8', mrrshan: '#d6a05a', psilon: '#9ad0a8', sakkra: '#6aa860', silicoid: '#80c8e0' };
-    const t = o.t || 0, col = o.color || C.brass, skin = SK[race] || '#d8b090', sc = min(w / 400, h / 500);
-    g.save(); g.beginPath(); g.rect(x, y, w, h); g.clip();
-    g.translate(x + w / 2, y + h); g.scale(sc, sc);
-    g.fillStyle = lgr(g, 0, -170, 0, 0, [0, lite(col, 0.12), 1, dark(col, 0.6)]);
-    g.beginPath(); g.moveTo(-190, 0); g.quadraticCurveTo(-176, -140, -70, -168); g.lineTo(70, -168); g.quadraticCurveTo(176, -140, 190, 0); g.closePath(); g.fill();
-    g.strokeStyle = C.brass; g.lineWidth = 3; g.beginPath(); g.moveTo(-70, -168); g.lineTo(0, -120); g.lineTo(70, -168); g.stroke();
-    g.fillStyle = dark(skin, 0.3); g.fillRect(-30, -230, 60, 70);
-    g.fillStyle = lgr(g, -70, -400, 70, -200, [0, lite(skin, 0.2), 1, dark(skin, 0.35)]);
-    g.beginPath(); g.ellipse(0, -295, 78, 98, 0, 0, TAU); g.fill();
-    const bl = (sin(t * 0.9) > 0.985) ? 0.15 : 1;
-    g.fillStyle = '#10142c'; g.beginPath(); g.ellipse(-30, -305, 13, 9 * bl, 0, 0, TAU); g.ellipse(30, -305, 13, 9 * bl, 0, 0, TAU); g.fill();
-    g.fillStyle = C.cyan; g.beginPath(); g.arc(-30, -305, 4, 0, TAU); g.arc(30, -305, 4, 0, TAU); g.fill();
-    const mo = o.talking ? abs(sin(t * 9)) * 12 : 2;
-    g.fillStyle = '#1a0f18'; g.beginPath(); g.ellipse(0, -250, 22, 3 + mo, 0, 0, TAU); g.fill();
-    g.restore();
-  }
   function drawPortrait(g, race, x, y, w, h, o) {
     const P = G.Portraits;
     if (P && P.draw) { try { P.draw(g, race, x, y, w, h, o); return true; } catch (e) { warnOnce('Portraits.draw', e); } }
-    fbPortrait(g, race, x, y, w, h, o);
-    return false;
+    return false;   // no stand-in figure: an empty spot beats a crude drawing
   }
   function drawBadge(g, race, cx, cy, r, o) {
     const P = G.Portraits;
@@ -528,23 +509,12 @@
     r.x = (a) => p.cx + p.f * p.Rx * sin(a) / (p.D + p.Rz * cos(a));
     r.s = (a) => p.f / (p.D + p.Rz * cos(a));
     r.y = (a, Y) => p.hy + (p.Hc - Y) * r.s(a);
-    /* wall angle at screen x */
-    r.angleAt = (sx) => {
-      let lo = -1.5, hi = 1.5;
-      for (let i = 0; i < 28; i++) { const m = (lo + hi) / 2; if (r.x(m) < sx) lo = m; else hi = m; }
-      return (lo + hi) / 2;
-    };
     return r;
   }
   /* affine map of a wall-mounted rectangle: returns [a,b,c,d,e,f] sending local (0..mw, 0..mh) to the wall quad */
   function wallXform(room, aL, aR, yTop, yBot, mw, mh) {
     const p0 = room.wall(aL, yTop), p1 = room.wall(aR, yTop), p2 = room.wall(aL, yBot);
     return [(p1[0] - p0[0]) / mw, (p1[1] - p0[1]) / mw, (p2[0] - p0[0]) / mh, (p2[1] - p0[1]) / mh, p0[0], p0[1]];
-  }
-  /* bilinear quad on the wall between angles a0..a1 and heights y0..y1 (world) -> 8 numbers (TL,TR,BR,BL) */
-  function wallQuad(room, a0, a1, y0, y1) {
-    const tl = room.wall(a0, y1), tr = room.wall(a1, y1), br = room.wall(a1, y0), bl = room.wall(a0, y0);
-    return [tl[0], tl[1], tr[0], tr[1], br[0], br[1], bl[0], bl[1]];
   }
   function wallPoly(g, room, a0, a1, y0, y1, n) {
     n = n || 6;
@@ -1725,11 +1695,125 @@
     g.restore();
   }
 
+  /* the name plate under a council seat: banner gem, delegate name, vote count, ABSTAIN tag, a soft glow once voted (u = the seat's size unit) */
+  function plaqueText(ctx, seat, pl, u, col, st) {
+    const abst = st === 'abstain', winner = st === 'winner', voted = st === 'voted';
+    const fs = clamp(u * 0.04, 9, 20), nm = String(seat.name || RACE_NAMES[seat.race] || ''), hasV = seat.votes != null && isFinite(seat.votes);
+    let f2 = fs; const maxW = pl.w - (hasV ? pl.h * 1.2 : 0) - pl.h * 0.9;
+    while (f2 > 8 && textW(ctx, nm, f2, FONT_D, 400, 0.4) > maxW) f2 -= 0.5;
+    const tx = pl.x + pl.h * 0.85;
+    // a small gem in the empire's colour: the delegate's photo is already in the alcove above, and a thumbnail of it here only muddied the plate
+    const gx = pl.x + pl.h * 0.48, gy = pl.y + pl.h * 0.5, gr = pl.h * 0.19;
+    ctx.save(); ctx.globalCompositeOperation = 'lighter'; glow(ctx, col, gx, gy, gr * 3.2, 0.32); ctx.restore();
+    ctx.beginPath(); ctx.moveTo(gx, gy - gr); ctx.lineTo(gx + gr * 0.78, gy); ctx.lineTo(gx, gy + gr); ctx.lineTo(gx - gr * 0.78, gy); ctx.closePath();
+    ctx.fillStyle = col; ctx.fill(); ctx.lineWidth = 1; ctx.strokeStyle = 'rgba(255,240,210,0.65)'; ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(gx, gy - gr); ctx.lineTo(gx + gr * 0.78, gy); ctx.lineTo(gx, gy); ctx.closePath(); ctx.fillStyle = 'rgba(255,255,255,0.35)'; ctx.fill();
+    text(ctx, nm, tx, pl.y + pl.h * 0.5 + f2 * 0.2, f2, abst ? C.fog : C.ivory, 'left', FONT_D, 400, 0.4);
+    if (hasV) {
+      const vs = clamp(u * 0.062, 11, 26);
+      text(ctx, String(seat.votes), pl.x + pl.w - pl.h * 0.45, pl.y + pl.h * 0.5 + vs * 0.34, vs, winner ? '#ffd54f' : C.gold, 'right', FONT_D, 400, 0.5);
+      ctx.fillStyle = rgba(C.gold, 0.3); ctx.fillRect(pl.x + pl.w - pl.h * 1.2 - vs * 0.6, pl.y + pl.h * 0.18, 1, pl.h * 0.64);
+    }
+    if (abst) text(ctx, 'ABSTAIN', pl.x + pl.w / 2, pl.y - u * 0.02, clamp(u * 0.028, 8, 14), C.mist, 'center', FONT_U, 600, 1.5);
+    if (voted) { ctx.save(); ctx.globalCompositeOperation = 'lighter'; glow(ctx, col, pl.x + pl.w - pl.h * 1.0, pl.y + pl.h * 0.5, pl.h * 0.8, 0.28); ctx.restore(); }
+  }
+
+  /* ---- COUNCIL on the illustrated chamber: assets/art/scene/scene-council-chamber.webp (docs/IMAGE-GEN-COUNCIL-AND-SKIES.md §1).
+     Six empty alcoves measured on the plate, as fractions of the image: niche left / right edge, arch crown, lectern top. The leader photos
+     stand in the alcoves on the lectern line; the drawn chamber below is the fallback until the plate has loaded. */
+  const CPLATE = {
+    al: [[0.0538, 0.1603, 0.2062, 0.5218], [0.2051, 0.2967, 0.2678, 0.5260], [0.3355, 0.4205, 0.2901, 0.5292],
+      [0.5789, 0.6639, 0.2912, 0.5292], [0.7027, 0.7943, 0.2678, 0.5260], [0.8385, 0.9462, 0.2232, 0.5218]],
+    plaque: [0.537, 0.583],                       // the brass panel on each lectern (y top, bottom)
+    ped: { x: 0.5, y: 0.573, rx: 0.06 },          // the emitter disc on the pedestal
+    // seat index -> alcove for 1..6 seats: Council's arrange() puts the two candidates in the seats "nearest the pedestal", which land in the
+    // two inner alcoves (2, 3); with fewer than six empires the outer alcoves stay vacant
+    map: [null, [2], [2, 3], [2, 1, 3], [1, 2, 3, 4], [1, 2, 0, 3, 4], [0, 1, 2, 3, 4, 5]],
+  };
+  function councilPlate(ctx, im, w, h, t, o, seats) {
+    const iw = im.naturalWidth, ih = im.naturalHeight, sc = max(w / iw, h / ih), sx0 = (iw - w / sc) / 2, sy0 = (ih - h / sc) / 2;
+    const X = (u) => (u * iw - sx0) * sc, Y = (v) => (v * ih - sy0) * sc;
+    G.WorldArt.draw(ctx, im, 0, 0, w, h);
+    // the oculus is bright where the vote tally sits: settle the top band
+    ctx.fillStyle = lgr(ctx, 0, 0, 0, h * 0.2, [0, 'rgba(4,3,8,0.55)', 1, 'rgba(4,3,8,0)']); ctx.fillRect(0, 0, w, h * 0.2);
+    const holo = o.hologram || 'galaxy', hcol = holo === 'crown' ? '#ffd54f' : holo === 'ballot' ? '#5fe0c0' : '#62d8ff';
+    const fl = 0.92 + 0.08 * sin(t * 31) * sin(t * 9.7);
+    const ped = { cx: X(CPLATE.ped.x), top: Y(CPLATE.ped.y), rx: CPLATE.ped.rx * iw * sc }; ped.ry = ped.rx * 0.12;
+    const hsc = h * 0.086, hcy = ped.top - h * 0.14;
+
+    /* light from the oculus onto the pedestal, then the hologram */
+    beam(ctx, ped.cx, 0, ped.cx, ped.top, w * 0.05, ped.rx * 1.6, '#ffe9bd', 0.07 + 0.02 * sin(t * 0.6));
+    holoBase(ctx, ped.cx, ped.top, ped.rx * 0.9, ped.ry * 0.9, hcol, t, fl, h * 0.12);
+    ctx.fillStyle = rgr(ctx, ped.cx, hcy, hsc * 0.2, hsc * 1.5, [0, 'rgba(2,4,22,0.5)', 0.6, 'rgba(2,4,22,0.26)', 1, 'rgba(2,4,22,0)']); ctx.fillRect(ped.cx - hsc * 1.6, hcy - hsc * 1.6, hsc * 3.2, hsc * 3.2);
+    if (holo === 'galaxy') holoGalaxy(ctx, ped.cx, hcy, hsc * 1.05, t, fl, seats);
+    else holoBallotFx(ctx, ped.cx, hcy, hsc * 0.9, t, fl, hcol);
+    holoScan(ctx, ped.cx, hcy, hsc * 0.95, hsc * 1.0, hcol, t, fl * 0.8);
+
+    /* the alcoves */
+    const P = G.Portraits, map = CPLATE.map[seats.length] || CPLATE.map[6], used = {}, out = { seats: [] };
+    for (let i = 0; i < seats.length; i++) used[map[i]] = i;
+    for (let k = 0; k < 6; k++) {
+      const A = CPLATE.al[k], x0 = X(A[0]), x1 = X(A[1]), crown = Y(A[2]), lect = Y(A[3]), ow = x1 - x0, R = ow / 2, ox = (x0 + x1) / 2, spring = crown + R;
+      const niche = () => { ctx.beginPath(); ctx.moveTo(x0, lect); ctx.lineTo(x0, spring); ctx.arc(ox, spring, R, PI, TAU); ctx.lineTo(x1, lect); ctx.closePath(); };
+      const si = used[k];
+      if (si === undefined) { ctx.save(); niche(); ctx.fillStyle = 'rgba(2,2,6,0.35)'; ctx.fill(); ctx.restore(); continue; }   // vacant seat
+      const seat = seats[si], st = seat.state || 'idle', col = seat.color || C.brass, u = ow / BW;
+      const speaking = st === 'speaking', winner = st === 'winner', abst = st === 'abstain', voted = st === 'voted';
+      const openH = lect - crown, pbh = openH * 0.84, pbw = pbh * 0.8, pbx = ox - pbw / 2, pby = lect - pbh;
+      // every delegate turns towards the pedestal: mirror a photo whose leader looks away from the centre
+      const face = P && P.facing ? P.facing(seat.race) : 1, flip = face !== 0 && face === (k < 3 ? -1 : 1);
+      glow(ctx, winner ? '#ffd54f' : speaking ? '#fff0c8' : abst ? '#8a93b8' : voted ? mixc(col, '#ffffff', 0.3) : '#c8a070', ox, crown + openH * 0.4, R * (winner || speaking ? 1.5 : 1.0), winner ? 0.4 : speaking ? 0.35 : 0.08);
+      ctx.save();
+      niche(); ctx.clip();
+      drawPortrait(ctx, seat.race || 'human', pbx, pby, pbw, pbh, { t: t, mood: winner ? 'pleased' : abst ? 'worried' : 'neutral', talking: speaking, color: seat.color, bg: false, flip: flip, key: 'council' + k });
+      // tie the photograph into the hall's warm lamplight (same grade as the drawn chamber's alcoves)
+      ctx.globalCompositeOperation = 'lighten'; ctx.fillStyle = 'rgb(30,22,19)'; ctx.fillRect(x0, crown, ow, openH);
+      ctx.globalCompositeOperation = 'multiply'; ctx.fillStyle = lgr(ctx, 0, crown, 0, lect, [0, 'rgb(255,240,218)', 0.55, 'rgb(246,218,188)', 1, 'rgb(186,148,120)']); ctx.fillRect(x0, crown, ow, openH);
+      ctx.globalCompositeOperation = 'soft-light'; ctx.fillStyle = 'rgba(255,172,104,0.3)'; ctx.fillRect(x0, crown, ow, openH);
+      if (abst) { ctx.globalCompositeOperation = 'saturation'; ctx.fillStyle = 'rgba(128,128,128,0.8)'; ctx.fillRect(x0, crown, ow, openH); ctx.globalCompositeOperation = 'multiply'; ctx.fillStyle = 'rgb(150,140,132)'; ctx.fillRect(x0, crown, ow, openH); }
+      else if (!speaking && !winner) { ctx.globalCompositeOperation = 'multiply'; ctx.fillStyle = voted ? 'rgb(240,232,224)' : 'rgb(214,202,190)'; ctx.fillRect(x0, crown, ow, openH); }
+      else { ctx.globalCompositeOperation = 'lighter'; ctx.fillStyle = winner ? 'rgba(255,200,80,0.09)' : 'rgba(255,240,200,0.06)'; ctx.fillRect(x0, crown, ow, openH); }
+      ctx.globalCompositeOperation = 'source-over';
+      ctx.fillStyle = rgr(ctx, ox, crown + openH * 0.5, R * 0.6, openH * 0.75, [0, 'rgba(2,3,10,0)', 1, 'rgba(2,3,10,0.5)']); ctx.fillRect(x0, crown, ow, openH);
+      ctx.restore();
+      if (speaking || winner) {
+        const pulse = 0.55 + 0.45 * sin(t * (speaking ? 4.2 : 2.4));
+        ctx.save(); ctx.globalCompositeOperation = 'lighter';
+        ctx.strokeStyle = winner ? '#ffd54f' : '#fff0c8'; ctx.lineWidth = max(1.5, ow * 0.012); ctx.globalAlpha = 0.35 + 0.45 * pulse;
+        niche(); ctx.stroke(); ctx.restore();
+        beam(ctx, ox, crown - R * 1.2, ox, lect, R * 0.6, R * 1.1, winner ? '#ffd870' : '#fff0c8', 0.1 + 0.05 * pulse);
+      }
+      // the empire's gem on the keystone
+      glow(ctx, col, ox, crown - R * 0.12, R * 0.35, 0.6);
+      ctx.fillStyle = col; ctx.fillRect(ox - R * 0.05, crown - R * 0.17, R * 0.1, R * 0.1);
+      // the text band across the brass panel: the full panel width, but only as tall as a drawn plaque (gem and number spacing scale with it)
+      const py0 = Y(CPLATE.plaque[0]), py1 = Y(CPLATE.plaque[1]), ph = min(py1 - py0, ow * 0.2);
+      const pl = { x: x0 - ow * 0.02, y: (py0 + py1 - ph) / 2, w: ow * 1.04, h: ph };
+      plaqueText(ctx, seat, pl, u, col, st);
+      if (winner) {
+        ctx.save(); ctx.globalCompositeOperation = 'lighter'; ctx.fillStyle = '#ffe08a';
+        for (let i = 0; i < 14; i++) { const q = fract(t * 0.4 + i / 14), sx = ox + (h2(i, k) - 0.5) * ow, sy = lect - q * openH * 0.8; ctx.globalAlpha = (1 - q) * 0.8; ctx.fillRect(sx, sy, 2, 2); }
+        ctx.restore();
+      }
+      out.seats[si] = { x: x0, y: crown, w: ow, h: pl.y + pl.h - crown, portrait: { x: x0, y: crown, w: ow, h: openH }, plaque: pl, cx: ox, cy: crown + openH * 0.5 };
+    }
+    motes(ctx, w * 0.3, h * 0.05, w * 0.4, h * 0.6, 30, t, '#ffeccc', 0.35, 3, 1.8);
+    finish(ctx, w, h, 0.35, 0.03, t);
+    out.pedestal = { cx: ped.cx, cy: ped.top, rx: ped.rx, ry: ped.ry };
+    out.hologram = { x: ped.cx - hsc * 1.1, y: hcy - hsc * 1.2, w: hsc * 2.2, h: hsc * 2.4 };
+    out.top = { x: w * 0.1, y: 0, w: w * 0.8, h: h * 0.1 };
+    out.bottom = { x: w * 0.12, y: h * 0.86, w: w * 0.76, h: h * 0.13 };
+    out.grade = 'plate';
+    return out;
+  }
+
   Scenes.council = {
     draw(ctx, w, h, t, o) {
       t = tm(t);
       o = o || {};
       const S = begin(ctx, w, h), seats = (Array.isArray(o.seats) ? o.seats : []).filter((x) => x && typeof x === 'object').slice(0, 6), n = max(1, seats.length || 1);
+      const WA = G.WorldArt, plate = WA && WA.scene ? WA.get(WA.scene('council-chamber')) : null;
+      if (plate) { const r = councilPlate(ctx, plate, w, h, t, o, seats); end(ctx); return r; }
       const e = layer('council|' + n, w, h, S, (g, ww, hh, c) => { const r = buildCouncil(g, ww, hh, c, n); tintLayer(c, COUNCIL_TINT); return r; });
       const geo = e.d, room = geo.room;
       ctx.drawImage(e.c, 0, 0, w, h);
@@ -1811,26 +1895,7 @@
         glow(ctx, col, ox, oy - yc - Ri - 0.012 * u * 0 - 0.0, u * 0.1, 0.6);
         ctx.fillStyle = col; ctx.fillRect(ox - u * 0.012, oy - yc - (Ri + (BW * u / 2 - Ri) / 2) - u * 0.012, u * 0.024, u * 0.024);
         const pl = { x: ox - bw * 0.4, y: oy - 0.12 * u, w: bw * 0.8, h: 0.095 * u };
-        if (seat) {
-          const fs = clamp(u * 0.04, 9, 20), nm = String(seat.name || RACE_NAMES[seat.race] || ''), hasV = seat.votes != null && isFinite(seat.votes);
-          let f2 = fs; const maxW = pl.w - (hasV ? pl.h * 1.2 : 0) - pl.h * 0.9;
-          while (f2 > 8 && textW(ctx, nm, f2, FONT_D, 400, 0.4) > maxW) f2 -= 0.5;
-          const tx = pl.x + pl.h * 0.85;
-          // a small gem in the empire's colour: the delegate's photo is already in the alcove above, and a thumbnail of it here only muddied the plate
-          const gx = pl.x + pl.h * 0.48, gy = pl.y + pl.h * 0.5, gr = pl.h * 0.19;
-          ctx.save(); ctx.globalCompositeOperation = 'lighter'; glow(ctx, col, gx, gy, gr * 3.2, 0.32); ctx.restore();
-          ctx.beginPath(); ctx.moveTo(gx, gy - gr); ctx.lineTo(gx + gr * 0.78, gy); ctx.lineTo(gx, gy + gr); ctx.lineTo(gx - gr * 0.78, gy); ctx.closePath();
-          ctx.fillStyle = col; ctx.fill(); ctx.lineWidth = 1; ctx.strokeStyle = 'rgba(255,240,210,0.65)'; ctx.stroke();
-          ctx.beginPath(); ctx.moveTo(gx, gy - gr); ctx.lineTo(gx + gr * 0.78, gy); ctx.lineTo(gx, gy); ctx.closePath(); ctx.fillStyle = 'rgba(255,255,255,0.35)'; ctx.fill();
-          text(ctx, nm, tx, pl.y + pl.h * 0.5 + f2 * 0.2, f2, abst ? C.fog : C.ivory, 'left', FONT_D, 400, 0.4);
-          if (hasV) {
-            const vs = clamp(u * 0.062, 11, 26);
-            text(ctx, String(seat.votes), pl.x + pl.w - pl.h * 0.45, pl.y + pl.h * 0.5 + vs * 0.34, vs, winner ? '#ffd54f' : C.gold, 'right', FONT_D, 400, 0.5);
-            ctx.fillStyle = rgba(C.gold, 0.3); ctx.fillRect(pl.x + pl.w - pl.h * 1.2 - vs * 0.6, pl.y + pl.h * 0.18, 1, pl.h * 0.64);
-          }
-          if (abst) text(ctx, 'ABSTAIN', pl.x + pl.w / 2, pl.y - u * 0.02, clamp(u * 0.028, 8, 14), C.mist, 'center', FONT_U, 600, 1.5);
-          if (voted) { ctx.save(); ctx.globalCompositeOperation = 'lighter'; glow(ctx, col, pl.x + pl.w - pl.h * 1.0, pl.y + pl.h * 0.5, pl.h * 0.8, 0.28); ctx.restore(); }
-        }
+        if (seat) plaqueText(ctx, seat, pl, u, col, st);
         if (voted) { // the seat has voted: a lamp on the desk lights in its colour (was an unshaded paper "ballot chip" that read as a rendering glitch)
           const lx = ox + bw * 0.36, ly = oy - deskH - u * 0.014, lr = max(2, u * 0.013), pul = 0.85 + 0.15 * sin(t * 2.2 + B.i);
           ctx.save(); ctx.globalCompositeOperation = 'lighter'; glow(ctx, col, lx, ly, u * 0.09, 0.5 * pul); glow(ctx, '#fff6e0', lx, ly, u * 0.03, 0.55 * pul); ctx.restore();
@@ -3353,7 +3418,7 @@
         ctx.translate(gx, sy); ctx.rotate(Math.PI / 2);
         if (landing < 0.99) { glow(ctx, '#ffb060', shs * 0.55, 0, shs * 1.4, 0.7 * (1 - touch * 0.6)); glow(ctx, '#ffffff', shs * 0.45, 0, shs * 0.5, 0.9 * (1 - touch)); }
         ctx.restore();
-        drawShip(ctx, { race: o.race || 'human', hull: 'cruiser', x: gx, y: sy, size: shs, angle: -PI / 2 + 0, color: o.color || '#8fb4ff', t: t, thrust: 1 - touch, flags: { colony: true } });
+        drawShip(ctx, { race: o.race || 'human', hull: 'cruiser', x: gx, y: sy, size: shs, angle: -PI / 2 + 0, view: '3q', color: o.color || '#8fb4ff', t: t, thrust: 1 - touch, flags: { colony: true } });   // seen from the beach, not from above
         // landing guide lights + beacon mast
         if (!photo) {
         const bx = gx - I.S0 * 1.8;
@@ -3816,7 +3881,7 @@
     sc.draw = function (ctx, w, h, t, o) {
       const GR = G.Grade; if (GR) GR.depth = (GR.depth || 0) + 1;
       let r; try { r = raw.apply(this, arguments); } finally { if (GR) GR.depth--; }
-      if (!(o && o.grade === false) && G.Grade) { try { G.Grade.apply(ctx, w, h, t || 0, GRADE[name]); } catch (e) { warnOnce('Grade', e); } }
+      if (!(o && o.grade === false) && G.Grade) { try { G.Grade.apply(ctx, w, h, t || 0, (r && r.grade) || GRADE[name]); } catch (e) { warnOnce('Grade', e); } }   // r.grade: a scene drawn on an illustrated plate asks for a lighter pass
       return r;
     };
   });

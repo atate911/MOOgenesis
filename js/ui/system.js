@@ -92,7 +92,12 @@
   // Star centre / radius as fractions of the image width (y of the height), measured on the 1672x941 masters.
   const PLATE_STAR = { yellow: { x: 0.045, y: 0.245, r: 0.11 }, red: { x: 0.173, y: 0.28, r: 0.09 }, blue: { x: 0.045, y: 0.14, r: 0.12 },
     green: { x: 0.036, y: 0.20, r: 0.108 }, white: { x: 0.123, y: 0.24, r: 0.066 }, purple: { x: 0.066, y: 0.276, r: 0.13 } };
-  const SKY_STAR = { x: 0.86, y: 0.16, r: 0.06 };
+  // where each planet-free sky (assets/art/system-sky/) painted its star: centre and disc radius, as fractions of the image width/height
+  // (measured on the delivered images; the brief asked for (0.86, 0.16, r 0.06) but the generator drew them lower and larger)
+  const SKY_STAR = {
+    yellow: { x: 0.858, y: 0.236, r: 0.097 }, red: { x: 0.858, y: 0.237, r: 0.071 }, green: { x: 0.875, y: 0.234, r: 0.096 },
+    blue: { x: 0.861, y: 0.266, r: 0.110 }, white: { x: 0.860, y: 0.243, r: 0.099 }, purple: { x: 0.842, y: 0.230, r: 0.045 },
+  };
   // the painted planet of each plate as a circle (px on the 1672-wide master; the limb arcs fitted through their top and right end):
   // it is masked out before the live planet is drawn, so no second planet shows beside it
   const PLATE_PLANET = { yellow: { x: 330, y: 1037, r: 637 }, red: { x: 300, y: 992, r: 522 }, blue: { x: 280, y: 950, r: 520 },
@@ -226,7 +231,7 @@
   function skyFor(i) {                                            // which illustration can carry this system, or null
     const WA = Gfx().WorldArt; if (!WA || !WA.enabled) return null;
     const sky = WA.systemSky && WA.systemSky(i.kind);
-    if (sky && WA.ready(sky)) return { path: sky, mode: 'sky', star: SKY_STAR };
+    if (sky && WA.ready(sky)) return { path: sky, mode: 'sky', star: SKY_STAR[i.kind] || SKY_STAR.yellow };
     const plate = WA.system(i.kind), ok = i.explored && i.p.type !== 'none';   // the plate shows a planet: only when the live planet can cover it
     if (plate && ok && WA.ready(plate)) return { path: plate, mode: 'plate', star: PLATE_STAR[i.kind] || PLATE_STAR.yellow, planet: PLATE_PLANET[i.kind] || PLATE_PLANET.yellow };
     for (const p of [sky, ok ? plate : null]) if (p && !WA.ready(p)) WA.whenReady(p, () => { bgKey = ''; });   // rebuild when it lands
@@ -356,7 +361,17 @@
   function placeCaption() {                                           // "<Colour> star" label sits right under the glowing star
     const cap = el.querySelector('.sv-star'), g = st.geo;
     if (!cap || !g) return;
+    const fl = el.querySelector('.sv-fleets'), sky = !!(st.plate && st.plate.mode === 'sky');
+    cap.style.transform = ''; if (fl) { fl.style.top = ''; fl.style.maxHeight = ''; }
     if (st.plate && st.plate.mode === 'plate') { cap.style.left = (g.sx + g.sr * 1.08) + 'px'; cap.style.top = (g.sy + g.sr * 0.3) + 'px'; }   // beside the plate's star (it may be cut by the left edge, and the big planet sits under it)
+    else if (sky) {
+      // the painted skies carry a large sun low in the corner: the label goes beside it (left), the fleets in orbit start under it
+      cap.style.left = (g.sx - g.sr * 1.12) + 'px'; cap.style.top = (g.sy - 8) + 'px'; cap.style.transform = 'translateX(-100%)';
+      if (fl) {
+        const top = Math.max(H * 0.36, g.sy + g.sr * 1.08), info = el.querySelector('.sv-info');
+        fl.style.top = top + 'px'; if (info && info.offsetTop > top) fl.style.maxHeight = Math.max(80, info.offsetTop - top - 12) + 'px';
+      }
+    }
     else { cap.style.left = g.sx + 'px'; cap.style.top = (g.sy + g.sr * 1.3) + 'px'; }
   }
 
