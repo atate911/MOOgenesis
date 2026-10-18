@@ -5,6 +5,10 @@ Versions follow `MAJOR.MINOR.PATCH`; the live version is the `VERSION` file.
 
 ## Unreleased
 
+- The combat board has illustrated backdrops by situation (`assets/art/battle/`): deep space, high orbit (the defended world's
+  glow and a debris ring just off-frame), an asteroid belt (dust and light shafts at the edges) and the inside of a nebula.
+  They are painted dark for the board, so the game only veils them lightly (12 % instead of the 45 % the stand-in system plate
+  needs) and the board stays readable.
 - Missile bases on the combat board are a rendered orbital battery (`assets/art/fx/base-platform.webp`: a hexagonal platform with
   six silos, two open): up to six orbit a defended planet, each with a pulsing light in the owner's colour on its beacon lens,
   replacing the orange gear icons.

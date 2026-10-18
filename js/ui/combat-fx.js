@@ -852,14 +852,15 @@
       const s = max(W / sw, H / sh) * 1.02, dw = sw * s, dh = sh * s, ox = (W - dw) / 2 + dx, oy = (H - dh) / 2 + dy;
       ctx.save(); ctx.imageSmoothingQuality = 'high';
       ctx.drawImage(im, sx, sy, sw, sh, ox, oy, dw, dh);
-      ctx.fillStyle = 'rgba(2,4,12,0.45)'; ctx.fillRect(0, 0, W, H);                                   // ~55 % brightness
+      // the stand-in system plate is a bright illustration and goes down to ~55 %; the battle backdrops are painted dark for the board already
+      ctx.fillStyle = mode === 'battle' ? 'rgba(2,4,12,0.12)' : 'rgba(2,4,12,0.45)'; ctx.fillRect(0, 0, W, H);
       if (B && B.nebula && mode === 'system') {                                                       // inside a nebula: a soft two-hue haze over the plate (shields are weaker here)
         const n1 = ctx.createRadialGradient(W * 0.3 + dx * 4, H * 0.6, 0, W * 0.3, H * 0.6, W * 0.5), n2 = ctx.createRadialGradient(W * 0.75, H * 0.3 + dy * 4, 0, W * 0.75, H * 0.3, W * 0.45);
         n1.addColorStop(0, 'rgba(120,70,190,0.26)'); n1.addColorStop(1, 'rgba(120,70,190,0)'); n2.addColorStop(0, 'rgba(60,150,170,0.2)'); n2.addColorStop(1, 'rgba(60,150,170,0)');
         ctx.fillStyle = n1; ctx.fillRect(0, 0, W, H); ctx.fillStyle = n2; ctx.fillRect(0, 0, W, H);
       }
       const vg = ctx.createRadialGradient(W * 0.5, H * 0.5, min(W, H) * 0.3, W * 0.5, H * 0.5, hypot(W, H) * 0.6);
-      vg.addColorStop(0, 'rgba(1,2,8,0)'); vg.addColorStop(1, 'rgba(1,2,8,0.5)'); ctx.fillStyle = vg; ctx.fillRect(0, 0, W, H);
+      vg.addColorStop(0, 'rgba(1,2,8,0)'); vg.addColorStop(1, mode === 'battle' ? 'rgba(1,2,8,0.3)' : 'rgba(1,2,8,0.5)'); ctx.fillStyle = vg; ctx.fillRect(0, 0, W, H);
       ctx.restore();
       star.x = ox + starU * dw; star.y = oy + starV * dh;
       return true;
