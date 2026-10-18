@@ -112,12 +112,12 @@ MOO.def(function (M) {
       if (f.ships.reduce((a, b) => a + b, 0) <= 0) continue;
       if (f.owner !== eid && !V.canSee(S, E, f)) continue;
       out.push({ id: f.id, owner: f.owner, star: f.star, from: f.from, to: f.to, x: f.x, y: f.y, speed: f.speed, ships: f.ships.slice(), kind: Q.fleetKind(S, f),
-        eta: f.star < 0 ? (f.owner === eid ? M.Sim.Fleet.etaLeft(S, f) : M.Sim.Fleet.eta(S, f.from, f.to, f.speed, false)) : 0,
+        eta: f.star < 0 ? M.Sim.Fleet.etaLeft(S, f, f.owner !== eid) : 0,
         legs: f.owner === eid && f.legs ? f.legs.map(l => ({ star: l.star, gate: !!l.gate })) : null });   // own routed fleets: the stops after f.to
     }
     for (const t of (S.trans || [])) {
       if (t.owner !== eid && !(E.explored[t.to] && V.canSee(S, E, { owner: t.owner, star: -1, x: t.x, y: t.y }))) continue;
-      out.push({ id: 't' + t.id, owner: t.owner, star: -1, from: t.from, to: t.to, x: t.x, y: t.y, speed: t.speed, ships: [0, 0, 0, 0, 0, 0], kind: 'transport', n: t.n, eta: M.Sim.Fleet.eta(S, t.from, t.to, t.speed, true) });
+      out.push({ id: 't' + t.id, owner: t.owner, star: -1, from: t.from, to: t.to, x: t.x, y: t.y, speed: t.speed, ships: [0, 0, 0, 0, 0, 0], kind: 'transport', n: t.n, eta: M.Sim.Fleet.etaLeft(S, t) });
     }
     return out;
   };

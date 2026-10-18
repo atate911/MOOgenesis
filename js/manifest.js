@@ -21,6 +21,16 @@ window.MOO_MANIFEST = {
 
     // ---- static data ----
     'js/data/text.js',
+    'js/data/diplo/human.js',
+    'js/data/diplo/mrrshan.js',
+    'js/data/diplo/silicoid.js',
+    'js/data/diplo/sakkra.js',
+    'js/data/diplo/psilon.js',
+    'js/data/diplo/alkari.js',
+    'js/data/diplo/klackon.js',
+    'js/data/diplo/bulrathi.js',
+    'js/data/diplo/meklar.js',
+    'js/data/diplo/darlok.js',
     'js/data/names.js',
 
     // ---- simulation (worker-safe) ----

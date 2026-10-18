@@ -101,7 +101,7 @@
     });
     const F = M.Sim.Fleet, land = [];
     for (const f of S.fleets) if (f.owner === E.id && f.star < 0 && f.to >= 0 && F.etaLeft(S, f) === 1 && land.indexOf(f.to) < 0) land.push(f.to);
-    for (const t of (S.trans || [])) if (t.owner === E.id && F.eta(S, t.from, t.to, t.speed, true) <= 1 && land.indexOf(t.to) < 0) land.push(t.to);
+    for (const t of (S.trans || [])) if (t.owner === E.id && F.etaLeft(S, t) <= 1 && land.indexOf(t.to) < 0) land.push(t.to);
     if (land.length) out.push({ pri: 3, cat: 'explore', label: 'Arriving next turn: ', stars: land });
     const col = [];
     for (const f of S.fleets) if (f.owner === E.id && f.star >= 0 && f.ships.some((n, i) => n > 0 && E.designs[i] && M.Sim.Design.stats(S, E, i).colonyMin)) col.push(f.star);

@@ -1042,19 +1042,28 @@
       ctx.globalAlpha = 1; ctx.globalCompositeOperation = 'source-over';
       lq('bd_spark');
     }
+    // The sky painting is a far plane anchored to the galaxy: it pans with the map (1:1 at the fit-all view) and zooms more slowly than
+    // the stars (z^0.35), so it reads as distant depth rather than a screen-fixed wallpaper, and is never stretched much past its size.
+    // It covers the galaxy plus a screen's margin, enlarged when needed so the screen is always covered.
+    function farRect(drx, dry) {
+      const zp = fitZ * Math.pow(Math.max(0.05, cam.z / fitZ), 0.35), cx = W / 2 + (gw / 2 - cam.x) * zp + drx, cy = H / 2 + (gh / 2 - cam.y) * zp + dry;
+      let hw = (gw / 2) * zp + W * 0.55, hh = (gh / 2) * zp + H * 0.55;
+      const k = Math.max(1, (Math.abs(cx - W / 2) + W / 2) / hw, (Math.abs(cy - H / 2) + H / 2) / hh); hw *= k; hh *= k;
+      return { x: cx - hw, y: cy - hh, w: hw * 2, h: hh * 2 };
+    }
     function paintBackdropStatic(g, z, px, py, zr, par, nl, drx, dry) {
       if (amb.ext) {
-        const mx = W * 0.04, my = H * 0.04, ox = par ? clamp(-px * 0.05 + drx, -mx, mx) : 0, oy = par ? clamp(-py * 0.05 + dry, -my, my) : 0;
-        g.drawImage(amb.ext, -mx + ox, -my + oy, W + mx * 2, H + my * 2);
+        const r = farRect(drx, dry);
+        g.fillStyle = '#03051a'; g.fillRect(0, 0, W, H);
+        g.drawImage(amb.ext, r.x, r.y, r.w, r.h);
       } else {
         const gk = W + 'x' + H;
         if (amb.gradKey !== gk) { const gr = g.createRadialGradient(W * 0.5, H * 0.46, 0, W * 0.5, H * 0.5, Math.hypot(W, H) * 0.62); gr.addColorStop(0, '#0c1442'); gr.addColorStop(0.55, '#070c2b'); gr.addColorStop(1, '#03051a'); amb.grad = gr; amb.gradKey = gk; }
         g.fillStyle = amb.grad; g.fillRect(0, 0, W, H);
         // far dust layer (parallax)
-        const far = amb.far, s = Math.max(W / far.width, H / far.height) * 1.14, dw = far.width * s, dh = far.height * s;
-        const ox = par ? clamp(-px * 0.07 + drx, -(dw - W) / 2, (dw - W) / 2) : 0, oy = par ? clamp(-py * 0.07 + dry, -(dh - H) / 2, (dh - H) / 2) : 0;
+        const far = amb.far, r = farRect(drx, dry);
         g.globalCompositeOperation = 'lighter'; g.globalAlpha = clamp(0.95 * Q.nebula, 0, 1);
-        g.drawImage(far, (W - dw) / 2 + ox, (H - dh) / 2 + oy, dw, dh);
+        g.drawImage(far, r.x, r.y, r.w, r.h);
       }
       // galaxy-anchored ambient cloud
       const wd = amb.world, wx = (wd.x0 - cam.x) * z + W / 2, wy = (wd.y0 - cam.y) * z + H / 2;

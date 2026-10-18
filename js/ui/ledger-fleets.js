@@ -168,7 +168,7 @@
       const tot = f.ships.reduce((a, b) => a + b, 0); if (tot <= 0) continue;
       for (let i = 0; i < 6; i++) counts[i] += f.ships[i] | 0;
       const moving = f.star < 0, sid = moving ? f.to : f.star, p = S.planets[sid];
-      rows.push({ id: f.id, star: f.star, from: f.from, to: f.to, ships: f.ships.slice(), total: tot, moving, eta: moving ? F.eta(S, f.from, f.to, f.speed, false) : 0, speed: f.speed,
+      rows.push({ id: f.id, star: f.star, from: f.from, to: f.to, ships: f.ships.slice(), total: tot, moving, eta: moving ? F.etaLeft(S, f) : 0, speed: f.speed,
         name: p && p.name ? p.name : S.stars[sid].name, planet: moving && !E.explored[sid] ? null : p, known: !moving || !!E.explored[sid], colony: !moving && !!own[f.star], foe: !moving && p && p.owner >= 0 && p.owner !== pid });
     }
     rows.sort((a, b) => (a.moving - b.moving) || (b.colony - a.colony) || (a.moving ? a.eta - b.eta : a.name.localeCompare(b.name)));

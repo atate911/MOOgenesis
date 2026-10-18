@@ -109,11 +109,13 @@ MOO.def(function (M) {
     best.legs = legs;
     return best;
   };
-  // turns left for a fleet under way: from where it is now to its current stop, plus the stops still ahead (f.legs)
-  F.etaLeft = function (S, f) {
+  // turns left for a fleet (or troop transport) under way: from where it is NOW to its current stop, plus the stops still ahead (f.legs).
+  // direct: only to the current stop — what another empire can see of a foreign fleet. (F.eta(from, to) is the whole trip, not what is left.)
+  F.etaLeft = function (S, f, direct) {
     if (f.star >= 0 || f.to < 0) return 0;
-    const B = S.stars[f.to]; let x = f.x, y = f.y, n = 0;
-    while ((x !== B.x || y !== B.y) && n < 200) { const p = stepTurn(S, x, y, B.x, B.y, Math.max(1, f.speed), false); x = p[0]; y = p[1]; n++; }
+    const B = S.stars[f.to], tr = !f.ships; let x = f.x, y = f.y, n = 0;
+    while ((x !== B.x || y !== B.y) && n < 200) { const p = stepTurn(S, x, y, B.x, B.y, Math.max(1, f.speed), tr); x = p[0]; y = p[1]; n++; }
+    if (direct) return n;
     let at = f.to;
     for (const l of f.legs || []) { n += l.gate ? 1 : F.eta(S, at, l.star, f.warp || 1, false); at = l.star; }
     return n;
