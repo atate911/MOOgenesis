@@ -5,6 +5,10 @@ Versions follow `MAJOR.MINOR.PATCH`; the live version is the `VERSION` file.
 
 ## Unreleased
 
+- Fleet deployment opens beside the click: clicking (or right-clicking a destination for) your fleet on the map shows the ship rows,
+  steppers, route and Accept in a floating panel next to the cursor instead of in the sidebar across the screen, placed on the side
+  of the click that hides the fewest reachable stars. It moves beside each destination you click, Enter sends and Esc cancels.
+  Opening it from the sidebar button or the Fleets screen keeps the sidebar. (`UI.Side.show(..., { float: true })`, `UI.Side.place`.)
 - The combat board has illustrated backdrops by situation (`assets/art/battle/`): deep space, high orbit (the defended world's
   glow and a debris ring just off-frame), an asteroid belt (dust and light shafts at the edges) and the inside of a nebula.
   They are painted dark for the board, so the game only veils them lightly (12 % instead of the 45 % the stand-in system plate

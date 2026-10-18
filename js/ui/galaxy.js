@@ -11,6 +11,9 @@
     .gx-side { grid-column:2; grid-row:1; min-height:0; padding:.55rem .55rem .35rem .35rem; display:flex; flex-direction:column; background:linear-gradient(90deg, rgba(6,9,25,.0), rgba(6,9,25,.9) 12%); }
     .gx-side .panel { flex:1 1 auto; min-height:0; display:flex; flex-direction:column; overflow:hidden; }
     .gx-sidebody { min-height:0; overflow-y:auto; flex:1 1 auto; padding-right:.2rem; }
+    /* a side panel opened from a map click floats beside the cursor instead (fleet deployment): the controls are where the hand already is */
+    .gx-float { position:absolute; grid-column:auto; grid-row:auto; z-index:8; width:min(24rem, calc(100% - 1rem)); max-height:min(72%, 36rem); display:none; padding:0; background:none; filter:drop-shadow(0 10px 26px rgba(0,0,0,.65)); }
+    .gx-float.on { display:flex; }
     .gx-sidebody.reveal { animation: gx-reveal .16s ease-out; }                /* panel change: a short settle, never on refresh (immersion review, Phase C) */
     @keyframes gx-reveal { from { opacity:.35; transform:translateX(6px); } to { opacity:1; transform:none; } }
     :root[data-reduce-motion] .gx-sidebody.reveal { animation:none; }
@@ -73,7 +76,7 @@
   `));
 
   // ---- side-panel registry ------------------------------------------------------------------------------------------------------------------
-  const panels = {}; let cur = null, host = null;
+  const panels = {}; let cur = null, host = null, floatEl = null, floatHost = null, lastPt = null;
   const ctx = params => ({ S: G.S, E: G.player(), Q, G, params: params || {}, show: (n, p) => UI.Side.show(n, p), defaultPanel: () => UI.Galaxy.showDefault(), map: UI.Galaxy.map, UI });
   UI.Side = {
     register(name, def) { panels[name] = def; },
@@ -100,17 +103,40 @@
       if (UI.Side.held && _hd !== UI.Side.held) return;                      // the prompt stays; the player may still click around the map (selection highlights, no panel change)
       const def = panels[name]; if (!def) { console.warn('no side panel', name); return; }
       if (cur && cur.def.dispose) { try { cur.def.dispose(); } catch (e) { console.error(e); } }
+      // params.float: render beside the last map click (UI.Side.place) and leave the sidebar as it is; any other panel closes the float
+      const float = !!(params && params.float && floatHost), tgt = float ? floatHost : host;
+      if (floatEl && (float || floatEl.classList.contains('on'))) { UI.clear(floatHost); floatEl.classList.toggle('on', float); }
       const changed = !cur || cur.name !== name || (cur.params && params && cur.params.star !== params.star);
-      UI.clear(host);
-      if (changed && !(M.Settings && M.Settings.get && M.Settings.get('reduceMotion'))) { host.classList.remove('reveal'); void host.offsetWidth; host.classList.add('reveal'); }
-      cur = { name, params: params || {}, def };
-      try { def.render(host, ctx(cur.params)); }
+      if (!float) UI.clear(host);
+      if (changed && !(M.Settings && M.Settings.get && M.Settings.get('reduceMotion'))) { tgt.classList.remove('reveal'); void tgt.offsetWidth; tgt.classList.add('reveal'); }
+      cur = { name, params: params || {}, def, host: tgt };
+      if (float) delete floatEl.dataset.placed;
+      try { def.render(tgt, ctx(cur.params)); if (float && !floatEl.dataset.placed) UI.Side.place(); }   // a panel that placed itself (with its own avoid list) keeps that spot
       catch (e) {
         console.error('[side panel ' + name + ']', e);
-        if (name !== 'star' && name !== 'colony') { cur = null; UI.clear(host); try { UI.Galaxy.showDefault(); } catch (e2) { console.error(e2); } }
+        if (float) floatEl.classList.remove('on');
+        if (name !== 'star' && name !== 'colony') { cur = null; UI.clear(tgt); try { UI.Galaxy.showDefault(); } catch (e2) { console.error(e2); } }
       }
     },
-    refresh() { if (cur && cur.def.refresh && host) { try { cur.def.refresh(host, ctx(cur.params)); } catch (e) { console.error('[side refresh]', e); } } },
+    refresh() { if (cur && cur.def.refresh && cur.host) { try { cur.def.refresh(cur.host, ctx(cur.params)); } catch (e) { console.error('[side refresh]', e); } } },
+    // move the floating panel beside the last click on the map, inside the map. avoid: points (map px) it should not cover, e.g. the stars the
+    // fleet can reach: of the four sides of the click (right, left, below, above) it takes the one hiding the fewest, preferring the right
+    place(avoid) {
+      if (!floatEl || !floatEl.classList.contains('on') || !mapWrap) return;
+      const W = mapWrap.clientWidth, H = mapWrap.clientHeight, pw = floatEl.offsetWidth, ph = floatEl.offsetHeight, gap = 30, m = 8, pad = 14;
+      const p = lastPt || { x: W / 2, y: H / 2 };
+      const fit = (x, y) => ({ x: Math.max(m, Math.min(W - pw - m, x)), y: Math.max(m, Math.min(H - ph - m, y)) });
+      const cands = [fit(p.x + gap, p.y - ph * 0.4), fit(p.x - gap - pw, p.y - ph * 0.4), fit(p.x - pw * 0.4, p.y + gap), fit(p.x - pw * 0.4, p.y - gap - ph)];
+      const covers = (c, q) => q.x > c.x - pad && q.x < c.x + pw + pad && q.y > c.y - pad && q.y < c.y + ph + pad;
+      let best = cands[0], bs = Infinity;
+      cands.forEach((c, i) => {
+        let sc = i * 0.1 + (covers(c, p) ? 1000 : 0);                                                         // never over the click itself
+        for (const q of avoid || []) if (covers(c, q)) sc += 1;
+        if (sc < bs) { bs = sc; best = c; }
+      });
+      floatEl.style.left = Math.round(best.x) + 'px'; floatEl.style.top = Math.round(best.y) + 'px'; floatEl.dataset.placed = '1';
+    },
+    floating: () => !!(floatEl && floatEl.classList.contains('on')),
     title(star, owner) {                    // common header: planet/star name + owner banner
       const E = owner !== undefined && owner >= 0 ? G.S.empires[owner] : null;
       return h('div.side-title', h('span.nm', G.S.stars[star].name), E ? h('span.own', h('span.empire-dot', { style: { '--c': 'var(--emp' + E.color + ')' } }), E.plural) : null);
@@ -256,6 +282,11 @@
       el = h('div.gx', mapWrap, side, bar);
       root.appendChild(el);
       mapWrap.appendChild(h('div.gx-top', hudEl, msgEl)); mapWrap.appendChild(busyEl);
+      floatHost = h('div.gx-sidebody'); floatEl = h('aside.gx-side.gx-float', h('div.panel', floatHost)); mapWrap.appendChild(floatEl);
+      mapWrap.addEventListener('pointerdown', e => {                                                       // where the hand is: the floating panel opens beside it
+        if (floatEl.contains(e.target)) return;
+        const r = mapWrap.getBoundingClientRect(); lastPt = { x: e.clientX - r.left, y: e.clientY - r.top };
+      }, true);
       bindKeys();
       M.Bus.on('state', () => { if (UI.Screens.current && UI.Screens.current.id === 'galaxy') { updateHud(); UI.Side.refresh(); } });
       M.Bus.on('turn:aborted', () => UI.Side.drop()); M.Bus.on('turn:skipped', () => UI.Side.drop());    // the prompt is moot: let it resolve and go
@@ -269,11 +300,11 @@
         map = UI.Galaxy.map = M.UI.GalaxyMap.create(mapWrap, {});
         map.on('selectStar', id => { if (UI.Galaxy.pick) UI.Galaxy.pick(id); else UI.Galaxy.selectStar(id); });
         map.on('dblStar', id => { G.sel.star = id; if (UI.Screens.has('system')) UI.Screens.go('system', { star: id, from: 'galaxy' }); });
-        map.on('selectFleet', fid => { G.sel.fleet = fid; const f = G.S.fleets.find(x => x.id === fid); if (f && f.owner === G.S.playerId) UI.Side.show(f.star >= 0 ? 'fleetDeploy' : 'fleetInfo', { star: f.star, fleet: fid }); else if (f) UI.Side.show('fleetInfo', { fleet: fid }); });
+        map.on('selectFleet', fid => { G.sel.fleet = fid; const f = G.S.fleets.find(x => x.id === fid); if (f && f.owner === G.S.playerId) UI.Side.show(f.star >= 0 ? 'fleetDeploy' : 'fleetInfo', { star: f.star, fleet: fid, float: f.star >= 0 }); else if (f) UI.Side.show('fleetInfo', { fleet: fid }); });
         map.on('moveOrder', o => {
           const f = G.S.fleets.find(x => x.id === o.fleetId); if (!f || f.star < 0 || f.owner !== G.S.playerId) return;
           if (UI.Side.current() === 'fleetDeploy' && UI.Galaxy.pick) { UI.Galaxy.pick(o.toStar); return; }      // the panel is open with the player's own counts: just set the destination
-          UI.Side.show('fleetDeploy', { star: f.star, dest: o.toStar, send: true });                              // otherwise a right-click is "send the fleet there"
+          UI.Side.show('fleetDeploy', { star: f.star, dest: o.toStar, send: true, float: true });                              // otherwise a right-click is "send the fleet there"
         });
       }
       UI.Galaxy.refresh();

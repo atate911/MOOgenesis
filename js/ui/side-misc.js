@@ -121,17 +121,27 @@
         host.appendChild(h('div.sm-fleet', shipPic(E, i, 58, 42), h('div', h('div.nm', E.designs[i].name), h('div.ct', 'speed ' + M.Sim.Design.stats(S, E, i).warp + (M.Sim.Design.stats(S, E, i).tanks ? ' · extra fuel' : ''))),
           h('div.sm-step', UI.button('◀◀', () => set(0), { small: true }), UI.button('◀', () => set(this.sel[i] - step), { small: true }), nEl, UI.button('▶', () => set(this.sel[i] + step), { small: true }), UI.button('▶▶', () => set(total), { small: true }))));
       }
-      this.hint = h('div.sc-pickhint', 'Choose destination and number to send.'); this.route = h('div'); this.acc = UI.button('Accept', () => this.accept(ctx), { primary: true, disabled: true });
+      const float = !!ctx.params.float;
+      this.hint = h('div.sc-pickhint', float ? 'Click a destination star · Enter sends · Esc cancels' : 'Choose destination and number to send.'); this.route = h('div'); this.acc = UI.button('Accept', () => this.accept(ctx), { primary: true, disabled: true });
+      const cancel = () => { UI.Galaxy.pick = null; if (UI.Galaxy.map) { UI.Galaxy.map.setRoutePreview(null); UI.Galaxy.map.setReach(null); } ctx.defaultPanel(); };
       host.appendChild(this.hint); host.appendChild(this.route);
-      host.appendChild(h('div.sm-actions', UI.button('Cancel', () => { UI.Galaxy.pick = null; if (UI.Galaxy.map) { UI.Galaxy.map.setRoutePreview(null); UI.Galaxy.map.setReach(null); } ctx.defaultPanel(); }), this.acc));
-      UI.Galaxy.pick = id => { this.dest = id; this.update(ctx); };
-      this.reach();
+      host.appendChild(h('div.sm-actions', UI.button('Cancel', cancel), this.acc));
+      // floating beside the click (opened from the map): it follows the hand to each destination clicked, and Enter / Esc answer it from the keyboard
+      const place = () => { if (float && UI.Side.place) UI.Side.place(this.avoid()); };
+      UI.Galaxy.pick = id => { this.dest = id; this.update(ctx); place(); };
+      this.keyOffs = float ? [UI.bindKey('enter', () => { if (this.dest >= 0 && !this.acc.disabled) this.accept(ctx); }, { screen: 'galaxy' }), UI.bindKey('Escape', cancel, { screen: 'galaxy' })] : [];
+      this.reach(); place();
       UI.Galaxy.pendingSend = () => { if (this.dest < 0 || this.acc.disabled) return true; return this.accept(ctx, true); };   // Next turn auto-accepts the queued move
       this.update(ctx);
       // "select and move on": a right-click on the destination (or a click in route mode) is an explicit send — accept at once when the whole group can go;
       // an invalid route stays on the panel with its reason so the player can change ships or destination
       if (ctx.params.send && this.dest >= 0 && !this.acc.disabled) { setTimeout(() => { if (UI.Side.current() === 'fleetDeploy' && this.dest >= 0 && !this.acc.disabled) this.accept(ctx); }, 0); }
       else if (this.dest >= 0) UI.attention(this.acc);
+    },
+    // the stars the floating panel should leave visible: every one the fleet can reach, in map pixels
+    avoid() {
+      const map = UI.Galaxy.map, S = G.S; if (!map || !map.worldToScreen) return [];
+      return (this.okStars || []).map(i => map.worldToScreen(S.stars[i].x, S.stars[i].y));
     },
     // dim every star the selected ships cannot reach (fuel range; Reserve Fuel Tanks only count when every selected design has them, as Q.route does)
     reach() {
@@ -140,7 +150,7 @@
       for (let i = 0; i < 6; i++) { if (!(this.sel[i] > 0)) continue; any += this.sel[i]; if (!M.Sim.Design.stats(S, E, i).tanks) tanks = false; }
       if (!any) tanks = false;
       const ok = []; for (let i = 0; i < S.stars.length; i++) if (i === this.star || (any && F.canReach(S, E, i, tanks))) ok.push(i);
-      map.setReach(ok);
+      this.okStars = ok; map.setReach(ok);
     },
     update(ctx) {
       const S = G.S, E = G.player(); if (this.dest < 0) { this.acc.disabled = true; return; }
@@ -156,7 +166,7 @@
       UI.sfx('warp'); UI.Galaxy.pick = null; if (UI.Galaxy.map) { UI.Galaxy.map.setRoutePreview(null); UI.Galaxy.map.setReach(null); }
       ctx.defaultPanel(); UI.Galaxy.refresh(); return true;
     },
-    dispose() { UI.Galaxy.pendingSend = null; UI.Galaxy.pick = null; if (UI.Galaxy.map) { UI.Galaxy.map.setRoutePreview(null); UI.Galaxy.map.setReach(null); } },
+    dispose() { (this.keyOffs || []).forEach(off => off()); this.keyOffs = null; UI.Galaxy.pendingSend = null; UI.Galaxy.pick = null; if (UI.Galaxy.map) { UI.Galaxy.map.setRoutePreview(null); UI.Galaxy.map.setReach(null); } },
   });
 
   // ---- fleets in flight / foreign fleets ---------------------------------------------------------------------------------------------------------------
