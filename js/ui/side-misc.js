@@ -213,6 +213,10 @@
             c.type !== 'none' ? h('div', 'POP ', h('b.t-leaf', c.maxPop), ' max') : h('div.dim', 'No habitable planet'), c.specialLabel ? h('div.t-cyan.small', c.specialLabel) : null)));
       }
       if (p.title) body.appendChild(h('h4', p.title));
+      // "Go there": fly the map in close on the star the card is about and select it (the card stays; the turn still waits on it)
+      if (p.star !== undefined && p.star >= 0 && UI.Galaxy.map) body.appendChild(h('div.sm-goto', h('span.tl-a', { tip: 'Zoom the galaxy map in on ' + G.S.stars[p.star].name + ' and select it', onclick: () => {
+        const m = UI.Galaxy.map; G.sel.star = p.star; m.select(p.star); m.centerOn(p.star, { animate: true, zoom: Math.max(4, (m.getCamera && m.getCamera().zoom) || 0) });
+      } }, 'Go there ›')));
       if (p.planetCard && p.flavor !== false) { const line = planetFlavor(p.planetCard); if (line) body.appendChild(h('p.sm-flavor', line)); }
       if (p.star !== undefined && p.star >= 0 && UI.Galaxy.map && G.sel.star !== p.star) { G.sel.star = p.star; try { UI.Galaxy.map.select(p.star); } catch (e) { /* optional */ } }   // the brackets show WHICH star the card is about
       for (const b of (p.body || [])) body.appendChild(typeof b === 'string' ? h('p', b) : b);

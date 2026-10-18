@@ -5,6 +5,8 @@ Versions follow `MAJOR.MINOR.PATCH`; the live version is the `VERSION` file.
 
 ## Unreleased
 
+- Turn cards about a star (a new system explored, the colonise question, notices) have a "Go there ›" link that zooms the
+  galaxy map in on that star and selects it; the card stays until answered.
 - Transport panel: the colonists on the origin and destination worlds now → after the move, against each world's maximum
   (amber when the destination would be over it), updated as the slider moves.
 - Fleet deployment opens in the sidebar when you click your fleet, keeping the map clear while you look for a destination;
