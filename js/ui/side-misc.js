@@ -25,6 +25,8 @@
     .sm-flavor { margin:.35rem 0 .1rem; color:var(--mist); font-size:.88rem; line-height:1.4; font-style:italic; }
   `);
   const bump = css => css.replace(/(^|[}])([^{}]*)[{]/g, (m, a, sel) => a + sel.replace(/[/][*][^]*?[*][/]/g, '').split(',').map(s => s.trim()).filter(Boolean).map(s => ':root:root ' + s).join(', ') + ' {');   // raise specificity over the theme-v2 .panel/.btn rules
+  // the fleet steppers: the sliders' steel buttons with drawn red arrows (single = one step, double = none / all), not text glyphs
+  const sbtn = (dir, tip, fn) => { const b = h('button.sm-sb.' + dir, { type: 'button', 'aria-label': tip, onclick: fn }); if (UI.setTip) UI.setTip(b, tip); else b.title = tip; return b; };
   // Restyle: black picture tiles with name plates, framed portrait, green hint text, bevelled steel steppers.
   UI.css('side-misc-orig', bump(`
     .sm-card { gap:.6rem; padding:.3rem; border:0; background:linear-gradient(180deg, #0b0e13, #05070a); box-shadow:0 0 0 1px #d04030, inset 0 0 0 1px rgba(0,0,0,.9); }
@@ -36,9 +38,16 @@
     .sm-fleet canvas { background:#000; box-shadow:inset 0 0 0 1px rgba(0,0,0,.9), 0 0 0 1px rgba(255,255,255,.12); }
     .sm-fleet .nm { display:inline-block; padding:.05rem .35rem; font:600 .8rem var(--font-display); letter-spacing:.12em; text-transform:uppercase; color:#f0d048; background:#3a2810; box-shadow:inset 1px 1px 2px rgba(0,0,0,.8); }
     .sm-fleet .ct { margin-top:.15rem; color:#e4e8ee; font-size:.78rem; }
-    .sm-step .btn { clip-path:none; padding:.05em .4em; color:#0b0e13; font-weight:700; background:#000; box-shadow:none; }
-    .sm-step .btn::before { clip-path:none; background:linear-gradient(180deg, #8791a0, #5b646f); box-shadow:inset 1px 1px 0 rgba(255,255,255,.35), inset -1px -1px 0 rgba(0,0,0,.45); }
-    .sm-step .n { padding:.05rem .3rem; background:#12161b; color:#f0e060; font-family:var(--font-mono, monospace); box-shadow:inset 1px 1px 2px rgba(0,0,0,.9); }
+    .sm-step { gap:.22rem; }
+    .sm-sb { position:relative; width:1.45rem; height:1.45rem; padding:0; border:0; cursor:pointer; background:linear-gradient(135deg, var(--bev-hi, #8a9aac), var(--bev-mid, #3a4656) 35%, var(--bev-lo, #11161e)); box-shadow:0 0 0 1px #000; }
+    .sm-sb:hover { background:linear-gradient(135deg, #8fa3b8, #3a4a60 35%, #141b26); } .sm-sb:active { background:linear-gradient(135deg, var(--bev-lo, #11161e), var(--bev-mid, #3a4656) 70%, var(--bev-hi, #8a9aac)); }
+    .sm-sb:focus-visible { outline:1px solid var(--brass-hi); outline-offset:1px; }
+    .sm-sb::after { content:""; position:absolute; inset:24% 26%; background:#d04a4a; filter:drop-shadow(0 1px 0 #000); }
+    .sm-sb:hover::after { background:#ff6a5a; }
+    .sm-sb.prev::after { clip-path:polygon(100% 0, 100% 100%, 0 50%); } .sm-sb.next::after { clip-path:polygon(0 0, 100% 50%, 0 100%); }
+    .sm-sb.first::after { inset:24% 18%; clip-path:polygon(0 50%, 50% 0, 50% 50%, 100% 0, 100% 100%, 50% 50%, 50% 100%); }
+    .sm-sb.last::after { inset:24% 18%; clip-path:polygon(0 0, 50% 50%, 50% 0, 100% 50%, 50% 100%, 50% 50%, 0 100%); }
+    .sm-step .n { min-width:3.4rem; padding:.12rem .35rem; text-align:center; font:600 .85rem var(--font-mono, monospace); color:var(--lime, #b8f060); background:var(--well, #0b0f14); box-shadow:inset 1px 1px 0 #000, inset -1px -1px 0 rgba(255,255,255,.08); }
     .sm-route { border:0; background:#12161b; color:#40e060; box-shadow:inset 1px 1px 2px rgba(0,0,0,.9), 0 1px 0 rgba(255,255,255,.12); } .sm-route.bad { color:#ff7a5a; background:#1a1210; }
     .sm-actions { justify-content:stretch; }
     .sm-event h4 { font:600 .95rem var(--font-display); letter-spacing:.08em; color:#f0d8b0; text-shadow:0 1px 0 #000; }
@@ -119,7 +128,7 @@
         const set = v => { this.sel[i] = Math.max(0, Math.min(total, v)); nEl.textContent = this.sel[i] + ' / ' + total; this.update(ctx); this.reach(); };
         nEl.textContent = this.sel[i] + ' / ' + total;
         const row = h('div.sm-fleet', shipPic(E, i, 58, 42), h('div', h('div.nm', E.designs[i].name), h('div.ct', 'speed ' + M.Sim.Design.stats(S, E, i).warp + (M.Sim.Design.stats(S, E, i).tanks ? ' · extra fuel' : ''))),
-          h('div.sm-step', UI.button('◀◀', () => set(0), { small: true }), UI.button('◀', () => set(this.sel[i] - step), { small: true }), nEl, UI.button('▶', () => set(this.sel[i] + step), { small: true }), UI.button('▶▶', () => set(total), { small: true })));
+          h('div.sm-step', sbtn('first', 'None', () => set(0)), sbtn('prev', 'Fewer (' + step + ')', () => set(this.sel[i] - step)), nEl, sbtn('next', 'More (' + step + ')', () => set(this.sel[i] + step)), sbtn('last', 'All', () => set(total))));
         // the wheel over a row: one ship per notch (Shift: a tenth of the group), so a count is set without hunting for the small arrows
         row.addEventListener('wheel', e => { const d = -(e.deltaY || e.deltaX); if (!d) return; e.preventDefault(); set(this.sel[i] + Math.sign(d) * (e.shiftKey ? step : 1)); }, { passive: false });
         host.appendChild(row);
