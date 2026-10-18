@@ -20,6 +20,8 @@ Check the result with `node tools/qa/art-shots.js` (and `TIER=medium`): a missin
 
 ## Batch 4 — sprites and skies (`docs/IMAGE-GEN-SPRITES.md`), 27 files
 
+Full prompts for the ships, rocks, debris and platform: `docs/IMAGE-GEN-SHIPS-AND-COMBAT.md`.
+
 ### Ship hulls, 3/4 view (9) — unlock: design hologram, fleet/system/pre-battle cards, lander, bombers, title fly-by, exile ending, GNN ship graphic, tech blueprint
 - [ ] `frigate-3q.png` (reference: `MOOg images/fleet-ai-evaluation/original--01-frigate.png`)
 - [ ] `destroyer-3q.png` (`revised--02-destroyer.png`)
