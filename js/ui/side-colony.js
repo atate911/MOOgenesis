@@ -146,6 +146,10 @@
       // title (click to rename)
       UI.mount(st.title, h('span.nm', { style: { cursor: 'pointer' }, tip: 'Click to rename', onclick: async () => { const n = await UI.prompt('Rename this planet', c.name, { maxlength: 11 }); if (n) { G.order({ t: 'rename', planet: c.id, name: n }); } } }, c.name),
         h('span.own', h('span.empire-dot', { style: { '--c': 'var(--emp' + E.color + ')' } }), E.plural));
+      if (S.planets.filter(p => p.owner === S.playerId).length > 1) {                 // ◀ ▶ step through your colonies without the map (F2 / F3)
+        const cyc = (dir, tip) => h('button.cyc' + (dir > 0 ? '.nx' : ''), { type: 'button', 'aria-label': tip.replace(/<[^>]+>/g, ''), tip, onclick: () => UI.Galaxy.cycleColony(dir) });
+        st.title.insertBefore(cyc(-1, 'Previous colony <b>F2</b>'), st.title.firstChild); st.title.appendChild(cyc(1, 'Next colony <b>F3</b>'));
+      }
       // planet card
       const key = c.type + c.growth + c.id;
       if (st.cardKey !== key) {
@@ -178,7 +182,8 @@
       const boxInner = b.stargate ? [h('div.bn', 'Stargate'), h('div.bc', U.fmt(Math.floor(b.progress)) + ' / 3000 BC')] : [shipCanvas(E, b.slot, 58, 48), h('div', h('div.bn', b.name), h('div.bc', b.cost + ' BC' + (b.progress ? ' · ' + U.fmt(b.progress) + ' stored' : '')))];
       const yard = yardPlate(); if (yard) boxInner.unshift(yard);                              // the shipyard behind the design (the original's gantry picture)
       UI.mount(st.build,
-        h('div.sc-bbox', { tip: 'Click to cycle ship designs', onclick: () => cycleBuild(c, E) }, boxInner),
+        h('div.sc-bbox', { tip: 'Click (or wheel) to cycle ship designs · right-click goes back', onclick: () => cycleBuild(c, E), oncontextmenu: e => { e.preventDefault(); e.stopPropagation(); cycleBuild(c, E, -1); },
+          onwheel: e => { const d = e.deltaY || e.deltaX; if (!d) return; e.preventDefault(); cycleBuild(c, E, d > 0 ? 1 : -1); } }, boxInner),
         h('div.sc-btns', UI.button('Ships', () => chooseBuild(c, E), { small: true }), UI.button('Reloc', () => ctx.show('reloc', { planet: c.id }), { small: true, tip: 'Set the rally point for newly built ships' }),
           UI.button('Trans', () => ctx.show('trans', { planet: c.id }), { small: true, tip: 'Send up to half of the population to another colony', disabled: c.pop < 2 })),
         rallyLine(c, E));
@@ -186,14 +191,21 @@
     dispose() { this.st = null; },
   });
 
-  function cycleBuild(c, E) {
+  function cycleBuild(c, E, dir) {
     const slots = E.designs.map((d, i) => d ? i : -1).filter(i => i >= 0); if (E.mods.stargate && !G.S.planets[c.id].stargate) slots.push(-1);
-    const i = slots.indexOf(c.build.stargate ? -1 : c.build.slot); G.order({ t: 'build', planet: c.id, design: slots[(i + 1) % slots.length] });
+    const i = slots.indexOf(c.build.stargate ? -1 : c.build.slot), n = slots.length; G.order({ t: 'build', planet: c.id, design: slots[(i + (dir || 1) + n) % n] });
   }
+  // the choice list: the current build is focused, so Enter keeps it; 1–6 pick a design directly
   async function chooseBuild(c, E) {
-    const rows = E.designs.map((d, i) => d ? UI.button(d.name + ' — ' + c.designs[i].cost + ' BC', () => { G.order({ t: 'build', planet: c.id, design: i }); pr.close(true); }, { block: true, active: !c.build.stargate && c.build.slot === i }) : null).filter(Boolean);
-    if (E.mods.stargate && !c.stargate) rows.push(UI.button('Stargate — 3000 BC', () => { G.order({ t: 'build', planet: c.id, design: -1 }); pr.close(true); }, { block: true, active: !!c.build.stargate }));
+    const pick = [], rows = [];
+    E.designs.forEach((d, i) => { if (!d) return; const n = pick.push(i); rows.push(UI.button(n + '. ' + d.name + ' — ' + c.designs[i].cost + ' BC', () => choose(i), { block: true, active: !c.build.stargate && c.build.slot === i })); });
+    if (E.mods.stargate && !c.stargate) { const n = pick.push(-1); rows.push(UI.button(n + '. Stargate — 3000 BC', () => choose(-1), { block: true, active: !!c.build.stargate })); }
+    const choose = i => { G.order({ t: 'build', planet: c.id, design: i }); pr.close(true); };
     const pr = UI.modal({ title: 'Build at ' + c.name, body: h('div.col', rows), buttons: [{ label: 'Close', value: false }], width: '22rem' });
+    const cur = pick.indexOf(c.build.stargate ? -1 : c.build.slot); if (rows[cur]) setTimeout(() => rows[cur].focus(), 0);
+    const onKey = e => { const k = +e.key; if (k >= 1 && k <= pick.length && !e.ctrlKey && !e.altKey && !e.metaKey) { e.preventDefault(); e.stopPropagation(); choose(pick[k - 1]); } };
+    document.addEventListener('keydown', onKey, true);
+    pr.then(() => document.removeEventListener('keydown', onKey, true));
   }
 
   // where this colony's new ships go: "Rally → Sol · 3 turns (stargate)", or nothing when they stay in orbit

@@ -72,6 +72,11 @@
       background:linear-gradient(180deg, #3d4780 0%, #2a3263 55%, #202750 100%); box-shadow:inset 1px 1px 0 rgba(255,255,255,.25), inset -1px -1px 0 rgba(0,0,0,.6), 0 0 0 1px rgba(0,0,0,.7); }
     .side-title .nm { font:400 1.35rem/1.1 var(--font-title); letter-spacing:.06em; color:#e8c850; text-shadow:0 1px 0 #6b4f12, 0 0 12px rgba(232,200,80,.25); }
     .side-title .own { margin-left:0; font-size:.8rem; letter-spacing:.06em; text-transform:uppercase; color:#cfd6ee; }
+    .side-title .cyc { flex:none; width:1.35rem; height:1.35rem; padding:0; border:0; background:none; cursor:pointer; color:#cfd6ee; opacity:.7; }
+    .side-title .cyc:first-child { margin-right:auto; } .side-title .cyc:last-child { margin-left:auto; }
+    .side-title .cyc:hover { opacity:1; color:#e8c850; }
+    .side-title .cyc::after { content:''; display:block; width:.55rem; height:.7rem; margin:auto; background:currentColor; clip-path:polygon(100% 0,0 50%,100% 100%); }
+    .side-title .cyc.nx::after { clip-path:polygon(0 0,100% 50%,0 100%); }
     .gx-side h3 { font:600 .95rem var(--font-display); letter-spacing:.14em; text-transform:uppercase; color:#e0553a; margin:.2rem 0 .4rem; text-align:center; }
   `));
 
@@ -162,6 +167,7 @@
   function go(screen, params) { if (turnLocked()) return; if (UI.Screens.has(screen)) UI.Screens.go(screen, Object.assign({ from: 'galaxy' }, params)); else UI.toast('That screen is not built yet', 'warn'); }
   UI.Galaxy = {
     map: null, go, pick: null,                    // pick: temporary star-click handler used by Reloc / Trans / fleet destination selection
+    cycleColony: (dir, pred) => cycleColony(dir, pred),
     refresh() { if (!el || !G.S) return; if (map) { map.setState(G.S); map.refresh(); } updateHud(); UI.Side.refresh(); },
     selectStar(id, opts) {
       if (!G.S || id < 0) return; G.sel.star = id; if (map) map.select(id);
@@ -208,9 +214,12 @@
     if (UI.Galaxy.pendingSend && UI.Galaxy.pendingSend() === false) return;      // a queued fleet move is accepted automatically (an invalid one stops the turn with its message)
     if (M.Settings.get('confirmEndTurn')) {
       const S = G.S, E = G.player(), issues = [];
-      for (const p of S.planets) if (p.owner === E.id && p.sliders[0] > 0 && !(p.build === -1 || (p.build >= 0 && E.designs[p.build]))) issues.push(p.name + ' spends on ships with no design to build');
-      if (E.research && E.research.slider.every(v => !v) && (E.research.total | 0) > 0) issues.push('no research field is funded');
-      if (issues.length) { const ok = await UI.confirm(h('div', h('p', 'End the turn anyway?'), h('ul', issues.slice(0, 6).map(t => h('li', t)))), { title: 'Before you end the turn' }); if (!ok) return; }
+      for (const p of S.planets) if (p.owner === E.id && p.sliders[0] > 0 && !(p.build === -1 || (p.build >= 0 && E.designs[p.build]))) issues.push([p.starId, p.name, ' spends on ships with no design to build']);
+      if (E.research && E.research.slider.every(v => !v) && (E.research.total | 0) > 0) issues.push([-2, 'No research field', ' is funded']);
+      // each named colony is a link: it cancels the end of turn and opens that colony (the research line opens the Tech screen)
+      const fix = id => { UI.closeAllModals(); if (id === -2) UI.Screens.go('tech', { from: 'galaxy' }); else { UI.Galaxy.selectStar(id); if (map) map.centerOn(id, { animate: true }); } };
+      const li = ([id, name, rest]) => h('li', h('span.tl-a', { tip: id === -2 ? 'Open the Tech screen' : 'Go to this colony', onclick: () => fix(id) }, name), rest);
+      if (issues.length) { const ok = await UI.confirm(h('div', h('p', 'End the turn anyway?'), h('ul', issues.slice(0, 6).map(li))), { title: 'Before you end the turn' }); if (!ok) return; }
     }
     UI.Galaxy.busy(true, 'Year ' + Q.year(G.S) + ' …');
     // 10 s without an answer is normal while the player reads a scene (combat, GNN, council, audience, landing), a modal or a held side-panel prompt:

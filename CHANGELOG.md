@@ -5,6 +5,9 @@ Versions follow `MAJOR.MINOR.PATCH`; the live version is the `VERSION` file.
 
 ## Unreleased
 
+- Fewer trips across the screen: ◀ ▶ arrows on a colony's title step through your colonies (as F2 / F3); the ship box cycles
+  designs with the wheel and backwards with a right-click; the Ships list opens on the current design and takes 1–6; the end-of-turn
+  warnings name each colony as a link that cancels the end of turn and opens it (the unfunded-research line opens Tech).
 - Galaxy map declutter (a lit button with the map controls, or V), after the DCLTR key on aviation displays: hides the grid, the
   standing range rings, names of stars that aren't yours, habitability marks, your fleets' ETA labels and every route or rally line
   but the selected one. A panel's own range rings (e.g. while picking a destination) still show. Remembered between games.
