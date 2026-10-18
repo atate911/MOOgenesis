@@ -5,6 +5,9 @@ Versions follow `MAJOR.MINOR.PATCH`; the live version is the `VERSION` file.
 
 ## Unreleased
 
+- Fixed: several ship ETAs counted the whole trip instead of the turns still to go: the Fleet screen's list, the panel for
+  another empire's fleet, and the map's ETAs (and so its tooltips and raid warnings) for foreign fleets and troop transports.
+  All now count from where the ships are (`F.etaLeft`, which also handles transports).
 - Galaxy map: the sky painting behind the stars is anchored to the galaxy as a far layer. It pans with the map (one to one at the
   fit-all view) and zooms more slowly than the stars, instead of staying almost fixed on screen while the map moved over it.
 - Turn cards about a star (a new system explored, the colonise question, notices) have a "Go there ›" link that zooms the

@@ -188,7 +188,7 @@
       const E = S.empires[f.owner], mine = f.owner === S.playerId;
       host.appendChild(h('div.side-title', h('span.nm', E.plural + ' fleet'), h('span.own', h('span.empire-dot', { style: { '--c': emp(E) } }))));
       if (f.star < 0) {
-        const fin = mine && f.legs && f.legs.length ? f.legs[f.legs.length - 1].star : f.to, n = mine ? M.Sim.Fleet.etaLeft(S, f) : M.Sim.Fleet.eta(S, f.from, f.to, f.speed, false);
+        const fin = mine && f.legs && f.legs.length ? f.legs[f.legs.length - 1].star : f.to, n = M.Sim.Fleet.etaLeft(S, f, !mine);
         host.appendChild(h('div.sm-range', 'ETA ' + n + ' turns · destination ', h('b', S.stars[fin].name), mine && f.legs ? ' (via stargate)' : ''));
       }
       else host.appendChild(h('div.sm-range', 'In orbit at ', h('b', S.stars[f.star].name)));
