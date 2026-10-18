@@ -87,14 +87,35 @@
     return String(str).replace(/\{(\w+)\}/g, (m, k) => (vars[k] !== undefined && vars[k] !== null && vars[k] !== '' ? vars[k] : (SAFE[k] !== undefined ? SAFE[k] : ''))).replace(/\s+([.,;:!?])/g, '$1').replace(/ {2,}/g, ' ').trim();
   }
   // a say-spec from the engine {personality, situation, vars} → one of the three lines of that leader (never the same line twice in a row)
+  // The speaker's RACE voice comes first (Data.diploRace[race][situation], js/data/diplo/*.js); the personality lines are the fallback.
+  // An opening line is refined by the meeting: first contact, allied, a cool reception (the engine's type 23 or a poor attitude).
+  function raceLines(spec) {
+    const R = M.Data && M.Data.diploRace, S = G.S; if (!R || !S) return null;
+    const from = spec && spec.from !== undefined ? spec.from : A.empire, E = from >= 0 ? S.empires[from] : null;
+    return R[(spec && spec.race) || (E && E.race)] || null;
+  }
+  function openingOf(spec) {
+    const S = G.S, mt = spec.msgType | 0, from = spec.from !== undefined ? spec.from : A.empire, h = S && S.playerId;
+    if (mt >= 14 && mt <= 19) return 'firstContact';
+    if (mt === 23) return 'greetingCool';
+    let st = null; try { st = M.Sim.Diplo.status(S, from, h); } catch (e) { st = null; }
+    return st && st.allied ? 'greetingAlly' : st && st.attitude <= -30 ? 'greetingCool' : 'greeting';
+  }
   function line(spec, extra) {
-    const T = M.Data && M.Data.text && M.Data.text.diplomacy;
+    const T = M.Data && M.Data.text && M.Data.text.diplomacy, RL = raceLines(spec);
     const pers = spec && T && T[spec.personality] ? spec.personality : 'ruthless';
-    let sit = spec && spec.situation ? spec.situation : 'proposalRejected';
-    let set = T && T[pers] && T[pers][sit];
-    if (!set || !set.length) { sit = 'proposalRejected'; set = T && T[pers] && T[pers][sit]; }
+    let sit = spec && spec.situation ? spec.situation : 'proposalRejected', set = null, key = '';
+    if (RL) {
+      const fine = sit === 'greeting' ? openingOf(spec || {}) : sit;
+      set = RL[fine] || RL[sit]; key = 'r/' + fine;
+    }
+    if (!set || !set.length) {
+      set = T && T[pers] && T[pers][sit];
+      if (!set || !set.length) { sit = 'proposalRejected'; set = (RL && RL[sit]) || (T && T[pers] && T[pers][sit]); }
+      key = pers + '/' + sit;
+    }
     if (!set || !set.length) return '…';
-    const key = pers + '/' + sit; let i = Math.floor(Math.random() * set.length);
+    let i = Math.floor(Math.random() * set.length);
     if (set.length > 1 && lastPick[key] === i) i = (i + 1 + Math.floor(Math.random() * (set.length - 1))) % set.length;
     lastPick[key] = i;
     const me = G.player();
@@ -109,7 +130,7 @@
     honorable: ['Perhaps this will show my good faith: I will add {x} to the offer.', 'To honour the spirit of the agreement, accept {x} as well.'],
     pacifistic: ['I would so like to be friends. Please, take {x} as well.', 'Let me add {x} to it, if that helps us find peace.'],
   };
-  const incentiveLine = (pers, what) => { const L = INCENTIVE[pers] || INCENTIVE.ruthless; return L[Math.floor(Math.random() * L.length)].replace('{x}', what); };
+  const incentiveLine = (pers, what, spec) => { const RL = raceLines(spec), L = (RL && RL.incentive) || INCENTIVE[pers] || INCENTIVE.ruthless; const me = G.player(); return fill(L[Math.floor(Math.random() * L.length)].replace('{x}', what), { leader2: me ? me.leader : '', race2: me ? me.plural : '' }); };
 
   // ================================================================ state
   const A = {
@@ -622,7 +643,7 @@
     if (it.greeting) { await speak(it.greeting, { mood: A.mood, moodSecs: 0 }); await pause(650); }
     let text;
     if (it.incentive) {
-      text = incentiveLine(it.text && it.text.personality, offerText(it.incentive));
+      text = incentiveLine(it.text && it.text.personality, offerText(it.incentive), it.text);
     } else text = it.text;
     terms(termsFor(it));
     await speak(text, { mood: A.mood, moodSecs: 0 });
