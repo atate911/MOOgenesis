@@ -36,7 +36,7 @@ Full prompts for the ships, rocks, debris and platform: `docs/IMAGE-GEN-SHIPS-AN
 
 ### Asteroids and debris, top-down cutouts (11) — unlock: combat board rocks and kill debris
 - [x] `rock-1.png` … `rock-8.png` (eight distinct shapes; cut from `MOOg images/fx/fx-sheet.png`)
-- [x] `debris-1.png` … `debris-8.png` (eight pieces; the game picks one at random per fragment)
+- [x] `debris-1.png` … `debris-24.png` (24 wreckage pieces from two sheets; the game picks one at random per fragment)
 
 ### Missile platform (1) — unlock: missile bases around the planet on the combat board
 - [ ] `base-platform.png`
