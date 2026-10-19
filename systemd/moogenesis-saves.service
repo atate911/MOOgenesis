@@ -1,0 +1,27 @@
+[Unit]
+Description=Master of Orion — Reborn — save server and password gate
+Documentation=file:/opt/moogenesis/server/moo-saves.py
+After=network.target
+
+[Service]
+Type=simple
+User=moogenesis
+Group=moogenesis
+ExecStart=/usr/bin/python3 /opt/moogenesis/server/moo-saves.py --config /etc/moogenesis/moo.conf
+Restart=always
+RestartSec=2
+# /var/lib/moogenesis (saves + cookie key), created and owned by the service user
+StateDirectory=moogenesis
+StateDirectoryMode=0750
+NoNewPrivileges=yes
+ProtectSystem=strict
+ProtectHome=yes
+PrivateTmp=yes
+PrivateDevices=yes
+ProtectKernelTunables=yes
+ProtectKernelModules=yes
+ProtectControlGroups=yes
+RestrictAddressFamilies=AF_INET AF_INET6 AF_UNIX
+
+[Install]
+WantedBy=multi-user.target

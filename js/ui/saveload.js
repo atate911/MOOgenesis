@@ -1,7 +1,9 @@
 // Save / load slots: full screen ('saveload', params {mode:'save'|'load', from}) and modal (UI.openSaveLoad(mode)).
 //   UI.openSaveLoad('save'|'load') -> Promise resolving to {action:'saved'|'loaded', slot} or null when closed without doing anything.
-// Slots come from MOO.Save.list() (auto + 6 manual). Save/load go through MOO.Game.saveSlot / loadSlot; export/import use MOO.Save.exportFile /
-// importFile (an imported file is written into a slot of your choice, then can be loaded like any other). Needs UI.Controls (setup.js).
+// Two places to keep saves: "This browser" (MOO.Save: auto + 6 slots in localStorage, via MOO.Game.saveSlot / loadSlot) and, when the game is
+// hosted with server/moo-saves.py, "Server" (MOO.Save.Server: 6 slots, via MOO.Game.saveServer / loadServer). A toggle switches between them;
+// the server is the default when it answers. Export/import use MOO.Save.exportFile / importFile (an imported file is written into a slot
+// of your choice, then can be loaded like any other). Needs UI.Controls (setup.js).
 (function (M) {
   'use strict';
   const UI = M.UI, U = M.Util, h = UI.h;
@@ -11,6 +13,7 @@
   function hasGame() { const G = game(); try { return !!(G && typeof G.hasGame === 'function' && G.hasGame()); } catch (e) { return false; } }
   function storageOk() { try { return !!(M.Save && M.Save.available && M.Save.available()); } catch (e) { return false; } }
   const slotName = slot => (slot === 'auto' ? 'Autosave' : 'Slot ' + slot);
+  const placeName = (b, slot) => (b.id === 'server' ? 'server ' : '') + slotName(slot);
   const SIZE_NAMES = { small: 'Small', medium: 'Medium', large: 'Large', huge: 'Huge', colossal: 'Colossal' };
   const plural = (n, a, b) => n + ' ' + (n === 1 ? a : b);
   const titleOf = mode => (mode === 'save' ? 'Save game' : 'Load game');
@@ -23,6 +26,28 @@
   const failMessage = () => (storageOk()
     ? 'The save could not be written. Browser storage may be full: delete an old save or export your game to a file, then try again.'
     : 'Browser storage is unavailable (a private window, or site data is blocked), so nothing can be kept between sessions. Use "Export current game" to keep a copy as a file.');
+  // Both backends return Promises (or plain values, wrapped by run()) and throw Errors whose message is shown to the player.
+  const LOCAL = {
+    id: 'local', ok: storageOk,
+    list: () => M.Save.list(),
+    save: slot => { if (!game().saveSlot(slot)) throw new Error(failMessage()); return true; },
+    load: slot => game().loadSlot(slot),
+    remove: slot => M.Save.remove(slot),
+    read: slot => M.Save.load(slot),
+    put: (slot, S) => { if (!M.Save.save(slot, S)) throw new Error(failMessage()); },
+  };
+  const SERVER = {
+    id: 'server', ok: () => true,
+    list: () => M.Save.Server.list(),
+    save: slot => game().saveServer(slot),
+    load: slot => game().loadServer(slot),
+    remove: slot => M.Save.Server.remove(slot),
+    read: slot => M.Save.Server.load(slot),
+    put: (slot, S) => M.Save.Server.save(slot, S),
+  };
+  const run = fn => { try { return Promise.resolve(fn()); } catch (e) { return Promise.reject(e); } };
+  const errText = e => String(e && e.message || e);
+  let lastWhere = null;                                    // the player's last pick, kept while the page is open
   const exportName = (meta, slot) => ('orion-' + (meta && meta.race || 'save') + '-year' + (meta && meta.year !== undefined ? meta.year : 'x') + '-' + (slot === 'auto' ? 'auto' : 'slot' + slot)).toLowerCase().replace(/[^a-z0-9-]+/g, '-');
 
   // ------------------------------------------------------------------ the slot browser (shared by screen + modal)
@@ -30,15 +55,18 @@
     const ctl = C();
     let mode = opts.mode === 'save' ? 'save' : 'load';
     if (mode === 'save' && !hasGame()) mode = 'load';
-    let sel = null, entries = [];
+    let sel = null, entries = [], where = lastWhere || 'local', serverOk = false, busy = false, listErr = null, gen = 0;
     const rows = {};
+    const be = () => (where === 'server' ? SERVER : LOCAL);
     const listEl = h('div.sl-list', { role: 'listbox', 'aria-label': 'Save slots' });
     const warnEl = h('div.sl-warns'), countEl = h('span.sl-count');
-    const modeSeg = ctl.segmented([{ id: 'save', label: 'Save', disabled: !hasGame() }, { id: 'load', label: 'Load' }], mode, v => { mode = v; refresh(); if (opts.onMode) opts.onMode(mode); }, { label: 'Mode' });
+    const modeSeg = ctl.segmented([{ id: 'save', label: 'Save', disabled: !hasGame() }, { id: 'load', label: 'Load' }], mode, v => { mode = v; render(); if (opts.onMode) opts.onMode(mode); }, { label: 'Mode' });
+    const whereSeg = ctl.segmented([{ id: 'server', label: 'Server' }, { id: 'local', label: 'This browser' }], where, v => { where = lastWhere = v; sel = null; refresh(); }, { label: 'Saves kept on' });
+    const whereEl = h('div.sl-where.hide', whereSeg);
     const fileIn = h('input.hide', { type: 'file', accept: '.json,application/json,text/plain', onchange: e => { const f = e.target.files && e.target.files[0]; e.target.value = ''; if (f) importFile(f); } });
     const importBtn = ctl.hotkey(ctl.iconButton('Import from file…', 'import', () => fileIn.click(), { small: true }), 'i');
     const exportBtn = ctl.hotkey(ctl.iconButton('Export current game', 'export', exportCurrent, { small: true }), 'e');
-    const el = h('div.sl', h('div.sl-bar', modeSeg, countEl), warnEl, listEl, h('div.sl-tools', importBtn, exportBtn, fileIn));
+    const el = h('div.sl', h('div.sl-bar', modeSeg, whereEl, countEl), warnEl, listEl, h('div.sl-tools', importBtn, exportBtn, fileIn));
 
     const finish = res => { if (opts.onDone) opts.onDone(res); };
     const entryOf = slot => entries.find(e => e.slot === slot);
@@ -47,44 +75,49 @@
     function doSave(slot) {
       const G = game();
       if (!G || typeof G.saveSlot !== 'function' || !hasGame()) { UI.alert('There is no game in progress to save.', { title: 'Cannot save' }); return; }
-      const e = entryOf(slot);
+      const e = entryOf(slot), b = be();
       const write = () => {
-        let ok = false;
-        try { ok = !!G.saveSlot(slot); } catch (err) { console.error('[saveload] saveSlot threw', err); }
-        if (!ok) { UI.alert(failMessage(), { title: 'Save failed' }); refresh(); return; }
-        UI.toast('Game saved to ' + slotName(slot), 'ok');
-        finish({ action: 'saved', slot });
+        if (busy) return;
+        busy = true;
+        run(() => b.save(slot)).then(() => {
+          busy = false;
+          UI.toast('Game saved to ' + placeName(b, slot), 'ok');
+          finish({ action: 'saved', slot });
+        }, err => { busy = false; console.error('[saveload] save failed', err); UI.alert(errText(err), { title: 'Save failed' }); refresh(); });
       };
-      if (e && e.meta) ctl.confirmDanger('Overwrite save?', 'Overwrite ' + slotName(slot) + ' (' + describe(e.meta) + ') with the current game?', 'Overwrite', true).then(yes => { if (yes) write(); });
+      if (e && e.meta) ctl.confirmDanger('Overwrite save?', 'Overwrite ' + placeName(b, slot) + ' (' + describe(e.meta) + ') with the current game?', 'Overwrite', true).then(yes => { if (yes) write(); });
       else write();
     }
     function doLoad(slot) {
       const G = game();
       if (!G || typeof G.loadSlot !== 'function') { UI.alert('The game engine is not available yet, so nothing can be loaded.', { title: 'Cannot load' }); return; }
+      const b = be();
       const go = () => {
-        let ok = false;
-        try { ok = !!G.loadSlot(slot); } catch (err) { console.error('[saveload] loadSlot threw', err); }
-        if (!ok) { UI.alert('That save could not be loaded. It may be damaged or from an incompatible version.', { title: 'Load failed' }); refresh(); return; }
-        finish({ action: 'loaded', slot });
+        if (busy) return;
+        busy = true;
+        run(() => b.load(slot)).then(ok => {
+          busy = false;
+          if (!ok) throw new Error('That save could not be loaded. It may be damaged or from an incompatible version.');
+          finish({ action: 'loaded', slot });
+        }).catch(err => { busy = false; console.error('[saveload] load failed', err); UI.alert(errText(err), { title: 'Load failed' }); refresh(); });
       };
       if (hasGame() && opts.from !== 'menu') ctl.confirmDanger('Load ' + slotName(slot) + '?', 'Loading replaces the game in progress. Anything since your last save will be lost.', 'Load', true).then(yes => { if (yes) go(); });
       else go();
     }
     function doDelete(slot) {
-      const e = entryOf(slot);
+      const e = entryOf(slot), b = be();
       if (!e || !e.meta) return;
-      ctl.confirmDanger('Delete save', 'Delete ' + slotName(slot) + ' (' + describe(e.meta) + ')? This cannot be undone.', 'Delete', false).then(yes => {
+      ctl.confirmDanger('Delete save', 'Delete ' + placeName(b, slot) + ' (' + describe(e.meta) + ')? This cannot be undone.', 'Delete', false).then(yes => {
         if (!yes) return;
-        try { M.Save.remove(slot); } catch (err) { console.error(err); }
-        refresh(); UI.toast(slotName(slot) + ' deleted');
+        run(() => b.remove(slot)).then(() => UI.toast(placeName(b, slot) + ' deleted'), err => UI.alert(errText(err), { title: 'Delete failed' })).then(refresh);
       });
     }
     function doExport(slot) {
       const e = entryOf(slot);
-      let S = null;
-      try { S = M.Save.load(slot); } catch (err) { /* handled below */ }
-      if (!S) { UI.alert('That save could not be read, so it cannot be exported.', { title: 'Export failed' }); return; }
-      try { M.Save.exportFile(S, exportName(e && e.meta, slot)); UI.toast('Save exported to a file', 'ok'); } catch (err) { UI.alert('The file could not be created: ' + (err && err.message || err), { title: 'Export failed' }); }
+      run(() => be().read(slot)).catch(() => null).then(S => {
+        if (!S) { UI.alert('That save could not be read, so it cannot be exported.', { title: 'Export failed' }); return; }
+        try { M.Save.exportFile(S, exportName(e && e.meta, slot)); UI.toast('Save exported to a file', 'ok'); } catch (err) { UI.alert('The file could not be created: ' + errText(err), { title: 'Export failed' }); }
+      });
     }
     function exportCurrent() {
       const G = game();
@@ -105,19 +138,21 @@
       }).then(v => (v ? select.value : null));
     }
     function importFile(file) {
-      if (!storageOk()) { UI.alert('Importing needs browser storage, which is unavailable here.', { title: 'Cannot import' }); return; }
+      const b = be();
+      if (!b.ok()) { UI.alert('Importing needs browser storage, which is unavailable here.', { title: 'Cannot import' }); return; }
       M.Save.importFile(file).then(S => {
         const meta = M.Save.meta(S);
         return chooseSlot(meta).then(slot => {
           if (!slot) return;
-          if (!M.Save.save(slot, S)) { UI.alert(failMessage(), { title: 'Import failed' }); return; }
-          sel = slot; refresh();
-          UI.toast('Imported into ' + slotName(slot), 'ok');
+          return run(() => b.put(slot, S)).then(() => {
+            sel = slot; refresh();
+            UI.toast('Imported into ' + placeName(b, slot), 'ok');
+          }, err => UI.alert(errText(err), { title: 'Import failed' }));
         });
-      }).catch(err => UI.alert(h('div', h('p', 'That file is not a valid saved game.'), h('p.dim', String(err && err.message || err))), { title: 'Import failed' }));
+      }, err => UI.alert(h('div', h('p', 'That file is not a valid saved game.'), h('p.dim', errText(err))), { title: 'Import failed' }));
     }
     const primary = slot => {
-      if (mode === 'save') { if (slot === 'auto') UI.toast('The autosave slot is written automatically at the start of every turn.', 'warn'); else if (storageOk()) doSave(slot); }
+      if (mode === 'save') { if (slot === 'auto') UI.toast('The autosave slot is written automatically at the start of every turn.', 'warn'); else if (be().ok()) doSave(slot); }
       else { const e = entryOf(slot); if (e && e.meta) doLoad(slot); }
     };
 
@@ -135,7 +170,7 @@
       const { slot, meta } = e, auto = slot === 'auto';
       const actions = h('div.sl-act');
       if (mode === 'save') {
-        const b = UI.button(meta ? 'Overwrite' : 'Save here', () => doSave(slot), { small: true, primary: !meta, disabled: auto || !storageOk() });
+        const b = UI.button(meta ? 'Overwrite' : 'Save here', () => doSave(slot), { small: true, primary: !meta, disabled: auto || !be().ok() });
         actions.appendChild(auto ? h('span', { tip: 'The autosave slot is written automatically at the start of every turn.' }, b) : b);
       } else if (meta) actions.appendChild(UI.button('Load', () => doLoad(slot), { small: true, primary: true }));
       if (meta) actions.append(iconBtn('export', 'Export to a file', () => doExport(slot)), iconBtn('trash', 'Delete', () => doDelete(slot), 'del'));
@@ -155,23 +190,40 @@
       const row = h('div.cx.sl-row' + (meta ? '' : '.empty'), { role: 'option', tabindex: 0, dataset: { slot }, onclick: () => select(slot), ondblclick: () => primary(slot) }, slotCol, mid, actions);
       return row;
     }
+    const emptySlots = () => (where === 'server' ? M.Save.Server.SLOTS : M.Save.SLOTS).map(s => ({ slot: s, meta: null }));
     function refresh() {
-      try { entries = M.Save && M.Save.list ? M.Save.list() : []; } catch (err) { entries = []; }
-      if (!entries.length) entries = (M.Save && M.Save.SLOTS || ['auto', '1', '2', '3', '4', '5', '6']).map(s => ({ slot: s, meta: null }));
+      const my = ++gen;                                    // a slower, older listing must not overwrite a newer one
+      run(() => be().list()).then(list => { listErr = null; return list; }, err => { listErr = errText(err); return []; }).then(list => {
+        if (my !== gen) return;
+        entries = list && list.length ? list : emptySlots();
+        render();
+      });
+    }
+    function render() {
       if (mode === 'save' && !hasGame()) mode = 'load';
+      whereEl.classList.toggle('hide', !serverOk);
+      whereSeg.set(where);
       modeSeg.set(mode);
       UI.clear(listEl); Object.keys(rows).forEach(k => delete rows[k]);
       entries.forEach(e => { rows[e.slot] = rowEl(e); listEl.appendChild(rows[e.slot]); });
-      if (!sel || !rows[sel]) { const first = entries.find(e => e.meta && e.slot !== 'auto') || entries.find(e => e.meta) || entries[1] || entries[0]; sel = first && first.slot; }
+      if (!sel || !rows[sel]) { const first = entries.find(e => e.meta && e.slot !== 'auto') || entries.find(e => e.meta) || entries.find(e => e.slot !== 'auto') || entries[0]; sel = first && first.slot; }
       select(sel);
       const used = entries.filter(e => e.meta).length;
       countEl.textContent = used + ' of ' + entries.length + ' slots in use';
       UI.clear(warnEl);
-      if (!storageOk()) warnEl.appendChild(h('div.sl-warn', ctl.icon('warn'), h('div', h('b', 'Browser storage is unavailable.'), ' Saves cannot be kept between sessions (private window, or site data blocked). You can still export your game to a file and import it later.')));
-      importBtn.disabled = !storageOk();
+      if (listErr) warnEl.appendChild(h('div.sl-warn', ctl.icon('warn'), h('div', h('b', 'The saves could not be listed.'), ' ' + listErr)));
+      else if (where === 'local' && !storageOk()) warnEl.appendChild(h('div.sl-warn', ctl.icon('warn'), h('div', h('b', 'Browser storage is unavailable.'), ' Saves cannot be kept between sessions (private window, or site data blocked). You can still export your game to a file and import it later.')));
+      importBtn.disabled = !be().ok();
       exportBtn.disabled = !hasGame();
     }
+    entries = emptySlots(); render();
     refresh();
+    M.Save.Server.probe().then(ok => {                    // the server is the default home for saves once it answers
+      serverOk = ok;
+      if (ok && !lastWhere) where = 'server';
+      if (!ok) where = 'local';
+      sel = null; refresh();
+    });
 
     function move(d) {
       const keys = entries.map(e => e.slot), i = keys.indexOf(sel);

@@ -2,11 +2,13 @@
 # Snapshot the server-side state: install.conf, VERSION, which release is live
 # (the `current` symlink), the nginx/Caddy site and the WHOLE of
 # /etc/letsencrypt (accounts, renewal config, live/ and archive/ — without the
-# keys a restore cannot bring the certificate back). The release tree itself
+# keys a restore cannot bring the certificate back), the save server's
+# settings (/etc/moogenesis) and the server save slots plus the login-cookie
+# key (/var/lib/moogenesis). The release tree itself
 # is not archived: it is 20+ MB of files that git already holds (version.txt
 # names the commit), and a restore rebuilds it with install.sh.
-# Players' SAVES are not here — they live in each browser (localStorage);
-# players can use the in-game Save → Export to keep a copy.
+# Saves kept in a player's BROWSER are not here (localStorage); players can
+# use the in-game Save → Export to keep a copy of those.
 # The archive holds private keys: it is written with umask 077 / mode 600.
 #
 #   sudo bash /opt/moogenesis/scripts/backup.sh [--root DIR] [--keep N] [--quiet]
@@ -45,7 +47,8 @@ for m in install.conf VERSION; do [[ -e "${INSTALL_ROOT}/${m}" ]] && MEMBERS+=("
 
 # System-side pieces are staged under system/ so the archive stays relocatable.
 TMP=$(mktemp -d); trap 'rm -rf "$TMP"' EXIT
-for p in /etc/nginx/sites-available/${MOO_SITE_NAME}.conf /etc/caddy/conf.d/${MOO_SITE_NAME}.caddy /etc/letsencrypt; do
+for p in /etc/nginx/sites-available/${MOO_SITE_NAME}.conf /etc/caddy/conf.d/${MOO_SITE_NAME}.caddy /etc/letsencrypt \
+         "$(dirname "$MOO_SAVES_CONF")" "$MOO_SAVES_DATA"; do
     [[ -e "$p" ]] || continue
     mkdir -p "${TMP}/system$(dirname "$p")"; cp -a "$p" "${TMP}/system${p}"
 done

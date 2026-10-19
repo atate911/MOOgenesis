@@ -7,7 +7,10 @@
 # Builds a NEW release directory, flips the `current` symlink, health-checks
 # the live site and flips back automatically if it is not serving the new
 # release. Old releases are kept (newest 5) for scripts/rollback.sh.
-# Never touches the nginx/Caddy site conf, so certbot's edits survive upgrades.
+# Never rewrites the nginx site conf, so certbot's edits survive upgrades; the
+# only change it makes there is adding the one `include` line for the save
+# server snippet when it is missing (checked with nginx -t, put back on failure).
+# The Caddy site file is the scripts' own and is re-rendered from its template.
 # The operator scripts, deploy templates, systemd units and VERSION are
 # refreshed even when the game files are unchanged. Refreshing renames new
 # files over the old ones (moo_install_scripts), so running this script from
@@ -74,6 +77,24 @@ refresh_operator_files() {
         for u in $changed; do ok "Refreshed ${u}"; done
     fi
     ok "Scripts, deploy templates and VERSION updated"
+    refresh_saves
+}
+
+# The save server and password gate: (re)started on every run, and the web
+# server's snippet rewritten to match (comment-only while the service is down).
+refresh_saves() {
+    local web on=no
+    step "Save server and password gate"
+    web="$(moo_conf_get "${INSTALL_ROOT}" web)"; web="${web:-nginx}"
+    command -v "$web" >/dev/null || { info "${web} is not installed here; skipped"; return 0; }
+    moo_saves_service "${REPO_DIR}" "${INSTALL_ROOT}" && on=yes
+    moo_saves_web "${REPO_DIR}" "${INSTALL_ROOT}" "$web" "$on" || return 0
+    if [[ "$on" != yes ]]; then warn "Server saves and the password gate are off until the save server runs"; return 0; fi
+    case "$(moo_saves_gate)" in
+        default) ok "Server saves on; password gate on with the default password 'moopassword' (change it in ${MOO_SAVES_CONF})" ;;
+        custom)  ok "Server saves on; password gate on (password from ${MOO_SAVES_CONF})" ;;
+        off)     ok "Server saves on; password gate off (blank password in ${MOO_SAVES_CONF})" ;;
+    esac
 }
 
 if $DO_PULL; then

@@ -1,0 +1,42 @@
+# Save server + password gate (server/moo-saves.py), included by the moogenesis nginx site
+# (`include /etc/nginx/snippets/moogenesis-saves.conf;` in each server block that serves the game).
+# install.sh / upgrade.sh render this into /etc/nginx/snippets/moogenesis-saves.conf on every run, so edit
+# the template, not the copy. @SAVES@ = the save server's `listen` address from /etc/moogenesis/moo.conf.
+# When the save server is not running the scripts write a comment-only snippet instead, so the game
+# still loads (without the gate and server saves) rather than failing every request.
+
+# Every request asks the save server first: 204 = serve it, 401 = show the password page instead.
+# The server itself lets /version.txt and /.well-known/ through (health checks, certificate renewal).
+auth_request /api/auth;
+error_page 401 = @moo_login;
+
+location = /api/auth {
+    internal;
+    auth_request off;
+    proxy_pass http://@SAVES@;
+    proxy_pass_request_body off;
+    proxy_set_header Content-Length "";
+    proxy_set_header X-Original-URI $request_uri;
+    proxy_set_header X-Forwarded-Uri "";          # Caddy's name for it: never take one from the client
+}
+
+location @moo_login {
+    auth_request off;
+    rewrite ^ /api/login break;
+    proxy_method GET;
+    proxy_pass http://@SAVES@;
+    proxy_pass_request_body off;
+    proxy_set_header Content-Length "";
+    proxy_set_header X-Original-URI $request_uri;
+    proxy_set_header X-Forwarded-Proto $scheme;
+}
+
+# Login form, logout and the save slots. The server checks the login cookie on its own for these.
+location /api/ {
+    auth_request off;
+    proxy_pass http://@SAVES@;
+    proxy_set_header Host $host;
+    proxy_set_header X-Real-IP $remote_addr;
+    proxy_set_header X-Forwarded-Proto $scheme;
+    client_max_body_size 8m;
+}

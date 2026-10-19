@@ -5,6 +5,19 @@ Versions follow `MAJOR.MINOR.PATCH`; the live version is the `VERSION` file.
 
 ## Unreleased
 
+- Server saves and a password gate (`server/moo-saves.py`, Python 3 standard library only). On a hosted install the game asks
+  for a password before anything loads (default `moopassword`, set in `/etc/moogenesis/moo.conf` on the server; blank turns it
+  off; changes apply at once and sign everyone out). The Save / Load screen gains a **Server | This browser** toggle; Server is
+  the default when the save server answers, with 6 slots kept gzipped in `/var/lib/moogenesis/saves` (a long colossal game is
+  ~50 KB). Saving to the server happens only when you choose to; autosave and F10 stay in the browser. Continue on the title
+  screen picks the newest save from either place. Opened from `file://`, or with no save server, everything works as before.
+  `python3 server/moo-saves.py --dev` serves the game locally with the gate and server saves (data in `server/dev-data/`).
+- Deploy: `install.sh` / `upgrade.sh` set up the `moogenesis` service user, `moo.conf` (written once, never overwritten), the
+  `moogenesis-saves` unit and an nginx / Caddy snippet the scripts own (nginx `auth_request`, Caddy `forward_auth`). An existing
+  nginx site only gains one `include` line (tested with `nginx -t`, put back on failure). While the save server is not answering
+  the snippet is written comment-only, so the game still loads, without the gate. Health checks send the login cookie, `doctor.sh`
+  reports the service, the gate and the slot count, `backup.sh` includes `/etc/moogenesis` and `/var/lib/moogenesis`, and
+  `uninstall.sh` removes the service but keeps the saves. `tools/qa/saves.js` tests the whole flow in Chromium.
 - Diplomacy in each race's own voice: 2,100 new lines (`js/data/diplo/<race>.js` → `Data.diploRace`), six for each of 35
   situations per race. That covers first contact, greetings (neutral, allied, frosty, at war), offers, sweeteners, answers, war,
   tribute, threats, peace, broken treaties, spies caught either way, border warnings, gifts, insults, calls to arms and Council

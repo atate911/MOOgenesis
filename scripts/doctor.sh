@@ -59,6 +59,24 @@ if command -v curl >/dev/null && [[ -n "$CUR" ]]; then
     else fail "${DOMAIN} is not serving ${CUR} locally"; hint "$([[ "$WEB" == caddy ]] && echo "sudo journalctl -u caddy -n 30" || echo "sudo tail /var/log/nginx/moogenesis.error.log")"; fi
 fi
 
+if [[ -f "${INSTALL_ROOT}/server/moo-saves.py" ]]; then
+    if systemctl is-active --quiet "$MOO_SAVES_UNIT"; then pass "save server (${MOO_SAVES_UNIT}) is running"
+    else fail "save server (${MOO_SAVES_UNIT}) is not running"; hint "sudo systemctl restart ${MOO_SAVES_UNIT}; sudo journalctl -u ${MOO_SAVES_UNIT} -n 30"; fi
+    UP=false; moo_saves_up && UP=true
+    $UP && pass "save server answers on $(moo_saves_listen)" || fail "save server does not answer on $(moo_saves_listen)"
+    if moo_saves_snippet_on "$WEB"; then
+        pass "${WEB} sends requests through the password gate"
+        $UP || hint "every page fails while the gate is wired in and the save server is down"
+    else note "${WEB} is not using the save server (its snippet is comment-only): no password, browser saves only"; hint "start the service, then: sudo bash ${INSTALL_ROOT}/scripts/upgrade.sh"; fi
+    case "$(moo_saves_gate)" in
+        default) pass "password gate on (still the default password 'moopassword'; ${MOO_SAVES_CONF})" ;;
+        custom)  pass "password gate on (custom password)" ;;
+        off)     pass "password gate off (blank password in ${MOO_SAVES_CONF})" ;;
+    esac
+    N=$(ls -1 "${MOO_SAVES_DATA}"/saves/*.save 2>/dev/null | wc -l)
+    pass "server saves: ${N} slot(s) in use (${MOO_SAVES_DATA}/saves)"
+else note "the save server is not installed (no ${INSTALL_ROOT}/server/moo-saves.py)"; hint "sudo bash ${INSTALL_ROOT}/scripts/upgrade.sh"; fi
+
 DNS_IP=$(getent ahostsv4 "$DOMAIN" 2>/dev/null | awk '{print $1; exit}')
 PUB_IP=$(curl -fsS --max-time 6 https://api.ipify.org 2>/dev/null || true)
 if [[ -z "$DNS_IP" ]]; then note "${DOMAIN} does not resolve"; hint "add an A record for ${DOMAIN} at your DNS host"

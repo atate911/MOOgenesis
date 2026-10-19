@@ -1,4 +1,4 @@
-# nginx site for Master of Orion — Reborn (static files, no backend).
+# nginx site for Master of Orion — Reborn (static files + the save server / password gate snippet).
 # install.sh renders this once into /etc/nginx/sites-available/moogenesis.conf.
 # certbot --nginx later adds the 443 server block and the http->https redirect
 # to the INSTALLED copy; upgrade.sh never rewrites it.
@@ -23,6 +23,9 @@ server {
 
     root @ROOT@/current;
     index index.html;
+
+    # Password gate + /api/ (server saves). The scripts own this file and rewrite it on every run.
+    include /etc/nginx/snippets/moogenesis-saves.conf;
 
     # NOTE: add_header at location level REPLACES the server-level set, so every
     # location below that sets a header repeats all four.

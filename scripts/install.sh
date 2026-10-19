@@ -10,8 +10,11 @@
 # A re-run reads domain / email / web from the existing install.conf (flags
 # still win), reuses the live release when the checkout is unchanged, and
 # keeps tls=yes once a certificate is in place.
-# The game is static files — no service user, no database. Player saves live
-# in each player's browser, so there is nothing server-side to lose.
+# The game is static files plus one small service: server/moo-saves.py (user
+# moogenesis, unit moogenesis-saves) asks for a password before the game loads
+# and keeps the server save slots in /var/lib/moogenesis. Its settings are in
+# /etc/moogenesis/moo.conf (default password: moopassword; blank turns it off),
+# written once and never overwritten. Browser saves still work as before.
 set -euo pipefail
 
 INSTALL_ROOT="/opt/moogenesis"
@@ -165,6 +168,16 @@ if $SKIP_NGINX; then
     exit 0
 fi
 
+step "Save server and password gate"
+SAVES_ON=no
+if moo_saves_service "${REPO_DIR}" "${INSTALL_ROOT}"; then
+    SAVES_ON=yes
+    ok "${MOO_SAVES_UNIT} is answering on $(moo_saves_listen)"
+else
+    warn "Continuing without it: the game loads with no password and browser saves only. Fix it, then re-run this installer."
+fi
+moo_saves_snippet "${REPO_DIR}" "$WEB" "$SAVES_ON"
+
 TLS_NOTE=""
 if [[ "$WEB" == caddy ]]; then
     step "Caddy site"
@@ -212,8 +225,11 @@ else
 step "nginx site"
 SITE_AVAIL="/etc/nginx/sites-available/${MOO_SITE_NAME}.conf"
 SITE_ENABLED="/etc/nginx/sites-enabled/${MOO_SITE_NAME}.conf"
+SITE_BAK=""
 if [[ -f "$SITE_AVAIL" ]]; then
     ok "Site conf already present — leaving it alone (certbot may have edited it)"
+    SITE_BAK=$(mktemp); cp -a "$SITE_AVAIL" "$SITE_BAK"
+    [[ "$(moo_nginx_include "$SITE_AVAIL")" == added ]] && ok "Added 'include ${MOO_NGINX_SNIPPET};' to it (save server / password gate)"
     if ! diff -q <(moo_render_nginx "${REPO_DIR}/deploy/nginx/moogenesis.conf.template" "$DOMAIN" "$INSTALL_ROOT") "$SITE_AVAIL" >/dev/null 2>&1; then
         info "It differs from the template (normal after certbot). To regenerate from scratch:"
         echo "        sudo rm ${SITE_AVAIL} ${SITE_ENABLED} && sudo bash ${REPO_DIR}/scripts/install.sh --domain ${DOMAIN}"
@@ -223,7 +239,11 @@ else
     ok "Wrote ${SITE_AVAIL}"
 fi
 ln -sfn "$SITE_AVAIL" "$SITE_ENABLED"
-nginx -t 2>&1 | sed 's/^/        /' || die "nginx config test failed — see above. Nothing was reloaded."
+if ! nginx -t 2>&1 | sed 's/^/        /'; then
+    [[ -n "$SITE_BAK" ]] && cp -a "$SITE_BAK" "$SITE_AVAIL" && warn "Put ${SITE_AVAIL} back as it was"
+    die "nginx config test failed — see above. Nothing was reloaded."
+fi
+[[ -z "$SITE_BAK" ]] || rm -f "$SITE_BAK"
 systemctl enable nginx >/dev/null 2>&1 || true
 if ! { systemctl reload nginx 2>/dev/null || systemctl restart nginx; }; then
     echo
@@ -308,6 +328,15 @@ printf  "║   MOO Reborn v%-34s║\n" "${VERSION} installed!"
 echo -e "╚══════════════════════════════════════════════════╝${NC}"
 echo
 echo    "   Play      : ${SCHEME}://${DOMAIN}/"
+if [[ "$SAVES_ON" == yes ]]; then
+    case "$(moo_saves_gate)" in
+        default) echo "   Password  : moopassword (the default; change it in ${MOO_SAVES_CONF}, blank turns it off)" ;;
+        custom)  echo "   Password  : as set in ${MOO_SAVES_CONF}" ;;
+        off)     echo "   Password  : off (blank in ${MOO_SAVES_CONF})" ;;
+    esac
+else
+    echo "   Password  : off (the save server is not running: sudo journalctl -u ${MOO_SAVES_UNIT} -n 30)"
+fi
 echo    "   Health    : sudo bash ${INSTALL_ROOT}/scripts/doctor.sh"
 echo    "   Upgrade   : cd ${REPO_DIR} && sudo bash scripts/upgrade.sh --pull"
 echo    "   Rollback  : sudo bash ${INSTALL_ROOT}/scripts/rollback.sh"
@@ -317,5 +346,5 @@ echo
 echo    "   Home network checklist (docs/DEPLOYMENT.md has the details):"
 echo    "     • DNS: an A record for ${DOMAIN} → your home's public IP (or a DDNS name)"
 echo    "     • Router: forward TCP 80 and 443 to this server's LAN IP"
-echo    "     • Saves are stored in each player's browser, not on this server"
+echo    "     • Server saves are in ${MOO_SAVES_DATA}/saves (backup.sh includes them); browser saves stay in each browser"
 echo

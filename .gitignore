@@ -4,3 +4,4 @@ tools/out/
 *.tmp.*
 .claude/settings.local.json
 __pycache__/
+server/dev-data/

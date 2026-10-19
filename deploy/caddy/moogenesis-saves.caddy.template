@@ -1,0 +1,18 @@
+# Save server + password gate (server/moo-saves.py), imported by the moogenesis Caddy site.
+# install.sh / upgrade.sh render this into /etc/caddy/moogenesis-saves.caddyfile on every run (it is NOT in
+# conf.d/: it holds directives for inside the site block, not a site). @SAVES@ = the save server's `listen`
+# address from /etc/moogenesis/moo.conf. When the save server is not running the scripts write a
+# comment-only file instead, so the game still loads (without the gate and server saves).
+
+# Login form, logout and the save slots. The server checks the login cookie on its own for these.
+handle /api/* {
+    reverse_proxy @SAVES@
+}
+
+# Everything else asks the save server first: 2xx = serve it, otherwise its answer (the password page) is
+# sent instead. The server itself lets /version.txt and /.well-known/ through.
+@moo_gated not path /api/*
+forward_auth @moo_gated @SAVES@ {
+    uri /api/auth
+    header_up -X-Original-URI      # nginx's name for it: never take one from the client (Caddy sets X-Forwarded-Uri)
+}
