@@ -18,7 +18,24 @@ Versions follow `MAJOR.MINOR.PATCH`; the live version is the `VERSION` file.
   the snippet is written comment-only, so the game still loads, without the gate. Health checks send the login cookie, `doctor.sh`
   reports the service, the gate and the slot count, `backup.sh` includes `/etc/moogenesis` and `/var/lib/moogenesis`, and
   `uninstall.sh` removes the service but keeps the saves. `tools/qa/saves.js` tests the whole flow in Chromium.
-
+- Diplomacy in each race's own voice: 2,100 new lines (`js/data/diplo/<race>.js` → `Data.diploRace`), six for each of 35
+  situations per race. That covers first contact, greetings (neutral, allied, frosty, at war), offers, sweeteners, answers, war,
+  tribute, threats, peace, broken treaties, spies caught either way, border warnings, gifts, insults, calls to arms and Council
+  votes. Human dealmakers, Mrrshan hunters, geological Silicoids, hungry Sakkra, condescending Psilons, Alkari clan-lords, the
+  Klackon Hive, gruff Bulrathi gardeners, Meklar cost-benefit reviews and Darlok denials. The audience screen speaks the race's
+  line first and falls back to the personality lines. A line that names a third race is skipped when the player is that race.
+  `tools/rules/93-diplo-race-lines.test.js` checks every set: complete, ASCII, and the right placeholders.
+- Fixed: several ship ETAs counted the whole trip instead of the turns still to go: the Fleet screen's list, the panel for
+  another empire's fleet, and the map's ETAs (and so its tooltips and raid warnings) for foreign fleets and troop transports.
+  All now count from where the ships are (`F.etaLeft`, which also handles transports).
+- Galaxy map: the sky painting behind the stars is anchored to the galaxy as a far layer. It pans with the map (one to one at the
+  fit-all view) and zooms more slowly than the stars, instead of staying almost fixed on screen while the map moved over it.
+- Turn cards about a star (a new system explored, the colonise question, notices) have a "Go there ›" link that zooms the
+  galaxy map in on that star and selects it; the card stays until answered.
+- Transport panel: the colonists on the origin and destination worlds now → after the move, against each world's maximum
+  (amber when the destination would be over it), updated as the slider moves.
+- Fleet deployment opens in the sidebar when you click your fleet, keeping the map clear while you look for a destination;
+  it moves beside the destination once you click one (a right-click send still opens it there at once).
 - Colonies needing attention (`Q.attention`): the Planets screen's warnings (rebellion or unrest, events, shrinking population,
   waste building up, idle factories) now show on the galaxy map as a small "!" badge at the colony (red or amber), and a hostile
   warfleet or troop transport you can see flying at one of your colonies draws a pulsing red ring with the turns until it arrives.

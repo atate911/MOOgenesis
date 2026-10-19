@@ -41,6 +41,11 @@
     .sc-relocmsg { margin:.2rem 0 .5rem; text-align:center; color:var(--ivory); min-height:1.3em; }
     .sc-relocbtns { gap:.4rem; margin-top:.35rem; } .sc-relocbtns .btn { flex:1; justify-content:center; }
     .sc-trans .big { font:400 1.4rem var(--font-display); color:var(--brass-hi); text-align:center; margin:.4rem 0; }
+    .sc-tpop { margin:.45rem 0 .3rem; font-variant-numeric:tabular-nums; }
+    .sc-tpop .r { display:grid; grid-template-columns:2.6rem 1fr auto; gap:.4rem; align-items:baseline; padding:.12rem .3rem; }
+    .sc-tpop .r + .r { border-top:1px solid rgba(214,179,106,.15); }
+    .sc-tpop .k { color:var(--mist); font-size:.78rem; text-transform:uppercase; letter-spacing:.08em; } .sc-tpop .nm { color:var(--ivory); }
+    .sc-tpop b { color:var(--leaf); } .sc-tpop b.over { color:var(--amber, #f0b050); }
     .empire-dot { display:inline-block; width:.7em; height:.7em; margin-right:.2em; transform:rotate(45deg); background:var(--c, var(--brass)); box-shadow:0 0 6px var(--c, var(--brass)); }
   `);
 
@@ -261,17 +266,24 @@
       const pid = ctx.params.planet, S = G.S, p = S.planets[pid], E = G.player(), max = Math.floor(p.pop / 2);
       const st = { to: ctx.params.to !== undefined ? ctx.params.to : p.trans ? p.trans.to : -1, n: ctx.params.n !== undefined ? ctx.params.n : p.trans ? p.trans.n : Math.min(max, 1) };
       this.st = st;
-      const info = h('div.sc-pickhint'), big = h('div.big'), msg = h('div.small');
+      const info = h('div.sc-pickhint'), big = h('div.big'), msg = h('div.small'), pops = h('div.sc-tpop');
+      // both worlds' colonists now → after the move, against their maximum (amber when the destination would be over it)
+      const popRow = (label, q, delta) => {
+        const mx = M.Sim.Colony.maxPopDisplay(E, q), now = q.pop | 0, after = Math.max(0, now + delta), over = delta > 0 && after > mx;
+        return h('div.r', h('span.k', label), h('span.nm', q.name || S.stars[q.starId].name), h('span.v', h('span.dim', now + ' → '), h('b' + (over ? '.over' : ''), after), h('span.dim', ' / ' + mx + 'M')));
+      };
       const sl = UI.slider({ label: 'Pop', color: 'var(--c-eco)', min: 0, max: Math.max(1, max), step: 1, value: st.n, lockable: false, fmt: v => v + 'M', onChange: v => { st.n = v; upd(); } });
       const upd = () => {
         let t = '', ok = false, eta = 0;
         if (st.to >= 0) { const chk = M.Sim.Fleet.canTransportTo(S, E, p, st.to); ok = chk.ok && st.n > 0; if (!chk.ok) t = chk.msg; else { eta = M.Sim.Fleet.transEta(S, E, p.starId, st.to); const q = S.planets[st.to]; if (q.owner === E.id && q.pop + st.n > q.mp3) t = 'Warning: above maximum population'; } }
+        const q = st.to >= 0 ? S.planets[st.to] : null;
+        UI.mount(pops, popRow('From', p, -st.n), q && q.owner === E.id ? popRow('To', q, st.n) : h('div.r', h('span.k', 'To'), h('span.dim', q ? (q.owner >= 0 ? 'a foreign colony: the colonists land as troops' : 'an empty world') : '—')));
         big.textContent = 'Moving ' + st.n + ' Million'; msg.textContent = st.to >= 0 ? (S.stars[st.to].name + (ok ? ' — ETA ' + turnsTxt(eta) + (M.Sim.Fleet.gateLink(S, E, p.starId, st.to) ? ' by stargate' : '') : '') + (t ? ' · ' + t : '')) : 'Choose a destination on the map';
         acc.disabled = !ok; acc.classList.toggle('disabled', !ok);
         if (ok && ctx.params.float) UI.attention(acc);
       };
       const acc = UI.button('Accept', () => { const r = G.order({ t: 'trans', planet: pid, to: st.to, n: st.n }); if (!r.ok) UI.toast(r.msg, 'bad'); UI.Galaxy.pick = null; ctx.show('colony', { star: pid }); }, { primary: true });
-      host.appendChild(UI.Side.title(pid, S.playerId)); host.appendChild(h('div.sc-trans', h('div.sc-pickhint', 'Choose number of colonists to transport, then click the destination colony. Enter accepts · Esc cancels.'), big, sl, msg));
+      host.appendChild(UI.Side.title(pid, S.playerId)); host.appendChild(h('div.sc-trans', h('div.sc-pickhint', 'Choose number of colonists to transport, then click the destination colony. Enter accepts · Esc cancels.'), big, sl, pops, msg));
       host.appendChild(h('div.row', { style: { marginTop: '.6rem' } }, UI.button('Cancel', () => { UI.Galaxy.pick = null; ctx.show('colony', { star: pid }); }), UI.button('Clear order', () => { G.order({ t: 'trans', planet: pid, n: 0 }); UI.Galaxy.pick = null; ctx.show('colony', { star: pid }); }), acc));
       const preview = () => { const id = st.to; if (id < 0 || !UI.Galaxy.map) return; const ok = M.Sim.Fleet.canTransportTo(S, E, p, id).ok; UI.Galaxy.map.setRoutePreview({ from: p.starId, to: id, eta: ok ? M.Sim.Fleet.transEta(S, E, p.starId, id) : 0, valid: ok, gate: ok && M.Sim.Fleet.gateLink(S, E, p.starId, id) }); };
       UI.Galaxy.pick = id => { if (ctx.follow({ to: id, n: st.n })) return; st.to = id; upd(); preview(); if (ctx.params.float && UI.Side.place) UI.Side.place(); };   // the panel comes to the destination clicked
