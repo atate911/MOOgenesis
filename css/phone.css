@@ -1,0 +1,42 @@
+/* =========================================================================
+   Phone prototype — every rule is gated on <html data-phone>, set by js/ui/phone.js
+   (touch device under 900px wide, or ?phone=1; ?phone=0 forces it off). Desktop is unaffected.
+   ========================================================================= */
+html[data-phone] { font-size: clamp(11px, min(3.7vw, 2.3vh), 17px); overscroll-behavior: none; }
+html[data-phone] body { touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
+html[data-phone] #tip { display: none !important; }                       /* hover tooltips make no sense on touch */
+
+/* ---- galaxy screen: map fills the screen, side panel becomes a bottom sheet, bar scrolls sideways ---- */
+html[data-phone] .gx { grid-template-columns: minmax(0, 1fr); grid-template-rows: minmax(0, 1fr) auto; padding: 0; gap: 0; }
+html[data-phone] .gx-mapwrap { grid-column: 1; grid-row: 1; }
+html[data-phone] .gx-side:not(.gx-float) {
+  grid-column: 1; grid-row: 1; align-self: end; z-index: 6; padding: 0; background: none;
+  max-height: 5.2rem; transition: max-height .22s var(--ease); overflow: hidden;
+}
+/* collapsed: handle + the planet/star title only */
+html[data-phone]:not([data-sheet="open"]) .gx-side:not(.gx-float) .panel { flex: 0 0 3.2rem; }
+html[data-phone]:not([data-sheet="open"]) .gx-side:not(.gx-float) > :not(.panel):not(.ph-grip) { display: none; }
+html[data-phone][data-sheet="open"] .gx-side:not(.gx-float) { max-height: 62%; }
+html[data-phone] .gx-side:not(.gx-float) .panel { box-shadow: 0 -8px 22px rgba(0,0,0,.55); }
+html[data-phone] .ph-grip {
+  position: relative; z-index: 2; display: flex; align-items: center; justify-content: center; height: 1.5rem; flex: none;
+  background: linear-gradient(180deg, #59636f, #3a424c); cursor: pointer;
+}
+html[data-phone] .ph-grip::before { content: ""; width: 3rem; height: .28rem; border-radius: .2rem; background: rgba(255,255,255,.45); }
+html[data-phone] .gx-side.gx-float { width: calc(100% - 1rem); left: .5rem !important; right: .5rem; bottom: .5rem; top: auto !important; max-height: 60%; }
+
+html[data-phone] .gx-top { left: .4rem; right: .4rem; top: .35rem; flex-direction: column; gap: .3rem; }
+html[data-phone] .gx-hud { flex-wrap: wrap; gap: .3rem .8rem; padding: .3rem .6rem; font-size: .9rem; }
+html[data-phone] .gx-msg { margin-left: 0; max-width: 78%; }
+
+html[data-phone] .gx-bar { overflow-x: auto; flex-wrap: nowrap; gap: .3rem; padding: .3rem .3rem calc(.3rem + env(safe-area-inset-bottom)); -webkit-overflow-scrolling: touch; scrollbar-width: none; }
+html[data-phone] .gx-bar::-webkit-scrollbar { display: none; }
+html[data-phone] .gx-bar .btn { flex: 0 0 auto !important; min-width: 0 !important; min-height: 2.9rem; padding: .5em 1em !important; font-size: .9rem !important; letter-spacing: .04em !important; white-space: nowrap; }
+html[data-phone] .gx-bar .btn.primary { flex: 0 0 auto !important; min-width: 6.5rem !important; position: sticky; right: 0; }
+
+/* ---- touch-sized controls everywhere ---- */
+html[data-phone] .btn { min-height: 2.6rem; }
+html[data-phone] .btn.small { min-height: 2.3rem; padding: .35em .9em; }
+html[data-phone] .slider { grid-template-columns: 6rem 2.4rem minmax(3rem, 1fr) 2.4rem 3rem 2.2rem !important; min-height: 2.6rem; }
+html[data-phone] .slider .s-track { height: 2.2rem; }
+html[data-phone] .modal { max-width: 96vw; max-height: 92vh; overflow: auto; }
