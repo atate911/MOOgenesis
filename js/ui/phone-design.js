@@ -16,6 +16,7 @@
   const X = () => UI.Design && UI.Design._phone;
   const KINDS = ['all', 'beam', 'missile', 'torpedo', 'bomb', 'bio'];
   let built = false, dzEl = null, headEl = null, libEl = null, libOpen = false;
+  if (UI.Phone) UI.Phone.backHidden.add('design');                                          // the pinned header's Cancel / Done is the Back here
 
   const pinHead = () => { if (dzEl && headEl) dzEl.style.setProperty('--ph-head', headEl.offsetHeight + 'px'); };   // sheets open under the budget strip
   function openLib(on) { libOpen = !!on; if (libOpen) pinHead(); if (libEl) libEl.classList.toggle('on', libOpen); if (libOpen && UI.Phone.hideTip) UI.Phone.hideTip(); }
@@ -47,7 +48,6 @@
     if (cvw) cvw.appendChild(h('button.ph-pv-reset', { type: 'button', onclick: () => { x.PV.manual = null; } }, 'reset view'));
     // Escape / Back: the library first, then the picker, then the screen (registered after design.js's own binding, so it is asked first)
     UI.bindKey('Escape', () => { if (libOpen) openLib(false); else if (x.st.popup) x.closePopup(); else x.cancel(); }, { screen: 'design' });
-    UI.Phone.backHidden.add('design');                                                       // the header's Cancel / Done is the Back here
     x.PV.refit = true;
   }
 

@@ -4,7 +4,8 @@
 //   UI.Phone.back()                          THE Back: dispatches an Escape keydown. Every screen, modal, popup and panel already handles
 //                                            Escape exactly like its right-click (kit.js keydown → modal stack → newest UI.bindKey; the
 //                                            window-capture handlers of galaxymap / help run first), so one control covers the whole game.
-//   UI.Phone.backHidden                      Set of screen ids where the global Back control stays hidden (they draw their own)
+//   UI.Phone.backHidden                      Set of screen ids where the global Back control stays hidden (they draw their own); every
+//                                            other screen gets a slim app bar holding Back (<html data-ph-bar>; #screens starts below it)
 //   UI.Phone.sheet(el, {states, initial})    makes a panel a bottom sheet: a drag handle (.ph-grip) becomes its first child and
 //                                            el.dataset.sheet = 'strip' | 'half' | 'full' (heights come from CSS); tap cycles, drag snaps.
 //                                            → {set(s), get(), on(fn), el, grip, states}; also stored as el.phSheet
@@ -36,14 +37,20 @@
   let backEl = null;
   function mountBack() {                                                                     // only ever in the DOM on a phone
     if (backEl) return;
+    const app = doc.getElementById('app') || doc.body;
+    app.appendChild(h('div.ph-appbar', { 'aria-hidden': 'true' }));
     backEl = h('button.ph-back', { type: 'button', 'aria-label': 'Back', onclick: () => P.back() }, h('span.ch', '‹'), h('span', 'Back'));
-    (doc.getElementById('app') || doc.body).appendChild(backEl);
+    app.appendChild(backEl);
   }
+  // the app bar is decided BEFORE a screen's enter() runs (Screens.go is wrapped below), so canvases measure the final size
+  const barFor = id => active() && !!id && !P.backHidden.has(id);
+  const setBar = id => root.toggleAttribute('data-ph-bar', barFor(id));
   function updateBack() {
     if (!backEl) return;
     const cur = UI.Screens && UI.Screens.current, id = cur && cur.id;
     const modal = !!(UI.modalOpen && UI.modalOpen());
-    backEl.classList.toggle('on', active() && (modal || !!(id && !P.backHidden.has(id))));
+    setBar(id);
+    backEl.classList.toggle('on', active() && (modal || barFor(id)));
   }
   P.updateBack = updateBack;
   P.back = function () {
@@ -157,6 +164,8 @@
     if (init0) init0.apply(this, arguments);
     if (active()) mountBack();
     if (M.Bus) M.Bus.on('screen', () => setTimeout(updateBack, 0));
+    const go0 = UI.Screens.go;
+    UI.Screens.go = function (id) { setBar(id); return go0.apply(UI.Screens, arguments); };
     const modal0 = UI.modal;                                                                 // the Back control shows while a modal is open
     UI.modal = function () { const p = modal0.apply(this, arguments); updateBack(); p.then(() => setTimeout(updateBack, 170), () => {}); return p; };
     if (UI.Help && UI.Help.overlay) { const ov0 = UI.Help.overlay; UI.Help.overlay = function () { return active() ? false : ov0.apply(this, arguments); }; }

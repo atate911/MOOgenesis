@@ -1218,6 +1218,7 @@
     layoutScene(rects.panel, w, hh);
   }
   function layoutScene(p, w, hh) {
+    if (M.Phone && M.Phone.active() && hh > w) p = { x: w * 0.04, y: hh * 0.4, w: w * 0.92, h: hh * 0.56 };   // phones in portrait: the choice panel spans the lower half
     const key = round(p.x) + ',' + round(p.y) + ',' + round(p.w) + ',' + round(p.h) + ',' + round(w) + 'x' + round(hh);
     if (key === SC.layKey) return;
     SC.layKey = key;

@@ -1,7 +1,7 @@
 // Phone QA: an emulated touch phone (390x844 portrait, or 844x390 with `landscape`) driven against the real gate in index.html (no ?phone=1),
 // plus a desktop pass proving the phone layer stays out of the way. Prints PASS / FAIL per check and the scale-audit findings per screen.
 // usage: node tools/qa/phone.js [landscape] [step ...]
-//   steps: gate galaxy battle screens design back tips bot desktop   (default: all)
+//   steps: gate galaxy battle screens scenes design back tips bot desktop   (default: all)
 //   env:   SHOTS=dir (default /tmp/claude-0/phone) · PORT (default 8794) · TURNS (dev auto-play turns before the checks, default 10)
 const { serve, open, sleep, ROOT } = require('./lib');
 const fs = require('fs'), path = require('path');
@@ -20,7 +20,7 @@ let fails = 0, passes = 0;
 const check = (name, ok, extra) => { console.log((ok ? 'PASS ' : 'FAIL ') + name + (extra !== undefined && extra !== '' ? ' :: ' + extra : '')); if (ok) passes++; else fails++; };
 const within = (p, ms, label) => Promise.race([p, sleep(ms).then(() => { throw new Error('timeout: ' + label); })]);
 // expected noise: offline web fonts, software-GL driver chatter, and art still listed in ART-NEEDED.md (the code falls back to other art)
-const benign = e => /fonts\.(googleapis|gstatic)|net::ERR_|Failed to load resource|ERR_TUNNEL|ERR_PROXY|GL Driver Message|assets\/art\/still\//.test(e);
+const benign = e => /fonts\.(googleapis|gstatic)|net::ERR_|Failed to load resource|ERR_TUNNEL|ERR_PROXY|GL Driver Message|assets\/art\/still\/|\/api\/status/.test(e);   // + the save-server probe (absent on a static dev server)
 
 async function bootGame(page) {
   await page.goto(BOOT, { waitUntil: 'load' });
@@ -123,14 +123,40 @@ const sheetState = page => page.evaluate(() => { const s = document.querySelecto
         check(id + ': nothing off-screen', !offs.length, offs.join(' | '));
         await shot('screen-' + id);
         const backOn = await page.evaluate(() => { const b = document.querySelector('.ph-back'); return !!(b && b.classList.contains('on')); });
-        const hasOwn = ['design'].includes(id);
-        if (!hasOwn && cur === id) check(id + ': Back control shown', backOn);
+        if (cur === id) check(id + ': Back control shown', backOn);
+        if (id === 'endings') {                                         // an ending is acknowledged, not backed out of: Back skips to its final card
+          await back(); await sleep(900);
+          check('endings: Back skips to the final card', await page.evaluate(() => !!document.querySelector('.screen.active .end-act .btn')));
+          await shot('screen-endings-final');
+          await page.evaluate(() => MOO.UI.Screens.go('galaxy')); await sleep(700);
+          continue;
+        }
         for (let i = 0; i < 4 && (await page.evaluate(() => MOO.UI.Screens.current.id)) !== 'galaxy'; i++) { await back(); await sleep(700); }
         check(id + ': Back returns to the map', (await page.evaluate(() => MOO.UI.Screens.current.id)) === 'galaxy');
         await page.evaluate(() => { if (MOO.UI.closeAllModals) MOO.UI.closeAllModals(); });
       }
       // GNN: phones get the brief list in a modal, never the 16:9 studio
       await page.evaluate(() => { window.__gnn = MOO.Game.S && MOO.UI.Flow ? 1 : 0; });
+    });
+
+    await step('scenes', async () => {
+      // the research choice ceremony: its panel spans the lower half in portrait
+      await page.evaluate(() => { const R = MOO.Sim.Research, S = MOO.Game.S, E = MOO.Game.player(); let f = 0, lv = [];
+        for (f = 0; f < 6 && lv.length < 2; f++) { lv = []; for (let l = 1; l <= 12 && lv.length < 3; l++) { const t = R.techAt(f, l); if (t) lv.push(l); } if (lv.length >= 2) break; }
+        window.__tc = MOO.UI.TechScenes.choose({ field: f, choices: lv.map(l => ({ level: l })), manual: true }); });
+      await sleep(2200);
+      const tc = await page.evaluate(() => { const p = document.querySelector('.screen.active .tsc-panel'); const id = MOO.UI.Screens.current.id; if (!p) return { id }; const r = p.getBoundingClientRect(); return { id, l: Math.round(r.left), w: Math.round(r.width) }; });
+      check('research choice opens with a full-width panel', tc.id === 'techscene' && tc.w > 300, JSON.stringify(tc));
+      await shot('scene-techchoice');
+      const offs = await offscreen(page); check('techscene: nothing off-screen', !offs.length, offs.join(' | '));
+      for (let i = 0; i < 3 && (await page.evaluate(() => MOO.UI.Screens.current.id)) !== 'galaxy'; i++) { await back(); await sleep(800); }
+      if ((await page.evaluate(() => MOO.UI.Screens.current.id)) !== 'galaxy') await page.evaluate(() => MOO.UI.Screens.go('galaxy'));
+      await sleep(500);
+      // the brief news list stands in for the GNN studio
+      await page.evaluate(() => { window.__news = MOO.UI.Flow && MOO.UI.Flow.newsBrief ? MOO.UI.Flow.newsBrief({ year: 2310, items: [{ headline: 'Test headline one' }, { headline: 'Test headline two', sub: 'detail' }] }) : null; });
+      await sleep(500);
+      check('news arrives as the brief list', await page.evaluate(() => !!document.querySelector('.modal .nb-list')));
+      await shot('scene-news'); await back(); await sleep(400);
     });
 
     await step('design', async () => {
