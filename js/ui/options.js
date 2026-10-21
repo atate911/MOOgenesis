@@ -12,9 +12,10 @@
 
   // ------------------------------------------------------------------ display preferences (applied to <html>)
   let scaleKey = '';
+  const maxScale = () => (M.Phone && M.Phone.active() ? 1.1 : 1.3);         // a phone's base size is already large: past 110% screens overflow
   function applyUiScale() {
     const root = doc.documentElement;
-    const s = U.clamp(Number(St().get('uiScale')) || 1, 0.85, 1.3);
+    const s = U.clamp(Number(St().get('uiScale')) || 1, 0.85, maxScale());
     root.style.setProperty('--ui-scale', String(s));
     // measuring must not read a value that is mid-transition (prefers-reduced-motion forces a 1 ms `all` transition on every element)
     root.style.transition = 'none';
@@ -131,11 +132,11 @@
     let pending = null, timer = 0;
     const flush = () => { clearTimeout(timer); if (pending !== null) { const v = pending; pending = null; S.set('uiScale', v); } };
     const scale = UI.slider({
-      label: 'Scale', color: 'var(--gold)', min: 85, max: 130, step: 5, value: Math.round(U.clamp(Number(S.get('uiScale')) || 1, .85, 1.3) * 100), fmt: v => v + '%', lockable: false,
+      label: 'Scale', color: 'var(--gold)', min: 85, max: Math.round(maxScale() * 100), step: 5, value: Math.round(U.clamp(Number(S.get('uiScale')) || 1, .85, maxScale()) * 100), fmt: v => v + '%', lockable: false,
       onChange: v => { pending = v / 100; clearTimeout(timer); timer = setTimeout(flush, 1200); },
     });
     ['pointerup', 'keyup', 'click', 'focusout'].forEach(ev => scale.addEventListener(ev, flush));
-    sync.push(() => { pending = null; scale.api.set(Math.round(U.clamp(Number(S.get('uiScale')) || 1, .85, 1.3) * 100)); });
+    sync.push(() => { pending = null; scale.api.set(Math.round(U.clamp(Number(S.get('uiScale')) || 1, .85, maxScale()) * 100)); });
     const iface = section('Display & animation', 'monitor', [
       row('Animation speed', 'Fleet movement and battle playback.', anim, 'stack'),
       bool('showTips', 'Tooltips', 'Hover hints on buttons, numbers and map objects.', true),

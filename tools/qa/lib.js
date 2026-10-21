@@ -13,9 +13,10 @@ function serve(port = 8765) {
 }
 async function open(opts = {}) {
   const browser = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium', args: ['--no-sandbox', '--disable-background-timer-throttling', '--disable-renderer-backgrounding', '--disable-backgrounding-occluded-windows', '--enable-unsafe-swiftshader', '--use-gl=swiftshader', '--autoplay-policy=no-user-gesture-required'].concat(opts.args || []) });
-  // opts.phone: true (390x844 portrait) | 'landscape' (844x390) — an emulated touch phone (coarse pointer, DPR 2), so index.html's own gate
-  // switches the phone layout layer on exactly as on a device (no ?phone=1)
-  const phone = opts.phone ? { viewport: opts.phone === 'landscape' ? { width: 844, height: 390 } : { width: 390, height: 844 }, deviceScaleFactor: 2, isMobile: true, hasTouch: true } : null;
+  // opts.phone: true (390x844 portrait) | 'landscape' (844x390) | 'small' (360x740, a small Android) — an emulated touch phone (coarse
+  // pointer, DPR 2), so index.html's own gate switches the phone layout layer on exactly as on a device (no ?phone=1)
+  const PHONES = { landscape: { width: 844, height: 390 }, small: { width: 360, height: 740 } };
+  const phone = opts.phone ? { viewport: PHONES[opts.phone] || { width: 390, height: 844 }, deviceScaleFactor: 2, isMobile: true, hasTouch: true } : null;
   const ctx = await browser.newContext(phone || { viewport: opts.viewport || { width: 1280, height: 720 } });
   const page = await ctx.newPage();
   if (process.env.TIER) { const go = page.goto.bind(page); page.goto = (u, o) => go(u + (u.includes('?') ? '&' : '?') + 'tier=' + process.env.TIER, o); }   // TIER=low|medium|high|ultra forces a perf tier (software GL is detected as 'low')

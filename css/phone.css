@@ -6,29 +6,59 @@
    ========================================================================= */
 
 /* ---- base ------------------------------------------------------------------ */
-html[data-phone] { font-size: clamp(11px, min(3.7vw, 2.3vh), 17px); -webkit-text-size-adjust: 100%; overscroll-behavior: none; }
+/* --tap: the smallest touch target (44px, HIG / 48dp-ish); --row: list rows that span the width. Both have pixel floors so a 360px phone
+   (where 2.75rem would be 41px) still gets them. */
+html[data-phone] {
+  font-size: clamp(14px, min(4.1vw, 2.6vh), 18px); -webkit-text-size-adjust: 100%; overscroll-behavior: none;
+  --tap: max(44px, 2.75rem); --row: max(38px, 2.4rem);
+}
+@media (orientation: portrait) { html[data-phone] { font-size: clamp(15px, min(4.1vw, 2.6vh), 18px); } }   /* .8rem never under 12px */
+/* (landscape sits on the 14px floor: a 390px-tall screen cannot afford more; the small hint classes below carry their own 12px floor) */
 html[data-phone] body { touch-action: pan-x pan-y; -webkit-tap-highlight-color: transparent; }
 html[data-phone] #tip { display: none !important; }                   /* hover tooltips never fire on touch: long-press shows .ph-tip */
 html[data-phone] .screen.fade-in { animation-name: ph-scr-in; }       /* scr-in's blur + brightness filter is a full-screen composite */
 @keyframes ph-scr-in { from { opacity: 0; } to { opacity: 1; } }
 
 /* ---- touch targets ---------------------------------------------------------- */
-html[data-phone] .btn { min-height: 2.6rem; }
-html[data-phone] .btn.small { min-height: 2.3rem; }
-html[data-phone] .tabs button { min-height: 2.4rem; }
-/* sliders: the arrow / lock buttons take their width from the grid column, so widen the columns rather than the buttons */
-html[data-phone] .slider { grid-template-columns: 5.2rem 2.2rem minmax(3rem, 1fr) 2.2rem 3.1rem 2.2rem; }
-html[data-phone] .slider .s-track { height: 1.8rem; }
-html[data-phone] .slider .s-btn, html[data-phone] .slider .s-lock { min-height: 2.2rem; }
+html:root:root[data-phone] .btn { min-height: var(--tap); min-width: var(--tap); }
+html:root:root[data-phone] .tabs button, html:root:root[data-phone] .ctl-seg button, html:root:root[data-phone] .ctl-sw { min-height: var(--tap); }
+html:root:root[data-phone] .gmap-btn { min-width: var(--tap); min-height: var(--tap); }
+html:root:root[data-phone] .gmap-legend .gl-tog { min-height: var(--tap); font-size: max(12px, .8rem); }
+html:root:root[data-phone] input.field, html:root:root[data-phone] select.field, html:root:root[data-phone] textarea.field { min-height: var(--tap); font-size: max(16px, 1rem); }   /* iOS zooms into a field under 16px */
+html:root:root[data-phone] .sl-ib { min-width: var(--tap); min-height: var(--tap); }
+html:root:root[data-phone] th.sortable { height: var(--tap); min-width: var(--tap); }
+html:root:root[data-phone] .slider .s-label { align-self: stretch; }                     /* research: tapping a field's name locks it */
+/* sliders: the arrows and the lock are --tap squares in --tap columns; the track stays a slim bar (a tall one would swallow vertical scrolls:
+   it is touch-action:none) but at least 24px */
+html:root:root[data-phone] .slider { grid-template-columns: 5.2rem var(--tap) minmax(3rem, 1fr) var(--tap) 3.1rem var(--tap); }
+html:root:root[data-phone] .slider .s-btn, html:root:root[data-phone] .slider .s-lock { width: 100%; height: var(--tap); min-height: 0; }
+html:root:root[data-phone] .slider .s-track { height: max(24px, 1.5rem); }
+html:root:root[data-phone] .slider .s-val { font-size: max(12px, .85rem); }
 html[data-phone] .scrim { padding: calc(3.2rem + env(safe-area-inset-top)) .4rem calc(.5rem + env(safe-area-inset-bottom)); }   /* dialogs open below the Back control */
 html[data-phone] .modal { max-width: 96vw; max-height: 100%; overflow: auto; }
-html[data-phone] .modal-f .btn { min-height: 2.8rem; }
 html[data-phone] .btn .kbd { display: none; }                         /* keyboard shortcut badges mean nothing on a phone */
+/* list rows that open or select something: at least --row tall */
+html:root:root[data-phone] :is(.tch-trow, .tch-nx, .au-item, .sc-rally, .gx-msg .m) { min-height: var(--row); display: flex; align-items: center; }
+html:root:root[data-phone] .tt-chip { min-height: var(--row); }
+html:root:root[data-phone] .lp-tbl tbody tr { height: var(--row); }
+html:root:root[data-phone] .gx-msg .m:nth-child(n+4) { display: none; }                        /* three messages at most over the map */
+html:root:root[data-phone] :is(.cyc, .sm-sb, .su-step) { min-width: var(--tap); min-height: var(--tap); }
+html:root:root[data-phone] .gx-att span { display: inline-flex; align-items: center; min-height: var(--tap); padding: 0 .6rem; }
+html:root:root[data-phone] .pb-autoall { min-height: var(--tap); } html[data-phone] .pb-autoall input { width: 1.4rem; height: 1.4rem; }
+/* fleet deployment (side-misc.js): the stepper gets its own row under the ship */
+html:root:root[data-phone] .sm-fleet { grid-template-columns: 3.8rem minmax(0, 1fr); }
+html:root:root[data-phone] .sm-fleet > .sm-step { grid-column: 1 / -1; display: flex; justify-content: space-between; }
+html:root:root[data-phone] .sm-fleet > .sm-step .n { flex: 1 1 auto; align-self: stretch; display: flex; align-items: center; justify-content: center; font-size: 1rem; }
+/* text floor (12px) for the labels the stylesheets set small, grouped by their own size so none shrinks (an :is() list takes its most
+   specific member's weight for every member) */
+html:root:root[data-phone] :is(.gl-sub, .ctl-sw-txt, .sl-slot-t, .chip-t, .tt-chip .lv, .tt-chip small, .tt-h small, .tt-tier small, .bc, .gl-h small, .gnn-arch-chips .n) { font-size: max(12px, .75rem); }
+html:root:root[data-phone] :is(.sx-scale, .tt-q, .ld-nameHint, .end-hint, .ctl-eyebrow) { font-size: max(12px, .8rem); }
+html:root:root[data-phone] :is(.op-hint, .ld-hint) { font-size: max(12px, .85rem); }
 
 /* ---- the Back control (js/ui/phone.js: dispatches Escape) ------------------- */
 html[data-phone] .ph-back {
   position: fixed; z-index: 250; top: calc(.45rem + env(safe-area-inset-top)); left: calc(.45rem + env(safe-area-inset-left));
-  display: none; align-items: center; gap: .25rem; min-height: 2.5rem; padding: .25rem .9rem .25rem .55rem; border: 1px solid var(--brass-lo);
+  display: none; align-items: center; gap: .25rem; min-height: var(--tap); padding: .25rem .9rem .25rem .55rem; border: 1px solid var(--brass-lo);
   background: rgba(8, 12, 34, .92); color: var(--brass-hi); font: 400 .95rem var(--font-display); letter-spacing: .06em; cursor: pointer;
   clip-path: polygon(.4rem 0, 100% 0, 100% calc(100% - .4rem), calc(100% - .4rem) 100%, 0 100%, 0 .4rem);
 }
@@ -52,14 +82,15 @@ html[data-phone] .ph-sheet[data-sheet="strip"] { height: var(--ph-strip, 4.8rem)
 html[data-phone] .ph-sheet[data-sheet="half"] { height: var(--ph-half, 52%); }
 html[data-phone] .ph-sheet[data-sheet="full"] { height: var(--ph-full, 100%); }
 html[data-phone] .ph-grip {
-  flex: none; display: flex; align-items: center; justify-content: center; height: 1.7rem; cursor: grab; touch-action: none; user-select: none;
+  flex: none; position: relative; display: flex; align-items: center; justify-content: center; height: 2rem; cursor: grab; touch-action: none; user-select: none;
   background: linear-gradient(180deg, #59636f, #3a424c); box-shadow: inset 0 1px 0 rgba(255, 255, 255, .25), 0 -6px 18px rgba(0, 0, 0, .45);
 }
 html[data-phone] .ph-grip::before { content: ""; width: 3rem; height: .3rem; border-radius: .2rem; background: rgba(255, 255, 255, .5); }
+html[data-phone] .ph-grip::after { content: ""; position: absolute; left: 0; right: 0; bottom: 0; top: calc(2rem - var(--tap)); }   /* a --tap tall hit area, reaching up over the map */
 
 /* ---- count stepper (UI.Phone.stepper) --------------------------------------- */
 html[data-phone] .ph-step { display: flex; align-items: center; gap: .3rem; }
-html[data-phone] .ph-step .btn { min-width: 2.6rem; padding: .3em .5em; }
+html[data-phone] .ph-step .btn { padding: .3em .5em; }
 html[data-phone] .ph-step .ph-stv { min-width: 2.6rem; text-align: center; font: 600 1.3rem var(--font-ui); font-variant-numeric: tabular-nums; }
 
 /* =========================================================================
@@ -70,7 +101,7 @@ html:root:root[data-phone] .gx { grid-template-columns: minmax(0, 1fr); grid-tem
 html:root:root[data-phone] .gx-mapwrap { grid-column: 1; grid-row: 1; }
 html:root:root[data-phone] .gx-side:not(.gx-float) {
   grid-column: 1; grid-row: 1; align-self: end; z-index: 6; padding: 0; background: none;
-  --ph-strip: 5rem; --ph-half: 56%; --ph-full: calc(100% - .4rem);
+  --ph-strip: 5.6rem; --ph-half: 56%; --ph-full: calc(100% - .4rem);
 }
 html:root:root[data-phone] .gx-side:not(.gx-float) .panel { box-shadow: 0 -8px 22px rgba(0, 0, 0, .55), 0 0 0 1px rgba(0, 0, 0, .8); }
 html:root:root[data-phone] .gx-side:not(.gx-float)[data-sheet="strip"] .gx-sidebody { overflow: hidden; }
@@ -86,29 +117,26 @@ html:root:root[data-phone] .gx-top { left: .4rem; right: 3.3rem; top: .35rem; fl
 html:root:root[data-phone] .gx-hud { flex-wrap: wrap; gap: .2rem .7rem; padding: .3rem .6rem; font-size: .9rem; }
 html:root:root[data-phone] .gx-hud .y { font-size: 1.15rem; }
 html:root:root[data-phone] .gx-msg { margin-left: 0; max-width: none; }
-html:root:root[data-phone] .gmap-ctrl .btn, html:root:root[data-phone] .gmap-ctrl button { min-width: 2.5rem; min-height: 2.5rem; }
+html:root:root[data-phone] .gmap-ctrl .btn, html:root:root[data-phone] .gmap-ctrl button { min-width: var(--tap); min-height: var(--tap); }
 /* bottom bar: one row that scrolls sideways; Next turn stays pinned at the right edge */
 html:root:root[data-phone] .gx-bar {
   display: flex; flex-wrap: nowrap; overflow-x: auto; overflow-y: hidden; gap: .3rem; padding: .3rem 0 calc(.3rem + env(safe-area-inset-bottom)) .3rem;
   -webkit-overflow-scrolling: touch; scrollbar-width: none; background: linear-gradient(180deg, #3a424c, #262c33);
 }
 html:root:root[data-phone] .gx-bar::-webkit-scrollbar { display: none; }
-html:root:root[data-phone] .gx-bar .btn { flex: 0 0 auto; min-width: 0; min-height: 2.9rem; padding: .5em 1em; font-size: .9rem; letter-spacing: .06em; white-space: nowrap; }
+html:root:root[data-phone] .gx-bar .btn { flex: 0 0 auto; min-width: 0; min-height: var(--tap); padding: .5em 1em; font-size: .9rem; letter-spacing: .06em; white-space: nowrap; }
 html:root:root[data-phone] .gx-bar .btn.primary { flex: 0 0 auto; min-width: 6.5rem; position: sticky; right: 0; box-shadow: -6px 0 10px rgba(0, 0, 0, .45); }
 html:root:root[data-phone] .gx-bar .gx-spacer { flex: 1 0 .2rem; }
 html:root:root[data-phone] .gx-bar .gx-wait { display: none; }
 /* the pre-battle / result cards inside the sheet */
-html[data-phone] .gx-side .pb-acts .btn { min-height: 2.8rem; }
 /* the battle card's Retreat / Auto stay reachable at the bottom of the panel however tall the card is */
 html[data-phone] .gx-sidebody .pb-acts { position: sticky; bottom: -.6rem; z-index: 3; margin: .3rem -.5rem 0; padding: .45rem .5rem .5rem; background: rgba(32, 37, 43, .97); box-shadow: 0 -6px 12px rgba(0, 0, 0, .45); }
 /* the minimap and the map key sit above the collapsed sheet (galaxymap.js positions the minimap inline per its corner setting) */
 html:root:root[data-phone] .gmap-mini { left: .5rem !important; right: auto !important; top: auto !important; bottom: 5.5rem !important; }
 html:root:root[data-phone] .gmap .gmap-legend.panel { bottom: 5.5rem; width: min(16rem, 70vw); max-height: 55%; }
 /* the colony sliders (side-colony.js, bumped): finger-sized arrows and lock in a 27rem-wide panel */
-html:root:root[data-phone] .sc-sliders .slider { grid-template-columns: 4.2rem 2.2rem minmax(0, 1fr) 2.2rem 3.9rem 2.2rem; gap: .2rem; margin: .3rem 0; }
-html:root:root[data-phone] .sc-sliders .s-btn { width: 2.2rem; height: 2.2rem; }
-html:root:root[data-phone] .sc-sliders .s-lock { width: 2.2rem; height: 2.2rem; }
-html:root:root[data-phone] .sc-sliders .s-track { height: 1.6rem; }
+html:root:root[data-phone] .sc-sliders .slider { grid-template-columns: 3.6rem var(--tap) minmax(0, 1fr) var(--tap) 3.3rem var(--tap); gap: .2rem; margin: .15rem 0; }
+html:root:root[data-phone] .sc-sliders .s-btn, html:root:root[data-phone] .sc-sliders .s-lock { width: 100%; height: var(--tap); }
 
 /* =========================================================================
    Ship design (js/ui/phone-design.js): one column — pinned budget header, scrolling parts, pinned Clear / Build.
@@ -123,10 +151,10 @@ html[data-phone] .ph-dz .ph-dz-head {
 html[data-phone] .ph-dz .ph-dz-hrow { display: flex; align-items: center; gap: .35rem; }
 html[data-phone] .ph-dz .ph-dz-hrow .dz-name { flex: 1 1 auto; min-width: 0; }
 html[data-phone] .ph-dz .ph-dz-hrow .dz-name label { display: none; }
-html[data-phone] .ph-dz .ph-dz-hrow .dz-name input { min-height: 2.4rem; font-size: 1rem; }
+html[data-phone] .ph-dz .ph-dz-hrow .dz-name input { min-height: var(--tap); font-size: max(16px, 1rem); }
 html[data-phone] .ph-dz .ph-dz-hrow .btn { flex: none; }
 html[data-phone] .ph-dz .ph-dz-head .dz-spc { margin: 0; padding: .3rem .5rem .35rem; }
-html[data-phone] .ph-dz .ph-dz-head .dz-legend { margin: .2rem 0 .25rem; font-size: .76rem; gap: .05rem .6rem; }
+html[data-phone] .ph-dz .ph-dz-head .dz-legend { margin: .2rem 0 .25rem; font-size: max(12px, .76rem); gap: .05rem .6rem; }
 html[data-phone] .ph-dz .ph-dz-body {
   flex: 1 1 auto; min-height: 0; overflow-x: hidden; overflow-y: auto; overscroll-behavior: contain; -webkit-overflow-scrolling: touch;
   display: flex; flex-direction: column; gap: .6rem; padding: .55rem .5rem 1rem;
@@ -141,13 +169,13 @@ html[data-phone] .ph-dz .ph-dz-hulls { display: flex; flex-direction: column; ga
 html[data-phone] .ph-dz .dz-hull { min-height: 3rem; justify-content: center; }
 html[data-phone] .ph-dz .dz-auto { display: flex; flex-wrap: wrap; gap: .35rem; padding: 0; }
 html[data-phone] .ph-dz .dz-auto .lb { width: 100%; }
-html[data-phone] .ph-dz .dz-auto .btn { flex: 1 1 0; min-height: 2.5rem; font-size: .88rem; }
+html[data-phone] .ph-dz .dz-auto .btn { flex: 1 1 0; min-height: var(--tap); font-size: .88rem; }
 /* preview */
 html[data-phone] .ph-dz .dz-pv { flex: none; min-height: 0; height: 15rem; }
 html[data-phone] .ph-dz .dz-cvw { touch-action: pan-y; }
 html[data-phone] .ph-dz .dz-cvw .tag { display: block; }
 html[data-phone] .ph-dz .ph-pv-reset {
-  position: absolute; right: .35rem; bottom: .35rem; z-index: 2; min-height: 2rem; padding: .2rem .7rem; border: 1px solid rgba(255, 255, 255, .25);
+  position: absolute; right: .35rem; bottom: .35rem; z-index: 2; min-height: var(--tap); padding: .2rem .8rem; border: 1px solid rgba(255, 255, 255, .25);
   background: rgba(0, 0, 0, .55); color: #ddd; font: 400 .8rem var(--font-ui); cursor: pointer;
 }
 /* the six stat tiles: 3 × 2 */
@@ -157,8 +185,8 @@ html[data-phone] .ph-dz .dz-tile .v { font-size: 1.5rem; }
 /* components: one column, finger-height rows */
 html[data-phone] .ph-dz .dz-slots { grid-template-columns: minmax(0, 1fr); gap: .35rem; }
 html[data-phone] .ph-dz .dz-slot { grid-template-columns: 5.9rem minmax(0, 1fr); }
-html[data-phone] .ph-dz .dz-sel { min-height: 2.8rem; }
-html[data-phone] .ph-dz .dz-sel .x { width: 2.4rem; height: 2.4rem; margin-right: -.4rem; }
+html[data-phone] .ph-dz .dz-sel { min-height: var(--tap); }
+html[data-phone] .ph-dz .dz-sel .x { width: var(--tap); height: var(--tap); margin-right: -.4rem; }
 /* weapons: each bank a card — weapon · damage · range, then the stepper, then the note */
 html[data-phone] .ph-dz .dz-wh { display: none; }
 html[data-phone] .ph-dz .dz-wr {
@@ -183,10 +211,9 @@ html[data-phone] .ph-dz .dz-sp .desc:empty { display: none; }
 /* look + readouts, then the fold */
 html[data-phone] .ph-dz .ph-dz-id { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: .6rem; align-items: center; }
 html[data-phone] .ph-dz .dz-id { margin: 0; }
-html[data-phone] .ph-dz .dz-look .btn { min-width: 2.4rem; }
 html[data-phone] .ph-dz .ph-fold { border: 1px solid #4d4d4d; background: rgba(0, 0, 0, .3); }
 html[data-phone] .ph-dz .ph-fold-h {
-  display: flex; width: 100%; align-items: center; justify-content: space-between; min-height: 2.8rem; padding: .3rem .7rem; border: 0; cursor: pointer;
+  display: flex; width: 100%; align-items: center; justify-content: space-between; min-height: var(--tap); padding: .3rem .7rem; border: 0; cursor: pointer;
   background: linear-gradient(180deg, #3d3d3d, #2c2c2c); color: #f2f2f2; font: 600 .9rem var(--font-display); letter-spacing: .08em; text-transform: uppercase;
 }
 html[data-phone] .ph-dz .ph-fold-ch { transition: transform .15s; } html[data-phone] .ph-dz .ph-fold.open .ph-fold-ch { transform: rotate(90deg); }
@@ -200,10 +227,10 @@ html[data-phone] .ph-dz .dz-pop.ph-pop .dz-pop-h { padding: .35rem .5rem; }
 html[data-phone] .ph-dz .dz-pop.ph-pop .dz-pop-h .t { font-size: 1.05rem; white-space: normal; }
 html[data-phone] .ph-dz .ph-pop-s { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: .3rem .8rem; padding: .3rem .6rem; color: var(--mist); font-size: .88rem; }
 html[data-phone] .ph-dz .ph-pop-s b { color: var(--ivory); }
-html[data-phone] .ph-dz .ph-pop-lk { display: inline-flex; align-items: center; gap: .4rem; min-height: 2.2rem; }
-html[data-phone] .ph-dz .ph-pop-lk input { width: 1.2rem; height: 1.2rem; }
+html[data-phone] .ph-dz .ph-pop-lk { display: inline-flex; align-items: center; gap: .5rem; min-height: var(--tap); }
+html[data-phone] .ph-dz .ph-pop-lk input { width: 1.4rem; height: 1.4rem; }
 html[data-phone] .ph-dz .dz-pop.ph-pop .dz-kf { flex-wrap: nowrap; overflow-x: auto; padding: .2rem .5rem .35rem; scrollbar-width: none; }
-html[data-phone] .ph-dz .dz-pop.ph-pop .dz-kf button { flex: none; min-height: 2.3rem; padding: .2rem .8rem; }
+html[data-phone] .ph-dz .dz-pop.ph-pop .dz-kf button { flex: none; min-height: var(--tap); padding: .2rem .8rem; }
 html[data-phone] .ph-dz .ph-pop-b { flex: 1 1 auto; min-height: 0; overflow-y: auto; overscroll-behavior: contain; display: flex; flex-direction: column; gap: .35rem; padding: .3rem .45rem .6rem; }
 html[data-phone] .ph-dz .ph-pc { flex: none; padding: .5rem .6rem; cursor: pointer; background: linear-gradient(180deg, #161616, #0a0a0a); box-shadow: 0 0 0 1px #000, inset 1px 1px 0 #2a2a2a, inset -1px -1px 0 #5a5a5a; }
 html[data-phone] .ph-dz .ph-pc:active { background: linear-gradient(180deg, #2a2a2a, #141414); }
@@ -231,7 +258,7 @@ html[data-phone] .ph-dz .dz-lib.ph-lib.on { display: flex; animation: ph-up .2s 
 html[data-phone] .ph-dz .ph-lib .panel-h { gap: .5rem; } html[data-phone] .ph-dz .ph-lib .panel-h .btn { margin-left: auto; }
 html[data-phone] .ph-dz .ph-lib .dz-cards { display: grid; grid-template-columns: minmax(0, 1fr); grid-auto-rows: min-content; gap: .4rem; overflow-y: auto; }
 html[data-phone] .ph-dz .ph-lib .dz-card { min-height: 5rem; }
-html[data-phone] .ph-dz .ph-lib .dz-ci .ft .btn { min-height: 2.2rem; padding: .2em .8em; font-size: .82rem; }
+html[data-phone] .ph-dz .ph-lib .dz-ci .ft .btn { min-height: var(--tap); padding: .2em .8em; font-size: .82rem; }
 html[data-phone] .ph-dz .dz-pop.ph-pop { background: #050505; }
 html[data-phone] .ph-dz .dz-cvw .tag { top: auto; bottom: .5rem; left: .5rem; right: auto; }
 html[data-phone] .ph-dz .ph-pc-c .chip { text-transform: none; letter-spacing: 0; }
@@ -263,7 +290,7 @@ html:root:root[data-phone] .lp-tablewrap { flex: none; min-height: 12rem; max-he
 html:root:root[data-phone] .lp-tbl th:nth-child(2), html:root:root[data-phone] .lp-tbl td.nm { position: sticky; left: 0; z-index: 2; }
 html:root:root[data-phone] .lp-tbl th:nth-child(2) { z-index: 3; }
 html:root:root[data-phone] .lp-foot { grid-template-columns: minmax(0, 1fr); gap: .5rem; }
-html:root:root[data-phone] .lp-sl .slider { grid-template-columns: 4.6rem 2.2rem minmax(0, 1fr) 2.2rem 4.4rem; }
+html:root:root[data-phone] .lp-sl .slider { grid-template-columns: 4.6rem var(--tap) minmax(0, 1fr) var(--tap) 4.4rem; }
 html:root:root[data-phone] .lp-btns { flex-direction: row; min-width: 0; } html:root:root[data-phone] .lp-btns .btn { flex: 1 1 0; }
 
 /* ---- fleet ledger: the grid scrolls sideways under a pinned station column; specs rows become cards ---- */
@@ -287,7 +314,7 @@ html:root:root[data-phone] .lf-cost { text-align: left; display: flex; align-ite
 html:root:root[data-phone] .tch { padding: .35rem .4rem .5rem; gap: .45rem; overflow-x: hidden; overflow-y: auto; overscroll-behavior: contain; }
 html:root:root[data-phone] .tch-head { flex-wrap: wrap; gap: .25rem .8rem; }
 html:root:root[data-phone] .tch-title { font-size: 1.45rem; } html:root:root[data-phone] .tch-total b { font-size: 1.6rem; }
-html:root:root[data-phone] .tch-tabs { overflow-x: auto; scrollbar-width: none; } html:root:root[data-phone] .tch-tab { flex: 0 0 auto; min-height: 2.6rem; }
+html:root:root[data-phone] .tch-tabs { overflow-x: auto; scrollbar-width: none; } html:root:root[data-phone] .tch-tab { flex: 0 0 auto; min-height: var(--tap); }
 html:root:root[data-phone] .tch-body { flex: none; display: flex; flex-direction: column; gap: .6rem; min-height: auto; }
 html:root:root[data-phone] .tch-left, html:root:root[data-phone] .tch-right { min-height: auto; overflow: visible; }
 html:root:root[data-phone] .tch-right { order: -1; }
@@ -297,7 +324,7 @@ html:root:root[data-phone] .tch-dtxt { overflow: visible; }
 html:root:root[data-phone] .tch-colh { display: none; }
 html:root:root[data-phone] .tch-r1 { grid-template-columns: minmax(0, 1fr) auto auto; row-gap: .15rem; }
 html:root:root[data-phone] .tch-r1 > .slider { grid-column: 1 / -1; }
-html:root:root[data-phone] .tch-row .slider { grid-template-columns: 7rem 2.2rem minmax(2.5rem, 1fr) 2.2rem 2.8rem 2.2rem; gap: .25rem; }
+html:root:root[data-phone] .tch-row .slider { grid-template-columns: 6.2rem var(--tap) minmax(2.5rem, 1fr) var(--tap) 2.8rem var(--tap); gap: .2rem; }
 html:root:root[data-phone] .tch-row .slider .s-label { overflow: hidden; text-overflow: ellipsis; }
 html:root:root[data-phone] .tch-r2 { flex-wrap: wrap; gap: .2rem .6rem; }
 html:root:root[data-phone] .tch-proj { min-height: auto; }
@@ -316,14 +343,18 @@ html:root:root[data-phone] .tt-side, html:root:root[data-phone] .tt-side .panel 
 html:root:root[data-phone] .tch-ovw { min-height: auto; }
 
 /* ---- races: one card per empire, the security card last; absent empires are left out ---- */
-html:root:root[data-phone] .rc-grid { flex: none; grid-template-columns: minmax(0, 1fr); grid-template-rows: none; grid-auto-flow: row; grid-auto-rows: 10.5rem; gap: .5rem; }
+html:root:root[data-phone] .rc-grid { flex: none; grid-template-columns: minmax(0, 1fr); grid-template-rows: none; grid-auto-flow: row; grid-auto-rows: minmax(7rem, auto); gap: .5rem; }
+html:root:root[data-phone] .rc-slot { position: relative; inset: auto; align-items: flex-start; }           /* the card's content sets its height */
+html:root:root[data-phone] .rc-pic { height: auto; width: 6.4rem; }
+html:root:root[data-phone] .rc-spy { grid-template-columns: minmax(0, 1fr); gap: .2rem; }
+html:root:root[data-phone] .rc-spy .rd { flex-direction: row; justify-content: space-between; gap: .6rem; }
 html:root:root[data-phone] .rc-cell:has(> .rc-void:not(.gone)) { display: none; }
 html:root:root[data-phone] .rc-slot { gap: .55rem; padding: .45rem .55rem .45rem .5rem; }
 html:root:root[data-phone] .rc-rel { grid-template-columns: minmax(0, 1fr) 5.2rem; gap: .4rem; } html:root:root[data-phone] .rc-lab { font-size: .9rem; }
-html:root:root[data-phone] .rc-spy .slider { grid-template-columns: 2.2rem minmax(2rem, 1fr) 2.2rem 2.8rem; }
-html:root:root[data-phone] .rc-modes { flex-wrap: wrap; gap: .25rem; } html:root:root[data-phone] .rc-modes .lbl { display: none; }
-html:root:root[data-phone] .rc-modes .btn { padding: .15em .5em; font-size: .78rem; min-height: 2rem; }
-html:root:root[data-phone] .rc-sec .slider { grid-template-columns: 2.2rem minmax(3rem, 1fr) 2.2rem; }
+html:root:root[data-phone] .rc-spy .slider { grid-template-columns: var(--tap) minmax(2rem, 1fr) var(--tap) 3.4rem; }
+html:root:root[data-phone] .rc-modes { gap: .25rem; flex-wrap: nowrap; } html:root:root[data-phone] .rc-modes .lbl { display: none; }
+html:root:root[data-phone] .rc-modes .btn { flex: 1 1 auto; min-width: 0; padding: .15em .3em; font-size: max(12px, .8rem); letter-spacing: .02em; min-height: var(--tap); }
+html:root:root[data-phone] .rc-sec .slider { grid-template-columns: var(--tap) minmax(3rem, 1fr) var(--tap); }
 html:root:root[data-phone] .rx-foot { flex-wrap: wrap; gap: .4rem; }
 html:root:root[data-phone] .rx-foot .rx-prompt { flex: 1 1 100%; }
 html:root:root[data-phone] .rx-foot .btn { flex: 1 1 auto; }
@@ -335,7 +366,7 @@ html:root:root[data-phone] .rp-techs { flex: none; grid-template-columns: repeat
 html:root:root[data-phone] .rp-tb .rp-tl { max-height: 11rem; }
 /* racial stats: the six boxes in one column */
 html:root:root[data-phone] .sx-grid { flex: none; grid-template-columns: minmax(0, 1fr); grid-template-rows: none; gap: .5rem; }
-html:root:root[data-phone] .sx-row { grid-template-columns: .85rem 6.4rem minmax(0, 1fr) 2.6rem; min-height: 1.9rem; }
+html:root:root[data-phone] .sx-row { grid-template-columns: .85rem 6.4rem minmax(0, 1fr) 2.6rem; min-height: var(--row); }
 
 /* ---- almanac ---- */
 html:root:root[data-phone] .al-search { margin-left: 0; width: 100%; }
@@ -347,7 +378,7 @@ html:root:root[data-phone] .al .tbl td.d { min-width: 12rem; }
 /* ---- map overview: the map fills the screen, the key is a bottom sheet ---- */
 html:root:root[data-phone] .ov { flex-direction: column; padding: 0; gap: 0; }
 html:root:root[data-phone] .ov-main { flex: 1 1 auto; min-height: 0; }
-html:root:root[data-phone] .ov-side { flex: none; width: auto; --ph-strip: 4.8rem; --ph-full: 64%; }
+html:root:root[data-phone] .ov-side { flex: none; width: auto; --ph-strip: 5.4rem; --ph-full: 64%; }
 html:root:root[data-phone] .ov-side .panel { padding: .3rem; }
 html:root:root[data-phone] .ov-side[data-sheet="strip"] .panel > :not(.ov-title) { display: none; }
 html:root:root[data-phone] .ov-title { font-size: 1.4rem; } html:root:root[data-phone] .ov-title small { display: none; }
@@ -376,7 +407,7 @@ html:root:root[data-phone] .au-bar { flex-wrap: wrap; gap: .3rem .8rem; } html:r
 html:root:root[data-phone] .au-item .d { white-space: normal; }
 
 /* ---- save / load: the import / export pair stacks ---- */
-html:root:root[data-phone] .sl-tools { flex-wrap: wrap; } html:root:root[data-phone] .sl-tools .btn { flex: 1 1 100%; }
+@media (orientation: portrait) { html:root:root[data-phone] .sl-tools { flex-wrap: wrap; } html:root:root[data-phone] .sl-tools .btn { flex: 1 1 100%; } }
 html:root:root[data-phone] .sl-foot-hint { display: none; }
 /* ---- spy theft: the six fields in one column ---- */
 html[data-phone] .spy-grid { grid-template-columns: minmax(0, 1fr); }
@@ -387,7 +418,7 @@ html[data-phone] .spy-fld { min-height: 3rem; }
    ========================================================================= */
 html:root:root[data-phone] .su-head { flex-direction: column; align-items: flex-start; gap: .4rem; }
 html:root:root[data-phone] .ctl-title { font-size: 2.2rem; }
-html:root:root[data-phone] .ctl-eyebrow { letter-spacing: .2em; font-size: .8rem; }
+html:root:root[data-phone] .ctl-eyebrow { letter-spacing: .2em; }
 html:root:root[data-phone] .su-step:not(.cur) .su-step-l { display: none; }        /* the tracker: numbers, plus the current step's name */
 html:root:root[data-phone] .su-sizes { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 html:root:root[data-phone] .su-race { gap: .5rem; padding: .35rem .5rem .35rem .35rem; }
@@ -396,7 +427,8 @@ html:root:root[data-phone] .su-race-g { font-size: .82rem; }
 /* cinematic captions use the width */
 html:root:root[data-phone] .end-cap { width: 92%; }
 html:root:root[data-phone] .su-thumb-w { max-height: 4.8rem; min-height: 3.6rem; }
-html:root:root[data-phone] .tl-r, html:root:root[data-phone] .tl-a { min-height: 2rem; }
+html:root:root[data-phone] .tl-r { min-height: var(--row); align-items: center; }
+html:root:root[data-phone] .tl-a { display: inline-block; padding: .55rem .1rem; margin: -.55rem 0; }   /* a taller tap box for the turn log's links, same line height */
 html[data-phone] #toasts { bottom: 6.5rem; max-width: 94vw; }
 
 /* =========================================================================

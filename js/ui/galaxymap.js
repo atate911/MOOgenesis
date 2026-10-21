@@ -822,17 +822,22 @@
 
     // ---------------------------------------------------------------- hit testing
     const pk = { sd: null, fd: null, grp: null };
+    // a finger on a phone: stars answer within 22px, fleets within 18px, and the nearer of the two wins (a mouse keeps fleets first)
+    const fingerPick = () => ptr.touch && !!(M.Phone && M.Phone.active());
     function pick(x, y) {
       pk.sd = null; pk.fd = null; pk.grp = null;
+      const fin = fingerPick();
       let best = 1e9;
-      for (let i = 0; i < nHit; i++) { const dx = hitX[i] - x, dy = hitY[i] - y, d = dx * dx + dy * dy, r = hitR[i]; if (d <= r * r && d < best) { best = d; pk.fd = hitFd[i]; pk.grp = hitGrp[i]; } }
-      if (pk.fd) return pk;
+      for (let i = 0; i < nHit; i++) { const dx = hitX[i] - x, dy = hitY[i] - y, d = dx * dx + dy * dy, r = fin ? Math.max(hitR[i], 18) : hitR[i]; if (d <= r * r && d < best) { best = d; pk.fd = hitFd[i]; pk.grp = hitGrp[i]; } }
+      if (pk.fd && !fin) return pk;
+      const bestFleet = best;
       best = 1e9;
       for (let i = 0; i < SD.length; i++) {
         const s = SD[i]; if (!s.on) continue;
-        const dx = s.sx - x, dy = s.sy - y, d = dx * dx + dy * dy, r = Math.max(11 * uk, s.r * 2 + 5);
+        const dx = s.sx - x, dy = s.sy - y, d = dx * dx + dy * dy, r = Math.max(fin ? 22 : 11 * uk, s.r * 2 + 5);
         if (d <= r * r && d < best) { best = d; pk.sd = s; }
       }
+      if (fin && pk.fd && pk.sd) { if (bestFleet <= best) pk.sd = null; else { pk.fd = null; pk.grp = null; } }
       return pk;
     }
     function nebAt(wx, wy) {
@@ -842,7 +847,7 @@
     }
 
     // ---------------------------------------------------------------- input
-    const ptr = { x: -1, y: -1, inside: false, down: false, id: -1, sx: 0, sy: 0, lx: 0, ly: 0, lt: 0, moved: false, btn: 0, t0: 0 };
+    const ptr = { x: -1, y: -1, inside: false, down: false, id: -1, sx: 0, sy: 0, lx: 0, ly: 0, lt: 0, moved: false, btn: 0, t0: 0, touch: false };
     const pts = new Map(); let pinch = null, lastClick = { t: 0, id: -2 };
     const rectOf = () => canvas.getBoundingClientRect();
     function startPinch() { const a = Array.from(pts.values()); pinch = { d: Math.hypot(a[0].x - a[1].x, a[0].y - a[1].y) || 1, mx: (a[0].x + a[1].x) / 2, my: (a[0].y + a[1].y) / 2 }; ptr.moved = true; cancelFlight(); vel.x = vel.y = 0; }
@@ -859,7 +864,7 @@
       root.focus({ preventScroll: true });
       const r = rectOf(), x = e.clientX - r.left, y = e.clientY - r.top;
       try { canvas.setPointerCapture(e.pointerId); } catch (err) { /* ignore */ }
-      pts.set(e.pointerId, { x, y }); ptr.x = x; ptr.y = y; ptr.inside = true;
+      pts.set(e.pointerId, { x, y }); ptr.x = x; ptr.y = y; ptr.inside = true; ptr.touch = e.pointerType === 'touch' || e.pointerType === 'pen';
       if (pts.size === 2) { startPinch(); ptr.down = false; return; }
       ptr.down = true; ptr.id = e.pointerId; ptr.btn = e.button; ptr.sx = ptr.lx = x; ptr.sy = ptr.ly = y; ptr.moved = false; ptr.t0 = ptr.lt = e.timeStamp;
       vel.x = vel.y = 0; hideTip(); e.preventDefault();
@@ -870,7 +875,7 @@
       if (pts.has(e.pointerId)) pts.set(e.pointerId, { x, y });
       if (pinch) { doPinch(); return; }
       if (ptr.down && e.pointerId === ptr.id) {
-        if (!ptr.moved && Math.hypot(x - ptr.sx, y - ptr.sy) > 4) { ptr.moved = true; root.classList.add('dragging'); cancelFlight(); anchor = null; hideTip(); }
+        if (!ptr.moved && Math.hypot(x - ptr.sx, y - ptr.sy) > (fingerPick() ? 8 : 4)) { ptr.moved = true; root.classList.add('dragging'); cancelFlight(); anchor = null; hideTip(); }
         if (ptr.moved) {
           const dx = x - ptr.lx, dy = y - ptr.ly, dtm = Math.max(1, e.timeStamp - ptr.lt);
           cam.x -= dx / cam.z; cam.y -= dy / cam.z; clampTo(cam); tgt.x = cam.x; tgt.y = cam.y; tgt.z = cam.z;

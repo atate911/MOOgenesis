@@ -12,6 +12,7 @@ const MODES = {
   ultra: { settings: { graphics: 'ultra' } },
   phone: { phone: true },                       // emulated touch phone, portrait (the phone layout layer; tools/qa/phone.js checks it in depth)
   phoneland: { phone: 'landscape' },
+  phonesmall: { phone: 'small' },               // 360x740
 };
 (async () => {
   const names = process.argv.slice(2).length ? process.argv.slice(2) : Object.keys(MODES);

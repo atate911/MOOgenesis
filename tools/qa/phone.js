@@ -1,13 +1,14 @@
-// Phone QA: an emulated touch phone (390x844 portrait, or 844x390 with `landscape`) driven against the real gate in index.html (no ?phone=1),
-// plus a desktop pass proving the phone layer stays out of the way. Prints PASS / FAIL per check and the scale-audit findings per screen.
-// usage: node tools/qa/phone.js [landscape] [step ...]
+// Phone QA: an emulated touch phone (390x844 portrait, 844x390 with `landscape`, 360x740 with `small`) driven against the real gate in
+// index.html (no ?phone=1), plus a desktop pass proving the phone layer stays out of the way. Prints PASS / FAIL per check, the scale-audit
+// findings per screen, and the touch audit (targets under 40px, text under 12px).
+// usage: node tools/qa/phone.js [landscape|small] [step ...]
 //   steps: gate galaxy battle screens scenes menus design back tips bot desktop   (default: all)
 //   env:   SHOTS=dir (default /tmp/claude-0/phone) · PORT (default 8794) · TURNS (dev auto-play turns before the checks, default 10)
 const { serve, open, sleep, ROOT } = require('./lib');
 const fs = require('fs'), path = require('path');
 const args = process.argv.slice(2);
-const LAND = args.includes('landscape');
-const STEPS = args.filter(a => a !== 'landscape');
+const LAND = args.includes('landscape'), SMALL = args.includes('small');
+const STEPS = args.filter(a => a !== 'landscape' && a !== 'small');
 const want = s => !STEPS.length || STEPS.includes(s);
 const SHOTS = process.env.SHOTS || '/tmp/claude-0/phone';
 const PORT = +process.env.PORT || 8794;
@@ -42,12 +43,39 @@ const offscreen = page => page.evaluate(() => {
   }
   return out.slice(0, 5);
 });
+// touch audit: interactive boxes under 40px (36px tall for rows 100px+ wide, 24px for slider tracks) and visible text under 12px, on the active screen or the top
+// dialog; grouped by tag.class → [[key, count, smallest], ...]
+const touchAudit = page => page.evaluate(() => {
+  const scope = [...document.querySelectorAll('.scrim .modal')].pop() || document.querySelector('.screen.active'); if (!scope) return { t: [], x: [] };
+  const vis = e => { const r = e.getBoundingClientRect(); if (r.width < 1 || r.height < 1) return null; const cs = getComputedStyle(e); return cs.visibility === 'hidden' || +cs.opacity === 0 ? null : r; };
+  const key = e => e.tagName.toLowerCase() + (typeof e.className === 'string' && e.className.trim() ? '.' + e.className.trim().split(/\s+/).slice(0, 2).join('.') : '');
+  const T = new Map(), X = new Map(), add = (m, k, v) => { const o = m.get(k) || [k, 0, 1e9]; o[1]++; o[2] = Math.min(o[2], Math.round(v)); m.set(k, o); };
+  const SEL = 'button, .btn, a[href], input:not([type=hidden]), select, textarea, [role=button], [role=tab], .s-btn, .s-lock, .s-track';
+  const seen = new Set();
+  for (const e of scope.querySelectorAll('*')) {
+    if (e.closest('svg') && e.tagName !== 'svg') continue;
+    let t = null;
+    if (e.matches(SEL)) t = e.closest('label') || e;
+    else { const c = getComputedStyle(e).cursor; if (c === 'pointer' && (!e.parentElement || getComputedStyle(e.parentElement).cursor !== 'pointer')) t = e; }
+    if (t && !seen.has(t) && !t.closest('.ph-tip') && t.tagName !== 'CANVAS' && !t.classList.contains('ph-grip')) {   // the grip's ::after reaches --tap
+      seen.add(t); const r = vis(t);
+      if (r) { const need = t.classList.contains('s-track') ? 24 : r.width >= 100 ? 36 : 40; if (r.height < need - 0.5 || r.width < Math.min(need, 39.5)) add(T, key(t), Math.min(r.width, r.height)); }   // slider tracks: 24px (WCAG 2.5.8); rows: 36px
+    }
+    if ([...e.childNodes].some(n => n.nodeType === 3 && n.textContent.trim())) {
+      const r = vis(e), fs = parseFloat(getComputedStyle(e).fontSize);
+      if (r && fs > 0 && fs < 11.5) add(X, key(e) + '"' + e.textContent.trim().slice(0, 14) + '"', fs);
+    }
+  }
+  const top = m => [...m.values()].sort((a, b) => b[1] - a[1]).slice(0, 10);
+  return { t: top(T), x: top(X) };
+});
+const fmtAudit = a => (a.t.length ? '\n      targets: ' + a.t.map(([k, n, v]) => k + '×' + n + '(' + v + ')').join(' ') : '') + (a.x.length ? '\n      text: ' + a.x.map(([k, n, v]) => k + '×' + n + '(' + v + ')').join(' ') : '');
 const sheetState = page => page.evaluate(() => { const s = document.querySelector('.gx-side:not(.gx-float)'); return s ? s.dataset.sheet || '' : 'none'; });
 
 (async () => {
   const srv = await serve(PORT);
-  const pre = LAND ? 'L-' : '';
-  const { browser, ctx, page, errors } = await open({ phone: LAND ? 'landscape' : true });
+  const pre = LAND ? 'L-' : SMALL ? 'S-' : '';
+  const { browser, ctx, page, errors } = await open({ phone: LAND ? 'landscape' : SMALL ? 'small' : true });
   page.setDefaultTimeout(10000);
   const shot = async name => { const f = path.join(SHOTS, pre + name + '.png'); await page.screenshot({ path: f }); return f; };
   const audit = async () => { await page.evaluate(src => { if (!window.__audit) (0, eval)(src); }, AUDIT); return page.evaluate(() => __audit().out); };
@@ -84,9 +112,11 @@ const sheetState = page => page.evaluate(() => { const s = document.querySelecto
         return;
       }
       check('sheet starts collapsed', (await sheetState(page)) === 'strip');
+      console.log('   galaxy (strip):' + fmtAudit(await touchAudit(page)));
       await shot('galaxy-strip');
       const grip = await page.$('.gx-side:not(.gx-float) .ph-grip');
       await grip.tap(); await sleep(350); check('handle tap opens halfway', (await sheetState(page)) === 'half'); await shot('galaxy-half');
+      console.log('   galaxy (half):' + fmtAudit(await touchAudit(page)));
       await grip.tap(); await sleep(350); check('second tap opens fully', (await sheetState(page)) === 'full'); await shot('galaxy-full');
       await grip.tap(); await sleep(350); check('third tap collapses', (await sheetState(page)) === 'strip');
       await (await page.$('.gx-side:not(.gx-float) .side-title')).tap(); await sleep(350);
@@ -94,6 +124,15 @@ const sheetState = page => page.evaluate(() => { const s = document.querySelecto
       const ov = await page.evaluate(() => { const p = document.querySelector('.gx-side:not(.gx-float) .panel'), r = p.getBoundingClientRect(); const out = [...p.querySelectorAll('*')].filter(e => { const q = e.getBoundingClientRect(); return q.width && q.right > r.right + 2; }).slice(0, 3).map(e => e.className); return out; });
       check('nothing in the colony panel spills past its right edge', !ov.length, ov.join(', '));
       await page.evaluate(() => MOO.UI.Phone.galaxySheet().set('strip'));
+      // a finger lands 16px off a star: the star is still picked (22px touch radius)
+      const tgt = await page.evaluate(() => {
+        const m = MOO.UI.Galaxy.map, d = m._dbg(), r = m.canvas.getBoundingClientRect(), sel = m.getSelection().star;
+        const ok = s => s.on && s.id !== sel && s.sx > 40 && s.sx < r.width - 90 && s.sy > 200 && s.sy < r.height - 200 && d.SD.every(o => o === s || Math.hypot(o.sx - s.sx, o.sy - s.sy) > 60);
+        const s = d.SD.find(ok); return s ? { id: s.id, x: r.left + s.sx + 15, y: r.top + s.sy + 6 } : null;
+      });
+      if (tgt) { await page.touchscreen.tap(tgt.x, tgt.y); await sleep(500); }
+      check('a tap 16px off a star selects it', !!tgt && (await page.evaluate(() => MOO.UI.Galaxy.map.getSelection().star)) === tgt.id, JSON.stringify(tgt));
+      await page.evaluate(() => { MOO.UI.Phone.galaxySheet().set('strip'); const E = MOO.Game.player(); MOO.UI.Galaxy.map.select(MOO.Game.S.planets[E.capital].starId, { emit: true }); }); await sleep(300);
       const bar = await page.evaluate(() => { const b = document.querySelector('.gx-bar'), n = b.querySelector('.btn.primary').getBoundingClientRect(); return { scroll: b.scrollWidth > b.clientWidth, ok: n.right <= innerWidth + 0.5 && n.left >= 0, edge: innerWidth - n.right }; });
       check('Next turn stays in view while the bar scrolls', bar.ok, JSON.stringify(bar));
       const ids = await page.evaluate(() => { const S = MOO.Game.S, E = MOO.Game.player(), cap = S.planets[E.capital]; return { star: cap.starId, planet: cap.id }; });
@@ -133,7 +172,7 @@ const sheetState = page => page.evaluate(() => { const s = document.querySelecto
         await sleep(1300);
         const cur = await page.evaluate(() => MOO.UI.Screens.current.id);
         const a = (await audit()).filter(x => !/^OFF/.test(x)), offs = await offscreen(page);
-        console.log('   ' + id + (cur !== id ? ' (now ' + cur + ')' : '') + ': ' + (a.length ? a.join(' | ') : 'no scroll / clip'));
+        console.log('   ' + id + (cur !== id ? ' (now ' + cur + ')' : '') + ': ' + (a.length ? a.join(' | ') : 'no scroll / clip') + fmtAudit(await touchAudit(page)));
         check(id + ': nothing off-screen', !offs.length, offs.join(' | '));
         await shot('screen-' + id);
         const backOn = await page.evaluate(() => { const b = document.querySelector('.ph-back'); return !!(b && b.classList.contains('on')); });
@@ -178,6 +217,7 @@ const sheetState = page => page.evaluate(() => { const s = document.querySelecto
         await page.evaluate(open); await sleep(600);
         const m = await page.evaluate(() => { const e = [...document.querySelectorAll('.scrim .modal')].pop(); if (!e) return null; const r = e.getBoundingClientRect(); return { l: r.left, r: innerWidth - r.right, t: r.top, b: innerHeight - r.bottom }; });
         check(name + ': the dialog fits the screen', !!m && m.l >= -1 && m.r >= -1 && m.t >= -1 && m.b >= -1, JSON.stringify(m));
+        console.log('   ' + name + ':' + fmtAudit(await touchAudit(page)));
         await shot('modal-' + name); await page.evaluate(() => MOO.UI.closeAllModals()); await sleep(300);
       };
       await modalShot('gamemenu', () => { MOO.UI.gameMenu(); });
@@ -203,11 +243,11 @@ const sheetState = page => page.evaluate(() => { const s = document.querySelecto
       await page.evaluate(() => MOO.UI.Screens.go('design', { from: 'galaxy' })); await sleep(1300);
       const lay = await page.evaluate(() => {
         const q = s => document.querySelector('.screen.active ' + s), r = s => { const e = q(s); return e ? e.getBoundingClientRect() : null; };
-        return { ph: !!q('.ph-dz'), head: r('.ph-dz-head'), foot: r('.ph-dz-foot'), body: r('.ph-dz-body'), build: r('.ph-dz-foot .btn.primary') };
+        return { ph: !!q('.ph-dz'), head: r('.ph-dz-head'), foot: r('.ph-dz-foot'), body: r('.ph-dz-body'), build: r('.ph-dz-foot .btn.primary'), vh: innerHeight };
       });
       check('editor rearranged into one column', lay.ph && !!lay.head && !!lay.foot && !!lay.body);
-      check('header pinned at the top, Build at the bottom', lay.head && lay.foot && lay.head.top < 60 && lay.foot.bottom > (LAND ? 380 : 830), JSON.stringify({ head: lay.head && lay.head.top, foot: lay.foot && lay.foot.bottom }));
-      const a = (await audit()).filter(x => !/^OFF/.test(x)), offs = await offscreen(page); console.log('   design: ' + (a.length ? a.join(' | ') : 'no scroll / clip'));
+      check('header pinned at the top, Build at the bottom', lay.head && lay.foot && lay.head.top < 60 && lay.foot.bottom > lay.vh - 14, JSON.stringify({ head: lay.head && lay.head.top, foot: lay.foot && lay.foot.bottom }));
+      const a = (await audit()).filter(x => !/^OFF/.test(x)), offs = await offscreen(page); console.log('   design: ' + (a.length ? a.join(' | ') : 'no scroll / clip') + fmtAudit(await touchAudit(page)));
       check('design: nothing off-screen', !offs.length, offs.join(' | '));
       await shot('design-top');
       await page.evaluate(() => { const w = document.querySelector('.screen.active .dz-wt'); if (w) w.scrollIntoView({ block: 'start' }); }); await sleep(300);
@@ -277,7 +317,7 @@ const sheetState = page => page.evaluate(() => { const s = document.querySelecto
   check('no console errors / page errors (phone)', !errs.length, errs.slice(0, 5).join(' | '));
   await browser.close();
 
-  if (want('desktop') && !LAND) {
+  if (want('desktop') && !LAND && !SMALL) {
     console.log('--- desktop');
     const d = await open({ viewport: { width: 1280, height: 720 } });
     try {
