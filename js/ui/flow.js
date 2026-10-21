@@ -98,7 +98,7 @@
     };
 
     H.gnn = async it => {
-      if (M.Settings.get('newsMode') === 'brief' && it && it.items && it.items.length) return Flow.newsBrief(it);        // one page, one Continue (Options › Interface)
+      if ((M.Settings.get('newsMode') === 'brief' || (M.Phone && M.Phone.active())) && it && it.items && it.items.length) return Flow.newsBrief(it);        // one page, one Continue (Options › Interface)
       if (UI.GNN && UI.GNN.show) return UI.GNN.show(it); (it.items || []).slice(0, 3).forEach(i => UI.Galaxy.message(i.headline));
     };
     H.council = async it => { if (UI.Council && UI.Council.show) return UI.Council.show(it); return M.Sim.Council && M.Sim.Council.autoVote ? M.Sim.Council.autoVote(G.S, it.info) : 0; };

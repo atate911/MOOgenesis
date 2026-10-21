@@ -118,8 +118,8 @@
     const news = ctl.segmented([{ id: 'broadcast', label: 'Broadcast' }, { id: 'brief', label: 'Brief' }], S.get('newsMode') || 'broadcast', v => S.set('newsMode', v), { block: true, label: 'News' });
     sync.push(() => news.set(S.get('newsMode') || 'broadcast'));
     const gameplay = section('Gameplay', 'compass', [
-      row('Default battle mode', 'Manual: you command each ship battle. Auto-resolve: battles play out on their own.', battle, 'stack'),
-      gameAuto ? row('Auto-resolve battles in this game', 'Set from the pre-battle card ("Auto-resolve every battle this game"); turn it off here.', gameAuto) : null,
+      M.Phone && M.Phone.active() ? null : row('Default battle mode', 'Manual: you command each ship battle. Auto-resolve: battles play out on their own.', battle, 'stack'),
+      gameAuto && !(M.Phone && M.Phone.active()) ? row('Auto-resolve battles in this game', 'Set from the pre-battle card ("Auto-resolve every battle this game"); turn it off here.', gameAuto) : null,
       bool('landingScenes', 'Colony landing scene', 'Play the landing vignette when a colony is founded. Off: the card\'s Yes founds it at once.', true),
       row('News', 'Broadcast: the GNN studio scene. Brief: one list of the turn\'s headlines with a single Continue.', news, 'stack'),
       bool('autosave', 'Autosave each turn', 'Writes the Auto slot at the end of every turn.', true),

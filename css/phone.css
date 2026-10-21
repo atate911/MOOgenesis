@@ -16,9 +16,10 @@ html[data-phone] .screen.fade-in { animation-name: ph-scr-in; }       /* scr-in'
 html[data-phone] .btn { min-height: 2.6rem; }
 html[data-phone] .btn.small { min-height: 2.3rem; }
 html[data-phone] .tabs button { min-height: 2.4rem; }
-html[data-phone] .slider .s-track { height: 2rem; }
-html[data-phone] .slider .s-btn { min-width: 2.2rem; min-height: 2.2rem; }
-html[data-phone] .slider .s-lock { min-width: 2.2rem; min-height: 2.2rem; }
+/* sliders: the arrow / lock buttons take their width from the grid column, so widen the columns rather than the buttons */
+html[data-phone] .slider { grid-template-columns: 5.2rem 2.2rem minmax(3rem, 1fr) 2.2rem 3.1rem 2.2rem; }
+html[data-phone] .slider .s-track { height: 1.8rem; }
+html[data-phone] .slider .s-btn, html[data-phone] .slider .s-lock { min-height: 2.2rem; }
 html[data-phone] .modal { max-width: 96vw; max-height: 92vh; overflow: auto; }
 html[data-phone] .modal-f .btn { min-height: 2.8rem; }
 
@@ -58,3 +59,49 @@ html[data-phone] .ph-grip::before { content: ""; width: 3rem; height: .3rem; bor
 html[data-phone] .ph-step { display: flex; align-items: center; gap: .3rem; }
 html[data-phone] .ph-step .btn { min-width: 2.6rem; padding: .3em .5em; }
 html[data-phone] .ph-step .ph-stv { min-width: 2.6rem; text-align: center; font: 600 1.3rem var(--font-ui); font-variant-numeric: tabular-nums; }
+
+/* =========================================================================
+   Galaxy screen (js/ui/phone-galaxy.js): full-bleed map, the side panel as a bottom sheet, a sideways-scrolling bar with Next turn pinned.
+   The restyle in galaxy.js is bumped to :root:root, hence the html:root:root[data-phone] prefix on the rules that fight it.
+   ========================================================================= */
+html:root:root[data-phone] .gx { grid-template-columns: minmax(0, 1fr); grid-template-rows: minmax(0, 1fr) auto; padding: 0; gap: 0; }
+html:root:root[data-phone] .gx-mapwrap { grid-column: 1; grid-row: 1; }
+html:root:root[data-phone] .gx-side:not(.gx-float) {
+  grid-column: 1; grid-row: 1; align-self: end; z-index: 6; padding: 0; background: none;
+  --ph-strip: 5rem; --ph-half: 56%; --ph-full: calc(100% - .4rem);
+}
+html:root:root[data-phone] .gx-side:not(.gx-float) .panel { box-shadow: 0 -8px 22px rgba(0, 0, 0, .55), 0 0 0 1px rgba(0, 0, 0, .8); }
+html:root:root[data-phone] .gx-side:not(.gx-float)[data-sheet="strip"] .gx-sidebody { overflow: hidden; }
+html:root:root[data-phone] .gx-side:not(.gx-float):not([data-sheet="full"]) > div:not(.panel):not(.ph-grip) { display: none; }   /* the turn log: full only */
+html:root:root[data-phone] .gx-side:not(.gx-float) .side-title { cursor: pointer; }
+html:root:root[data-phone] .gx-sidebody { padding: .4rem .5rem calc(.6rem + env(safe-area-inset-bottom)); }
+/* a panel opened beside a map tap: pinned to the bottom edge of the map instead of UI.Side.place()'s inline position */
+html:root:root[data-phone] .gx-side.gx-float {
+  left: .5rem !important; top: auto !important; right: .5rem; bottom: .5rem; width: auto; max-height: 58%;
+}
+/* top: year / treasury plate and the message list stack, leaving the map's control column free on the right */
+html:root:root[data-phone] .gx-top { left: .4rem; right: 3.3rem; top: .35rem; flex-direction: column; align-items: stretch; gap: .3rem; }
+html:root:root[data-phone] .gx-hud { flex-wrap: wrap; gap: .2rem .7rem; padding: .3rem .6rem; font-size: .9rem; }
+html:root:root[data-phone] .gx-hud .y { font-size: 1.15rem; }
+html:root:root[data-phone] .gx-msg { margin-left: 0; max-width: none; }
+html:root:root[data-phone] .gmap-ctrl .btn, html:root:root[data-phone] .gmap-ctrl button { min-width: 2.5rem; min-height: 2.5rem; }
+/* bottom bar: one row that scrolls sideways; Next turn stays pinned at the right edge */
+html:root:root[data-phone] .gx-bar {
+  display: flex; flex-wrap: nowrap; overflow-x: auto; overflow-y: hidden; gap: .3rem; padding: .3rem 0 calc(.3rem + env(safe-area-inset-bottom)) .3rem;
+  -webkit-overflow-scrolling: touch; scrollbar-width: none; background: linear-gradient(180deg, #3a424c, #262c33);
+}
+html:root:root[data-phone] .gx-bar::-webkit-scrollbar { display: none; }
+html:root:root[data-phone] .gx-bar .btn { flex: 0 0 auto; min-width: 0; min-height: 2.9rem; padding: .5em 1em; font-size: .9rem; letter-spacing: .06em; white-space: nowrap; }
+html:root:root[data-phone] .gx-bar .btn.primary { flex: 0 0 auto; min-width: 6.5rem; position: sticky; right: 0; box-shadow: -6px 0 10px rgba(0, 0, 0, .45); }
+html:root:root[data-phone] .gx-bar .gx-spacer { flex: 1 0 .2rem; }
+html:root:root[data-phone] .gx-bar .gx-wait { display: none; }
+/* the pre-battle / result cards inside the sheet */
+html[data-phone] .gx-side .pb-acts .btn { min-height: 2.8rem; }
+/* the minimap and the map key sit above the collapsed sheet (galaxymap.js positions the minimap inline per its corner setting) */
+html:root:root[data-phone] .gmap-mini { left: .5rem !important; right: auto !important; top: auto !important; bottom: 5.5rem !important; }
+html:root:root[data-phone] .gmap .gmap-legend.panel { bottom: 5.5rem; width: min(16rem, 70vw); max-height: 55%; }
+/* the colony sliders (side-colony.js, bumped): finger-sized arrows and lock in a 27rem-wide panel */
+html:root:root[data-phone] .sc-sliders .slider { grid-template-columns: 4.2rem 2.2rem minmax(0, 1fr) 2.2rem 3.9rem 2.2rem; gap: .2rem; margin: .3rem 0; }
+html:root:root[data-phone] .sc-sliders .s-btn { width: 2.2rem; height: 2.2rem; }
+html:root:root[data-phone] .sc-sliders .s-lock { width: 2.2rem; height: 2.2rem; }
+html:root:root[data-phone] .sc-sliders .s-track { height: 1.6rem; }

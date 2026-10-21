@@ -215,7 +215,8 @@
   function buildPreBattle(p, host, finish) {
     const battle = p.battle, S = p.S || G.S, me = mySide(battle), foe = 1 - me, B = sideBlurb(battle), cleanup = [];
     const colA = sideCol(battle, S, battle.sides.indexOf(B.a)), colD = sideCol(battle, S, battle.sides.indexOf(B.d));
-    const tacticalDefault = !(S && S.settings && S.settings.options && S.settings.options.tactical === false);
+    const phone = !!(M.Phone && M.Phone.active());                                              // phones: Auto or Retreat, never the tactical screen
+    const tacticalDefault = !phone && !(S && S.settings && S.settings.options && S.settings.options.tactical === false);
     const root = h('div.pb');
     root.appendChild(h('div.pb-head', h('span.ti', 'Space Combat'), h('span.st', battle.starName || (S && S.stars[battle.star] && S.stars[battle.star].name) || '')));
 
@@ -276,13 +277,13 @@
     if (canRetreat && !refuge) root.appendChild(h('div.pb-note', 'You own no other colony: a fleet that withdraws has nowhere to go and is lost.'));
     const go = fn => () => { fn(); };
     const acts = h('div.pb-acts');
-    const bFight = UI.button('Continue', go(() => finish('fight')), { primary: tacticalDefault, kbd: 'C', tip: 'Fight the battle yourself on the tactical map (C / Space)' });
     const bAuto = UI.button('Auto', go(() => finish('auto')), { primary: !tacticalDefault, kbd: 'A', tip: 'Let the computer fight it out and show only the result (A)' });
+    const bFight = phone ? bAuto : UI.button('Continue', go(() => finish('fight')), { primary: tacticalDefault, kbd: 'C', tip: 'Fight the battle yourself on the tactical map (C / Space)' });
     const bRet = UI.button('Retreat', go(async () => {
       if (!refuge && !(await UI.confirm('Your fleet has no other colony to retreat to and will be lost. Withdraw anyway?', { title: 'Retreat' }))) return;
       finish('retreat');
     }), { danger: false, kbd: 'R', disabled: !canRetreat, tip: canRetreat ? 'Withdraw the whole fleet without a fight (R)' : 'You have no ships to withdraw' });
-    acts.appendChild(bRet); acts.appendChild(bAuto); acts.appendChild(bFight);
+    acts.appendChild(bRet); acts.appendChild(bAuto); if (!phone) acts.appendChild(bFight);
     root.appendChild(acts);
     // "select and move on": one tick and no further battle this game asks — Auto is applied straight away (Options › Gameplay turns it off again)
     const autoAll = h('label.pb-autoall', h('input', { type: 'checkbox' }), ' Auto-resolve every battle this game');
@@ -429,6 +430,7 @@
     if (!battle.sides.some(s => s.human)) return Cb.resolve(battle, M.RNG.create(seed));          // nobody to ask: pure auto-resolve
     const autoAll = !!(S && S.settings && S.settings.options && S.settings.options.autoBattle);
     let choice = opts.skipCard ? 'fight' : autoAll ? 'auto' : await showOnGalaxy('prebattle', { battle, S });
+    if (choice === 'fight' && M.Phone && M.Phone.active()) choice = 'auto';                   // phones never open the tactical screen
     if (choice === 'retreat') {
       const res = Cb.retreatBeforeBattle(battle, me);
       await showOnGalaxy('combatResult', { battle, S, result: res }, true);
@@ -524,6 +526,11 @@
       if (!sess) {                                                       // dev: ?screen=combat → straight into a demo battle
         const q = new URLSearchParams(location.search), d = Combat.demo({ scn: q.get('scn') || 'planet' });
         sess = { battle: d.battle, S: d.S, resolve: () => {}, from: 'galaxy', seed: String(d.battle.seed) + ':ui', demo: true };
+      }
+      if (M.Phone && M.Phone.active()) {                                   // backstop: a phone that lands here (?screen=combat, an old save mid-battle) auto-resolves
+        let res = null; try { res = E().resolve(sess.battle, M.RNG.create(sess.seed + ':auto')); } catch (e) { console.error(e); }
+        try { sess.resolve(res); } catch (e) { console.error(e); }
+        UI.Screens.go(UI.Screens.has(sess.from) ? sess.from : 'galaxy'); return;
       }
       start(sess);
     },

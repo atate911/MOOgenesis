@@ -106,6 +106,7 @@ window.MOO_MANIFEST = {
     'js/ui/galaxy.js',
     'js/ui/side-colony.js',
     'js/ui/side-misc.js',
+    'js/ui/phone-galaxy.js',
     'js/ui/flow.js',
     'js/ui/turnlog.js',
     'js/ui/gnn.js',
