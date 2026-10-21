@@ -204,7 +204,7 @@ html[data-phone] .ph-dz .dz-auto .btn { flex: 1 1 0; min-height: var(--tap); fon
 /* preview */
 html[data-phone] .ph-dz .dz-pv { flex: none; min-height: 0; height: 15rem; }
 html[data-phone] .ph-dz .dz-cvw { touch-action: pan-y; }
-html[data-phone] .ph-dz .dz-cvw .tag { display: block; }
+html[data-phone] .ph-dz .dz-cvw .tag { display: none; }                                   /* "drag to turn" collided with the part labels; the reset button stays */
 html[data-phone] .ph-dz .ph-pv-reset {
   position: absolute; right: .35rem; bottom: .35rem; z-index: 2; min-height: var(--tap); padding: .2rem .8rem; border: 1px solid rgba(255, 255, 255, .25);
   background: rgba(0, 0, 0, .55); color: #ddd; font: 400 .8rem var(--font-ui); cursor: pointer;
@@ -291,7 +291,6 @@ html[data-phone] .ph-dz .ph-lib .dz-cards { display: grid; grid-template-columns
 html[data-phone] .ph-dz .ph-lib .dz-card { min-height: 5rem; }
 html[data-phone] .ph-dz .ph-lib .dz-ci .ft .btn { min-height: var(--tap); padding: .2em .8em; font-size: .82rem; }
 html[data-phone] .ph-dz .dz-pop.ph-pop { background: #050505; }
-html[data-phone] .ph-dz .dz-cvw .tag { top: auto; bottom: .5rem; left: .5rem; right: auto; }
 html[data-phone] .ph-dz .ph-pc-c .chip { text-transform: none; letter-spacing: 0; }
 html[data-phone] .ph-dz .dz-msg { height: auto; min-height: 2.6rem; padding: .35rem .6rem; line-height: 1.3; }
 html[data-phone] .ph-dz .ph-dz-body > * { flex-shrink: 0; }                   /* an explicit min-height would otherwise let the column squeeze an item below its text */

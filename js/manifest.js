@@ -7,6 +7,7 @@ window.MOO_MANIFEST = {
     'css/kit.css',
     'css/theme-v2.css',          // opt-out layer: active unless <html data-theme> is removed (?theme=v1)
     'css/phone.css',             // phone layout layer: every rule gated on <html data-phone> (set by index.html)
+    'css/phone-skin.css',        // phone look: flat native-style surfaces and controls, same gate
   ],
   js: [
     // ---- core ----
