@@ -232,6 +232,7 @@
       if (issues.length) { const ok = await UI.confirm(h('div', h('p', 'End the turn anyway?'), h('ul', issues.slice(0, 6).map(li))), { title: 'Before you end the turn' }); if (!ok) return; }
     }
     UI.Galaxy.busy(true, 'Year ' + Q.year(G.S) + ' …');
+    if (UI.Phone) UI.Phone.haptic('turn');                                                    // phones: a tick as the turn starts
     // 10 s without an answer is normal while the player reads a scene (combat, GNN, council, audience, landing), a modal or a held side-panel prompt:
     // those all carry their own controls, so the Skip escape is offered ONLY when nothing visible can answer the pending step (a genuinely stuck turn).
     let lateSkip = 0;

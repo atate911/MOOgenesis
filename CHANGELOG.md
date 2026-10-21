@@ -24,6 +24,11 @@ Versions follow `MAJOR.MINOR.PATCH`; the live version is the `VERSION` file.
   music voices instead of the 50 MB sampled orchestra. QA: `node tools/qa/phone.js [landscape|small]` (also fails on small targets
   or text and on keyboard wording), phone profiles in `tools/qa/modes.js`, and `tools/qa/layout-fingerprint.js` to diff desktop
   layouts between two checkouts. Notes and follow-ups: `tools/handoff/phone-2026-10.md`.
+  On a phone the interface also looks like a phone app while keeping the game's colours: flat screens and cards in each area's own
+  colours, small section headings, normal-case labels, flat buttons with a gold main action, a plain Back with the title centred, a
+  flat tab bar, the galaxy's status line as a top bar, a bottom sheet with rounded top corners, simpler dialogs and snackbar messages.
+  Short haptic taps on Next turn, slider steps, switches and errors (Android, and iPhones on iOS 18 or later; Options › Haptics turns
+  them off). The installed app gets a matching status-bar colour per screen and launch images for iPhones.
 - Server saves and a password gate (`server/moo-saves.py`, Python 3 standard library only). On a hosted install the game asks
   for a password before anything loads (default `moopassword`, set in `/etc/moogenesis/moo.conf` on the server; blank turns it
   off; changes apply at once and sign everyone out). The Save / Load screen gains a **Server | This browser** toggle; Server is

@@ -29,8 +29,9 @@ text are original — never imitate or reproduce original assets.**
 ## Phone layout layer (`tools/handoff/phone-2026-10.md`)
 - `index.html` decides `<html data-phone>` before any CSS loads; `js/core/phone.js` exposes it (`MOO.Phone.active()`; it reads the
   `window.MOO_PHONE` flag, undefined in Node). Perf, workers and audio read it once at start-up.
-- Phone rules live only in `css/phone.css`, every selector starting `html[data-phone]` (or `html:root:root[data-phone]` to beat a
-  bumped restyle). Phone behaviour lives in `js/ui/phone*.js`. A screen file gets at most a one-line `M.Phone && M.Phone.active()`
+- Phone rules live only in `css/phone.css` (layout) and `css/phone-skin.css` (look), every selector starting `html[data-phone]` (or
+  `html:root:root[data-phone]` to beat a bumped restyle). A new screen family on phones sets the `--pk-*` tokens on its root element
+  instead of restyling cards and controls one by one. Phone behaviour lives in `js/ui/phone*.js`. A screen file gets at most a one-line `M.Phone && M.Phone.active()`
   branch; never change a desktop rule to make a phone layout work.
 - Back on phones is a synthetic Escape: keep every screen's Escape binding equal to its right-click / Cancel.
 - Sizes on phones: controls at least `var(--tap)` (44px), list rows `var(--row)` (38px), text at least 12px (`max(12px, …rem)`).

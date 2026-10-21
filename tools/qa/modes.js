@@ -18,7 +18,8 @@ const MODES = {
   const names = process.argv.slice(2).length ? process.argv.slice(2) : Object.keys(MODES);
   const PORT = +process.env.PORT || 8793; const srv = await serve(PORT);
   for (const name of names) {
-    const m = MODES[name]; const [W, H] = m.vp || [1280, 720];
+    const m = MODES[name]; if (!m) { console.log(name + ': no such mode (' + Object.keys(MODES).join(' ') + ')'); continue; }
+    const [W, H] = m.vp || [1280, 720];
     const { browser, ctx, page, errors } = await open({ viewport: { width: W, height: H }, phone: m.phone });
     if (m.settings) await ctx.addInitScript(s => localStorage.setItem('moo.settings.v1', JSON.stringify(Object.assign(JSON.parse(localStorage.getItem('moo.settings.v1') || '{}'), s))), m.settings);
     if (m.noWorkers) await ctx.addInitScript(() => { window.Worker = undefined; });

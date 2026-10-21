@@ -45,7 +45,7 @@
       if (sheet.get() !== 'strip' || !portrait() || !e.target.closest || e.target.closest('.ph-grip')) return;
       if (e.target.closest('.cyc') || (e.target.closest('.btn, button, input') && !e.target.closest('.side-title'))) return;
       e.stopPropagation(); e.preventDefault();
-      sheet.set('half');
+      sheet.set('half'); UI.Phone.haptic('snap');
       try { const id = G.sel && G.sel.star; if (id >= 0 && UI.Galaxy.map) UI.Galaxy.map.centerOn(id, { animate: true }); } catch (err) { /* optional */ }
     }, true);
     sheet.on(st => { if (st === 'half') requestAnimationFrame(fitHalf); });

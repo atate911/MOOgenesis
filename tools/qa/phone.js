@@ -2,7 +2,7 @@
 // index.html (no ?phone=1), plus a desktop pass proving the phone layer stays out of the way. Prints PASS / FAIL per check, the scale-audit
 // findings per screen, and per screen the touch audit (targets under 40px, text under 12px) and a scan for keyboard / mouse wording.
 // usage: node tools/qa/phone.js [landscape|small] [step ...]
-//   steps: gate galaxy battle screens research scenes menus design back tips firstrun bot desktop   (default: all)
+//   steps: gate galaxy battle screens research scenes menus design back tips native firstrun bot desktop   (default: all)
 //   env:   SHOTS=dir (default /tmp/claude-0/phone) · PORT (default 8794) · TURNS (dev auto-play turns before the checks, default 10)
 const { serve, open, sleep, ROOT } = require('./lib');
 const fs = require('fs'), path = require('path');
@@ -77,12 +77,15 @@ const deskWords = page => page.evaluate(() => {
   let m; while ((m = RX.exec(t))) out.add(t.slice(Math.max(0, m.index - 24), m.index + m[0].length + 16).replace(/\s+/g, ' '));
   return [...out].slice(0, 4);
 });
+// navigator.vibrate stub: the patterns land in window.__vib (UI.Phone.haptic)
+const VIB = () => { window.__vib = []; try { Object.defineProperty(Navigator.prototype, 'vibrate', { configurable: true, value: p => { window.__vib.push(p); return true; } }); } catch (e) { /* ignore */ } };
 const sheetState = page => page.evaluate(() => { const s = document.querySelector('.gx-side:not(.gx-float)'); return s ? s.dataset.sheet || '' : 'none'; });
 
 (async () => {
   const srv = await serve(PORT);
   const pre = LAND ? 'L-' : SMALL ? 'S-' : '';
   const { browser, ctx, page, errors } = await open({ phone: LAND ? 'landscape' : SMALL ? 'small' : true });
+  await ctx.addInitScript(VIB);
   page.setDefaultTimeout(10000);
   const shot = async name => { const f = path.join(SHOTS, pre + name + '.png'); await page.screenshot({ path: f }); return f; };
   const audit = async () => { await page.evaluate(src => { if (!window.__audit) (0, eval)(src); }, AUDIT); return page.evaluate(() => __audit().out); };
@@ -433,6 +436,45 @@ const sheetState = page => page.evaluate(() => { const s = document.querySelecto
       const cont = await page.$('.gx-side:not(.gx-float) .btn:has-text("Continue")'); if (cont) { await cont.tap(); await sleep(600); }
     });
 
+    await step('native', async () => {
+      const vib = () => page.evaluate(() => window.__vib.slice());
+      // haptics: a slider step and a switch tick; nothing with Haptics off; Next turn ticks 20 ms
+      await page.evaluate(() => { MOO.Settings.set('haptics', true); MOO.UI.Screens.go('galaxy'); const E = MOO.Game.player(); MOO.UI.Galaxy.selectStar(MOO.Game.S.planets[E.capital].starId); MOO.UI.Galaxy.showDefault(); MOO.UI.Phone.galaxySheet().set('half'); }); await sleep(600);
+      await page.evaluate(() => { window.__vib.length = 0; });
+      // a slider that can move (not locked, not pinned at an end): + then, if that did nothing, −
+      const plus = await page.$('.gx-side:not(.gx-float) .sc-sliders .slider:not(.locked) .s-btn:nth-child(4)'), minus = await page.$('.gx-side:not(.gx-float) .sc-sliders .slider:not(.locked) .s-btn:nth-child(2)');
+      if (plus) { await plus.tap(); await sleep(200); }
+      if (minus && !(await vib()).length) { await minus.tap(); await sleep(200); }
+      check('haptics: a slider step ticks (5 ms)', (await vib()).includes(5), JSON.stringify(await vib()));
+      await page.evaluate(() => { MOO.Settings.set('haptics', false); window.__vib.length = 0; });
+      if (plus) { await page.waitForTimeout(80); await plus.tap(); await sleep(200); }
+      check('haptics: none with Options › Haptics off', !(await vib()).length, JSON.stringify(await vib()));
+      await page.evaluate(() => { MOO.Settings.set('haptics', true); window.__vib.length = 0; MOO.UI.Phone.galaxySheet().set('strip'); }); await sleep(400);
+      const bot = require('./bot'), b = bot.start(page, {});
+      await (await page.$('.gx-bar .ph-next')).tap();
+      for (let i = 0; i < 120 && await page.evaluate(() => MOO.Game.busy || !window.__vib.length); i++) await sleep(500);
+      b.stop(); await sleep(400);
+      check('haptics: Next turn ticks (20 ms)', (await vib()).includes(20), JSON.stringify(await vib()));
+      // the status bar colour follows the screen
+      const tc = () => page.evaluate(() => document.querySelector('meta[name="theme-color"]').getAttribute('content'));
+      await page.evaluate(() => MOO.UI.Screens.go('galaxy')); await sleep(400); const tGal = await tc();
+      await page.evaluate(() => MOO.UI.Screens.go('planets', { from: 'galaxy' })); await sleep(600); const tPl = await tc();
+      check('theme-color follows the screen (galaxy HUD / app bar)', tGal === '#10141b' && tPl === '#0c1122', tGal + ' / ' + tPl);
+      // a tap leaves no hover look behind
+      await page.evaluate(() => MOO.UI.Screens.go('tech', { from: 'galaxy' })); await sleep(800);
+      const al = await page.$('.screen.active .ph-tseg button:has-text("Allocation")'); if (al) { await al.tap(); await sleep(300); }
+      const look = () => page.evaluate(() => { const b = [...document.querySelectorAll('.screen.active .tch-sl .btn')].find(x => /Equalise/.test(x.textContent)); const c = getComputedStyle(b, '::before'); return c.backgroundColor + ' ' + c.backgroundImage + ' ' + getComputedStyle(b).filter; });
+      const before = await look(); await (await page.$('.screen.active .tch-sl .btn:has-text("Equalise")')).tap(); await sleep(900); const after = await look();
+      check('a tapped button keeps its look (no stuck hover)', before === after, before + ' → ' + after);
+      await page.evaluate(() => MOO.UI.Screens.go('galaxy')); await sleep(500);
+      // setup: one Back (the app bar's), one title (the app bar's)
+      await page.evaluate(() => MOO.UI.Screens.go('setup', { from: 'galaxy' })); await sleep(1200);
+      const su = await page.evaluate(() => { const vis = e => e.getClientRects().length && getComputedStyle(e).visibility !== 'hidden' && e.getBoundingClientRect().width > 0; return { backs: [...document.querySelectorAll('.btn, .ph-back')].filter(e => vis(e) && /^\W*Back$/.test(e.innerText.trim())).length, titles: [...document.querySelectorAll('.screen.active .ctl-title')].filter(vis).length, bar: document.querySelector('.ph-bar-t').textContent }; });
+      check('setup: a single Back and a single title (the app bar)', su.backs === 1 && su.titles === 0 && su.bar === 'New game', JSON.stringify(su));
+      await back(); await sleep(900);
+      await page.evaluate(() => { if (MOO.UI.Screens.current.id !== 'galaxy') MOO.UI.Screens.go('galaxy'); }); await sleep(500);
+    });
+
     await step('firstrun', async () => {
       await page.evaluate(() => { MOO.Settings.set('phoneHints', false); MOO.UI.Screens.go('options', { from: 'galaxy' }); }); await sleep(500);
       await page.evaluate(() => MOO.UI.Screens.go('galaxy')); await sleep(1600);
@@ -460,11 +502,14 @@ const sheetState = page => page.evaluate(() => { const s = document.querySelecto
   if (want('desktop') && !LAND && !SMALL) {
     console.log('--- desktop');
     const d = await open({ viewport: { width: 1280, height: 720 } });
+    await d.ctx.addInitScript(VIB);
     try {
       await bootGame(d.page);
       const st = await d.page.evaluate(() => ({ attr: document.documentElement.hasAttribute('data-phone'), back: !!document.querySelector('.ph-back'), grip: !!document.querySelector('.ph-grip'), tier: MOO.Perf.tier, samples: MOO.Audio.Samples.enabled, hist: history.state }));
       check('desktop: no phone gate', !st.attr && !st.back && !st.grip, JSON.stringify(st));
       check('desktop: tier and samples untouched', st.tier !== 'phone' && st.samples === true && st.hist === null);
+      const dv = await d.page.evaluate(() => { const S = MOO.Game.S, E = MOO.Game.player(); MOO.UI.Galaxy.selectStar(S.planets[E.capital].starId); const b = document.querySelector('.gx-side .sc-sliders .slider .s-btn:nth-child(4)'); if (b) b.click(); MOO.UI.toast('x', 'bad'); return { haptic: MOO.UI.Phone.haptic('turn'), vib: (window.__vib || []).length, theme: document.querySelector('meta[name="theme-color"]').getAttribute('content') }; });
+      check('desktop: no haptics, theme-color untouched', dv.haptic === false && dv.vib === 0 && dv.theme === '#060919', JSON.stringify(dv));
       await d.page.evaluate(() => { const x = MOO.UI.Combat.demo({ scn: 'planet' }); MOO.UI.Combat.fight(x.battle, x.S); }); await sleep(900);
       const btns = await d.page.$$eval('.gx-side .pb-acts .btn', els => els.map(e => e.textContent.trim()));
       check('desktop: the pre-battle card still offers Continue', btns.some(t => /Continue/.test(t)), btns.join(', '));

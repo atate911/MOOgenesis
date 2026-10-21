@@ -873,7 +873,7 @@
       if (pts.size === 2) { startPinch(); ptr.down = false; return; }
       ptr.down = true; ptr.id = e.pointerId; ptr.btn = e.button; ptr.sx = ptr.lx = x; ptr.sy = ptr.ly = y; ptr.moved = false; ptr.t0 = ptr.lt = e.timeStamp;
       vel.x = vel.y = 0; hideTip(); e.preventDefault();
-      if (fingerPick()) hold.timer = setTimeout(() => { hold.timer = 0; if (ptr.down && !ptr.moved && !pinch) { hold.fired = true; tipKey = ''; updateHover(); } }, 450);
+      if (fingerPick()) hold.timer = setTimeout(() => { hold.timer = 0; if (ptr.down && !ptr.moved && !pinch) { hold.fired = true; tipKey = ''; updateHover(); if (UI.Phone) UI.Phone.haptic('tap'); } }, 450);
     });
     canvas.addEventListener('pointermove', e => {
       const r = rectOf(), x = e.clientX - r.left, y = e.clientY - r.top;

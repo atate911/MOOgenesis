@@ -198,6 +198,7 @@
       v = U.clamp(Math.round(v / o.step) * o.step, o.min, max);
       if (v === value) return;
       value = v; draw(); if (o.onChange) o.onChange(value, true);
+      if (UI.Phone) UI.Phone.haptic('step');                                                  // phones only (js/ui/phone.js)
     }
     function fromEvent(e) { const r = track.getBoundingClientRect(); user(o.min + U.clamp((e.clientX - r.left) / r.width, 0, 1) * (o.max - o.min)); }
     track.addEventListener('pointerdown', e => { if (locked) return; track.setPointerCapture(e.pointerId); fromEvent(e); track.onpointermove = fromEvent; });
@@ -370,6 +371,7 @@
     const box = doc.getElementById('toasts');
     const t = h('div.toast' + (kind ? '.' + kind : ''), msg);
     box.appendChild(t);
+    if (kind === 'bad' && UI.Phone) UI.Phone.haptic('warn');
     while (box.children.length > 4) box.firstChild.remove();
     setTimeout(() => { t.classList.add('out'); setTimeout(() => t.remove(), 360); }, ms || 3200);
     return t;

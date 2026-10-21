@@ -14,6 +14,9 @@
 //   UI.Phone.showTip(html, x, y) / hideTip() the tooltip popover (.ph-tip)
 //   UI.Phone.say(desktop, phone)             the phone wording of a visible hint where the desktop one names keys or the mouse
 //   UI.Phone.key(k)                          a key badge's touch equivalent: Space → Tap, Esc → Back; null for keys a phone has no use for
+//   UI.Phone.haptic(kind)                    a short vibration: 'tap' | 'step' | 'snap' | 'turn' | 'warn' (Settings 'haptics', on by
+//                                            default). Android: navigator.vibrate. iOS has no vibration API: on iOS 18+ toggling a hidden
+//                                            <input type=checkbox switch> plays the system tick (inside a tap only); elsewhere nothing happens
 // Also installed on phones: a history sentinel (hardware Back / edge swipe → UI.Phone.back() instead of leaving the page); tooltips on
 // touch — a long press on any [data-tip] shows it, and so does a plain tap where the tap does nothing else (text, numbers, chips: the
 // element and its ancestors up to the tip holder are not controls, carry no data-act from UI.h and no pointer / grab cursor); a disabled
@@ -28,6 +31,31 @@
   P.say = (desktop, phone) => (active() ? phone : desktop);
   const KEYS = { Space: 'Tap', Esc: 'Back', Enter: 'Tap', '↵': '↵' };
   P.key = k => (!active() ? k : KEYS[k] !== undefined ? KEYS[k] : null);
+
+  // haptics: one short pattern per kind; slider steps at most every 45 ms so a drag ticks rather than buzzes
+  const BUZZ = { tap: 8, step: 5, snap: 10, turn: 20, warn: [20, 40, 20] };
+  const nav = typeof navigator !== 'undefined' ? navigator : {};
+  const canVibrate = typeof nav.vibrate === 'function';
+  const isIOS = /iP(hone|ad|od)/.test(nav.platform || '') || (/Mac/.test(nav.userAgent || '') && 'ontouchend' in doc);
+  let lastStep = 0, iosSw = null;
+  function iosTick() {
+    try {
+      if (!iosSw) {
+        const cb = doc.createElement('input'); cb.type = 'checkbox'; cb.setAttribute('switch', '');
+        iosSw = doc.createElement('label'); iosSw.setAttribute('aria-hidden', 'true'); iosSw.appendChild(cb);
+        iosSw.style.cssText = 'position:fixed;left:-200px;top:0;width:1px;height:1px;opacity:0;pointer-events:none';
+        doc.body.appendChild(iosSw);
+      }
+      iosSw.click();
+    } catch (e) { /* ignore */ }
+  }
+  P.haptic = function (kind) {
+    if (!active() || (M.Settings && M.Settings.get('haptics') === false)) return false;
+    if (kind === 'step') { const t = performance.now(); if (t - lastStep < 45) return false; lastStep = t; }
+    if (canVibrate) { try { return nav.vibrate(BUZZ[kind] || BUZZ.tap); } catch (e) { return false; } }
+    if (isIOS) { iosTick(); return true; }
+    return false;
+  };
 
   // tooltip text on a phone: no hotkeys, no mouse — "Previous colony <b>F2</b>" → "Previous colony", "Click to rename" → "Tap to rename";
   // a " · "-separated clause about the wheel, right-click, hover or a key is dropped
@@ -69,6 +97,13 @@
       const scr = UI.Screens.el && UI.Screens.el('saveload'), t = scr && scr.querySelector('.ctl-title');
       if (t) { const copy = () => { titleEl.textContent = t.textContent; }; copy(); titleObs = new MutationObserver(copy); titleObs.observe(t, { childList: true, characterData: true, subtree: true }); }
     }
+  }
+  // the status bar (theme-color) matches what sits under it: the app bar, the galaxy HUD, the design header, or the title art
+  const BAR = { galaxy: '#10141b', design: '#2f2f2f', menu: '#05080c' };
+  let metaTheme = null;
+  function setThemeColor(id) {
+    if (!metaTheme) metaTheme = doc.querySelector('meta[name="theme-color"]');
+    if (metaTheme) metaTheme.setAttribute('content', BAR[id] || '#0c1122');
   }
   function mountBack() {                                                                     // only ever in the DOM on a phone
     if (backEl) return;
@@ -141,7 +176,7 @@
     if (!t) return;
     lpCancel();
     const x = e.clientX, y = e.clientY;
-    lp = { x, y, timer: setTimeout(() => { lp = null; const html = tipHtml(t); if (!html) return; P.showTip(html, x, y, t); swallow = true; }, 450) };
+    lp = { x, y, timer: setTimeout(() => { lp = null; const html = tipHtml(t); if (!html) return; P.showTip(html, x, y, t); swallow = true; P.haptic('tap'); }, 450) };
   }, true);
   // tap-to-read: a tap that does nothing else shows the tip of what it landed on
   const CONTROL = 'button, a[href], input, select, textarea, label, summary, [role=button], [role=option], [role=tab], [role=radio], [role=switch], [role=slider], [tabindex]:not([tabindex="-1"]), [contenteditable], [data-act], canvas';
@@ -158,6 +193,7 @@
   window.addEventListener('pointercancel', lpCancel, true);
   window.addEventListener('scroll', lpCancel, true);
   window.addEventListener('click', e => {
+    if (!e.isTrusted) return;                                                                // e.g. the iOS haptic switch (P.haptic)
     if (swallow) { swallow = false; e.preventDefault(); e.stopImmediatePropagation(); return; }   // the tap that ended the press is not a click
     if (active() && touch && !(M.Settings && M.Settings.get('showTips') === false)) readTap(e);   // Options › Tooltips off: long press only
   }, true);
@@ -190,6 +226,7 @@
       if (!drag) return;
       const d = drag; drag = null; el.classList.remove('ph-dragging'); el.style.height = '';
       const i = states.indexOf(state);
+      P.haptic('snap');
       if (!d.moved) { set(states[(i + 1) % states.length]); return; }                       // a tap on the handle cycles
       const dy = d.y - e.clientY, v = dy / Math.max(1, e.timeStamp - d.t);                 // px per ms, up = positive
       let steps = Math.round(dy / (innerHeight * 0.28));
@@ -219,7 +256,7 @@
   UI.init = function () {
     if (init0) init0.apply(this, arguments);
     if (active()) mountBack();
-    if (M.Bus) M.Bus.on('screen', id => { P.hideTip(); setTimeout(updateBack, 0); if (active()) setTitle(id); });
+    if (M.Bus) M.Bus.on('screen', id => { P.hideTip(); setTimeout(updateBack, 0); if (active()) { setTitle(id); setThemeColor(id); } });
     const go0 = UI.Screens.go;
     UI.Screens.go = function (id) { setBar(id); return go0.apply(UI.Screens, arguments); };
     const modal0 = UI.modal;                                                                 // the Back control shows while a modal is open

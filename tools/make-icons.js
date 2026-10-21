@@ -1,4 +1,6 @@
-// Renders the home-screen / install icons (assets/icons/*.png) from one inline SVG with the bundled Playwright Chromium.
+// Renders the home-screen / install icons (assets/icons/*.png) from one inline SVG with the bundled Playwright Chromium, and the iOS
+// launch images (assets/icons/launch-WxH.png: the emblem on the game's background, one per iPhone screen size, linked from index.html
+// with media queries; without them an installed app opens on a white screen).
 // usage: node tools/make-icons.js      (re-run after changing the artwork below)
 const { chromium } = require('/opt/node-tools/node_modules/playwright');
 const path = require('path');
@@ -18,7 +20,9 @@ const art = pad => `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512
     <circle r="22" cx="150" cy="-92" fill="#62d8ff"/>
   </g>
 </svg>`;
-(async () => {
+const LAUNCH = [[430, 932, 3], [393, 852, 3], [402, 874, 3], [440, 956, 3], [390, 844, 3], [428, 926, 3], [375, 812, 3], [414, 896, 3], [414, 896, 2], [375, 667, 2]];
+module.exports = { LAUNCH };
+if (require.main === module) (async () => {
   const b = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium', args: ['--no-sandbox'] });
   const p = await b.newPage({ viewport: { width: 512, height: 512 } });
   const shots = [['icon-512.png', 512, 1], ['icon-192.png', 192, 1], ['icon-180.png', 180, 1], ['icon-maskable-512.png', 512, 0.78]];
@@ -26,6 +30,15 @@ const art = pad => `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512
     await p.setViewportSize({ width: size, height: size });
     await p.setContent(`<html><body style="margin:0;background:#060919">${art(pad).replace('width="512" height="512"', `width="${size}" height="${size}"`)}</body></html>`);
     await p.screenshot({ path: path.join(OUT, name), clip: { x: 0, y: 0, width: size, height: size } });
+    console.log('wrote', name);
+  }
+  // launch images: [css width, css height, dpr] of the iPhone screens (portrait); index.html lists the same set
+  for (const [w, hh, dpr] of LAUNCH) {
+    const W = w * dpr, H = hh * dpr, em = Math.round(W * 0.26), name = `launch-${W}x${H}.png`;   // a flat background keeps each file small
+    await p.setViewportSize({ width: W, height: H });
+    await p.setContent(`<html><body style="margin:0;width:${W}px;height:${H}px;background:#05080c;display:grid;place-items:center">` +
+      `<div style="width:${em}px;height:${em}px;border-radius:22%;overflow:hidden">${art(1).replace('width="512" height="512"', `width="${em}" height="${em}"`)}</div></body></html>`);
+    await p.screenshot({ path: path.join(OUT, name), clip: { x: 0, y: 0, width: W, height: H } });
     console.log('wrote', name);
   }
   await b.close();

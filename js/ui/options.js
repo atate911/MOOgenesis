@@ -143,6 +143,7 @@
       bool('reduceMotion', 'Reduce motion', 'Calmer screens: fewer sweeps, particles and twinkling.', false),
       row('Map labels', 'Which stars show their names on the galaxy map.', labels, 'stack'),
       bool('mapGrid', 'Star-chart grid', 'Draw the graticule behind the galaxy map.', true),
+      M.Phone && M.Phone.active() ? bool('haptics', 'Haptics', 'A short vibration on Next turn, slider steps, switches and errors (Android; iPhones with iOS 18 or later tick).', true) : null,
       M.Phone && M.Phone.active() ? bool('perfOverlay', 'Performance overlay', 'Frame rate, graphics tier and worker load in the top corner.', false) : null,
       row('Interface scale', 'Resizes the whole interface. Applied when you let go of the slider.', null, 'stack'),
       h('div.op-row.slr', scale)]);
