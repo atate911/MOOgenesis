@@ -35,7 +35,7 @@ DEFAULTS = {'password': 'moopassword', 'listen': '127.0.0.1:8766', 'data_dir': '
 COOKIE = 'moo_auth'
 COOKIE_DAYS = 30
 SLOT_RE = re.compile(r'^[a-z0-9][a-z0-9_-]{0,23}$')
-OPEN_FILES, OPEN_DIRS = ('/version.txt',), ('/.well-known/',)    # never gated: health checks and certificate renewal
+OPEN_FILES, OPEN_DIRS = ('/version.txt', '/manifest.webmanifest'), ('/.well-known/', '/assets/icons/')    # never gated: health checks, certificate renewal, and the install manifest + icons (browsers fetch them without cookies)
 MAX_META = 4096
 
 

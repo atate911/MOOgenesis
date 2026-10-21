@@ -55,6 +55,15 @@ server {
         return 404;
     }
 
+    # The install manifest: older mime.types files have no entry for .webmanifest.
+    location = /manifest.webmanifest {
+        types { }
+        default_type application/manifest+json;
+        add_header Cache-Control "no-cache" always;
+        add_header X-Content-Type-Options "nosniff" always;
+        try_files $uri =404;
+    }
+
     # World art is .webp; nginx <= 1.18 (Ubuntu 22.04) has no image/webp in mime.types.
     location ~* \.webp$ {
         types { }

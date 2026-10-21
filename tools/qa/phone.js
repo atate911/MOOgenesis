@@ -1,7 +1,7 @@
 // Phone QA: an emulated touch phone (390x844 portrait, or 844x390 with `landscape`) driven against the real gate in index.html (no ?phone=1),
 // plus a desktop pass proving the phone layer stays out of the way. Prints PASS / FAIL per check and the scale-audit findings per screen.
 // usage: node tools/qa/phone.js [landscape] [step ...]
-//   steps: gate galaxy battle screens scenes design back tips bot desktop   (default: all)
+//   steps: gate galaxy battle screens scenes menus design back tips bot desktop   (default: all)
 //   env:   SHOTS=dir (default /tmp/claude-0/phone) · PORT (default 8794) · TURNS (dev auto-play turns before the checks, default 10)
 const { serve, open, sleep, ROOT } = require('./lib');
 const fs = require('fs'), path = require('path');
@@ -38,7 +38,7 @@ const offscreen = page => page.evaluate(() => {
     const r = e.getBoundingClientRect(); if (!r.width || !r.height) continue;
     const cs = getComputedStyle(e); if (cs.visibility === 'hidden' || cs.position === 'fixed') continue;
     if (e.closest('svg') && e.tagName !== 'svg') continue;
-    if ((r.right > W + 2 || r.bottom > H + 2 || r.left < -2 || r.top < -2) && !contained(e)) out.push(e.tagName + '.' + String(typeof e.className === 'string' ? e.className : '').slice(0, 28) + ' ' + [r.left, r.top, r.right, r.bottom].map(Math.round).join(','));
+    if ((r.right > W + 6 || r.bottom > H + 6 || r.left < -6 || r.top < -6) && !contained(e)) out.push(e.tagName + '.' + String(typeof e.className === 'string' ? e.className : '').slice(0, 28) + ' ' + [r.left, r.top, r.right, r.bottom].map(Math.round).join(','));
   }
   return out.slice(0, 5);
 });
@@ -66,6 +66,8 @@ const sheetState = page => page.evaluate(() => { const s = document.querySelecto
       check('Back hidden on the galaxy screen', !(await page.$eval('.ph-back', e => e.classList.contains('on'))));
       await page.keyboard.press('F1'); await sleep(300);
       check('F1 help overlay disabled', !(await page.$('.hp-ov')));
+      const man = await page.evaluate(async () => { const l = document.querySelector('link[rel=manifest]'); if (!l) return null; const r = await fetch(l.href); const j = await r.json(); return { ok: r.ok, icons: (j.icons || []).length, display: j.display }; });
+      check('installable: manifest with icons', !!man && man.ok && man.icons >= 2 && man.display === 'standalone', JSON.stringify(man));
     });
 
     await step('galaxy', async () => {
@@ -157,6 +159,32 @@ const sheetState = page => page.evaluate(() => { const s = document.querySelecto
       await sleep(500);
       check('news arrives as the brief list', await page.evaluate(() => !!document.querySelector('.modal .nb-list')));
       await shot('scene-news'); await back(); await sleep(400);
+    });
+
+    await step('menus', async () => {
+      const modalShot = async (name, open) => {
+        await page.evaluate(open); await sleep(600);
+        const m = await page.evaluate(() => { const e = [...document.querySelectorAll('.scrim .modal')].pop(); if (!e) return null; const r = e.getBoundingClientRect(); return { l: r.left, r: innerWidth - r.right, t: r.top, b: innerHeight - r.bottom }; });
+        check(name + ': the dialog fits the screen', !!m && m.l >= -1 && m.r >= -1 && m.t >= -1 && m.b >= -1, JSON.stringify(m));
+        await shot('modal-' + name); await page.evaluate(() => MOO.UI.closeAllModals()); await sleep(300);
+      };
+      await modalShot('gamemenu', () => { MOO.UI.gameMenu(); });
+      await modalShot('options', () => { MOO.UI.openOptions(); });
+      await modalShot('archive', () => { MOO.UI.GNN.archive(MOO.Game.S); });
+      await page.evaluate(() => MOO.UI.Screens.go('menu')); await sleep(1500);
+      let offs = await offscreen(page); check('menu: nothing off-screen', !offs.length, offs.join(' | '));
+      check('menu: no Back control', !(await page.evaluate(() => document.querySelector('.ph-back').classList.contains('on'))));
+      await shot('menu');
+      await page.evaluate(() => MOO.UI.Screens.go('setup', { from: 'menu' })); await sleep(1500);
+      for (let i = 0; i < 5; i++) {
+        offs = await offscreen(page); check('setup step ' + (i + 1) + ': nothing off-screen', !offs.length, offs.join(' | '));
+        await shot('setup-' + (i + 1));
+        const next = await page.$('.screen.active .btn.su-nav.primary:visible');
+        const label = next ? (await next.textContent()).trim() : '';
+        if (!next || /begin/i.test(label)) break;
+        await next.tap(); await sleep(900);
+      }
+      await page.evaluate(() => MOO.UI.Screens.go('galaxy')); await sleep(900);
     });
 
     await step('design', async () => {

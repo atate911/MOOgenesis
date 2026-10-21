@@ -6,7 +6,8 @@
 # still loads (without the gate and server saves) rather than failing every request.
 
 # Every request asks the save server first: 204 = serve it, 401 = show the password page instead.
-# The server itself lets /version.txt and /.well-known/ through (health checks, certificate renewal).
+# The server itself lets /version.txt, /.well-known/, /manifest.webmanifest and /assets/icons/ through (health checks, certificate
+# renewal, and the install manifest + icons, which browsers fetch without cookies).
 auth_request /api/auth;
 error_page 401 = @moo_login;
 
