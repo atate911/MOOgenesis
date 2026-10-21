@@ -22,6 +22,7 @@ html[data-phone] .slider .s-track { height: 1.8rem; }
 html[data-phone] .slider .s-btn, html[data-phone] .slider .s-lock { min-height: 2.2rem; }
 html[data-phone] .modal { max-width: 96vw; max-height: 92vh; overflow: auto; }
 html[data-phone] .modal-f .btn { min-height: 2.8rem; }
+html[data-phone] .btn .kbd { display: none; }                         /* keyboard shortcut badges mean nothing on a phone */
 
 /* ---- the Back control (js/ui/phone.js: dispatches Escape) ------------------- */
 html[data-phone] .ph-back {
@@ -105,3 +106,131 @@ html:root:root[data-phone] .sc-sliders .slider { grid-template-columns: 4.2rem 2
 html:root:root[data-phone] .sc-sliders .s-btn { width: 2.2rem; height: 2.2rem; }
 html:root:root[data-phone] .sc-sliders .s-lock { width: 2.2rem; height: 2.2rem; }
 html:root:root[data-phone] .sc-sliders .s-track { height: 1.6rem; }
+
+/* =========================================================================
+   Ship design (js/ui/phone-design.js): one column — pinned budget header, scrolling parts, pinned Clear / Build.
+   design.js's own <style> loads after this file and its 960px media rules fire on phones, so selectors carry .ph-dz for weight.
+   ========================================================================= */
+html[data-phone] .dz.ph-dz { display: flex; flex-direction: column; gap: 0; padding: 0; overflow: hidden; }
+html[data-phone] .dz.ph-dz::after { display: none; }                                  /* the desktop bezel frame */
+html[data-phone] .ph-dz .ph-dz-head {
+  flex: none; position: relative; z-index: 5; display: flex; flex-direction: column; gap: .35rem;
+  padding: calc(.4rem + env(safe-area-inset-top)) .45rem .4rem; background: linear-gradient(180deg, #3d3d3d, #262626); box-shadow: 0 2px 0 #000, 0 6px 14px rgba(0, 0, 0, .5);
+}
+html[data-phone] .ph-dz .ph-dz-hrow { display: flex; align-items: center; gap: .35rem; }
+html[data-phone] .ph-dz .ph-dz-hrow .dz-name { flex: 1 1 auto; min-width: 0; }
+html[data-phone] .ph-dz .ph-dz-hrow .dz-name label { display: none; }
+html[data-phone] .ph-dz .ph-dz-hrow .dz-name input { min-height: 2.4rem; font-size: 1rem; }
+html[data-phone] .ph-dz .ph-dz-hrow .btn { flex: none; }
+html[data-phone] .ph-dz .ph-dz-head .dz-spc { margin: 0; padding: .3rem .5rem .35rem; }
+html[data-phone] .ph-dz .ph-dz-head .dz-legend { margin: .2rem 0 .25rem; font-size: .76rem; gap: .05rem .6rem; }
+html[data-phone] .ph-dz .ph-dz-body {
+  flex: 1 1 auto; min-height: 0; overflow-x: hidden; overflow-y: auto; overscroll-behavior: contain; -webkit-overflow-scrolling: touch;
+  display: flex; flex-direction: column; gap: .6rem; padding: .55rem .5rem 1rem;
+}
+html[data-phone] .ph-dz .ph-dz-foot {
+  flex: none; display: grid; grid-template-columns: 1fr 1.6fr; gap: .45rem; padding: .45rem .5rem calc(.45rem + env(safe-area-inset-bottom));
+  background: linear-gradient(180deg, #3d3d3d, #262626); box-shadow: 0 -2px 0 #000, 0 -6px 14px rgba(0, 0, 0, .5);
+}
+html[data-phone] .ph-dz .ph-dz-foot .btn { width: 100%; min-height: 3rem; }
+/* hull size + autofill */
+html[data-phone] .ph-dz .ph-dz-hulls { display: flex; flex-direction: column; gap: .4rem; }
+html[data-phone] .ph-dz .dz-hull { min-height: 3rem; justify-content: center; }
+html[data-phone] .ph-dz .dz-auto { display: flex; flex-wrap: wrap; gap: .35rem; padding: 0; }
+html[data-phone] .ph-dz .dz-auto .lb { width: 100%; }
+html[data-phone] .ph-dz .dz-auto .btn { flex: 1 1 0; min-height: 2.5rem; font-size: .88rem; }
+/* preview */
+html[data-phone] .ph-dz .dz-pv { flex: none; min-height: 0; height: 15rem; }
+html[data-phone] .ph-dz .dz-cvw { touch-action: pan-y; }
+html[data-phone] .ph-dz .dz-cvw .tag { display: block; }
+html[data-phone] .ph-dz .ph-pv-reset {
+  position: absolute; right: .35rem; bottom: .35rem; z-index: 2; min-height: 2rem; padding: .2rem .7rem; border: 1px solid rgba(255, 255, 255, .25);
+  background: rgba(0, 0, 0, .55); color: #ddd; font: 400 .8rem var(--font-ui); cursor: pointer;
+}
+/* the six stat tiles: 3 × 2 */
+html[data-phone] .ph-dz .dz-strip { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: .35rem; }
+html[data-phone] .ph-dz .dz-tile { min-height: 4rem; }
+html[data-phone] .ph-dz .dz-tile .v { font-size: 1.5rem; }
+/* components: one column, finger-height rows */
+html[data-phone] .ph-dz .dz-slots { grid-template-columns: minmax(0, 1fr); gap: .35rem; }
+html[data-phone] .ph-dz .dz-slot { grid-template-columns: 5.9rem minmax(0, 1fr); }
+html[data-phone] .ph-dz .dz-sel { min-height: 2.8rem; }
+html[data-phone] .ph-dz .dz-sel .x { width: 2.4rem; height: 2.4rem; margin-right: -.4rem; }
+/* weapons: each bank a card — weapon · damage · range, then the stepper, then the note */
+html[data-phone] .ph-dz .dz-wh { display: none; }
+html[data-phone] .ph-dz .dz-wr {
+  grid-template-columns: minmax(0, 1fr) auto auto; grid-template-areas: "sel dmg rng" "step step step" "note note note";
+  gap: .3rem .5rem; padding: .4rem; margin-bottom: .4rem; background: rgba(0, 0, 0, .35); box-shadow: inset 1px 1px 0 #000, inset -1px -1px 0 #3a3a3a;
+}
+html[data-phone] .ph-dz .dz-wr.empty { grid-template-areas: "sel sel sel"; }
+html[data-phone] .ph-dz .dz-wr .dz-count { display: none; }
+html[data-phone] .ph-dz .dz-wr > .dz-sel { grid-area: sel; }
+html[data-phone] .ph-dz .dz-wr .dmg { grid-area: dmg; } html[data-phone] .ph-dz .dz-wr .rng { grid-area: rng; }
+html[data-phone] .ph-dz .dz-wr .dmg::before { content: "dmg "; color: var(--fog); font-size: .78rem; font-weight: 400; }
+html[data-phone] .ph-dz .dz-wr .rng::before { content: "rng "; color: var(--fog); font-size: .78rem; font-weight: 400; }
+html[data-phone] .ph-dz .dz-wr.empty .dmg, html[data-phone] .ph-dz .dz-wr.empty .rng, html[data-phone] .ph-dz .dz-wr.empty .note { display: none; }
+html[data-phone] .ph-dz .dz-wr .ph-step { grid-area: step; justify-content: space-between; }
+html[data-phone] .ph-dz .dz-wr .note { grid-area: note; }
+html[data-phone] .ph-dz .dz-wr .note:empty { display: none; }
+/* special devices: label + device, the description under it */
+html[data-phone] .ph-dz .dz-sp { grid-template-columns: 5.9rem minmax(0, 1fr); grid-template-areas: "lb sel" "desc desc"; gap: .25rem .5rem; }
+html[data-phone] .ph-dz .dz-sp .dz-lb { grid-area: lb; } html[data-phone] .ph-dz .dz-sp > .dz-sel { grid-area: sel; }
+html[data-phone] .ph-dz .dz-sp .desc { grid-area: desc; display: flex; }
+html[data-phone] .ph-dz .dz-sp .desc:empty { display: none; }
+/* look + readouts, then the fold */
+html[data-phone] .ph-dz .ph-dz-id { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: .6rem; align-items: center; }
+html[data-phone] .ph-dz .dz-id { margin: 0; }
+html[data-phone] .ph-dz .dz-look .btn { min-width: 2.4rem; }
+html[data-phone] .ph-dz .ph-fold { border: 1px solid #4d4d4d; background: rgba(0, 0, 0, .3); }
+html[data-phone] .ph-dz .ph-fold-h {
+  display: flex; width: 100%; align-items: center; justify-content: space-between; min-height: 2.8rem; padding: .3rem .7rem; border: 0; cursor: pointer;
+  background: linear-gradient(180deg, #3d3d3d, #2c2c2c); color: #f2f2f2; font: 600 .9rem var(--font-display); letter-spacing: .08em; text-transform: uppercase;
+}
+html[data-phone] .ph-dz .ph-fold-ch { transition: transform .15s; } html[data-phone] .ph-dz .ph-fold.open .ph-fold-ch { transform: rotate(90deg); }
+html[data-phone] .ph-dz .ph-fold-b { display: none; flex-direction: column; gap: .5rem; padding: .5rem; }
+html[data-phone] .ph-dz .ph-fold.open .ph-fold-b { display: flex; }
+html[data-phone] .ph-dz .ph-fold-b .fin { display: flex; flex-wrap: wrap; gap: .3rem 1rem; color: var(--mist); }
+html[data-phone] .ph-dz .dz-cmpg { grid-template-columns: minmax(0, 1fr); }
+/* the picker: a sheet of cards under the pinned budget header */
+html[data-phone] .ph-dz .dz-pop.ph-pop { position: absolute; inset: var(--ph-head, 0px) 0 0 0; z-index: 8; border: 0; }
+html[data-phone] .ph-dz .dz-pop.ph-pop .dz-pop-h { padding: .35rem .5rem; }
+html[data-phone] .ph-dz .dz-pop.ph-pop .dz-pop-h .t { font-size: 1.05rem; white-space: normal; }
+html[data-phone] .ph-dz .ph-pop-s { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: .3rem .8rem; padding: .3rem .6rem; color: var(--mist); font-size: .88rem; }
+html[data-phone] .ph-dz .ph-pop-s b { color: var(--ivory); }
+html[data-phone] .ph-dz .ph-pop-lk { display: inline-flex; align-items: center; gap: .4rem; min-height: 2.2rem; }
+html[data-phone] .ph-dz .ph-pop-lk input { width: 1.2rem; height: 1.2rem; }
+html[data-phone] .ph-dz .dz-pop.ph-pop .dz-kf { flex-wrap: nowrap; overflow-x: auto; padding: .2rem .5rem .35rem; scrollbar-width: none; }
+html[data-phone] .ph-dz .dz-pop.ph-pop .dz-kf button { flex: none; min-height: 2.3rem; padding: .2rem .8rem; }
+html[data-phone] .ph-dz .ph-pop-b { flex: 1 1 auto; min-height: 0; overflow-y: auto; overscroll-behavior: contain; display: flex; flex-direction: column; gap: .35rem; padding: .3rem .45rem .6rem; }
+html[data-phone] .ph-dz .ph-pc { flex: none; padding: .5rem .6rem; cursor: pointer; background: linear-gradient(180deg, #161616, #0a0a0a); box-shadow: 0 0 0 1px #000, inset 1px 1px 0 #2a2a2a, inset -1px -1px 0 #5a5a5a; }
+html[data-phone] .ph-dz .ph-pc:active { background: linear-gradient(180deg, #2a2a2a, #141414); }
+html[data-phone] .ph-dz .ph-pc.cur { background: var(--o-sel, #7a4c12); }
+html[data-phone] .ph-dz .ph-pc.lock, html[data-phone] .ph-dz .ph-pc.conf { opacity: .55; }
+html[data-phone] .ph-dz .ph-pc.over .ph-pc-h .nm, html[data-phone] .ph-dz .ph-pc.over .ph-pc-c { opacity: .55; }
+html[data-phone] .ph-dz .ph-pc.none .nm { color: var(--mist); font-style: italic; }
+html[data-phone] .ph-dz .ph-pc-h { display: flex; align-items: center; gap: .45rem; }
+html[data-phone] .ph-dz .ph-pc-h .nm { flex: 1 1 auto; min-width: 0; color: var(--o-orange, var(--brass-hi)); font: 600 1rem var(--font-ui); text-transform: uppercase; letter-spacing: .03em; }
+html[data-phone] .ph-dz .ph-pc-h .ico { width: 1.1rem; height: 1.1rem; color: var(--o-teal, var(--brass)); flex: none; }
+html[data-phone] .ph-dz .ph-pc-h .mk { color: #fff; }
+html[data-phone] .ph-dz .ph-pc-h .fit { flex: none; font-size: .82rem; font-weight: 600; color: var(--leaf); white-space: nowrap; }
+html[data-phone] .ph-dz .ph-pc-h .fit.no { color: var(--rose); }
+html[data-phone] .ph-dz .ph-pc-d { margin-top: .2rem; color: var(--mist); font-size: .86rem; line-height: 1.3; }
+html[data-phone] .ph-dz .ph-pc .req { margin-top: .2rem; color: var(--ember); font-size: .84rem; } html[data-phone] .ph-dz .ph-pc .req .ico { width: .85rem; height: .85rem; vertical-align: -.1rem; margin-right: .25rem; }
+html[data-phone] .ph-dz .ph-pc-x { margin-top: .25rem; font-size: .84rem; color: var(--mist); }
+html[data-phone] .ph-dz .ph-pc-c { display: flex; flex-wrap: wrap; gap: .25rem; margin-top: .35rem; }
+html[data-phone] .ph-dz .ph-pc-c .chip { padding: .1rem .45rem; font-size: .8rem; color: var(--mist); background: rgba(255, 255, 255, .06); clip-path: none; }
+html[data-phone] .ph-dz .ph-pc-c .chip b { color: var(--ivory); font-weight: 600; }
+html[data-phone] .ph-dz .dz-pop.ph-pop .dz-pfoot { flex-wrap: wrap; gap: .2rem .8rem; padding-bottom: calc(.3rem + env(safe-area-inset-bottom)); }
+/* the library sheet */
+html[data-phone] .ph-dz .dz-lib.ph-lib { display: none; position: absolute; left: 0; right: 0; bottom: 0; top: var(--ph-head, 12%); z-index: 9; max-height: none; box-shadow: 0 -10px 30px rgba(0, 0, 0, .7); }
+html[data-phone] .ph-dz .dz-lib.ph-lib.on { display: flex; animation: ph-up .2s var(--ease) both; }
+@keyframes ph-up { from { transform: translateY(30%); opacity: .4; } to { transform: none; opacity: 1; } }
+html[data-phone] .ph-dz .ph-lib .panel-h { gap: .5rem; } html[data-phone] .ph-dz .ph-lib .panel-h .btn { margin-left: auto; }
+html[data-phone] .ph-dz .ph-lib .dz-cards { display: grid; grid-template-columns: minmax(0, 1fr); grid-auto-rows: min-content; gap: .4rem; overflow-y: auto; }
+html[data-phone] .ph-dz .ph-lib .dz-card { min-height: 5rem; }
+html[data-phone] .ph-dz .ph-lib .dz-ci .ft .btn { min-height: 2.2rem; padding: .2em .8em; font-size: .82rem; }
+html[data-phone] .ph-dz .dz-pop.ph-pop { background: #050505; }
+html[data-phone] .ph-dz .dz-cvw .tag { top: auto; bottom: .5rem; left: .5rem; right: auto; }
+html[data-phone] .ph-dz .ph-pc-c .chip { text-transform: none; letter-spacing: 0; }
+html[data-phone] .ph-dz .dz-msg { height: auto; min-height: 2.6rem; padding: .35rem .6rem; line-height: 1.3; }
+html[data-phone] .ph-dz .ph-dz-body > * { flex-shrink: 0; }                   /* an explicit min-height would otherwise let the column squeeze an item below its text */

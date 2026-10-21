@@ -836,11 +836,13 @@
       const sel = h('button.dz-sel' + (w ? '' : '.none'), { type: 'button', onclick: () => openPopup('weapon', i), tip: w ? weaponTip(w, sw, s) : '<b>Weapon bank ' + (i + 1) + '</b><br>Empty — click to choose a weapon.' },
         w ? UI.icon(KIND_ICON[w.kind] || 'weapons') : null, h('span.nm', w ? w.name : '— weapon ' + (i + 1) + ' —'),
         w ? h('span.x', { tip: 'Remove', onclick: ev => { ev.stopPropagation(); clearField('weapon', i); } }, UI.icon('close')) : UI.icon('chevron', 'chev'));
-      rows.push(h('div.dz-wr' + (w ? '' : '.empty'),
+      const rowEl = h('div.dz-wr' + (w ? '' : '.empty'),
         h('div.dz-count' + (dis ? '.off' : ''), cnt, h('div.ud', up, dn)),
         sel,
         h('div.dmg', w ? dmgText(w) : '—'), h('div.rng', w ? String(rangeOf(w, s)) : '—'),
-        h('div.note', w ? weaponNote(w) : '')));
+        h('div.note', w ? weaponNote(w) : ''));
+      if (UI.Design.phoneRow) UI.Design.phoneRow(rowEl, i, b, w);                  // phones: a −10 −1 n +1 +10 Fill stepper (js/ui/phone-design.js)
+      rows.push(rowEl);
     }
     UI.mount(ui.weap, h('div.dz-wh', h('span.c', 'Count'), h('span', 'Ship weapons'), h('span.c', 'Damage'), h('span.c', 'Rng'), h('span', 'Notes')), rows);
   }
@@ -1048,6 +1050,7 @@
   function renderPopup() {
     const pop = st.popup, kind = pop.kind, E = E_(), d = st.draft;
     pop.rows = buildRows(pop);
+    if (M.Phone && M.Phone.active() && UI.Design.phonePicker) { UI.Design.phonePicker(pop); return; }      // phones: a sheet of cards (js/ui/phone-design.js)
     const isW = kind === 'weapon', isMan = kind === 'man';
     const cols = isMan ? ['Rating', 'Combat speed', 'Defense', 'Missile def', 'Power', 'Engines', 'Cost', 'Space'] : isW ? ['Max', 'Weapon', 'Description', 'Dmg', 'Rng', 'Cost', 'Size', 'Power', 'Space'] : ['Name', 'Description', 'Cost', 'Size', 'Power', 'Space'];
     const numStart = isMan ? 0 : isW ? 3 : 2;
@@ -1400,5 +1403,7 @@
   M.Bus.on('game:loaded', () => { memo = null; lastBuilt = -1; });
   M.Bus.on('state', () => { if (UI.Screens.current && UI.Screens.current.id === 'design' && st.draft && !G.busy) { availCache = null; renderHead(); } });
 
-  UI.Design = { flags: shipFlags, open: params => UI.Screens.go('design', params || {}), emblem };
+  UI.Design = { flags: shipFlags, open: params => UI.Screens.go('design', params || {}), emblem,
+    // the editor's internals for the phone layout layer (js/ui/phone-design.js): it re-arranges these containers and draws the picker as cards
+    _phone: { ui, st, PV, pickRow, closePopup, renderPopup, setCount, cancel, rowDesc, dmgText, planetTypeStrip, settleText, HULL_LABEL, KIND_ICON, KIND_LABEL, POP_TITLE, LIST } };
 })(window.MOO);

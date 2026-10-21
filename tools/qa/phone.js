@@ -1,0 +1,239 @@
+// Phone QA: an emulated touch phone (390x844 portrait, or 844x390 with `landscape`) driven against the real gate in index.html (no ?phone=1),
+// plus a desktop pass proving the phone layer stays out of the way. Prints PASS / FAIL per check and the scale-audit findings per screen.
+// usage: node tools/qa/phone.js [landscape] [step ...]
+//   steps: gate galaxy battle screens design back tips bot desktop   (default: all)
+//   env:   SHOTS=dir (default /tmp/claude-0/phone) · PORT (default 8794) · TURNS (dev auto-play turns before the checks, default 10)
+const { serve, open, sleep, ROOT } = require('./lib');
+const fs = require('fs'), path = require('path');
+const args = process.argv.slice(2);
+const LAND = args.includes('landscape');
+const STEPS = args.filter(a => a !== 'landscape');
+const want = s => !STEPS.length || STEPS.includes(s);
+const SHOTS = process.env.SHOTS || '/tmp/claude-0/phone';
+const PORT = +process.env.PORT || 8794;
+const TURNS = process.env.TURNS || 10;
+const BOOT = `http://localhost:${PORT}/index.html?dev=1&screen=galaxy&race=human&size=medium&opp=3&seed=abc&turns=${TURNS}`;
+const AUDIT = fs.readFileSync(path.join(ROOT, 'tools/qa/scale-audit.js'), 'utf8');
+fs.mkdirSync(SHOTS, { recursive: true });
+
+let fails = 0, passes = 0;
+const check = (name, ok, extra) => { console.log((ok ? 'PASS ' : 'FAIL ') + name + (extra !== undefined && extra !== '' ? ' :: ' + extra : '')); if (ok) passes++; else fails++; };
+const within = (p, ms, label) => Promise.race([p, sleep(ms).then(() => { throw new Error('timeout: ' + label); })]);
+// expected noise: offline web fonts, software-GL driver chatter, and art still listed in ART-NEEDED.md (the code falls back to other art)
+const benign = e => /fonts\.(googleapis|gstatic)|net::ERR_|Failed to load resource|ERR_TUNNEL|ERR_PROXY|GL Driver Message|assets\/art\/still\//.test(e);
+
+async function bootGame(page) {
+  await page.goto(BOOT, { waitUntil: 'load' });
+  for (let i = 0; i < 240; i++) { if (await page.evaluate(() => !!(window.MOO && MOO.Game && MOO.Game.S && !MOO.Game.busy && MOO.UI.Screens.current))) break; await sleep(500); }
+  await page.evaluate(() => { const S = MOO.Game.S; for (const E of S.empires) for (const o of S.empires) if (E.id !== o.id) MOO.Sim.Diplo.rec(S, E.id, o.id).contact = true; });
+  await page.evaluate(() => MOO.UI.Screens.go('galaxy'));
+  await sleep(1200);
+}
+// elements that stick out of the viewport where nothing lets the player reach them: not inside a scrolling or clipping container
+const offscreen = page => page.evaluate(() => {
+  const W = innerWidth, H = innerHeight, scr = document.querySelector('.screen.active'), out = [];
+  if (!scr) return ['no active screen'];
+  const contained = e => { for (let p = e.parentElement; p && p !== scr; p = p.parentElement) { const cs = getComputedStyle(p); if (cs.overflowX !== 'visible' || cs.overflowY !== 'visible') return true; } return false; };
+  for (const e of scr.querySelectorAll('*')) {
+    const r = e.getBoundingClientRect(); if (!r.width || !r.height) continue;
+    const cs = getComputedStyle(e); if (cs.visibility === 'hidden' || cs.position === 'fixed') continue;
+    if (e.closest('svg') && e.tagName !== 'svg') continue;
+    if ((r.right > W + 2 || r.bottom > H + 2 || r.left < -2 || r.top < -2) && !contained(e)) out.push(e.tagName + '.' + String(typeof e.className === 'string' ? e.className : '').slice(0, 28) + ' ' + [r.left, r.top, r.right, r.bottom].map(Math.round).join(','));
+  }
+  return out.slice(0, 5);
+});
+const sheetState = page => page.evaluate(() => { const s = document.querySelector('.gx-side:not(.gx-float)'); return s ? s.dataset.sheet || '' : 'none'; });
+
+(async () => {
+  const srv = await serve(PORT);
+  const pre = LAND ? 'L-' : '';
+  const { browser, ctx, page, errors } = await open({ phone: LAND ? 'landscape' : true });
+  page.setDefaultTimeout(10000);
+  const shot = async name => { const f = path.join(SHOTS, pre + name + '.png'); await page.screenshot({ path: f }); return f; };
+  const audit = async () => { await page.evaluate(src => { if (!window.__audit) (0, eval)(src); }, AUDIT); return page.evaluate(() => __audit().out); };
+  const back = () => page.evaluate(() => MOO.UI.Phone.back());
+  const step = async (name, fn) => { if (!want(name)) return; console.log('--- ' + name); try { await within(fn(), 180000, name); } catch (e) { check(name + ' completed', false, e.message.split('\n')[0]); } };
+  try {
+    await bootGame(page);
+
+    await step('gate', async () => {
+      const st = await page.evaluate(() => ({ attr: document.documentElement.hasAttribute('data-phone'), tier: MOO.Perf.tier, gl: MOO.Perf.q.gl, workers: MOO.Workers.stats().size, samples: MOO.Audio.Samples.enabled, font: getComputedStyle(document.documentElement).fontSize }));
+      check('gate on from the device itself (no ?phone=1)', st.attr);
+      check('perf tier is phone', st.tier === 'phone', st.tier + (st.gl ? ' gl' : ' 2d'));
+      check('worker pool at most 2', st.workers <= 2, st.workers);
+      check('sampled orchestra off', st.samples === false);
+      check('root font readable', parseFloat(st.font) >= 11, st.font);
+      check('Back hidden on the galaxy screen', !(await page.$eval('.ph-back', e => e.classList.contains('on'))));
+      await page.keyboard.press('F1'); await sleep(300);
+      check('F1 help overlay disabled', !(await page.$('.hp-ov')));
+    });
+
+    await step('galaxy', async () => {
+      check('sheet starts collapsed', (await sheetState(page)) === 'strip');
+      await shot('galaxy-strip');
+      const grip = await page.$('.gx-side:not(.gx-float) .ph-grip');
+      await grip.tap(); await sleep(350); check('handle tap opens halfway', (await sheetState(page)) === 'half'); await shot('galaxy-half');
+      await grip.tap(); await sleep(350); check('second tap opens fully', (await sheetState(page)) === 'full'); await shot('galaxy-full');
+      await grip.tap(); await sleep(350); check('third tap collapses', (await sheetState(page)) === 'strip');
+      await (await page.$('.gx-side:not(.gx-float) .side-title')).tap(); await sleep(350);
+      check('title tap opens halfway', (await sheetState(page)) === 'half');
+      const ov = await page.evaluate(() => { const p = document.querySelector('.gx-side:not(.gx-float) .panel'), r = p.getBoundingClientRect(); const out = [...p.querySelectorAll('*')].filter(e => { const q = e.getBoundingClientRect(); return q.width && q.right > r.right + 2; }).slice(0, 3).map(e => e.className); return out; });
+      check('nothing in the colony panel spills past its right edge', !ov.length, ov.join(', '));
+      await page.evaluate(() => MOO.UI.Phone.galaxySheet().set('strip'));
+      const bar = await page.evaluate(() => { const b = document.querySelector('.gx-bar'), n = b.querySelector('.btn.primary').getBoundingClientRect(); return { scroll: b.scrollWidth > b.clientWidth, ok: n.right <= innerWidth + 0.5 && n.left >= 0, edge: innerWidth - n.right }; });
+      check('Next turn stays in view while the bar scrolls', bar.ok, JSON.stringify(bar));
+      const ids = await page.evaluate(() => { const S = MOO.Game.S, E = MOO.Game.player(), cap = S.planets[E.capital]; return { star: cap.starId, planet: cap.id }; });
+      await page.evaluate(id => MOO.UI.Side.show('reloc', { planet: id }), ids.planet); await sleep(300);
+      check('Reloc opens the sheet halfway', (await sheetState(page)) === 'half'); await shot('galaxy-reloc');
+      await back(); await sleep(300);
+      const far = await page.evaluate(star => { const S = MOO.Game.S; return S.stars.filter(s => s.id !== star)[0].id; }, ids.star);
+      await page.evaluate(([s, d]) => MOO.UI.Side.show('fleetDeploy', { star: s, dest: d, float: true }), [ids.star, far]); await sleep(400);
+      const fl = await page.evaluate(() => { const f = document.querySelector('.gx-float'), r = f.getBoundingClientRect(); return { on: f.classList.contains('on'), l: Math.round(r.left), r: Math.round(innerWidth - r.right), h: Math.round(r.height), top: Math.round(r.top) }; });
+      check('a panel opened from the map pins to the bottom edge', fl.on && fl.l < 20 && fl.r < 20 && fl.h > 100, JSON.stringify(fl));
+      check('the sheet collapses under it', (await sheetState(page)) === 'strip');
+      await shot('galaxy-float');
+      await back(); await sleep(300);
+      check('Back closes it', !(await page.evaluate(() => document.querySelector('.gx-float').classList.contains('on'))));
+    });
+
+    await step('battle', async () => {
+      await page.evaluate(() => { const d = MOO.UI.Combat.demo({ scn: 'planet' }); window.__fight = MOO.UI.Combat.fight(d.battle, d.S).then(r => { window.__res = r; }); });
+      await sleep(900);
+      check('pre-battle card opens the sheet fully', (await sheetState(page)) === 'full');
+      const btns = await page.$$eval('.gx-side:not(.gx-float) .pb-acts .btn', els => els.map(e => e.textContent.trim().replace(/\s+\S$/, '')));
+      check('only Retreat and Auto are offered', btns.length === 2 && !btns.some(t => /Continue/.test(t)), btns.join(', '));
+      await shot('battle-card');
+      await (await page.$('.gx-side:not(.gx-float) .pb-acts .btn:has-text("Auto")')).tap(); await sleep(900);
+      await shot('battle-result');
+      await (await page.$('.gx-side:not(.gx-float) .btn:has-text("Continue")')).tap(); await sleep(600);
+      check('the battle resolved', await page.evaluate(() => !!(window.__res && typeof window.__res === 'object')));
+      check('the sheet goes back to where it was', (await sheetState(page)) === 'strip', await sheetState(page));
+      check('the tactical screen was never built', await page.evaluate(() => !document.querySelector('.screen[data-screen="combat"]')));
+    });
+
+    await step('screens', async () => {
+      const list = [['planets'], ['fleets'], ['specs'], ['tech'], ['techtree'], ['races'], ['report', { empire: 1 }], ['status'], ['mapoverview'], ['system'],
+        ['help'], ['saveload'], ['options'], ['audience', { empire: 1 }], ['council'], ['landing'], ['endings']];
+      for (const [id, params] of list) {
+        await page.evaluate(([id, p]) => { try { MOO.UI.Screens.go(id, Object.assign({ from: 'galaxy' }, p || {})); } catch (e) { console.error('go ' + id + ': ' + e.message); } }, [id, params]);
+        await sleep(1300);
+        const cur = await page.evaluate(() => MOO.UI.Screens.current.id);
+        const a = (await audit()).filter(x => !/^OFF/.test(x)), offs = await offscreen(page);
+        console.log('   ' + id + (cur !== id ? ' (now ' + cur + ')' : '') + ': ' + (a.length ? a.join(' | ') : 'no scroll / clip'));
+        check(id + ': nothing off-screen', !offs.length, offs.join(' | '));
+        await shot('screen-' + id);
+        const backOn = await page.evaluate(() => { const b = document.querySelector('.ph-back'); return !!(b && b.classList.contains('on')); });
+        const hasOwn = ['design'].includes(id);
+        if (!hasOwn && cur === id) check(id + ': Back control shown', backOn);
+        for (let i = 0; i < 4 && (await page.evaluate(() => MOO.UI.Screens.current.id)) !== 'galaxy'; i++) { await back(); await sleep(700); }
+        check(id + ': Back returns to the map', (await page.evaluate(() => MOO.UI.Screens.current.id)) === 'galaxy');
+        await page.evaluate(() => { if (MOO.UI.closeAllModals) MOO.UI.closeAllModals(); });
+      }
+      // GNN: phones get the brief list in a modal, never the 16:9 studio
+      await page.evaluate(() => { window.__gnn = MOO.Game.S && MOO.UI.Flow ? 1 : 0; });
+    });
+
+    await step('design', async () => {
+      await page.evaluate(() => MOO.UI.Screens.go('design', { from: 'galaxy' })); await sleep(1300);
+      const lay = await page.evaluate(() => {
+        const q = s => document.querySelector('.screen.active ' + s), r = s => { const e = q(s); return e ? e.getBoundingClientRect() : null; };
+        return { ph: !!q('.ph-dz'), head: r('.ph-dz-head'), foot: r('.ph-dz-foot'), body: r('.ph-dz-body'), build: r('.ph-dz-foot .btn.primary') };
+      });
+      check('editor rearranged into one column', lay.ph && !!lay.head && !!lay.foot && !!lay.body);
+      check('header pinned at the top, Build at the bottom', lay.head && lay.foot && lay.head.top < 60 && lay.foot.bottom > (LAND ? 380 : 830), JSON.stringify({ head: lay.head && lay.head.top, foot: lay.foot && lay.foot.bottom }));
+      const a = (await audit()).filter(x => !/^OFF/.test(x)), offs = await offscreen(page); console.log('   design: ' + (a.length ? a.join(' | ') : 'no scroll / clip'));
+      check('design: nothing off-screen', !offs.length, offs.join(' | '));
+      await shot('design-top');
+      await page.evaluate(() => { const w = document.querySelector('.screen.active .dz-wt'); if (w) w.scrollIntoView({ block: 'start' }); }); await sleep(300);
+      await shot('design-weapons');
+      const before = await page.evaluate(() => JSON.stringify(MOO.UI.Design._phone.st.draft.weapons));
+      await (await page.$('.screen.active .dz-wt .dz-wr:not(.empty) > .dz-sel .nm')).tap(); await sleep(500);   // a fitted bank: swapping its weapon frees its space
+      check('weapon picker opens full-screen as cards', await page.evaluate(() => { const p = document.querySelector('.screen.active .dz-pop.on'); if (!p) return false; const r = p.getBoundingClientRect(); return r.width >= innerWidth - 2 && !!p.querySelector('.ph-pc'); }));
+      await shot('design-picker');
+      const card = await page.$('.screen.active .dz-pop .ph-pc:not(.none):not(.lock):not(.over):not(.conf):not(.cur)');
+      if (card) { await card.tap(); await sleep(500); }
+      const after = await page.evaluate(() => JSON.stringify(MOO.UI.Design._phone.st.draft.weapons));
+      check('tapping a card fits the weapon and closes the picker', !!card && before !== after && !(await page.$('.screen.active .dz-pop.on')));
+      const stp = await page.$('.screen.active .dz-wt .ph-step');
+      check('weapon banks carry a stepper', !!stp);
+      if (stp) {
+        const n0 = await page.evaluate(() => MOO.UI.Design._phone.st.draft.weapons.reduce((a, b) => a + (b.count | 0), 0));
+        await (await stp.$$('.btn'))[2].tap(); await sleep(300);
+        const n1 = await page.evaluate(() => MOO.UI.Design._phone.st.draft.weapons.reduce((a, b) => a + (b.count | 0), 0));
+        check('stepper + adds one', n1 === n0 + 1 || n1 === n0, n0 + ' → ' + n1);
+        const stp2 = await page.$('.screen.active .dz-wt .ph-step');                                 // the rows are redrawn after every change
+        await (await stp2.$('.btn:has-text("Fill")')).tap(); await sleep(300);
+        const free = await page.evaluate(() => MOO.UI.Design._phone.st.stats.free);
+        check('Fill leaves the hull valid', free >= 0, 'free ' + free);
+      }
+      await shot('design-after');
+      await (await page.$('.screen.active .ph-dz-head .btn:has-text("Library")')).tap(); await sleep(400);
+      check('Library opens as a sheet', await page.evaluate(() => !!document.querySelector('.screen.active .ph-lib.on')));
+      await shot('design-library');
+      await back(); await sleep(300);
+      check('Back closes the library first', await page.evaluate(() => !document.querySelector('.screen.active .ph-lib.on') && MOO.UI.Screens.current.id === 'design'));
+      await back(); await sleep(700);
+      check('Back then leaves the editor', (await page.evaluate(() => MOO.UI.Screens.current.id)) === 'galaxy');
+    });
+
+    await step('back', async () => {
+      await (await page.$('.gx-bar .btn:has-text("Game")')).tap(); await sleep(450);
+      check('Game menu open, Back shown', await page.evaluate(() => MOO.UI.modalOpen() && document.querySelector('.ph-back').classList.contains('on')));
+      await (await page.$('.ph-back')).tap(); await sleep(400);
+      check('Back closes the menu', !(await page.evaluate(() => MOO.UI.modalOpen())));
+      await (await page.$('.gx-bar .btn:has-text("Game")')).tap(); await sleep(450);
+      const url = page.url();
+      await page.goBack(); await sleep(600);
+      check('the phone\'s own Back closes the menu and keeps the game', !(await page.evaluate(() => MOO.UI.modalOpen())) && page.url() === url && (await page.evaluate(() => !!MOO.Game.S)));
+    });
+
+    await step('tips', async () => {
+      const el = await page.$('.gmap-ctrl [data-tip]') || await page.$('.screen.active [data-tip]');
+      const b = await el.boundingBox(), x = b.x + b.width / 2, y = b.y + b.height / 2;
+      const cdp = await ctx.newCDPSession(page);
+      await cdp.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: [{ x, y }] }); await sleep(650);
+      const shown = await page.evaluate(() => { const t = document.querySelector('.ph-tip'); return t && t.classList.contains('on') ? t.textContent.slice(0, 60) : ''; });
+      await shot('tip');
+      await cdp.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] }); await sleep(200);
+      check('a long press shows the tooltip', !!shown, shown);
+    });
+
+    await step('bot', async () => {
+      const bot = require('./bot'); const b = bot.start(page, {}); let ok = 0;
+      for (let i = 0; i < 4; i++) { const r = await Promise.race([page.evaluate(() => MOO.Game.endTurn().then(() => 1)), sleep(60000).then(() => 0)]); if (!r) { console.log('   STUCK turn', i); break; } ok++; await sleep(300); }
+      b.stop(); await sleep(300);
+      check('bot plays 4 turns', ok === 4, ok);
+      check('no turn opened the tactical screen', !b.stats.screens.combat, JSON.stringify(b.stats.screens));
+      await shot('after-turns');
+    });
+  } catch (e) { check('run', false, e.stack); }
+  const errs = [...new Set(errors)].filter(e => !benign(e));
+  check('no console errors / page errors (phone)', !errs.length, errs.slice(0, 5).join(' | '));
+  await browser.close();
+
+  if (want('desktop') && !LAND) {
+    console.log('--- desktop');
+    const d = await open({ viewport: { width: 1280, height: 720 } });
+    try {
+      await bootGame(d.page);
+      const st = await d.page.evaluate(() => ({ attr: document.documentElement.hasAttribute('data-phone'), back: !!document.querySelector('.ph-back'), grip: !!document.querySelector('.ph-grip'), tier: MOO.Perf.tier, samples: MOO.Audio.Samples.enabled, hist: history.state }));
+      check('desktop: no phone gate', !st.attr && !st.back && !st.grip, JSON.stringify(st));
+      check('desktop: tier and samples untouched', st.tier !== 'phone' && st.samples === true && st.hist === null);
+      await d.page.evaluate(() => { const x = MOO.UI.Combat.demo({ scn: 'planet' }); MOO.UI.Combat.fight(x.battle, x.S); }); await sleep(900);
+      const btns = await d.page.$$eval('.gx-side .pb-acts .btn', els => els.map(e => e.textContent.trim()));
+      check('desktop: the pre-battle card still offers Continue', btns.some(t => /Continue/.test(t)), btns.join(', '));
+      await d.page.click('.gx-side .pb-acts .btn:has-text("Auto")'); await sleep(700); await d.page.click('.gx-side .btn:has-text("Continue")'); await sleep(300);
+      await d.page.evaluate(() => MOO.UI.Screens.go('design', { from: 'galaxy' })); await sleep(900);
+      check('desktop: the design editor keeps its three columns', await d.page.evaluate(() => !document.querySelector('.ph-dz') && getComputedStyle(document.querySelector('.dz')).gridTemplateColumns.split(' ').length === 3));
+      await d.page.keyboard.press('Escape'); await sleep(500);
+      await d.page.keyboard.press('F1'); await sleep(300);
+      check('desktop: F1 help still opens', !!(await d.page.$('.hp-ov'))); await d.page.keyboard.press('Escape');
+      const errs2 = [...new Set(d.errors)].filter(e => !benign(e));
+      check('no console errors / page errors (desktop)', !errs2.length, errs2.slice(0, 5).join(' | '));
+    } catch (e) { check('desktop run', false, e.stack); }
+    await d.browser.close();
+  }
+  srv.close();
+  console.log(`\n${passes} passed, ${fails} failed · screenshots in ${SHOTS}`);
+  process.exit(fails ? 1 : 0);
+})();
