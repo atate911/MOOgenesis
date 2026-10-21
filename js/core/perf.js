@@ -16,7 +16,7 @@
     medium: { dpr: 1.5, particles: 0.6,  planetDetail: 0.75, gl: true,  bloom: false, nebula: 0.75, glow: 0.8, maxFx: 1800, animFps: 60 },
     high:   { dpr: 2,   particles: 1,    planetDetail: 1,    gl: true,  bloom: true,  nebula: 1,    glow: 1,   maxFx: 5000, animFps: 60 },
     ultra:  { dpr: 2.5, particles: 1.6,  planetDetail: 1.5,  gl: true,  bloom: true,  nebula: 1.25, glow: 1.2, maxFx: 12000, animFps: 120 },
-    // phones (MOO.Phone): crisp on a 3× screen, GL on, few particles; outside ORDER so the governor never climbs into or out of it
+    // phones (MOO.Phone): crisp on a 3× screen, GL on, few particles; outside ORDER, so the governor never climbs into it and only ever leaves it for 'low'
     phone:  { dpr: 2,   particles: 0.4,  planetDetail: 0.75, gl: true,  bloom: false, nebula: 0.6,  glow: 0.7, maxFx: 1200, animFps: 60 },
   };
   const ORDER = ['low', 'medium', 'high', 'ultra'];
@@ -46,7 +46,7 @@
   }
 
   function heuristicTier(c) {
-    if (M.Phone && M.Phone.active()) return 'phone';
+    if (M.Phone && M.Phone.active()) return c.software ? 'low' : 'phone';             // a phone on a software renderer starts low
     if (!c.webgl2 || c.software) return 'low';
     let score = 0;
     score += c.discrete ? 2 : 1;
@@ -96,12 +96,13 @@
     if (acc < 1) return;
     const avg = acc / n * 1000; acc = 0; n = 0; secs++;
     if (cooldown > 0) cooldown--;
-    if (P.preset !== 'auto' || P.tier === 'phone') return;
+    if (P.preset !== 'auto') return;
     const budget = 1000 / Math.min(P.q.animFps, 60, P.hz || 60);   // ms per frame we should hit (a 30 Hz display is not slow frames)
     if (avg > budget * 1.35) { slowSecs++; fastSecs = 0; } else if (avg < budget * 0.55) { fastSecs++; slowSecs = 0; } else { slowSecs = 0; fastSecs = 0; }
     const i = ORDER.indexOf(P.tier);
-    if (slowSecs >= 3 && i > 0 && !cooldown) { failedAt[P.tier] = secs; apply(ORDER[i - 1], 'slow frames'); slowSecs = 0; cooldown = 6; }
-    else if (fastSecs >= 10 && i < maxTier() && i < ORDER.length - 1 && !cooldown) {
+    // the phone tier sits outside ORDER: it can only step down, to 'low', and never climbs back (maxTier() is 0 with a 'phone' cap)
+    if (slowSecs >= 3 && (i > 0 || P.tier === 'phone') && !cooldown) { failedAt[P.tier] = secs; apply(P.tier === 'phone' ? 'low' : ORDER[i - 1], 'slow frames'); slowSecs = 0; cooldown = 6; }
+    else if (i >= 0 && fastSecs >= 10 && i < maxTier() && i < ORDER.length - 1 && !cooldown) {
       const up = ORDER[i + 1];
       if (failedAt[up] !== undefined && secs - failedAt[up] < RECLIMB_S) { fastSecs = 0; return; }
       apply(up, 'headroom'); fastSecs = 0; cooldown = 12;

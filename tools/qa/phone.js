@@ -57,9 +57,9 @@ const sheetState = page => page.evaluate(() => { const s = document.querySelecto
     await bootGame(page);
 
     await step('gate', async () => {
-      const st = await page.evaluate(() => ({ attr: document.documentElement.hasAttribute('data-phone'), tier: MOO.Perf.tier, gl: MOO.Perf.q.gl, workers: MOO.Workers.stats().size, samples: MOO.Audio.Samples.enabled, font: getComputedStyle(document.documentElement).fontSize }));
+      const st = await page.evaluate(() => ({ attr: document.documentElement.hasAttribute('data-phone'), tier: MOO.Perf.tier, soft: !!(MOO.Perf.caps && MOO.Perf.caps.software), gl: MOO.Perf.q.gl, workers: MOO.Workers.stats().size, samples: MOO.Audio.Samples.enabled, font: getComputedStyle(document.documentElement).fontSize }));
       check('gate on from the device itself (no ?phone=1)', st.attr);
-      check('perf tier is phone', st.tier === 'phone', st.tier + (st.gl ? ' gl' : ' 2d'));
+      check('perf tier: phone (low on a software renderer)', st.tier === (st.soft ? 'low' : 'phone'), st.tier + (st.soft ? ' · software GL' : '') + (st.gl ? ' · gl' : ' · 2d'));
       check('worker pool at most 2', st.workers <= 2, st.workers);
       check('sampled orchestra off', st.samples === false);
       check('root font readable', parseFloat(st.font) >= 11, st.font);
@@ -71,6 +71,18 @@ const sheetState = page => page.evaluate(() => { const s = document.querySelecto
     });
 
     await step('galaxy', async () => {
+      if (LAND) {                                                   // landscape: the side panel is a right-hand column (no sheet handle)
+        const col = await page.evaluate(() => { const s = document.querySelector('.gx-side:not(.gx-float)'), r = s.getBoundingClientRect(), g = s.querySelector('.ph-grip'); return { l: Math.round(r.left), w: Math.round(r.width), h: Math.round(r.height), grip: !!(g && g.offsetParent) }; });
+        check('landscape: side panel is a right-hand column', col.l > 400 && col.h > 250 && !col.grip, JSON.stringify(col));
+        await shot('galaxy-column');
+        const ids = await page.evaluate(() => { const S = MOO.Game.S, E = MOO.Game.player(), cap = S.planets[E.capital]; return { star: cap.starId }; });
+        const far = await page.evaluate(star => MOO.Game.S.stars.filter(s => s.id !== star)[0].id, ids.star);
+        await page.evaluate(([s, d]) => MOO.UI.Side.show('fleetDeploy', { star: s, dest: d, float: true }), [ids.star, far]); await sleep(400);
+        const fl = await page.evaluate(() => { const f = document.querySelector('.gx-float'), r = f.getBoundingClientRect(); return { on: f.classList.contains('on'), l: Math.round(r.left), b: Math.round(innerHeight - r.bottom), t: Math.round(r.top) }; });
+        check('landscape: a panel opened from the map sits at the lower left, on screen', fl.on && fl.l < 20 && fl.t >= 0, JSON.stringify(fl));
+        await shot('galaxy-float'); await back(); await sleep(300);
+        return;
+      }
       check('sheet starts collapsed', (await sheetState(page)) === 'strip');
       await shot('galaxy-strip');
       const grip = await page.$('.gx-side:not(.gx-float) .ph-grip');

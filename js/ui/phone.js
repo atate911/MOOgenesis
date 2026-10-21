@@ -163,7 +163,7 @@
   UI.init = function () {
     if (init0) init0.apply(this, arguments);
     if (active()) mountBack();
-    if (M.Bus) M.Bus.on('screen', () => setTimeout(updateBack, 0));
+    if (M.Bus) M.Bus.on('screen', () => { P.hideTip(); setTimeout(updateBack, 0); });
     const go0 = UI.Screens.go;
     UI.Screens.go = function (id) { setBar(id); return go0.apply(UI.Screens, arguments); };
     const modal0 = UI.modal;                                                                 // the Back control shows while a modal is open

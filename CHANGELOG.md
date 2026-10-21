@@ -5,6 +5,19 @@ Versions follow `MAJOR.MINOR.PATCH`; the live version is the `VERSION` file.
 
 ## Unreleased
 
+- Phone mode. On a phone (touch screen, shorter side 600 px or less; `?phone=1` / `?phone=0` force it) the game switches to a
+  layout built for one thumb, and the desktop layout is unchanged. The galaxy map fills the screen and the colony / star panel
+  becomes a bottom sheet you drag or tap between a title strip, half and full height; fleet orders pin to the bottom edge and a
+  battle or a scout report opens the sheet fully. A Back button on every screen, and the phone's own back gesture, do what Esc or
+  a right-click does on desktop. Long-press anything for its tooltip. Battles are always auto-resolved on a phone (the pre-battle
+  card keeps Retreat and Auto). The ship design editor becomes one column with the hull-space bar and cost pinned at the top,
+  components picked from a sheet of cards that says what fits, a −10 −1 +1 +10 Fill stepper for each weapon bank, and Build pinned
+  at the bottom. The ledgers, research, tech tree, races, reports, almanac, setup, options and save screens stack for a narrow
+  screen; landscape phones get the galaxy panel as a right-hand column. News arrives as the brief headline list. The game can be
+  added to the home screen (`manifest.webmanifest`, icons in `assets/icons/`). Phones use their own graphics tier (stepping down to
+  Low if frames are slow), at most two worker threads, and the synthesised music voices instead of the 50 MB sampled orchestra.
+  QA: `node tools/qa/phone.js [landscape]`, phone profiles in `tools/qa/modes.js`, and `tools/qa/layout-fingerprint.js` to diff
+  desktop layouts between two checkouts. Notes and follow-ups: `tools/handoff/phone-2026-10.md`.
 - Server saves and a password gate (`server/moo-saves.py`, Python 3 standard library only). On a hosted install the game asks
   for a password before anything loads (default `moopassword`, set in `/etc/moogenesis/moo.conf` on the server; blank turns it
   off; changes apply at once and sign everyone out). The Save / Load screen gains a **Server | This browser** toggle; Server is

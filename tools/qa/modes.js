@@ -1,5 +1,5 @@
 // Robustness matrix: viewport x settings (low tier / GPU off / workers off / reduced motion / threads=1). For each: visit every screen, play 8 turns through the bot,
-// screenshot galaxy, report console errors. usage: node modes.js [name ...]
+// screenshot galaxy, report console errors. usage: node modes.js [name ...]   (phone / phoneland: an emulated touch phone)
 const { serve, open, sleep } = require('./lib'); const bot = require('./bot');
 const MODES = {
   '1920x1080': { vp: [1920, 1080] },
@@ -10,13 +10,15 @@ const MODES = {
   workersoff: { noWorkers: true },
   reduced: { settings: { reduceMotion: true, animSpeed: 0 } },
   ultra: { settings: { graphics: 'ultra' } },
+  phone: { phone: true },                       // emulated touch phone, portrait (the phone layout layer; tools/qa/phone.js checks it in depth)
+  phoneland: { phone: 'landscape' },
 };
 (async () => {
   const names = process.argv.slice(2).length ? process.argv.slice(2) : Object.keys(MODES);
   const PORT = +process.env.PORT || 8793; const srv = await serve(PORT);
   for (const name of names) {
     const m = MODES[name]; const [W, H] = m.vp || [1280, 720];
-    const { browser, ctx, page, errors } = await open({ viewport: { width: W, height: H } });
+    const { browser, ctx, page, errors } = await open({ viewport: { width: W, height: H }, phone: m.phone });
     if (m.settings) await ctx.addInitScript(s => localStorage.setItem('moo.settings.v1', JSON.stringify(s)), m.settings);
     if (m.noWorkers) await ctx.addInitScript(() => { window.Worker = undefined; });
     await page.goto(`http://localhost:${PORT}/index.html?dev=1&screen=galaxy&race=human&size=medium&opp=3&seed=abc&turns=15`);

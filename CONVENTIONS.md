@@ -26,6 +26,15 @@ text are original — never imitate or reproduce original assets.**
 - Style: 2-space indent, semicolons, `const`/`let`, short functions, comments only for non-obvious intent. Be performance-aware in per-frame code
   (no allocation in hot loops, cache gradients/sprites in offscreen canvases).
 
+## Phone layout layer (`tools/handoff/phone-2026-10.md`)
+- `index.html` decides `<html data-phone>` before any CSS loads; `js/core/phone.js` exposes it (`MOO.Phone.active()`; it reads the
+  `window.MOO_PHONE` flag, undefined in Node). Perf, workers and audio read it once at start-up.
+- Phone rules live only in `css/phone.css`, every selector starting `html[data-phone]` (or `html:root:root[data-phone]` to beat a
+  bumped restyle). Phone behaviour lives in `js/ui/phone*.js`. A screen file gets at most a one-line `M.Phone && M.Phone.active()`
+  branch; never change a desktop rule to make a phone layout work.
+- Back on phones is a synthetic Escape: keep every screen's Escape binding equal to its right-click / Cancel.
+- Check a change with `node tools/qa/phone.js` (and `landscape`), and diff `tools/qa/layout-fingerprint.js` against `main` for desktop.
+
 ## Threads, GPU & portability (the game uses the hardware it finds — and never requires it)
 - **Worker-safe modules** (`core/util|rng|ops`, `data/*` that sim needs, `sim/*`, `ai/*`) are written `MOO.def(function (M) { … });` instead of an IIFE
   (see `js/core/ns.js`). `MOO.def` runs the function and remembers its source so `MOO.Workers` can boot identical code in a pool of Web Workers (works from
