@@ -9,11 +9,10 @@
 /* --tap: the smallest touch target (44px, HIG / 48dp-ish); --row: list rows that span the width. Both have pixel floors so a 360px phone
    (where 2.75rem would be 41px) still gets them. */
 html[data-phone] {
-  font-size: clamp(14px, min(4.1vw, 2.6vh), 18px); -webkit-text-size-adjust: 100%; overscroll-behavior: none;
+  font-size: clamp(15px, min(4.1vw, 2.6vh), 18px); -webkit-text-size-adjust: 100%; overscroll-behavior: none;
   --tap: max(44px, 2.75rem); --row: max(38px, 2.4rem);
 }
-@media (orientation: portrait) { html[data-phone] { font-size: clamp(15px, min(4.1vw, 2.6vh), 18px); } }   /* .8rem never under 12px */
-/* (landscape sits on the 14px floor: a 390px-tall screen cannot afford more; the small hint classes below carry their own 12px floor) */
+/* 15px floor: .8rem never under 12px (landscape sits on it: 2.6vh of a 390px-tall screen is 10px) */
 html[data-phone] body { touch-action: pan-x pan-y; -webkit-tap-highlight-color: transparent; }
 html[data-phone] #tip { display: none !important; }                   /* hover tooltips never fire on touch: long-press shows .ph-tip */
 html[data-phone] .screen.fade-in { animation-name: ph-scr-in; }       /* scr-in's blur + brightness filter is a full-screen composite */
@@ -386,7 +385,7 @@ html:root:root[data-phone] .tch-colh { display: none; }
 html:root:root[data-phone] .tch-r1 { grid-template-columns: minmax(0, 1fr) auto auto; row-gap: .15rem; }
 html:root:root[data-phone] .tch-r1 > .slider { grid-column: 1 / -1; }
 html:root:root[data-phone] .tch-row .slider { grid-template-columns: var(--tap) minmax(2.5rem, 1fr) var(--tap) 3.2rem var(--tap); gap: .2rem .25rem; }
-html:root:root[data-phone] .tch-row .slider .s-label { grid-column: 1 / -1; min-height: 1.7rem; overflow: hidden; text-overflow: ellipsis; }   /* the field's name on its own line */
+html:root:root[data-phone] .tch-row .slider .s-label { grid-column: 1 / -1; min-height: max(36px, 2.2rem); overflow: hidden; text-overflow: ellipsis; }   /* the field's name on its own line (a tap locks it) */
 html:root:root[data-phone] .tch-r2 { flex-wrap: wrap; gap: .2rem .6rem; }
 html:root:root[data-phone] .tch-proj { min-height: auto; }
 html:root:root[data-phone] .tch-sl .foot { flex-wrap: wrap; }

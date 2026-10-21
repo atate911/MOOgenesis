@@ -1,6 +1,6 @@
 // Phone QA: an emulated touch phone (390x844 portrait, 844x390 with `landscape`, 360x740 with `small`) driven against the real gate in
 // index.html (no ?phone=1), plus a desktop pass proving the phone layer stays out of the way. Prints PASS / FAIL per check, the scale-audit
-// findings per screen, and the touch audit (targets under 40px, text under 12px).
+// findings per screen, and per screen the touch audit (targets under 40px, text under 12px) and a scan for keyboard / mouse wording.
 // usage: node tools/qa/phone.js [landscape|small] [step ...]
 //   steps: gate galaxy battle screens research scenes menus design back tips firstrun bot desktop   (default: all)
 //   env:   SHOTS=dir (default /tmp/claude-0/phone) · PORT (default 8794) · TURNS (dev auto-play turns before the checks, default 10)
@@ -69,7 +69,6 @@ const touchAudit = page => page.evaluate(() => {
   const top = m => [...m.values()].sort((a, b) => b[1] - a[1]).slice(0, 10);
   return { t: top(T), x: top(X) };
 });
-const fmtAudit = a => (a.t.length ? '\n      targets: ' + a.t.map(([k, n, v]) => k + '×' + n + '(' + v + ')').join(' ') : '') + (a.x.length ? '\n      text: ' + a.x.map(([k, n, v]) => k + '×' + n + '(' + v + ')').join(' ') : '');
 // visible keyboard / mouse wording on the active screen or the top dialog ("Space" as in space dock / combat / monsters is not a key)
 const deskWords = page => page.evaluate(() => {
   const scope = [...document.querySelectorAll('.scrim .modal')].pop() || document.querySelector('.screen.active'); if (!scope) return [];
@@ -108,6 +107,13 @@ const sheetState = page => page.evaluate(() => { const s = document.querySelecto
     await page.evaluate(() => MOO.Bus.emit('turn:processing', false)); await sleep(100);
     check(label + ': tabs and Next turn lock while a turn runs, More stays open', locked);
   };
+  // touch targets, text size and keyboard / mouse wording on what is showing now: checks (FAIL), with the findings as detail
+  const audits = async label => {
+    const a = await touchAudit(page), dw = await deskWords(page), f = l => l.map(([k, n, v]) => k + '×' + n + '(' + v + ')').join(' ');
+    check(label + ': touch targets ≥ 40px', !a.t.length, f(a.t));
+    check(label + ': text ≥ 12px', !a.x.length, f(a.x));
+    check(label + ': no keyboard / mouse wording', !dw.length, dw.join(' | '));
+  };
   const step = async (name, fn) => { if (!want(name)) return; console.log('--- ' + name); try { await within(fn(), 180000, name); } catch (e) { check(name + ' completed', false, e.message.split('\n')[0]); } };
   try {
     await bootGame(page);
@@ -141,12 +147,11 @@ const sheetState = page => page.evaluate(() => { const s = document.querySelecto
         return;
       }
       check('sheet starts collapsed', (await sheetState(page)) === 'strip');
-      console.log('   galaxy (strip):' + fmtAudit(await touchAudit(page)));
+      await audits('galaxy (strip)');
       await shot('galaxy-strip');
       const grip = await page.$('.gx-side:not(.gx-float) .ph-grip');
       await grip.tap(); await sleep(350); check('handle tap opens halfway', (await sheetState(page)) === 'half'); await shot('galaxy-half');
-      console.log('   galaxy (half):' + fmtAudit(await touchAudit(page)));
-      { const dw = await deskWords(page); if (dw.length) console.log('      wording: ' + dw.join(' | ')); }
+      await audits('galaxy (half)');
       await grip.tap(); await sleep(350); check('second tap opens fully', (await sheetState(page)) === 'full'); await shot('galaxy-full');
       await grip.tap(); await sleep(350); check('third tap collapses', (await sheetState(page)) === 'strip');
       const sum = await page.evaluate(() => { const side = document.querySelector('.gx-side:not(.gx-float)'), e = side.querySelector('.ph-sum'), t = side.querySelector('.side-title .ph-thumb'); if (!e) return null; const r = e.getBoundingClientRect(), sr = side.getBoundingClientRect(); return { text: e.innerText.replace(/\s+/g, ' '), inStrip: r.top >= sr.top && r.bottom <= sr.bottom + 1, r: [r.top, r.bottom, sr.top, sr.bottom].map(Math.round), thumb: !!(t && t.offsetWidth) }; });
@@ -213,9 +218,15 @@ const sheetState = page => page.evaluate(() => { const s = document.querySelecto
         await sleep(1300);
         const cur = await page.evaluate(() => MOO.UI.Screens.current.id);
         const a = (await audit()).filter(x => !/^OFF/.test(x)), offs = await offscreen(page);
-        console.log('   ' + id + (cur !== id ? ' (now ' + cur + ')' : '') + ': ' + (a.length ? a.join(' | ') : 'no scroll / clip') + fmtAudit(await touchAudit(page)));
+        console.log('   ' + id + (cur !== id ? ' (now ' + cur + ')' : '') + ': ' + (a.length ? a.join(' | ') : 'no scroll / clip'));
+        await audits(id);
+        const TITLE = { planets: /^Planets$/, fleets: /^Fleets$/, specs: /^Fleets$/, tech: /^Research$/, techtree: /^Tech overview$/, races: /^Races$/, report: /^Report$/, status: /^Racial stats$/, mapoverview: /^Galaxy map$/,
+          system: /^Star system$/, help: /^Almanac$/, saveload: /^(Save|Load) game$/, options: /^Options$/, audience: /^Audience$/, council: /^Galactic Council$/, landing: /^New colony$/ };
+        if (cur === id && TITLE[id]) {
+          const bt = await page.evaluate(() => ({ title: document.querySelector('.ph-bar-t').textContent, own: [...document.querySelectorAll('.screen.active .btn')].filter(b => b.offsetParent && /^(OK|Done|Back)$/i.test(b.innerText.trim())).map(b => b.innerText.trim()) }));
+          check(id + ': the app bar carries the title; no OK / Done / Back of its own', TITLE[id].test(bt.title) && !bt.own.length, JSON.stringify(bt));
+        }
         check(id + ': nothing off-screen', !offs.length, offs.join(' | '));
-        const dw = await deskWords(page); if (dw.length) console.log('      wording: ' + dw.join(' | '));
         await shot('screen-' + id);
         const backOn = await page.evaluate(() => { const b = document.querySelector('.ph-back'); return !!(b && b.classList.contains('on')); });
         if (cur === id) check(id + ': Back control shown', backOn);
@@ -286,8 +297,7 @@ const sheetState = page => page.evaluate(() => { const s = document.querySelecto
         await page.evaluate(open); await sleep(600);
         const m = await page.evaluate(() => { const e = [...document.querySelectorAll('.scrim .modal')].pop(); if (!e) return null; const r = e.getBoundingClientRect(); return { l: r.left, r: innerWidth - r.right, t: r.top, b: innerHeight - r.bottom }; });
         check(name + ': the dialog fits the screen', !!m && m.l >= -1 && m.r >= -1 && m.t >= -1 && m.b >= -1, JSON.stringify(m));
-        console.log('   ' + name + ':' + fmtAudit(await touchAudit(page)));
-        const dw = await deskWords(page); if (dw.length) console.log('      wording: ' + dw.join(' | '));
+        await audits(name);
         await shot('modal-' + name); await page.evaluate(() => MOO.UI.closeAllModals()); await sleep(300);
       };
       await modalShot('gamemenu', () => { MOO.UI.gameMenu(); });
@@ -317,7 +327,8 @@ const sheetState = page => page.evaluate(() => { const s = document.querySelecto
       });
       check('editor rearranged into one column', lay.ph && !!lay.head && !!lay.foot && !!lay.body);
       check('header pinned at the top, Build at the bottom', lay.head && lay.foot && lay.head.top < 60 && lay.foot.bottom > lay.vh - 14, JSON.stringify({ head: lay.head && lay.head.top, foot: lay.foot && lay.foot.bottom }));
-      const a = (await audit()).filter(x => !/^OFF/.test(x)), offs = await offscreen(page); console.log('   design: ' + (a.length ? a.join(' | ') : 'no scroll / clip') + fmtAudit(await touchAudit(page)));
+      const a = (await audit()).filter(x => !/^OFF/.test(x)), offs = await offscreen(page); console.log('   design: ' + (a.length ? a.join(' | ') : 'no scroll / clip'));
+      await audits('design');
       check('design: nothing off-screen', !offs.length, offs.join(' | '));
       await shot('design-top');
       await page.evaluate(() => { const w = document.querySelector('.screen.active .dz-wt'); if (w) w.scrollIntoView({ block: 'start' }); }); await sleep(300);
