@@ -1,0 +1,60 @@
+/* =========================================================================
+   Phone layout layer. EVERY rule is gated on <html data-phone>, set by the inline script in index.html (a coarse-pointer device whose
+   shorter screen side is 600px or less, or ?phone=1; ?phone=0 forces it off). Desktop never matches a rule in this file.
+   Specificity: screens restyled through bump() carry a :root:root prefix (0,4,0); a rule that must beat one starts with
+   html:root:root[data-phone] (0,3,1) + the rest. !important is used only against inline styles. Behaviour: js/ui/phone.js.
+   ========================================================================= */
+
+/* ---- base ------------------------------------------------------------------ */
+html[data-phone] { font-size: clamp(11px, min(3.7vw, 2.3vh), 17px); -webkit-text-size-adjust: 100%; overscroll-behavior: none; }
+html[data-phone] body { touch-action: pan-x pan-y; -webkit-tap-highlight-color: transparent; }
+html[data-phone] #tip { display: none !important; }                   /* hover tooltips never fire on touch: long-press shows .ph-tip */
+html[data-phone] .screen.fade-in { animation-name: ph-scr-in; }       /* scr-in's blur + brightness filter is a full-screen composite */
+@keyframes ph-scr-in { from { opacity: 0; } to { opacity: 1; } }
+
+/* ---- touch targets ---------------------------------------------------------- */
+html[data-phone] .btn { min-height: 2.6rem; }
+html[data-phone] .btn.small { min-height: 2.3rem; }
+html[data-phone] .tabs button { min-height: 2.4rem; }
+html[data-phone] .slider .s-track { height: 2rem; }
+html[data-phone] .slider .s-btn { min-width: 2.2rem; min-height: 2.2rem; }
+html[data-phone] .slider .s-lock { min-width: 2.2rem; min-height: 2.2rem; }
+html[data-phone] .modal { max-width: 96vw; max-height: 92vh; overflow: auto; }
+html[data-phone] .modal-f .btn { min-height: 2.8rem; }
+
+/* ---- the Back control (js/ui/phone.js: dispatches Escape) ------------------- */
+html[data-phone] .ph-back {
+  position: fixed; z-index: 250; top: calc(.45rem + env(safe-area-inset-top)); left: calc(.45rem + env(safe-area-inset-left));
+  display: none; align-items: center; gap: .25rem; min-height: 2.5rem; padding: .25rem .9rem .25rem .55rem; border: 1px solid var(--brass-lo);
+  background: rgba(8, 12, 34, .92); color: var(--brass-hi); font: 400 .95rem var(--font-display); letter-spacing: .06em; cursor: pointer;
+  clip-path: polygon(.4rem 0, 100% 0, 100% calc(100% - .4rem), calc(100% - .4rem) 100%, 0 100%, 0 .4rem);
+}
+html[data-phone] .ph-back.on { display: inline-flex; }
+html[data-phone] .ph-back .ch { font-size: 1.6rem; line-height: 1; margin-top: -.2rem; }
+html[data-phone] .ph-back:active { filter: brightness(1.2); }
+
+/* ---- long-press tooltip popover -------------------------------------------- */
+html[data-phone] .ph-tip {
+  --ch: .35rem; position: fixed; z-index: 260; left: 0; top: 0; display: none; max-width: min(22rem, 88vw); padding: .5rem .75rem;
+  font-size: .92rem; line-height: 1.35; color: var(--ivory); background: var(--glass-hi); border: 1px solid var(--brass-lo);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, .6); pointer-events: none;
+}
+html[data-phone] .ph-tip.on { display: block; }
+html[data-phone] .ph-tip b { color: var(--brass-hi); }
+
+/* ---- bottom sheet (UI.Phone.sheet) ------------------------------------------ */
+html[data-phone] .ph-sheet { transition: height .22s var(--ease); overflow: hidden; }
+html[data-phone] .ph-sheet.ph-dragging { transition: none; }
+html[data-phone] .ph-sheet[data-sheet="strip"] { height: var(--ph-strip, 4.8rem); }
+html[data-phone] .ph-sheet[data-sheet="half"] { height: var(--ph-half, 52%); }
+html[data-phone] .ph-sheet[data-sheet="full"] { height: var(--ph-full, 100%); }
+html[data-phone] .ph-grip {
+  flex: none; display: flex; align-items: center; justify-content: center; height: 1.7rem; cursor: grab; touch-action: none; user-select: none;
+  background: linear-gradient(180deg, #59636f, #3a424c); box-shadow: inset 0 1px 0 rgba(255, 255, 255, .25), 0 -6px 18px rgba(0, 0, 0, .45);
+}
+html[data-phone] .ph-grip::before { content: ""; width: 3rem; height: .3rem; border-radius: .2rem; background: rgba(255, 255, 255, .5); }
+
+/* ---- count stepper (UI.Phone.stepper) --------------------------------------- */
+html[data-phone] .ph-step { display: flex; align-items: center; gap: .3rem; }
+html[data-phone] .ph-step .btn { min-width: 2.6rem; padding: .3em .5em; }
+html[data-phone] .ph-step .ph-stv { min-width: 2.6rem; text-align: center; font: 600 1.3rem var(--font-ui); font-variant-numeric: tabular-nums; }

@@ -6,6 +6,7 @@ window.MOO_MANIFEST = {
     'css/base.css',
     'css/kit.css',
     'css/theme-v2.css',          // opt-out layer: active unless <html data-theme> is removed (?theme=v1)
+    'css/phone.css',             // phone layout layer: every rule gated on <html data-phone> (set by index.html)
   ],
   js: [
     // ---- core ----
@@ -16,6 +17,7 @@ window.MOO_MANIFEST = {
     'js/core/bus.js',
     'js/core/save.js',
     'js/core/settings.js',
+    'js/core/phone.js',
     'js/core/workers.js',
     'js/core/perf.js',
 
@@ -98,6 +100,7 @@ window.MOO_MANIFEST = {
     // ---- ui foundation ----
     'js/ui/kit.js',
     'js/ui/screens.js',
+    'js/ui/phone.js',
     'js/ui/styleguide.js',
     'js/ui/galaxymap.js',
     'js/ui/galaxy.js',

@@ -111,7 +111,7 @@
       if (initP) return initP;
       initP = new Promise(resolve => {
         const pref = size !== undefined ? size : (M.Settings && M.Settings.get('threads')) || 0;
-        const want = pref > 0 ? pref : Math.max(1, Math.min(32, (M.HW.threads | 0) - 1));
+        const want = pref > 0 ? pref : Math.max(1, Math.min(M.Phone && M.Phone.active() ? 2 : 32, (M.HW.threads | 0) - 1));
         if (typeof Worker === 'undefined' || typeof Blob === 'undefined' || !M.__defs.length) { inlineOnly = true; M.HW.workers = 0; resolve(0); return; }
         try {
           blobUrl = buildBlobUrl();

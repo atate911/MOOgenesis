@@ -115,6 +115,7 @@
     return el;
   };
   function tipHtml(el) { const f = tipFns.get(el); return f ? f() : el.getAttribute('data-tip'); }
+  UI.tipHtml = tipHtml;                                                     // js/ui/phone.js shows tips on long-press
   function placeTip(x, y) {
     const w = tipEl.offsetWidth, hh = tipEl.offsetHeight;
     let l = x + 16, t = y + 18;
