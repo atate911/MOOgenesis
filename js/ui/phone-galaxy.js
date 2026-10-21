@@ -7,15 +7,33 @@
 // a pick-a-star panel (Reloc / Trans / Fleet deployment) opens it halfway so the map stays visible for the pick, a held prompt opens it fully
 // and the state from before the prompt comes back once it is answered; the turn's processing collapses it. A tap on the title plate while
 // collapsed opens the sheet halfway and centres the map on the selection. Also reused by the map overview screen (its side panel → sheet).
+// The bottom bar becomes fixed tabs: Planets · Fleet · Tech · Races · More, then Next turn (css/phone.css lays out galaxy.js's own buttons;
+// Game, Design and Map are hidden: More opens the game menu, which on a phone also offers Design and the galaxy map — gamemenu.js).
 (function (M) {
   'use strict';
   const UI = M.UI, G = M.Game;
   const active = () => !!(UI.Phone && UI.Phone.active());
   const PICK = { reloc: true, trans: true, fleetDeploy: true };
+  const TABS = { Game: ['game'], Design: ['design'], Map: ['map'], Fleet: ['fleet', 'fleet'], Races: ['races', 'diplomacy'], Planets: ['planets', 'planet'], Tech: ['tech', 'research'] };
   let sheet = null, holding = false, remembered = 'strip';
+
+  // the bar's buttons get a tab class (+ an icon over the label); a More tab opens the game menu
+  function installBar(scr) {
+    const bar = scr.querySelector('.gx-bar'); if (!bar || bar.classList.contains('ph-tabs')) return;
+    bar.classList.add('ph-tabs');
+    for (const b of bar.querySelectorAll(':scope > .btn')) {
+      const t = TABS[(b.firstChild && b.firstChild.nodeType === 3 ? b.firstChild.textContent : b.textContent).trim()];
+      if (b.classList.contains('primary')) { b.classList.add('ph-next'); b.insertBefore(UI.icon('nextturn'), b.firstChild); continue; }
+      if (!t) continue;
+      b.classList.add('ph-tab-' + t[0]);
+      if (t[1]) b.insertBefore(UI.icon(t[1]), b.firstChild);
+    }
+    bar.appendChild(UI.button('More', () => { if (UI.gameMenu) UI.gameMenu(); }, { icon: 'more', cls: 'ph-tab-more' }));
+  }
 
   function installGalaxy() {
     const scr = UI.Screens.el('galaxy'); if (!scr) return;
+    installBar(scr);
     const side = scr.querySelector('.gx-side:not(.gx-float)'); if (!side || side.phSheet) return;
     sheet = UI.Phone.sheet(side, { initial: 'strip' });
     side.addEventListener('click', e => {                                                 // the collapsed title plate: open + centre on the selection

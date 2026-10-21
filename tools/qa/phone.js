@@ -80,6 +80,26 @@ const sheetState = page => page.evaluate(() => { const s = document.querySelecto
   const shot = async name => { const f = path.join(SHOTS, pre + name + '.png'); await page.screenshot({ path: f }); return f; };
   const audit = async () => { await page.evaluate(src => { if (!window.__audit) (0, eval)(src); }, AUDIT); return page.evaluate(() => __audit().out); };
   const back = () => page.evaluate(() => MOO.UI.Phone.back());
+  // the tab bar: five tabs in order + Next turn, all on screen, nothing scrolls; More opens the game menu as a sheet with Design / Galaxy map
+  const tabBar = async label => {
+    const bar = await page.evaluate(() => {
+      const b = document.querySelector('.gx-bar'), vis = [...b.children].filter(e => e.offsetParent && e.getBoundingClientRect().width > 0).sort((x, y) => x.getBoundingClientRect().left - y.getBoundingClientRect().left);
+      const r = e => e.getBoundingClientRect();
+      return { names: vis.map(e => e.innerText.replace(/\s+/g, ' ').trim()), scroll: b.scrollWidth > b.clientWidth + 1, inView: vis.every(e => r(e).left >= 0 && r(e).right <= innerWidth + 0.5 && r(e).bottom <= innerHeight + 0.5), minH: Math.min(...vis.map(e => r(e).height)) };
+    });
+    check(label + ' tab bar: Planets · Fleet · Tech · Races · More · Next turn, all in view, no scrolling', bar.names.join('|').toLowerCase() === 'planets|fleet|tech|races|more|next turn' && !bar.scroll && bar.inView && bar.minH >= 40, JSON.stringify(bar));
+    await (await page.$('.gx-bar .ph-tab-more')).tap(); await sleep(500);
+    const sh = await page.evaluate(() => { const m = [...document.querySelectorAll('.scrim .modal')].pop(); if (!m) return null; const r = m.getBoundingClientRect(); return { sheet: m.classList.contains('gm-sheet'), bottom: Math.round(innerHeight - r.bottom), w: Math.round(r.width), items: [...m.querySelectorAll('.gm-item .btn')].map(b => b.textContent.replace(/\s+/g, ' ').trim()).slice(0, 4) }; });
+    check(label + ': More opens the game menu as a bottom sheet with Ship design and Galaxy map first', !!sh && sh.sheet && sh.bottom <= 1 && sh.w >= (await page.evaluate(() => innerWidth)) - 2 && /Ship design/.test(sh.items[0]) && /Galaxy map/.test(sh.items[1]), JSON.stringify(sh));
+    await shot('more-sheet');
+    await (await page.$('.scrim .gm-nav .btn:has-text("Ship design")')).tap(); await sleep(900);
+    check(label + ': More › Ship design opens the editor', (await page.evaluate(() => MOO.UI.Screens.current.id)) === 'design');
+    await back(); await sleep(800);
+    await page.evaluate(() => MOO.Bus.emit('turn:processing', true)); await sleep(100);
+    const locked = await page.evaluate(() => ['planets', 'fleet', 'tech', 'races'].every(t => document.querySelector('.gx-bar .ph-tab-' + t).classList.contains('turn-locked')) && document.querySelector('.gx-bar .ph-next').classList.contains('turn-locked') && !document.querySelector('.gx-bar .ph-tab-more').classList.contains('turn-locked'));
+    await page.evaluate(() => MOO.Bus.emit('turn:processing', false)); await sleep(100);
+    check(label + ': tabs and Next turn lock while a turn runs, More stays open', locked);
+  };
   const step = async (name, fn) => { if (!want(name)) return; console.log('--- ' + name); try { await within(fn(), 180000, name); } catch (e) { check(name + ' completed', false, e.message.split('\n')[0]); } };
   try {
     await bootGame(page);
@@ -109,6 +129,7 @@ const sheetState = page => page.evaluate(() => { const s = document.querySelecto
         const fl = await page.evaluate(() => { const f = document.querySelector('.gx-float'), r = f.getBoundingClientRect(); return { on: f.classList.contains('on'), l: Math.round(r.left), b: Math.round(innerHeight - r.bottom), t: Math.round(r.top) }; });
         check('landscape: a panel opened from the map sits at the lower left, on screen', fl.on && fl.l < 20 && fl.t >= 0, JSON.stringify(fl));
         await shot('galaxy-float'); await back(); await sleep(300);
+        await tabBar('landscape');
         return;
       }
       check('sheet starts collapsed', (await sheetState(page)) === 'strip');
@@ -133,8 +154,7 @@ const sheetState = page => page.evaluate(() => { const s = document.querySelecto
       if (tgt) { await page.touchscreen.tap(tgt.x, tgt.y); await sleep(500); }
       check('a tap 16px off a star selects it', !!tgt && (await page.evaluate(() => MOO.UI.Galaxy.map.getSelection().star)) === tgt.id, JSON.stringify(tgt));
       await page.evaluate(() => { MOO.UI.Phone.galaxySheet().set('strip'); const E = MOO.Game.player(); MOO.UI.Galaxy.map.select(MOO.Game.S.planets[E.capital].starId, { emit: true }); }); await sleep(300);
-      const bar = await page.evaluate(() => { const b = document.querySelector('.gx-bar'), n = b.querySelector('.btn.primary').getBoundingClientRect(); return { scroll: b.scrollWidth > b.clientWidth, ok: n.right <= innerWidth + 0.5 && n.left >= 0, edge: innerWidth - n.right }; });
-      check('Next turn stays in view while the bar scrolls', bar.ok, JSON.stringify(bar));
+      await tabBar('portrait');
       const ids = await page.evaluate(() => { const S = MOO.Game.S, E = MOO.Game.player(), cap = S.planets[E.capital]; return { star: cap.starId, planet: cap.id }; });
       await page.evaluate(id => MOO.UI.Side.show('reloc', { planet: id }), ids.planet); await sleep(300);
       check('Reloc opens the sheet halfway', (await sheetState(page)) === 'half'); await shot('galaxy-reloc');
@@ -283,11 +303,11 @@ const sheetState = page => page.evaluate(() => { const s = document.querySelecto
     });
 
     await step('back', async () => {
-      await (await page.$('.gx-bar .btn:has-text("Game")')).tap(); await sleep(450);
+      await (await page.$('.gx-bar .ph-tab-more')).tap(); await sleep(450);
       check('Game menu open, Back shown', await page.evaluate(() => MOO.UI.modalOpen() && document.querySelector('.ph-back').classList.contains('on')));
       await (await page.$('.ph-back')).tap(); await sleep(400);
       check('Back closes the menu', !(await page.evaluate(() => MOO.UI.modalOpen())));
-      await (await page.$('.gx-bar .btn:has-text("Game")')).tap(); await sleep(450);
+      await (await page.$('.gx-bar .ph-tab-more')).tap(); await sleep(450);
       const url = page.url();
       await page.goBack(); await sleep(600);
       check('the phone\'s own Back closes the menu and keeps the game', !(await page.evaluate(() => MOO.UI.modalOpen())) && page.url() === url && (await page.evaluate(() => !!MOO.Game.S)));

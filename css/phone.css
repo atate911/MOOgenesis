@@ -113,24 +113,28 @@ html:root:root[data-phone] .gx-side.gx-float {
   left: .5rem !important; top: auto !important; right: .5rem; bottom: .5rem; width: auto; max-height: 58%;
 }
 /* top: year / treasury plate and the message list stack, leaving the map's control column free on the right */
-html:root:root[data-phone] .gx-top { left: .4rem; right: 3.3rem; top: .35rem; flex-direction: column; align-items: stretch; gap: .3rem; }
+html:root:root[data-phone] .gx-top { left: .4rem; right: calc(var(--tap) + 1.1rem); top: .35rem; flex-direction: column; align-items: stretch; gap: .3rem; }
 html:root:root[data-phone] .gx-hud { flex-wrap: wrap; gap: .2rem .7rem; padding: .3rem .6rem; font-size: .9rem; }
 html:root:root[data-phone] .gx-hud .y { font-size: 1.15rem; }
 html:root:root[data-phone] .gx-msg { margin-left: 0; max-width: none; }
 html:root:root[data-phone] .gmap-ctrl .btn, html:root:root[data-phone] .gmap-ctrl button { min-width: var(--tap); min-height: var(--tap); }
-/* bottom bar: one row that scrolls sideways; Next turn stays pinned at the right edge */
-html:root:root[data-phone] .gx-bar {
-  display: flex; flex-wrap: nowrap; overflow-x: auto; overflow-y: hidden; gap: .3rem; padding: .3rem 0 calc(.3rem + env(safe-area-inset-bottom)) .3rem;
-  -webkit-overflow-scrolling: touch; scrollbar-width: none; background: linear-gradient(180deg, #3a424c, #262c33);
+/* bottom bar: fixed tabs (phone-galaxy.js tags galaxy.js's own buttons) — Planets · Fleet · Tech · Races · More, then a wide Next turn.
+   Game, Design and Map live in More (the game menu as a bottom sheet, gamemenu.js). Icon over label. */
+html:root:root[data-phone] .gx-bar.ph-tabs {
+  display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)) minmax(0, 1.55fr); gap: .2rem; overflow: hidden;
+  padding: .25rem .25rem calc(.25rem + env(safe-area-inset-bottom)); background: linear-gradient(180deg, #3a424c, #262c33);
 }
-html:root:root[data-phone] .gx-bar::-webkit-scrollbar { display: none; }
-html:root:root[data-phone] .gx-bar .btn { flex: 0 0 auto; min-width: 0; min-height: var(--tap); padding: .5em 1em; font-size: .9rem; letter-spacing: .06em; white-space: nowrap; }
-html:root:root[data-phone] .gx-bar .btn.primary { flex: 0 0 auto; min-width: 6.5rem; position: sticky; right: 0; box-shadow: -6px 0 10px rgba(0, 0, 0, .45); }
-html:root:root[data-phone] .gx-bar .gx-spacer { flex: 1 0 .2rem; }
-html:root:root[data-phone] .gx-bar .gx-wait { display: none; }
+html:root:root[data-phone] .gx-bar.ph-tabs > :is(.gx-spacer, .gx-wait, .ph-tab-game, .ph-tab-design, .ph-tab-map) { display: none; }
+html:root:root[data-phone] .gx-bar.ph-tabs .ph-tab-planets { order: 1; } html:root:root[data-phone] .gx-bar.ph-tabs .ph-tab-fleet { order: 2; }
+html:root:root[data-phone] .gx-bar.ph-tabs .ph-tab-tech { order: 3; } html:root:root[data-phone] .gx-bar.ph-tabs .ph-tab-races { order: 4; }
+html:root:root[data-phone] .gx-bar.ph-tabs .ph-tab-more { order: 5; } html:root:root[data-phone] .gx-bar.ph-tabs .ph-next { order: 6; }
+html:root:root[data-phone] .gx-bar.ph-tabs .btn {
+  flex-direction: column; justify-content: center; gap: .15rem; min-width: 0; min-height: calc(var(--tap) + .5rem); padding: .3rem .1rem;
+  font: 600 max(12px, .76rem)/1.1 var(--font-ui); letter-spacing: 0; text-transform: none; white-space: nowrap;
+}
+html:root:root[data-phone] .gx-bar.ph-tabs .btn .ico { width: 1.35rem; height: 1.35rem; margin: 0; }
+html:root:root[data-phone] .gx-bar.ph-tabs .ph-next { font: 700 max(12px, .82rem)/1.1 var(--font-display); letter-spacing: .04em; text-transform: uppercase; }
 /* the pre-battle / result cards inside the sheet */
-/* the battle card's Retreat / Auto stay reachable at the bottom of the panel however tall the card is */
-html[data-phone] .gx-sidebody .pb-acts { position: sticky; bottom: -.6rem; z-index: 3; margin: .3rem -.5rem 0; padding: .45rem .5rem .5rem; background: rgba(32, 37, 43, .97); box-shadow: 0 -6px 12px rgba(0, 0, 0, .45); }
 /* the minimap and the map key sit above the collapsed sheet (galaxymap.js positions the minimap inline per its corner setting) */
 html:root:root[data-phone] .gmap-mini { left: .5rem !important; right: auto !important; top: auto !important; bottom: 5.5rem !important; }
 html:root:root[data-phone] .gmap .gmap-legend.panel { bottom: 5.5rem; width: min(16rem, 70vw); max-height: 55%; }
@@ -264,6 +268,16 @@ html[data-phone] .ph-dz .dz-cvw .tag { top: auto; bottom: .5rem; left: .5rem; ri
 html[data-phone] .ph-dz .ph-pc-c .chip { text-transform: none; letter-spacing: 0; }
 html[data-phone] .ph-dz .dz-msg { height: auto; min-height: 2.6rem; padding: .35rem .6rem; line-height: 1.3; }
 html[data-phone] .ph-dz .ph-dz-body > * { flex-shrink: 0; }                   /* an explicit min-height would otherwise let the column squeeze an item below its text */
+
+/* ---- the game menu from More: a bottom sheet over the tab bar ---- */
+html[data-phone] .scrim:has(> .gm-sheet) { place-items: end stretch; padding-bottom: 0; padding-left: 0; padding-right: 0; }
+html[data-phone] .modal.gm-sheet { width: auto !important; max-width: none; min-width: 0; max-height: 100%; animation: ph-up .22s var(--ease) both; padding-bottom: calc(.6rem + env(safe-area-inset-bottom)); }
+html[data-phone] .gm-sheet .modal-h { margin-bottom: .4rem; padding-bottom: .35rem; font-size: 1.15rem; }
+html[data-phone] .gm-sheet .gm-info { padding-bottom: .5rem; margin-bottom: .5rem; }
+html[data-phone] .gm-sheet .gm-list { gap: .35rem; }
+html[data-phone] .gm-sheet .gm-nav { display: grid; grid-template-columns: 1fr 1fr; gap: .35rem; margin-bottom: .25rem; }
+html:root:root[data-phone] .gm-sheet .gm-item .btn { min-height: var(--tap); padding: .35em .9em; font-size: 1.02rem; }
+html[data-phone] .gm-sheet .gm-sep { margin: .1rem 0; }
 
 /* ---- app bar: every screen but the map, the menu and the design editor gets a slim bar holding Back (js/ui/phone.js) ---- */
 html[data-phone] .ph-appbar {
@@ -442,7 +456,10 @@ html[data-phone] #toasts { bottom: 6.5rem; max-width: 94vw; }
   html:root:root[data-phone] .gx-side:not(.gx-float)[data-sheet] .gx-sidebody { overflow-y: auto; }
   html:root:root[data-phone] .gx-side:not(.gx-float):not([data-sheet="full"]) > div:not(.panel):not(.ph-grip) { display: block; }
   html:root:root[data-phone] .gx-side.gx-float { right: auto; width: min(24rem, 52%); max-height: calc(100% - 1rem); }
-  html:root:root[data-phone] .gx-top { right: 3.3rem; flex-direction: row; }
+  html:root:root[data-phone] .gx-top { right: calc(2 * var(--tap) + 1.4rem); flex-direction: row; }
+  html:root:root[data-phone] .gmap-ctrl { top: .4rem; display: grid; grid-template-columns: repeat(2, var(--tap)); }   /* seven controls in a 390px-tall map: two columns */
+  html:root:root[data-phone] .gx-bar.ph-tabs .btn { flex-direction: row; gap: .35rem; min-height: var(--tap); padding: .2rem .3rem; }
+  html:root:root[data-phone] .gx-bar.ph-tabs .btn .ico { width: 1.15rem; height: 1.15rem; }
   html:root:root[data-phone] .gmap-mini { bottom: .5rem !important; }
   html:root:root[data-phone] .gmap .gmap-legend.panel { bottom: .5rem; }
   html[data-phone] .ph-dz .dz-pv { height: 12rem; }
