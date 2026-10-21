@@ -20,7 +20,7 @@ const MODES = {
   for (const name of names) {
     const m = MODES[name]; const [W, H] = m.vp || [1280, 720];
     const { browser, ctx, page, errors } = await open({ viewport: { width: W, height: H }, phone: m.phone });
-    if (m.settings) await ctx.addInitScript(s => localStorage.setItem('moo.settings.v1', JSON.stringify(s)), m.settings);
+    if (m.settings) await ctx.addInitScript(s => localStorage.setItem('moo.settings.v1', JSON.stringify(Object.assign(JSON.parse(localStorage.getItem('moo.settings.v1') || '{}'), s))), m.settings);
     if (m.noWorkers) await ctx.addInitScript(() => { window.Worker = undefined; });
     await page.goto(`http://localhost:${PORT}/index.html?dev=1&screen=galaxy&race=human&size=medium&opp=3&seed=abc&turns=15`);
     await sleep(1500);

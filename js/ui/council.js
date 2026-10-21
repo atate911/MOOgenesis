@@ -385,7 +385,7 @@
   // ================================================================== prompts (cards in the dock)
   function setHint(parts) {
     UI.clear(CN.hint);
-    for (const p of parts) CN.hint.appendChild(h('span', h('kbd', p[0]), p[1]));
+    for (const p of parts) { const k = UI.Phone.key(p[0]); if (k) CN.hint.appendChild(h('span', h('kbd', k), p[1])); }   // phones: Tap / Back
   }
   function showCards(list) {
     UI.clear(CN.cards);
@@ -591,7 +591,7 @@
     try {
       if (R.kind === 'vote') {
         const vote = await runVote(R);
-        if (R.demo) { R.phase = 'demo'; say(R, ['Demonstration chamber — press Esc to leave.']); setHint([['Esc', 'leave']]); return; }
+        if (R.demo) { R.phase = 'demo'; say(R, [UI.Phone.say('Demonstration chamber — press Esc to leave.', 'Demonstration chamber — Back leaves.')]); setHint([['Esc', 'leave']]); return; }
         R.awaiting = true;
         R.orphan = setTimeout(() => { if (RUN === R && R.awaiting) { R.awaiting = false; endRun(R, false); } }, 15000);    // result() normally arrives within a frame; a slow huge-map turn must not end the chamber early
         R.spec.resolve(vote);

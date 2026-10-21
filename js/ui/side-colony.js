@@ -234,7 +234,7 @@
       const st = { to: ctx.params.to !== undefined ? ctx.params.to : p.reloc !== p.starId && S.planets[p.reloc] && S.planets[p.reloc].owner === E.id ? p.reloc : -1 };
       const back = () => { UI.Galaxy.pick = null; if (UI.Galaxy.map) UI.Galaxy.map.setRoutePreview(null); ctx.show('colony', { star: pid }); };
       host.appendChild(UI.Side.title(pid, S.playerId));
-      host.appendChild(h('div.sc-pickhint', 'Click one of your colonies on the map: ships finished at ' + (p.name || S.stars[p.starId].name) + ' will fly there automatically. Enter accepts · Esc cancels.'));
+      host.appendChild(h('div.sc-pickhint', UI.Phone.say('Click', 'Tap') + ' one of your colonies on the map: ships finished at ' + (p.name || S.stars[p.starId].name) + ' will fly there automatically.' + UI.Phone.say(' Enter accepts · Esc cancels.', '')));
       const msg = h('div.sc-relocmsg');
       const acc = UI.button('Accept', () => { const r = G.order({ t: 'reloc', planet: pid, to: st.to }); if (!r.ok) { UI.toast(r.msg, 'bad'); return; } UI.sfx('click'); back(); }, { primary: true, kbd: 'Space' });
       const all = UI.button('All colonies', () => {
@@ -287,7 +287,7 @@
         if (ok && ctx.params.float) UI.attention(acc);
       };
       const acc = UI.button('Accept', () => { const r = G.order({ t: 'trans', planet: pid, to: st.to, n: st.n }); if (!r.ok) UI.toast(r.msg, 'bad'); UI.Galaxy.pick = null; ctx.show('colony', { star: pid }); }, { primary: true });
-      host.appendChild(UI.Side.title(pid, S.playerId)); host.appendChild(h('div.sc-trans', h('div.sc-pickhint', 'Choose number of colonists to transport, then click the destination colony. Enter accepts · Esc cancels.'), big, sl, pops, msg));
+      host.appendChild(UI.Side.title(pid, S.playerId)); host.appendChild(h('div.sc-trans', h('div.sc-pickhint', 'Choose number of colonists to transport, then ' + UI.Phone.say('click', 'tap') + ' the destination colony.' + UI.Phone.say(' Enter accepts · Esc cancels.', '')), big, sl, pops, msg));
       host.appendChild(h('div.row', { style: { marginTop: '.6rem' } }, UI.button('Cancel', () => { UI.Galaxy.pick = null; ctx.show('colony', { star: pid }); }), UI.button('Clear order', () => { G.order({ t: 'trans', planet: pid, n: 0 }); UI.Galaxy.pick = null; ctx.show('colony', { star: pid }); }), acc));
       const preview = () => { const id = st.to; if (id < 0 || !UI.Galaxy.map) return; const ok = M.Sim.Fleet.canTransportTo(S, E, p, id).ok; UI.Galaxy.map.setRoutePreview({ from: p.starId, to: id, eta: ok ? M.Sim.Fleet.transEta(S, E, p.starId, id) : 0, valid: ok, gate: ok && M.Sim.Fleet.gateLink(S, E, p.starId, id) }); };
       UI.Galaxy.pick = id => { if (ctx.follow({ to: id, n: st.n })) return; st.to = id; upd(); preview(); if (ctx.params.float && UI.Side.place) UI.Side.place(); };   // the panel comes to the destination clicked

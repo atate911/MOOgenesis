@@ -121,6 +121,24 @@
   const refresh0 = UI.Side.refresh;
   UI.Side.refresh = function () { const r = refresh0.apply(this, arguments); update(); return r; };
 
+  // ---- the first-run card: how the phone layout works (once; Settings 'phoneHints'). Waits for a quiet moment: no dialog, no held prompt.
+  const HINTS = [['planet', 'Tap the panel at the bottom to open your colony, or the star you picked. Drag its handle to resize it.'],
+    ['info', 'Press and hold anything to see what it is: a star, a number, a button. A tap on a number or label works too.'],
+    ['left', 'Back, top left (or your phone’s own back gesture), closes and goes back.'],
+    ['more', 'More holds the game menu, Ship design and the Galaxy map. Battles resolve on their own.']];
+  let hintTimer = 0;
+  function firstRunHints() {
+    clearTimeout(hintTimer);
+    if (!active() || !M.Settings || M.Settings.get('phoneHints')) return;
+    hintTimer = setTimeout(() => {
+      const cur = UI.Screens.current;
+      if (!cur || cur.id !== 'galaxy' || (UI.modalOpen && UI.modalOpen()) || UI.Side.held || G.busy) return;        // the next galaxy entry tries again
+      M.Settings.set('phoneHints', true);
+      UI.modal({ title: 'Playing on a phone', cls: 'ph-hints', width: '26rem', buttons: [{ label: 'Got it', value: true, primary: true }],
+        body: h('div.ph-hints-b', HINTS.map(([ico, t]) => h('div.ph-hint', UI.icon(ico), h('span', t)))) });
+    }, 900);
+  }
+
   function installOverview() {
     const scr = UI.Screens.el('mapoverview'); if (!scr) return;
     const side = scr.querySelector('.ov-side'); if (!side || side.phSheet) return;
@@ -129,7 +147,7 @@
 
   if (M.Bus) M.Bus.on('screen', id => {
     if (!active()) return;
-    if (id === 'galaxy') installGalaxy(); else if (id === 'mapoverview') installOverview();
+    if (id === 'galaxy') { installGalaxy(); firstRunHints(); } else if (id === 'mapoverview') installOverview();
   });
   UI.Phone.galaxySheet = () => sheet;
 })(window.MOO);

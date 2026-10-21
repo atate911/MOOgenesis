@@ -744,7 +744,7 @@
     }
     function setRouteMode(fid) {
       routeFleet = fid; root.classList.toggle('route', fid !== null);
-      if (fid !== null) { const f = FD.get(fid); hintEl.innerHTML = 'Choose a destination' + (f ? ' for <b>' + esc((FLEET_KIND[f.f.kind] || 'fleet')) + ' #' + f.id + '</b>' : '') + ' &nbsp;·&nbsp; <kbd>Esc</kbd> cancel'; }
+      if (fid !== null) { const f = FD.get(fid); hintEl.innerHTML = 'Choose a destination' + (f ? ' for <b>' + esc((FLEET_KIND[f.f.kind] || 'fleet')) + ' #' + f.id + '</b>' : '') + ' &nbsp;·&nbsp; ' + (UI.Phone ? UI.Phone.say('<kbd>Esc</kbd> cancel', 'Back cancels') : '<kbd>Esc</kbd> cancel'); }
     }
 
     // ---------------------------------------------------------------- camera
@@ -849,6 +849,10 @@
     // ---------------------------------------------------------------- input
     const ptr = { x: -1, y: -1, inside: false, down: false, id: -1, sx: 0, sy: 0, lx: 0, ly: 0, lt: 0, moved: false, btn: 0, t0: 0, touch: false };
     const pts = new Map(); let pinch = null, lastClick = { t: 0, id: -2 };
+    // a finger on a phone: the star / fleet tip shows after a still 450 ms press (not at once, as hover would), stays after the lift until the
+    // next touch, and that release selects nothing
+    const hold = { timer: 0, fired: false, keep: false };
+    const holdOff = () => { clearTimeout(hold.timer); hold.timer = 0; hold.fired = false; };
     const rectOf = () => canvas.getBoundingClientRect();
     function startPinch() { const a = Array.from(pts.values()); pinch = { d: Math.hypot(a[0].x - a[1].x, a[0].y - a[1].y) || 1, mx: (a[0].x + a[1].x) / 2, my: (a[0].y + a[1].y) / 2 }; ptr.moved = true; cancelFlight(); vel.x = vel.y = 0; }
     function doPinch() {
@@ -865,9 +869,11 @@
       const r = rectOf(), x = e.clientX - r.left, y = e.clientY - r.top;
       try { canvas.setPointerCapture(e.pointerId); } catch (err) { /* ignore */ }
       pts.set(e.pointerId, { x, y }); ptr.x = x; ptr.y = y; ptr.inside = true; ptr.touch = e.pointerType === 'touch' || e.pointerType === 'pen';
+      hold.keep = false; holdOff();
       if (pts.size === 2) { startPinch(); ptr.down = false; return; }
       ptr.down = true; ptr.id = e.pointerId; ptr.btn = e.button; ptr.sx = ptr.lx = x; ptr.sy = ptr.ly = y; ptr.moved = false; ptr.t0 = ptr.lt = e.timeStamp;
       vel.x = vel.y = 0; hideTip(); e.preventDefault();
+      if (fingerPick()) hold.timer = setTimeout(() => { hold.timer = 0; if (ptr.down && !ptr.moved && !pinch) { hold.fired = true; tipKey = ''; updateHover(); } }, 450);
     });
     canvas.addEventListener('pointermove', e => {
       const r = rectOf(), x = e.clientX - r.left, y = e.clientY - r.top;
@@ -875,7 +881,7 @@
       if (pts.has(e.pointerId)) pts.set(e.pointerId, { x, y });
       if (pinch) { doPinch(); return; }
       if (ptr.down && e.pointerId === ptr.id) {
-        if (!ptr.moved && Math.hypot(x - ptr.sx, y - ptr.sy) > (fingerPick() ? 8 : 4)) { ptr.moved = true; root.classList.add('dragging'); cancelFlight(); anchor = null; hideTip(); }
+        if (!ptr.moved && Math.hypot(x - ptr.sx, y - ptr.sy) > (fingerPick() ? 8 : 4)) { ptr.moved = true; holdOff(); root.classList.add('dragging'); cancelFlight(); anchor = null; hideTip(); }
         if (ptr.moved) {
           const dx = x - ptr.lx, dy = y - ptr.ly, dtm = Math.max(1, e.timeStamp - ptr.lt);
           cam.x -= dx / cam.z; cam.y -= dy / cam.z; clampTo(cam); tgt.x = cam.x; tgt.y = cam.y; tgt.z = cam.z;
@@ -887,16 +893,19 @@
     });
     const endPointer = e => {
       pts.delete(e.pointerId);
-      if (pinch) { if (pts.size < 2) pinch = null; ptr.down = false; ptr.moved = false; root.classList.remove('dragging'); return; }
+      if (pinch) { holdOff(); if (pts.size < 2) pinch = null; ptr.down = false; ptr.moved = false; root.classList.remove('dragging'); return; }
       if (!ptr.down || e.pointerId !== ptr.id) return;
       ptr.down = false; root.classList.remove('dragging');
-      const wasMoved = ptr.moved; ptr.moved = false;
+      const wasMoved = ptr.moved, held = hold.fired; ptr.moved = false; holdOff();
       if (e.type === 'pointercancel') return;
+      if (held) { hold.keep = tipEl.style.display === 'block'; return; }                       // the press showed the tip: keep it, select nothing
       if (!wasMoved) { vel.x = vel.y = 0; if (ptr.btn === 0) handleClick(ptr.x, ptr.y); }
       else if (e.timeStamp - ptr.lt > 90) { vel.x = vel.y = 0; }
     };
     canvas.addEventListener('pointerup', endPointer); canvas.addEventListener('pointercancel', endPointer);
-    canvas.addEventListener('pointerleave', e => { if (!ptr.down) { ptr.inside = false; setHover(null, null, null); hideTip(); } });
+    canvas.addEventListener('pointerleave', e => { if (!ptr.down) { ptr.inside = false; if (!hold.keep) { setHover(null, null, null); hideTip(); } } });
+    const dropHeldTip = e => { if (hold.keep && e.target !== canvas) { hold.keep = false; setHover(null, null, null); hideTip(); } };
+    window.addEventListener('pointerdown', dropHeldTip, true);
     canvas.addEventListener('wheel', e => {
       e.preventDefault();
       const r = rectOf(), x = e.clientX - r.left, y = e.clientY - r.top;
@@ -969,6 +978,7 @@
       root.classList.toggle('hot', sid !== null || fid !== null);
     }
     function updateHover() {
+      if (hold.keep) return;                                                                      // a long-press tip stays until the next touch
       if (!ptr.inside || ptr.moved || pinch || flight) { setHover(null, null, null); hoverNeb = -1; refreshTip(); return; }
       const p = pick(ptr.x, ptr.y);
       setHover(p.sd, p.fd, p.grp);
@@ -1919,7 +1929,7 @@
         out += '<div class="gt-r"><i class="sw" style="--c:' + empHex(fd.owner) + '"></i><b>' + esc(E.name || E.race || 'Empire') + '</b>' + (fd.owner === pid ? ' (you)' : '') + '</div>';
         for (const x of list.slice(0, 6)) out += '<div class="gt-r gt-d">#' + x.id + ' · ' + esc(FLEET_KIND[x.f.kind] || 'Fleet') + ' · ' + x.nsh + ' ' + plural(x.nsh, 'ship') + '</div>';
         if (list.length > 6) out += '<div class="gt-r gt-d">… and ' + (list.length - 6) + ' more</div>';
-        out += '<div class="gt-r gt-d">Click again to cycle through them</div>';
+        out += '<div class="gt-r gt-d">' + (UI.Phone ? UI.Phone.say('Click', 'Tap') : 'Click') + ' again to cycle through them</div>';
       }
       return out;
     }
@@ -1929,7 +1939,7 @@
       if (hoverFleet !== null) key = 'f' + hoverFleet + (hoverGrp ? 'g' + hoverGrp.list.length : '');
       else if (hoverStar !== null) key = 's' + hoverStar;
       else if (hoverNeb >= 0) key = 'n' + hoverNeb;
-      if (!key || ptr.moved) { hideTip(); return; }
+      if (!key || ptr.moved || (ptr.down && fingerPick() && !hold.fired)) { hideTip(); return; }
       if (key === tipKey) return;
       tipKey = key; let html = '';
       if (hoverFleet !== null) { const fd = FD.get(hoverFleet); if (fd) html = fleetTip(fd, hoverGrp); }
@@ -1942,6 +1952,7 @@
       if (tipEl.style.display !== 'block') return;
       const w = tipEl.offsetWidth, hh = tipEl.offsetHeight; let l = x + 18, t = y + 20;
       if (l + w > W - 6) l = x - w - 14; if (t + hh > H - 6) t = y - hh - 14;
+      if (fingerPick()) { l = Math.min(W - w - 6, x - w / 2); t = y - hh - 34; if (t < 4) t = y + 34; }   // a finger: centred above it, clear of the thumb
       // a panel floating over the map (fleet deployment, rally point) sits above the tip: take the corner of the pointer that keeps the tip clear of it
       const fl = root.parentElement && root.parentElement.querySelector('.gx-float.on');
       if (fl) {
@@ -2133,7 +2144,7 @@
       destroy() {
         if (destroyed) return; destroyed = true;
         try { if (stopFrame) stopFrame(); if (stopWatch) stopWatch(); if (stopBus) stopBus(); } catch (e) { /* ignore */ }
-        window.removeEventListener('keydown', onKeyDown, true); window.removeEventListener('keyup', onKeyUp, true); window.removeEventListener('blur', onBlur);
+        window.removeEventListener('keydown', onKeyDown, true); window.removeEventListener('keyup', onKeyUp, true); window.removeEventListener('blur', onBlur); window.removeEventListener('pointerdown', dropHeldTip, true);
         if (root.parentNode) root.parentNode.removeChild(root);
         for (const k in handlers) delete handlers[k];
       },

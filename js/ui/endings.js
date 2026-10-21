@@ -192,7 +192,7 @@
     UI.clear(EN.cap); EN.cap.classList.remove('in'); void EN.cap.offsetWidth; EN.cap.classList.add('in');
     EN.cap.appendChild(h('div.hd', b.head)); EN.cap.appendChild(h('p', b.text));
     const last = i >= R.T.beats.length - 1;
-    EN.hint.innerHTML = '<kbd>Space</kbd>next &nbsp; <kbd>Esc</kbd>skip';
+    EN.hint.innerHTML = '<kbd>' + UI.Phone.key('Space') + '</kbd>next &nbsp; <kbd>' + UI.Phone.key('Esc') + '</kbd>skip';
     if (last) { R.timer = setTimeout(() => showFinal(R), R.rm ? 1500 : max(4500, b.text.length * 60)); }
     else R.timer = setTimeout(() => showBeat(R, i + 1), R.rm ? 1500 : max(3600, b.text.length * 55));
   }

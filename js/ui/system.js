@@ -168,7 +168,7 @@
     kids.push(h('div.sv-star', STAR_NAME[i.kind] + ' star'));
     if (!i.explored) {
       kids.push(h('div.sv-unex', h('span.un', 'UNEXPLORED'), STAR_TEXT[i.kind], h('div.dim', { style: { marginTop: '.5rem', fontSize: '.95rem' } }, 'Send a ship here to chart the system.')));
-      kids.push(h('div.sv-hint', 'Click or press any key to return'));
+      kids.push(h('div.sv-hint', UI.Phone.say('Click or press any key to return', 'Tap to return')));
       st.tiles = []; ui.append.apply(ui, kids.filter(Boolean)); placeCaption(); return;
     }
     // --- fleets in orbit
@@ -220,7 +220,7 @@
       }
       if (ir.children.length) kids.push(ir);
     }
-    kids.push(h('div.sv-hint', 'Click or press any key to return'));
+    kids.push(h('div.sv-hint', UI.Phone.say('Click or press any key to return', 'Tap to return')));
     ui.append.apply(ui, kids.filter(Boolean));
     placeCaption();
   }

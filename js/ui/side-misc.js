@@ -139,7 +139,7 @@
         host.appendChild(row);
       }
       const float = !!ctx.params.float;
-      this.hint = h('div.sc-pickhint', 'Click a destination star · Enter sends · Esc cancels'); this.route = h('div'); this.acc = UI.button('Accept', () => this.accept(ctx), { primary: true, disabled: true });
+      this.hint = h('div.sc-pickhint', UI.Phone.say('Click a destination star · Enter sends · Esc cancels', 'Tap a destination star on the map')); this.route = h('div'); this.acc = UI.button('Accept', () => this.accept(ctx), { primary: true, disabled: true });
       const cancel = () => { UI.Galaxy.pick = null; if (UI.Galaxy.map) { UI.Galaxy.map.setRoutePreview(null); UI.Galaxy.map.setReach(null); } ctx.defaultPanel(); };
       host.appendChild(this.hint); host.appendChild(this.route);
       host.appendChild(h('div.sm-actions', UI.button('Cancel', cancel), this.acc));

@@ -204,7 +204,7 @@
     function paintBanner() {
       const scr = st.scrap && st.mode === 'grid';
       banner.classList.toggle('on', scr || !!st.hint); banner.classList.toggle('hint', !scr && !!st.hint);
-      UI.mount(banner, UI.icon(scr ? 'warning' : 'info'), h('span', scr ? 'Scrap: click the design to scrap. All of its ships are removed and a quarter of their value goes to the reserve. Esc cancels.' : st.hint));
+      UI.mount(banner, UI.icon(scr ? 'warning' : 'info'), h('span', scr ? 'Scrap: ' + UI.Phone.say('click', 'tap') + ' the design to scrap. All of its ships are removed and a quarter of their value goes to the reserve. ' + UI.Phone.say('Esc cancels.', 'Back cancels.') : st.hint));
     }
     function paintBtns() {
       UI.mount(btnSpecs, st.mode === 'grid' ? 'Specs' : 'Fleets', h('span.kbd', 'V'));

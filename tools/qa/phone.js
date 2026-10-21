@@ -2,7 +2,7 @@
 // index.html (no ?phone=1), plus a desktop pass proving the phone layer stays out of the way. Prints PASS / FAIL per check, the scale-audit
 // findings per screen, and the touch audit (targets under 40px, text under 12px).
 // usage: node tools/qa/phone.js [landscape|small] [step ...]
-//   steps: gate galaxy battle screens research scenes menus design back tips bot desktop   (default: all)
+//   steps: gate galaxy battle screens research scenes menus design back tips firstrun bot desktop   (default: all)
 //   env:   SHOTS=dir (default /tmp/claude-0/phone) · PORT (default 8794) · TURNS (dev auto-play turns before the checks, default 10)
 const { serve, open, sleep, ROOT } = require('./lib');
 const fs = require('fs'), path = require('path');
@@ -70,6 +70,14 @@ const touchAudit = page => page.evaluate(() => {
   return { t: top(T), x: top(X) };
 });
 const fmtAudit = a => (a.t.length ? '\n      targets: ' + a.t.map(([k, n, v]) => k + '×' + n + '(' + v + ')').join(' ') : '') + (a.x.length ? '\n      text: ' + a.x.map(([k, n, v]) => k + '×' + n + '(' + v + ')').join(' ') : '');
+// visible keyboard / mouse wording on the active screen or the top dialog ("Space" as in space dock / combat / monsters is not a key)
+const deskWords = page => page.evaluate(() => {
+  const scope = [...document.querySelectorAll('.scrim .modal')].pop() || document.querySelector('.screen.active'); if (!scope) return [];
+  const t = scope.innerText || '', out = new Set();
+  const RX = /\b(?:double-)?click(?:s|ing)?\b|right-click|mouse|\bwheel\b|\bhover\b|\bEsc\b|\bEnter\b|\bSpace\b(?! (?:[Cc]ombat|[Dd]ock|[Mm]onsters|[Pp]irates|[Cc]rystal|[Aa]moeba|[Tt]eleporter|Academy))|\bpress(?:es)?\s+[A-Z0-9]\b|\bF\d{1,2}\b|\bCtrl\b/g;
+  let m; while ((m = RX.exec(t))) out.add(t.slice(Math.max(0, m.index - 24), m.index + m[0].length + 16).replace(/\s+/g, ' '));
+  return [...out].slice(0, 4);
+});
 const sheetState = page => page.evaluate(() => { const s = document.querySelector('.gx-side:not(.gx-float)'); return s ? s.dataset.sheet || '' : 'none'; });
 
 (async () => {
@@ -138,6 +146,7 @@ const sheetState = page => page.evaluate(() => { const s = document.querySelecto
       const grip = await page.$('.gx-side:not(.gx-float) .ph-grip');
       await grip.tap(); await sleep(350); check('handle tap opens halfway', (await sheetState(page)) === 'half'); await shot('galaxy-half');
       console.log('   galaxy (half):' + fmtAudit(await touchAudit(page)));
+      { const dw = await deskWords(page); if (dw.length) console.log('      wording: ' + dw.join(' | ')); }
       await grip.tap(); await sleep(350); check('second tap opens fully', (await sheetState(page)) === 'full'); await shot('galaxy-full');
       await grip.tap(); await sleep(350); check('third tap collapses', (await sheetState(page)) === 'strip');
       const sum = await page.evaluate(() => { const side = document.querySelector('.gx-side:not(.gx-float)'), e = side.querySelector('.ph-sum'), t = side.querySelector('.side-title .ph-thumb'); if (!e) return null; const r = e.getBoundingClientRect(), sr = side.getBoundingClientRect(); return { text: e.innerText.replace(/\s+/g, ' '), inStrip: r.top >= sr.top && r.bottom <= sr.bottom + 1, r: [r.top, r.bottom, sr.top, sr.bottom].map(Math.round), thumb: !!(t && t.offsetWidth) }; });
@@ -206,6 +215,7 @@ const sheetState = page => page.evaluate(() => { const s = document.querySelecto
         const a = (await audit()).filter(x => !/^OFF/.test(x)), offs = await offscreen(page);
         console.log('   ' + id + (cur !== id ? ' (now ' + cur + ')' : '') + ': ' + (a.length ? a.join(' | ') : 'no scroll / clip') + fmtAudit(await touchAudit(page)));
         check(id + ': nothing off-screen', !offs.length, offs.join(' | '));
+        const dw = await deskWords(page); if (dw.length) console.log('      wording: ' + dw.join(' | '));
         await shot('screen-' + id);
         const backOn = await page.evaluate(() => { const b = document.querySelector('.ph-back'); return !!(b && b.classList.contains('on')); });
         if (cur === id) check(id + ': Back control shown', backOn);
@@ -277,6 +287,7 @@ const sheetState = page => page.evaluate(() => { const s = document.querySelecto
         const m = await page.evaluate(() => { const e = [...document.querySelectorAll('.scrim .modal')].pop(); if (!e) return null; const r = e.getBoundingClientRect(); return { l: r.left, r: innerWidth - r.right, t: r.top, b: innerHeight - r.bottom }; });
         check(name + ': the dialog fits the screen', !!m && m.l >= -1 && m.r >= -1 && m.t >= -1 && m.b >= -1, JSON.stringify(m));
         console.log('   ' + name + ':' + fmtAudit(await touchAudit(page)));
+        const dw = await deskWords(page); if (dw.length) console.log('      wording: ' + dw.join(' | '));
         await shot('modal-' + name); await page.evaluate(() => MOO.UI.closeAllModals()); await sleep(300);
       };
       await modalShot('gamemenu', () => { MOO.UI.gameMenu(); });
@@ -361,6 +372,65 @@ const sheetState = page => page.evaluate(() => { const s = document.querySelecto
       await shot('tip');
       await cdp.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] }); await sleep(200);
       check('a long press shows the tooltip', !!shown, shown);
+      const tipOn = () => page.evaluate(() => { const t = document.querySelector('.ph-tip'); return t && t.classList.contains('on') ? t.innerText.replace(/\s+/g, ' ').slice(0, 80) : ''; });
+      // the long press tip has no keyboard / mouse wording
+      check('the tip text drops its hotkey', !/\b(Ctrl|Shift|Home|Esc)\b|<b>[+−]<\/b>|\bclick\b/i.test(shown), shown);
+      // map: press and hold a star → its tip, kept after the lift, nothing selected; the next touch clears it
+      const st = await page.evaluate(() => {
+        const m = MOO.UI.Galaxy.map, d = m._dbg(), r = m.canvas.getBoundingClientRect(), sel = m.getSelection().star;
+        const top = r.height > 600 ? 200 : 80, bot = r.height > 600 ? 220 : 60;                       // clear of the HUD and the sheet (portrait) / the scale bar (landscape)
+        const s = d.SD.find(s => s.on && s.id !== sel && s.sx > 60 && s.sx < r.width - 130 && s.sy > top && s.sy < r.height - bot && d.SD.every(o => o === s || Math.hypot(o.sx - s.sx, o.sy - s.sy) > 40));
+        return s ? { id: s.id, x: r.left + s.sx, y: r.top + s.sy, sel } : null;
+      });
+      if (st) {
+        await cdp.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: [{ x: st.x, y: st.y }] }); await sleep(250);
+        const early = await page.evaluate(() => getComputedStyle(document.querySelector('.gmap-tip')).display !== 'none');
+        await sleep(450);
+        const during = await page.evaluate(() => getComputedStyle(document.querySelector('.gmap-tip')).display !== 'none');
+        await cdp.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] }); await sleep(300);
+        const after = await page.evaluate(() => ({ tip: getComputedStyle(document.querySelector('.gmap-tip')).display !== 'none', sel: MOO.UI.Galaxy.map.getSelection().star }));
+        await shot('map-longpress');
+        check('map: a press and hold on a star shows its tip (not at once), kept after the lift, nothing selected', !early && during && after.tip && after.sel === st.sel, JSON.stringify({ early, during, after, star: st.id }));
+        await page.touchscreen.tap(20, 300); await sleep(300);
+        check('map: the next touch clears it', await page.evaluate(() => getComputedStyle(document.querySelector('.gmap-tip')).display === 'none'));
+      } else check('map: a star to press', false);
+      // tap-to-read: a research bulb (a gauge, not a control) shows its tip on a plain tap; a button does its job and shows none
+      await page.evaluate(() => MOO.UI.Screens.go('tech', { from: 'galaxy' })); await sleep(900);
+      const alloc = await page.$('.screen.active .ph-tseg button:has-text("Allocation")'); if (alloc) { await alloc.tap(); await sleep(300); }
+      await (await page.$('.screen.active .tch-sl .tch-bulb')).tap(); await sleep(300);
+      const bulb = await tipOn();
+      check('tap-to-read: a tap on a research bulb shows its tip', !!bulb, bulb);
+      await (await page.$('.screen.active .tch-sl .tch-bulb')).tap(); await sleep(300);
+      check('tap-to-read: a second tap closes it', !(await tipOn()));
+      const eq = await page.$('.screen.active .tch-sl .btn:has-text("Equalise")'); await eq.tap(); await sleep(300);
+      check('a tap on a button shows no tip', !(await tipOn()));
+      await back(); await sleep(700);
+      // a disabled button: its tip ("why not") on a tap over its box
+      await page.evaluate(() => { const d = MOO.UI.Combat.demo({ scn: 'planet' }); window.__fight2 = MOO.UI.Combat.fight(d.battle, d.S); }); await sleep(900);
+      const dis = await page.$('.gx-side:not(.gx-float) .pb-acts .btn:disabled[data-tip]');
+      if (dis) {
+        const b = await dis.boundingBox(); await page.touchscreen.tap(b.x + b.width / 2, b.y + b.height / 2); await sleep(300);
+        const why = await tipOn();
+        check('a tap on a disabled button shows why', !!why, why);
+      } else {                                                           // none on this card: the same path on a disabled button of our own
+        await page.evaluate(() => { const b = MOO.UI.button('Disabled', null, { disabled: true, tip: 'Not now: a test reason' }); b.id = 'qa-dis'; Object.assign(b.style, { position: 'absolute', left: '40px', top: '200px', zIndex: 50 }); document.querySelector('.screen.active').appendChild(b); });
+        const b = await (await page.$('#qa-dis')).boundingBox(); await page.touchscreen.tap(b.x + b.width / 2, b.y + b.height / 2); await sleep(300);
+        const why = await tipOn(); await page.evaluate(() => document.getElementById('qa-dis').remove());
+        check('a tap on a disabled button shows why', /test reason/.test(why), why);
+      }
+      await (await page.$('.gx-side:not(.gx-float) .pb-acts .btn:has-text("Auto")')).tap(); await sleep(900);
+      const cont = await page.$('.gx-side:not(.gx-float) .btn:has-text("Continue")'); if (cont) { await cont.tap(); await sleep(600); }
+    });
+
+    await step('firstrun', async () => {
+      await page.evaluate(() => { MOO.Settings.set('phoneHints', false); MOO.UI.Screens.go('options', { from: 'galaxy' }); }); await sleep(500);
+      await page.evaluate(() => MOO.UI.Screens.go('galaxy')); await sleep(1600);
+      const card = await page.evaluate(() => { const m = document.querySelector('.scrim .modal.ph-hints'); return m ? m.querySelectorAll('.ph-hint').length : 0; });
+      check('first galaxy entry: the touch-controls card', card === 4, card);
+      await shot('firstrun');
+      await page.evaluate(() => MOO.UI.closeAllModals()); await sleep(300);
+      await page.evaluate(() => MOO.UI.Screens.go('planets', { from: 'galaxy' })); await sleep(500); await page.evaluate(() => MOO.UI.Screens.go('galaxy')); await sleep(1600);
+      check('…shown once', !(await page.$('.scrim .modal.ph-hints')) && (await page.evaluate(() => MOO.Settings.get('phoneHints'))) === true);
     });
 
     await step('bot', async () => {

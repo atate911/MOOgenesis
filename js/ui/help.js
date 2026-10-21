@@ -178,7 +178,8 @@
 
   // ================================================================================================================================ tutor pop-ups (Simple / Easy only; once per topic; remembered in Settings)
   const TOPICS = [
-    { id: 'start', title: 'Welcome, emperor', text: 'You rule one colony. Open it (click your home star) and look at the five spending sliders: Industry builds factories, Ecology keeps the planet clean, Tech funds research and Ship builds ships. Send your scouts out with the Fleet panel, and press <b>N</b> to end the turn.', test: S => S.turn === 0 },
+    { id: 'start', title: 'Welcome, emperor', get text() { return UI.Phone.say('You rule one colony. Open it (click your home star) and look at the five spending sliders: Industry builds factories, Ecology keeps the planet clean, Tech funds research and Ship builds ships. Send your scouts out with the Fleet panel, and press <b>N</b> to end the turn.',
+      'You rule one colony. Its panel waits at the bottom of the map: tap it and look at the five spending sliders. Industry builds factories, Ecology keeps the planet clean, Tech funds research and Ship builds ships. Send your scouts out with the <b>Fleet</b> tab, and tap <b>Next turn</b> to end the turn.'); }, test: S => S.turn === 0 },
     { id: 'contact', title: 'First contact', text: 'You have met another empire. Open <b>Races</b> to see its attitude and ask for an audience: a non-aggression pact is a cheap way to keep the peace while you grow.', test: (S, E) => (E.relations || []).some(r => r && r.contact && r.with !== E.id) },
     { id: 'bases', title: 'An undefended colony', text: 'A populous colony without missile bases invites raiders. Give it a few points on the <b>Def</b> slider so it can build bases and, later, a planetary shield.', test: (S, E) => S.planets.some(p => p.owner === E.id && p.pop >= 70 && !(p.bases > 0)) },
     { id: 'year30', title: 'Thirty years in', text: 'By now neighbours are growing too. Check the <b>Races</b> screen for rivals who out-produce you, and keep a few warships near your core.', test: S => S.turn >= 29 },
@@ -320,11 +321,22 @@
     return h('div.al-grid', R.map(([t, b]) => card(t, '', bullets(b))));
   }
   function controlsTab() {
+    if (UI.Phone.active()) return tbl([{ t: 'Where' }, { t: 'Touch' }], TOUCH.map(([a, b]) => [{ n: h('b', a), s: a }, { n: b, s: b }]));
     const K = [['Control screen', 'G Game · D Design · F Fleet · M Map · R Races · P Planets · T Tech · N Next turn'], ['Cycling', 'F2 / F3 colonies (or the ◀ ▶ on a colony’s title) · I / Shift+I colonies needing attention (raids first; or click the ⚠ / ! count at the top) · F4 / F5 colonies with ships · Home capital · C centre on selection'], ['Everywhere', 'Space accept / continue · Esc or right-click cancel / back · first letter of a button = its hotkey · F1 help · F10 quick-save · F3 performance overlay'],
       ['Fleet deployment', 'click your fleet: the panel opens in the sidebar, then moves beside the destination you click · wheel over a ship row = ±1 (Shift ±10 %) · click a destination star (the panel follows) · Enter = Accept, Esc = Cancel'], ['Galaxy map', 'L = fleet routes and rally lines on / off (the selected fleet or colony keeps its line) · V = declutter (hides the grid, range rings, foreign star names, ETAs and most lines; lit when on) · K = map key'], ['Rally point / transport', 'pick the colony on the map: the panel follows the click · Enter = Accept, Esc = Cancel'], ['Sliders', 'mouse wheel = one step (Shift: five) · Shift-click − / + = minimum / maximum'], ['Colony panel', 'click, wheel or right-click the ship box to cycle designs · Ships list: 1–6 picks, Enter keeps the current one'], ['Planets', 'T transfer · O or Space OK · click a heading to sort'], ['Tech', '= equalise sliders · + / − nudge · 1–6 pick a field'], ['Races', 'S status · R report · A audience'],
       ['Tactical combat', 'A auto · P planet · S scan · M missiles · X special (opens beside the ship; 1–9 pick a device) · R retreat · W or double-click the acting group = wait · D, Esc or right-click = done'], ['Bombardment', 'B bomb · Esc cancel · C or Space continue'], ['Colonise / explore', 'Y yes · N no · C or Space continue'], ['Galactic Council', '1 / 2 / 0 vote · Y / N accept or defy · Space continue'], ['Scenes', 'Space or click skips ahead · Esc skips the whole scene']];
     return tbl([{ t: 'Where' }, { t: 'Keys' }], K.map(([a, b]) => [{ n: h('b', a), s: a }, { n: b, s: b }]));
   }
+  // the Controls tab on a phone (css/phone.css, js/ui/phone*.js)
+  const TOUCH = [['Anywhere', 'Back (top left, or the phone’s own back gesture) closes, cancels or goes back · a long press shows what anything is; a tap on a number, label or chip does too'],
+    ['Galaxy map', 'drag to pan, pinch to zoom · tap a star or fleet to select it (double-tap a star: its system view) · press and hold a star or fleet for its details · the buttons on the right zoom, fit, centre on home, show the key and routes'],
+    ['Bottom panel', 'tap it (or its handle) to open it halfway: the colony’s sliders and Ships / Reloc / Trans · again for everything and the turn log · drag the handle to resize'],
+    ['Tabs', 'Planets · Fleet · Tech · Races · More (the game menu, Ship design and the galaxy map) · Next turn'],
+    ['Fleet deployment', 'tap your fleet, then a destination star · set the counts with the arrows · Accept'],
+    ['Ship design', 'tap a part to choose it: cards show what fits · weapon counts with − / + / Fill · Library opens your six designs'],
+    ['Research', 'Allocation (the field sliders; tap a field’s name to lock it) · Project · Techs (and the overview tree)'],
+    ['Battles', 'fought automatically on a phone: Retreat or Auto on the battle card'],
+    ['Scenes', 'tap to continue · Back skips']];
   function tipsTab() {
     const tips = (M.Data && M.Data.text && M.Data.text.tips) || [];
     return h('div.al-grid', tips.map((t, i) => h('div.al-card.al-row', { dataset: { s: t.toLowerCase() } }, h('p', h('b.t-brass', (i + 1) + '. '), t))));

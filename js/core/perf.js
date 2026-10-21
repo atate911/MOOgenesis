@@ -132,7 +132,10 @@
     if (M.UI && M.UI.onFrame) M.UI.onFrame(dt => { tick(dt); ovT += dt; if (ovT > 0.25) { ovT = 0; renderOverlay(); } });
     if (M.UI && M.UI.bindKey) M.UI.bindKey('F3', () => { P.overlay = !P.overlay; if (M.Settings) M.Settings.set('perfOverlay', P.overlay); renderOverlay(); }, { modal: true });
     P.overlay = !!(M.Settings && M.Settings.get('perfOverlay'));
-    if (M.Bus) M.Bus.on('settings', k => { if (k === 'gpu' || k === 'reduceMotion' || k === null) apply(P.tier, 'settings'); });
+    if (M.Bus) M.Bus.on('settings', k => {
+      if (k === 'gpu' || k === 'reduceMotion' || k === null) apply(P.tier, 'settings');
+      if (k === 'perfOverlay' || k === null) { P.overlay = !!(M.Settings && M.Settings.get('perfOverlay')); renderOverlay(); }   // Options' row (phones have no F3)
+    });
   };
 
   // convenience for gfx modules: devicePixelRatio capped by the current tier

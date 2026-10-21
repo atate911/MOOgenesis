@@ -276,9 +276,9 @@
     }
     const p = R.prompt; if (!p) return;
     p.classList.toggle('hot', !!R.mode);
-    if (R.mode) UI.mount(p, 'Choose an empire for the ', h('b', R.mode === 'report' ? 'report' : 'audience'), ' — click its portrait or press ', h('b', '1–5'), '.  Esc cancels.');
+    if (R.mode) UI.mount(p, 'Choose an empire for the ', h('b', R.mode === 'report' ? 'report' : 'audience'), UI.Phone.say([' — click its portrait or press ', h('b', '1–5'), '.  Esc cancels.'], ' — tap its portrait. Back cancels.'));
     else if (R.sel >= 0 && S.empires[R.sel]) UI.mount(p, h('span.rx-dot', { style: { '--c': bannerOf(S.empires[R.sel]), marginRight: '.4rem' } }), 'The ', h('b', S.empires[R.sel].name), ' are selected: ', h('b', 'Report'), ' or ', h('b', 'Audience'), '.');
-    else UI.mount(p, 'Click a portrait to select an empire, or press ', h('b', 'Report'), ' / ', h('b', 'Audience'), ' first.');
+    else UI.mount(p, UI.Phone.say('Click a portrait to select an empire, or press ', 'Tap a portrait to select an empire, or tap '), h('b', 'Report'), ' / ', h('b', 'Audience'), ' first.');
     if (R.btnR) { R.btnR.classList.toggle('active', R.mode === 'report'); R.btnA.classList.toggle('active', R.mode === 'audience'); }
   }
 

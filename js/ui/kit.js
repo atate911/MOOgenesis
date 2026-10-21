@@ -19,6 +19,7 @@
       else el.appendChild(doc.createTextNode(String(k)));
     }
   }
+  const ACT_EV = { click: 1, dblclick: 1, pointerdown: 1, pointerup: 1, mousedown: 1, mouseup: 1, touchstart: 1 };
   function h(tag, ...args) {
     let attrs = null;
     if (args.length && isAttrs(args[0])) attrs = args.shift();
@@ -37,7 +38,7 @@
         else if (k === 'html') el.innerHTML = v;
         else if (k === 'text') el.textContent = v;
         else if (k === 'tip') UI.setTip(el, v);
-        else if (k.length > 2 && k.startsWith('on') && typeof v === 'function') el.addEventListener(k.slice(2).toLowerCase(), v);
+        else if (k.length > 2 && k.startsWith('on') && typeof v === 'function') { const ev = k.slice(2).toLowerCase(); el.addEventListener(ev, v); if (ACT_EV[ev]) el.setAttribute('data-act', ''); }   // data-act: a tap here does something (phone.js: no tap-to-read tip)
         else if (PROPS[k]) el[k] = v;
         else if (v === true) el.setAttribute(k, '');
         else el.setAttribute(k, v);

@@ -11,16 +11,37 @@
 //                                            el.dataset.sheet = 'strip' | 'half' | 'full' (heights come from CSS); tap cycles, drag snaps.
 //                                            → {set(s), get(), on(fn), el, grip, states}; also stored as el.phSheet
 //   UI.Phone.stepper({get, set, max})        −10 · −1 · value · +1 · +10 · Fill row for counts (ship-design weapon banks); .api.draw()
-//   UI.Phone.showTip(html, x, y) / hideTip() the long-press tooltip popover (.ph-tip)
-// Also installed on phones: a history sentinel (hardware Back / edge swipe → UI.Phone.back() instead of leaving the page), long-press on
-// any [data-tip] shows its tooltip, the long-press contextmenu is swallowed (it would fire every right-click-as-Back handler), the F1
-// help overlay is off (hover leader lines; the Almanac stays), and the game autosaves when the tab is hidden (phones kill background tabs).
+//   UI.Phone.showTip(html, x, y) / hideTip() the tooltip popover (.ph-tip)
+//   UI.Phone.say(desktop, phone)             the phone wording of a visible hint where the desktop one names keys or the mouse
+//   UI.Phone.key(k)                          a key badge's touch equivalent: Space → Tap, Esc → Back; null for keys a phone has no use for
+// Also installed on phones: a history sentinel (hardware Back / edge swipe → UI.Phone.back() instead of leaving the page); tooltips on
+// touch — a long press on any [data-tip] shows it, and so does a plain tap where the tap does nothing else (text, numbers, chips: the
+// element and its ancestors up to the tip holder are not controls, carry no data-act from UI.h and no pointer / grab cursor); a disabled
+// button's tip (it takes no pointer events) shows for a tap or a press on its box; tip texts lose their keyboard and mouse clauses; the
+// long-press contextmenu is swallowed (it would fire every right-click-as-Back handler); the F1 help overlay is off (hover leader lines;
+// the Almanac stays); and the game autosaves when the tab is hidden (phones kill background tabs).
 (function (M) {
   'use strict';
   const UI = M.UI, h = UI.h, U = M.Util, doc = document, root = doc.documentElement;
   const active = () => !!(M.Phone && M.Phone.active());
-  const tipHtml = el => (UI.tipHtml ? UI.tipHtml(el) : el.getAttribute('data-tip'));
   const P = UI.Phone = { active, backHidden: new Set(['menu', 'galaxy']) };
+  P.say = (desktop, phone) => (active() ? phone : desktop);
+  const KEYS = { Space: 'Tap', Esc: 'Back', Enter: 'Tap', '↵': '↵' };
+  P.key = k => (!active() ? k : KEYS[k] !== undefined ? KEYS[k] : null);
+
+  // tooltip text on a phone: no hotkeys, no mouse — "Previous colony <b>F2</b>" → "Previous colony", "Click to rename" → "Tap to rename";
+  // a " · "-separated clause about the wheel, right-click, hover or a key is dropped
+  const DESK = /right-click|mouse|wheel|\bhover|\bCtrl\b|\bShift\b|\bAlt\b|\bkey [0-9A-Z]\b|hotkey|keyboard|\bpress\b/i;
+  function touchText(html) {
+    if (!html || typeof html !== 'string') return html;
+    let t = html.replace(/\s*\([^()]*(?:wheel|right-click|\bkey [0-9A-Z]\b|Ctrl|Shift)[^()]*\)/gi, '')
+      .replace(/\s*\((?:[A-Z0-9=+\-−]|F\d{1,2}|Esc|Space|Enter|Home|Del)\)/g, '')
+      .replace(/\s*<b>(?:F\d{1,2}|[A-Z0-9=+\-−/]|Esc|Space|Enter|Home|Del|(?:Ctrl|Shift|Alt)\+?[^<]*)<\/b>/g, '');
+    t = t.split(/(<br\s*\/?>)/i).map(part => /^<br/i.test(part) ? part : part.split(/\s·\s/).filter(c => !DESK.test(c.replace(/<[^>]+>/g, ''))).join(' · ')).join('');
+    return t.replace(/double-click/gi, 'double-tap').replace(/\bClick/g, 'Tap').replace(/\bclick(s?)\b/g, 'tap$1').replace(/(<br\s*\/?>\s*)+$/i, '').trim();
+  }
+  const tipHtml = el => { const raw = UI.tipHtml ? UI.tipHtml(el) : el.getAttribute('data-tip'); return active() ? touchText(raw) : raw; };
+  P.touchText = touchText;
 
   // ------------------------------------------------------------------ the gate, live
   function recheck() {
@@ -92,34 +113,54 @@
   // a long press raises contextmenu on Android: swallowed, or every right-click-as-Back handler would fire under the finger
   window.addEventListener('contextmenu', e => { if (active()) { e.preventDefault(); e.stopImmediatePropagation(); } }, true);
 
-  // ------------------------------------------------------------------ long-press tooltips
-  let tipEl = null, tipTimer = 0, lp = null, swallow = false;
-  P.showTip = function (html, x, y) {
+  // ------------------------------------------------------------------ tooltips: long press, tap-to-read, disabled buttons
+  let tipEl = null, tipTimer = 0, lp = null, swallow = false, tipFor = null, downFor = null, touch = false;
+  P.showTip = function (html, x, y, el) {
     if (!tipEl) { tipEl = h('div.ph-tip.ch'); (doc.getElementById('app') || doc.body).appendChild(tipEl); }
-    tipEl.innerHTML = html; tipEl.classList.add('on');
+    tipEl.innerHTML = html; tipEl.classList.add('on'); tipFor = el || null;
     const w = tipEl.offsetWidth, hh = tipEl.offsetHeight;
     let l = x - w / 2, t = y - hh - 20; if (t < 6) t = y + 26;
     tipEl.style.left = Math.max(6, Math.min(innerWidth - w - 6, l)) + 'px';
     tipEl.style.top = Math.max(6, Math.min(innerHeight - hh - 6, t)) + 'px';
     clearTimeout(tipTimer); tipTimer = setTimeout(P.hideTip, 6000);
   };
-  P.hideTip = () => { if (tipEl) tipEl.classList.remove('on'); clearTimeout(tipTimer); tipTimer = 0; };
+  P.hideTip = () => { if (tipEl) tipEl.classList.remove('on'); clearTimeout(tipTimer); tipTimer = 0; tipFor = null; };
   const lpCancel = () => { if (lp) { clearTimeout(lp.timer); lp = null; } };
+  // a disabled button takes no pointer events (kit.css), so its tip ("why not") is found by its box under the finger
+  function disabledAt(x, y) {
+    const scope = [...doc.querySelectorAll('.scrim .modal')].pop() || doc.querySelector('.screen.active'); if (!scope) return null;
+    for (const b of scope.querySelectorAll('button:disabled[data-tip], .btn.disabled[data-tip]')) { const r = b.getBoundingClientRect(); if (r.width && x >= r.left && x <= r.right && y >= r.top && y <= r.bottom) return b; }
+    return null;
+  }
   window.addEventListener('pointerdown', e => {
-    swallow = false;
-    if (!active() || e.pointerType === 'mouse') return;
+    swallow = false; touch = e.pointerType !== 'mouse';
+    if (!active() || !touch) return;
+    downFor = tipEl && tipEl.classList.contains('on') ? tipFor : null;                     // a second tap on the same thing closes its tip
     P.hideTip();
-    const t = e.target && e.target.closest ? e.target.closest('[data-tip]') : null;
+    const t = (e.target && e.target.closest ? e.target.closest('[data-tip]') : null) || disabledAt(e.clientX, e.clientY);
     if (!t) return;
     lpCancel();
     const x = e.clientX, y = e.clientY;
-    lp = { x, y, timer: setTimeout(() => { lp = null; const html = tipHtml(t); if (!html) return; P.showTip(html, x, y); swallow = true; }, 450) };
+    lp = { x, y, timer: setTimeout(() => { lp = null; const html = tipHtml(t); if (!html) return; P.showTip(html, x, y, t); swallow = true; }, 450) };
   }, true);
+  // tap-to-read: a tap that does nothing else shows the tip of what it landed on
+  const CONTROL = 'button, a[href], input, select, textarea, label, summary, [role=button], [role=option], [role=tab], [role=radio], [role=switch], [role=slider], [tabindex]:not([tabindex="-1"]), [contenteditable], [data-act], canvas';
+  const ACTS = /pointer|grab|move|resize|crosshair/;
+  function readTap(e) {
+    let t = e.target && e.target.closest ? e.target.closest('[data-tip]') : null;
+    if (t) { for (let n = e.target; n; n = n.parentElement) { if (n.matches(CONTROL) || ACTS.test(getComputedStyle(n).cursor)) return; if (n === t) break; } }
+    else t = disabledAt(e.clientX, e.clientY);
+    if (!t || t === downFor) return;
+    const html = tipHtml(t); if (html) P.showTip(html, e.clientX, e.clientY, t);
+  }
   window.addEventListener('pointermove', e => { if (lp && Math.hypot(e.clientX - lp.x, e.clientY - lp.y) > 8) lpCancel(); }, true);
   window.addEventListener('pointerup', lpCancel, true);
   window.addEventListener('pointercancel', lpCancel, true);
   window.addEventListener('scroll', lpCancel, true);
-  window.addEventListener('click', e => { if (swallow) { swallow = false; e.preventDefault(); e.stopImmediatePropagation(); } }, true);   // the tap that ended the press is not a click
+  window.addEventListener('click', e => {
+    if (swallow) { swallow = false; e.preventDefault(); e.stopImmediatePropagation(); return; }   // the tap that ended the press is not a click
+    if (active() && touch && !(M.Settings && M.Settings.get('showTips') === false)) readTap(e);   // Options › Tooltips off: long press only
+  }, true);
 
   // ------------------------------------------------------------------ bottom sheet
   P.sheet = function (el, o) {

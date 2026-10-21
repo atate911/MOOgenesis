@@ -122,7 +122,7 @@
       M.Phone && M.Phone.active() ? null : row('Default battle mode', 'Manual: you command each ship battle. Auto-resolve: battles play out on their own.', battle, 'stack'),
       gameAuto && !(M.Phone && M.Phone.active()) ? row('Auto-resolve battles in this game', 'Set from the pre-battle card ("Auto-resolve every battle this game"); turn it off here.', gameAuto) : null,
       bool('landingScenes', 'Colony landing scene', 'Play the landing vignette when a colony is founded. Off: the card\'s Yes founds it at once.', true),
-      row('News', 'Broadcast: the GNN studio scene. Brief: one list of the turn\'s headlines with a single Continue.', news, 'stack'),
+      M.Phone && M.Phone.active() ? null : row('News', 'Broadcast: the GNN studio scene. Brief: one list of the turn\'s headlines with a single Continue.', news, 'stack'),   // phones always get the brief list (flow.js)
       bool('autosave', 'Autosave each turn', 'Writes the Auto slot at the end of every turn.', true),
       bool('confirmEndTurn', 'Confirm end of turn', 'Ask first when a colony builds ships with no design, research has no funding, or a fleet order is still unaccepted.', false)]);
 
@@ -139,10 +139,11 @@
     sync.push(() => { pending = null; scale.api.set(Math.round(U.clamp(Number(S.get('uiScale')) || 1, .85, maxScale()) * 100)); });
     const iface = section('Display & animation', 'monitor', [
       row('Animation speed', 'Fleet movement and battle playback.', anim, 'stack'),
-      bool('showTips', 'Tooltips', 'Hover hints on buttons, numbers and map objects.', true),
+      bool('showTips', 'Tooltips', UI.Phone.say('Hover hints on buttons, numbers and map objects.', 'Tap a number, label or chip to read about it (a long press always works, on buttons too).'), true),
       bool('reduceMotion', 'Reduce motion', 'Calmer screens: fewer sweeps, particles and twinkling.', false),
       row('Map labels', 'Which stars show their names on the galaxy map.', labels, 'stack'),
       bool('mapGrid', 'Star-chart grid', 'Draw the graticule behind the galaxy map.', true),
+      M.Phone && M.Phone.active() ? bool('perfOverlay', 'Performance overlay', 'Frame rate, graphics tier and worker load in the top corner.', false) : null,
       row('Interface scale', 'Resizes the whole interface. Applied when you let go of the slider.', null, 'stack'),
       h('div.op-row.slr', scale)]);
 

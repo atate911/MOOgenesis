@@ -190,7 +190,7 @@
   }
   function act(kind) { if (Host.scene && Host.scene.input) Host.scene.input(kind); }
   function setHint(html) { if (Host.hint) Host.hint.innerHTML = html || ''; }
-  const KEY = (k, label) => '<kbd>' + k + '</kbd>' + label;
+  const KEY = (k, label) => { const t = UI.Phone.key(k); return t ? '<kbd>' + t + '</kbd>' + label : ''; };   // phones: Tap / Back, letter keys dropped
 
   const MAKERS = {};      // kind → (host, data, run) => scene {layout(w,h), update(dt, speed), draw(ctx, w, h), input(kind), music(), dispose()}
   const FALSE_KINDS = { bombPrompt: 1 };

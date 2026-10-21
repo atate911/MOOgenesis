@@ -737,7 +737,7 @@
     }
     UI.mount(ui.cards, cards);
     const used = usedSlots();
-    UI.mount(ui.libfoot, h('div', 'Designs ', h('b', used + ' / ' + NSLOT)), h('div.dim', used >= NSLOT ? 'All slots are in use — Build asks which design to replace.' : 'Click a design to use it as a template, or an empty slot to start fresh.'));
+    UI.mount(ui.libfoot, h('div', 'Designs ', h('b', used + ' / ' + NSLOT)), h('div.dim', used >= NSLOT ? 'All slots are in use — Build asks which design to replace.' : UI.Phone.say('Click', 'Tap') + ' a design to use it as a template, or an empty slot to start fresh.'));
   }
   function designTip(d, s, slot, n, b) {
     let t = '<b>' + esc(d.name) + '</b> — ' + HULL_LABEL[d.hull] + ' hull, ' + D.cost(G.S, E_(), slot) + ' BC<br>Attack ' + (s.attack | 0) + ' · defense ' + (s.beamDef | 0) + '/' + (s.missDef | 0) + ' · hits ' + (s.hp | 0) + ' · warp ' + s.warp + ' · speed ' + (s.combatSpeed | 0);

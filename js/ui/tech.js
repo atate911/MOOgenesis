@@ -764,7 +764,7 @@
     st.slTitle = h('span', 'Research allocation'); st.slSub = h('span.sub');
     const slPanel = h('div.panel.tch-sl', h('div.panel-h', UI.icon('tech'), st.slTitle, st.slSub),
       h('div.tch-colh', h('span', 'Field · research share (2% steps)'), h('span', 'Chance'), h('span', 'Level')), st.rows.map(r => r.row),
-      h('div.foot', h('span', 'Click a name to lock it · wheel or +/− to nudge · = equalises'), h('span.grow'), st.eqBtn));
+      h('div.foot', h('span', UI.Phone.say('Click a name to lock it · wheel or +/− to nudge · = equalises', 'Tap a field\'s name to lock it')), h('span.grow'), st.eqBtn));
     st.proj = h('div.panel.tch-proj');
     const right = h('div.tch-right', slPanel, st.proj);
     st.ovw = h('div.tch-ovw');
@@ -1325,7 +1325,7 @@
     const box = h('div.tsc-box.ch', h('div.tsc-box-h', UI.icon(F.icon), h('span', F.name + ' Technology'), h('small', list.length + (list.length === 1 ? ' choice' : ' choices'))), R.listEl, R.infoEl,
       h('div.tsc-acts', R.skipBtn, h('span.grow'), R.okBtn));
     SC.panel.appendChild(box);
-    SC.hint.innerHTML = '<kbd>↑</kbd><kbd>↓</kbd> choose &nbsp;·&nbsp; <kbd>Space</kbd> research &nbsp;·&nbsp; <kbd>Esc</kbd> ' + (R.manual ? 'cancel' : 'let the scientists decide');
+    SC.hint.innerHTML = UI.Phone.say('<kbd>↑</kbd><kbd>↓</kbd> choose &nbsp;·&nbsp; <kbd>Space</kbd> research &nbsp;·&nbsp; <kbd>Esc</kbd> ' + (R.manual ? 'cancel' : 'let the scientists decide'), '');
     setHi(R.hi, true);
     void S; void rs;
   }
