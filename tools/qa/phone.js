@@ -140,21 +140,33 @@ const sheetState = page => page.evaluate(() => { const s = document.querySelecto
       console.log('   galaxy (half):' + fmtAudit(await touchAudit(page)));
       await grip.tap(); await sleep(350); check('second tap opens fully', (await sheetState(page)) === 'full'); await shot('galaxy-full');
       await grip.tap(); await sleep(350); check('third tap collapses', (await sheetState(page)) === 'strip');
-      await (await page.$('.gx-side:not(.gx-float) .side-title')).tap(); await sleep(350);
-      check('title tap opens halfway', (await sheetState(page)) === 'half');
+      const sum = await page.evaluate(() => { const side = document.querySelector('.gx-side:not(.gx-float)'), e = side.querySelector('.ph-sum'), t = side.querySelector('.side-title .ph-thumb'); if (!e) return null; const r = e.getBoundingClientRect(), sr = side.getBoundingClientRect(); return { text: e.innerText.replace(/\s+/g, ' '), inStrip: r.top >= sr.top && r.bottom <= sr.bottom + 1, r: [r.top, r.bottom, sr.top, sr.bottom].map(Math.round), thumb: !!(t && t.offsetWidth) }; });
+      check('the collapsed sheet shows the thumbnail and the summary line', !!sum && sum.inStrip && sum.thumb && /Pop \d/.test(sum.text) && /Prod \d/.test(sum.text), JSON.stringify(sum));
+      await (await page.$('.gx-side:not(.gx-float) .side-title .nm')).tap(); await sleep(350);
+      check('a tap on the name in the strip opens the sheet halfway, not the rename prompt', (await sheetState(page)) === 'half' && !(await page.evaluate(() => MOO.UI.modalOpen())));
+      const half = await page.evaluate(() => { const side = document.querySelector('.gx-side:not(.gx-float)'), sr = side.getBoundingClientRect(), vis = e => { const r = e.getBoundingClientRect(); return r.height > 0 && r.top >= sr.top - 1 && r.bottom <= sr.bottom + 1; };
+        const sl = [...side.querySelectorAll('.sc-sliders .slider')], bt = [...side.querySelectorAll('.sc-btns .btn')]; return { sliders: sl.filter(vis).length, of: sl.length, buttons: bt.filter(vis).length, h: Math.round(sr.height), map: Math.round(side.parentElement.querySelector('.gx-mapwrap').clientHeight) }; });
+      check('half height: all five sliders and Ships / Reloc / Trans inside the sheet', half.sliders === 5 && half.of === 5 && half.buttons === 3 && half.h <= half.map * 0.71, JSON.stringify(half));
       const ov = await page.evaluate(() => { const p = document.querySelector('.gx-side:not(.gx-float) .panel'), r = p.getBoundingClientRect(); const out = [...p.querySelectorAll('*')].filter(e => { const q = e.getBoundingClientRect(); return q.width && q.right > r.right + 2; }).slice(0, 3).map(e => e.className); return out; });
       check('nothing in the colony panel spills past its right edge', !ov.length, ov.join(', '));
-      await page.evaluate(() => MOO.UI.Phone.galaxySheet().set('strip'));
+      await page.evaluate(() => MOO.UI.Phone.galaxySheet().set('strip')); await sleep(400);
       // a finger lands 16px off a star: the star is still picked (22px touch radius)
       const tgt = await page.evaluate(() => {
         const m = MOO.UI.Galaxy.map, d = m._dbg(), r = m.canvas.getBoundingClientRect(), sel = m.getSelection().star;
-        const ok = s => s.on && s.id !== sel && s.sx > 40 && s.sx < r.width - 90 && s.sy > 200 && s.sy < r.height - 200 && d.SD.every(o => o === s || Math.hypot(o.sx - s.sx, o.sy - s.sy) > 60);
+        const ok = s => s.on && s.id !== sel && s.sx > 40 && s.sx < r.width - 90 && s.sy > 160 && s.sy < r.height - 160 && d.SD.every(o => o === s || Math.hypot(o.sx - s.sx, o.sy - s.sy) > 46);
         const s = d.SD.find(ok); return s ? { id: s.id, x: r.left + s.sx + 15, y: r.top + s.sy + 6 } : null;
       });
       if (tgt) { await page.touchscreen.tap(tgt.x, tgt.y); await sleep(500); }
       check('a tap 16px off a star selects it', !!tgt && (await page.evaluate(() => MOO.UI.Galaxy.map.getSelection().star)) === tgt.id, JSON.stringify(tgt));
       await page.evaluate(() => { MOO.UI.Phone.galaxySheet().set('strip'); const E = MOO.Game.player(); MOO.UI.Galaxy.map.select(MOO.Game.S.planets[E.capital].starId, { emit: true }); }); await sleep(300);
       await tabBar('portrait');
+      // a star panel: thumbnail + summary (planet / range), and no rename from the strip
+      const sid = await page.evaluate(() => { const S = MOO.Game.S, E = MOO.Game.player(); const s = S.stars.find(x => x.id !== S.planets[E.capital].starId && S.planets[x.id].owner < 0 && E.explored[x.id]) || S.stars.find(x => !E.explored[x.id]); MOO.UI.Galaxy.selectStar(s.id); MOO.UI.Side.show('star', { star: s.id }); return s.id; });
+      await sleep(400);
+      const ss = await page.evaluate(() => { const side = document.querySelector('.gx-side:not(.gx-float)'), e = side.querySelector('.ph-sum'); return { st: side.dataset.sheet, text: e ? e.innerText.replace(/\s+/g, ' ') : null, thumb: !!side.querySelector('.side-title .ph-thumb') }; });
+      check('a star shows its thumbnail and summary (planet or "unexplored", range)', !!ss.text && ss.thumb && /(Range|territory)/.test(ss.text) && /(max|Unexplored|No habitable)/.test(ss.text), JSON.stringify(Object.assign({ star: sid }, ss)));
+      await shot('galaxy-star-strip');
+      await page.evaluate(() => { const E = MOO.Game.player(), id = MOO.Game.S.planets[E.capital].starId; MOO.UI.Galaxy.selectStar(id); MOO.UI.Galaxy.showDefault(); MOO.UI.Phone.galaxySheet().set('strip'); }); await sleep(300);
       const ids = await page.evaluate(() => { const S = MOO.Game.S, E = MOO.Game.player(), cap = S.planets[E.capital]; return { star: cap.starId, planet: cap.id }; });
       await page.evaluate(id => MOO.UI.Side.show('reloc', { planet: id }), ids.planet); await sleep(300);
       check('Reloc opens the sheet halfway', (await sheetState(page)) === 'half'); await shot('galaxy-reloc');

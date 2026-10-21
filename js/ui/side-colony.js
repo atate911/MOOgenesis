@@ -155,8 +155,12 @@
         const cyc = (dir, tip) => h('button.cyc' + (dir > 0 ? '.nx' : ''), { type: 'button', 'aria-label': tip.replace(/<[^>]+>/g, ''), tip, onclick: () => UI.Galaxy.cycleColony(dir) });
         st.title.insertBefore(cyc(-1, 'Previous colony <b>F2</b>'), st.title.firstChild); st.title.appendChild(cyc(1, 'Next colony <b>F3</b>'));
       }
-      // planet card
       const key = c.type + c.growth + c.id;
+      if (UI.Phone && UI.Phone.active()) {                                             // phones: a thumbnail in the title row (the wide card shows when the sheet is fully open)
+        if (st.thumbKey !== key) { st.thumbKey = key; st.thumb = h('span.ph-thumb', planetCanvas(c, 36)); }
+        st.title.insertBefore(st.thumb, st.title.querySelector('.nm'));
+      }
+      // planet card
       if (st.cardKey !== key) {
         st.cardKey = key;
         const WA = M.Gfx && M.Gfx.WorldArt, art = WA && WA.enabled ? WA.orbit(c, G.S) : null;

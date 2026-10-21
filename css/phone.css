@@ -82,11 +82,11 @@ html[data-phone] .ph-sheet[data-sheet="strip"] { height: var(--ph-strip, 4.8rem)
 html[data-phone] .ph-sheet[data-sheet="half"] { height: var(--ph-half, 52%); }
 html[data-phone] .ph-sheet[data-sheet="full"] { height: var(--ph-full, 100%); }
 html[data-phone] .ph-grip {
-  flex: none; position: relative; display: flex; align-items: center; justify-content: center; height: 2rem; cursor: grab; touch-action: none; user-select: none;
+  flex: none; position: relative; display: flex; align-items: center; justify-content: center; height: var(--grip, 2rem); cursor: grab; touch-action: none; user-select: none;
   background: linear-gradient(180deg, #59636f, #3a424c); box-shadow: inset 0 1px 0 rgba(255, 255, 255, .25), 0 -6px 18px rgba(0, 0, 0, .45);
 }
 html[data-phone] .ph-grip::before { content: ""; width: 3rem; height: .3rem; border-radius: .2rem; background: rgba(255, 255, 255, .5); }
-html[data-phone] .ph-grip::after { content: ""; position: absolute; left: 0; right: 0; bottom: 0; top: calc(2rem - var(--tap)); }   /* a --tap tall hit area, reaching up over the map */
+html[data-phone] .ph-grip::after { content: ""; position: absolute; left: 0; right: 0; bottom: 0; top: calc(var(--grip, 2rem) - var(--tap)); }   /* a --tap tall hit area, reaching up over the map */
 
 /* ---- count stepper (UI.Phone.stepper) --------------------------------------- */
 html[data-phone] .ph-step { display: flex; align-items: center; gap: .3rem; }
@@ -99,15 +99,16 @@ html[data-phone] .ph-step .ph-stv { min-width: 2.6rem; text-align: center; font:
    ========================================================================= */
 html:root:root[data-phone] .gx { grid-template-columns: minmax(0, 1fr); grid-template-rows: minmax(0, 1fr) auto; padding: 0; gap: 0; }
 html:root:root[data-phone] .gx-mapwrap { grid-column: 1; grid-row: 1; }
+html[data-phone] { --ph-strip: calc(var(--tap) + 4.1rem); }                           /* the collapsed sheet: grip, title row, summary line (the minimap, map key and toasts sit above it) */
 html:root:root[data-phone] .gx-side:not(.gx-float) {
   grid-column: 1; grid-row: 1; align-self: end; z-index: 6; padding: 0; background: none;
-  --ph-strip: 5.6rem; --ph-half: 56%; --ph-full: calc(100% - .4rem);
+  --ph-half: 56%; --ph-full: calc(100% - .4rem); --grip: 1.5rem;        /* --ph-half: phone-galaxy.js measures the controls' height */
 }
 html:root:root[data-phone] .gx-side:not(.gx-float) .panel { box-shadow: 0 -8px 22px rgba(0, 0, 0, .55), 0 0 0 1px rgba(0, 0, 0, .8); }
 html:root:root[data-phone] .gx-side:not(.gx-float)[data-sheet="strip"] .gx-sidebody { overflow: hidden; }
 html:root:root[data-phone] .gx-side:not(.gx-float):not([data-sheet="full"]) > div:not(.panel):not(.ph-grip) { display: none; }   /* the turn log: full only */
 html:root:root[data-phone] .gx-side:not(.gx-float) .side-title { cursor: pointer; }
-html:root:root[data-phone] .gx-sidebody { padding: .4rem .5rem calc(.6rem + env(safe-area-inset-bottom)); }
+html:root:root[data-phone] .gx-sidebody { padding: .3rem .5rem .6rem; }   /* the tab bar under the sheet pads for the home indicator */
 /* a panel opened beside a map tap: pinned to the bottom edge of the map instead of UI.Side.place()'s inline position */
 html:root:root[data-phone] .gx-side.gx-float {
   left: .5rem !important; top: auto !important; right: .5rem; bottom: .5rem; width: auto; max-height: 58%;
@@ -136,10 +137,33 @@ html:root:root[data-phone] .gx-bar.ph-tabs .btn .ico { width: 1.35rem; height: 1
 html:root:root[data-phone] .gx-bar.ph-tabs .ph-next { font: 700 max(12px, .82rem)/1.1 var(--font-display); letter-spacing: .04em; text-transform: uppercase; }
 /* the pre-battle / result cards inside the sheet */
 /* the minimap and the map key sit above the collapsed sheet (galaxymap.js positions the minimap inline per its corner setting) */
-html:root:root[data-phone] .gmap-mini { left: .5rem !important; right: auto !important; top: auto !important; bottom: 5.5rem !important; }
-html:root:root[data-phone] .gmap .gmap-legend.panel { bottom: 5.5rem; width: min(16rem, 70vw); max-height: 55%; }
+html:root:root[data-phone] .gmap-mini { left: .5rem !important; right: auto !important; top: auto !important; bottom: calc(var(--ph-strip) + .5rem) !important; }
+html:root:root[data-phone] .gmap .gmap-legend.panel { bottom: calc(var(--ph-strip) + .5rem); width: min(16rem, 70vw); max-height: 55%; }
+/* the sheet's title row: a thumbnail (side-colony.js / side-misc.js add it on phones), then the summary line (phone-galaxy.js) */
+html:root:root[data-phone] .gx-side .side-title { min-height: var(--tap); gap: .5rem; margin-bottom: .2rem; padding: .15rem .35rem; }
+html[data-phone] .ph-thumb { flex: none; display: grid; place-items: center; width: 2.4rem; height: 2.4rem; overflow: hidden; }
+html[data-phone] .ph-thumb canvas, html[data-phone] .ph-thumb .sm-pic { display: block; width: 100%; height: 100%; }
+html[data-phone] .ph-thumb.star { --sc: #ffe27a; width: 2rem; height: 2rem; border-radius: 50%; background: radial-gradient(circle, #fff 0 14%, var(--sc) 34%, color-mix(in srgb, var(--sc) 40%, transparent) 52%, transparent 70%); }
+html[data-phone] .ph-thumb.star[data-c="red"] { --sc: #ff6a4a; } html[data-phone] .ph-thumb.star[data-c="green"] { --sc: #7ae07a; }
+html[data-phone] .ph-thumb.star[data-c="blue"] { --sc: #6aa8ff; } html[data-phone] .ph-thumb.star[data-c="white"] { --sc: #e8f0ff; } html[data-phone] .ph-thumb.star[data-c="purple"] { --sc: #c08aff; }
+html[data-phone] .ph-sum { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: .15rem .75rem; padding: 0 .3rem .45rem; font-size: max(12px, .86rem); line-height: 1.35; color: #d6dce6; text-align: center; }
+html[data-phone] .ph-sum b { color: #fff; font-weight: 600; font-variant-numeric: tabular-nums; }
+html[data-phone] .ph-sum .up { color: var(--leaf); } html[data-phone] .ph-sum .dn { color: var(--rose); }
+html[data-phone] .ph-sum .w { padding: 0 .45rem; color: #ffb27a; border: 1px solid currentColor; border-radius: .2rem; }
+html[data-phone] .gx-sidebody:has(.ph-sum) .sm-range { display: none; }   /* the star's range is in its summary */
+/* the colony's build row: the box (picture and design) on its own line, Ships · Reloc · Trans as a row under it */
+html:root:root[data-phone] .sc-build { grid-template-columns: minmax(0, 1fr); }
+html:root:root[data-phone] .sc-btns { flex-direction: row; } html:root:root[data-phone] .sc-btns .btn { flex: 1 1 0; }
+/* half height = the controls (portrait): the picture, the stats, the build box, the rally line and the star's planet card wait for full */
+@media (orientation: portrait) {
+  html:root:root[data-phone] .gx-side:not(.gx-float)[data-sheet="half"] :is(.sc-card, .sc-stats, .sc-bbox, .sc-rally, .sm-card) { display: none; }
+}
+/* a pick-a-star panel taller than its sheet keeps Cancel / Accept in reach */
+html[data-phone] .gx-side:not(.gx-float) .gx-sidebody > .sm-actions:last-child { position: sticky; bottom: -.6rem; z-index: 3; margin: .3rem -.5rem 0; padding: .45rem .5rem .5rem; background: rgba(58, 66, 76, .97); box-shadow: 0 -6px 12px rgba(0, 0, 0, .45); }
 /* the colony sliders (side-colony.js, bumped): finger-sized arrows and lock in a 27rem-wide panel */
-html:root:root[data-phone] .sc-sliders .slider { grid-template-columns: 3.6rem var(--tap) minmax(0, 1fr) var(--tap) 3.3rem var(--tap); gap: .2rem; margin: .15rem 0; }
+html:root:root[data-phone] .sc-sliders .slider { grid-template-columns: 3.3rem var(--tap) minmax(0, 1fr) var(--tap) 3.9rem var(--tap); gap: .2rem; margin: .15rem 0; }
+html:root:root[data-phone] .sc-sliders .s-val { padding: .12rem .2rem; font-size: 12px; letter-spacing: 0; text-align: center; }
+html:root:root[data-phone] .sc-sliders .s-label { padding: .1rem 0; letter-spacing: .04em; }
 html:root:root[data-phone] .sc-sliders .s-btn, html:root:root[data-phone] .sc-sliders .s-lock { width: 100%; height: var(--tap); }
 
 /* =========================================================================
@@ -443,7 +467,7 @@ html:root:root[data-phone] .end-cap { width: 92%; }
 html:root:root[data-phone] .su-thumb-w { max-height: 4.8rem; min-height: 3.6rem; }
 html:root:root[data-phone] .tl-r { min-height: var(--row); align-items: center; }
 html:root:root[data-phone] .tl-a { display: inline-block; padding: .55rem .1rem; margin: -.55rem 0; }   /* a taller tap box for the turn log's links, same line height */
-html[data-phone] #toasts { bottom: 6.5rem; max-width: 94vw; }
+html[data-phone] #toasts { bottom: calc(var(--ph-strip) + var(--tap) + 1.4rem + env(safe-area-inset-bottom)); max-width: 94vw; }
 
 /* =========================================================================
    Landscape phones: the galaxy side panel is a right-hand column again (as on desktop) — a bottom sheet would leave the map a
@@ -453,6 +477,8 @@ html[data-phone] #toasts { bottom: 6.5rem; max-width: 94vw; }
   html:root:root[data-phone] .gx { grid-template-columns: minmax(0, 1fr) min(24rem, 46vw); }
   html:root:root[data-phone] .gx-side:not(.gx-float) { grid-column: 2; grid-row: 1; align-self: stretch; height: auto !important; transition: none; }
   html:root:root[data-phone] .gx-side:not(.gx-float) .ph-grip { display: none; }
+  html[data-phone] .gx-side :is(.ph-sum, .ph-thumb) { display: none; }
+  html[data-phone] .gx-sidebody:has(.ph-sum) .sm-range { display: block; }
   html:root:root[data-phone] .gx-side:not(.gx-float)[data-sheet] .gx-sidebody { overflow-y: auto; }
   html:root:root[data-phone] .gx-side:not(.gx-float):not([data-sheet="full"]) > div:not(.panel):not(.ph-grip) { display: block; }
   html:root:root[data-phone] .gx-side.gx-float { right: auto; width: min(24rem, 52%); max-height: calc(100% - 1rem); }
