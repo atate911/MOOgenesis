@@ -311,6 +311,17 @@ html[data-phone] .ph-appbar {
 html[data-phone][data-ph-bar] .ph-appbar { display: block; }
 html[data-phone][data-ph-bar] #screens { top: calc(3.1rem + env(safe-area-inset-top)); }
 html[data-phone][data-ph-bar] .ph-back { top: calc(.3rem + env(safe-area-inset-top)); }
+html[data-phone] .ph-bar-t {
+  position: absolute; left: 7.4rem; right: .8rem; bottom: 0; height: 3.1rem; display: flex; align-items: center; justify-content: flex-end;
+  overflow: hidden; white-space: nowrap; text-overflow: ellipsis; font: 400 1.25rem var(--font-title); letter-spacing: .04em; color: var(--brass-hi);
+}
+
+/* ---- tool screens: the app bar carries the title and Back, so the in-screen title and the OK / Done / Back that only close the screen go */
+html:root:root[data-phone] :is(.lp-title, .lf-title, .rx-title, .al-title, .tch-title, .ttp-head h1, .op-head, .sl-head, .ov-title) { display: none; }
+html:root:root[data-phone] :is(.lp-btns > .btn.primary, .lf-foot > .btn.primary, .tch-head > .btn.primary, .ttp-head > .btn, .rx-foot > .btn.primary:last-child,
+  .rx-chips > .btn.primary:last-child, .al-foot, .op-foot > .btn.primary, .op-foot-hint, .sl-foot, .ov-ok) { display: none; }
+html:root:root[data-phone] .lf-foot > .btn:not(.primary):not(.danger) { display: none; }   /* Specs: the Fleets | Specs tabs in the head do the same */
+html:root:root[data-phone] .ttp-head:not(:has(> :not(h1):not(.btn))) { display: none; }
 
 /* =========================================================================
    Tool screens (ledgers, research, races, almanac): the frame scrolls as one page instead of fitting the window; panels stack.
@@ -352,7 +363,10 @@ html:root:root[data-phone] .lf-cost { text-align: left; display: flex; align-ite
 html:root:root[data-phone] .tch { padding: .35rem .4rem .5rem; gap: .45rem; overflow-x: hidden; overflow-y: auto; overscroll-behavior: contain; }
 html:root:root[data-phone] .tch-head { flex-wrap: wrap; gap: .25rem .8rem; }
 html:root:root[data-phone] .tch-title { font-size: 1.45rem; } html:root:root[data-phone] .tch-total b { font-size: 1.6rem; }
-html:root:root[data-phone] .tch-tabs { overflow-x: auto; scrollbar-width: none; } html:root:root[data-phone] .tch-tab { flex: 0 0 auto; min-height: var(--tap); }
+html:root:root[data-phone] .tch-tabs { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .25rem; overflow: visible; }   /* all six fields in view */
+html:root:root[data-phone] .tch-tab { min-width: 0; min-height: var(--tap); padding: .2rem .5rem; }
+html:root:root[data-phone] .tch-tab .nm { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+html:root:root[data-phone] .tch-tab.ovw { grid-column: 1 / -1; }
 html:root:root[data-phone] .tch-body { flex: none; display: flex; flex-direction: column; gap: .6rem; min-height: auto; }
 html:root:root[data-phone] .tch-left, html:root:root[data-phone] .tch-right { min-height: auto; overflow: visible; }
 html:root:root[data-phone] .tch-right { order: -1; }
@@ -362,11 +376,19 @@ html:root:root[data-phone] .tch-dtxt { overflow: visible; }
 html:root:root[data-phone] .tch-colh { display: none; }
 html:root:root[data-phone] .tch-r1 { grid-template-columns: minmax(0, 1fr) auto auto; row-gap: .15rem; }
 html:root:root[data-phone] .tch-r1 > .slider { grid-column: 1 / -1; }
-html:root:root[data-phone] .tch-row .slider { grid-template-columns: 6.2rem var(--tap) minmax(2.5rem, 1fr) var(--tap) 2.8rem var(--tap); gap: .2rem; }
-html:root:root[data-phone] .tch-row .slider .s-label { overflow: hidden; text-overflow: ellipsis; }
+html:root:root[data-phone] .tch-row .slider { grid-template-columns: var(--tap) minmax(2.5rem, 1fr) var(--tap) 3.2rem var(--tap); gap: .2rem .25rem; }
+html:root:root[data-phone] .tch-row .slider .s-label { grid-column: 1 / -1; min-height: 1.7rem; overflow: hidden; text-overflow: ellipsis; }   /* the field's name on its own line */
 html:root:root[data-phone] .tch-r2 { flex-wrap: wrap; gap: .2rem .6rem; }
 html:root:root[data-phone] .tch-proj { min-height: auto; }
 html:root:root[data-phone] .tch-sl .foot { flex-wrap: wrap; }
+
+/* the three parts (js/ui/phone-research.js): Allocation · Project · Techs */
+html:root:root[data-phone] .tch .ph-tseg { flex: none; }
+html:root:root[data-phone] .tch[data-ph-seg="alloc"] :is(.tch-tabs, .tch-left, .tch-proj, .tch-ovw) { display: none; }
+html:root:root[data-phone] .tch[data-ph-seg="proj"] :is(.tch-left, .tch-sl, .tch-ovw, .tch-tab.ovw) { display: none; }
+html:root:root[data-phone] .tch[data-ph-seg="techs"] .tch-right { display: none; }
+html:root:root[data-phone] .tch[data-ph-seg="techs"] .tch-list { max-height: none; }
+html:root:root[data-phone] .tch-head { justify-content: center; }
 
 /* ---- tech tree (its own screen, or Research › Overview): the tree on top, the detail under it ---- */
 html:root:root[data-phone] .ttp { padding: .35rem .4rem .5rem; gap: .45rem; overflow-y: auto; }
@@ -383,6 +405,7 @@ html:root:root[data-phone] .tch-ovw { min-height: auto; }
 /* ---- races: one card per empire, the security card last; absent empires are left out ---- */
 html:root:root[data-phone] .rc-grid { flex: none; grid-template-columns: minmax(0, 1fr); grid-template-rows: none; grid-auto-flow: row; grid-auto-rows: minmax(7rem, auto); gap: .5rem; }
 html:root:root[data-phone] .rc-slot { position: relative; inset: auto; align-items: flex-start; }           /* the card's content sets its height */
+html:root:root[data-phone] .rc-sec { position: relative; inset: auto; gap: .3rem; }
 html:root:root[data-phone] .rc-pic { height: auto; width: 6.4rem; }
 html:root:root[data-phone] .rc-spy { grid-template-columns: minmax(0, 1fr); gap: .2rem; }
 html:root:root[data-phone] .rc-spy .rd { flex-direction: row; justify-content: space-between; gap: .6rem; }
@@ -408,6 +431,15 @@ html:root:root[data-phone] .sx-row { grid-template-columns: .85rem 6.4rem minmax
 
 /* ---- almanac ---- */
 html:root:root[data-phone] .al-search { margin-left: 0; width: 100%; }
+/* the search and the tabs stay at the top while a long page scrolls under them; the tabs are one sideways row */
+html:root:root[data-phone] .al-sub { display: none; }
+html:root:root[data-phone] .al-head { position: sticky; top: -.3rem; z-index: 5; margin: -.5rem -.5rem 0; padding: .5rem .5rem .3rem; background: #141b29; }
+html:root:root[data-phone] .al-sheet > .tabs {
+  position: sticky; top: calc(var(--tap) + .5rem); z-index: 5; flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none;
+  margin: 0 -.5rem; padding: .1rem .5rem .35rem; background: #141b29; box-shadow: 0 6px 10px rgba(0, 0, 0, .35);
+}
+html:root:root[data-phone] .al-sheet > .tabs::-webkit-scrollbar { display: none; }
+html:root:root[data-phone] .al-sheet > .tabs button { flex: none; }
 html:root:root[data-phone] .al-body { flex: none; overflow: visible; }
 html:root:root[data-phone] .al-grid { grid-template-columns: minmax(0, 1fr); }
 html:root:root[data-phone] .al-race { grid-template-columns: 5.6rem minmax(0, 1fr); }
@@ -418,9 +450,9 @@ html:root:root[data-phone] .ov { flex-direction: column; padding: 0; gap: 0; }
 html:root:root[data-phone] .ov-main { flex: 1 1 auto; min-height: 0; }
 html:root:root[data-phone] .ov-side { flex: none; width: auto; --ph-strip: 5.4rem; --ph-full: 64%; }
 html:root:root[data-phone] .ov-side .panel { padding: .3rem; }
-html:root:root[data-phone] .ov-side[data-sheet="strip"] .panel > :not(.ov-title) { display: none; }
+html:root:root[data-phone] .ov-side[data-sheet="strip"] .panel > :not(.ov-modes) { display: none; }   /* collapsed: the three map modes (the app bar says "Galaxy map") */
 html:root:root[data-phone] .ov-title { font-size: 1.4rem; } html:root:root[data-phone] .ov-title small { display: none; }
-html:root:root[data-phone] .ov-modes { flex-direction: row; flex-wrap: wrap; } html:root:root[data-phone] .ov-modes .btn { flex: 1 1 0; width: auto; justify-content: center; }
+html:root:root[data-phone] .ov-modes { flex-direction: row; flex-wrap: wrap; } html:root:root[data-phone] .ov-modes .btn { flex: 1 1 0; min-width: 0; width: auto; justify-content: center; padding: .4em .2em; letter-spacing: .02em; font-size: max(12px, .82rem); }
 
 /* ---- star system: portrait placement (system.js geometry() places the planet and star), panels along the edges ---- (landscape phones keep the desktop placement) */
 @media (orientation: portrait) {

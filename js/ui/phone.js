@@ -5,7 +5,8 @@
 //                                            Escape exactly like its right-click (kit.js keydown → modal stack → newest UI.bindKey; the
 //                                            window-capture handlers of galaxymap / help run first), so one control covers the whole game.
 //   UI.Phone.backHidden                      Set of screen ids where the global Back control stays hidden (they draw their own); every
-//                                            other screen gets a slim app bar holding Back (<html data-ph-bar>; #screens starts below it)
+//                                            other screen gets a slim app bar holding Back and the screen's title (<html data-ph-bar>;
+//                                            #screens starts below it; css/phone.css hides the in-screen titles and OK buttons it replaces)
 //   UI.Phone.sheet(el, {states, initial})    makes a panel a bottom sheet: a drag handle (.ph-grip) becomes its first child and
 //                                            el.dataset.sheet = 'strip' | 'half' | 'full' (heights come from CSS); tap cycles, drag snaps.
 //                                            → {set(s), get(), on(fn), el, grip, states}; also stored as el.phSheet
@@ -34,11 +35,25 @@
   try { const mq = matchMedia('(pointer: coarse)'); if (mq && mq.addEventListener) mq.addEventListener('change', recheck); } catch (e) { /* ignore */ }
 
   // ------------------------------------------------------------------ Back
-  let backEl = null;
+  let backEl = null, titleEl = null, titleObs = null;
+  // the app bar's title: a fixed name per screen; Save / Load follows the screen's own heading (it switches between the two)
+  const TITLES = { planets: 'Planets', fleets: 'Fleets', specs: 'Fleets', tech: 'Research', techtree: 'Tech overview', races: 'Races', report: 'Report',
+    status: 'Racial stats', help: 'Almanac', options: 'Options', mapoverview: 'Galaxy map', system: 'Star system', audience: 'Audience', council: 'Galactic Council',
+    landing: 'New colony', endings: '', setup: 'New game', saveload: 'Save / load', gnn: 'Galactic News', techscene: 'Research', combat: 'Battle' };
+  function setTitle(id) {
+    if (!titleEl) return;
+    if (titleObs) { titleObs.disconnect(); titleObs = null; }
+    titleEl.textContent = TITLES[id] !== undefined ? TITLES[id] : '';
+    if (id === 'saveload') {
+      const scr = UI.Screens.el && UI.Screens.el('saveload'), t = scr && scr.querySelector('.ctl-title');
+      if (t) { const copy = () => { titleEl.textContent = t.textContent; }; copy(); titleObs = new MutationObserver(copy); titleObs.observe(t, { childList: true, characterData: true, subtree: true }); }
+    }
+  }
   function mountBack() {                                                                     // only ever in the DOM on a phone
     if (backEl) return;
     const app = doc.getElementById('app') || doc.body;
-    app.appendChild(h('div.ph-appbar', { 'aria-hidden': 'true' }));
+    titleEl = h('div.ph-bar-t');
+    app.appendChild(h('div.ph-appbar', { 'aria-hidden': 'true' }, titleEl));
     backEl = h('button.ph-back', { type: 'button', 'aria-label': 'Back', onclick: () => P.back() }, h('span.ch', '‹'), h('span', 'Back'));
     app.appendChild(backEl);
   }
@@ -163,7 +178,7 @@
   UI.init = function () {
     if (init0) init0.apply(this, arguments);
     if (active()) mountBack();
-    if (M.Bus) M.Bus.on('screen', () => { P.hideTip(); setTimeout(updateBack, 0); });
+    if (M.Bus) M.Bus.on('screen', id => { P.hideTip(); setTimeout(updateBack, 0); if (active()) setTitle(id); });
     const go0 = UI.Screens.go;
     UI.Screens.go = function (id) { setBar(id); return go0.apply(UI.Screens, arguments); };
     const modal0 = UI.modal;                                                                 // the Back control shows while a modal is open

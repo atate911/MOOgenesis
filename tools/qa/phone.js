@@ -2,7 +2,7 @@
 // index.html (no ?phone=1), plus a desktop pass proving the phone layer stays out of the way. Prints PASS / FAIL per check, the scale-audit
 // findings per screen, and the touch audit (targets under 40px, text under 12px).
 // usage: node tools/qa/phone.js [landscape|small] [step ...]
-//   steps: gate galaxy battle screens scenes menus design back tips bot desktop   (default: all)
+//   steps: gate galaxy battle screens research scenes menus design back tips bot desktop   (default: all)
 //   env:   SHOTS=dir (default /tmp/claude-0/phone) · PORT (default 8794) · TURNS (dev auto-play turns before the checks, default 10)
 const { serve, open, sleep, ROOT } = require('./lib');
 const fs = require('fs'), path = require('path');
@@ -222,6 +222,33 @@ const sheetState = page => page.evaluate(() => { const s = document.querySelecto
       }
       // GNN: phones get the brief list in a modal, never the 16:9 studio
       await page.evaluate(() => { window.__gnn = MOO.Game.S && MOO.UI.Flow ? 1 : 0; });
+    });
+
+    await step('research', async () => {
+      await page.evaluate(() => MOO.UI.Screens.go('tech', { from: 'galaxy' })); await sleep(1000);
+      const vis = sel => page.evaluate(s => { const e = document.querySelector('.screen.active ' + s); return !!(e && e.getClientRects().length && getComputedStyle(e).display !== 'none'); }, sel);
+      const top = () => page.evaluate(() => { const t = document.querySelector('.screen.active .tch'); if (t) t.scrollTop = 0; });
+      const segs = await page.$$eval('.screen.active .ph-tseg button', b => b.map(x => x.textContent));
+      check('research: Allocation · Project · Techs', segs.join('|') === 'Allocation|Project|Techs', segs.join('|'));
+      check('Allocation: the six sliders, no list or project', (await vis('.tch-sl')) && !(await vis('.tch-left')) && !(await vis('.tch-proj')) && (await page.$$('.screen.active .tch-sl .slider')).length === 6);
+      const bar = await page.evaluate(() => document.querySelector('.ph-bar-t').textContent);
+      check('app bar: "Research", no in-screen title or OK', bar === 'Research' && !(await vis('.tch-title')) && !(await vis('.tch-head > .btn.primary')), bar);
+      await top(); await shot('research-alloc');
+      await (await page.$('.screen.active .ph-tseg button:has-text("Project")')).tap(); await sleep(400);
+      check('Project: field tabs and the project card only', (await vis('.tch-proj')) && (await vis('.tch-tabs')) && !(await vis('.tch-sl')) && !(await vis('.tch-left')) && !(await vis('.tch-tab.ovw')));
+      await top(); await shot('research-project');
+      await (await page.$('.screen.active .ph-tseg button:has-text("Techs")')).tap(); await sleep(400);
+      check('Techs: the list and the detail', (await vis('.tch-left')) && !(await vis('.tch-sl')) && !(await vis('.tch-proj')));
+      await top(); await shot('research-techs');
+      await (await page.$('.screen.active .tch-tab.ovw')).tap(); await sleep(700);
+      check('Techs › Overview: the tech tree', (await vis('.tch-ovw')) && (await page.evaluate(() => MOO.UI.Tech._phone.st.view)) === 'overview');
+      await top(); await shot('research-overview');
+      await (await page.$('.screen.active .ph-tseg button:has-text("Allocation")')).tap(); await sleep(400);
+      check('leaving Techs from Overview goes back to the field view', (await page.evaluate(() => MOO.UI.Tech._phone.st.view)) === 'field' && (await vis('.tch-sl')));
+      await back(); await sleep(700);
+      await page.evaluate(() => MOO.UI.Screens.go('tech', { from: 'galaxy', view: 'overview' })); await sleep(900);
+      check('opening Research on the overview selects Techs', (await page.evaluate(() => document.querySelector('.screen.active .tch').dataset.phSeg)) === 'techs' && (await vis('.tch-ovw')));
+      await back(); await sleep(700);
     });
 
     await step('scenes', async () => {

@@ -117,6 +117,7 @@ window.MOO_MANIFEST = {
     'js/ui/design.js',
     'js/ui/phone-design.js',
     'js/ui/tech.js',
+    'js/ui/phone-research.js',
     'js/ui/techtree.js',
     'js/ui/races.js',
     'js/ui/audience.js',

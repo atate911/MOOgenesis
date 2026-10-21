@@ -1007,6 +1007,7 @@
     const sel = st.list.querySelector('.tch-trow.sel'); if (sel) sel.scrollIntoView({ block: 'nearest' });
   }
   UI.Tech = { open(params) { if (UI.Screens.has('tech')) UI.Screens.go('tech', Object.assign({ from: UI.Screens.current ? UI.Screens.current.id : 'galaxy' }, params)); } };
+  UI.Tech._phone = { st, selectField, setView, refresh };                                   // js/ui/phone-research.js (the phone layout's segments)
 
   // ================================================================== "original" restyle — brown leather family (research/ui-ref B §0, C §0)
   // Tech, Races, Report and the tech-tree screens: warm terracotta/leather body, bevelled frames, dark-brown wells, orange/amber headings,
