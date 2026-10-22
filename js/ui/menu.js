@@ -104,7 +104,12 @@
   }
 
   // ---------------------------------------------------------------- screen
-  let canvas, ctx, vortex, bg = null, bgKey = '', t0 = 0, listEl, metaEl;
+  let canvas, ctx, vortex, bg = null, bgKey = '', t0 = 0, listEl, metaEl, scratch = null;
+  function shipScratch(w, hh) {
+    if (!scratch) scratch = document.createElement('canvas');
+    if (scratch.width !== w || scratch.height !== hh) { scratch.width = w; scratch.height = hh; }
+    return scratch;
+  }
 
   function rebuildBackdrop(w, hh) {
     const key = w + 'x' + hh;
@@ -188,11 +193,28 @@
         const par = Math.sin(t * 0.05);
         try { P.draw(ctx, { look: 'terran', seed: 'menu-world-32', inhabited: true, color: '#d6b36a' }, w * (0.9 + 0.012 * par), hh * (1.02 + 0.02 * par), Math.min(w, hh) * 0.36, t, { lightAngle: -2.9, lightElev: 0.15, spin: 0.016, cloudShadows: true }); } catch (e) { /* ignore */ }
       }
-      // ship fly-by, right to left across the top: a path that stays above the wordmark (it used to cross behind the letters)
+      // ship fly-by, right to left across the top (a path that stays above the wordmark). The 3/4 render carries its own studio light,
+      // which read as a cut-out against the scene: it is drawn to a scratch canvas and relit there — exposure down (it is far from any
+      // sun), the side away from the planet's sun (upper-left) in shadow, a cool fill from the galaxy, a quieter drive — then composited.
       const S = M.Gfx && M.Gfx.Ships;
       if (S && S.draw) {
-        const u = ((t - t0) * 0.045) % 1.35 - 0.2;
-        try { S.draw(ctx, { race: 'human', hull: 3, x: w * (1.1 - u * 1.35), y: hh * (0.07 + u * .07), size: Math.min(w, hh) * 0.2, angle: Math.PI + 0.08, color: '#d6b36a', t, thrust: 0.8, view: '3q' }); } catch (e) { /* ignore */ }
+        const u = ((t - t0) * 0.045) % 1.35 - 0.2, sz = Math.min(w, hh) * 0.19, sx = w * (1.1 - u * 1.35), sy = hh * (0.07 + u * .07);
+        try {
+          const sc = shipScratch(Math.ceil(sz * 1.6), Math.ceil(sz * 1.1)), g = sc.getContext('2d');
+          g.setTransform(1, 0, 0, 1, 0, 0); g.clearRect(0, 0, sc.width, sc.height);
+          S.draw(g, { race: 'human', hull: 3, x: sc.width * 0.5, y: sc.height * 0.5, size: sz, angle: Math.PI + 0.08, color: '#d6b36a', t, thrust: 0.4, view: '3q' });
+          g.globalCompositeOperation = 'source-atop';
+          let lg = g.createLinearGradient(sc.width * 0.2, 0, sc.width, sc.height * 0.6);
+          lg.addColorStop(0, 'rgba(6,8,22,0)'); lg.addColorStop(0.45, 'rgba(6,8,22,.32)'); lg.addColorStop(1, 'rgba(6,8,22,.78)');
+          g.fillStyle = lg; g.fillRect(0, 0, sc.width, sc.height);
+          lg = g.createLinearGradient(0, sc.height, 0, 0);
+          lg.addColorStop(0, 'rgba(120,150,255,0)'); lg.addColorStop(1, 'rgba(120,150,255,.14)');
+          g.fillStyle = lg; g.fillRect(0, 0, sc.width, sc.height);
+          g.globalCompositeOperation = 'source-over';
+          ctx.globalAlpha = 0.86;
+          ctx.drawImage(sc, sx - sc.width * 0.5, sy - sc.height * 0.5);
+          ctx.globalAlpha = 1;
+        } catch (e) { /* ignore */ }
       }
     },
   });

@@ -601,7 +601,7 @@ uniform vec3 uSd2;
 uniform vec4 uRn;
 uniform vec4 uLod;      // x terrain octaves, y cloud octaves, z crater scales, w city grain frequency
 uniform vec4 uFlg;      // x clouds, y atmosphere, z lights, w time (s, wrapped)
-uniform vec4 uQ;        // x cloud-shadow strength, y cloud shadow offset, z bump scale, w unused
+uniform vec4 uQ;        // x cloud-shadow strength, y cloud shadow offset, z bump scale, w 1 = live frame (lightning), 0 = still (sprites)
 uniform vec4 uA[16];
 uniform vec4 uF[8];
 `;
@@ -863,12 +863,15 @@ vec3 shadeDisc(vec3 n, float pxw) {
 
   float rs = (uRing.y > 0.0) ? ringShadowOn(n) : 1.0;
 
-  // ---- clouds
+  // ---- clouds: a deck 1.2 % above the ground (the view ray meets it at nh, not n: parallax toward the limb, shadows below the banks),
+  //      lit with a thin-edge backlight near the terminator and warmed in twilight; lightning inside thick banks on the night side
   float ca = 0.0;
-  vec3 ccol = vec3(0.0);
+  vec3 ccol = vec3(0.0), flash = vec3(0.0);
   float shadowF = 1.0;
   if (uFlg.x > 0.5 && CTHR < 8.0) {
-    vec3 Pc = uRotC * n;
+    vec2 qh = n.xy / 1.012;
+    vec3 nh = vec3(qh, sqrt(max(1.0 - dot(qh, qh), 0.0)));
+    vec3 Pc = uRotC * nh;
     float coct = max(uLod.y - limbLod, 2.0);
     vec4 cd = cloudField(Pc, coct, true);
     float soft = 0.05;
@@ -876,10 +879,24 @@ vec3 shadeDisc(vec3 n, float pxw) {
     ca = dens * COPAC;
     if (ca > 0.002) {
       vec3 gct = cd.yzw - Pc * dot(cd.yzw, Pc);
-      vec3 nc = normalize(n - 0.16 * (gct * uRotC));
+      vec3 nc = normalize(nh - 0.16 * (gct * uRotC));
+      float ndlc = dot(nh, uL);
       float dc = clamp((dot(nc, uL) + CWRAP) / (1.0 + CWRAP), 0.0, 1.0);
       float thick = sst(CTHR, CTHR + 0.45, cd.x);
-      ccol = P_CLOUD * (uSun * dc * mix(1.0, 0.72, thick * thick) * rs + vec3(0.016, 0.02, 0.034));
+      float tw = exp(-pow((ndlc - 0.02) / 0.12, 2.0));                                  // a narrow warm band at the terminator
+      vec3 sunc = mix(uSun, uSun * P_TWI * 1.15, tw * 0.4);
+      float rim = exp(-pow((ndlc + 0.04) / 0.12, 2.0)) * (1.0 - thick) * (0.5 + 0.5 * pow(1.0 - n.z, 1.5));   // thin edges lit from behind just past it
+      ccol = P_CLOUD * (sunc * (dc * mix(1.0, 0.72, thick * thick) + 0.35 * rim) * rs + vec3(0.016, 0.02, 0.034));
+      if (uQ.w > 0.5 && thick > 0.25 && ndlc < 0.08) {
+        vec3 cp = floor(Pc * 9.0), cf = Pc * 9.0 - cp - 0.5;
+        float cid = hash11(dot(cp, vec3(1.0, 57.0, 113.0)) + uRn.x * 91.0);
+        float slot = floor(tt * 5.0 + cid * 5.0);
+        float on = step(0.975, hash11(cid * 7.0 + slot * 1.7));
+        float ph = fract(tt * 5.0 + cid * 5.0);
+        float fl = on * exp(-ph * 4.5) * (0.6 + 0.4 * step(0.5, hash11(slot + cid)));
+        float g = exp(-dot(cf, cf) * 7.0);
+        flash = vec3(0.72, 0.8, 1.0) * fl * g * thick * sst(0.08, -0.12, ndlc) * 3.2;
+      }
     }
     if (uQ.x > 0.0 && ndl > -0.1) {
       vec3 Lt = uL - n * ndl;
@@ -915,14 +932,23 @@ vec3 shadeDisc(vec3 n, float pxw) {
 
   // clouds over the surface
   col = mix(col, ccol, ca);
+  col += flash;
 
   // ---- atmosphere in-scatter / aerial perspective
   if (uFlg.y > 0.5 && ATMS > 0.0) {
-    float fres = pow(1.0 - n.z, 2.8);
-    float haze = clamp(ATMS * (0.03 + 0.80 * fres), 0.0, 0.97);
-    vec3 ar = atmColor(ndl) * atmLight(ndl) * (uSun * 0.78);
+    // a broad Rayleigh wash over the disc (sky blue only) + the sharp limb (which goes warm in the twilight band and brightens toward
+    // the sun by forward scatter); the two are blended by their own thicknesses so the twilight colour never tints the whole disc
+    float f1 = pow(1.0 - n.z, 1.6), f2 = pow(1.0 - n.z, 4.0);
+    float hB = ATMS * (0.025 + 0.30 * f1), hL = ATMS * 0.45 * f2;
+    float sunl = atmLight(ndl) * 0.78;
+    vec3 arB = P_ATM * sunl * uSun;
+    vec2 lim = n.xy / max(length(n.xy), 1e-4);
+    float mie = pow(clamp(dot(vec3(lim, 0.0), uL), 0.0, 1.0), 6.0) * sst(-0.2, 0.3, ndl);
+    vec3 arL = atmColor(ndl) * sunl * uSun + uSun * 0.35 * mie;
+    vec3 ar = (arB * hB + arL * hL) / max(hB + hL, 1e-4);
+    float haze = clamp(hB + hL, 0.0, 0.97);
     ar = mix(ar, P_ATM * 0.55 * (uSun * 0.78), ATMEMIS);
-    col = mix(col, ar, haze) + ar * 0.10 * fres * ATMS;
+    col = mix(col, ar, haze) + ar * 0.10 * f2 * ATMS;
   }
   return col;
 }
@@ -943,7 +969,7 @@ void main() {
       vec3 ar = atmColor(sd) * atmLight(sd) * (uSun * 0.78);
       ar = mix(ar, P_ATM * 0.55 * (uSun * 0.78), ATMEMIS);
       float peak = clamp(ATMS * 0.80, 0.0, 0.97);
-      float prof = exp(-h / H) * (1.0 - sst(H * 3.5, H * 7.0, h));
+      float prof = exp(-h / H) * (1.0 - sst(H * 3.5, H * 7.0, h)) * (1.0 + 0.5 * pow(max(sd, 0.0), 4.0));
       base = glowOut(ar * peak * prof);
     }
   }
@@ -1272,7 +1298,7 @@ void main() {
     const clouds = opts.clouds !== false, atm = opts.atmosphere !== false, lights = opts.lights !== false && !!(desc && desc.inhabited);
     pr.f4('uFlg', clouds ? 1 : 0, atm ? 1 : 0, lights ? 1 : 0, t % 4096);
     const shadows = opts.cloudShadows !== false && detail >= 0.7 && Rpx >= 26;
-    pr.f4('uQ', shadows ? 0.5 : 0, 0.035, 1.0 / (1.0 + 0.12 * terr), 0);
+    pr.f4('uQ', shadows ? 0.5 : 0, 0.035, 1.0 / (1.0 + 0.12 * terr), opts.still ? 0 : 1);
     const cc = cityColor(desc && desc.color);
     pr.f3('uCity', cc[0], cc[1], cc[2]);
     g.uniform4fv(pr.u('uVort'), P.vort);
@@ -1398,7 +1424,7 @@ void main() {
     const c2 = cv.getContext('2d');
     const fit = extentOf(P) + 0.02;
     const Rr = Math.max(3, (D / 2 - 1.5) / fit);
-    const o = Object.assign({}, opts, { dpr: 1, cloudShadows: true, spin: 1, lightAngle: la, lightElev: le });   // spin 1 rev/s * t = phase (revolutions) -> static pose
+    const o = Object.assign({}, opts, { dpr: 1, cloudShadows: true, spin: 1, lightAngle: la, lightElev: le, still: true });   // spin 1 rev/s * t = phase (revolutions) -> static pose; still: no lightning baked in
     const ok = renderPlanetRegion(c2, desc, D / 2, D / 2, Rr, opts.phase || 0, o, 1, false);
     if (!ok) return null;
     cv._bytes = D * D * 4; sprBytes += cv._bytes; SPR.set(key, cv);
