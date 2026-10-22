@@ -495,9 +495,10 @@ vec3 grade(vec3 c) {
 vec4 glowOut(vec3 I) { vec3 d = grade(I); float a = clamp(max(d.r, max(d.g, d.b)), 0.0, 1.0); return vec4(d, a); }
 vec4 over(vec4 t, vec4 b) { return t + b * (1.0 - t.a); }
 float ign(vec2 p) { return fract(52.9829189 * fract(dot(p, vec2(0.06711056, 0.00583715)))); }
+uniform vec2 uVo;        // viewport origin inside the full render region (px): keeps the dither pattern the same when only part of a region is shaded
 vec4 finalize(vec4 c) {
   if (c.a > 0.0) {
-    float dn = (ign(gl_FragCoord.xy) - 0.5) / 255.0;
+    float dn = (ign(gl_FragCoord.xy + uVo) - 0.5) / 255.0;
     c.a = clamp(c.a + dn, 0.0, 1.0);
     c.rgb = min(max(c.rgb + dn, 0.0), c.a);
   }
@@ -600,7 +601,7 @@ uniform vec3 uSd2;
 uniform vec4 uRn;
 uniform vec4 uLod;      // x terrain octaves, y cloud octaves, z crater scales, w city grain frequency
 uniform vec4 uFlg;      // x clouds, y atmosphere, z lights, w time (s, wrapped)
-uniform vec4 uQ;        // x cloud-shadow strength, y cloud shadow offset, z bump scale, w unused
+uniform vec4 uQ;        // x cloud-shadow strength, y cloud shadow offset, z bump scale, w 1 = live frame (lightning), 0 = still (sprites)
 uniform vec4 uA[16];
 uniform vec4 uF[8];
 `;
@@ -801,20 +802,25 @@ Sf surfaceAt(vec3 P, float pxw, float limbLod) {
 }
 
 // ---- cloud layer: swirl vortices + domain warp + zonal stretch; returns (density, gradient wrt direction)
+// Weather: the warp fields are sampled along a slow bounded wander through noise space (tw) and the cyclones breathe, so banks stretch,
+// curl and break up over tens of seconds instead of riding the planet as a fixed decal. The wander's frequencies are multiples of
+// 2*pi/4096 so it is continuous where uFlg.w (t mod 4096) wraps. The shadow lookup calls the same function at the same time.
 vec4 cloudField(vec3 Pc, float oct, bool full) {
+  float tt = uFlg.w;
   vec3 p = Pc;
   for (int i = 0; i < 3; i++) {
     float f = uVs[i];
     if (f == 0.0) continue;
     vec4 v = uVort[i];
     float d = acos(clamp(dot(p, v.xyz), -1.0, 1.0));
-    p = rotAbout(p, v.xyz, f * exp(-(d * d) / (v.w * v.w)));
+    p = rotAbout(p, v.xyz, f * (1.0 + 0.22 * sin(tt * 0.006136 + float(i) * 2.1)) * exp(-(d * d) / (v.w * v.w)));
   }
   vec3 sc = vec3(CSCALE, CSCALE * 1.3, CSCALE);
   vec3 q = p;
   if (full) {
-    q += nzV(p * 0.85 + uSd2).xyz * 0.24;
-    q += nzV(q * 2.1 + uSd).xyz * 0.07;
+    vec3 tw = vec3(sin(tt * 0.003068), cos(tt * 0.004602), sin(tt * 0.003068 + 2.1)) * 0.8;
+    q += nzV(p * 0.85 + uSd2 + tw).xyz * 0.24;
+    q += nzV(q * 2.1 + uSd - tw * 0.6).xyz * 0.07;
   }
   vec4 d = fbmG(q * sc + uSd.yzx, oct, 0.55, 0.58);
   d.yzw *= sc;
@@ -857,12 +863,15 @@ vec3 shadeDisc(vec3 n, float pxw) {
 
   float rs = (uRing.y > 0.0) ? ringShadowOn(n) : 1.0;
 
-  // ---- clouds
+  // ---- clouds: a deck 1.2 % above the ground (the view ray meets it at nh, not n: parallax toward the limb, shadows below the banks),
+  //      lit with a thin-edge backlight near the terminator and warmed in twilight; lightning inside thick banks on the night side
   float ca = 0.0;
-  vec3 ccol = vec3(0.0);
+  vec3 ccol = vec3(0.0), flash = vec3(0.0);
   float shadowF = 1.0;
   if (uFlg.x > 0.5 && CTHR < 8.0) {
-    vec3 Pc = uRotC * n;
+    vec2 qh = n.xy / 1.012;
+    vec3 nh = vec3(qh, sqrt(max(1.0 - dot(qh, qh), 0.0)));
+    vec3 Pc = uRotC * nh;
     float coct = max(uLod.y - limbLod, 2.0);
     vec4 cd = cloudField(Pc, coct, true);
     float soft = 0.05;
@@ -870,10 +879,24 @@ vec3 shadeDisc(vec3 n, float pxw) {
     ca = dens * COPAC;
     if (ca > 0.002) {
       vec3 gct = cd.yzw - Pc * dot(cd.yzw, Pc);
-      vec3 nc = normalize(n - 0.16 * (gct * uRotC));
+      vec3 nc = normalize(nh - 0.16 * (gct * uRotC));
+      float ndlc = dot(nh, uL);
       float dc = clamp((dot(nc, uL) + CWRAP) / (1.0 + CWRAP), 0.0, 1.0);
       float thick = sst(CTHR, CTHR + 0.45, cd.x);
-      ccol = P_CLOUD * (uSun * dc * mix(1.0, 0.72, thick * thick) * rs + vec3(0.016, 0.02, 0.034));
+      float tw = exp(-pow((ndlc - 0.02) / 0.12, 2.0));                                  // a narrow warm band at the terminator
+      vec3 sunc = mix(uSun, uSun * P_TWI * 1.15, tw * 0.4);
+      float rim = exp(-pow((ndlc + 0.04) / 0.12, 2.0)) * (1.0 - thick) * (0.5 + 0.5 * pow(1.0 - n.z, 1.5));   // thin edges lit from behind just past it
+      ccol = P_CLOUD * (sunc * (dc * mix(1.0, 0.72, thick * thick) + 0.35 * rim) * rs + vec3(0.016, 0.02, 0.034));
+      if (uQ.w > 0.5 && thick > 0.25 && ndlc < 0.08) {
+        vec3 cp = floor(Pc * 9.0), cf = Pc * 9.0 - cp - 0.5;
+        float cid = hash11(dot(cp, vec3(1.0, 57.0, 113.0)) + uRn.x * 91.0);
+        float slot = floor(tt * 5.0 + cid * 5.0);
+        float on = step(0.975, hash11(cid * 7.0 + slot * 1.7));
+        float ph = fract(tt * 5.0 + cid * 5.0);
+        float fl = on * exp(-ph * 4.5) * (0.6 + 0.4 * step(0.5, hash11(slot + cid)));
+        float g = exp(-dot(cf, cf) * 7.0);
+        flash = vec3(0.72, 0.8, 1.0) * fl * g * thick * sst(0.08, -0.12, ndlc) * 3.2;
+      }
     }
     if (uQ.x > 0.0 && ndl > -0.1) {
       vec3 Lt = uL - n * ndl;
@@ -909,14 +932,23 @@ vec3 shadeDisc(vec3 n, float pxw) {
 
   // clouds over the surface
   col = mix(col, ccol, ca);
+  col += flash;
 
   // ---- atmosphere in-scatter / aerial perspective
   if (uFlg.y > 0.5 && ATMS > 0.0) {
-    float fres = pow(1.0 - n.z, 2.8);
-    float haze = clamp(ATMS * (0.03 + 0.80 * fres), 0.0, 0.97);
-    vec3 ar = atmColor(ndl) * atmLight(ndl) * (uSun * 0.78);
+    // a broad Rayleigh wash over the disc (sky blue only) + the sharp limb (which goes warm in the twilight band and brightens toward
+    // the sun by forward scatter); the two are blended by their own thicknesses so the twilight colour never tints the whole disc
+    float f1 = pow(1.0 - n.z, 1.6), f2 = pow(1.0 - n.z, 4.0);
+    float hB = ATMS * (0.025 + 0.30 * f1), hL = ATMS * 0.45 * f2;
+    float sunl = atmLight(ndl) * 0.78;
+    vec3 arB = P_ATM * sunl * uSun;
+    vec2 lim = n.xy / max(length(n.xy), 1e-4);
+    float mie = pow(clamp(dot(vec3(lim, 0.0), uL), 0.0, 1.0), 6.0) * sst(-0.2, 0.3, ndl);
+    vec3 arL = atmColor(ndl) * sunl * uSun + uSun * 0.35 * mie;
+    vec3 ar = (arB * hB + arL * hL) / max(hB + hL, 1e-4);
+    float haze = clamp(hB + hL, 0.0, 0.97);
     ar = mix(ar, P_ATM * 0.55 * (uSun * 0.78), ATMEMIS);
-    col = mix(col, ar, haze) + ar * 0.10 * fres * ATMS;
+    col = mix(col, ar, haze) + ar * 0.10 * f2 * ATMS;
   }
   return col;
 }
@@ -937,7 +969,7 @@ void main() {
       vec3 ar = atmColor(sd) * atmLight(sd) * (uSun * 0.78);
       ar = mix(ar, P_ATM * 0.55 * (uSun * 0.78), ATMEMIS);
       float peak = clamp(ATMS * 0.80, 0.0, 0.97);
-      float prof = exp(-h / H) * (1.0 - sst(H * 3.5, H * 7.0, h));
+      float prof = exp(-h / H) * (1.0 - sst(H * 3.5, H * 7.0, h)) * (1.0 + 0.5 * pow(max(sd, 0.0), 4.0));
       base = glowOut(ar * peak * prof);
     }
   }
@@ -1231,7 +1263,7 @@ void main() {
     const g = GL.gl();
     const spin = opts.spin !== undefined ? opts.spin : 0.015;
     let sp = P.phase + spin * t; sp -= Math.floor(sp);
-    let csp = P.cphase + spin * 1.18 * t + 0.0012 * t; csp -= Math.floor(csp);
+    let csp = P.cphase + spin * 1.24 * t + 0.0012 * t; csp -= Math.floor(csp);   // the cloud deck runs a little ahead of the ground
     viewToObject(_mS, sp * TAU, P.elev, P.roll);
     viewToObject(_mC, csp * TAU, P.elev, P.roll);
     const la = opts.lightAngle !== undefined ? opts.lightAngle : -2.3, le = opts.lightElev !== undefined ? opts.lightElev : 0.55;
@@ -1266,7 +1298,7 @@ void main() {
     const clouds = opts.clouds !== false, atm = opts.atmosphere !== false, lights = opts.lights !== false && !!(desc && desc.inhabited);
     pr.f4('uFlg', clouds ? 1 : 0, atm ? 1 : 0, lights ? 1 : 0, t % 4096);
     const shadows = opts.cloudShadows !== false && detail >= 0.7 && Rpx >= 26;
-    pr.f4('uQ', shadows ? 0.5 : 0, 0.035, 1.0 / (1.0 + 0.12 * terr), 0);
+    pr.f4('uQ', shadows ? 0.5 : 0, 0.035, 1.0 / (1.0 + 0.12 * terr), opts.still ? 0 : 1);
     const cc = cityColor(desc && desc.color);
     pr.f3('uCity', cc[0], cc[1], cc[2]);
     g.uniform4fv(pr.u('uVort'), P.vort);
@@ -1291,6 +1323,22 @@ void main() {
 
   /* ---- planet region + draw */
   let _lastDrawErr = 0;
+  // The part of a region ([x, x+s] × [y, y+s] in ctx units) that lands on ctx's bitmap, as an offset + size in region device px: null when
+  // all of it does, false when none. Shading only that part is free (same fragment maths, a smaller viewport) and halves the cost of a
+  // planet half off the canvas (the title screen's, a close system view). Only for scale + translate transforms (the usual
+  // setTransform(dpr, 0, 0, dpr, 0, 0)); a rotated or skewed ctx shades the whole region.
+  function visibleSub(ctx, x, y, s, dpr, S) {
+    const cv = ctx.canvas;
+    if (!cv || typeof ctx.getTransform !== 'function') return null;
+    let m; try { m = ctx.getTransform(); } catch (e) { return null; }
+    if (!m || m.b !== 0 || m.c !== 0 || !(m.a > 0) || !(m.d > 0)) return null;
+    const x0 = -m.e / m.a, y0 = -m.f / m.d, x1 = (cv.width - m.e) / m.a, y1 = (cv.height - m.f) / m.d;
+    if (x0 <= x && y0 <= y && x1 >= x + s && y1 >= y + s) return null;
+    const ox = Math.max(0, Math.floor((x0 - x) * dpr) - 1), oy = Math.max(0, Math.floor((y0 - y) * dpr) - 1);
+    const ex = Math.min(S, Math.ceil((x1 - x) * dpr) + 1), ey = Math.min(S, Math.ceil((y1 - y) * dpr) + 1);
+    if (ex <= ox || ey <= oy) return false;
+    return { ox, oy, w: ex - ox, h: ey - oy };
+  }
   function renderPlanetRegion(ctx, desc, cx, cy, radius, t, opts, forceDpr, fit) {
     const q = getQ();
     const P = planetData(desc);
@@ -1309,15 +1357,20 @@ void main() {
     const gx = cx * dpr, gy = cy * dpr;
     const ix = Math.round(gx - half), iy = Math.round(gy - half);
     const fx = gx - ix - half, fy = gy - iy - half;
+    let ox = 0, oy = 0, Sw = S, Sh = S;
+    const sub = visibleSub(ctx, ix / dpr, iy / dpr, S / dpr, dpr, S);
+    if (sub === false) return true;                 // nothing of it on the canvas
+    if (sub) { ox = sub.ox; oy = sub.oy; Sw = sub.w; Sh = sub.h; }
     const t0 = (typeof performance !== 'undefined') ? performance.now() : 0;
-    if (!GL.begin(S, S)) return false;
+    if (!GL.begin(Sw, Sh)) return false;
     pr.use();
     const detail = clamp(q.planetDetail === undefined ? 1 : q.planetDetail, 0.4, 2.0);
-    bindCommon(pr, P, Rpx, half + fx, half - fy, t, opts);
+    bindCommon(pr, P, Rpx, half + fx - ox, Sh - (half + fy - oy), t, opts);   // centre in viewport px, GL origin bottom-left (unclipped: half + fx, half - fy)
+    pr.f2('uVo', ox, S - Sh - oy);
     if (P.gas) setGasUniforms(pr, P, Rpx, detail, t, opts); else setRockyUniforms(pr, P, Rpx, detail, t, opts, desc);
     setRingUniforms(pr, P);
     GL.drawQuad();
-    GL.blit(ctx, ix / dpr, iy / dpr, S / dpr, S / dpr);
+    GL.blit(ctx, (ix + ox) / dpr, (iy + oy) / dpr, Sw / dpr, Sh / dpr);
     stats.draws++;
     if (t0) stats.lastMs = performance.now() - t0;
     return true;
@@ -1371,7 +1424,7 @@ void main() {
     const c2 = cv.getContext('2d');
     const fit = extentOf(P) + 0.02;
     const Rr = Math.max(3, (D / 2 - 1.5) / fit);
-    const o = Object.assign({}, opts, { dpr: 1, cloudShadows: true, spin: 1, lightAngle: la, lightElev: le });   // spin 1 rev/s * t = phase (revolutions) -> static pose
+    const o = Object.assign({}, opts, { dpr: 1, cloudShadows: true, spin: 1, lightAngle: la, lightElev: le, still: true });   // spin 1 rev/s * t = phase (revolutions) -> static pose; still: no lightning baked in
     const ok = renderPlanetRegion(c2, desc, D / 2, D / 2, Rr, opts.phase || 0, o, 1, false);
     if (!ok) return null;
     cv._bytes = D * D * 4; sprBytes += cv._bytes; SPR.set(key, cv);

@@ -5,6 +5,19 @@ Versions follow `MAJOR.MINOR.PATCH`; the live version is the `VERSION` file.
 
 ## Unreleased
 
+- Title screen. The world in the corner turns smoothly and visibly: its axis now tilts away from the viewer so mid-latitudes sweep
+  past instead of a polar cap turning in place, one turn takes about a minute, the sun sits low on the galaxy's side so the terminator, the
+  night-side city lights and the cloud shadows cross the visible half, and it drifts a little against the galaxy's slow zoom. Clouds on
+  every GL-rendered rocky world are now weather rather than a decal: banks stretch, curl and break up over tens of seconds, cyclones
+  breathe, and the deck runs a little ahead of the ground (the shadows follow). The deck now sits a little above the ground (parallax
+  at the limb, shadows below the banks), thin bank edges catch the sun from behind near the terminator and warm in twilight, thick
+  banks on the night side flicker with lightning (live frames only, never baked into a sprite), and the atmosphere is a broad blue
+  wash thickening to the limb with the limb brightest toward the sun. The fly-by ship on the title screen is relit for the scene
+  (exposure down, shadow side away from the sun, a cool fill, a quieter drive) instead of showing its baked studio lighting. The GL
+  planet renderer shades only the part of a planet that lands on the canvas (half the cost for a planet half off-screen: the title
+  screen, a close system view), so the title screen no longer drags the quality tier down into the Canvas2D fallback on an integrated
+  GPU. The menu marker no longer sits on the first letter of the default row (New game / Continue). The title block shows the version
+  and © Andrew Tate, 2026.
 - Phone mode. On a phone (touch screen, shorter side 600 px or less; `?phone=1` / `?phone=0` force it) the game switches to a
   layout built for one thumb, and the desktop layout is unchanged. Buttons and controls are at least 44 px and text at least 12 px.
   The galaxy map fills the screen with fixed tabs underneath: Planets, Fleet, Tech, Races, More (the game menu, Ship design and the
