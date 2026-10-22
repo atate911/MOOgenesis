@@ -234,7 +234,7 @@
       const st = { to: ctx.params.to !== undefined ? ctx.params.to : p.reloc !== p.starId && S.planets[p.reloc] && S.planets[p.reloc].owner === E.id ? p.reloc : -1 };
       const back = () => { UI.Galaxy.pick = null; if (UI.Galaxy.map) UI.Galaxy.map.setRoutePreview(null); ctx.show('colony', { star: pid }); };
       host.appendChild(UI.Side.title(pid, S.playerId));
-      host.appendChild(h('div.sc-pickhint', UI.Phone.say('Click', 'Tap') + ' one of your colonies on the map: ships finished at ' + (p.name || S.stars[p.starId].name) + ' will fly there automatically.' + UI.Phone.say(' Enter accepts · Esc cancels.', '')));
+      host.appendChild(h('div.sc-pickhint', UI.Phone.say('Click one of your colonies on the map: ships finished at ' + (p.name || S.stars[p.starId].name) + ' will fly there automatically. Enter accepts · Esc cancels.', 'Tap one of your colonies: new ships built at ' + (p.name || S.stars[p.starId].name) + ' fly there.')));
       const msg = h('div.sc-relocmsg');
       const acc = UI.button('Accept', () => { const r = G.order({ t: 'reloc', planet: pid, to: st.to }); if (!r.ok) { UI.toast(r.msg, 'bad'); return; } UI.sfx('click'); back(); }, { primary: true, kbd: 'Space' });
       const all = UI.button('All colonies', () => {

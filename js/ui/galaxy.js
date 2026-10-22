@@ -89,7 +89,7 @@
     keys: (enter, esc) => { if (!cur) return; const o = { screen: 'galaxy' }; cur.keyOffs = [enter && UI.bindKey('enter', enter, o), esc && UI.bindKey('Escape', esc, o)].filter(Boolean); },
     // a pick on the map moves the panel beside that click (re-rendered there with `extra` merged into its params); true when it moved
     follow: extra => {
-      if (!cur || cur.params.float || !floatHost) return false;
+      if (!cur || cur.params.float || !floatHost || (UI.Side.noFollow && UI.Side.noFollow())) return false;   // phones: the panel stays in its sheet / column (phone-galaxy.js)
       const name = cur.name, p = Object.assign({}, cur.params, extra, { float: true });
       UI.Galaxy.showDefault();                                                                              // the sidebar goes back to the star / colony it was showing
       UI.Side.show(name, p); return true;

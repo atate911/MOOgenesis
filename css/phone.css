@@ -161,6 +161,24 @@ html:root:root[data-phone] .sc-btns { flex-direction: row; } html:root:root[data
 @media (orientation: portrait) {
   html:root:root[data-phone] .gx-side:not(.gx-float)[data-sheet="half"] :is(.sc-card, .sc-stats, .sc-bbox, .sc-rally, .sm-card) { display: none; }
 }
+/* a pick panel (Fleet deployment / Reloc / Trans; phone-galaxy.js sets data-ph-pick) collapsed to the strip is a compact card measured from its
+   content, so the map stays in view for the pick: Fleet deployment shows its ships as chips (a tap unfolds the steppers at half) and the
+   hint gives way to the route line once a star is picked. Landscape keeps the full column. */
+@media (orientation: portrait) {
+  html:root:root[data-phone] .gx-side:not(.gx-float)[data-ph-pick][data-sheet="strip"] :is(h3, .sm-fleet) { display: none; }
+  html:root:root[data-phone] .gx-side:not(.gx-float)[data-ph-pick][data-sheet="strip"] .side-title { min-height: var(--row); margin-bottom: 0; padding-top: 0; }
+  html:root:root[data-phone] .gx-side:not(.gx-float)[data-ph-pick][data-sheet="strip"] .side-title .nm { font-size: 1.15rem; }
+  html:root:root[data-phone] .gx-side:not(.gx-float)[data-ph-pick][data-sheet="strip"] :is(.sc-pickhint, .sm-route, .sm-relocmsg) { margin: .25rem 0; padding: .35rem .5rem; }
+  html:root:root[data-phone] .gx-side:not(.gx-float)[data-ph-pick][data-sheet="strip"] .sm-actions { margin-top: .25rem; }
+  html:root:root[data-phone] .gx-side:not(.gx-float)[data-ph-pick]:not([data-sheet="strip"]) .ph-fsum { display: none; }
+}
+html:root:root[data-phone] .gx-side[data-ph-pick] .sc-pickhint:has(+ div > .sm-route) { display: none; }
+html[data-phone] .ph-fsum { display: flex; align-items: center; gap: .4rem; min-height: var(--row); margin: .1rem 0 .15rem; padding: .1rem .15rem; cursor: pointer; }
+html[data-phone] .ph-fchips { flex: 1 1 auto; display: flex; flex-wrap: wrap; align-items: center; gap: .25rem .3rem; }
+html[data-phone] .ph-fchip { display: inline-flex; align-items: center; gap: .2rem; padding: .15rem .5rem; font-size: max(12px, .84rem); line-height: 1.3; color: var(--pk-ink, #e4e8ee); background: var(--pk-well, rgba(0, 0, 0, .3)); box-shadow: 0 0 0 1px var(--pk-edge, rgba(255, 255, 255, .12)); }
+html[data-phone] .ph-fchip b { color: var(--lime, #b8f060); font-variant-numeric: tabular-nums; }
+html[data-phone] .ph-fchip.off { opacity: .6; } html[data-phone] .ph-fchip.off b { color: #ff8a6a; }
+html[data-phone] .ph-fedit { flex: none; padding: 0 .2rem; font: 600 max(12px, .78rem) var(--font-display); letter-spacing: .06em; text-transform: uppercase; color: var(--pk-head, #e8c850); }
 /* a pick-a-star panel taller than its sheet keeps Cancel / Accept in reach */
 html[data-phone] .gx-side:not(.gx-float) .gx-sidebody > .sm-actions:last-child { position: sticky; bottom: -.6rem; z-index: 3; margin: .3rem -.5rem 0; padding: .45rem .5rem .5rem; background: rgba(58, 66, 76, .97); box-shadow: 0 -6px 12px rgba(0, 0, 0, .45); }
 /* the colony sliders (side-colony.js, bumped): finger-sized arrows and lock in a 27rem-wide panel */

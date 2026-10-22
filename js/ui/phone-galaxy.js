@@ -5,10 +5,14 @@
 //   half    the controls: a colony's five sliders and Ships / Reloc / Trans (the picture, stats and build box wait for full), or a
 //           pick-a-star panel's counts and Accept / Cancel; its height is measured from that content (at most 70% of the map)
 //   full    everything, including the turn log; a held prompt (pre-battle card, battle result, exploration / colonise card) opens here
-// The sheet is driven from UI.Side.show: a floating panel (opened beside a map tap) pins to the bottom edge and drops the sheet to the strip,
-// a pick-a-star panel (Reloc / Trans / Fleet deployment) opens it halfway so the map stays visible for the pick, a held prompt opens it fully
-// and the state from before the prompt comes back once it is answered; the turn's processing collapses it. A tap on the title plate while
-// collapsed opens the sheet halfway and centres the map on the selection. Also reused by the map overview screen (its side panel → sheet).
+// The sheet is driven from UI.Side.show: a pick-a-star panel (Fleet deployment / Reloc / Trans) collapses it to a compact card measured
+// from its own content (data-ph-pick: Fleet deployment hides its steppers behind a row of ship chips — a tap opens them at half — and
+// the hint gives way to the route line once a star is picked) so the map stays in view for the pick, and never follows the pick into a
+// floating panel (UI.Side.noFollow); the map is told what the sheet, the HUD and the control column cover (map.setInset) so centring
+// lands in the uncovered part, and the origin with every star the ships can reach (a colony's rally candidates for Reloc) is flown into
+// that part (map.frame) when any of them is hidden. A held prompt opens the sheet fully and the state from before the prompt comes back
+// once it is answered; the turn's processing collapses it. A tap on the title plate while collapsed opens the sheet halfway and centres
+// the map on the selection. Also reused by the map overview screen (its side panel → sheet).
 // The bottom bar becomes fixed tabs: Planets · Fleet · Tech · Races · More, then Next turn (css/phone.css lays out galaxy.js's own buttons;
 // Game, Design and Map are hidden: More opens the game menu, which on a phone also offers Design and the galaxy map — gamemenu.js).
 (function (M) {
@@ -18,7 +22,8 @@
   const portrait = () => { try { return matchMedia('(orientation: portrait)').matches; } catch (e) { return true; } };   // landscape: the panel is a column, not a sheet
   const PICK = { reloc: true, trans: true, fleetDeploy: true };
   const TABS = { Game: ['game'], Design: ['design'], Map: ['map'], Fleet: ['fleet', 'fleet'], Races: ['races', 'diplomacy'], Planets: ['planets', 'planet'], Tech: ['tech', 'research'] };
-  let sheet = null, holding = false, remembered = 'strip';
+  let sheet = null, holding = false, remembered = 'strip', halfPx = 0, probe = null;
+  UI.Side.noFollow = () => active();                                                       // a pick stays in the sheet (or landscape's column): the float would cover the map
 
   // the bar's buttons get a tab class (+ an icon over the label); a More tab opens the game menu
   function installBar(scr) {
@@ -43,15 +48,17 @@
     // name's rename prompt does not open from the strip (it still does from half / full); the colony arrows keep working.
     side.addEventListener('click', e => {
       if (sheet.get() !== 'strip' || !portrait() || !e.target.closest || e.target.closest('.ph-grip')) return;
-      if (e.target.closest('.cyc') || (e.target.closest('.btn, button, input') && !e.target.closest('.side-title'))) return;
+      if (e.target.closest('.cyc') || (e.target.closest('.btn, button, input, .slider') && !e.target.closest('.side-title'))) return;
       e.stopPropagation(); e.preventDefault();
       sheet.set('half'); UI.Phone.haptic('snap');
+      if (side.dataset.phPick) return;                                                     // a pick card: the steppers unfold, the map stays where the pick is
       try { const id = G.sel && G.sel.star; if (id >= 0 && UI.Galaxy.map) UI.Galaxy.map.centerOn(id, { animate: true }); } catch (err) { /* optional */ }
     }, true);
-    sheet.on(st => { if (st === 'half') requestAnimationFrame(fitHalf); });
-    window.addEventListener('resize', () => requestAnimationFrame(fitHalf));
+    side.addEventListener('click', e => { if (e.target.closest && e.target.closest('.sm-sb')) requestAnimationFrame(updateFleetSum); });   // a stepper changed a count: the chips follow
+    sheet.on(st => { if (st === 'half') requestAnimationFrame(() => { fitHalf(); pushInsets(); }); else pushInsets(); });
+    window.addEventListener('resize', () => requestAnimationFrame(() => { fitStrip(); fitHalf(); pushInsets(); }));
     if (M.Bus) M.Bus.on('turn:processing', on => { if (on && active() && sheet) { holding = false; sheet.set('strip'); } });
-    noteShown(UI.Side.current(), null); update();                                          // the first entry showed its panel before the sheet existed
+    noteShown(UI.Side.current(), null); update(); pushInsets({ animate: false });         // the first entry showed its panel before the sheet existed
   }
 
   // ---- the summary line (.ph-sum) under the sidebar's title ----------------------------------------------------------------------------------
@@ -91,6 +98,72 @@
     UI.mount(el, parts);
   }
 
+  // ---- the pick card: Fleet deployment's ships as chips ("2× Scout · 1 of 3× Cruiser", a tap unfolds the steppers at half) ----------------------
+  function updateFleetSum() {
+    const host = sideHost(), side = host && host.closest('.gx-side'); if (!host) return;
+    let el = host.querySelector('.ph-fsum');
+    const rows = side && side.dataset.phPick === 'fleetDeploy' ? [...host.querySelectorAll('.sm-fleet')] : [];
+    if (!rows.length) { if (el) el.remove(); return; }
+    const chips = rows.map(r => {
+      const nm = r.querySelector('.nm'), n = r.querySelector('.sm-step .n'), m = /(\d+)\s*\/\s*(\d+)/.exec(n ? n.textContent : ''), sel = m ? +m[1] : 0, tot = m ? +m[2] : 0;
+      return h('span.ph-fchip' + (sel ? '' : '.off'), h('b', (sel === tot ? sel : sel + ' of ' + tot) + '×'), ' ' + (nm ? nm.textContent : ''));
+    });
+    if (!el) el = h('div.ph-fsum', { role: 'button', 'aria-label': 'Change which ships go' });
+    UI.mount(el, h('span.ph-fchips', chips), h('span.ph-fedit', 'Change'));
+    const after = host.querySelector('h3') || host.querySelector('.side-title');
+    if (after && after.nextSibling !== el) after.after(el);
+  }
+  // a pick panel collapses to a compact card: its strip height is its own content (the hidden steppers do not count), at most 60% of the map
+  function fitStrip() {
+    if (!sheet || !portrait()) return;
+    const side = sheet.el, host = side.querySelector('.gx-sidebody'), panel = host && host.parentElement, wrap = side.parentElement && side.parentElement.querySelector('.gx-mapwrap');
+    if (!side.dataset.phPick || !host || !panel || !wrap) { document.documentElement.style.removeProperty('--ph-strip'); return; }
+    const cs = getComputedStyle(panel), pad = parseFloat(cs.paddingTop) + parseFloat(cs.paddingBottom) + parseFloat(cs.borderTopWidth) + parseFloat(cs.borderBottomWidth);
+    const need = sheet.grip.offsetHeight + pad + host.scrollHeight + 2;
+    document.documentElement.style.setProperty('--ph-strip', Math.round(Math.min(need, wrap.clientHeight * 0.6)) + 'px');   // on the root: the minimap, map key and toasts sit above the strip too
+  }
+  function pickShown(name, params) {
+    const side = sheet.el; side.dataset.phPick = name;
+    sheet.set('strip'); updateFleetSum(); fitStrip(); pushInsets();
+    framePick(name, params);
+  }
+  function pickHidden() {
+    const side = sheet.el; if (!side.dataset.phPick) return false;
+    delete side.dataset.phPick; const el = side.querySelector('.ph-fsum'); if (el) el.remove();
+    fitStrip(); return true;
+  }
+  // the origin and every star the pick may land on, into the uncovered part of the map (only when one of them is hidden)
+  function framePick(name, params) {
+    const map = UI.Galaxy.map, S = G.S, E = G.player(); if (!map || !map.frame || !S) return;
+    const origin = params && params.star !== undefined ? params.star : params && params.planet !== undefined ? params.planet : G.sel.star;
+    const ids = [];
+    try {
+      if (name === 'fleetDeploy') { const r = map.getReach && map.getReach(); if (r && r.forEach) r.forEach(id => ids.push(id)); else if (typeof r === 'function') for (let i = 0; i < S.stars.length; i++) if (r(i)) ids.push(i); }
+      else if (name === 'reloc') for (const q of S.planets) if (q.owner === E.id) ids.push(q.starId);
+      else if (name === 'trans') for (let i = 0; i < S.stars.length; i++) if (M.Sim.Fleet.canReach(S, E, i, false)) ids.push(i);
+    } catch (e) { console.warn('[phone frame]', e); }
+    if (origin >= 0 && ids.indexOf(origin) < 0) ids.push(origin);
+    map.frame(ids, { maxZoom: 2.6, pad: 30 });
+  }
+  // what covers the map: the HUD (top), the control column (right) and, in portrait, the sheet (bottom; at most 62% so a centred star stays
+  // in view after a full sheet closes). Heights come from the sheet's own CSS (a probe reads --ph-strip; fitHalf measured half)
+  function pushInsets(opt) {
+    const map = UI.Galaxy.map; if (!map || !map.setInset) return;
+    if (!active() || !sheet) { map.setInset(null, opt); return; }
+    const side = sheet.el, wrap = side.parentElement && side.parentElement.querySelector('.gx-mapwrap'); if (!wrap) return;
+    const wr = wrap.getBoundingClientRect(), hud = wrap.querySelector('.gx-hud'), ctrl = wrap.querySelector('.gmap-ctrl');
+    const hr = hud ? hud.getBoundingClientRect() : null, cr = ctrl ? ctrl.getBoundingClientRect() : null;
+    const top = hr && hr.height ? Math.max(0, hr.bottom - wr.top + 6) : 0, right = cr && cr.width ? Math.max(0, wr.right - cr.left + 6) : 0;
+    let bottom = 0;
+    if (portrait()) {
+      if (!probe) { probe = h('div', { style: { position: 'absolute', visibility: 'hidden', pointerEvents: 'none', width: '0', height: 'var(--ph-strip)' } }); wrap.appendChild(probe); }   // not in the sheet: its non-panel children are hidden below full
+      const st = sheet.get();
+      bottom = st === 'strip' ? probe.offsetHeight : st === 'half' ? (halfPx || wr.height * 0.56) : wr.height;
+      bottom = Math.min(bottom, wr.height * 0.62);
+    }
+    map.setInset({ top, right, bottom, left: 0 }, opt);
+  }
+
   // ---- half height = the controls' own height, at most 70% of the map (portrait) --------------------------------------------------------------
   function fitHalf() {
     if (!sheet || !portrait() || sheet.get() !== 'half') return;
@@ -98,9 +171,10 @@
     if (!host || !panel || !wrap) return;
     const cs = getComputedStyle(panel), pad = parseFloat(cs.paddingTop) + parseFloat(cs.paddingBottom) + parseFloat(cs.borderTopWidth) + parseFloat(cs.borderBottomWidth);
     const need = sheet.grip.offsetHeight + pad + host.scrollHeight + 2;
-    side.style.setProperty('--ph-half', Math.round(Math.min(need, wrap.clientHeight * 0.7)) + 'px');
+    halfPx = Math.round(Math.min(need, wrap.clientHeight * 0.7));
+    side.style.setProperty('--ph-half', halfPx + 'px');
   }
-  const update = () => { if (!active()) return; updateSummary(); if (sheet && sheet.get() === 'half') fitHalf(); };
+  const update = () => { if (!active()) return; updateSummary(); updateFleetSum(); if (sheet && sheet.get() === 'half') fitHalf(); };
 
   // which height a panel wants (runs after the original show, only when that show took effect)
   const show0 = UI.Side.show;
@@ -110,11 +184,12 @@
     if (!(params && params.float)) noteShown(name, params);
     update();
     if (!sheet) return r;
-    const held = UI.Side.held && _hd === UI.Side.held;
+    const held = UI.Side.held && _hd === UI.Side.held, pick = PICK[name] && !(params && params.float);
+    const wasPick = !pick && pickHidden();
     if (params && params.float) { if (!held) sheet.set('strip'); return r; }                 // the float card carries its own Accept / Cancel
-    if (held) { if (!holding) { holding = true; remembered = sheet.get(); } sheet.set('full'); return r; }
+    if (held) { if (!holding) { holding = true; remembered = wasPick ? 'strip' : sheet.get(); } sheet.set('full'); return r; }
     if (holding) { holding = false; sheet.set(remembered === 'full' ? 'half' : remembered); return r; }   // the prompt was answered: back to where the player was
-    if (PICK[name]) sheet.set('half');
+    if (pick) pickShown(name, params); else if (wasPick) sheet.set('strip');                // the pick is over (accepted or cancelled): the strip again
     return r;
   };
 
@@ -150,4 +225,5 @@
     if (id === 'galaxy') { installGalaxy(); firstRunHints(); } else if (id === 'mapoverview') installOverview();
   });
   UI.Phone.galaxySheet = () => sheet;
+  UI.Phone.galaxyInsets = pushInsets;
 })(window.MOO);

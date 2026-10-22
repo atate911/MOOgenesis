@@ -5,6 +5,7 @@
 //   map.setMode('normal'|'colonies'|'environments'|'minerals') · getMode()      overview filters + Map Key legend (map.legend() -> HTMLElement, showLegend(bool))
 //   map.select(starId|null) · selectFleet(id|null) · getSelection()             API-driven changes do NOT emit events unless {emit:true}; {center:true} also flies there
 //   map.centerOn(starId|{x,y}, {zoom, animate}) · fit() · home()                smooth fly-to camera. zoom is RELATIVE to the fit-all view (1 = whole galaxy, 4 = four times closer)
+//   map.setInset({top,right,bottom,left}) · frame(ids|points, {pad,maxZoom,animate})   UI over the canvas: centerOn/fit/frame aim at the uncovered part
 //   map.setRoutePreview({from,to,eta,valid,reason}|null) · beginRoute(fleetId) · endRoute()    route mode: left-click a star -> 'moveOrder'
 //   map.setReach(ids|Set|fn|null) dims stars outside the set (fleet-pick range) · setPlanetIcons(bool)/getPlanetIcons()   colonisation glyphs beside explored free stars (legend + K key)
 //   map.highlightStars(ids, {color}) · setRanges({stars:[ids], radius (parsecs), color}|null)  pulsing target marks / dashed range rings
@@ -755,17 +756,25 @@
     }
     // the camera centre may sit anywhere over the galaxy, but the VIEW stays over it: centring on an edge star no longer leaves half the screen empty
     // (when the view is wider than the galaxy at this zoom, the galaxy is centred on that axis instead)
-    function clampTo(c) {
+    // screen insets: the canvas edges that UI covers (a phone's bottom sheet, the HUD, the control column; setInset). centerOn / home / fit /
+    // frame aim at the centre of what is left, and the view may run that far past the galaxy's edge (a star at the bottom edge can sit
+    // above the sheet). The inset eases over 0.25 s so the clamp boundary moves with the sheet instead of snapping the camera.
+    const inset = { top: 0, right: 0, bottom: 0, left: 0 }, insetTo = { top: 0, right: 0, bottom: 0, left: 0 }, insetFrom = { top: 0, right: 0, bottom: 0, left: 0 };
+    let insetT = 0; const INSET_DUR = 0.25;
+    const vis = ins => ({ x: ins.left, y: ins.top, w: Math.max(40, W - ins.left - ins.right), h: Math.max(40, H - ins.top - ins.bottom) });
+    function clampTo(c, ins) {
+      ins = ins || inset;
       c.z = clamp(c.z, minZ, maxZ);
       if (!W || !H) { c.x = clamp(c.x, 0, gw); c.y = clamp(c.y, 0, gh); return; }
-      const hw = W / (2 * c.z), hh = H / (2 * c.z), m = 56 / c.z;
-      c.x = hw * 2 >= gw + 2 * m ? gw / 2 : clamp(c.x, hw - m, gw - hw + m);
-      c.y = hh * 2 >= gh + 2 * m ? gh / 2 : clamp(c.y, hh - m, gh - hh + m);
+      const hw = W / (2 * c.z), hh = H / (2 * c.z), m = 56 / c.z, il = ins.left / c.z, ir = ins.right / c.z, it = ins.top / c.z, ib = ins.bottom / c.z;
+      c.x = hw * 2 - il - ir >= gw + 2 * m ? gw / 2 - (il - ir) / 2 : clamp(c.x, hw - il - m, gw - hw + ir + m);
+      c.y = hh * 2 - it - ib >= gh + 2 * m ? gh / 2 - (it - ib) / 2 : clamp(c.y, hh - it - m, gh - hh + ib + m);
     }
     function setCamNow(x, y, z) { camSet = true; cam.x = tgt.x = x; cam.y = tgt.y = y; cam.z = tgt.z = z; clampTo(cam); clampTo(tgt); flight = null; anchor = null; vel.x = vel.y = 0; }
     function cancelFlight() { if (flight) { tgt.x = cam.x; tgt.y = cam.y; tgt.z = cam.z; flight = null; } }
     function flyTo(x, y, z, animate, dur) {
-      const dest = { x, y, z }; clampTo(dest); x = dest.x; y = dest.y; z = dest.z;                       // fly to where the camera may actually rest (no snap at the end of the flight)
+      const v = vis(insetTo), dest = { x: x - (v.x + v.w / 2 - W / 2) / z, y: y - (v.y + v.h / 2 - H / 2) / z, z };   // the target lands at the centre of the uncovered map
+      clampTo(dest, insetTo); x = dest.x; y = dest.y; z = dest.z;                                       // fly to where the camera may actually rest (no snap at the end of the flight)
       if (!animate || Q.reduce || !W) { setCamNow(x, y, z); return; }
       const distPx = Math.hypot(x - cam.x, y - cam.y) * Math.min(cam.z, z), span = Math.hypot(W, H);
       if (distPx < 1 && Math.abs(Math.log(z / cam.z)) < 0.002) { setCamNow(x, y, z); return; }
@@ -773,6 +782,7 @@
       tgt.x = x; tgt.y = y; tgt.z = z; anchor = null; vel.x = vel.y = 0;
     }
     function updateCamera(dt) {
+      if (insetT > 0) { insetT = Math.max(0, insetT - dt); const u = easeIO(1 - insetT / INSET_DUR); for (const k in inset) inset[k] = insetFrom[k] + (insetTo[k] - insetFrom[k]) * u; }
       if (flight) {
         flight.t += dt; const u = clamp(flight.t / flight.dur, 0, 1), s = easeIO(u);
         cam.x = lerp(flight.x0, flight.x1, s); cam.y = lerp(flight.y0, flight.y1, s);
@@ -2112,7 +2122,34 @@
         if (!W) { pendingCmd = () => api.centerOn(target, Object.assign({}, o, { animate: false })); return api; }       // not laid out yet: apply on the first frame
         pendingView = null; const z = o.zoom ? o.zoom * fitZ : (camSet ? cam.z : clamp(Math.max(W / 200, fitZ * 1.4), minZ, maxZ)); flyTo(x, y, z, camSet && o.animate !== false); return api;
       },
-      fit(o) { if (!W) { pendingCmd = () => api.fit({ animate: false }); return api; } pendingView = null; flyTo(gw / 2, gh / 2, fitZ, !(o && o.animate === false)); return api; },
+      fit(o) { if (!W) { pendingCmd = () => api.fit({ animate: false }); return api; } pendingView = null; const v = vis(insetTo), vz = Math.min((v.w - 80 * uk) / gw, (v.h - 56 * uk) / gh); flyTo(gw / 2, gh / 2, clamp(Math.min(fitZ, vz), minZ, maxZ), !(o && o.animate === false)); return api; },
+      // the canvas edges UI covers, in CSS px: {top,right,bottom,left}; eased unless o.animate === false. centerOn / home / fit / frame then aim at the uncovered part
+      setInset(o, opt) {
+        const next = { top: 0, right: 0, bottom: 0, left: 0 }; for (const k in next) next[k] = Math.max(0, +(o && o[k]) || 0);
+        if (next.top === insetTo.top && next.right === insetTo.right && next.bottom === insetTo.bottom && next.left === insetTo.left) return api;
+        for (const k in next) { insetFrom[k] = inset[k]; insetTo[k] = next[k]; }
+        if (opt && opt.animate === false || Q.reduce || !W) { for (const k in next) inset[k] = next[k]; insetT = 0; } else insetT = INSET_DUR;
+        return api;
+      },
+      getInset: () => Object.assign({}, insetTo),
+      // bring a set of stars (ids) or points ({x,y}) into the uncovered part of the map: no camera move when they are already all in view (o.pad px
+      // from its edges, 34 by default); otherwise fly to fit them, zooming in at most to o.maxZoom × fit (never out past minimum zoom, and never
+      // out just because of that cap when the camera is already closer). One target keeps the zoom. Returns true when the camera moves.
+      frame(targets, o) {
+        o = o || {}; if (!W) { pendingCmd = () => api.frame(targets, Object.assign({}, o, { animate: false })); return false; }
+        let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity, n = 0; const pts = [];
+        for (const t of targets || []) { const p = typeof t === 'number' ? sdById[t] : t; if (!p || typeof p.x !== 'number') continue; n++; pts.push(p); x0 = Math.min(x0, p.x); y0 = Math.min(y0, p.y); x1 = Math.max(x1, p.x); y1 = Math.max(y1, p.y); }
+        if (!n) return false;
+        const v = vis(insetTo), pad = o.pad !== undefined ? o.pad : 34;
+        const cz = flight ? flight.z1 : cam.z, cx = flight ? flight.x1 : cam.x, cy = flight ? flight.y1 : cam.y;
+        let inside = true;
+        for (const p of pts) { const sx = (p.x - cx) * cz + W / 2, sy = (p.y - cy) * cz + H / 2; if (sx < v.x + pad || sx > v.x + v.w - pad || sy < v.y + pad || sy > v.y + v.h - pad) { inside = false; break; } }
+        if (inside) return false;
+        let z = n === 1 ? cz : Math.min((v.w - 2 * pad) / Math.max(1e-6, x1 - x0), (v.h - 2 * pad) / Math.max(1e-6, y1 - y0));
+        const cap = Math.max(cz, o.maxZoom ? o.maxZoom * fitZ : maxZ);
+        z = clamp(Math.min(z, cap), minZ, maxZ);
+        pendingView = null; flyTo((x0 + x1) / 2, (y0 + y1) / 2, z, o.animate !== false); return true;
+      },
       home(o) { if (!W) { pendingCmd = () => api.home({ animate: false }); return api; } pendingView = null; const c = capitalStar(); if (!c) return api.fit(o); flyTo(c.x, c.y, clamp(Math.max(W / 200, fitZ * 1.4), minZ, maxZ), !(o && o.animate === false)); return api; },
       setRoutePreview(p) { routePrev = p ? { from: p.from, to: p.to, eta: p.eta, valid: p.valid !== false, reason: p.reason, gate: !!p.gate, kind: p.kind || '', legs: Array.isArray(p.legs) && p.legs.length > 1 ? p.legs : null } : null; return api; },
       beginRoute(fid) { if (!FD.has(fid)) return api; if (selFleet !== fid) setSelFleet(fid, false); setRouteMode(fid); return api; },

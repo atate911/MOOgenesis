@@ -5,6 +5,10 @@ Versions follow `MAJOR.MINOR.PATCH`; the live version is the `VERSION` file.
 
 ## Unreleased
 
+- Phones: moving ships no longer hides the galaxy. A tap on a fleet (and Reloc / Trans) opens a compact card at the bottom — the
+  ships as chips (a tap unfolds the counts), the hint, Cancel / Accept — instead of a sheet covering two thirds of the map, the map
+  slides the origin and every star in range into the part it leaves uncovered, the destination and its ETA appear in the same card
+  (no second floating panel), and centring a star now lands it above the sheet rather than under it. Desktop is unchanged.
 - Phone mode. On a phone (touch screen, shorter side 600 px or less; `?phone=1` / `?phone=0` force it) the game switches to a
   layout built for one thumb, and the desktop layout is unchanged. Buttons and controls are at least 44 px and text at least 12 px.
   The galaxy map fills the screen with fixed tabs underneath: Planets, Fleet, Tech, Races, More (the game menu, Ship design and the

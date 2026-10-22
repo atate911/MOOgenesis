@@ -135,17 +135,49 @@ const sheetState = page => page.evaluate(() => { const s = document.querySelecto
       check('installable: manifest with icons', !!man && man.ok && man.icons >= 2 && man.display === 'standalone', JSON.stringify(man));
     });
 
+    // the player's fleet in orbit at the capital, tapped on the map as a finger would (the group's drawn spot); → what the sheet / column shows
+    const fleetPick = async () => {
+      const f = await page.evaluate(() => { const S = MOO.Game.S, E = MOO.Game.player(), cap = S.planets[E.capital], fl = MOO.Sim.Fleet.at(S, cap.starId, E.id); MOO.UI.Galaxy.map.centerOn(cap.starId, { animate: false }); return fl ? { id: fl.id, star: cap.starId } : null; });
+      if (!f) return { panel: 'no fleet' };
+      await sleep(250);
+      const pos = await page.evaluate(id => { const m = MOO.UI.Galaxy.map, d = m._dbg(), r = m.canvas.getBoundingClientRect(), g = d.groups.find(g => g.list.some(x => x.id === id)); return g ? { x: r.left + g.sx, y: r.top + g.sy } : null; }, f.id);
+      if (!pos) return { panel: 'fleet not drawn' };
+      await page.touchscreen.tap(pos.x, pos.y); await sleep(1500);                           // the sheet settles and the map's flight ends
+      return page.evaluate(star => {
+        const side = document.querySelector('.gx-side:not(.gx-float)'), sr = side.getBoundingClientRect(), wrap = document.querySelector('.gx-mapwrap'), wr = wrap.getBoundingClientRect(), m = MOO.UI.Galaxy.map, S = MOO.Game.S;
+        const vis = e => { if (!e) return false; const r = e.getBoundingClientRect(); return r.height > 0 && r.top >= sr.top - 1 && r.bottom <= sr.bottom + 1; };
+        const rows = [...side.querySelectorAll('.sm-fleet')], chips = [...side.querySelectorAll('.ph-fchip')], hud = wrap.querySelector('.gx-hud'), ctrl = wrap.querySelector('.gmap-ctrl');
+        const land = matchMedia('(orientation: landscape)').matches;
+        const free = { top: hud ? hud.getBoundingClientRect().bottom : wr.top, bottom: land ? wr.bottom : sr.top, left: wr.left, right: ctrl ? ctrl.getBoundingClientRect().left : wr.right };
+        const r = m.getReach(), reach = r && r.forEach ? [...r] : []; if (reach.indexOf(star) < 0) reach.push(star);
+        const hidden = reach.filter(id => { const p = m.worldToScreen(S.stars[id].x, S.stars[id].y), x = wr.left + p.x, y = wr.top + p.y; return x < free.left + 8 || x > free.right - 8 || y < free.top + 8 || y > free.bottom - 8; });
+        return { panel: MOO.UI.Side.current(), sheet: side.dataset.sheet, float: document.querySelector('.gx-float').classList.contains('on'), rows: rows.length, rowsVis: rows.filter(vis).length, chips: chips.filter(vis).length,
+          chipText: chips.map(c => c.textContent.replace(/\s+/g, ' ').trim()), hint: vis(side.querySelector('.sc-pickhint')), cancel: vis([...side.querySelectorAll('.sm-actions .btn')].find(b => /Cancel/.test(b.textContent))), accept: vis(side.querySelector('.sm-actions .btn.primary')),
+          h: Math.round(sr.height), map: Math.round(wr.height), reach, hidden, free: Object.fromEntries(Object.entries(free).map(([k, v]) => [k, Math.round(v)])) };
+      }, f.star);
+    };
+    // a tap on a reachable star other than the origin (the map's own spot for it) → the card's state
+    const pickDest = async () => {
+      const t = await page.evaluate(() => { const m = MOO.UI.Galaxy.map, S = MOO.Game.S, r = m.getReach(), sel = m.getSelection(), cr = m.canvas.getBoundingClientRect();
+        const ids = r && r.forEach ? [...r] : []; const star = MOO.Game.sel.star; for (const id of ids) { if (id === star) continue; const p = m.worldToScreen(S.stars[id].x, S.stars[id].y); return { id, x: cr.left + p.x, y: cr.top + p.y, sel }; } return null; });
+      if (!t) return { panel: 'no reachable star' };
+      await page.touchscreen.tap(t.x, t.y); await sleep(500);
+      return page.evaluate(id => { const side = document.querySelector('.gx-side:not(.gx-float)'), sr = side.getBoundingClientRect(), vis = e => { if (!e) return false; const r = e.getBoundingClientRect(); return r.height > 0 && r.top >= sr.top - 1 && r.bottom <= sr.bottom + 1; }; const acc = side.querySelector('.sm-actions .btn.primary');
+        return { panel: MOO.UI.Side.current(), sheet: side.dataset.sheet, float: document.querySelector('.gx-float').classList.contains('on'), route: vis(side.querySelector('.sm-route')) && new RegExp(MOO.Game.S.stars[id].name).test(side.querySelector('.sm-route').textContent), accept: vis(acc) && !acc.disabled, hint: vis(side.querySelector('.sc-pickhint')), dest: id }; }, t.id);
+    };
+    const cardInfo = () => page.evaluate(() => { const side = document.querySelector('.gx-side:not(.gx-float)'), sr = side.getBoundingClientRect(), vis = e => { const r = e.getBoundingClientRect(); return r.height > 0 && r.top >= sr.top - 1 && r.bottom <= sr.bottom + 1; }; const btns = [...side.querySelectorAll('.gx-sidebody .btn')]; return { sheet: side.dataset.sheet, pick: side.dataset.phPick || null, h: Math.round(sr.height), map: Math.round(document.querySelector('.gx-mapwrap').clientHeight), btns: btns.length, btnsVis: btns.filter(vis).length, slider: !!side.querySelector('.slider') && vis(side.querySelector('.slider')) }; });
+
     await step('galaxy', async () => {
       if (LAND) {                                                   // landscape: the side panel is a right-hand column (no sheet handle)
         const col = await page.evaluate(() => { const s = document.querySelector('.gx-side:not(.gx-float)'), r = s.getBoundingClientRect(), g = s.querySelector('.ph-grip'); return { l: Math.round(r.left), w: Math.round(r.width), h: Math.round(r.height), grip: !!(g && g.offsetParent) }; });
         check('landscape: side panel is a right-hand column', col.l > 400 && col.h > 250 && !col.grip, JSON.stringify(col));
         await shot('galaxy-column');
-        const ids = await page.evaluate(() => { const S = MOO.Game.S, E = MOO.Game.player(), cap = S.planets[E.capital]; return { star: cap.starId }; });
-        const far = await page.evaluate(star => MOO.Game.S.stars.filter(s => s.id !== star)[0].id, ids.star);
-        await page.evaluate(([s, d]) => MOO.UI.Side.show('fleetDeploy', { star: s, dest: d, float: true }), [ids.star, far]); await sleep(400);
-        const fl = await page.evaluate(() => { const f = document.querySelector('.gx-float'), r = f.getBoundingClientRect(); return { on: f.classList.contains('on'), l: Math.round(r.left), b: Math.round(innerHeight - r.bottom), t: Math.round(r.top) }; });
-        check('landscape: a panel opened from the map sits at the lower left, on screen', fl.on && fl.l < 20 && fl.t >= 0, JSON.stringify(fl));
-        await shot('galaxy-float'); await back(); await sleep(300);
+        const fp = await fleetPick();
+        check('landscape: a fleet tap opens Fleet deployment in the column (steppers in view, no floating panel)', fp.panel === 'fleetDeploy' && fp.rows > 0 && fp.rowsVis === fp.rows && !fp.float, JSON.stringify(fp));
+        await shot('galaxy-fleet');
+        const dest = await pickDest();
+        check('landscape: picking a destination keeps the panel in the column with the route and Accept', dest.panel === 'fleetDeploy' && !dest.float && dest.route && dest.accept, JSON.stringify(dest));
+        await shot('galaxy-fleet-dest'); await back(); await sleep(300);
         await tabBar('landscape');
         return;
       }
@@ -185,17 +217,45 @@ const sheetState = page => page.evaluate(() => { const s = document.querySelecto
       await shot('galaxy-star-strip');
       await page.evaluate(() => { const E = MOO.Game.player(), id = MOO.Game.S.planets[E.capital].starId; MOO.UI.Galaxy.selectStar(id); MOO.UI.Galaxy.showDefault(); MOO.UI.Phone.galaxySheet().set('strip'); }); await sleep(300);
       const ids = await page.evaluate(() => { const S = MOO.Game.S, E = MOO.Game.player(), cap = S.planets[E.capital]; return { star: cap.starId, planet: cap.id }; });
-      await page.evaluate(id => MOO.UI.Side.show('reloc', { planet: id }), ids.planet); await sleep(300);
-      check('Reloc opens the sheet halfway', (await sheetState(page)) === 'half'); await shot('galaxy-reloc');
+      // moving ships: a tap on the fleet in orbit opens Fleet deployment as a compact card (ships as chips, the hint, Cancel / Accept) and the map
+      // flies the origin and every reachable star into the part it leaves uncovered; the pick stays in the card (no floating panel)
+      const fp = await fleetPick();
+      check('a fleet tap opens Fleet deployment collapsed to a compact card (no steppers, ships as chips)', fp.panel === 'fleetDeploy' && fp.sheet === 'strip' && fp.rows > 0 && fp.rowsVis === 0 && fp.chips === fp.rows && fp.hint && fp.cancel && fp.accept && !fp.float, JSON.stringify(fp));
+      check('the card covers at most a third of the map', fp.h <= fp.map * 0.34, fp.h + ' of ' + fp.map);
+      check('the chips say what goes ("2× Scout")', /^\d+× /.test(fp.chipText[0] || ''), JSON.stringify(fp.chipText));
+      check('the origin and every reachable star are in view above the card and below the HUD', fp.reach.length > 1 && fp.hidden.length === 0, JSON.stringify({ reach: fp.reach, hidden: fp.hidden, free: fp.free }));
+      await audits('galaxy (fleet card)');
+      await shot('galaxy-fleet');
+      await (await page.$('.gx-side:not(.gx-float) .ph-fsum')).tap(); await sleep(400);
+      const fh = await page.evaluate(() => { const side = document.querySelector('.gx-side:not(.gx-float)'), sr = side.getBoundingClientRect(), vis = e => { const r = e.getBoundingClientRect(); return r.height > 0 && r.top >= sr.top - 1 && r.bottom <= sr.bottom + 1; }; const rows = [...side.querySelectorAll('.sm-fleet')]; return { st: side.dataset.sheet, rows: rows.length, vis: rows.filter(vis).length, chips: !!(side.querySelector('.ph-fsum') && side.querySelector('.ph-fsum').offsetHeight), accept: vis(side.querySelector('.sm-actions .btn.primary')) }; });
+      check('a tap on the chips unfolds the steppers at half, Accept still in reach', fh.st === 'half' && fh.vis === fh.rows && !fh.chips && fh.accept, JSON.stringify(fh));
+      await audits('galaxy (fleet steppers)');
+      await shot('galaxy-fleet-half');
+      await (await page.$('.gx-side:not(.gx-float) .sm-fleet .sm-sb.first')).tap(); await sleep(200);
+      await page.evaluate(() => MOO.UI.Phone.galaxySheet().set('strip')); await sleep(400);
+      const chip0 = await page.evaluate(() => document.querySelector('.gx-side:not(.gx-float) .ph-fchip').textContent.replace(/\s+/g, ' ').trim());
+      check('a stepper change shows in the chips ("0 of 2×")', /^0 of \d+× /.test(chip0), chip0);
+      await (await page.$('.gx-side:not(.gx-float) .sm-fleet .sm-sb.last')).tap().catch(() => {});   // hidden in the strip: set it back through the panel instead
+      await page.evaluate(() => { const b = document.querySelector('.gx-side:not(.gx-float) .sm-fleet .sm-sb.last'); if (b) b.click(); }); await sleep(100);
+      const dest = await pickDest();
+      check('a tap on a reachable star sets the destination in the same card (route line, Accept lit, no floating panel)', dest.panel === 'fleetDeploy' && dest.sheet === 'strip' && !dest.float && dest.route && dest.accept && !dest.hint, JSON.stringify(dest));
+      await audits('galaxy (fleet destination)');
+      await shot('galaxy-fleet-dest');
+      await (await page.$('.gx-side:not(.gx-float) .sm-actions .btn.primary')).tap(); await sleep(500);
+      const sent = await page.evaluate(() => ({ panel: MOO.UI.Side.current(), sheet: document.querySelector('.gx-side:not(.gx-float)').dataset.sheet, pick: document.querySelector('.gx-side:not(.gx-float)').dataset.phPick || null, strip: document.documentElement.style.getPropertyValue('--ph-strip') || '', moving: MOO.Game.S.fleets.some(f => f.owner === MOO.Game.S.playerId && f.to >= 0 && f.star < 0) }));
+      check('Accept sends the ships and the strip shows the colony again', sent.panel === 'colony' && sent.sheet === 'strip' && !sent.pick && !sent.strip && sent.moving, JSON.stringify(sent));
+      // Reloc and Trans: the same compact card
+      await page.evaluate(id => MOO.UI.Side.show('reloc', { planet: id }), ids.planet); await sleep(400);
+      const rl = await cardInfo();
+      check('Reloc opens as a compact card with its buttons in reach', rl.sheet === 'strip' && rl.pick === 'reloc' && rl.h <= rl.map * 0.5 && rl.btnsVis === rl.btns, JSON.stringify(rl));
+      await audits('galaxy (reloc card)'); await shot('galaxy-reloc');
       await back(); await sleep(300);
-      const far = await page.evaluate(star => { const S = MOO.Game.S; return S.stars.filter(s => s.id !== star)[0].id; }, ids.star);
-      await page.evaluate(([s, d]) => MOO.UI.Side.show('fleetDeploy', { star: s, dest: d, float: true }), [ids.star, far]); await sleep(400);
-      const fl = await page.evaluate(() => { const f = document.querySelector('.gx-float'), r = f.getBoundingClientRect(); return { on: f.classList.contains('on'), l: Math.round(r.left), r: Math.round(innerWidth - r.right), h: Math.round(r.height), top: Math.round(r.top) }; });
-      check('a panel opened from the map pins to the bottom edge', fl.on && fl.l < 20 && fl.r < 20 && fl.h > 100, JSON.stringify(fl));
-      check('the sheet collapses under it', (await sheetState(page)) === 'strip');
-      await shot('galaxy-float');
+      await page.evaluate(id => MOO.UI.Side.show('trans', { planet: id }), ids.planet); await sleep(400);
+      const tr = await cardInfo();
+      check('Trans opens as a compact card with its slider and buttons in reach', tr.sheet === 'strip' && tr.pick === 'trans' && tr.h <= tr.map * 0.6 && tr.btnsVis === tr.btns && tr.slider, JSON.stringify(tr));
+      await audits('galaxy (trans card)'); await shot('galaxy-trans');
       await back(); await sleep(300);
-      check('Back closes it', !(await page.evaluate(() => document.querySelector('.gx-float').classList.contains('on'))));
+      check('Back closes it and the strip is the colony\'s again', (await page.evaluate(() => MOO.UI.Side.current())) === 'colony' && (await sheetState(page)) === 'strip');
     });
 
     await step('battle', async () => {
