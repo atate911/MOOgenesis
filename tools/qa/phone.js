@@ -173,8 +173,13 @@ const sheetState = page => page.evaluate(() => { const s = document.querySelecto
         check('landscape: side panel is a right-hand column', col.l > 400 && col.h > 250 && !col.grip, JSON.stringify(col));
         await shot('galaxy-column');
         const fp = await fleetPick();
-        check('landscape: a fleet tap opens Fleet deployment in the column (steppers in view, no floating panel)', fp.panel === 'fleetDeploy' && fp.rows > 0 && fp.rowsVis === fp.rows && !fp.float, JSON.stringify(fp));
+        check('landscape: a fleet tap opens Fleet deployment in the column as the compact card (chips, hint, Cancel / Accept; no floating panel)', fp.panel === 'fleetDeploy' && fp.rows > 0 && fp.rowsVis === 0 && fp.chips === fp.rows && fp.hint && fp.cancel && fp.accept && !fp.float, JSON.stringify(fp));
+        check('landscape: the origin and every reachable star are in view', fp.reach.length > 1 && fp.hidden.length === 0, JSON.stringify({ reach: fp.reach, hidden: fp.hidden }));
         await shot('galaxy-fleet');
+        await (await page.$('.gx-side:not(.gx-float) .ph-fsum')).tap(); await sleep(400);
+        const lh = await page.evaluate(() => { const side = document.querySelector('.gx-side:not(.gx-float)'); const rows = [...side.querySelectorAll('.sm-fleet')]; return { st: side.dataset.sheet, rows: rows.length, vis: rows.filter(r => r.offsetHeight > 0).length, chips: !!side.querySelector('.ph-fsum') && side.querySelector('.ph-fsum').offsetHeight > 0 }; });
+        check('landscape: a tap on the chips unfolds the steppers', lh.vis === lh.rows && !lh.chips, JSON.stringify(lh));
+        await page.evaluate(() => MOO.UI.Phone.galaxySheet().set('strip')); await sleep(200);
         const dest = await pickDest();
         check('landscape: picking a destination keeps the panel in the column with the route and Accept', dest.panel === 'fleetDeploy' && !dest.float && dest.route && dest.accept, JSON.stringify(dest));
         await shot('galaxy-fleet-dest'); await back(); await sleep(300);

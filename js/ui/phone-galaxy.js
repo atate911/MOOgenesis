@@ -8,7 +8,7 @@
 // The sheet is driven from UI.Side.show: a pick-a-star panel (Fleet deployment / Reloc / Trans) collapses it to a compact card measured
 // from its own content (data-ph-pick: Fleet deployment hides its steppers behind a row of ship chips — a tap opens them at half — and
 // the hint gives way to the route line once a star is picked) so the map stays in view for the pick, and never follows the pick into a
-// floating panel (UI.Side.noFollow); the map is told what the sheet, the HUD and the control column cover (map.setInset) so centring
+// floating panel (UI.Side.noFollow; landscape's column shows the same card); the map is told what the sheet, the HUD and the control column cover (map.setInset) so centring
 // lands in the uncovered part, and the origin with every star the ships can reach (a colony's rally candidates for Reloc) is flown into
 // that part (map.frame) when any of them is hidden. A held prompt opens the sheet fully and the state from before the prompt comes back
 // once it is answered; the turn's processing collapses it. A tap on the title plate while collapsed opens the sheet halfway and centres
@@ -47,7 +47,7 @@
     // the collapsed sheet: a tap anywhere on it (title row or summary) opens it halfway and centres the map on the selection. Captured, so the
     // name's rename prompt does not open from the strip (it still does from half / full); the colony arrows keep working.
     side.addEventListener('click', e => {
-      if (sheet.get() !== 'strip' || !portrait() || !e.target.closest || e.target.closest('.ph-grip')) return;
+      if (sheet.get() !== 'strip' || !e.target.closest || e.target.closest('.ph-grip') || (!portrait() && !e.target.closest('.ph-fsum'))) return;   // landscape: only the chips unfold
       if (e.target.closest('.cyc') || (e.target.closest('.btn, button, input, .slider') && !e.target.closest('.side-title'))) return;
       e.stopPropagation(); e.preventDefault();
       sheet.set('half'); UI.Phone.haptic('snap');

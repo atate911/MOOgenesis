@@ -163,15 +163,14 @@ html:root:root[data-phone] .sc-btns { flex-direction: row; } html:root:root[data
 }
 /* a pick panel (Fleet deployment / Reloc / Trans; phone-galaxy.js sets data-ph-pick) collapsed to the strip is a compact card measured from its
    content, so the map stays in view for the pick: Fleet deployment shows its ships as chips (a tap unfolds the steppers at half) and the
-   hint gives way to the route line once a star is picked. Landscape keeps the full column. */
-@media (orientation: portrait) {
-  html:root:root[data-phone] .gx-side:not(.gx-float)[data-ph-pick][data-sheet="strip"] :is(h3, .sm-fleet) { display: none; }
-  html:root:root[data-phone] .gx-side:not(.gx-float)[data-ph-pick][data-sheet="strip"] .side-title { min-height: var(--row); margin-bottom: 0; padding-top: 0; }
-  html:root:root[data-phone] .gx-side:not(.gx-float)[data-ph-pick][data-sheet="strip"] .side-title .nm { font-size: 1.15rem; }
-  html:root:root[data-phone] .gx-side:not(.gx-float)[data-ph-pick][data-sheet="strip"] :is(.sc-pickhint, .sm-route, .sm-relocmsg) { margin: .25rem 0; padding: .35rem .5rem; }
-  html:root:root[data-phone] .gx-side:not(.gx-float)[data-ph-pick][data-sheet="strip"] .sm-actions { margin-top: .25rem; }
-  html:root:root[data-phone] .gx-side:not(.gx-float)[data-ph-pick]:not([data-sheet="strip"]) .ph-fsum { display: none; }
-}
+   hint gives way to the route line once a star is picked. Landscape's column shows the same card (its 390px would scroll the route line
+   under Accept otherwise); the chips unfold the steppers there too. */
+html:root:root[data-phone] .gx-side:not(.gx-float)[data-ph-pick][data-sheet="strip"] :is(h3, .sm-fleet) { display: none; }
+html:root:root[data-phone] .gx-side:not(.gx-float)[data-ph-pick][data-sheet="strip"] .side-title { min-height: var(--row); margin-bottom: 0; padding-top: 0; }
+html:root:root[data-phone] .gx-side:not(.gx-float)[data-ph-pick][data-sheet="strip"] .side-title .nm { font-size: 1.15rem; }
+html:root:root[data-phone] .gx-side:not(.gx-float)[data-ph-pick][data-sheet="strip"] :is(.sc-pickhint, .sm-route, .sm-relocmsg) { margin: .25rem 0; padding: .35rem .5rem; }
+html:root:root[data-phone] .gx-side:not(.gx-float)[data-ph-pick][data-sheet="strip"] .sm-actions { margin-top: .25rem; }
+html:root:root[data-phone] .gx-side:not(.gx-float)[data-ph-pick]:not([data-sheet="strip"]) .ph-fsum { display: none; }
 html:root:root[data-phone] .gx-side[data-ph-pick] .sc-pickhint:has(+ div > .sm-route) { display: none; }
 html[data-phone] .ph-fsum { display: flex; align-items: center; gap: .4rem; min-height: var(--row); margin: .1rem 0 .15rem; padding: .1rem .15rem; cursor: pointer; }
 html[data-phone] .ph-fchips { flex: 1 1 auto; display: flex; flex-wrap: wrap; align-items: center; gap: .25rem .3rem; }
