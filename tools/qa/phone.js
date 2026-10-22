@@ -21,7 +21,9 @@ let fails = 0, passes = 0;
 const check = (name, ok, extra) => { console.log((ok ? 'PASS ' : 'FAIL ') + name + (extra !== undefined && extra !== '' ? ' :: ' + extra : '')); if (ok) passes++; else fails++; };
 const within = (p, ms, label) => Promise.race([p, sleep(ms).then(() => { throw new Error('timeout: ' + label); })]);
 // expected noise: offline web fonts, software-GL driver chatter, and art still listed in ART-NEEDED.md (the code falls back to other art)
-const benign = e => /fonts\.(googleapis|gstatic)|net::ERR_|Failed to load resource|ERR_TUNNEL|ERR_PROXY|GL Driver Message|assets\/art\/still\/|\/api\/status/.test(e);   // + the save-server probe (absent on a static dev server)
+// Only what this sandbox causes: web fonts / the network blocked by its proxy, software-GL notes, and the save-server probe (absent on a
+// static dev server). A missing game file is NOT benign: it is a failed load in the player's console too.
+const benign = e => /fonts\.(googleapis|gstatic)|net::ERR_|ERR_TUNNEL|ERR_PROXY|GL Driver Message|\/api\/status/.test(e);
 
 async function bootGame(page) {
   await page.goto(BOOT, { waitUntil: 'load' });
