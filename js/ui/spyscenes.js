@@ -94,11 +94,14 @@
     try {
       const idx = await new Promise(resolve => {
         let pm, off = null;
-        const info = h('div.spy-info', 'Choose the field to steal from. Hover a field to read what the plans contain.');
+        const phone = !!(M.Phone && M.Phone.active());
+        const info = h('div.spy-info', phone ? 'Choose the field to steal from: tap a field to read what the plans contain, tap it again to steal them.' : 'Choose the field to steal from. Hover a field to read what the plans contain.');
+        let shown = -1;
         const show = i => { const c = cands[i]; UI.clear(info); info.appendChild(h('div', h('b', c.name), ' — level ' + c.level + ' ' + c.fieldName)); info.appendChild(h('div', c.desc || '')); };
         const btns = FIELDS.map((F, f) => {
           const ci = cands.findIndex(c => c.field === f), c = ci >= 0 ? cands[ci] : null;
-          return h('button.spy-fld' + (c ? '' : '.off'), { type: 'button', disabled: !c, style: { '--c': F.col }, onmouseenter: () => c && show(ci), onfocus: () => c && show(ci), onclick: () => { if (c) { UI.sfx('confirm'); pm.close(ci); } } },
+          return h('button.spy-fld' + (c ? '' : '.off'), { type: 'button', disabled: !c, style: { '--c': F.col }, onmouseenter: () => c && show(ci), onfocus: () => { if (c && !phone) show(ci); },
+            onclick: () => { if (!c) return; if (phone && shown !== ci) { shown = ci; show(ci); UI.sfx('click'); return; } UI.sfx('confirm'); pm.close(ci); } },   // phones: first tap reads, second steals
             UI.icon(F.icon), h('span.t', h('b', F.name), h('small', c ? c.name + ' · level ' + c.level : 'nothing to steal')));
         });
         const body = h('div', h('div.spy-hd', h('div', h('div.race', T ? T.name : it.race), h('small', 'Your ' + it.n + (it.n === 1 ? ' spy steals' : ' spies steal') + ' the plans for:'))), h('div.spy-grid', btns), info,

@@ -330,7 +330,7 @@
     create(root) {
       st.table = buildTable();
       st.sub = h('div.lp-sub'); st.chips = h('div.lp-chips');
-      st.banner = h('div.lp-banner', UI.icon('money'), h('span', 'Transfer: choose the colony that receives funds from the reserve. Press Esc to cancel.'));
+      st.banner = h('div.lp-banner', UI.icon('money'), h('span', 'Transfer: choose the colony that receives funds from the reserve. ' + UI.Phone.say('Press Esc to cancel.', 'Back cancels.')));
       const head = h('div.lp-head', h('div.lp-title', 'Planets'), st.sub, st.chips);
       el = h('div.lp', h('div.lp-sheet.panel', head, st.banner, h('div.lp-tablewrap', st.table), buildFooter()));
       root.appendChild(el);

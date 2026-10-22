@@ -1,6 +1,7 @@
 // In-game menu (modal): Resume · Save · Load · Options · Almanac · Quit to title.
 //   MOO.UI.gameMenu() -> Promise resolving to the chosen action ('resume' | 'quit' | 'help' | 'saved' | 'loaded' ...) or null (Esc / click-away).
 // Open it from the galaxy screen's bottom-bar "Game" button and on Esc. First letters are hotkeys (underlined); Esc or right-click closes.
+// On a phone it is the galaxy tab bar's More: a bottom sheet (css/phone.css .gm-sheet) that also offers Ship design and Galaxy map.
 // Options / Save / Load open as modals and return to this menu when cancelled. A button is enabled only when it applies
 // (no game: no save / quit; no 'help' screen: no almanac). Needs UI.Controls (setup.js).
 (function (M) {
@@ -41,8 +42,15 @@
     });
   }
 
+  // phones: the galaxy screen's More tab opens this menu, so it also carries the two screens the phone tab bar leaves out
+  const phone = () => !!(M.Phone && M.Phone.active());
+  const goOk = () => (midTurn() ? MID_TURN : hasGame() && UI.Galaxy ? true : 'There is no game in progress.');
+  const NAV = [{ id: 'design', label: 'Ship design', icon: 'design', ok: goOk }, { id: 'map', label: 'Galaxy map', icon: 'map', ok: goOk }];
+
   function run(id) {
     switch (id) {
+      case 'design': UI.Galaxy.go('design'); return 'design';
+      case 'map': UI.Galaxy.go('mapoverview'); return 'map';
       case 'resume': return 'resume';
       case 'save': case 'load': return UI.openSaveLoad(id).then(res => (res && res.action) || UI.gameMenu());
       case 'options': return UI.openOptions().then(() => UI.gameMenu());
@@ -70,12 +78,16 @@
       if (en.sep) list.appendChild(h('div.gm-sep'));
       list.appendChild(h('div.gm-item', { tip: enabled ? null : why }, b));
     });
+    if (phone()) list.insertBefore(h('div.gm-nav', NAV.map(en => {
+      const why = en.ok();
+      return h('div.gm-item', { tip: why === true ? null : why }, UI.button(en.label, () => pm.close(en.id), { block: true, icon: en.icon, disabled: why !== true }));
+    })), list.firstChild);
 
     const head = live && info
       ? h('div.gm-info', ctl.raceBadge(info.race, 3.3, info.color),
         h('div.gm-info-t', h('b', ctl.raceName(info.race)), h('span', (info.leader ? info.leader + ' · ' : '') + 'Year ' + ctl.calendarYear(info.year) + ' · Turn ' + info.turn)))
       : null;
-    pm = UI.modal({ title: 'Game menu', body: h('div.gm', head, list), buttons: [], width: '25rem', cls: 'gm-modal' });
+    pm = UI.modal({ title: 'Game menu', body: h('div.gm', head, list), buttons: [], width: '25rem', cls: phone() ? 'gm-modal.gm-sheet' : 'gm-modal' });   // css/phone.css: a bottom sheet
 
     const move = dir => {
       const all = Array.from(list.querySelectorAll('button:not(:disabled)'));

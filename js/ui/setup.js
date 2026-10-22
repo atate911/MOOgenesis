@@ -67,7 +67,7 @@
     const txt = h('span.ctl-sw-txt');
     const b = h('button.ctl-sw', { type: 'button', role: 'switch', 'aria-label': o.label || null }, h('span.ctl-sw-track', h('i')), txt);
     function paint() { b.setAttribute('aria-checked', on ? 'true' : 'false'); txt.textContent = on ? (o.onText || 'On') : (o.offText || 'Off'); }
-    b.addEventListener('click', () => { on = !on; paint(); UI.sfx('click'); if (onChange) onChange(on); });
+    b.addEventListener('click', () => { on = !on; paint(); UI.sfx('click'); if (UI.Phone) UI.Phone.haptic('tap'); if (onChange) onChange(on); });
     b.set = v => { on = !!v; paint(); };
     b.get = () => on;
     paint();
@@ -111,7 +111,7 @@
       const b = h('button', { type: 'button', role: 'radio', disabled: !!it.disabled, tip: it.tip || null }, it.label);
       b.addEventListener('click', () => {
         if (String(cur) === String(it.id)) return;
-        set(it.id); UI.sfx('click'); if (onChange) onChange(it.id, true);
+        set(it.id); UI.sfx('click'); if (UI.Phone) UI.Phone.haptic('tap'); if (onChange) onChange(it.id, true);
       });
       root.appendChild(b);
       return b;

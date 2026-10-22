@@ -764,7 +764,7 @@
     st.slTitle = h('span', 'Research allocation'); st.slSub = h('span.sub');
     const slPanel = h('div.panel.tch-sl', h('div.panel-h', UI.icon('tech'), st.slTitle, st.slSub),
       h('div.tch-colh', h('span', 'Field · research share (2% steps)'), h('span', 'Chance'), h('span', 'Level')), st.rows.map(r => r.row),
-      h('div.foot', h('span', 'Click a name to lock it · wheel or +/− to nudge · = equalises'), h('span.grow'), st.eqBtn));
+      h('div.foot', h('span', UI.Phone.say('Click a name to lock it · wheel or +/− to nudge · = equalises', 'Tap a field\'s name to lock it')), h('span.grow'), st.eqBtn));
     st.proj = h('div.panel.tch-proj');
     const right = h('div.tch-right', slPanel, st.proj);
     st.ovw = h('div.tch-ovw');
@@ -1007,6 +1007,7 @@
     const sel = st.list.querySelector('.tch-trow.sel'); if (sel) sel.scrollIntoView({ block: 'nearest' });
   }
   UI.Tech = { open(params) { if (UI.Screens.has('tech')) UI.Screens.go('tech', Object.assign({ from: UI.Screens.current ? UI.Screens.current.id : 'galaxy' }, params)); } };
+  UI.Tech._phone = { st, selectField, setView, refresh };                                   // js/ui/phone-research.js (the phone layout's segments)
 
   // ================================================================== "original" restyle — brown leather family (research/ui-ref B §0, C §0)
   // Tech, Races, Report and the tech-tree screens: warm terracotta/leather body, bevelled frames, dark-brown wells, orange/amber headings,
@@ -1218,6 +1219,7 @@
     layoutScene(rects.panel, w, hh);
   }
   function layoutScene(p, w, hh) {
+    if (M.Phone && M.Phone.active() && hh > w) p = { x: w * 0.04, y: hh * 0.4, w: w * 0.92, h: hh * 0.56 };   // phones in portrait: the choice panel spans the lower half
     const key = round(p.x) + ',' + round(p.y) + ',' + round(p.w) + ',' + round(p.h) + ',' + round(w) + 'x' + round(hh);
     if (key === SC.layKey) return;
     SC.layKey = key;
@@ -1323,7 +1325,7 @@
     const box = h('div.tsc-box.ch', h('div.tsc-box-h', UI.icon(F.icon), h('span', F.name + ' Technology'), h('small', list.length + (list.length === 1 ? ' choice' : ' choices'))), R.listEl, R.infoEl,
       h('div.tsc-acts', R.skipBtn, h('span.grow'), R.okBtn));
     SC.panel.appendChild(box);
-    SC.hint.innerHTML = '<kbd>↑</kbd><kbd>↓</kbd> choose &nbsp;·&nbsp; <kbd>Space</kbd> research &nbsp;·&nbsp; <kbd>Esc</kbd> ' + (R.manual ? 'cancel' : 'let the scientists decide');
+    SC.hint.innerHTML = UI.Phone.say('<kbd>↑</kbd><kbd>↓</kbd> choose &nbsp;·&nbsp; <kbd>Space</kbd> research &nbsp;·&nbsp; <kbd>Esc</kbd> ' + (R.manual ? 'cancel' : 'let the scientists decide'), '');
     setHi(R.hi, true);
     void S; void rs;
   }

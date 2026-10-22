@@ -5,6 +5,30 @@ Versions follow `MAJOR.MINOR.PATCH`; the live version is the `VERSION` file.
 
 ## Unreleased
 
+- Phone mode. On a phone (touch screen, shorter side 600 px or less; `?phone=1` / `?phone=0` force it) the game switches to a
+  layout built for one thumb, and the desktop layout is unchanged. Buttons and controls are at least 44 px and text at least 12 px.
+  The galaxy map fills the screen with fixed tabs underneath: Planets, Fleet, Tech, Races, More (the game menu, Ship design and the
+  galaxy map) and a wide Next turn. The colony / star panel is a bottom sheet: collapsed, it shows the planet, the colony's
+  population, production and what it builds (or a star's planet, owner and range) and any warning; half open, the five spending
+  sliders and Ships / Reloc / Trans; fully open, everything and the turn log. Fleet orders pin to the bottom edge and a battle or a
+  scout report opens the sheet fully. Every screen has an app bar with Back and its title; Back and the phone's own back gesture do
+  what Esc or a right-click does on desktop. Press and hold anything for its tooltip, a star or fleet on the map included; a tap on
+  a number, label or chip shows it too, and a greyed-out button says why. Hints talk about taps, not keys, and a first-run card
+  explains the controls. Battles are always auto-resolved on a phone (the pre-battle card keeps Retreat and Auto). The ship design
+  editor becomes one column with the hull-space bar and cost pinned at the top, components picked from a sheet of cards that says
+  what fits, a −10 −1 +1 +10 Fill stepper for each weapon bank, and Build pinned at the bottom. Research splits into Allocation,
+  Project and Techs; the ledgers, tech tree, races, reports, almanac (search and tabs stay on top), setup, options and save screens
+  stack for a narrow screen; landscape phones get the galaxy panel as a right-hand column. News arrives as the brief headline list.
+  The game can be added to the home screen (`manifest.webmanifest`, icons in `assets/icons/`). Phones use their own graphics tier
+  (stepping down to Low if frames are slow; Options has a performance overlay row), at most two worker threads, and the synthesised
+  music voices instead of the 50 MB sampled orchestra. QA: `node tools/qa/phone.js [landscape|small]` (also fails on small targets
+  or text and on keyboard wording), phone profiles in `tools/qa/modes.js`, and `tools/qa/layout-fingerprint.js` to diff desktop
+  layouts between two checkouts. Notes and follow-ups: `tools/handoff/phone-2026-10.md`.
+  On a phone the interface also looks like a phone app while keeping the game's colours: flat screens and cards in each area's own
+  colours, small section headings, normal-case labels, flat buttons with a gold main action, a plain Back with the title centred, a
+  flat tab bar, the galaxy's status line as a top bar, a bottom sheet with rounded top corners, simpler dialogs and snackbar messages.
+  Short haptic taps on Next turn, slider steps, switches and errors (Android, and iPhones on iOS 18 or later; Options › Haptics turns
+  them off). The installed app gets a matching status-bar colour per screen and launch images for iPhones.
 - Server saves and a password gate (`server/moo-saves.py`, Python 3 standard library only). On a hosted install the game asks
   for a password before anything loads (default `moopassword`, set in `/etc/moogenesis/moo.conf` on the server; blank turns it
   off; changes apply at once and sign everyone out). The Save / Load screen gains a **Server | This browser** toggle; Server is

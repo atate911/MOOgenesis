@@ -3,14 +3,37 @@
 <head>
 <meta charset="utf-8">
 <title>Master of Orion — Reborn</title>
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content">
 <meta name="theme-color" content="#060919">
+<!-- Installable (home screen, no browser chrome): manifest.webmanifest + icons from tools/make-icons.js; no service worker, the game stays online. -->
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="assets/icons/icon-180.png">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="MOO Reborn">
+<!-- iOS launch images for the installed app (tools/make-icons.js renders them; without one it opens on a white screen) -->
+<link rel="apple-touch-startup-image" media="(device-width: 430px) and (device-height: 932px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)" href="assets/icons/launch-1290x2796.png">
+<link rel="apple-touch-startup-image" media="(device-width: 393px) and (device-height: 852px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)" href="assets/icons/launch-1179x2556.png">
+<link rel="apple-touch-startup-image" media="(device-width: 402px) and (device-height: 874px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)" href="assets/icons/launch-1206x2622.png">
+<link rel="apple-touch-startup-image" media="(device-width: 440px) and (device-height: 956px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)" href="assets/icons/launch-1320x2868.png">
+<link rel="apple-touch-startup-image" media="(device-width: 390px) and (device-height: 844px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)" href="assets/icons/launch-1170x2532.png">
+<link rel="apple-touch-startup-image" media="(device-width: 428px) and (device-height: 926px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)" href="assets/icons/launch-1284x2778.png">
+<link rel="apple-touch-startup-image" media="(device-width: 375px) and (device-height: 812px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)" href="assets/icons/launch-1125x2436.png">
+<link rel="apple-touch-startup-image" media="(device-width: 414px) and (device-height: 896px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)" href="assets/icons/launch-1242x2688.png">
+<link rel="apple-touch-startup-image" media="(device-width: 414px) and (device-height: 896px) and (-webkit-device-pixel-ratio: 2) and (orientation: portrait)" href="assets/icons/launch-828x1792.png">
+<link rel="apple-touch-startup-image" media="(device-width: 375px) and (device-height: 667px) and (-webkit-device-pixel-ratio: 2) and (orientation: portrait)" href="assets/icons/launch-750x1334.png">
 <!-- Optional web fonts: the game falls back to system fonts when offline. -->
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Ccircle cx=%2716%27 cy=%2716%27 r=%2710%27 fill=%27%23d6b36a%27/%3E%3C/svg%3E">
 <script>
 // Theme v2 ("serious sci-fi") is the default; ?theme=v1 restores the original look. ?accent=cyan|amber|leaf, ?fx=off drop the vignette/scanlines.
 (function () { try { var q = new URLSearchParams(location.search), r = document.documentElement, t = q.get('theme');
   if (t === 'v1') r.removeAttribute('data-theme'); if (q.get('accent')) r.setAttribute('data-accent', q.get('accent')); if (q.get('fx')) r.setAttribute('data-fx', q.get('fx')); } catch (e) {} })();
+// Phone layout layer (css/phone.css, js/ui/phone.js): decided here, before any stylesheet loads. ?phone=1|0 forces it; otherwise a
+// coarse-pointer device whose shorter screen side is 600px or less (phones in either orientation; tablets keep the desktop layout).
+(function () { try { var q = new URLSearchParams(location.search), f = q.get('phone'), on;
+  if (f === '1' || f === '0') on = f === '1'; else on = !!(window.matchMedia && matchMedia('(pointer: coarse)').matches) && Math.min(screen.width, screen.height) <= 600;
+  window.MOO_PHONE = on; window.MOO_PHONE_FORCED = f === '1' || f === '0'; if (on) document.documentElement.setAttribute('data-phone', ''); } catch (e) {} })();
 </script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>

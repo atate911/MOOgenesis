@@ -22,6 +22,7 @@
     try { const cs = document.currentScript; S.base = new URL('../../assets/audio/', cs && cs.src ? cs.src : location.href).href; } catch (e) { /* relative fallback */ }
     try { if (/[?&]samples=0\b/.test(location.search)) S.enabled = false; } catch (e) { /* ignore */ }
     try { if (location.protocol === 'file:') S.enabled = false; } catch (e) { /* ignore */ }   // fetch() cannot read file:// URLs
+    try { if (M.Phone && M.Phone.active()) S.enabled = false; } catch (e) { /* ignore */ }   // phones: the orchestra decodes to hundreds of MB; the synth voices play
   })();
 
   // ------------------------------------------------------------------ loading

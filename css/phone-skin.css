@@ -1,0 +1,240 @@
+/* =========================================================================
+   Phone skin: the LOOK of the phone layout layer (css/phone.css holds the layout). Every rule is gated on <html data-phone>; desktop never
+   matches one. Native-app structure with the game's skin: flat surfaces, cards with a 1px edge, small-caps section headers, sentence-case
+   rows, flat buttons with a gold primary plate, a plain-text Back and a centred title. Each screen family keeps its colours (indigo
+   menus and dialogs, gunmetal galaxy, grey-metal design, bronze ledgers, brown-leather research / races / reports) through --pk-* tokens
+   set on the family's root element.
+   Specificity: per-screen restyles are injected at runtime by UI.css() (after this file) at up to (0,4,0); theme-v2's primary / active /
+   selection rules are (0,6,0). Rules here start html:root:root[data-phone] (0,4,1); the few that must beat (0,6,0) start
+   html:root:root:root[data-phone] (0,5,1) + their classes.
+   ========================================================================= */
+
+/* ---- tokens: indigo (menus, dialogs, setup, options, almanac) by default; each family re-points them on its root ---------------------- */
+html[data-phone] {
+  --pk-surface: #0b0f1d; --pk-card: #151b31; --pk-edge: rgba(150, 170, 255, .14); --pk-hi: rgba(255, 255, 255, .05); --pk-sep: rgba(255, 255, 255, .08);
+  --pk-head: #a9b6f0; --pk-ink: #eceef6; --pk-ink2: #a8b0c8; --pk-btn: #1f2742; --pk-btn-edge: rgba(170, 185, 255, .2); --pk-press: #141a30;
+  --pk-well: #0a0d1a; --pk-accent: #e8c860; --pk-sel: rgba(232, 200, 96, .16); --pk-bar: #0c1122;
+}
+html:root:root[data-phone] :is(.gx, .ov) {                                         /* gunmetal */
+  --pk-surface: #1a1f26; --pk-card: #2b323c; --pk-edge: rgba(255, 255, 255, .1); --pk-head: #c6ae74; --pk-ink: #e6eaf0; --pk-ink2: #b4bdc9;
+  --pk-btn: #1d232c; --pk-btn-edge: rgba(255, 255, 255, .14); --pk-press: #141920; --pk-well: #12161c; --pk-bar: #141920;
+}
+html:root:root[data-phone] .dz {                                                   /* grey metal */
+  --pk-surface: #0e0e0f; --pk-card: #19191b; --pk-edge: rgba(255, 255, 255, .1); --pk-head: #ffad3a; --pk-ink: #ececec; --pk-ink2: #b0b0b0;
+  --pk-btn: #262628; --pk-btn-edge: rgba(255, 255, 255, .16); --pk-press: #18181a; --pk-well: #080808; --pk-sel: rgba(255, 173, 58, .18); --pk-bar: #1d1d1f;
+}
+html:root:root[data-phone] :is(.lp, .lf) {                                          /* bronze */
+  --pk-surface: #241a13; --pk-card: #3a2c22; --pk-edge: rgba(255, 225, 180, .13); --pk-sep: rgba(255, 235, 200, .08); --pk-head: #e3b56a;
+  --pk-ink: #f0e2c8; --pk-ink2: #c9b394; --pk-btn: #4a382b; --pk-btn-edge: rgba(255, 225, 180, .2); --pk-press: #33261d; --pk-well: #1d1510;
+  --pk-sel: rgba(232, 160, 60, .2);
+}
+html:root:root[data-phone] :is(.tch, .rx, .ttp) {                                   /* brown leather */
+  --pk-surface: #6c5240; --pk-card: #57422f; --pk-edge: rgba(255, 225, 190, .16); --pk-sep: rgba(255, 235, 205, .1); --pk-head: #ffb04a;
+  --pk-ink: #f6e6cc; --pk-ink2: #e0c9a6; --pk-btn: #6d5645; --pk-btn-edge: rgba(255, 225, 190, .24); --pk-press: #4a3a2c; --pk-well: #3a2c21;
+  --pk-sel: rgba(255, 176, 74, .2);
+}
+
+/* ---- surfaces: one flat level, no bezels --------------------------------------------------------------------------------------------- */
+html:root:root[data-phone] :is(.tch, .rx, .ttp, .dz, .gx-mapwrap, .ov-main)::after { display: none; }      /* the bevelled screen rims */
+html:root:root[data-phone] .gx { background: var(--pk-surface); box-shadow: none; }
+html:root:root[data-phone] :is(.lp, .lf, .ov) { background: var(--pk-surface); box-shadow: none; }
+html:root:root[data-phone] .dz { background: var(--pk-surface); }
+html:root:root[data-phone] :is(.lp-sheet, .lf-sheet, .rx-sheet, .al-sheet) { background: none; box-shadow: none; padding-left: .2rem; padding-right: .2rem; }
+html:root:root[data-phone] :is(.lp-sheet, .lf-sheet, .rx-sheet, .al-sheet)::before { display: none; }
+/* cards: the family's face, a 1px edge, a soft shadow */
+html:root:root[data-phone] :is(.panel, .lp-box, .rx-box, .rc-slot, .rc-sec) { clip-path: none; background: var(--pk-edge); box-shadow: 0 6px 16px rgba(0, 0, 0, .28); }
+html:root:root[data-phone] :is(.panel, .lp-box, .rx-box, .rc-slot, .rc-sec)::before { clip-path: none; inset: 1px; background: var(--pk-card); box-shadow: inset 0 1px 0 var(--pk-hi); }
+html:root:root[data-phone] .rc-slot.sel::after { display: none; }
+html:root:root[data-phone] .rc-slot.sel::before { background: color-mix(in srgb, var(--pk-card) 82%, #ffb04a); }
+html:root:root[data-phone] :is(.panel, .rx-box)::after { display: none; }
+/* section headers: small caps on the card, no plate */
+html:root:root[data-phone] :is(.panel-h, .lp-bt, .rx-bt, .sec-h, .ov-kt, .ov-kh) {
+  margin: 0 0 .4rem; padding: 0; border: 0; background: none; box-shadow: none; text-shadow: none;
+  font: 600 max(12px, .76rem)/1.25 var(--font-display); letter-spacing: .14em; text-transform: uppercase; color: var(--pk-head);
+}
+html:root:root[data-phone] .panel-h .ico, html:root:root[data-phone] .rx-bt .ico { width: .95rem; height: .95rem; color: var(--pk-head); }
+html:root:root[data-phone] .panel-h .sub { color: var(--pk-ink2); text-shadow: none; }
+/* rows inside cards: sentence case, hairline separators */
+html:root:root[data-phone] .lp-line { margin: 0; padding: .48rem 0; border-top: 1px solid var(--pk-sep); }
+html:root:root[data-phone] .lp-bt + .lp-line { border-top: 0; }
+html:root:root[data-phone] :is(.lp-line .k, .op-name, .sc-stats .cell span:first-child, .rc-lab, .sx-row .k, .dz-lb, .dz-tile .k, .lf-maint .k, .tch-trow, .ov-kr) {
+  text-transform: none; letter-spacing: 0; text-shadow: none; font-family: var(--font-ui);
+}
+html:root:root[data-phone] .lp-line .k { font-size: 1rem; font-weight: 500; color: var(--pk-ink); }
+html:root:root[data-phone] .lp-line .v { color: var(--pk-ink); }
+html:root:root[data-phone] .lp-reserve b { color: #ffbf5a; text-shadow: none; }
+html:root:root[data-phone] :is(.lp-head, .lf-head, .rx-head, .tch-head, .ttp-head) { border: 0; box-shadow: none; color: var(--pk-ink2); }
+html:root:root[data-phone] :is(.lp-hint, .lf-note, .rx-prompt, .op-hint, .sc-note) { color: var(--pk-ink2); }
+
+/* ---- tables (kept, as chosen): a light header, hairline rows, the selected row a tint ------------------------------------------------- */
+html:root:root[data-phone] .lp-tablewrap { background: var(--pk-card); box-shadow: 0 0 0 1px var(--pk-edge); }
+html:root:root[data-phone] .lp-tbl th { background: color-mix(in srgb, var(--pk-card) 85%, #000); box-shadow: none; border-bottom: 1px solid var(--pk-sep); text-shadow: none;
+  font: 600 max(12px, .72rem) var(--font-display); letter-spacing: .12em; color: var(--pk-head); }
+html:root:root[data-phone] .lp-tbl td { border-bottom: 1px solid var(--pk-sep); }
+html:root:root:root[data-phone] .lp-tbl tbody tr.sel { background: none; box-shadow: none; }
+html:root:root:root[data-phone] .lp-tbl tbody tr.sel td { background: var(--pk-sel); color: var(--pk-ink); }
+@media (hover: none) { html:root:root[data-phone] .lp-tbl tbody tr:not(.sel):not(.rebel):not(.unrest):hover td { background: transparent; } }   /* a tap leaves no hover tint */
+html:root:root:root[data-phone] .lp-tbl tbody tr.sel td:first-child { box-shadow: inset 3px 0 0 var(--pk-head); }
+html:root:root[data-phone] .lp-tbl tfoot td { background: color-mix(in srgb, var(--pk-card) 85%, #000); }
+html:root:root[data-phone] .lf-grid { background: var(--pk-card); box-shadow: 0 0 0 1px var(--pk-edge); }
+html:root:root[data-phone] .lf-row.head > *, html:root:root[data-phone] .lf-row.total > * { background: color-mix(in srgb, var(--pk-card) 85%, #000); }
+html:root:root[data-phone] .lf-row > :first-child { background: var(--pk-card); }
+html:root:root[data-phone] .lf-row.head > :first-child, html:root:root[data-phone] .lf-row.total > :first-child { background: color-mix(in srgb, var(--pk-card) 85%, #000); }
+html:root:root[data-phone] .lf-row > * { border-color: var(--pk-sep); }
+html:root:root[data-phone] .lf-maint, html:root:root[data-phone] .lf-srow { background: var(--pk-card); box-shadow: 0 0 0 1px var(--pk-edge); }
+
+/* ---- buttons: flat face, 1px edge; the primary a gold plate; pressed = darker (no hover on touch: the base rules here outrank it) -------- */
+html:root:root[data-phone] .btn {
+  clip-path: none; background: var(--pk-btn-edge); box-shadow: none; text-shadow: none; filter: none; transform: none;
+  font: 600 .95rem/1.15 var(--font-ui); letter-spacing: .01em; text-transform: none; color: var(--pk-ink);
+}
+html:root:root[data-phone] .btn::before { clip-path: none; inset: 1px; background: var(--pk-btn); box-shadow: inset 0 1px 0 var(--pk-hi); }
+html:root:root[data-phone] .btn:active { background: var(--pk-btn-edge); }
+html:root:root[data-phone] .btn:active::before { background: var(--pk-press); box-shadow: none; }
+html:root:root:root[data-phone] .btn.primary { color: #231603; background: #b8892e; font: 700 .86rem/1.15 var(--font-display); letter-spacing: .08em; text-transform: uppercase; text-shadow: none; }
+html:root:root:root[data-phone] .btn.primary::before { background: linear-gradient(180deg, #f3d184, #dcaa4a); box-shadow: none; }
+html:root:root:root[data-phone] .btn.primary:active::before { background: linear-gradient(180deg, #d9b468, #c08f36); }
+html:root:root:root[data-phone] .btn.danger { color: #ffd9dc; background: rgba(255, 120, 130, .38); }
+html:root:root:root[data-phone] .btn.danger::before { background: #4f1c27; }
+html:root:root:root[data-phone] .btn.active { color: #fff6dc; background: var(--pk-accent); }
+html:root:root:root[data-phone] .btn.active::before { background: color-mix(in srgb, var(--pk-btn) 70%, #b8892e); box-shadow: none; }
+html:root:root[data-phone] .btn:disabled, html:root:root[data-phone] .btn.disabled { opacity: .45; filter: none; }
+html:root:root[data-phone] .btn .ico { color: inherit; }
+/* the title menu keeps its gold words on the art (menu.js) */
+html:root:root[data-phone] .menu-list .btn { background: none; color: #f2c640; font: 400 clamp(1.4rem, 2.4vh, 2rem)/1.1 var(--font-title); letter-spacing: .08em; text-shadow: 0 2px 0 #4a3408; }
+html:root:root[data-phone] .menu-list .btn::before { display: none; }
+html:root:root:root[data-phone] .menu-list .btn.primary.primary { background: none; color: #fff1a8; font: 400 clamp(1.4rem, 2.4vh, 2rem)/1.1 var(--font-title); letter-spacing: .08em; text-transform: none; text-shadow: 0 2px 0 #4a3408, 0 0 22px rgba(255, 226, 120, .45); }
+/* tabs and segmented controls: flat wells with a selected plate */
+html:root:root[data-phone] .tabs { background: var(--pk-well); box-shadow: inset 0 0 0 1px var(--pk-edge); padding: 2px; gap: 2px; }
+html:root:root[data-phone] .tabs button { background: none; box-shadow: none; border: 0; text-shadow: none; color: var(--pk-ink2); font: 600 .9rem var(--font-ui); letter-spacing: .01em; text-transform: none; clip-path: none; }
+html:root:root:root[data-phone] .tabs button.active { background: linear-gradient(180deg, #f3d184, #dcaa4a); color: #231603; }
+html:root:root[data-phone] .tabs button::before { display: none; }
+html:root:root[data-phone] .ctl-seg { background: var(--pk-well); box-shadow: inset 0 0 0 1px var(--pk-edge); }
+html:root:root[data-phone] .ctl-seg button { color: var(--pk-ink2); font: 600 .95rem var(--font-ui); letter-spacing: .01em; }
+html:root:root[data-phone] .ctl-seg button[aria-checked=true] { color: #231603; background: linear-gradient(180deg, #f3d184, #dcaa4a); }
+html:root:root[data-phone] .dz-sec { width: auto; margin: .3rem 0 .2rem; padding: 0; background: none; box-shadow: none; clip-path: none; text-shadow: none; color: var(--pk-head); font: 600 max(12px, .76rem) var(--font-display); letter-spacing: .14em; }
+html:root:root[data-phone] .tch-tab { background: var(--pk-btn-edge); text-shadow: none; color: var(--pk-ink); font-family: var(--font-ui); font-weight: 600; letter-spacing: .01em; }
+html:root:root[data-phone] .tch-tab::before { background: var(--pk-btn); box-shadow: inset 0 1px 0 var(--pk-hi); }
+html:root:root[data-phone] .tch-tab.on { background: var(--tc, var(--pk-head)); color: #fff; }
+html:root:root[data-phone] .tch-tab.on::before { background: color-mix(in srgb, var(--tc, #e3b327) 34%, var(--pk-btn)); box-shadow: none; }
+html:root:root[data-phone] .tch-tab .tl { color: var(--pk-ink2); } html:root:root[data-phone] .tch-tab.on .tl { color: #fff; }
+/* fields */
+html:root:root[data-phone] :is(input.field, select.field, textarea.field) { background: var(--pk-well); border: 0; box-shadow: inset 0 0 0 1px var(--pk-edge); color: var(--pk-ink); clip-path: none; }
+html:root:root[data-phone] :is(input.field, select.field, textarea.field):focus { box-shadow: inset 0 0 0 1px var(--pk-accent); }
+
+/* ---- sliders: flat steppers keeping the red triangles, a darker track, a visible knob -------------------------------------------------- */
+html:root:root[data-phone] .slider .s-label { text-transform: none; letter-spacing: 0; text-shadow: none; font: 500 .98rem var(--font-ui); color: var(--pk-ink); background: none; box-shadow: none; justify-content: flex-start; }
+html:root:root[data-phone] .slider :is(.s-btn, .s-lock) { background: var(--pk-btn); box-shadow: 0 0 0 1px var(--pk-btn-edge); border: 0; }
+html:root:root[data-phone] .slider .s-btn:active { background: var(--pk-press); }
+html:root:root[data-phone] .slider .s-lock.on { background: color-mix(in srgb, var(--pk-btn) 55%, #c0552a); color: #fff; }
+html:root:root[data-phone] .slider .s-track { background: var(--pk-well); box-shadow: inset 0 0 0 1px var(--pk-edge); }
+html:root:root[data-phone] .slider .s-knob { display: block; top: -.3rem; bottom: -.3rem; width: .7rem; margin-left: -.35rem; background: #f2e6c4; box-shadow: 0 1px 4px rgba(0, 0, 0, .8); }
+html:root:root[data-phone] .slider .s-val { background: none; box-shadow: none; text-shadow: none; color: var(--pk-ink); font: 600 .95rem var(--font-ui); }
+html:root:root[data-phone] .slider.locked .s-label { color: #ffb48a; }
+/* switches: larger, no ON / OFF text */
+html:root:root[data-phone] .ctl-sw-txt { display: none; }
+html:root:root[data-phone] .ctl-sw-track { width: 3.2rem; height: 1.9rem; background: var(--pk-well); box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .2); }
+html:root:root[data-phone] .ctl-sw-track i { top: 3px; bottom: 3px; left: 3px; width: calc(1.9rem - 6px); background: #aab4c4; box-shadow: none; }
+html:root:root[data-phone] .ctl-sw[aria-checked=true] .ctl-sw-track { background: #b8892e; box-shadow: none; }
+html:root:root[data-phone] .ctl-sw[aria-checked=true] .ctl-sw-track i { left: calc(100% - 1.9rem + 3px); background: #fff6dc; box-shadow: none; }
+
+/* ---- app bar: a plain-text Back in the accent colour, the title centred, a hairline under ------------------------------------------------ */
+html[data-phone] .ph-appbar { background: var(--pk-bar); box-shadow: 0 1px 0 rgba(255, 255, 255, .09); }
+html[data-phone] .ph-back {
+  border: 0; background: none; clip-path: none; box-shadow: none; gap: .1rem; padding: 0 .8rem 0 .3rem;
+  color: var(--pk-accent); font: 500 1.08rem var(--font-ui); letter-spacing: 0;
+}
+html[data-phone] .ph-back .ch { font-size: 2.1rem; font-weight: 300; margin-top: -.3rem; }
+html[data-phone] .ph-back:active { filter: none; opacity: .6; }
+html[data-phone] .ph-bar-t { left: 5.4rem; right: 5.4rem; justify-content: center; font: 600 1.12rem var(--font-display); letter-spacing: .02em; color: #f2e6c4; pointer-events: none; }
+/* setup and options: the app bar already says Back and the title */
+html:root:root[data-phone] :is(.su-head .ctl-eyebrow, .su-head .ctl-title, .op-head) { display: none; }
+html:root:root[data-phone] .su-foot > .btn.su-nav:not(.primary) { display: none; }   /* setup's Cancel and Back: the app bar's Back steps back, and leaves from step 1 */
+
+/* ---- the galaxy tab bar: flat, a hairline on top, icon over label; Next turn a gold plate -------------------------------------------- */
+html:root:root[data-phone] .gx-bar.ph-tabs { background: var(--pk-bar); box-shadow: 0 -1px 0 rgba(255, 255, 255, .08); gap: 0; padding-top: .15rem; }
+html:root:root[data-phone] .gx-bar.ph-tabs .btn:not(.ph-next) { background: none; color: #b9c3d3; font: 600 max(12px, .76rem)/1.1 var(--font-ui); }
+html:root:root[data-phone] .gx-bar.ph-tabs .btn:not(.ph-next)::before { background: none; box-shadow: none; }
+html:root:root[data-phone] .gx-bar.ph-tabs .btn:not(.ph-next):active::before { background: rgba(255, 255, 255, .07); }
+html:root:root[data-phone] .gx-bar.ph-tabs .btn:not(.ph-next) .ico { color: var(--pk-accent); }
+html:root:root[data-phone] .gx-bar.ph-tabs .btn.turn-locked { opacity: .4; }
+html:root:root:root[data-phone] .gx-bar.ph-tabs .btn.ph-next { margin: .25rem .25rem .25rem .1rem; font-size: max(12px, .76rem); letter-spacing: .05em; }
+
+/* ---- galaxy: the HUD as a top bar, grouped map controls, a flat sheet with rounded top corners -------------------------------------- */
+html:root:root[data-phone] .gx-top { left: 0; right: 0; top: 0; gap: 0; }
+html:root:root[data-phone] .gx-hud {
+  padding: calc(.4rem + env(safe-area-inset-top)) calc(var(--tap) + 1.1rem) .4rem .8rem; border: 0; clip-path: none;
+  background: rgba(16, 20, 27, .86); backdrop-filter: blur(6px); box-shadow: 0 1px 0 rgba(255, 255, 255, .08);
+}
+html:root:root[data-phone] .gx-msg { padding: .35rem .5rem 0; }
+html:root:root[data-phone] .gmap-ctrl { top: calc(4.6rem + env(safe-area-inset-top)); gap: 0; box-shadow: 0 4px 14px rgba(0, 0, 0, .5); }
+html:root:root[data-phone] .gmap-ctrl :is(.gmap-btn, button) { background: rgba(28, 34, 44, .92); border: 0; border-bottom: 1px solid rgba(255, 255, 255, .08); box-shadow: none; clip-path: none; }
+html:root:root[data-phone] .gx-side:not(.gx-float) .panel { border-radius: .6rem .6rem 0 0; overflow: hidden; box-shadow: 0 -8px 22px rgba(0, 0, 0, .5); }
+html:root:root[data-phone] .gx-side:not(.gx-float) .panel::before { border-radius: .6rem .6rem 0 0; }
+html:root:root[data-phone] .gx-side:not(.gx-float) { --grip: 1.3rem; }
+html[data-phone] { --ph-strip: calc(var(--tap) + 3.1rem); }                         /* grip over the panel top, title row, summary line */
+html:root:root[data-phone] .gx-side:not(.gx-float) .ph-grip { position: relative; z-index: 2; margin-bottom: calc(-1 * var(--grip)); background: none; box-shadow: none; }
+html:root:root[data-phone] .gx-side:not(.gx-float) .ph-grip::before { width: 2.6rem; height: .28rem; background: rgba(255, 255, 255, .35); }
+html:root:root[data-phone] .gx-side:not(.gx-float) .gx-sidebody { padding-top: 1.05rem; }
+html:root:root[data-phone] .gx-side .side-title { background: none; box-shadow: none; }
+html:root:root[data-phone] .gx-side .side-title .nm { font-size: 1.5rem; }
+html:root:root[data-phone] .gx-side.gx-float .panel { box-shadow: 0 10px 30px rgba(0, 0, 0, .6); }
+/* the colony panel */
+html:root:root[data-phone] .sc-stats .cell { background: none; box-shadow: none; padding: .35rem .1rem; border-bottom: 1px solid var(--pk-sep); }
+html:root:root[data-phone] .sc-stats .cell span:first-child { font-size: .95rem; font-weight: 500; color: var(--pk-ink2); }
+html:root:root[data-phone] .sc-stats .cell > span:last-child { background: none; box-shadow: none; color: var(--pk-ink); font-family: var(--font-ui); font-weight: 600; }
+html:root:root[data-phone] .sc-sliders { background: none; box-shadow: none; padding: 0; }
+html:root:root[data-phone] .sc-sliders .s-label { font-size: .95rem; }
+html:root:root[data-phone] .sc-sliders .slider > .s-btn:nth-child(2)::before { border-right-color: #e05545; }
+html:root:root[data-phone] .sc-sliders .slider > .s-btn:nth-child(4)::before { border-left-color: #e05545; }
+html:root:root[data-phone] .sc-sliders .s-val { color: var(--pk-ink); font: 600 max(12px, .82rem) var(--font-ui); }
+html:root:root[data-phone] .sc-sliders .s-val.warn { color: #ff8a6a; } html:root:root[data-phone] .sc-sliders .s-val.dim { color: var(--pk-ink2); }
+html:root:root[data-phone] .sc-sliders .s-fill { box-shadow: none; }
+html:root:root[data-phone] :is(.sc-btns, .sm-actions) .btn { background: var(--pk-btn-edge); }
+html:root:root[data-phone] :is(.sc-btns, .sm-actions) .btn::before { background: var(--pk-btn); box-shadow: inset 0 1px 0 var(--pk-hi); }
+html:root:root[data-phone] .sc-bbox { border: 1px solid var(--pk-edge); }
+html:root:root[data-phone] .sc-bbox > div { background: rgba(0, 0, 0, .55); border-top: 0; }
+html:root:root[data-phone] .ph-sum { color: var(--pk-ink2); }
+html:root:root[data-phone] :is(.sm-card) { box-shadow: 0 0 0 1px var(--pk-edge); }
+html:root:root[data-phone] :is(.sm-range, .sm-route) { box-shadow: none; background: var(--pk-well); }
+html:root:root[data-phone] .sm-fleet { background: var(--pk-card); box-shadow: 0 0 0 1px var(--pk-edge); }
+html:root:root[data-phone] .sm-sb { background: var(--pk-btn); box-shadow: 0 0 0 1px var(--pk-btn-edge); }
+html:root:root[data-phone] .gx-side h3 { color: var(--pk-head); font-size: max(12px, .8rem); }
+/* the galaxy map overview */
+html:root:root[data-phone] .ov-side .panel { border-radius: .6rem .6rem 0 0; overflow: hidden; }
+html:root:root[data-phone] .ov-side .panel::before { border-radius: .6rem .6rem 0 0; }
+html:root:root[data-phone] .ov-side .ph-grip { background: var(--pk-card); box-shadow: none; }
+html:root:root[data-phone] .ov-key { background: var(--pk-well); box-shadow: inset 0 0 0 1px var(--pk-edge); }
+
+/* ---- dialogs (centred, as chosen): a plain title, a flat card, full-width footer buttons -------------------------------------------- */
+html:root:root[data-phone] .modal { min-width: 0; width: auto !important; max-width: 92vw; background: var(--pk-edge); box-shadow: 0 20px 50px rgba(0, 0, 0, .6); padding: .8rem .8rem .7rem; }
+html:root:root[data-phone] .modal::before { inset: 1px; background: var(--pk-card); box-shadow: none; }
+html:root:root[data-phone] .modal-h { margin: 0 0 .35rem; padding: .1rem .2rem .3rem; border: 0; background: none; box-shadow: none; text-shadow: none;
+  font: 600 1.2rem var(--font-display); letter-spacing: .02em; text-transform: none; color: #f2e6c4; }
+html:root:root[data-phone] .modal-f { justify-content: stretch; border-top: 1px solid var(--pk-sep); }
+html:root:root[data-phone] .modal-f .btn { flex: 1 1 0; justify-content: center; }
+html:root:root[data-phone] .modal .panel { background: none; box-shadow: none; padding: .2rem .2rem .3rem; }
+html:root:root[data-phone] .modal .panel::before { background: none; box-shadow: none; }
+html:root:root[data-phone] .modal .panel-h { margin-top: .35rem; }
+html:root:root[data-phone] .op-rows { background: color-mix(in srgb, var(--pk-card) 70%, #2a3366); padding: 0 .7rem; box-shadow: 0 0 0 1px var(--pk-edge); }
+html:root:root[data-phone] .op-row { border-top: 1px solid var(--pk-sep); padding: .55rem .1rem; }
+html:root:root[data-phone] .op-row:first-child { border-top: 0; }
+html:root:root[data-phone] .op-name { font-size: 1.05rem; font-weight: 500; color: var(--pk-ink); }
+html:root:root[data-phone] .gm-sheet .gm-info { border-bottom-color: var(--pk-sep); }
+html:root:root[data-phone] .gm-sheet .gm-sep { background: var(--pk-sep); }
+html:root:root[data-phone] .modal.gm-sheet { max-width: none; }
+/* toasts: a snackbar at the bottom */
+html:root:root[data-phone] .toast { clip-path: none; background: #1d2333; box-shadow: 0 6px 20px rgba(0, 0, 0, .55), 0 0 0 1px rgba(255, 255, 255, .1); color: #eef0f6; font: 500 .95rem var(--font-ui); text-align: left; }
+html:root:root[data-phone] .toast::before { display: none; }
+html:root:root[data-phone] .toast.ok { box-shadow: inset 3px 0 0 var(--leaf), 0 6px 20px rgba(0, 0, 0, .55); }
+html:root:root[data-phone] .toast.warn { box-shadow: inset 3px 0 0 var(--ember), 0 6px 20px rgba(0, 0, 0, .55); }
+html:root:root[data-phone] .toast.bad { box-shadow: inset 3px 0 0 var(--rose), 0 6px 20px rgba(0, 0, 0, .55); }
+html[data-phone][data-ph-bar] #toasts { bottom: calc(1rem + env(safe-area-inset-bottom)); }
+
+/* ---- the installed app: notches and the home indicator, no text selection or iOS callout on a long press (fields excepted) ------------- */
+html[data-phone] body, html[data-phone] .modal-b { -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
+html[data-phone] :is(input, textarea, [contenteditable]) { -webkit-user-select: text; user-select: text; }
+html:root:root[data-phone] .gx-hud { padding-left: max(.8rem, env(safe-area-inset-left)); }
+html:root:root[data-phone] .gx-bar.ph-tabs { padding-left: max(.25rem, env(safe-area-inset-left)); padding-right: max(.25rem, env(safe-area-inset-right)); }
+html[data-phone] .ph-appbar { padding-left: env(safe-area-inset-left); padding-right: env(safe-area-inset-right); }
+html[data-phone] .ph-back { left: calc(.3rem + env(safe-area-inset-left)); }

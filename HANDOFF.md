@@ -7,6 +7,17 @@ Docs: `PROGRESS.md` (plan/status/25-feature acceptance checklist) · `CONVENTION
 Commands: `node tools/check.js` (syntax of every manifest file) · `node tools/rules-test.js [area]` · `node tools/soak.js` (24-thread AI-vs-AI soak/balance; `tools/SOAK.md`) · `node tools/headless.js`.
 Browser-pane tip: animations use requestAnimationFrame, so in the built-in browser pane a tab must be fronted (`tabs_select`) for anything animated (GNN, audiences, scenes, combat) to advance.
 
+## Session 7 (October 2026) — phone mode, branch `claude/phone-mode`
+`tools/handoff/phone-2026-10.md`: a phone layout layer gated on `<html data-phone>` (desktop layouts proven identical to `main`):
+galaxy bottom sheet, one Back control + the phone's back gesture (both dispatch Escape), auto-only battles, a one-column ship design
+editor with a card picker, stacked tool screens, landscape support, installable web app. Round 2 (after an interface review): 44px
+targets / 12px text, fixed tab bar + More, a collapsed sheet with a summary line and a half height that holds all five sliders,
+app-bar titles in place of in-screen titles and OK buttons, research segments, tap-to-read and map long-press tooltips, touch
+wording (`UI.Phone.say / key`). `node tools/qa/phone.js [landscape|small]` (fails on small targets / text and keyboard wording).
+Round 3: a native-app look with the game's skin (`css/phone-skin.css`, family tokens `--pk-*`), haptics (`UI.Phone.haptic`), and
+installed-app polish (theme-color per screen, iOS launch images). Its **Follow-ups** list ranks what is left; first is the real-device
+pass (deploy the branch over HTTPS).
+
 ## Session 6b (October 2026) — GNN, photos, stargates, rally points, same branch
 `tools/handoff/gnn-logistics-2026-10.md`: the GNN closing before it could be read (timeline measured, last story now waits), the
 photo portraits that bobbed and pulsed, the race-photo audit (all 71 art files show the right race; code paths checked), stargate and

@@ -168,7 +168,7 @@
     kids.push(h('div.sv-star', STAR_NAME[i.kind] + ' star'));
     if (!i.explored) {
       kids.push(h('div.sv-unex', h('span.un', 'UNEXPLORED'), STAR_TEXT[i.kind], h('div.dim', { style: { marginTop: '.5rem', fontSize: '.95rem' } }, 'Send a ship here to chart the system.')));
-      kids.push(h('div.sv-hint', 'Click or press any key to return'));
+      kids.push(h('div.sv-hint', UI.Phone.say('Click or press any key to return', 'Tap to return')));
       st.tiles = []; ui.append.apply(ui, kids.filter(Boolean)); placeCaption(); return;
     }
     // --- fleets in orbit
@@ -220,7 +220,7 @@
       }
       if (ir.children.length) kids.push(ir);
     }
-    kids.push(h('div.sv-hint', 'Click or press any key to return'));
+    kids.push(h('div.sv-hint', UI.Phone.say('Click or press any key to return', 'Tap to return')));
     ui.append.apply(ui, kids.filter(Boolean));
     placeCaption();
   }
@@ -279,8 +279,12 @@
   function geometry() {
     const i = st.info, k = i.explored && i.p.type !== 'none' ? 0.84 + 0.16 * clamp(i.p.maxPop / 120, 0, 1) : 0.9;
     const pl = st.plate, big = !!(pl && pl.mode === 'plate');                     // over the system plate the live planet grows to cover the painted one
-    const pr = (big ? Math.min(H * 0.5, W * 0.3) : Math.min(H * 0.4, W * 0.27)) * k, px = big ? W * 0.27 : W * 0.25, py = big ? H * 0.86 : H * 0.8;
-    const sx = pl ? pl.sx : W * 0.86, sy = pl ? pl.sy : H * 0.15, sr = pl ? pl.sr : Math.min(H * 0.13, W * 0.09);
+    let pr = (big ? Math.min(H * 0.5, W * 0.3) : Math.min(H * 0.4, W * 0.27)) * k, px = big ? W * 0.27 : W * 0.25, py = big ? H * 0.86 : H * 0.8;
+    let sx = pl ? pl.sx : W * 0.86, sy = pl ? pl.sy : H * 0.15, sr = pl ? pl.sr : Math.min(H * 0.13, W * 0.09);
+    if (M.Phone && M.Phone.active() && H > W) {                                  // phones in portrait: the planet in the middle band, the star top right
+      pr = Math.min(W * 0.36, H * 0.2) * k; px = W * 0.42; py = H * 0.5;
+      if (!pl) { sx = W * 0.84; sy = H * 0.19; sr = Math.min(H * 0.06, W * 0.1); }
+    }
     const la = Math.atan2(sy - py, sx - px), base = { dpr, lightAngle: la, lightElev: 0.5, clouds: true, atmosphere: true, lights: true, cloudShadows: true };
     st.geo = { pr, px, py, sx, sy, sr, la, starOpts: { dpr }, optsGL: Object.assign({ spin: 0.018 }, base), optsCPU: Object.assign({ spin: 0.004 }, base) };
   }

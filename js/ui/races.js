@@ -276,9 +276,9 @@
     }
     const p = R.prompt; if (!p) return;
     p.classList.toggle('hot', !!R.mode);
-    if (R.mode) UI.mount(p, 'Choose an empire for the ', h('b', R.mode === 'report' ? 'report' : 'audience'), ' — click its portrait or press ', h('b', '1–5'), '.  Esc cancels.');
+    if (R.mode) UI.mount(p, 'Choose an empire for the ', h('b', R.mode === 'report' ? 'report' : 'audience'), UI.Phone.say([' — click its portrait or press ', h('b', '1–5'), '.  Esc cancels.'], ' — tap its portrait. Back cancels.'));
     else if (R.sel >= 0 && S.empires[R.sel]) UI.mount(p, h('span.rx-dot', { style: { '--c': bannerOf(S.empires[R.sel]), marginRight: '.4rem' } }), 'The ', h('b', S.empires[R.sel].name), ' are selected: ', h('b', 'Report'), ' or ', h('b', 'Audience'), '.');
-    else UI.mount(p, 'Click a portrait to select an empire, or press ', h('b', 'Report'), ' / ', h('b', 'Audience'), ' first.');
+    else UI.mount(p, UI.Phone.say('Click a portrait to select an empire, or press ', 'Tap a portrait to select an empire, or tap '), h('b', 'Report'), ' / ', h('b', 'Audience'), ' first.');
     if (R.btnR) { R.btnR.classList.toggle('active', R.mode === 'report'); R.btnA.classList.toggle('active', R.mode === 'audience'); }
   }
 
@@ -603,7 +603,9 @@
         const wd = Math.min(100, v / axis * 100), tr = h('i'); tr.style.width = animate ? '0%' : wd + '%';
         const row = h('div.sx-row' + (id === me ? '.me' : '') + (!E.alive ? '.dead' : '') + (E.alive && v === lead && lead > 0 ? '.top' : ''), { dataset: { emp: id }, style: { '--c': col, '--i': k }, tip: () => '<b>' + U.esc(E.name) + '</b><br>' + rawTip(S, E, st.key, r) },
           h('i.rx-dot'), h('span.nm', id === me ? E.name + ' (you)' : E.name), h('div.tr', tr), h('span.v', E.alive ? String(v) : '—'));
-        row.addEventListener('mouseenter', () => { SX.grid.dataset.hl = id; for (const x of SX.grid.querySelectorAll('.sx-row')) x.classList.toggle('hl', +x.dataset.emp === id); });
+        const hl = () => { SX.grid.dataset.hl = id; for (const x of SX.grid.querySelectorAll('.sx-row')) x.classList.toggle('hl', +x.dataset.emp === id); };
+        row.addEventListener('mouseenter', hl);
+        row.addEventListener('click', () => { if (!(M.Phone && M.Phone.active())) return; if (SX.grid.dataset.hl === String(id)) delete SX.grid.dataset.hl; else hl(); });   // phones: a tap highlights that empire in every box
         row.addEventListener('mouseleave', () => { delete SX.grid.dataset.hl; });
         box.rows.appendChild(row);
         if (animate) requestAnimationFrame(() => requestAnimationFrame(() => { tr.style.width = wd + '%'; }));

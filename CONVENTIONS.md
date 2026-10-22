@@ -26,6 +26,20 @@ text are original — never imitate or reproduce original assets.**
 - Style: 2-space indent, semicolons, `const`/`let`, short functions, comments only for non-obvious intent. Be performance-aware in per-frame code
   (no allocation in hot loops, cache gradients/sprites in offscreen canvases).
 
+## Phone layout layer (`tools/handoff/phone-2026-10.md`)
+- `index.html` decides `<html data-phone>` before any CSS loads; `js/core/phone.js` exposes it (`MOO.Phone.active()`; it reads the
+  `window.MOO_PHONE` flag, undefined in Node). Perf, workers and audio read it once at start-up.
+- Phone rules live only in `css/phone.css` (layout) and `css/phone-skin.css` (look), every selector starting `html[data-phone]` (or
+  `html:root:root[data-phone]` to beat a bumped restyle). A new screen family on phones sets the `--pk-*` tokens on its root element
+  instead of restyling cards and controls one by one. Phone behaviour lives in `js/ui/phone*.js`. A screen file gets at most a one-line `M.Phone && M.Phone.active()`
+  branch; never change a desktop rule to make a phone layout work.
+- Back on phones is a synthetic Escape: keep every screen's Escape binding equal to its right-click / Cancel.
+- Sizes on phones: controls at least `var(--tap)` (44px), list rows `var(--row)` (38px), text at least 12px (`max(12px, …rem)`).
+- A visible hint that names a key or the mouse goes through `UI.Phone.say(desktop, phone)`; a key badge through `UI.Phone.key(k)`.
+  Tooltip texts are made touch-friendly automatically. Give clickable elements their handler through `UI.h` (`onclick` etc.) so
+  they carry `data-act` and a tap on them never pops a tooltip instead.
+- Check a change with `node tools/qa/phone.js` (and `landscape`, `small`), and diff `tools/qa/layout-fingerprint.js` against `main` for desktop.
+
 ## Threads, GPU & portability (the game uses the hardware it finds — and never requires it)
 - **Worker-safe modules** (`core/util|rng|ops`, `data/*` that sim needs, `sim/*`, `ai/*`) are written `MOO.def(function (M) { … });` instead of an IIFE
   (see `js/core/ns.js`). `MOO.def` runs the function and remembers its source so `MOO.Workers` can boot identical code in a pool of Web Workers (works from

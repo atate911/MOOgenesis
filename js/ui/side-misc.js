@@ -91,6 +91,11 @@
       const S = G.S, me = G.player(), q = Q.star(S, me.id, this.pid), s = S.stars[this.pid], parts = [];
       const owner = q.owner >= 0 ? S.empires[q.owner] : null;
       parts.push(UI.Side.title(this.pid, q.owner));
+      if (UI.Phone && UI.Phone.active()) {                                             // phones: a thumbnail in the title row — the planet as last seen (its owner as known: no fog-of-war leak), or the star
+        const key = q.explored ? 'p' + q.planet.type + q.planet.growth + q.owner : 's' + s.color;
+        if (this.thumbKey !== key || this.thumbPid !== this.pid) { this.thumbKey = key; this.thumbPid = this.pid; this.thumb = q.explored ? h('span.ph-thumb', planetPic(Object.assign({}, q.planet, { owner: q.owner }), 36, q.owner)) : h('span.ph-thumb.star', { dataset: { c: s.color } }); }
+        parts[0].insertBefore(this.thumb, parts[0].querySelector('.nm'));
+      }
       if (!q.explored) {
         parts.push(h('div.sm-card.unexp', h('span.un', 'UNEXPLORED')));
         parts.push(h('div.sm-desc', STAR_TEXT[s.color]));
@@ -134,7 +139,7 @@
         host.appendChild(row);
       }
       const float = !!ctx.params.float;
-      this.hint = h('div.sc-pickhint', 'Click a destination star · Enter sends · Esc cancels'); this.route = h('div'); this.acc = UI.button('Accept', () => this.accept(ctx), { primary: true, disabled: true });
+      this.hint = h('div.sc-pickhint', UI.Phone.say('Click a destination star · Enter sends · Esc cancels', 'Tap a destination star on the map')); this.route = h('div'); this.acc = UI.button('Accept', () => this.accept(ctx), { primary: true, disabled: true });
       const cancel = () => { UI.Galaxy.pick = null; if (UI.Galaxy.map) { UI.Galaxy.map.setRoutePreview(null); UI.Galaxy.map.setReach(null); } ctx.defaultPanel(); };
       host.appendChild(this.hint); host.appendChild(this.route);
       host.appendChild(h('div.sm-actions', UI.button('Cancel', cancel), this.acc));

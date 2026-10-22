@@ -6,6 +6,8 @@ window.MOO_MANIFEST = {
     'css/base.css',
     'css/kit.css',
     'css/theme-v2.css',          // opt-out layer: active unless <html data-theme> is removed (?theme=v1)
+    'css/phone.css',             // phone layout layer: every rule gated on <html data-phone> (set by index.html)
+    'css/phone-skin.css',        // phone look: flat native-style surfaces and controls, same gate
   ],
   js: [
     // ---- core ----
@@ -16,6 +18,7 @@ window.MOO_MANIFEST = {
     'js/core/bus.js',
     'js/core/save.js',
     'js/core/settings.js',
+    'js/core/phone.js',
     'js/core/workers.js',
     'js/core/perf.js',
 
@@ -98,11 +101,13 @@ window.MOO_MANIFEST = {
     // ---- ui foundation ----
     'js/ui/kit.js',
     'js/ui/screens.js',
+    'js/ui/phone.js',
     'js/ui/styleguide.js',
     'js/ui/galaxymap.js',
     'js/ui/galaxy.js',
     'js/ui/side-colony.js',
     'js/ui/side-misc.js',
+    'js/ui/phone-galaxy.js',
     'js/ui/flow.js',
     'js/ui/turnlog.js',
     'js/ui/gnn.js',
@@ -111,7 +116,9 @@ window.MOO_MANIFEST = {
     'js/ui/overview.js',
     'js/ui/system.js',
     'js/ui/design.js',
+    'js/ui/phone-design.js',
     'js/ui/tech.js',
+    'js/ui/phone-research.js',
     'js/ui/techtree.js',
     'js/ui/races.js',
     'js/ui/audience.js',

@@ -12,7 +12,7 @@ declare -F warn >/dev/null || warn() { echo "   !  $*" >&2; }
 # surface. research/, briefs/, tools/ and the *.md docs stay in the checkout.
 # (The save server, server/moo-saves.py, is not part of a release: it is
 # copied to ROOT/server by moo_install_scripts, so a rollback leaves it alone.)
-MOO_DEPLOY_PATHS=(index.html css js assets/art assets/races assets/ships assets/audio)
+MOO_DEPLOY_PATHS=(index.html manifest.webmanifest css js assets/art assets/races assets/ships assets/audio assets/icons)
 
 MOO_DEFAULT_ROOT="/opt/moogenesis"
 MOO_DEFAULT_DOMAIN="moo.dhlab.us"

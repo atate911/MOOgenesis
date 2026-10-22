@@ -23,7 +23,9 @@
     threads: 0,             // worker threads for AI/combat/texture jobs: 0 = auto (all logical threads - 1)
     graphics: 'auto',       // 'auto' | 'low' | 'medium' | 'high' | 'ultra' (see MOO.Perf)
     gpu: true,              // use WebGL2 shader renderers when available (false = Canvas2D fallbacks)
-    perfOverlay: false,     // F3 overlay: fps, frame ms, worker utilisation, GPU
+    perfOverlay: false,     // F3 overlay: fps, frame ms, worker utilisation, GPU (phones: a row in Options)
+    phoneHints: false,      // phones: the first-run card on touch controls has been shown (js/ui/phone-galaxy.js)
+    haptics: true,          // phones: short vibrations on Next turn, slider steps, switches, sheet snaps and errors (UI.Phone.haptic)
     lastSetup: null,        // remembered new-game choices
   };
   let cur = Object.assign({}, DEFAULTS);
