@@ -10,9 +10,13 @@ declare -F warn >/dev/null || warn() { echo "   !  $*" >&2; }
 
 # What gets published: the game is static, so this is the whole deployable
 # surface. research/, briefs/, tools/ and the *.md docs stay in the checkout.
+# api/status is the static "no server saves" answer to the game's save-server probe
+# (js/core/save.js), served only when the save server is not set up: when it is,
+# the web server routes /api/ to it first. Without the file, every page load
+# logged a 404 in the player's console.
 # (The save server, server/moo-saves.py, is not part of a release: it is
 # copied to ROOT/server by moo_install_scripts, so a rollback leaves it alone.)
-MOO_DEPLOY_PATHS=(index.html manifest.webmanifest css js assets/art assets/races assets/ships assets/audio assets/icons)
+MOO_DEPLOY_PATHS=(index.html manifest.webmanifest api css js assets/art assets/races assets/ships assets/audio assets/icons)
 
 MOO_DEFAULT_ROOT="/opt/moogenesis"
 MOO_DEFAULT_DOMAIN="moo.dhlab.us"

@@ -14,9 +14,10 @@ const { serve, open, sleep } = require('./lib'); const bot = require('./bot');
     if (!alive) { console.log('game over at turn', i); break; }
     const p = page.evaluate(() => MOO.Game.endTurn().then(r => r && { ints: r.interrupts.length, over: r.over && r.over.reason, ms: r.ms | 0 }));
     const res = await Promise.race([p, sleep(60000).then(() => 'TIMEOUT')]);
+    if (res && res.over) { console.log('OVER', res); }
+    if (!(await page.evaluate(() => !!MOO.Game.S))) { console.log('game closed after turn', i, '(game over -> title)'); break; }
     const info = await page.evaluate(() => ({ t: MOO.Game.S.turn, scr: MOO.UI.Screens.current.id, busy: MOO.Game.busy, modal: !!document.querySelector('.scrim .modal') }));
     if (res === 'TIMEOUT') { console.log('STUCK turn', i, info, b.stats.seen.slice(-4), await page.evaluate(() => ({ cur: window.__cur, ints: window.__int.slice(-6), side: MOO.UI.Side.current(), card: (document.querySelector('.gx-side') || {}).innerText && document.querySelector('.gx-side').innerText.slice(0, 200), modals: document.querySelectorAll('.scrim').length }))); await page.screenshot({ path: '/tmp/claude-0/stuck.png' }); break; }
-    if (res && res.over) { console.log('OVER', res); }
     if (info.scr !== 'galaxy') await page.evaluate(() => MOO.UI.Screens.go('galaxy'));
   }
   console.log('turns played', (Date.now() - t0) / 1000 | 0, 's; bot clicks', b.stats.clicks, JSON.stringify(b.stats.screens));
