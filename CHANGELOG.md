@@ -7,7 +7,9 @@ Versions follow `MAJOR.MINOR.PATCH`; the live version is the `VERSION` file.
 
 - Title screen. The world in the corner turns smoothly and visibly: its axis now tilts away from the viewer so mid-latitudes sweep
   past instead of a polar cap turning in place, one turn takes about a minute, the sun sits low on the galaxy's side so the terminator, the
-  night-side city lights and the cloud shadows cross the visible half, and it drifts a little against the galaxy's slow zoom. The GL
+  night-side city lights and the cloud shadows cross the visible half, and it drifts a little against the galaxy's slow zoom. Clouds on
+  every GL-rendered rocky world are now weather rather than a decal: banks stretch, curl and break up over tens of seconds, cyclones
+  breathe, and the deck runs a little ahead of the ground (the shadows follow). The GL
   planet renderer shades only the part of a planet that lands on the canvas (half the cost for a planet half off-screen: the title
   screen, a close system view), so the title screen no longer drags the quality tier down into the Canvas2D fallback on an integrated
   GPU. The menu marker no longer sits on the first letter of the default row (New game / Continue). The title block shows the version

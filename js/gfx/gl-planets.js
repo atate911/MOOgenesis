@@ -802,20 +802,25 @@ Sf surfaceAt(vec3 P, float pxw, float limbLod) {
 }
 
 // ---- cloud layer: swirl vortices + domain warp + zonal stretch; returns (density, gradient wrt direction)
+// Weather: the warp fields are sampled along a slow bounded wander through noise space (tw) and the cyclones breathe, so banks stretch,
+// curl and break up over tens of seconds instead of riding the planet as a fixed decal. The wander's frequencies are multiples of
+// 2*pi/4096 so it is continuous where uFlg.w (t mod 4096) wraps. The shadow lookup calls the same function at the same time.
 vec4 cloudField(vec3 Pc, float oct, bool full) {
+  float tt = uFlg.w;
   vec3 p = Pc;
   for (int i = 0; i < 3; i++) {
     float f = uVs[i];
     if (f == 0.0) continue;
     vec4 v = uVort[i];
     float d = acos(clamp(dot(p, v.xyz), -1.0, 1.0));
-    p = rotAbout(p, v.xyz, f * exp(-(d * d) / (v.w * v.w)));
+    p = rotAbout(p, v.xyz, f * (1.0 + 0.22 * sin(tt * 0.006136 + float(i) * 2.1)) * exp(-(d * d) / (v.w * v.w)));
   }
   vec3 sc = vec3(CSCALE, CSCALE * 1.3, CSCALE);
   vec3 q = p;
   if (full) {
-    q += nzV(p * 0.85 + uSd2).xyz * 0.24;
-    q += nzV(q * 2.1 + uSd).xyz * 0.07;
+    vec3 tw = vec3(sin(tt * 0.003068), cos(tt * 0.004602), sin(tt * 0.003068 + 2.1)) * 0.8;
+    q += nzV(p * 0.85 + uSd2 + tw).xyz * 0.24;
+    q += nzV(q * 2.1 + uSd - tw * 0.6).xyz * 0.07;
   }
   vec4 d = fbmG(q * sc + uSd.yzx, oct, 0.55, 0.58);
   d.yzw *= sc;
@@ -1232,7 +1237,7 @@ void main() {
     const g = GL.gl();
     const spin = opts.spin !== undefined ? opts.spin : 0.015;
     let sp = P.phase + spin * t; sp -= Math.floor(sp);
-    let csp = P.cphase + spin * 1.18 * t + 0.0012 * t; csp -= Math.floor(csp);
+    let csp = P.cphase + spin * 1.24 * t + 0.0012 * t; csp -= Math.floor(csp);   // the cloud deck runs a little ahead of the ground
     viewToObject(_mS, sp * TAU, P.elev, P.roll);
     viewToObject(_mC, csp * TAU, P.elev, P.roll);
     const la = opts.lightAngle !== undefined ? opts.lightAngle : -2.3, le = opts.lightElev !== undefined ? opts.lightElev : 0.55;
