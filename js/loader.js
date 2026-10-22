@@ -10,6 +10,13 @@
   // id, so it keeps the per-load timestamp — nothing may be cached there.
   var build = typeof window.MOO_BUILD === 'string' && /^[A-Za-z0-9._+-]{1,80}$/.test(window.MOO_BUILD) ? window.MOO_BUILD : '';
   var bust = build ? '?v=' + build : '?_=' + Date.now();
+  // One automatic retry. A file that failed to load or to run (a dropped connection, or a truncated
+  // copy the browser cached as immutable) leaves a module missing, and the game would only break much
+  // later (e.g. at Begin: "M.Sim.Research.init"). So: reload the page once with a fresh token on every
+  // URL, which goes past the cache, and if that load fails too, stop with a message instead of booting.
+  var RETRY_KEY = 'moo.loadRetry', retried = false;
+  try { var t = +sessionStorage.getItem(RETRY_KEY) || 0; retried = Date.now() - t < 60000; } catch (e) { /* no storage: no retry */ }
+  if (retried) bust += '&r=' + Date.now();
   window.MOO_BUST = bust;
   var fill = document.getElementById('boot-fill');
   var errBox = document.getElementById('boot-err');
@@ -30,7 +37,16 @@
     if (done === total) finish();
   }
   function finish() {
+    window.removeEventListener('error', onScriptError);
     if (errors.length) { errBox.textContent = 'Failed to load:\n' + errors.join('\n'); console.warn('Missing files:', errors); }
+    if (jsFailed) {
+      if (!retried) {
+        try { sessionStorage.setItem(RETRY_KEY, String(Date.now())); location.reload(); return; } catch (e) { /* fall through to the message */ }
+      }
+      errBox.textContent += '\n\nThe game could not finish loading. Check your connection and reload the page.';
+      return;
+    }
+    try { sessionStorage.removeItem(RETRY_KEY); } catch (e) { /* ignore */ }
     try {
       if (window.MOO && typeof window.MOO.boot === 'function') window.MOO.boot();
       else throw new Error('MOO.boot is not defined (js/main.js missing?)');
@@ -39,12 +55,22 @@
       console.error(e);
     }
   }
+  // A script that loads but throws while running (or does not parse) only shows up as a window error
+  // whose filename is that script's URL.
+  var jsFailed = false;
+  function onScriptError(ev) {
+    var f = ev && ev.filename || '';
+    for (var i = 0; i < man.js.length; i++) {
+      if (f.indexOf(man.js[i] + bust) >= 0) { jsFailed = true; errors.push('js (error): ' + man.js[i] + ': ' + (ev.message || 'script error')); return; }
+    }
+  }
+  window.addEventListener('error', onScriptError);
   man.js.forEach(function (src) {
     var s = document.createElement('script');
     s.src = src + bust;
     s.async = false;                       // preserves execution order
     s.onload = step;
-    s.onerror = function () { errors.push('js: ' + src); step(); };
+    s.onerror = function () { jsFailed = true; errors.push('js: ' + src); step(); };
     document.head.appendChild(s);
   });
 })();
