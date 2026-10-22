@@ -495,9 +495,10 @@ vec3 grade(vec3 c) {
 vec4 glowOut(vec3 I) { vec3 d = grade(I); float a = clamp(max(d.r, max(d.g, d.b)), 0.0, 1.0); return vec4(d, a); }
 vec4 over(vec4 t, vec4 b) { return t + b * (1.0 - t.a); }
 float ign(vec2 p) { return fract(52.9829189 * fract(dot(p, vec2(0.06711056, 0.00583715)))); }
+uniform vec2 uVo;        // viewport origin inside the full render region (px): keeps the dither pattern the same when only part of a region is shaded
 vec4 finalize(vec4 c) {
   if (c.a > 0.0) {
-    float dn = (ign(gl_FragCoord.xy) - 0.5) / 255.0;
+    float dn = (ign(gl_FragCoord.xy + uVo) - 0.5) / 255.0;
     c.a = clamp(c.a + dn, 0.0, 1.0);
     c.rgb = min(max(c.rgb + dn, 0.0), c.a);
   }
@@ -1291,6 +1292,22 @@ void main() {
 
   /* ---- planet region + draw */
   let _lastDrawErr = 0;
+  // The part of a region ([x, x+s] × [y, y+s] in ctx units) that lands on ctx's bitmap, as an offset + size in region device px: null when
+  // all of it does, false when none. Shading only that part is free (same fragment maths, a smaller viewport) and halves the cost of a
+  // planet half off the canvas (the title screen's, a close system view). Only for scale + translate transforms (the usual
+  // setTransform(dpr, 0, 0, dpr, 0, 0)); a rotated or skewed ctx shades the whole region.
+  function visibleSub(ctx, x, y, s, dpr, S) {
+    const cv = ctx.canvas;
+    if (!cv || typeof ctx.getTransform !== 'function') return null;
+    let m; try { m = ctx.getTransform(); } catch (e) { return null; }
+    if (!m || m.b !== 0 || m.c !== 0 || !(m.a > 0) || !(m.d > 0)) return null;
+    const x0 = -m.e / m.a, y0 = -m.f / m.d, x1 = (cv.width - m.e) / m.a, y1 = (cv.height - m.f) / m.d;
+    if (x0 <= x && y0 <= y && x1 >= x + s && y1 >= y + s) return null;
+    const ox = Math.max(0, Math.floor((x0 - x) * dpr) - 1), oy = Math.max(0, Math.floor((y0 - y) * dpr) - 1);
+    const ex = Math.min(S, Math.ceil((x1 - x) * dpr) + 1), ey = Math.min(S, Math.ceil((y1 - y) * dpr) + 1);
+    if (ex <= ox || ey <= oy) return false;
+    return { ox, oy, w: ex - ox, h: ey - oy };
+  }
   function renderPlanetRegion(ctx, desc, cx, cy, radius, t, opts, forceDpr, fit) {
     const q = getQ();
     const P = planetData(desc);
@@ -1309,15 +1326,20 @@ void main() {
     const gx = cx * dpr, gy = cy * dpr;
     const ix = Math.round(gx - half), iy = Math.round(gy - half);
     const fx = gx - ix - half, fy = gy - iy - half;
+    let ox = 0, oy = 0, Sw = S, Sh = S;
+    const sub = visibleSub(ctx, ix / dpr, iy / dpr, S / dpr, dpr, S);
+    if (sub === false) return true;                 // nothing of it on the canvas
+    if (sub) { ox = sub.ox; oy = sub.oy; Sw = sub.w; Sh = sub.h; }
     const t0 = (typeof performance !== 'undefined') ? performance.now() : 0;
-    if (!GL.begin(S, S)) return false;
+    if (!GL.begin(Sw, Sh)) return false;
     pr.use();
     const detail = clamp(q.planetDetail === undefined ? 1 : q.planetDetail, 0.4, 2.0);
-    bindCommon(pr, P, Rpx, half + fx, half - fy, t, opts);
+    bindCommon(pr, P, Rpx, half + fx - ox, Sh - (half + fy - oy), t, opts);   // centre in viewport px, GL origin bottom-left (unclipped: half + fx, half - fy)
+    pr.f2('uVo', ox, S - Sh - oy);
     if (P.gas) setGasUniforms(pr, P, Rpx, detail, t, opts); else setRockyUniforms(pr, P, Rpx, detail, t, opts, desc);
     setRingUniforms(pr, P);
     GL.drawQuad();
-    GL.blit(ctx, ix / dpr, iy / dpr, S / dpr, S / dpr);
+    GL.blit(ctx, (ix + ox) / dpr, (iy + oy) / dpr, Sw / dpr, Sh / dpr);
     stats.draws++;
     if (t0) stats.lastMs = performance.now() - t0;
     return true;
