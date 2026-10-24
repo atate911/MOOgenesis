@@ -169,6 +169,9 @@ html:root:root[data-phone] .sc-btns { flex-direction: row; } html:root:root[data
 /* half height = the controls (portrait): the picture, the stats, the build box, the rally line and the star's planet card wait for full */
 @media (orientation: portrait) {
   html:root:root[data-phone] .gx-side:not(.gx-float)[data-sheet="half"] :is(.sc-card, .sc-stats, .sc-bbox, .sc-rally, .sm-card) { display: none; }
+  html:root:root[data-phone] .gx-side:not(.gx-float) .sc-card.wide { aspect-ratio: 16 / 4.5; }   /* full: the colony plate shorter, so the whole panel fits */
+  html:root:root[data-phone] .gx-side:not(.gx-float)[data-sheet="full"] .ph-sum { display: none; }   /* full: the stats block shows the same figures */
+  html:root:root[data-phone] .gx-side:not(.gx-float) .sc-bbox { min-height: 3.4rem; }
 }
 /* a pick-a-star panel taller than its sheet keeps Cancel / Accept in reach */
 html[data-phone] .gx-side .gx-sidebody > .sm-actions:last-child { position: sticky; bottom: -.6rem; z-index: 3; margin: .3rem -.5rem 0; padding: .45rem .5rem .5rem; background: rgba(58, 66, 76, .97); box-shadow: 0 -6px 12px rgba(0, 0, 0, .45); }
@@ -352,7 +355,13 @@ html:root:root[data-phone] .lp-title, html:root:root[data-phone] .lf-title, html
 html:root:root[data-phone] .tch::after, html:root:root[data-phone] .rx::after, html:root:root[data-phone] .ttp::after { display: none; }   /* the bezel frame */
 
 /* ---- planets ledger: the table scrolls sideways under a pinned planet column; the footer stacks ---- */
-html:root:root[data-phone] .lp-tablewrap { flex: none; min-height: 12rem; max-height: 52vh; }
+html:root:root[data-phone] .lp-tablewrap { flex: none; min-height: 0; max-height: 52vh; }   /* no empty block under a short table */
+html:root:root[data-phone] .lp-line { padding-top: .22rem; padding-bottom: .22rem; }           /* read-only lines: not tap targets */
+html:root:root[data-phone] .lp-reserve b { font-size: 1.45rem; }
+html:root:root[data-phone] .lp-foot { margin-top: .4rem; }
+html:root:root[data-phone] .lp-box { padding-top: .25rem; padding-bottom: .35rem; }
+html:root:root[data-phone] .lp-sl .slider { margin: .1rem 0; }
+html:root:root[data-phone] .lp-hint { display: none; }                                      /* the tax / security hint line: the sliders' values say it */
 html:root:root[data-phone] .lp-tbl th:nth-child(2), html:root:root[data-phone] .lp-tbl td.nm { position: sticky; left: 0; z-index: 2; }
 html:root:root[data-phone] .lp-tbl th:nth-child(2) { z-index: 3; }
 html:root:root[data-phone] .lp-foot { grid-template-columns: minmax(0, 1fr); gap: .5rem; }
@@ -391,10 +400,21 @@ html:root:root[data-phone] .tch-listp { flex: none; } html:root:root[data-phone]
 html:root:root[data-phone] .tch-detail { flex: none; grid-template-columns: minmax(0, 1fr); } html:root:root[data-phone] .tch-pic { height: 11rem; }
 html:root:root[data-phone] .tch-dtxt { overflow: visible; }
 html:root:root[data-phone] .tch-colh { display: none; }
-html:root:root[data-phone] .tch-r1 { grid-template-columns: minmax(0, 1fr) auto auto; row-gap: .15rem; }
-html:root:root[data-phone] .tch-r1 > .slider { grid-column: 1 / -1; }
-html:root:root[data-phone] .tch-row .slider { grid-template-columns: var(--tap) minmax(2.5rem, 1fr) var(--tap) 3.2rem var(--tap); gap: .2rem .25rem; }
-html:root:root[data-phone] .tch-row .slider .s-label { grid-column: 1 / -1; min-height: max(36px, 2.2rem); overflow: hidden; text-overflow: ellipsis; }   /* the field's name on its own line (a tap locks it) */
+/* a field is two rows: the name with the bulb and the level at its right, then the slider's parts (the slider is display: contents so its parts
+   join the row's grid); six fields fit a phone screen without scrolling (three rows per field did not) */
+html:root:root[data-phone] .tch-row { padding: .15rem .5rem .18rem; }
+html:root:root[data-phone] .tch-r2 { margin-top: 0; }
+html:root:root[data-phone] .tch-sl { padding: .3rem .5rem .35rem; }
+html:root:root[data-phone] .tch-sl > .panel-h { display: none; }                            /* the Allocation tab already names the part */
+html:root:root[data-phone] .tch-sl .foot { margin-top: .25rem; padding-top: .25rem; }
+html:root:root[data-phone] .tch-head { display: none; }                                      /* the app bar names the screen; the total is in the foot (tech.js) */
+html:root:root[data-phone] .tch-sl .foot .tch-total { margin-left: 0; } html:root:root[data-phone] .tch-sl .foot .tch-total b { font-size: 1.5rem; }
+html:root:root[data-phone] .tch-r1 { grid-template-columns: var(--tap) minmax(2.5rem, 1fr) var(--tap) 3.2rem var(--tap); gap: .1rem .25rem; }
+html:root:root[data-phone] .tch-row .slider { display: contents; }
+html:root:root[data-phone] .tch-row .slider .s-label { grid-row: 1; grid-column: 1 / 4; min-height: max(36px, 2.2rem); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }   /* the field's name (a tap locks it) */
+html:root:root[data-phone] .tch-row .tch-bulb { grid-row: 1; grid-column: 4; }
+html:root:root[data-phone] .tch-row .tch-lvl { grid-row: 1; grid-column: 5; font-size: 1.15rem; }
+html:root:root[data-phone] .tch-row .slider > :is(.s-btn, .s-track, .s-val, .s-lock) { grid-row: 2; }
 html:root:root[data-phone] .tch-r2 { flex-wrap: wrap; gap: .2rem .6rem; }
 html:root:root[data-phone] .tch-proj { min-height: auto; }
 html:root:root[data-phone] .tch-sl .foot { flex-wrap: wrap; }
@@ -514,6 +534,20 @@ html:root:root[data-phone] .su-race-g { font-size: .82rem; }
 /* cinematic captions use the width */
 html:root:root[data-phone] .end-cap { width: 92%; }
 html:root:root[data-phone] .su-thumb-w { max-height: 4.8rem; min-height: 3.6rem; }
+/* less to scroll in the wizard: the difficulty rows show their description on the chosen one only; the race detail keeps a small portrait beside
+   the text instead of a tall frame beside a tall column; banner tiles, the fleet preview and the identity card are shorter */
+html:root:root[data-phone] .su-drow:not([aria-checked="true"]) .su-drow-t { display: none; }
+html:root:root[data-phone] .su-diffs { grid-auto-rows: minmax(var(--tap), auto); gap: .3rem; }
+html:root:root[data-phone] .su-d-top { grid-template-columns: 6.5rem minmax(0, 1fr); gap: .6rem; }
+html:root:root[data-phone] .su-d-desc { font-size: .9rem; line-height: 1.35; margin: .1rem 0 .25rem; }
+html:root:root[data-phone] .su-homeart { display: none; }                                   /* the homeworld illustration: the galaxy shows it soon enough */
+html:root:root[data-phone] .su-facts { display: grid; grid-template-columns: 1fr 1fr; gap: .4rem; }
+html:root:root[data-phone] .su-traits { gap: .3rem; }
+html:root:root[data-phone] .su-trait { grid-template-columns: minmax(6.2rem, auto) minmax(0, 1fr); gap: .5rem; font-size: .88rem; }
+html:root:root[data-phone] .su-banner > canvas { height: 2.6rem; }
+html:root:root[data-phone] .su-fleet { min-height: 4rem; margin-top: .4rem; }
+html:root:root[data-phone] .su-note { font-size: .85rem; }
+html:root:root[data-phone] .su-id { display: none; }                                       /* the identity card repeats the two name fields above it */
 html:root:root[data-phone] .tl-r { min-height: var(--row); align-items: center; }
 html:root:root[data-phone] .tl-a { display: inline-block; padding: .55rem .1rem; margin: -.55rem 0; }   /* a taller tap box for the turn log's links, same line height */
 html[data-phone] #toasts { bottom: calc(var(--ph-strip) + var(--tap) + 1.4rem + env(safe-area-inset-bottom)); max-width: 94vw; }
