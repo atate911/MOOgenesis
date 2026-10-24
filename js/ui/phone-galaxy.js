@@ -50,7 +50,7 @@
     }, true);
     sheet.on(st => { if (st === 'half') requestAnimationFrame(fitHalf); });
     window.addEventListener('resize', () => requestAnimationFrame(fitHalf));
-    if (M.Bus) M.Bus.on('turn:processing', on => { if (on && active() && sheet) { holding = false; sheet.set('strip'); } });
+    if (M.Bus) M.Bus.on('turn:processing', on => { if (!active() || !sheet) return; if (on) { holding = false; sheet.set('strip'); } markHeld(false); });
     noteShown(UI.Side.current(), null); update();                                          // the first entry showed its panel before the sheet existed
   }
 
@@ -102,6 +102,11 @@
   }
   const update = () => { if (!active()) return; updateSummary(); if (sheet && sheet.get() === 'half') fitHalf(); };
 
+  // A held prompt (the turn's pending question) must stack above the map's busy overlay (.gx-busy, z-index 20): on a phone the sheet lies OVER
+  // the map, and under that overlay its buttons could not be tapped — the turn then waited forever on a card the player could see but not
+  // answer (the "Year …" freeze). css/phone.css raises [data-held] above the overlay; nothing else on the sheet may reach past it mid-turn.
+  const markHeld = on => { if (sheet) { if (on) sheet.el.dataset.held = ''; else delete sheet.el.dataset.held; } };
+
   // which height a panel wants (runs after the original show, only when that show took effect)
   const show0 = UI.Side.show;
   UI.Side.show = function (name, params, _hd) {
@@ -112,8 +117,8 @@
     if (!sheet) return r;
     const held = UI.Side.held && _hd === UI.Side.held;
     if (params && params.float) { if (!held) sheet.set('strip'); return r; }                 // the float card carries its own Accept / Cancel
-    if (held) { if (!holding) { holding = true; remembered = sheet.get(); } sheet.set('full'); return r; }
-    if (holding) { holding = false; sheet.set(remembered === 'full' ? 'half' : remembered); return r; }   // the prompt was answered: back to where the player was
+    if (held) { if (!holding) { holding = true; remembered = sheet.get(); } markHeld(true); sheet.set('full'); return r; }
+    if (holding) { holding = false; markHeld(false); sheet.set(remembered === 'full' ? 'half' : remembered); return r; }   // the prompt was answered: back to where the player was
     if (PICK[name]) sheet.set('half');
     return r;
   };

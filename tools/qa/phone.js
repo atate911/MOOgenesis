@@ -488,6 +488,27 @@ const sheetState = page => page.evaluate(() => { const s = document.querySelecto
       check('…shown once', !(await page.$('.scrim .modal.ph-hints')) && (await page.evaluate(() => MOO.Settings.get('phoneHints'))) === true);
     });
 
+    await step('prompt', async () => {
+      // a turn prompt held in the sheet while the "Year …" busy overlay is up must answer a REAL tap: the bot clicks through script, which no
+      // overlay can block, so only a hit-tested tap proves the card is reachable (under the overlay it was not: the "Year …" freeze on phones)
+      await page.evaluate(() => MOO.UI.closeAllModals()); await sleep(200);
+      const r = await page.evaluate(async () => {
+        const UI = MOO.UI, G = MOO.Game, cap = G.player().capital;
+        UI.Galaxy.busy(true, 'Year … (prompt check)'); G.busy = true; window.__promptAns = null;
+        UI.Flow.card({ star: cap, planetCard: MOO.Sim.Q.planetCard(G.S, cap), title: 'Build a new colony?', body: [], buttons: [{ label: 'No', value: false }, { label: 'Yes', value: true, primary: true }] }).then(v => { window.__promptAns = v; });
+        await new Promise(res => setTimeout(res, 600));
+        const side = document.querySelector('.gx-side:not(.gx-float)'), yes = [...side.querySelectorAll('button')].find(b => /^Yes/.test(b.textContent.trim()));
+        const rc = yes.getBoundingClientRect(), x = rc.left + rc.width / 2, y = rc.top + rc.height / 2, top = document.elementFromPoint(x, y);
+        return { x, y, sheet: side.dataset.sheet, covered: !(top === yes || yes.contains(top)), top: top && (top.className || top.tagName) };
+      });
+      if (r.x > 0 && r.y > 0) await page.touchscreen.tap(r.x, r.y);
+      await sleep(500);
+      const ans = await page.evaluate(() => window.__promptAns);
+      check('held prompt is not covered by the busy overlay', !r.covered, JSON.stringify(r));
+      check('held prompt answers a real tap mid-turn', ans === true, 'answer ' + ans);
+      await page.evaluate(() => { MOO.Game.busy = false; MOO.UI.Galaxy.busy(false); if (MOO.UI.Side.held) MOO.UI.Side.drop(); }); await sleep(300);
+    });
+
     await step('bot', async () => {
       const bot = require('./bot'); const b = bot.start(page, {}); let ok = 0;
       for (let i = 0; i < 4; i++) { const r = await Promise.race([page.evaluate(() => MOO.Game.endTurn().then(() => 1)), sleep(60000).then(() => 0)]); if (!r) { console.log('   STUCK turn', i); break; } ok++; await sleep(300); }

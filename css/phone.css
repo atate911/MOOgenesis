@@ -106,6 +106,10 @@ html:root:root[data-phone] .gx-side:not(.gx-float) {
   grid-column: 1; grid-row: 1; align-self: end; z-index: 6; padding: 0; background: none;
   --ph-half: 56%; --ph-full: calc(100% - .4rem); --grip: 1.5rem;        /* --ph-half: phone-galaxy.js measures the controls' height */
 }
+/* a held prompt (the turn's pending question; phone-galaxy.js sets data-held) stacks above the map's busy overlay (.gx-busy, z-index 20):
+   the sheet lies over the map, and under the overlay its buttons could not be tapped — the turn waited forever on a card the player could
+   see but not answer */
+html:root:root[data-phone] .gx-side:not(.gx-float)[data-held] { z-index: 21; }
 html:root:root[data-phone] .gx-side:not(.gx-float) .panel { box-shadow: 0 -8px 22px rgba(0, 0, 0, .55), 0 0 0 1px rgba(0, 0, 0, .8); }
 html:root:root[data-phone] .gx-side:not(.gx-float)[data-sheet="strip"] .gx-sidebody { overflow: hidden; }
 html:root:root[data-phone] .gx-side:not(.gx-float):not([data-sheet="full"]) > div:not(.panel):not(.ph-grip) { display: none; }   /* the turn log: full only */
