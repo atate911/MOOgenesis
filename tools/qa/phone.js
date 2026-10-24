@@ -112,9 +112,32 @@ const sheetState = page => page.evaluate(() => { const s = document.querySelecto
     await page.evaluate(() => MOO.Bus.emit('turn:processing', false)); await sleep(100);
     check(label + ': tabs and Next turn lock while a turn runs, More stays open', locked);
   };
+  // hit-test audit: every enabled control that is visible (in the viewport, inside its clipping ancestors) must be what a tap at its centre
+  // reaches — a control painted under another element is the bug class script clicks never see (the "Year …" freeze); [tag.class@x,y under tag.class]
+  const coveredAudit = page => page.evaluate(() => {
+    const scope = [...document.querySelectorAll('.scrim .modal')].pop() || document.querySelector('.screen.active'); if (!scope) return [];
+    const SEL = 'button, .btn, a[href], input:not([type=hidden]), select, textarea, [role=button], [role=tab]';
+    const out = [], W = innerWidth, H = innerHeight;
+    const key = e => e.tagName.toLowerCase() + (typeof e.className === 'string' && e.className.trim() ? '.' + e.className.trim().split(/\s+/).slice(0, 2).join('.') : '');
+    for (const e of scope.querySelectorAll(SEL)) {
+      if (e.disabled || e.closest('[inert], [aria-hidden="true"]')) continue;
+      const r = e.getBoundingClientRect(); if (r.width < 2 || r.height < 2) continue;
+      const cs = getComputedStyle(e); if (cs.visibility === 'hidden' || +cs.opacity === 0 || cs.pointerEvents === 'none') continue;
+      let cx = r.left + r.width / 2, cy = r.top + r.height / 2, clipped = false;
+      for (let p = e.parentElement; p && p !== document.body; p = p.parentElement) { const ps = getComputedStyle(p); if (ps.overflowX !== 'visible' || ps.overflowY !== 'visible' || ps.clipPath !== 'none') { const q = p.getBoundingClientRect(); if (cx < q.left || cx > q.right || cy < q.top || cy > q.bottom) { clipped = true; break; } } }
+      if (clipped || cx < 0 || cx > W || cy < 0 || cy > H) continue;
+      const top = document.elementFromPoint(cx, cy); if (!top) continue;
+      const lab = e.closest('label');
+      if (top === e || e.contains(top) || (lab && (top === lab || lab.contains(top))) || top.contains(e)) continue;
+      out.push(key(e) + '@' + Math.round(cx) + ',' + Math.round(cy) + ' under ' + key(top));
+    }
+    return out;
+  });
   // touch targets, text size and keyboard / mouse wording on what is showing now: checks (FAIL), with the findings as detail
   const audits = async label => {
     const a = await touchAudit(page), dw = await deskWords(page), f = l => l.map(([k, n, v]) => k + '×' + n + '(' + v + ')').join(' ');
+    const cov = await coveredAudit(page);
+    check(label + ': no visible control is covered', !cov.length, cov.slice(0, 6).join(' | '));
     check(label + ': touch targets ≥ 40px', !a.t.length, f(a.t));
     check(label + ': text ≥ 12px', !a.x.length, f(a.x));
     check(label + ': no keyboard / mouse wording', !dw.length, dw.join(' | '));

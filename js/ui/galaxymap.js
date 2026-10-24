@@ -758,7 +758,8 @@
     // insetB: map pixels at the bottom covered by something else (a phone's bottom sheet or floating card, api.setInset): the clamp keeps the
     // galaxy over the UNCOVERED part, so a drag can bring its lower stars out from under the sheet, and flyTo aims at that part's centre.
     // Without it a galaxy that fits the view vertically was pinned, and on a phone its lower half sat under the sheet with no way to reach it.
-    let insetB = 0;
+    let insetB = 0, insetReq = 0, insetSoft = null;                                          // insetB eases toward the valid part of insetReq (updateCamera); insetSoft waits for the touch to end
+    const insetGoal = () => (H && insetReq >= H * 0.75 ? 0 : insetReq);                     // a cover of three quarters or more is "the map is hidden", not an inset
     function clampTo(c) {
       c.z = clamp(c.z, minZ, maxZ);
       if (!W || !H) { c.x = clamp(c.x, 0, gw); c.y = clamp(c.y, 0, gh); return; }
@@ -794,6 +795,7 @@
         const f = Math.exp(-dt * 5.5); vel.x *= f; vel.y *= f;
       } else if (!ptr.moved) { vel.x = vel.y = 0; }
       const k = Q.reduce ? 1 : 1 - Math.exp(-dt * 13);
+      { const g = insetGoal(); insetB = Math.abs(g - insetB) < 0.5 ? g : insetB + (g - insetB) * k; }   // the covered edge moves with the sheet, the view glides after it
       clampTo(tgt);
       const lz = Math.log(cam.z), lt = Math.log(tgt.z);
       cam.z = Math.abs(lt - lz) < 1e-4 ? tgt.z : Math.exp(lz + (lt - lz) * k);
@@ -898,6 +900,7 @@
     });
     const endPointer = e => {
       pts.delete(e.pointerId);
+      if (insetSoft !== null) { insetReq = insetSoft; insetSoft = null; }                   // a cover measured as the touch began applies now that it has ended
       if (pinch) { holdOff(); if (pts.size < 2) pinch = null; ptr.down = false; ptr.moved = false; root.classList.remove('dragging'); return; }
       if (!ptr.down || e.pointerId !== ptr.id) return;
       ptr.down = false; root.classList.remove('dragging');
@@ -2137,10 +2140,10 @@
       getReach: () => reachSet,
       showLegend(b) { legendForce = b === undefined ? null : !!b; dirty.legend = true; return api; },
       getCamera: camInfo,
-      // {bottom}: map pixels along the bottom edge covered by other UI (phone sheet / floating card). A cover of three quarters or more
-      // is "the map is hidden", not an inset. The camera is re-clamped at once so the galaxy stays over what the player can see.
-      setInset(o) { const b = Math.max(0, +(o && o.bottom) || 0); insetB = H && b >= H * 0.75 ? 0 : b; if (W && H) { clampTo(tgt); clampTo(cam); } return api; },
-      getInset: () => ({ bottom: insetB }),
+      // {bottom, soft}: map pixels along the bottom edge covered by other UI (phone sheet / floating card). The camera eases to the
+      // re-clamped view over the next frames; soft (set as a touch begins) only records the value, so nothing moves under the finger.
+      setInset(o) { const b = Math.max(0, +(o && o.bottom) || 0); if (o && o.soft) insetSoft = b; else { insetReq = b; insetSoft = null; } return api; },
+      getInset: () => ({ bottom: insetGoal() }),
       worldToScreen: (x, y) => ({ x: (x - cam.x) * cam.z + W / 2, y: (y - cam.y) * cam.z + H / 2 }),
       screenToWorld: (px, py) => ({ x: cam.x + (px - W / 2) / cam.z, y: cam.y + (py - H / 2) / cam.z }),
       starAt(px, py) { const p = pick(px, py); return p.sd ? p.sd.id : null; },

@@ -55,14 +55,13 @@
       console.error(e);
     }
   }
-  // A script that loads but throws while running (or does not parse) only shows up as a window error
-  // whose filename is that script's URL.
+  // A script that loads but throws while running (or does not parse) only shows up as a window error whose filename is that
+  // script's URL. Scripts run in manifest order (async=false), so the one executing is man.js[done]: only ITS errors count —
+  // a callback of an earlier script firing in between (a timer, an event) is that script's bug, not a failed load.
   var jsFailed = false;
   function onScriptError(ev) {
-    var f = ev && ev.filename || '';
-    for (var i = 0; i < man.js.length; i++) {
-      if (f.indexOf(man.js[i] + bust) >= 0) { jsFailed = true; errors.push('js (error): ' + man.js[i] + ': ' + (ev.message || 'script error')); return; }
-    }
+    var f = ev && ev.filename || '', cur = man.js[done];
+    if (cur && f.indexOf(cur + bust) >= 0) { jsFailed = true; errors.push('js (error): ' + cur + ': ' + (ev.message || 'script error')); }
   }
   window.addEventListener('error', onScriptError);
   man.js.forEach(function (src) {

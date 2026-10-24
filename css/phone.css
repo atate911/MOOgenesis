@@ -126,6 +126,10 @@ html:root:root[data-phone] .gx-hud { flex-wrap: wrap; gap: .2rem .7rem; padding:
 html:root:root[data-phone] .gx-hud .y { font-size: 1.15rem; }
 html:root:root[data-phone] .gx-msg { margin-left: 0; max-width: none; }
 html:root:root[data-phone] .gmap-ctrl .btn, html:root:root[data-phone] .gmap-ctrl button { min-width: var(--tap); min-height: var(--tap); }
+/* the map's control column sits just above whatever covers the map's bottom (the sheet, a floating card; phone-galaxy.js sets --ph-inset), so
+   a half-open sheet never covers its lower buttons; when the uncovered band is too short for one column it becomes two (.ph-ctl-tight) */
+html:root:root[data-phone] .gmap-ctrl { top: auto; bottom: calc(var(--ph-inset, 0px) + .5rem); transition: bottom .22s var(--ease); }
+html:root:root[data-phone] .gx.ph-ctl-tight .gmap-ctrl { display: grid; grid-template-columns: repeat(2, var(--tap)); }
 html[data-phone] .gmap canvas { -webkit-touch-callout: none; -webkit-user-select: none; user-select: none; }   /* a long press on the map is its tooltip, not iOS's callout */
 /* bottom bar: fixed tabs (phone-galaxy.js tags galaxy.js's own buttons) — Planets · Fleet · Tech · Races · More, then a wide Next turn.
    Game, Design and Map live in More (the game menu as a bottom sheet, gamemenu.js). Icon over label. */
@@ -167,7 +171,8 @@ html:root:root[data-phone] .sc-btns { flex-direction: row; } html:root:root[data
   html:root:root[data-phone] .gx-side:not(.gx-float)[data-sheet="half"] :is(.sc-card, .sc-stats, .sc-bbox, .sc-rally, .sm-card) { display: none; }
 }
 /* a pick-a-star panel taller than its sheet keeps Cancel / Accept in reach */
-html[data-phone] .gx-side:not(.gx-float) .gx-sidebody > .sm-actions:last-child { position: sticky; bottom: -.6rem; z-index: 3; margin: .3rem -.5rem 0; padding: .45rem .5rem .5rem; background: rgba(58, 66, 76, .97); box-shadow: 0 -6px 12px rgba(0, 0, 0, .45); }
+html[data-phone] .gx-side .gx-sidebody > .sm-actions:last-child { position: sticky; bottom: -.6rem; z-index: 3; margin: .3rem -.5rem 0; padding: .45rem .5rem .5rem; background: rgba(58, 66, 76, .97); box-shadow: 0 -6px 12px rgba(0, 0, 0, .45); }
+html[data-phone] .gx-side.gx-float .gx-sidebody > .sm-actions:last-child { bottom: 0; }   /* the floating card too (fleet deployment after the first pick): Accept stays in reach on a card taller than its 58% */
 /* the colony sliders (side-colony.js, bumped): finger-sized arrows and lock in a 27rem-wide panel */
 html:root:root[data-phone] .sc-sliders .slider { grid-template-columns: 3.3rem var(--tap) minmax(0, 1fr) var(--tap) 3.9rem var(--tap); gap: .2rem; margin: .15rem 0; }
 html:root:root[data-phone] .sc-sliders .s-val { padding: .12rem .2rem; font-size: 12px; letter-spacing: 0; text-align: center; }
@@ -527,7 +532,7 @@ html[data-phone] #toasts { bottom: calc(var(--ph-strip) + var(--tap) + 1.4rem + 
   html:root:root[data-phone] .gx-side:not(.gx-float):not([data-sheet="full"]) > div:not(.panel):not(.ph-grip) { display: block; }
   html:root:root[data-phone] .gx-side.gx-float { right: auto; width: min(24rem, 52%); max-height: calc(100% - 1rem); }
   html:root:root[data-phone] .gx-top { right: calc(2 * var(--tap) + 1.4rem); flex-direction: row; }
-  html:root:root[data-phone] .gmap-ctrl { top: .4rem; display: grid; grid-template-columns: repeat(2, var(--tap)); }   /* seven controls in a 390px-tall map: two columns */
+  html:root:root[data-phone] .gmap-ctrl { top: .4rem; bottom: auto; display: grid; grid-template-columns: repeat(2, var(--tap)); }   /* seven controls in a 390px-tall map: two columns */
   html:root:root[data-phone] .gx-bar.ph-tabs .btn { flex-direction: row; gap: .35rem; min-height: var(--tap); padding: .2rem .3rem; }
   html:root:root[data-phone] .gx-bar.ph-tabs .btn .ico { width: 1.15rem; height: 1.15rem; }
   html:root:root[data-phone] .gmap-mini { bottom: .5rem !important; }
