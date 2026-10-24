@@ -29,11 +29,13 @@
 // Theme v2 ("serious sci-fi") is the default; ?theme=v1 restores the original look. ?accent=cyan|amber|leaf, ?fx=off drop the vignette/scanlines.
 (function () { try { var q = new URLSearchParams(location.search), r = document.documentElement, t = q.get('theme');
   if (t === 'v1') r.removeAttribute('data-theme'); if (q.get('accent')) r.setAttribute('data-accent', q.get('accent')); if (q.get('fx')) r.setAttribute('data-fx', q.get('fx')); } catch (e) {} })();
-// Phone layout layer (css/phone.css, js/ui/phone.js): decided here, before any stylesheet loads. ?phone=1|0 forces it; otherwise a
+// Phone layout layer (css/phone.css, js/ui/phone.js): decided here, before any stylesheet loads. ?phone=1|0 forces it for this page load;
+// else the Options › Display setting "Phone layout" (on / off, kept in localStorage under moo.settings.v1 as phoneMode) pins it; else auto: a
 // coarse-pointer device whose shorter screen side is 600px or less (phones in either orientation; tablets keep the desktop layout).
-(function () { try { var q = new URLSearchParams(location.search), f = q.get('phone'), on;
-  if (f === '1' || f === '0') on = f === '1'; else on = !!(window.matchMedia && matchMedia('(pointer: coarse)').matches) && Math.min(screen.width, screen.height) <= 600;
-  window.MOO_PHONE = on; window.MOO_PHONE_FORCED = f === '1' || f === '0'; if (on) document.documentElement.setAttribute('data-phone', ''); } catch (e) {} })();
+(function () { try { var q = new URLSearchParams(location.search), f = q.get('phone'), on, pinned = f === '1' || f === '0';
+  if (!pinned) { try { var st = JSON.parse(localStorage.getItem('moo.settings.v1') || '{}'); if (st.phoneMode === 'on' || st.phoneMode === 'off') { f = st.phoneMode === 'on' ? '1' : '0'; pinned = true; } } catch (e2) {} }
+  if (pinned) on = f === '1'; else on = !!(window.matchMedia && matchMedia('(pointer: coarse)').matches) && Math.min(screen.width, screen.height) <= 600;
+  window.MOO_PHONE = on; window.MOO_PHONE_FORCED = pinned; if (on) document.documentElement.setAttribute('data-phone', ''); } catch (e) {} })();
 </script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>

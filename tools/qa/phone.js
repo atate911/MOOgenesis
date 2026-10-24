@@ -567,6 +567,23 @@ const sheetState = page => page.evaluate(() => { const s = document.querySelecto
       await page.evaluate(() => { MOO.UI.Galaxy.pick = null; if (MOO.UI.Galaxy.map) { MOO.UI.Galaxy.map.setRoutePreview(null); MOO.UI.Galaxy.map.setReach(null); } MOO.UI.Galaxy.showDefault(); }); await sleep(300);
     });
 
+    await step('phonemode', async () => {
+      // Options › Display › Phone layout: Off pins the desktop layout on a phone (read by index.html before the first stylesheet; a reload applies it)
+      await page.evaluate(() => MOO.UI.Screens.go('options', { from: 'galaxy' })); await sleep(900);
+      const seg = await page.evaluate(() => { const row = [...document.querySelectorAll('.screen.active .op-row')].find(r => /Phone layout/.test(r.textContent)); if (!row) return null; const b = [...row.querySelectorAll('button, .btn')].map(x => x.textContent.trim()); return { btns: b, now: /Now: phone layout/.test(row.textContent) }; });
+      check('Options has a Phone layout row (Auto / On / Off) that names the current layout', !!seg && seg.btns.join(',') === 'Auto,On,Off' && seg.now, JSON.stringify(seg));
+      await page.evaluate(() => { const row = [...document.querySelectorAll('.screen.active .op-row')].find(r => /Phone layout/.test(r.textContent)); [...row.querySelectorAll('button, .btn')].find(x => x.textContent.trim() === 'Off').click(); }); await sleep(500);
+      const ask = await page.evaluate(() => { const m = [...document.querySelectorAll('.scrim .modal')].pop(); return m ? m.textContent.slice(0, 80) : null; });
+      check('choosing Off asks to reload', !!ask && /Reload now/.test(ask), ask);
+      await page.evaluate(() => { const m = [...document.querySelectorAll('.scrim .modal')].pop(); const b = [...m.querySelectorAll('.modal-f button')]; (b.find(x => /Cancel/i.test(x.textContent)) || b[0]).click(); }); await sleep(300);
+      check('the setting is stored before the reload', (await page.evaluate(() => MOO.Settings.get('phoneMode'))) === 'off');
+      await page.reload({ waitUntil: 'load' }); await sleep(1500);
+      check('after a reload the phone boots the DESKTOP layout (Off)', !(await page.evaluate(() => document.documentElement.hasAttribute('data-phone') || MOO.Phone.active())));
+      await page.evaluate(() => { MOO.Settings.set('phoneMode', 'auto'); }); await page.reload({ waitUntil: 'load' }); await sleep(1500);
+      check('Auto again: the phone layout is back', await page.evaluate(() => document.documentElement.hasAttribute('data-phone') && MOO.Phone.active()));
+      await bootGame(page);
+    });
+
     await step('bot', async () => {
       const bot = require('./bot'); const b = bot.start(page, {}); let ok = 0;
       for (let i = 0; i < 4; i++) { const r = await Promise.race([page.evaluate(() => MOO.Game.endTurn().then(() => 1)), sleep(60000).then(() => 0)]); if (!r) { console.log('   STUCK turn', i); break; } ok++; await sleep(300); }
@@ -600,6 +617,11 @@ const sheetState = page => page.evaluate(() => { const s = document.querySelecto
       await d.page.keyboard.press('Escape'); await sleep(500);
       await d.page.keyboard.press('F1'); await sleep(300);
       check('desktop: F1 help still opens', !!(await d.page.$('.hp-ov'))); await d.page.keyboard.press('Escape');
+      // Options › Phone layout: On pins the phone layout on a desktop (and Auto restores the desktop one)
+      await d.page.evaluate(() => { MOO.Settings.set('phoneMode', 'on'); }); await d.page.reload({ waitUntil: 'load' }); await sleep(1500);
+      check('desktop: Phone layout = On boots the phone layout after a reload', await d.page.evaluate(() => document.documentElement.hasAttribute('data-phone') && MOO.Phone.active() && MOO.Phone.forced));
+      await d.page.evaluate(() => { MOO.Settings.set('phoneMode', 'auto'); }); await d.page.reload({ waitUntil: 'load' }); await sleep(1500);
+      check('desktop: Auto again boots the desktop layout', !(await d.page.evaluate(() => document.documentElement.hasAttribute('data-phone'))));
       const errs2 = [...new Set(d.errors)].filter(e => !benign(e));
       check('no console errors / page errors (desktop)', !errs2.length, errs2.slice(0, 5).join(' | '));
     } catch (e) { check('desktop run', false, e.stack); }

@@ -26,6 +26,7 @@
     perfOverlay: false,     // F3 overlay: fps, frame ms, worker utilisation, GPU (phones: a row in Options)
     phoneHints: false,      // phones: the first-run card on touch controls has been shown (js/ui/phone-galaxy.js)
     haptics: true,          // phones: short vibrations on Next turn, slider steps, switches, sheet snaps and errors (UI.Phone.haptic)
+    phoneMode: 'auto',      // the phone layout: 'auto' (a coarse-pointer device 600px or narrower) | 'on' | 'off' — read by index.html's gate at load; a change needs a reload
     lastSetup: null,        // remembered new-game choices
   };
   let cur = Object.assign({}, DEFAULTS);
