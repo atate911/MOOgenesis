@@ -509,6 +509,41 @@ const sheetState = page => page.evaluate(() => { const s = document.querySelecto
       await page.evaluate(() => { MOO.Game.busy = false; MOO.UI.Galaxy.busy(false); if (MOO.UI.Side.held) MOO.UI.Side.drop(); }); await sleep(300);
     });
 
+    await step('deploy', async () => {
+      // fleet deployment: a destination that starts UNDER the sheet must be reachable by panning with a real touch drag and tapping it (the map's bottom
+      // inset, galaxymap.js setInset); landscape keeps the panel beside the map, so nothing is under it there
+      await page.evaluate(() => { MOO.UI.closeAllModals(); const S = MOO.Game.S, E = MOO.Game.player(); E.mods.fuel = 99; MOO.Sim.Fleet.updateRange(S); MOO.Sim.Vis.update(S); MOO.UI.Galaxy.selectStar(E.capital); MOO.UI.Side.show('fleetDeploy', { star: E.capital }); });
+      await sleep(900);
+      const cdp = await ctx.newCDPSession(page);
+      const touchDrag = async (x0, y0, x1, y1) => { await cdp.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: [{ x: x0, y: y0 }] }); for (let i = 1; i <= 12; i++) { await cdp.send('Input.dispatchTouchEvent', { type: 'touchMove', touchPoints: [{ x: x0 + (x1 - x0) * i / 12, y: y0 + (y1 - y0) * i / 12 }] }); await sleep(16); } await cdp.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] }); };
+      const state = () => page.evaluate(() => {
+        const G = MOO.Game, S = G.S, E = G.player(), map = MOO.UI.Galaxy.map, wrap = document.querySelector('.gx-mapwrap'), w = wrap.getBoundingClientRect(), side = document.querySelector('.gx-side:not(.gx-float)'), sr = side.getBoundingClientRect();
+        const over = sr.top > w.top + 1 && sr.left < w.right && sr.right > w.left;      // the sheet lies over the map (portrait)
+        const stars = S.stars.map((st, i) => { const p = map.worldToScreen(st.x, st.y), x = w.left + p.x, y = w.top + p.y, top = document.elementFromPoint(x, y); return { i, name: st.name, x, y, reach: i !== E.capital && MOO.Sim.Fleet.canReach(S, E, i, false), onCanvas: !!(top && top.tagName === 'CANVAS' && wrap.contains(top)), inMap: x > w.left + 10 && x < w.right - 10 && y > w.top && y < w.bottom }; });
+        const route = document.querySelector('.sm-route b'), gt = wrap.querySelector('.gx-top'), topBottom = gt ? gt.getBoundingClientRect().bottom : w.top;
+        return { over, sheetTop: sr.top, topBottom, wrap: [w.left, w.top, w.right, w.bottom], panel: MOO.UI.Side.current(), pick: !!MOO.UI.Galaxy.pick, dest: route ? route.textContent : null, inset: map.getInset ? map.getInset().bottom : -1, stars };
+      });
+      let st = await state();
+      check('deployment panel open with the pick active', st.panel === 'fleetDeploy' && st.pick, st.panel);
+      if (!st.over) { check('landscape: the panel is beside the map (nothing under it)', true); }
+      else {
+        check('the map knows what the sheet covers (inset)', st.inset > 0 && Math.abs(st.inset - (st.wrap[3] - st.sheetTop)) < 4, 'inset ' + st.inset + ' vs ' + Math.round(st.wrap[3] - st.sheetTop));
+        const tgt = st.stars.filter(s => s.reach && s.inMap && s.y > st.sheetTop + 30).sort((a, b) => a.y - b.y)[0];
+        if (!tgt) check('a reachable star under the sheet to test with', false, 'none found');
+        else {
+          // drag the map so the star lands in the clear band between the HUD / message stack at the top and the sheet (up to three drags: the pan is clamped)
+          const vx = (st.wrap[0] + st.wrap[2]) / 2, yc = (st.topBottom + st.sheetTop) / 2; let t = tgt, n = 0;
+          while (n++ < 3 && Math.abs(t.y - yc) > 25) { const y0 = st.sheetTop - 30, y1 = Math.max(st.wrap[1] + 5, Math.min(st.wrap[3] - 5, y0 - (t.y - yc))); await touchDrag(vx, y0, vx, y1); await sleep(700); st = await state(); t = st.stars[tgt.i]; }
+          const covered = t.onCanvas ? '' : ' (covered by ' + (await page.evaluate(([x, y]) => { const e = document.elementFromPoint(x, y); return e ? e.tagName + '.' + String(e.className).slice(0, 24) : 'nothing'; }, [t.x, t.y])) + ')';
+          check('a touch drag pans the map so the star comes out from under the sheet', t.y < st.sheetTop - 10 && t.onCanvas, tgt.name + ' y ' + Math.round(tgt.y) + ' -> ' + Math.round(t.y) + ' (clear band ' + Math.round(st.topBottom) + '..' + Math.round(st.sheetTop) + ')' + covered);
+          if (t.onCanvas) { await page.touchscreen.tap(t.x, t.y); await sleep(700); st = await state(); check('tapping it picks the destination', st.dest === tgt.name, 'dest ' + st.dest); }
+          const acc = await page.evaluate(() => { const b = [...document.querySelectorAll('.gx-side button')].find(x => /^Accept/.test(x.textContent)); if (!b) return 'no button'; const r = b.getBoundingClientRect(), top = document.elementFromPoint(r.left + r.width / 2, r.top + r.height / 2); return b.disabled ? 'disabled' : (top === b || b.contains(top)) ? 'ok' : 'covered'; });
+          check('Accept is enabled and tappable', acc === 'ok', acc);
+        }
+      }
+      await page.evaluate(() => { MOO.UI.Galaxy.pick = null; if (MOO.UI.Galaxy.map) { MOO.UI.Galaxy.map.setRoutePreview(null); MOO.UI.Galaxy.map.setReach(null); } MOO.UI.Galaxy.showDefault(); }); await sleep(300);
+    });
+
     await step('bot', async () => {
       const bot = require('./bot'); const b = bot.start(page, {}); let ok = 0;
       for (let i = 0; i < 4; i++) { const r = await Promise.race([page.evaluate(() => MOO.Game.endTurn().then(() => 1)), sleep(60000).then(() => 0)]); if (!r) { console.log('   STUCK turn', i); break; } ok++; await sleep(300); }

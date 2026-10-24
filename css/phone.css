@@ -43,6 +43,7 @@ html:root:root[data-phone] :is(.tch-trow, .tch-nx, .au-item, .sc-rally, .gx-msg 
 html:root:root[data-phone] .tt-chip { min-height: var(--row); }
 html:root:root[data-phone] .lp-tbl tbody tr { height: var(--row); }
 html:root:root[data-phone] .gx-msg .m:nth-child(n+4) { display: none; }                        /* three messages at most over the map */
+html:root:root[data-phone] .gx.ph-pick .gx-msg { display: none; }                               /* none while a destination is being picked (phone-galaxy.js) */
 html:root:root[data-phone] :is(.cyc, .sm-sb, .su-step) { min-width: var(--tap); min-height: var(--tap); }
 html:root:root[data-phone] .gx-att span { display: inline-flex; align-items: center; min-height: var(--tap); padding: 0 .6rem; }
 html:root:root[data-phone] .pb-autoall { min-height: var(--tap); } html[data-phone] .pb-autoall input { width: 1.4rem; height: 1.4rem; }

@@ -755,16 +755,21 @@
     }
     // the camera centre may sit anywhere over the galaxy, but the VIEW stays over it: centring on an edge star no longer leaves half the screen empty
     // (when the view is wider than the galaxy at this zoom, the galaxy is centred on that axis instead)
+    // insetB: map pixels at the bottom covered by something else (a phone's bottom sheet or floating card, api.setInset): the clamp keeps the
+    // galaxy over the UNCOVERED part, so a drag can bring its lower stars out from under the sheet, and flyTo aims at that part's centre.
+    // Without it a galaxy that fits the view vertically was pinned, and on a phone its lower half sat under the sheet with no way to reach it.
+    let insetB = 0;
     function clampTo(c) {
       c.z = clamp(c.z, minZ, maxZ);
       if (!W || !H) { c.x = clamp(c.x, 0, gw); c.y = clamp(c.y, 0, gh); return; }
-      const hw = W / (2 * c.z), hh = H / (2 * c.z), m = 56 / c.z;
+      const hw = W / (2 * c.z), hh = H / (2 * c.z), hb = (H / 2 - insetB) / c.z, m = 56 / c.z;     // hb: world units from the centre down to the covered edge
       c.x = hw * 2 >= gw + 2 * m ? gw / 2 : clamp(c.x, hw - m, gw - hw + m);
-      c.y = hh * 2 >= gh + 2 * m ? gh / 2 : clamp(c.y, hh - m, gh - hh + m);
+      c.y = hh + hb >= gh + 2 * m ? gh / 2 + (hh - hb) / 2 : clamp(c.y, hh - m, gh - hb + m);
     }
     function setCamNow(x, y, z) { camSet = true; cam.x = tgt.x = x; cam.y = tgt.y = y; cam.z = tgt.z = z; clampTo(cam); clampTo(tgt); flight = null; anchor = null; vel.x = vel.y = 0; }
     function cancelFlight() { if (flight) { tgt.x = cam.x; tgt.y = cam.y; tgt.z = cam.z; flight = null; } }
     function flyTo(x, y, z, animate, dur) {
+      z = clamp(z, minZ, maxZ); y += insetB / (2 * z);                                                  // the target lands at the centre of the uncovered part of the map
       const dest = { x, y, z }; clampTo(dest); x = dest.x; y = dest.y; z = dest.z;                       // fly to where the camera may actually rest (no snap at the end of the flight)
       if (!animate || Q.reduce || !W) { setCamNow(x, y, z); return; }
       const distPx = Math.hypot(x - cam.x, y - cam.y) * Math.min(cam.z, z), span = Math.hypot(W, H);
@@ -2132,6 +2137,10 @@
       getReach: () => reachSet,
       showLegend(b) { legendForce = b === undefined ? null : !!b; dirty.legend = true; return api; },
       getCamera: camInfo,
+      // {bottom}: map pixels along the bottom edge covered by other UI (phone sheet / floating card). A cover of three quarters or more
+      // is "the map is hidden", not an inset. The camera is re-clamped at once so the galaxy stays over what the player can see.
+      setInset(o) { const b = Math.max(0, +(o && o.bottom) || 0); insetB = H && b >= H * 0.75 ? 0 : b; if (W && H) { clampTo(tgt); clampTo(cam); } return api; },
+      getInset: () => ({ bottom: insetB }),
       worldToScreen: (x, y) => ({ x: (x - cam.x) * cam.z + W / 2, y: (y - cam.y) * cam.z + H / 2 }),
       screenToWorld: (px, py) => ({ x: cam.x + (px - W / 2) / cam.z, y: cam.y + (py - H / 2) / cam.z }),
       starAt(px, py) { const p = pick(px, py); return p.sd ? p.sd.id : null; },
