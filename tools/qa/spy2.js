@@ -28,6 +28,6 @@ const { serve, open, sleep } = require('./lib');
     await page.evaluate(ev => { MOO.UI.Spy.victimNotice(Object.assign({ type: 'notice', empire: 0 }, ev)); }, ev); await sleep(500);
     await page.evaluate(() => { document.querySelectorAll('.scrim .modal-f button').forEach(b => b.click()); }); await sleep(300);
   }
-  await page.evaluate(() => MOO.UI.Spy.caught()); await sleep(500); await page.screenshot({ path: '/tmp/claude-0/spy-caught.png' });
+  await page.evaluate(() => { void MOO.UI.Spy.caught(); }); await sleep(500); await page.screenshot({ path: '/tmp/claude-0/spy-caught.png' });
   console.log([...new Set(errors)]); await browser.close(); srv.close();
 })();

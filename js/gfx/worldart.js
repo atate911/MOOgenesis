@@ -22,12 +22,14 @@
   const SCENES = ['first-landing', 'galaxy', 'ground-battle', 'council-chamber'];
   const RACES = ['human', 'mrrshan', 'silicoid', 'sakkra', 'psilon', 'alkari', 'klackon', 'bulrathi', 'meklar', 'darlok'];
   const PURPOSES = ['audience', 'scientist', 'figure', 'homeworld', 'council', 'homeworld-square'];
-  // Batch-4 sprites / skies (docs/IMAGE-GEN-SPRITES.md) and batch-3 stills (docs/IMAGE-GEN-OTHER.md): looked up by the same rules,
-  // so the callers below fall back to procedural art until the files exist in assets/art/.
-  const BATTLE = ['planet', 'nebula', 'asteroids', 'star', 'deep'];
+  // Batch-4 sprites / skies (docs/IMAGE-GEN-SPRITES.md) and batch-3 stills (docs/IMAGE-GEN-OTHER.md): looked up by the same rules.
+  // Every list names ONLY files that exist in assets/art/ (tools/rules/94-art-files.test.js): a missing one would still be requested
+  // and show up as a failed load in the player's console. Art not made yet (ART-NEEDED.md) — battle 'star', stills 'end-exile',
+  // 'inst-spaceport', 'title-key-art' — is added here together with its file; until then the callers keep their procedural art.
+  const BATTLE = ['planet', 'nebula', 'asteroids', 'deep'];
   const FX = ['rock-1', 'rock-2', 'rock-3', 'rock-4', 'rock-5', 'rock-6', 'rock-7', 'rock-8', 'base-platform'];
   for (let i = 1; i <= 24; i++) FX.push('debris-' + i);   // wreckage cutouts (fx-sheet.png rows 3-4, fx-sheet-2.png)
-  const STILLS = ['end-exile', 'inst-spaceport', 'title-key-art'];
+  const STILLS = [];
   const has = (a, k) => a.indexOf(k) >= 0;
 
   function budget() { const gb = (M.HW && M.HW.memoryGB) || 4; return Math.max(160, Math.min(480, gb * 48)) * 1048576; }

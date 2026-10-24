@@ -741,7 +741,9 @@
     const root = h('div.tch');
     // header
     st.title = h('small'); st.totalNum = h('b'); st.eqBtn = UI.button('Equalise', equalise, { kbd: '=', tip: 'Spread research evenly over all six fields (unlocked ones when some are locked)' });
-    const head = h('div.tch-head', h('div.tch-title', UI.icon('research'), 'Research', st.title), h('div.tch-total', h('span.k', 'Total research'), st.totalNum, h('span.u', 'RP')),
+    // phones: the total sits in the allocation panel's foot (the app bar carries the title, the foot's hint goes), so six fields fit the screen without scrolling
+    const phone = !!(UI.Phone && UI.Phone.active()), total = h('div.tch-total', h('span.k', 'Total research'), st.totalNum, h('span.u', 'RP'));
+    const head = h('div.tch-head', h('div.tch-title', UI.icon('research'), 'Research', st.title), phone ? null : total,
       UI.button('OK', closeTech, { primary: true, big: true, kbd: 'Space' }));
     // tabs
     st.tabsEl = h('nav.tch-tabs');
@@ -764,7 +766,7 @@
     st.slTitle = h('span', 'Research allocation'); st.slSub = h('span.sub');
     const slPanel = h('div.panel.tch-sl', h('div.panel-h', UI.icon('tech'), st.slTitle, st.slSub),
       h('div.tch-colh', h('span', 'Field · research share (2% steps)'), h('span', 'Chance'), h('span', 'Level')), st.rows.map(r => r.row),
-      h('div.foot', h('span', UI.Phone.say('Click a name to lock it · wheel or +/− to nudge · = equalises', 'Tap a field\'s name to lock it')), h('span.grow'), st.eqBtn));
+      h('div.foot', phone ? total : h('span', 'Click a name to lock it · wheel or +/− to nudge · = equalises'), h('span.grow'), st.eqBtn));
     st.proj = h('div.panel.tch-proj');
     const right = h('div.tch-right', slPanel, st.proj);
     st.ovw = h('div.tch-ovw');

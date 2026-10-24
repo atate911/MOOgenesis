@@ -70,7 +70,7 @@
       }
       case 'event': {
         const st = it.star !== undefined && it.star >= 0 ? it.star : it.planet !== undefined && it.planet >= 0 && S.planets[it.planet] ? S.planets[it.planet].starId : -1;
-        const txt = String(it.text || it.kind || 'Event').replace(/\s+/g, ' '), first = txt.split(/(?<=[.!?])\s/)[0];
+        const txt = String(it.text || it.kind || 'Event').replace(/\s+/g, ' '), first = txt.replace(/([.!?])\s[\s\S]*$/, '$1');
         add(1, first.length > 90 ? first.slice(0, 87) + '…' : first, -1, { link: st });
         break;
       }

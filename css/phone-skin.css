@@ -167,7 +167,7 @@ html:root:root[data-phone] .gx-hud {
   background: rgba(16, 20, 27, .86); backdrop-filter: blur(6px); box-shadow: 0 1px 0 rgba(255, 255, 255, .08);
 }
 html:root:root[data-phone] .gx-msg { padding: .35rem .5rem 0; }
-html:root:root[data-phone] .gmap-ctrl { top: calc(4.6rem + env(safe-area-inset-top)); gap: 0; box-shadow: 0 4px 14px rgba(0, 0, 0, .5); }
+html:root:root[data-phone] .gmap-ctrl { gap: 0; box-shadow: 0 4px 14px rgba(0, 0, 0, .5); }   /* placed by css/phone.css (above the sheet) */
 html:root:root[data-phone] .gmap-ctrl :is(.gmap-btn, button) { background: rgba(28, 34, 44, .92); border: 0; border-bottom: 1px solid rgba(255, 255, 255, .08); box-shadow: none; clip-path: none; }
 html:root:root[data-phone] .gx-side:not(.gx-float) .panel { border-radius: .6rem .6rem 0 0; overflow: hidden; box-shadow: 0 -8px 22px rgba(0, 0, 0, .5); }
 html:root:root[data-phone] .gx-side:not(.gx-float) .panel::before { border-radius: .6rem .6rem 0 0; }

@@ -21,7 +21,9 @@ let fails = 0, passes = 0;
 const check = (name, ok, extra) => { console.log((ok ? 'PASS ' : 'FAIL ') + name + (extra !== undefined && extra !== '' ? ' :: ' + extra : '')); if (ok) passes++; else fails++; };
 const within = (p, ms, label) => Promise.race([p, sleep(ms).then(() => { throw new Error('timeout: ' + label); })]);
 // expected noise: offline web fonts, software-GL driver chatter, and art still listed in ART-NEEDED.md (the code falls back to other art)
-const benign = e => /fonts\.(googleapis|gstatic)|net::ERR_|Failed to load resource|ERR_TUNNEL|ERR_PROXY|GL Driver Message|assets\/art\/still\/|\/api\/status/.test(e);   // + the save-server probe (absent on a static dev server)
+// Only what this sandbox causes: web fonts / the network blocked by its proxy and software-GL notes. A missing game file is NOT benign:
+// it is a failed load in the player's console too (the save-server probe is answered by the static api/status).
+const benign = e => /fonts\.(googleapis|gstatic)|net::ERR_|ERR_TUNNEL|ERR_PROXY|GL Driver Message/.test(e);
 
 async function bootGame(page) {
   await page.goto(BOOT, { waitUntil: 'load' });
@@ -110,9 +112,32 @@ const sheetState = page => page.evaluate(() => { const s = document.querySelecto
     await page.evaluate(() => MOO.Bus.emit('turn:processing', false)); await sleep(100);
     check(label + ': tabs and Next turn lock while a turn runs, More stays open', locked);
   };
+  // hit-test audit: every enabled control that is visible (in the viewport, inside its clipping ancestors) must be what a tap at its centre
+  // reaches — a control painted under another element is the bug class script clicks never see (the "Year …" freeze); [tag.class@x,y under tag.class]
+  const coveredAudit = page => page.evaluate(() => {
+    const scope = [...document.querySelectorAll('.scrim .modal')].pop() || document.querySelector('.screen.active'); if (!scope) return [];
+    const SEL = 'button, .btn, a[href], input:not([type=hidden]), select, textarea, [role=button], [role=tab]';
+    const out = [], W = innerWidth, H = innerHeight;
+    const key = e => e.tagName.toLowerCase() + (typeof e.className === 'string' && e.className.trim() ? '.' + e.className.trim().split(/\s+/).slice(0, 2).join('.') : '');
+    for (const e of scope.querySelectorAll(SEL)) {
+      if (e.disabled || e.closest('[inert], [aria-hidden="true"]')) continue;
+      const r = e.getBoundingClientRect(); if (r.width < 2 || r.height < 2) continue;
+      const cs = getComputedStyle(e); if (cs.visibility === 'hidden' || +cs.opacity === 0 || cs.pointerEvents === 'none') continue;
+      let cx = r.left + r.width / 2, cy = r.top + r.height / 2, clipped = false;
+      for (let p = e.parentElement; p && p !== document.body; p = p.parentElement) { const ps = getComputedStyle(p); if (ps.overflowX !== 'visible' || ps.overflowY !== 'visible' || ps.clipPath !== 'none') { const q = p.getBoundingClientRect(); if (cx < q.left || cx > q.right || cy < q.top || cy > q.bottom) { clipped = true; break; } } }
+      if (clipped || cx < 0 || cx > W || cy < 0 || cy > H) continue;
+      const top = document.elementFromPoint(cx, cy); if (!top) continue;
+      const lab = e.closest('label');
+      if (top === e || e.contains(top) || (lab && (top === lab || lab.contains(top))) || top.contains(e)) continue;
+      out.push(key(e) + '@' + Math.round(cx) + ',' + Math.round(cy) + ' under ' + key(top));
+    }
+    return out;
+  });
   // touch targets, text size and keyboard / mouse wording on what is showing now: checks (FAIL), with the findings as detail
   const audits = async label => {
     const a = await touchAudit(page), dw = await deskWords(page), f = l => l.map(([k, n, v]) => k + '×' + n + '(' + v + ')').join(' ');
+    const cov = await coveredAudit(page);
+    check(label + ': no visible control is covered', !cov.length, cov.slice(0, 6).join(' | '));
     check(label + ': touch targets ≥ 40px', !a.t.length, f(a.t));
     check(label + ': text ≥ 12px', !a.x.length, f(a.x));
     check(label + ': no keyboard / mouse wording', !dw.length, dw.join(' | '));
@@ -486,6 +511,79 @@ const sheetState = page => page.evaluate(() => { const s = document.querySelecto
       check('…shown once', !(await page.$('.scrim .modal.ph-hints')) && (await page.evaluate(() => MOO.Settings.get('phoneHints'))) === true);
     });
 
+    await step('prompt', async () => {
+      // a turn prompt held in the sheet while the "Year …" busy overlay is up must answer a REAL tap: the bot clicks through script, which no
+      // overlay can block, so only a hit-tested tap proves the card is reachable (under the overlay it was not: the "Year …" freeze on phones)
+      await page.evaluate(() => MOO.UI.closeAllModals()); await sleep(200);
+      const r = await page.evaluate(async () => {
+        const UI = MOO.UI, G = MOO.Game, cap = G.player().capital;
+        UI.Galaxy.busy(true, 'Year … (prompt check)'); G.busy = true; window.__promptAns = null;
+        UI.Flow.card({ star: cap, planetCard: MOO.Sim.Q.planetCard(G.S, cap), title: 'Build a new colony?', body: [], buttons: [{ label: 'No', value: false }, { label: 'Yes', value: true, primary: true }] }).then(v => { window.__promptAns = v; });
+        await new Promise(res => setTimeout(res, 600));
+        const side = document.querySelector('.gx-side:not(.gx-float)'), yes = [...side.querySelectorAll('button')].find(b => /^Yes/.test(b.textContent.trim()));
+        const rc = yes.getBoundingClientRect(), x = rc.left + rc.width / 2, y = rc.top + rc.height / 2, top = document.elementFromPoint(x, y);
+        return { x, y, sheet: side.dataset.sheet, covered: !(top === yes || yes.contains(top)), top: top && (top.className || top.tagName) };
+      });
+      if (r.x > 0 && r.y > 0) await page.touchscreen.tap(r.x, r.y);
+      await sleep(500);
+      const ans = await page.evaluate(() => window.__promptAns);
+      check('held prompt is not covered by the busy overlay', !r.covered, JSON.stringify(r));
+      check('held prompt answers a real tap mid-turn', ans === true, 'answer ' + ans);
+      await page.evaluate(() => { MOO.Game.busy = false; MOO.UI.Galaxy.busy(false); if (MOO.UI.Side.held) MOO.UI.Side.drop(); }); await sleep(300);
+    });
+
+    await step('deploy', async () => {
+      // fleet deployment: a destination that starts UNDER the sheet must be reachable by panning with a real touch drag and tapping it (the map's bottom
+      // inset, galaxymap.js setInset); landscape keeps the panel beside the map, so nothing is under it there
+      await page.evaluate(() => { MOO.UI.closeAllModals(); const S = MOO.Game.S, E = MOO.Game.player(); E.mods.fuel = 99; MOO.Sim.Fleet.updateRange(S); MOO.Sim.Vis.update(S); MOO.UI.Galaxy.selectStar(E.capital); MOO.UI.Side.show('fleetDeploy', { star: E.capital }); });
+      await sleep(900);
+      const cdp = await ctx.newCDPSession(page);
+      const touchDrag = async (x0, y0, x1, y1) => { await cdp.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: [{ x: x0, y: y0 }] }); for (let i = 1; i <= 12; i++) { await cdp.send('Input.dispatchTouchEvent', { type: 'touchMove', touchPoints: [{ x: x0 + (x1 - x0) * i / 12, y: y0 + (y1 - y0) * i / 12 }] }); await sleep(16); } await cdp.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] }); };
+      const state = () => page.evaluate(() => {
+        const G = MOO.Game, S = G.S, E = G.player(), map = MOO.UI.Galaxy.map, wrap = document.querySelector('.gx-mapwrap'), w = wrap.getBoundingClientRect(), side = document.querySelector('.gx-side:not(.gx-float)'), sr = side.getBoundingClientRect();
+        const over = sr.top > w.top + 1 && sr.left < w.right && sr.right > w.left;      // the sheet lies over the map (portrait)
+        const stars = S.stars.map((st, i) => { const p = map.worldToScreen(st.x, st.y), x = w.left + p.x, y = w.top + p.y, top = document.elementFromPoint(x, y); return { i, name: st.name, x, y, reach: i !== E.capital && MOO.Sim.Fleet.canReach(S, E, i, false), onCanvas: !!(top && top.tagName === 'CANVAS' && wrap.contains(top)), inMap: x > w.left + 10 && x < w.right - 10 && y > w.top && y < w.bottom }; });
+        const route = document.querySelector('.sm-route b'), gt = wrap.querySelector('.gx-top'), topBottom = gt ? gt.getBoundingClientRect().bottom : w.top;
+        return { over, sheetTop: sr.top, topBottom, wrap: [w.left, w.top, w.right, w.bottom], panel: MOO.UI.Side.current(), pick: !!MOO.UI.Galaxy.pick, dest: route ? route.textContent : null, inset: map.getInset ? map.getInset().bottom : -1, stars };
+      });
+      let st = await state();
+      check('deployment panel open with the pick active', st.panel === 'fleetDeploy' && st.pick, st.panel);
+      if (!st.over) { check('landscape: the panel is beside the map (nothing under it)', true); }
+      else {
+        check('the map knows what the sheet covers (inset)', st.inset > 0 && Math.abs(st.inset - (st.wrap[3] - st.sheetTop)) < 4, 'inset ' + st.inset + ' vs ' + Math.round(st.wrap[3] - st.sheetTop));
+        const tgt = st.stars.filter(s => s.reach && s.inMap && s.y > st.sheetTop + 30).sort((a, b) => a.y - b.y)[0];
+        if (!tgt) check('a reachable star under the sheet to test with', false, 'none found');
+        else {
+          // drag the map so the star lands in the clear band between the HUD / message stack at the top and the sheet (up to three drags: the pan is clamped)
+          const vx = (st.wrap[0] + st.wrap[2]) / 2, yc = (st.topBottom + st.sheetTop) / 2; let t = tgt, n = 0;
+          while (n++ < 3 && Math.abs(t.y - yc) > 25) { const y0 = st.sheetTop - 30, y1 = Math.max(st.wrap[1] + 5, Math.min(st.wrap[3] - 5, y0 - (t.y - yc))); await touchDrag(vx, y0, vx, y1); await sleep(700); st = await state(); t = st.stars[tgt.i]; }
+          const covered = t.onCanvas ? '' : ' (covered by ' + (await page.evaluate(([x, y]) => { const e = document.elementFromPoint(x, y); return e ? e.tagName + '.' + String(e.className).slice(0, 24) : 'nothing'; }, [t.x, t.y])) + ')';
+          check('a touch drag pans the map so the star comes out from under the sheet', t.y < st.sheetTop - 10 && t.onCanvas, tgt.name + ' y ' + Math.round(tgt.y) + ' -> ' + Math.round(t.y) + ' (clear band ' + Math.round(st.topBottom) + '..' + Math.round(st.sheetTop) + ')' + covered);
+          if (t.onCanvas) { await page.touchscreen.tap(t.x, t.y); await sleep(700); st = await state(); check('tapping it picks the destination', st.dest === tgt.name, 'dest ' + st.dest); }
+          const acc = await page.evaluate(() => { const b = [...document.querySelectorAll('.gx-side button')].find(x => /^Accept/.test(x.textContent)); if (!b) return 'no button'; const r = b.getBoundingClientRect(), top = document.elementFromPoint(r.left + r.width / 2, r.top + r.height / 2); return b.disabled ? 'disabled' : (top === b || b.contains(top)) ? 'ok' : 'covered'; });
+          check('Accept is enabled and tappable', acc === 'ok', acc);
+        }
+      }
+      await page.evaluate(() => { MOO.UI.Galaxy.pick = null; if (MOO.UI.Galaxy.map) { MOO.UI.Galaxy.map.setRoutePreview(null); MOO.UI.Galaxy.map.setReach(null); } MOO.UI.Galaxy.showDefault(); }); await sleep(300);
+    });
+
+    await step('phonemode', async () => {
+      // Options › Display › Phone layout: Off pins the desktop layout on a phone (read by index.html before the first stylesheet; a reload applies it)
+      await page.evaluate(() => MOO.UI.Screens.go('options', { from: 'galaxy' })); await sleep(900);
+      const seg = await page.evaluate(() => { const row = [...document.querySelectorAll('.screen.active .op-row')].find(r => /Phone layout/.test(r.textContent)); if (!row) return null; const b = [...row.querySelectorAll('button, .btn')].map(x => x.textContent.trim()); return { btns: b, now: /Now: phone layout/.test(row.textContent) }; });
+      check('Options has a Phone layout row (Auto / On / Off) that names the current layout', !!seg && seg.btns.join(',') === 'Auto,On,Off' && seg.now, JSON.stringify(seg));
+      await page.evaluate(() => { const row = [...document.querySelectorAll('.screen.active .op-row')].find(r => /Phone layout/.test(r.textContent)); [...row.querySelectorAll('button, .btn')].find(x => x.textContent.trim() === 'Off').click(); }); await sleep(500);
+      const ask = await page.evaluate(() => { const m = [...document.querySelectorAll('.scrim .modal')].pop(); return m ? m.textContent.slice(0, 80) : null; });
+      check('choosing Off asks to reload', !!ask && /Reload now/.test(ask), ask);
+      await page.evaluate(() => { const m = [...document.querySelectorAll('.scrim .modal')].pop(); const b = [...m.querySelectorAll('.modal-f button')]; (b.find(x => /Cancel/i.test(x.textContent)) || b[0]).click(); }); await sleep(300);
+      check('the setting is stored before the reload', (await page.evaluate(() => MOO.Settings.get('phoneMode'))) === 'off');
+      await page.reload({ waitUntil: 'load' }); await sleep(1500);
+      check('after a reload the phone boots the DESKTOP layout (Off)', !(await page.evaluate(() => document.documentElement.hasAttribute('data-phone') || MOO.Phone.active())));
+      await page.evaluate(() => { MOO.Settings.set('phoneMode', 'auto'); }); await page.reload({ waitUntil: 'load' }); await sleep(1500);
+      check('Auto again: the phone layout is back', await page.evaluate(() => document.documentElement.hasAttribute('data-phone') && MOO.Phone.active()));
+      await bootGame(page);
+    });
+
     await step('bot', async () => {
       const bot = require('./bot'); const b = bot.start(page, {}); let ok = 0;
       for (let i = 0; i < 4; i++) { const r = await Promise.race([page.evaluate(() => MOO.Game.endTurn().then(() => 1)), sleep(60000).then(() => 0)]); if (!r) { console.log('   STUCK turn', i); break; } ok++; await sleep(300); }
@@ -519,6 +617,11 @@ const sheetState = page => page.evaluate(() => { const s = document.querySelecto
       await d.page.keyboard.press('Escape'); await sleep(500);
       await d.page.keyboard.press('F1'); await sleep(300);
       check('desktop: F1 help still opens', !!(await d.page.$('.hp-ov'))); await d.page.keyboard.press('Escape');
+      // Options › Phone layout: On pins the phone layout on a desktop (and Auto restores the desktop one)
+      await d.page.evaluate(() => { MOO.Settings.set('phoneMode', 'on'); }); await d.page.reload({ waitUntil: 'load' }); await sleep(1500);
+      check('desktop: Phone layout = On boots the phone layout after a reload', await d.page.evaluate(() => document.documentElement.hasAttribute('data-phone') && MOO.Phone.active() && MOO.Phone.forced));
+      await d.page.evaluate(() => { MOO.Settings.set('phoneMode', 'auto'); }); await d.page.reload({ waitUntil: 'load' }); await sleep(1500);
+      check('desktop: Auto again boots the desktop layout', !(await d.page.evaluate(() => document.documentElement.hasAttribute('data-phone'))));
       const errs2 = [...new Set(d.errors)].filter(e => !benign(e));
       check('no console errors / page errors (desktop)', !errs2.length, errs2.slice(0, 5).join(' | '));
     } catch (e) { check('desktop run', false, e.stack); }

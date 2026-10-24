@@ -84,6 +84,7 @@
   function maxTier() { const c = ORDER.indexOf(P.cap); return P.caps && P.caps.software ? c : c + 1; }
   let acc = 0, n = 0, slowSecs = 0, fastSecs = 0, last = 0, cooldown = 0, secs = 0;
   const failedAt = {};                             // tier -> second it was dropped from for slow frames (not climbed back into for RECLIMB_S)
+  const STARTUP_S = 8;                             // the governor ignores the first seconds after boot
   const RECLIMB_S = 300;                           // a tier that failed is retried after five minutes, not twenty seconds: the old loop went
   // medium → low (3 slow s) → medium (10 fast s: the loop runs at the display rate while screens draw at 30, so it always looks fast) → low …,
   // the game alternating between two looks and two frame rates every ~20 s on a machine that is only a little too slow for the tier above
@@ -96,12 +97,16 @@
     if (acc < 1) return;
     const avg = acc / n * 1000; acc = 0; n = 0; secs++;
     if (cooldown > 0) cooldown--;
-    if (P.preset !== 'auto') return;
+    if (P.preset !== 'auto' || secs < STARTUP_S) return;                                   // boot (sprite caches, shader links, first paints) is not a slow machine
     const budget = 1000 / Math.min(P.q.animFps, 60, P.hz || 60);   // ms per frame we should hit (a 30 Hz display is not slow frames)
     if (avg > budget * 1.35) { slowSecs++; fastSecs = 0; } else if (avg < budget * 0.55) { fastSecs++; slowSecs = 0; } else { slowSecs = 0; fastSecs = 0; }
     const i = ORDER.indexOf(P.tier);
-    // the phone tier sits outside ORDER: it can only step down, to 'low', and never climbs back (maxTier() is 0 with a 'phone' cap)
+    // the phone tier sits outside ORDER: it steps down to 'low' on slow frames and climbs back only after RECLIMB_S of the same retry rule as the others
     if (slowSecs >= 3 && (i > 0 || P.tier === 'phone') && !cooldown) { failedAt[P.tier] = secs; apply(P.tier === 'phone' ? 'low' : ORDER[i - 1], 'slow frames'); slowSecs = 0; cooldown = 6; }
+    else if (P.cap === 'phone' && P.tier === 'low' && fastSecs >= 10 && !cooldown) {
+      if (failedAt.phone !== undefined && secs - failedAt.phone < RECLIMB_S) { fastSecs = 0; return; }
+      apply('phone', 'headroom'); fastSecs = 0; cooldown = 12;
+    }
     else if (i >= 0 && fastSecs >= 10 && i < maxTier() && i < ORDER.length - 1 && !cooldown) {
       const up = ORDER[i + 1];
       if (failedAt[up] !== undefined && secs - failedAt[up] < RECLIMB_S) { fastSecs = 0; return; }

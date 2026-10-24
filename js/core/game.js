@@ -136,7 +136,7 @@
       while (!r.done) {
         const it = r.value, h = G.handlers[it.type] || DEFAULTS[it.type];
         let ans;
-        const wd = setTimeout(() => { if (!live()) return; console.warn('[turn] still waiting on the "' + it.type + '" interrupt after 10 s', it); M.Bus.emit('turn:waiting', it.type); }, 10000);   // diagnostic: a handler that never answers is what freezes a turn
+        const wd = setTimeout(() => { if (!live()) return; console.info('[turn] waiting on the "' + it.type + '" interrupt for 10 s', it); M.Bus.emit('turn:waiting', it.type); }, 10000);   // diagnostic: a handler that never answers is what freezes a turn
         const escP = new Promise(res => {
           G.skipWait = () => { res(SKIPPED); };                                                        // the player's way out of a stuck interrupt (busy overlay "Skip" button)
           abortWait = res;                                                                            // load / quit / new game while waiting

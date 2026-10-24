@@ -13,7 +13,7 @@
 // Game, Design and Map are hidden: More opens the game menu, which on a phone also offers Design and the galaxy map — gamemenu.js).
 (function (M) {
   'use strict';
-  const UI = M.UI, G = M.Game, h = UI.h, U = M.Util, Q = M.Sim.Q;
+  const UI = M.UI, G = M.Game, h = UI.h, U = M.Util, Q = M.Sim.Q, root = document.documentElement;
   const active = () => !!(UI.Phone && UI.Phone.active());
   const portrait = () => { try { return matchMedia('(orientation: portrait)').matches; } catch (e) { return true; } };   // landscape: the panel is a column, not a sheet
   const PICK = { reloc: true, trans: true, fleetDeploy: true };
@@ -48,9 +48,12 @@
       sheet.set('half'); UI.Phone.haptic('snap');
       try { const id = G.sel && G.sel.star; if (id >= 0 && UI.Galaxy.map) UI.Galaxy.map.centerOn(id, { animate: true }); } catch (err) { /* optional */ }
     }, true);
-    sheet.on(st => { if (st === 'half') requestAnimationFrame(fitHalf); });
-    window.addEventListener('resize', () => requestAnimationFrame(fitHalf));
-    if (M.Bus) M.Bus.on('turn:processing', on => { if (on && active() && sheet) { holding = false; sheet.set('strip'); } });
+    sheet.on(st => { if (st === 'half') requestAnimationFrame(fitHalf); scheduleInset(); });
+    side.addEventListener('transitionend', e => { if (e.propertyName === 'height') syncInset(); });        // the sheet's height has settled: measure now, not on the timer
+    const wrap = scr.querySelector('.gx-mapwrap'); if (wrap) wrap.addEventListener('pointerdown', () => syncInset(true), true);   // and right before a drag / tap on the map (soft: the view must not move under the finger)
+    window.addEventListener('resize', () => { requestAnimationFrame(fitHalf); scheduleInset(); });
+    if (M.Bus) { M.Bus.on('turn:processing', on => { if (!active() || !sheet) return; if (on) { holding = false; sheet.set('strip'); markPick(false); } markHeld(false); }); M.Bus.on('screen', id => { if (id === 'galaxy') scheduleInset(); }); }
+    scheduleInset();
     noteShown(UI.Side.current(), null); update();                                          // the first entry showed its panel before the sheet existed
   }
 
@@ -98,22 +101,53 @@
     if (!host || !panel || !wrap) return;
     const cs = getComputedStyle(panel), pad = parseFloat(cs.paddingTop) + parseFloat(cs.paddingBottom) + parseFloat(cs.borderTopWidth) + parseFloat(cs.borderBottomWidth);
     const need = sheet.grip.offsetHeight + pad + host.scrollHeight + 2;
-    side.style.setProperty('--ph-half', Math.round(Math.min(need, wrap.clientHeight * 0.7)) + 'px');
+    const cap = PICK[UI.Side.current()] ? 0.45 : 0.7;                                      // a pick needs the map: its panel takes at most 45% (the body scrolls)
+    side.style.setProperty('--ph-half', Math.round(Math.min(need, wrap.clientHeight * cap)) + 'px');
   }
-  const update = () => { if (!active()) return; updateSummary(); if (sheet && sheet.get() === 'half') fitHalf(); };
+  const update = () => { if (!active()) return; updateSummary(); if (sheet && sheet.get() === 'half') fitHalf(); scheduleInset(); };
+
+  // ---- the map's bottom inset: what the sheet (portrait: it lies over the map) or the floating card covers, so the camera keeps the galaxy over the
+  // uncovered part and a drag can reach the stars under them (galaxymap.js setInset). Measured once the sheet's height transition has ended.
+  let insetTimer = 0;
+  function syncInset(soft) {
+    const map = UI.Galaxy.map; if (!active() || !map || !map.setInset) return;
+    const scr = UI.Screens.el && UI.Screens.el('galaxy'), wrap = scr && scr.querySelector('.gx-mapwrap'); if (!wrap) return;
+    const w = wrap.getBoundingClientRect(); let bottom = 0;
+    const covers = el => { if (!el) return 0; const r = el.getBoundingClientRect(); if (!r.height || r.right <= w.left || r.left >= w.right || r.top <= w.top) return 0; return Math.max(0, w.bottom - r.top); };
+    bottom = Math.max(covers(sheet && sheet.el), covers(scr.querySelector('.gx-side.gx-float.on')));
+    map.setInset({ bottom: Math.round(bottom), soft: !!soft });
+    // the map's control column stands on the uncovered band (css/phone.css --ph-inset); two columns when one would not fit between the HUD and the cover
+    const gx = scr.querySelector('.gx'), ctl = wrap.querySelector('.gmap-ctrl'), top = wrap.querySelector('.gx-top');
+    if (gx) {
+      const b = bottom >= w.height * 0.75 ? 0 : bottom;                                      // the map is hidden, not inset: the column stays put
+      gx.style.setProperty('--ph-inset', Math.round(b) + 'px');
+      const tap = parseFloat(getComputedStyle(root).getPropertyValue('--tap')) || 44, free = w.height - b - (top ? top.getBoundingClientRect().bottom - w.top : 0);
+      gx.classList.toggle('ph-ctl-tight', !!ctl && ctl.children.length * tap + 24 > free);
+    }
+  }
+  const markPick = on => { const scr = UI.Screens.el && UI.Screens.el('galaxy'), gx = scr && scr.querySelector('.gx'); if (gx) gx.classList.toggle('ph-pick', !!on); };
+  function scheduleInset() { clearTimeout(insetTimer); insetTimer = setTimeout(syncInset, 280); }
+
+  // A held prompt (the turn's pending question) must stack above the map's busy overlay (.gx-busy, z-index 20): on a phone the sheet lies OVER
+  // the map, and under that overlay its buttons could not be tapped — the turn then waited forever on a card the player could see but not
+  // answer (the "Year …" freeze). css/phone.css raises [data-held] above the overlay; nothing else on the sheet may reach past it mid-turn.
+  const markHeld = on => { if (sheet) { if (on) sheet.el.dataset.held = ''; else delete sheet.el.dataset.held; } };
 
   // which height a panel wants (runs after the original show, only when that show took effect)
   const show0 = UI.Side.show;
   UI.Side.show = function (name, params, _hd) {
     const r = show0.apply(this, arguments);
     if (!active() || UI.Side.current() !== name) return r;
+    // a destination pick (Reloc / Trans / fleet deployment, in the sheet or floating after the first pick) hides the turn-message stack over the map:
+    // on a small phone it and the sheet left a strip of a few dozen pixels for the pick (css/phone.css .ph-pick); the messages return with the next panel
+    markPick(!!PICK[name]);
     if (!(params && params.float)) noteShown(name, params);
     update();
     if (!sheet) return r;
     const held = UI.Side.held && _hd === UI.Side.held;
     if (params && params.float) { if (!held) sheet.set('strip'); return r; }                 // the float card carries its own Accept / Cancel
-    if (held) { if (!holding) { holding = true; remembered = sheet.get(); } sheet.set('full'); return r; }
-    if (holding) { holding = false; sheet.set(remembered === 'full' ? 'half' : remembered); return r; }   // the prompt was answered: back to where the player was
+    if (held) { if (!holding) { holding = true; remembered = sheet.get(); } markHeld(true); sheet.set('full'); return r; }
+    if (holding) { holding = false; markHeld(false); sheet.set(remembered === 'full' ? 'half' : remembered); return r; }   // the prompt was answered: back to where the player was
     if (PICK[name]) sheet.set('half');
     return r;
   };
