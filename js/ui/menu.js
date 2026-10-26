@@ -22,7 +22,8 @@
     .menu-title::before { content:attr(data-text); position:absolute; inset:0; z-index:-1; color:#6b542a; -webkit-text-fill-color:#6b542a; background:none;
       text-shadow: -1px -1px 0 rgba(255,250,230,.55), 1px 1px 0 #3a2c12, 2px 2px 0 #332710, 3px 3px 0 #2c210d, 4px 4px 0 #251b0a, 5px 5px 0 #1e1607, 6px 6px 1px #140e04,
                    7px 9px 14px rgba(0,0,0,.6), 0 0 34px rgba(214,179,106,.18); }
-    .menu-sub { margin:.7rem 0 2.4rem .2rem; color:var(--mist); font-size:clamp(1rem,1.25vw,1.35rem); max-width:28rem; opacity:0; animation: menu-fade .5s .15s ease-out forwards; }
+    .menu-ver { margin:.7rem 0 0 .3rem; font:400 clamp(.8rem, 1vw, .98rem) var(--font-display); color:var(--brass); letter-spacing:.2em; opacity:0; animation: menu-fade .5s .1s ease-out forwards; }
+    .menu-sub { margin:.5rem 0 2.4rem .2rem; color:var(--mist); font-size:clamp(1rem,1.25vw,1.35rem); max-width:28rem; opacity:0; animation: menu-fade .5s .15s ease-out forwards; }
     .menu-list { display:flex; flex-direction:column; gap:.7rem; width:min(21rem, 80vw); opacity:0; animation: menu-fade .4s .1s ease-out forwards; }
     .menu-list .btn { justify-content:flex-start; padding:.6em 1.3em; font-size:1.25rem; }
     .menu-foot { position:absolute; left:0; right:0; bottom:.8rem; text-align:center; font-size:.8rem; color:var(--fog); }
@@ -43,14 +44,20 @@
       color:#e8b830; text-shadow:0 2px 0 #4a3408, 0 0 18px rgba(232,184,48,.18); transition:color .15s, text-shadow .15s, padding-left .15s; }
     .menu-list .btn::before { display:none; }
     .menu-list .btn:hover, .menu-list .btn:focus-visible { background:none; color:#fff1a8; padding-left:.8em; text-shadow:0 2px 0 #4a3408, 0 0 22px rgba(255,226,120,.55); }
-    .menu-list .btn:hover::after, .menu-list .btn:focus-visible::after { content:""; position:absolute; left:.1em; top:50%; width:.45em; height:.45em; margin-top:-.22em; inset:auto; border:0; background:#fff1a8; clip-path:polygon(0 0, 100% 50%, 0 100%); transform:none; left:.1em; top:50%; }
+    /* the marker: one small triangle in the row's left padding, on the default row and on the hovered / focused one. inset:auto (which
+       clears the kit's focus-ring box) has to come BEFORE left/top: the shorthand resets both, and a marker with auto offsets sits at its
+       static position, which in this flex row is on top of the label's first letter */
+    .menu-list .btn:hover::after, .menu-list .btn:focus-visible::after, .menu-list .btn.primary::after, .menu-list .btn:first-child::after {
+      content:""; position:absolute; inset:auto; left:.1em; top:50%; width:.45em; height:.45em; margin-top:-.22em; border:0; background:#ffd860;
+      clip-path:polygon(0 0, 100% 50%, 0 100%); transform:none; pointer-events:none; }
+    .menu-list .btn:hover::after, .menu-list .btn:focus-visible::after { background:#fff1a8; }
     .menu-list .btn { color:#f2c640; font-size:clamp(1.4rem, 2.4vh, 2rem); }
     .menu-list .btn.primary, .menu-list .btn:first-child { color:#fff1a8; padding-left:.8em; }
-    .menu-list .btn.primary::after, .menu-list .btn:first-child::after { content:""; position:absolute; left:.1em; top:50%; width:.45em; height:.45em; margin-top:-.22em; inset:auto; border:0; background:#ffd860; clip-path:polygon(0 0, 100% 50%, 0 100%); }
     .menu-list .btn.primary.primary.primary.primary { background:none; box-shadow:none; color:#fff1a8; text-shadow:0 2px 0 #4a3408, 0 0 22px rgba(255,226,120,.45); }
     .menu-list .btn.disabled, .menu-list .btn:disabled { opacity:.5; }
     .menu-list .btn .kbd { display:none; }
     .menu-foot { color:#b8b0d0; letter-spacing:.06em; text-transform:uppercase; font-size:.8rem; } .menu-sub { color:#d8dff5; } .menu-meta { color:#d8dff5; font-size:.92rem; }
+    .menu-ver { color:#dcc07c; text-shadow:0 1px 0 rgba(0,0,0,.6); }
   `));
 
   // ---------------------------------------------------------------- vortex renderer
@@ -97,7 +104,12 @@
   }
 
   // ---------------------------------------------------------------- screen
-  let canvas, ctx, vortex, bg = null, bgKey = '', t0 = 0, listEl, metaEl;
+  let canvas, ctx, vortex, bg = null, bgKey = '', t0 = 0, listEl, metaEl, scratch = null;
+  function shipScratch(w, hh) {
+    if (!scratch) scratch = document.createElement('canvas');
+    if (scratch.width !== w || scratch.height !== hh) { scratch.width = w; scratch.height = hh; }
+    return scratch;
+  }
 
   function rebuildBackdrop(w, hh) {
     const key = w + 'x' + hh;
@@ -143,6 +155,7 @@
         h('div.menu-col',
           h('div.menu-kicker', 'The galaxy awaits'),
           h('h1.menu-title', { 'data-text': 'Master of Orion' }, 'Master of Orion'),
+          h('div.menu-ver', 'Version ' + (M.VERSION || '') + ' · © Andrew Tate, 2026'),
           h('div.menu-sub', 'Ten races. One throne-world. Seize the stars, outwit your rivals, and win the vote of the Galactic Council — or end it by force.'),
           listEl, metaEl),
         h('div.menu-foot', 'Master of Orion Reborn · a fan remake — all art, music and text are original')));
@@ -171,16 +184,37 @@
       if (art) drew = true;
       else if (GS && GS.supported && GS.supported()) { try { drew = GS.vortex(ctx, w * 0.66, hh * 0.46, R, t, { tilt: 0.42, rot }) !== false; } catch (e) { drew = false; } }
       if (!drew) vortex.draw(ctx, w * 0.66, hh * 0.46, R, t, 0.42, rot);
-      // a big slow planet low-left of the vortex (GLPlanets falls back to the CPU renderer by itself)
+      // a big slow world low-right, its upper half on screen (GLPlanets falls back to the CPU renderer by itself). The seed is one whose
+      // axis tilts away from the viewer, so what we see is mid-latitudes sweeping past, not a polar cap turning in place; one turn in about a minute;
+      // the sun low from the upper-left (the galaxy's side), so the terminator, the city lights and the cloud shadows cross the visible
+      // part; and a little parallax against the galaxy's slow breathing zoom (same phase, a larger excursion: it is nearer)
       const P = M.Gfx && (M.Gfx.pick('planets'));
       if (P && P.draw) {
-        try { P.draw(ctx, { look: 'terran', seed: 'menu-world', inhabited: true, color: '#d6b36a' }, w * 0.9, hh * 1.02, Math.min(w, hh) * 0.36, t, { lightAngle: -2.45, spin: 0.01 }); } catch (e) { /* ignore */ }
+        const par = Math.sin(t * 0.05);
+        try { P.draw(ctx, { look: 'terran', seed: 'menu-world-32', inhabited: true, color: '#d6b36a' }, w * (0.9 + 0.012 * par), hh * (1.02 + 0.02 * par), Math.min(w, hh) * 0.36, t, { lightAngle: -2.9, lightElev: 0.15, spin: 0.016, cloudShadows: true }); } catch (e) { /* ignore */ }
       }
-      // ship fly-by
+      // ship fly-by, right to left across the top (a path that stays above the wordmark). The 3/4 render carries its own studio light,
+      // which read as a cut-out against the scene: it is drawn to a scratch canvas and relit there — exposure down (it is far from any
+      // sun), the side away from the planet's sun (upper-left) in shadow, a cool fill from the galaxy, a quieter drive — then composited.
       const S = M.Gfx && M.Gfx.Ships;
       if (S && S.draw) {
-        const u = ((t - t0) * 0.045) % 1.35 - 0.2;
-        try { S.draw(ctx, { race: 'human', hull: 3, x: w * (1.1 - u * 1.35), y: hh * (0.2 + u * .1), size: Math.min(w, hh) * 0.2, angle: Math.PI + 0.08, color: '#d6b36a', t, thrust: 0.8, view: '3q' }); } catch (e) { /* ignore */ }
+        const u = ((t - t0) * 0.045) % 1.35 - 0.2, sz = Math.min(w, hh) * 0.19, sx = w * (1.1 - u * 1.35), sy = hh * (0.07 + u * .07);
+        try {
+          const sc = shipScratch(Math.ceil(sz * 1.6), Math.ceil(sz * 1.1)), g = sc.getContext('2d');
+          g.setTransform(1, 0, 0, 1, 0, 0); g.clearRect(0, 0, sc.width, sc.height);
+          S.draw(g, { race: 'human', hull: 3, x: sc.width * 0.5, y: sc.height * 0.5, size: sz, angle: Math.PI + 0.08, color: '#d6b36a', t, thrust: 0.4, view: '3q' });
+          g.globalCompositeOperation = 'source-atop';
+          let lg = g.createLinearGradient(sc.width * 0.2, 0, sc.width, sc.height * 0.6);
+          lg.addColorStop(0, 'rgba(6,8,22,0)'); lg.addColorStop(0.45, 'rgba(6,8,22,.32)'); lg.addColorStop(1, 'rgba(6,8,22,.78)');
+          g.fillStyle = lg; g.fillRect(0, 0, sc.width, sc.height);
+          lg = g.createLinearGradient(0, sc.height, 0, 0);
+          lg.addColorStop(0, 'rgba(120,150,255,0)'); lg.addColorStop(1, 'rgba(120,150,255,.14)');
+          g.fillStyle = lg; g.fillRect(0, 0, sc.width, sc.height);
+          g.globalCompositeOperation = 'source-over';
+          ctx.globalAlpha = 0.86;
+          ctx.drawImage(sc, sx - sc.width * 0.5, sy - sc.height * 0.5);
+          ctx.globalAlpha = 1;
+        } catch (e) { /* ignore */ }
       }
     },
   });
