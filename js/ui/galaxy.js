@@ -23,14 +23,20 @@
     .gx-top { position:absolute; left:.7rem; top:.6rem; right:.7rem; display:flex; gap:.5rem; align-items:flex-start; pointer-events:none; z-index:3; }
     .gx-hud { pointer-events:auto; display:flex; gap:1.1rem; align-items:center; padding:.35rem .9rem; background:rgba(8,12,34,.72); backdrop-filter:blur(4px); border:1px solid rgba(214,179,106,.35); clip-path:polygon(.45rem 0,100% 0,100% calc(100% - .45rem),calc(100% - .45rem) 100%,0 100%,0 .45rem); font-size:.98rem; }
     .gx-hud .y { font:400 1.3rem var(--font-display); color:var(--brass-hi); letter-spacing:.04em; }
+    .gx-hudr { display:contents; }                                                /* the HUD minus the year: rebuilt on every state change */
+    .gx-hud .od { display:inline-block; height:1.2em; line-height:1.2em; overflow:hidden; vertical-align:bottom; }
+    .gx-hud .od-in { display:flex; flex-direction:column; animation:gx-od .6s cubic-bezier(.3,.7,.2,1) both; }
+    .gx-hud .od-in > span { height:1.2em; }
+    @keyframes gx-od { from { transform:translateY(0); } to { transform:translateY(-50%); } }
     .gx-hud .k { color:var(--mist); font-size:.82rem; margin-right:.3em; }
     .gx-hud b { font-weight:600; font-variant-numeric:tabular-nums; }
-    .gx-att { display:flex; gap:.45rem; cursor:pointer; font-weight:600; font-variant-numeric:tabular-nums; } .gx-att span { padding:.05rem .4rem; border:1px solid currentColor; border-radius:.2rem; }
+    .gx-att { display:flex; gap:.45rem; cursor:var(--hand); font-weight:600; font-variant-numeric:tabular-nums; } .gx-att span { padding:.05rem .4rem; border:1px solid currentColor; border-radius:.2rem; }
     .gx-att .r { color:#ff7a6a; } .gx-att .w { color:var(--ember, #f0a040); } .gx-att:hover span { background:rgba(255,255,255,.08); }
+    .gx-logc { display:none; }                                                    /* the turn log's chip: portrait phones only (css/phone.css) */
     .gx-msg { pointer-events:auto; margin-left:auto; max-width:28rem; display:flex; flex-direction:column; gap:.3rem; }
     .gx-msg .m { padding:.3rem .7rem; background:rgba(8,12,34,.78); border-left:3px solid var(--brass); font-size:.9rem; }
     .gx-msg .m.bad { border-left-color:var(--rose); } .gx-msg .m.ok { border-left-color:var(--leaf); }
-    .gx-msg .m { cursor:pointer; } .gx-msg .m.link:hover { background:rgba(214,179,106,.18); } .gx-msg .m.link::after { content:' ›'; color:var(--brass-hi); }
+    .gx-msg .m { cursor:var(--hand); } .gx-msg .m.link:hover { background:rgba(214,179,106,.18); } .gx-msg .m.link::after { content:' ›'; color:var(--brass-hi); }
     .gx-wait { margin-right:.8rem; font:500 .85rem var(--font-display); letter-spacing:.06em; color:var(--brass-hi); opacity:.9; white-space:nowrap; }
     .gx-busy { position:absolute; inset:0; z-index:20; display:none; align-items:center; justify-content:center; background:rgba(3,5,16,.45); backdrop-filter:blur(1.5px); }
     .gx-busy.on { display:flex; } .gx-busy .box { padding:1rem 2rem; font:400 1.4rem var(--font-display); color:var(--brass-hi); background:rgba(8,12,34,.9); border:1px solid var(--brass-lo); }
@@ -74,7 +80,7 @@
       background:linear-gradient(180deg, #3d4780 0%, #2a3263 55%, #202750 100%); box-shadow:inset 1px 1px 0 rgba(255,255,255,.25), inset -1px -1px 0 rgba(0,0,0,.6), 0 0 0 1px rgba(0,0,0,.7); }
     .side-title .nm { font:400 1.35rem/1.1 var(--font-title); letter-spacing:.06em; color:#e8c850; text-shadow:0 1px 0 #6b4f12, 0 0 12px rgba(232,200,80,.25); }
     .side-title .own { margin-left:0; font-size:.8rem; letter-spacing:.06em; text-transform:uppercase; color:#cfd6ee; }
-    .side-title .cyc { flex:none; width:1.35rem; height:1.35rem; padding:0; border:0; background:none; cursor:pointer; color:#cfd6ee; opacity:.7; }
+    .side-title .cyc { flex:none; width:1.35rem; height:1.35rem; padding:0; border:0; background:none; cursor:var(--hand); color:#cfd6ee; opacity:.7; }
     .side-title .cyc:first-child { margin-right:auto; } .side-title .cyc:last-child { margin-left:auto; }
     .side-title .cyc:hover { opacity:1; color:#e8c850; }
     .side-title .cyc::after { content:''; display:block; width:.55rem; height:.7rem; margin:auto; background:currentColor; clip-path:polygon(100% 0,0 50%,100% 100%); }
@@ -198,16 +204,38 @@
     endTurn,
   };
 
+  // the year is an odometer: it stays in place while the rest of the HUD is rebuilt (on every state change), and the digits that change at the end
+  // of a turn roll over (css .od); a new or loaded game sets it without the roll. Reduce motion makes the roll instant (base.css / options.js).
+  let yearEl = null, yearNum = null, restEl = null, yearShown = '';
+  function setYear(y) {
+    const s = String(y), prev = yearShown; yearShown = s;
+    if (!prev || prev === s || prev.length !== s.length) { yearNum.textContent = s; return; }
+    UI.clear(yearNum);
+    for (let i = 0; i < s.length; i++) yearNum.appendChild(s[i] === prev[i] ? document.createTextNode(s[i]) : h('span.od', h('span.od-in', h('span', prev[i]), h('span', s[i]))));
+    const settle = () => { if (yearShown === s && yearNum.querySelector('.od')) yearNum.textContent = s; };   // plain text again once rolled (screen readers, scripts)
+    yearNum.addEventListener('animationend', settle, { once: true }); setTimeout(settle, 1200);
+  }
   function updateHud() {
     if (!hudEl || !G.S) return;
     const S = G.S, E = G.player(), f = E.flow || {}, rp = E.research.total | 0;
     const colonies = S.planets.filter(p => p.owner === E.id).length;
-    UI.mount(hudEl,
-      h('span.y', 'Year ' + Q.year(S)),
+    if (!yearEl) { yearNum = h('span.yn'); yearEl = h('span.y', 'Year ', yearNum); restEl = h('span.gx-hudr'); UI.mount(hudEl, yearEl, restEl); }
+    setYear(Q.year(S));
+    UI.mount(restEl,
       h('span', h('span.k', 'Reserve'), h('b.t-gold', U.fmt(E.bc)), ' ', h('span.t-gold', 'BC'), f.taxToReserve ? h('span.t-leaf.small', ' +' + f.taxToReserve) : null),
+      logChip(),                                                                       // phones only: ends the first line of the wrapped HUD
       h('span', h('span.k', 'Income'), h('b' + ((f.net | 0) < (f.gross | 0) * 0.6 ? '.t-rose' : '.t-leaf'), U.fmt(f.net | 0)), h('span.k', ' of ' + U.fmt(f.gross | 0))),
       h('span', h('span.k', 'Research'), h('b.t-cyan', U.fmt(rp)), h('span.t-cyan', ' RP')),
       h('span', h('span.k', 'Colonies'), h('b', colonies)), attentionChips());
+  }
+  // phones: the turn log's count in the HUD. In portrait the sidebar is a bottom sheet and the log under it was only seen at full height; the
+  // chip opens the whole log (css/phone.css shows it in portrait only — landscape keeps the sidebar column with the log in it)
+  function logChip() {
+    if (!(M.Phone && M.Phone.active()) || !UI.TurnLog || !UI.TurnLog.counts) return null;
+    const c = UI.TurnLog.counts(); if (!c.log && !c.next) return null;
+    const tone = c.worst === 0 ? '.r' : c.worst === 1 ? '.w' : '';
+    return h('span.gx-logc' + tone, { tip: 'What happened last turn and what is coming up. Tap to read it; each line takes you to its star.', onclick: () => UI.TurnLog.openSheet() },
+      UI.icon('list'), c.log ? h('span', 'Last turn ', h('b', c.log)) : h('span', 'Coming up ', h('b', c.next)));
   }
   // the HUD's count of colonies needing a look: a click (or I) steps through them, most urgent first
   function attentionChips() {
@@ -232,6 +260,7 @@
       if (issues.length) { const ok = await UI.confirm(h('div', h('p', 'End the turn anyway?'), h('ul', issues.slice(0, 6).map(li))), { title: 'Before you end the turn' }); if (!ok) return; }
     }
     UI.Galaxy.busy(true, 'Year ' + Q.year(G.S) + ' …');
+    UI.sfx('turn');                                                                           // the stamp and rising sweep (the 'newturn' chime answers it at turn:end, soundscape.js)
     if (UI.Phone) UI.Phone.haptic('turn');                                                    // phones: a tick as the turn starts
     // 10 s without an answer is normal while the player reads a scene (combat, GNN, council, audience, landing), a modal or a held side-panel prompt:
     // those all carry their own controls, so the Skip escape is offered ONLY when nothing visible can answer the pending step (a genuinely stuck turn).
@@ -311,7 +340,7 @@
       const side = h('aside.gx-side', h('div.panel', host), logEl);
       if (UI.TurnLog) UI.TurnLog.mount(logEl);                                                              // "Last turn": links to where things happened
       const navBtns = NAV.map(([name, key, fn]) => UI.button(name, fn, { kbd: key.toUpperCase() }));
-    const nextBtn = UI.button('Next turn', () => endTurn(), { primary: true, big: true, kbd: 'N' });
+    const nextBtn = UI.button('Next turn', () => endTurn(), { primary: true, big: true, kbd: 'N', sfx: false });   // endTurn plays the turn cue once the turn really starts
     const bar = h('nav.gx-bar', navBtns, h('span.gx-spacer'), nextBtn);
     const waitEl = h('span.gx-wait');
     bar.insertBefore(waitEl, nextBtn);
@@ -333,6 +362,8 @@
       }, true);
       bindKeys();
       M.Bus.on('state', () => { if (UI.Screens.current && UI.Screens.current.id === 'galaxy') { updateHud(); UI.Side.refresh(); } });
+      M.Bus.on('turnlog', () => updateHud());
+      M.Bus.on('game:new', () => { yearShown = ''; }); M.Bus.on('game:loaded', () => { yearShown = ''; });   // a jump in years is not a turn: no roll
       M.Bus.on('turn:aborted', () => UI.Side.drop()); M.Bus.on('turn:skipped', () => UI.Side.drop());    // the prompt is moot: let it resolve and go
       let saveWarned = false;                                                                               // a silently failing autosave used to be discovered only at the Save screen
       M.Bus.on('save:failed', slot => { if (slot !== 'auto' || saveWarned) return; saveWarned = true; UI.toast('Autosave failed: browser storage is full or blocked. Export a save file from Game › Save.', 'bad', 10000); });

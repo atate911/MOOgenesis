@@ -119,7 +119,7 @@
     .cou-cards { display:flex; gap:.75rem; justify-content:center; align-items:stretch; }
     .cou-cards:empty { display:none; }
     .cou-card { --ch:.55rem; --poly:polygon(var(--ch) 0, calc(100% - var(--ch)) 0, 100% var(--ch), 100% calc(100% - var(--ch)), calc(100% - var(--ch)) 100%, var(--ch) 100%, 0 calc(100% - var(--ch)), 0 var(--ch));
-      position:relative; isolation:isolate; flex:1 1 0; min-width:0; max-width:27rem; display:flex; align-items:center; gap:.75rem; padding:.5rem .95rem .5rem .6rem; border:0; cursor:pointer; text-align:left; color:var(--ivory);
+      position:relative; isolation:isolate; flex:1 1 0; min-width:0; max-width:27rem; display:flex; align-items:center; gap:.75rem; padding:.5rem .95rem .5rem .6rem; border:0; cursor:var(--hand); text-align:left; color:var(--ivory);
       font:inherit; background:linear-gradient(180deg, var(--cc, var(--brass)), var(--brass-lo)); clip-path:var(--poly); transition:filter .15s, transform .08s, opacity .25s; animation:cou-pop .4s var(--ease) both; }
     .cou-card::before { content:""; position:absolute; inset:1px; z-index:-1; clip-path:var(--poly); background:linear-gradient(180deg, #25316b, #131b46); transition:background .15s; }
     .cou-card:hover { filter:brightness(1.14); } .cou-card:hover::before { background:linear-gradient(180deg, #34448c, #1a2459); }

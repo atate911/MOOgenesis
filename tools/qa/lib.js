@@ -18,7 +18,7 @@ async function open(opts = {}) {
   const PHONES = { landscape: { width: 844, height: 390 }, small: { width: 360, height: 740 } };
   const phone = opts.phone ? { viewport: PHONES[opts.phone] || { width: 390, height: 844 }, deviceScaleFactor: 2, isMobile: true, hasTouch: true } : null;
   const ctx = await browser.newContext(phone || { viewport: opts.viewport || { width: 1280, height: 720 } });
-  if (phone && !opts.firstRun) await ctx.addInitScript(() => { try { const k = 'moo.settings.v1', s = JSON.parse(localStorage.getItem(k) || '{}'); s.phoneHints = true; localStorage.setItem(k, JSON.stringify(s)); } catch (e) { /* ignore */ } });   // the first-run card: tools/qa/phone.js tests it
+  if (phone && !opts.firstRun) await ctx.addInitScript(() => { try { const k = 'moo.settings.v1', s = JSON.parse(localStorage.getItem(k) || '{}'); s.phoneHints = true; s.installHint = true; localStorage.setItem(k, JSON.stringify(s)); } catch (e) { /* ignore */ } });   // the first-run card: tools/qa/phone.js tests it
   const page = await ctx.newPage();
   if (process.env.TIER) { const go = page.goto.bind(page); page.goto = (u, o) => go(u + (u.includes('?') ? '&' : '?') + 'tier=' + process.env.TIER, o); }   // TIER=low|medium|high|ultra forces a perf tier (software GL is detected as 'low')
   const errors = [];

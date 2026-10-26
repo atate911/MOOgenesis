@@ -403,7 +403,7 @@ const sheetState = page => page.evaluate(() => { const s = document.querySelecto
     });
 
     await step('tips', async () => {
-      const el = await page.$('.gmap-ctrl [data-tip]') || await page.$('.screen.active [data-tip]');
+      const el = await page.$('.gmap-ctrl > .gmap-btn:not(.gmap-zoom):not(.gmap-extra)[data-tip]') || await page.$('.screen.active [data-tip]');   // + / − and the folded toggles are hidden on phones
       const b = await el.boundingBox(), x = b.x + b.width / 2, y = b.y + b.height / 2;
       const cdp = await ctx.newCDPSession(page);
       await cdp.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: [{ x, y }] }); await sleep(650);

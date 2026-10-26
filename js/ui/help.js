@@ -15,7 +15,7 @@
 
   // ================================================================================================================================ css
   UI.css('help', `
-    .hp-ov { position:absolute; inset:0; z-index:60; pointer-events:auto; cursor:pointer; background:radial-gradient(ellipse at 50% 45%, rgba(3,5,18,.55), rgba(3,5,18,.82)); animation:scrim-in .2s ease-out both; }
+    .hp-ov { position:absolute; inset:0; z-index:60; pointer-events:auto; cursor:var(--hand); background:radial-gradient(ellipse at 50% 45%, rgba(3,5,18,.55), rgba(3,5,18,.82)); animation:scrim-in .2s ease-out both; }
     .hp-svg { position:absolute; inset:0; width:100%; height:100%; pointer-events:none; overflow:visible; }
     .hp-svg line { stroke:var(--brass-hi); stroke-width:1.6; } .hp-svg rect { fill:rgba(243,220,160,.07); stroke:var(--brass-hi); stroke-width:1.5; stroke-dasharray:6 4; } .hp-svg circle { fill:var(--brass-hi); }
     .hp-box { position:absolute; width:17rem; max-width:40vw; padding:.5rem .7rem .55rem; font-size:.95rem; line-height:1.35; color:var(--ivory); background:linear-gradient(135deg, var(--brass-lo), #2a3260 40%, #2a3260 60%, var(--brass-lo)); --ch:.4rem; clip-path:polygon(var(--ch) 0, calc(100% - var(--ch)) 0, 100% var(--ch), 100% calc(100% - var(--ch)), calc(100% - var(--ch)) 100%, var(--ch) 100%, 0 calc(100% - var(--ch)), 0 var(--ch)); isolation:isolate; }
@@ -222,6 +222,13 @@
     if (M.Bus) {
       M.Bus.on('turn:end', () => setTimeout(() => tutor.check(), 700));
       M.Bus.on('screen', id => { if (id === 'galaxy') setTimeout(() => tutor.check(), 900); });
+      // the loading screen's tip (loader.js MOO_BOOT_TIP) once more on the first turn of a Simple / Easy game, as a report on the map that stays
+      // until the turn ends (the original's tutor talked to new players there too); once per page load
+      M.Bus.on('screen', id => {
+        const S = G && G.S, tip = window.MOO_BOOT_TIP;
+        if (id !== 'galaxy' || !tip || Help.tipShown || !S || S.turn !== 0 || !tutor.enabled() || !UI.Galaxy || !UI.Galaxy.message) return;
+        Help.tipShown = true; setTimeout(() => UI.Galaxy.message('Tip: ' + tip, null, { sticky: true }), 1200);
+      });
     }
   };
 

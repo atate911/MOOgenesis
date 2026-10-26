@@ -26,7 +26,7 @@
     .sc-sliders .s-val.warn { color:var(--rose); } .sc-sliders .s-val.dim { color:var(--mist); }
     .sc-sliders .s-label small { color:var(--mist); margin-left:.25rem; font-size:.72rem; }
     .sc-build { display:grid; grid-template-columns: 1fr auto; gap:.5rem; align-items:stretch; margin-top:.2rem; }
-    .sc-bbox { display:flex; align-items:center; gap:.5rem; padding:.35rem .5rem; cursor:pointer; background:rgba(0,0,0,.3); border:1px solid var(--brass-lo); min-height:4rem; position:relative; overflow:hidden; }
+    .sc-bbox { display:flex; align-items:center; gap:.5rem; padding:.35rem .5rem; cursor:var(--hand); background:rgba(0,0,0,.3); border:1px solid var(--brass-lo); min-height:4rem; position:relative; overflow:hidden; }
     .sc-bbox .yard { position:absolute; inset:0; z-index:0; pointer-events:none; filter:brightness(.45) saturate(.8); } .sc-bbox .yard canvas { display:block; width:100%; height:100%; }
     .sc-bbox .yard::after { content:""; position:absolute; inset:0; background:linear-gradient(90deg, rgba(0,0,0,.15), rgba(0,0,0,.6)); }
     .sc-bbox > :not(.yard) { position:relative; z-index:1; }
@@ -35,7 +35,7 @@
     .sc-btns { display:flex; flex-direction:column; gap:.3rem; } .sc-btns .btn { padding:.25em .9em; font-size:.92rem; }
     .sc-note { margin:.4rem 0; padding:.35rem .6rem; border-left:3px solid var(--ember); background:rgba(255,148,64,.08); font-size:.88rem; }
     .sc-pickhint { margin:.6rem 0; padding:.6rem .7rem; background:rgba(98,216,255,.08); border:1px dashed var(--cyan); color:var(--ivory); }
-    .sc-rally { grid-column:1 / -1; padding:.15rem .4rem; font-size:.85rem; color:var(--mist); cursor:pointer; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .sc-rally { grid-column:1 / -1; padding:.15rem .4rem; font-size:.85rem; color:var(--mist); cursor:var(--hand); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
     .sc-rally .k { color:#9fb2d8; text-transform:uppercase; letter-spacing:.08em; font-size:.75rem; } .sc-rally b { color:var(--ivory); font-weight:600; }
     .sc-gate { color:#c7a6ff; }
     .sc-relocmsg { margin:.2rem 0 .5rem; text-align:center; color:var(--ivory); min-height:1.3em; }
@@ -47,6 +47,28 @@
     .sc-tpop .k { color:var(--mist); font-size:.78rem; text-transform:uppercase; letter-spacing:.08em; } .sc-tpop .nm { color:var(--ivory); }
     .sc-tpop b { color:var(--leaf); } .sc-tpop b.over { color:var(--amber, #f0b050); }
     .empire-dot { display:inline-block; width:.7em; height:.7em; margin-right:.2em; transform:rotate(45deg); background:var(--c, var(--brass)); box-shadow:0 0 6px var(--c, var(--brass)); }
+    /* the colony postcard under the build box (desktop): the panel's lower third was an empty band. The body becomes a column so the card takes
+       whatever height is left; the container query hides it when that is too little to read. Phones: never (the sheet shows the controls). */
+    .sc-post { display:none; }
+    :root:not([data-phone]) .sc-post { position:relative; display:block; aspect-ratio:16 / 7; margin-top:.55rem; container-type:size; overflow:hidden; background:#05070a; }
+    :root:not([data-phone]) .gx-sidebody:has(> .sc-post) { display:flex; flex-direction:column; }
+    :root:not([data-phone]) .gx-sidebody:has(> .sc-post) > * { flex:none; }
+    /* a flex column does not collapse margins: keep the block layout's collapsed gaps (card .5 | stats, stats .45 | sliders, sliders .5 | build,
+       and a note's .4 against its neighbours) so nothing above the postcard moves */
+    :root:not([data-phone]) .gx-sidebody:has(> .sc-post) > :is(.sc-stats, .sc-sliders, .sc-build), :root:not([data-phone]) .gx-sidebody:has(> .sc-post) .sc-note { margin-top:0; }
+    :root:not([data-phone]) .gx-sidebody:has(> .sc-post) > .sc-post { flex:1 1 0; min-height:0; aspect-ratio:auto; max-height:26rem; }
+    .sc-post > canvas { position:absolute; inset:0; width:100%; height:100%; object-fit:cover; object-position:50% 60%; }
+    .sc-post::after { content:""; position:absolute; inset:0; pointer-events:none; box-shadow:inset 0 0 0 1px rgba(214,179,106,.3), inset 0 0 2.5rem rgba(0,0,0,.55);
+      background:linear-gradient(180deg, rgba(0,0,0,.5), rgba(0,0,0,0) 30%, rgba(0,0,0,0) 55%, rgba(0,0,0,.75)); }
+    .sc-pc { position:absolute; left:.65rem; top:.45rem; right:.65rem; z-index:1; line-height:1.25; text-shadow:0 1px 2px #000, 0 0 8px rgba(0,0,0,.9); }
+    .sc-pc b { display:block; font:600 .8rem var(--font-display); letter-spacing:.12em; text-transform:uppercase; color:#f0d048; } .sc-pc span { font-size:.85rem; color:#e6e2d4; }
+    .sc-orb { position:absolute; left:.5rem; right:.5rem; bottom:.4rem; z-index:1; display:flex; flex-wrap:wrap; align-items:center; gap:.3rem; }
+    .sc-orb .k { font:600 .72rem var(--font-display); letter-spacing:.12em; text-transform:uppercase; color:#cfd6e2; text-shadow:0 1px 2px #000; margin-right:.15rem; }
+    .sc-oc { display:inline-flex; align-items:center; gap:.15rem; padding:.05rem .4rem .05rem .1rem; background:rgba(6,9,16,.82); border:1px solid rgba(214,179,106,.45); cursor:var(--hand); font:600 .82rem var(--font-ui); color:#f3e6c0; font-variant-numeric:tabular-nums; }
+    .sc-oc:hover { border-color:#f0d048; background:rgba(40,32,12,.9); } .sc-oc canvas { width:3.2rem; height:1.9rem; }
+    .sc-oc.foe { border-color:rgba(255,92,106,.65); color:#ffc2b8; cursor:default; } .sc-oc.none { cursor:default; color:#aab3c0; border-color:rgba(255,255,255,.18); font-weight:400; padding-left:.4rem; }
+    @container (max-height: 5.5rem) { .sc-pc { display:none; } }
+    @container (max-height: 3.2rem) { .sc-orb, .sc-post > canvas { display:none; } }
   `);
 
   const bump = css => css.replace(/(^|[}])([^{}]*)[{]/g, (m, a, sel) => a + sel.replace(/[/][*][^]*?[*][/]/g, '').split(',').map(s => s.trim()).filter(Boolean).map(s => ':root:root ' + s).join(', ') + ' {');   // raise specificity over the theme-v2 .panel/.btn rules
@@ -132,7 +154,7 @@
       const S = ctx.S, pid = ctx.params.star !== undefined ? ctx.params.star : G.sel.star, p = S.planets[pid];
       const st = { pid, sliders: [], labels: [] };
       this.st = st;
-      st.title = h('div.side-title'); st.card = h('div.sc-card'); st.stats = h('div.sc-stats'); st.note = h('div'); st.sl = h('div.sc-sliders'); st.build = h('div.sc-build');
+      st.title = h('div.side-title'); st.card = h('div.sc-card'); st.stats = h('div.sc-stats'); st.note = h('div'); st.sl = h('div.sc-sliders'); st.build = h('div.sc-build'); st.post = h('div.sc-post');
       LABELS.forEach(([name, key, color], i) => {
         const lbl = h('span', name, h('small', ''));
         const s = UI.slider({ label: lbl, color, value: p.sliders[i], step: 4, min: 0, max: 100, fmt: () => '',
@@ -141,7 +163,7 @@
         st.sliders.push(s); st.labels.push(lbl); st.sl.appendChild(s);
       });
       st.sync = () => this.refresh(host, ctx);
-      host.appendChild(st.title); host.appendChild(st.card); host.appendChild(st.stats); host.appendChild(st.note); host.appendChild(st.sl); host.appendChild(st.build);
+      host.appendChild(st.title); host.appendChild(st.card); host.appendChild(st.stats); host.appendChild(st.note); host.appendChild(st.sl); host.appendChild(st.build); host.appendChild(st.post);
       this.refresh(host, ctx);
     },
     refresh(host, ctx) {
@@ -149,7 +171,7 @@
       const c = Q.colony(S, st.pid); if (!c || c.owner !== S.playerId) { ctx.defaultPanel(); return; }
       const E = S.empires[c.owner];
       // title (click to rename)
-      UI.mount(st.title, h('span.nm', { style: { cursor: 'pointer' }, tip: 'Click to rename', onclick: async () => { const n = await UI.prompt('Rename this planet', c.name, { maxlength: 11 }); if (n) { G.order({ t: 'rename', planet: c.id, name: n }); } } }, c.name),
+      UI.mount(st.title, h('span.nm', { style: { cursor: 'var(--hand)' }, tip: 'Click to rename', onclick: async () => { const n = await UI.prompt('Rename this planet', c.name, { maxlength: 11 }); if (n) { G.order({ t: 'rename', planet: c.id, name: n }); } } }, c.name),
         h('span.own', h('span.empire-dot', { style: { '--c': 'var(--emp' + E.color + ')' } }), E.plural));
       if (S.planets.filter(p => p.owner === S.playerId).length > 1) {                 // ◀ ▶ step through your colonies without the map (F2 / F3)
         const cyc = (dir, tip) => h('button.cyc' + (dir > 0 ? '.nx' : ''), { type: 'button', 'aria-label': tip.replace(/<[^>]+>/g, ''), tip, onclick: () => UI.Galaxy.cycleColony(dir) });
@@ -196,9 +218,38 @@
         h('div.sc-btns', UI.button('Ships', () => chooseBuild(c, E), { small: true }), UI.button('Reloc', () => ctx.show('reloc', { planet: c.id }), { small: true, tip: 'Set the rally point for newly built ships' }),
           UI.button('Trans', () => ctx.show('trans', { planet: c.id }), { small: true, tip: 'Send up to half of the population to another colony', disabled: c.pop < 2 })),
         rallyLine(c, E));
+      postcard(st, c, E);
     },
     dispose() { this.st = null; },
   });
+
+  // the colony postcard (desktop): the colony art for this world (domes on a hostile planet, mines on a barren one, a fortress when well defended,
+  // smog when waste builds up, industry when the factories are many, else a city), what the colony is, and what is in orbit — your ships (a click
+  // opens their deployment) and any foreign ones
+  function postcard(st, c, E) {
+    if (UI.Phone && UI.Phone.active()) return;
+    const S = G.S, WA = M.Gfx && M.Gfx.WorldArt;
+    const path = WA && WA.enabled && WA.colony ? WA.colony(c, { fortified: c.bases >= 8 || c.shield >= 10, polluted: c.waste > 0 && c.readouts.eco.text === 'WASTE', industrial: c.factories >= 120 }) : null;
+    if (st.postKey !== path) { st.postKey = path; st.postArt = path ? WA.canvas(path, 640, 300, { fx: 0.5, fy: 0.6 }) : null; }
+    if (!st.postArt) { UI.clear(st.post); st.post.style.display = 'none'; return; }
+    st.post.style.display = '';
+    const capital = E.capital === c.id, pop = U.fmt(c.pop) + ' million ' + (c.pop === 1 ? 'colonist' : 'colonists');
+    const cap = h('div.sc-pc', h('b', capital ? 'Imperial capital' : c.factories >= 120 ? 'Industrial world' : c.bases >= 8 || c.shield >= 10 ? 'Fortified colony' : 'Colony'), h('span', pop + ' · ' + U.fmt(c.factories) + ' factories'));
+    const orb = h('div.sc-orb', h('span.k', 'In orbit'));
+    const mine = S.fleets.find(f => f.owner === E.id && f.star === c.id);
+    if (mine) mine.ships.forEach((n, slot) => {
+      if (!(n > 0) || !E.designs[slot]) return;
+      orb.appendChild(h('span.sc-oc', { tip: '<b>' + E.designs[slot].name + '</b> × ' + n + '<br>Click to send them somewhere', onclick: () => { G.sel.fleet = mine.id; UI.Side.show('fleetDeploy', { star: c.id, fleet: mine.id }); } },
+        shipCanvas(E, slot, 44, 26), U.fmt(n)));
+    });
+    for (const f of S.fleets) {
+      if (f.owner === E.id || f.star !== c.id) continue;
+      const O = S.empires[f.owner], n = f.ships.reduce((a, b) => a + (b | 0), 0); if (!O || !n) continue;
+      orb.appendChild(h('span.sc-oc.foe', { tip: n + ' ' + O.name + ' ' + (n === 1 ? 'ship' : 'ships') + ' in orbit' }, UI.icon('warning'), U.fmt(n) + ' ' + O.name));
+    }
+    if (orb.children.length === 1) orb.appendChild(h('span.sc-oc.none', 'No ships'));
+    UI.mount(st.post, st.postArt, cap, orb);
+  }
 
   function cycleBuild(c, E, dir) {
     const slots = E.designs.map((d, i) => d ? i : -1).filter(i => i >= 0); if (E.mods.stargate && !G.S.planets[c.id].stargate) slots.push(-1);

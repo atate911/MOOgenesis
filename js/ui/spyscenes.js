@@ -43,7 +43,7 @@
     .spy-hd .race { font:400 1.7rem/1 var(--font-title); letter-spacing:.08em; text-transform:uppercase; color:var(--brass-hi); }
     .spy-hd small { display:block; margin-top:.2rem; font:400 .9rem var(--font-ui); color:var(--mist); letter-spacing:0; text-transform:none; }
     .spy-grid { display:grid; grid-template-columns:1fr 1fr; gap:.55rem; }
-    .spy-fld { --c:var(--cyan); display:flex; align-items:center; gap:.65rem; padding:.55rem .75rem; text-align:left; cursor:pointer; color:var(--ivory); background:rgba(255,255,255,.04); border:1px solid color-mix(in srgb, var(--c) 55%, #000); font:inherit; }
+    .spy-fld { --c:var(--cyan); display:flex; align-items:center; gap:.65rem; padding:.55rem .75rem; text-align:left; cursor:var(--hand); color:var(--ivory); background:rgba(255,255,255,.04); border:1px solid color-mix(in srgb, var(--c) 55%, #000); font:inherit; }
     .spy-fld:hover, .spy-fld:focus-visible { background:color-mix(in srgb, var(--c) 18%, transparent); outline:none; box-shadow:0 0 14px color-mix(in srgb, var(--c) 35%, transparent); }
     .spy-fld .ico { width:1.7rem; height:1.7rem; color:var(--c); flex:none; }
     .spy-fld .t b { display:block; font:400 1.1rem/1.1 var(--font-display); color:var(--c); letter-spacing:.03em; }

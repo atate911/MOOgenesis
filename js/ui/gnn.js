@@ -220,7 +220,7 @@
 
   // ================================================================== styles
   UI.css('gnn', `
-    .gnn { position:absolute; inset:0; overflow:hidden; background:#04061a; color:var(--ivory); font-family:var(--font-ui); cursor:pointer; outline:none;
+    .gnn { position:absolute; inset:0; overflow:hidden; background:#04061a; color:var(--ivory); font-family:var(--font-ui); cursor:var(--hand); outline:none;
       --u:12.8px; --cat:var(--cyan); --tone:var(--brass); --tone-hi:var(--brass-hi); --tone-lo:var(--brass-lo); --tone-ink:#261b06; user-select:none; -webkit-user-select:none; }
     .gnn[data-tone=breaking] { --tone:#ff8d97; --tone-hi:#ffd0d4; --tone-lo:#a3303d; --tone-ink:#3a0710; }
     .gnn[data-tone=top] { --tone:#ffd54f; --tone-hi:#fff0b0; --tone-lo:#a8842a; --tone-ink:#2e2204; }

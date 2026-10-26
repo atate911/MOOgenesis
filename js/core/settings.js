@@ -14,8 +14,9 @@
     newsMode: 'broadcast',  // 'broadcast' = the GNN studio scene; 'brief' = one list of the turn's headlines with a single Continue
     showTips: true,         // tooltips
     reduceMotion: false,    // less screen motion/particles
+    empireMarks: false,     // colour-blind aid: each empire's owner rings get a pattern of their own and its race code (HU, MR, …) on the galaxy map and its key
     mapLabels: 'auto',      // 'auto' | 'all' | 'owned'
-    mapGrid: true,          // star-chart graticule on the galaxy map
+    mapGrid: !(typeof window !== 'undefined' && window.MOO_PHONE),   // star-chart graticule on the galaxy map (the original had none; off by default on phones, where it crowded a small map)
     turnLogOpen: true,      // the galaxy sidebar's "Last turn" log is expanded
     mapRoutes: true,
     mapDeclutter: false,    // the galaxy map's declutter mode (button / V)        // fleet route lines and colony rally lines on the galaxy map (the map's route button / L)
@@ -25,6 +26,8 @@
     gpu: true,              // use WebGL2 shader renderers when available (false = Canvas2D fallbacks)
     perfOverlay: false,     // F3 overlay: fps, frame ms, worker utilisation, GPU (phones: a row in Options)
     phoneHints: false,      // phones: the first-run card on touch controls has been shown (js/ui/phone-galaxy.js)
+    phoneVisits: 0,         // phones: page loads in a browser tab (not the installed app), counted for the install hint
+    installHint: false,     // phones: the "add to home screen" card has been shown (once, from the second visit; js/ui/phone-galaxy.js)
     haptics: true,          // phones: short vibrations on Next turn, slider steps, switches, sheet snaps and errors (UI.Phone.haptic)
     phoneMode: 'auto',      // the phone layout: 'auto' (a coarse-pointer device 600px or narrower) | 'on' | 'off' — read by index.html's gate at load; a change needs a reload
     lastSetup: null,        // remembered new-game choices

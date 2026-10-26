@@ -2432,6 +2432,12 @@
   const MOOD_FX = { neutral: { c: '#ffffff', a: 0, rim: null }, pleased: { c: '#ffc85a', a: 0.2, rim: '#ffd890' }, angry: { c: '#ff2a3a', a: 0.3, rim: '#ff5a50' }, worried: { c: '#3d6bff', a: 0.26, rim: '#7a9cff' }, scheming: { c: '#a855ff', a: 0.26, rim: '#c890ff' } };
   const HALLS = {};
   function audGeo(w, h) {
+    // portrait screens (phones): sizing by height then clamping to 44 % of the width left a small leader standing at the bottom edge, where the
+    // dialogue panel covers the lower half of the screen. There the leader is sized by the width, centred, and stands in the upper band.
+    if (w < h * 0.8) {
+      const lw = min(w * 0.92, h * 0.4), lh = lw / 0.8, cx = w * 0.5;
+      return { w: w, h: h, cx: cx, L: { x: cx - lw / 2, y: h * 0.1, w: lw, h: lh }, hz: h * 0.56, fy: h * 0.78, portrait: true };
+    }
     let lh = h * 0.9, lw = lh * 0.8;
     if (lw > w * 0.44) { lw = w * 0.44; lh = lw / 0.8; }
     const cx = w * 0.625;

@@ -153,7 +153,7 @@
     .rc-slot.pickable .rc-pic { animation:rc-pick 1.4s ease-in-out infinite; }
     @keyframes rc-pick { 0%, 100% { box-shadow:0 0 0 2px rgba(243,220,160,.55); } 50% { box-shadow:0 0 0 2px rgba(243,220,160,.95), 0 0 .9rem rgba(243,220,160,.55); } }
     @media (prefers-reduced-motion: reduce) { .rc-slot.pickable .rc-pic { animation:none; box-shadow:0 0 0 2px rgba(243,220,160,.85); } }
-    .rc-pic { --ch:.4rem; position:relative; flex:none; height:100%; aspect-ratio:4 / 5; cursor:pointer; background:linear-gradient(135deg, var(--brass-hi), var(--c) 30%, #12183e 60%, var(--c)); }
+    .rc-pic { --ch:.4rem; position:relative; flex:none; height:100%; aspect-ratio:4 / 5; cursor:var(--hand); background:linear-gradient(135deg, var(--brass-hi), var(--c) 30%, #12183e 60%, var(--c)); }
     .rc-pic canvas { position:absolute; left:3px; top:3px; width:calc(100% - 6px); height:calc(100% - 6px); background:#050818; }
     .rc-pic .rc-key { position:absolute; left:.2rem; top:.15rem; z-index:2; min-width:1.15rem; padding:0 .3rem; text-align:center; font:700 .8rem/1.3rem var(--font-ui); color:var(--brass-hi); background:rgba(5,8,24,.78); border:1px solid rgba(214,179,106,.5); }
     .rc-main { flex:1 1 0; min-width:0; display:flex; flex-direction:column; justify-content:space-between; gap:.2rem; }
@@ -212,6 +212,17 @@
     .rp-legend { display:flex; gap:1rem; align-items:center; margin-bottom:.5rem; color:var(--mist); font-size:.9rem; } .rp-legend i { display:inline-block; width:.7rem; height:.7rem; margin-right:.35rem; vertical-align:-.05rem; } .rp-legend .l i { background:var(--gold); } .rp-legend .h i { background:var(--fog); }
     .rp-right { min-height:0; display:flex; flex-direction:column; }
     .rp-note { margin:.2rem 0 .6rem; padding:.5rem .8rem; border-left:3px solid var(--rose); background:rgba(255,92,106,.07); font-size:.98rem; } .rp-note b { color:var(--ivory); }
+    /* nothing on file: one dossier card over their homeworld instead of six empty field boxes */
+    .rp-dossier { --ch:.6rem; position:relative; flex:1 1 auto; min-height:12rem; overflow:hidden; display:flex; flex-direction:column; justify-content:flex-end; gap:.6rem; padding:1.2rem 1.4rem; background:#05070f; box-shadow:inset 0 0 0 1px rgba(214,179,106,.35); }
+    .rp-dossier > canvas { position:absolute; inset:0; width:100%; height:100%; object-fit:cover; filter:saturate(.75) brightness(.55); }
+    .rp-dossier::before { content:""; position:absolute; inset:0; background:linear-gradient(180deg, rgba(3,5,14,.15) 30%, rgba(3,5,14,.88)); }
+    .rp-dossier > :not(canvas) { position:relative; }
+    .rp-dossier .k { font:400 .82rem var(--font-display); letter-spacing:.24em; text-transform:uppercase; color:var(--rose); }
+    .rp-dossier .t { font:400 1.6rem/1.15 var(--font-title); color:var(--ivory); }
+    .rp-dossier .d { max-width:40rem; color:#d5dbea; font-size:1rem; line-height:1.4; }
+    .rp-dossier .hw { position:absolute; right:1rem; top:.8rem; font:400 .85rem var(--font-display); letter-spacing:.14em; text-transform:uppercase; color:rgba(236,230,211,.75); }
+    .rp-dossier .btn { align-self:flex-start; }
+    .rp-noteh { flex:1 1 auto; min-height:0; display:flex; flex-direction:column; }
 
     /* ---------------------------------------------------- Status */
     .sx-grid { flex:1 1 auto; min-height:0; display:grid; grid-template-columns:repeat(3, minmax(0,1fr)); grid-template-rows:repeat(2, minmax(0,1fr)); gap:.75rem; }
@@ -489,7 +500,19 @@
       if (!list.length) UI.mount(box.list, h('div.empty', data.rep ? 'Nothing known yet' : '—'));
       else UI.mount(box.list, list.map(t => h('div.rp-t.' + (t.have ? 'have' : 'lack'), { tip: '<b>' + U.esc(t.name) + '</b>' + (t.desc ? '<br>' + U.esc(t.desc) : '') + (t.have ? '' : '<br><span class="t-gold">You do not have this technology.</span>') }, h('span.lv', t.level > 1 ? 'L' + t.level : '·'), h('span', t.name))));
     }
-    UI.mount(P.note, data.rep ? null : h('div.rp-note', h('b', 'No intelligence. '), 'Put some of your budget into a spy network on the Races screen and your agents will start reporting the ' + T.name + ' technologies.'));
+    // nothing on file: one dossier card over their homeworld (the six field boxes would all read "—")
+    P.techs.style.display = data.rep ? '' : 'none'; if (P.prompt) P.prompt.style.visibility = data.rep ? '' : 'hidden';
+    if (data.rep) UI.clear(P.note);
+    else {
+      const WA = M.Gfx && M.Gfx.WorldArt, path = WA && WA.enabled ? WA.race(T.race, 'homeworld') : null, R = M.Data.Races && M.Data.Races[T.race];
+      if (P.dossKey !== path) { P.dossKey = path; P.dossArt = path ? WA.canvas(path, 960, 540, { fx: 0.5, fy: 0.45 }) : null; }
+      const toRaces = () => { UI.sfx('click'); if (P.from === 'races') goBack(null, P); else UI.Screens.go('races', { from: 'galaxy' }); };
+      UI.mount(P.note, h('div.rp-dossier.ch', P.dossArt, R && R.homeworld ? h('div.hw', 'Homeworld · ' + R.homeworld) : null,
+        h('div.k', 'No intelligence on file'), h('div.t', 'What the ' + T.name + ' know is still their secret'),
+        h('div.d', 'Put part of your budget into a spy network against the ' + T.name + ' on the Races screen. Your agents will report their technologies here every year they stay hidden.'),
+        UI.button('Spy networks', toRaces, { small: true })));
+    }
+    P.note.className = data.rep ? '' : 'rp-noteh';
     UI.mount(P.legend, data.rep ? [h('span.l', h('i'), 'You lack it (' + lack + ')'), h('span.h', h('i'), 'You have it (' + (known - lack) + ')')] : null);
     UI.mount(P.sub, 'Intelligence on the ', h('b', T.name), ' · leader ', h('b', T.leader), ' · ', h('b', pv.treatyName.toLowerCase()), ' · attitude ', h('b', pv.label.toLowerCase()));
     P.btnA.disabled = !(pv.contact && T.alive); P.btnA.classList.toggle('disabled', P.btnA.disabled);
@@ -508,14 +531,14 @@
       const r = h('span.r'), list = h('div.rp-tl');
       return { r, list, el: h('div.rx-box.ch.rp-tb', h('div.rx-bt', UI.icon(FIELD_ICON[f]), name, r), list) };
     });
-    P.note = h('div'); P.legend = h('div.rp-legend');
-    const right = h('div.rp-right', P.note, P.legend, h('div.rp-techs', P.boxes.map(b => b.el)));
+    P.note = h('div'); P.legend = h('div.rp-legend'); P.techs = h('div.rp-techs', P.boxes.map(b => b.el));
+    const right = h('div.rp-right', P.note, P.legend, P.techs);
     P.sub = h('div.rx-sub');
     P.btnPrev = UI.button('◀', () => cycleReport(-1), { small: true, tip: 'Previous empire (←)' }); P.btnNext = UI.button('▶', () => cycleReport(1), { small: true, tip: 'Next empire (→)' });
     P.btnA = UI.button('Audience', () => { const j = P.emp; UI.sfx('open'); if (UI.Audience && UI.Audience.open) UI.Audience.open(j, { from: 'report', fromParams: { empire: j, from: P.from, fromParams: P.fromParams } }); else UI.toast('The audience chamber is not built yet', 'warn'); }, { kbd: 'A' });
     P.btnO = UI.button('OK', () => goBack('confirm', P), { primary: true, kbd: 'Space', sfx: 'confirm' });
     P.el = h('div.rx', h('div.rx-sheet.panel', h('div.rx-head', h('div.rx-title', 'Report'), P.sub), h('div.rp-body', P.left, right),
-      h('div.rx-foot', h('div.rx-prompt', 'Techs in white are ones you do not have yet.'), P.btnPrev, P.btnNext, P.btnA, P.btnO)));
+      h('div.rx-foot', P.prompt = h('div.rx-prompt', 'Techs in white are ones you do not have yet.'), P.btnPrev, P.btnNext, P.btnA, P.btnO)));
     root.appendChild(P.el);
     const scr = { screen: 'report' };
     for (const k of ['o', 'space']) UI.bindKey(k, () => goBack('confirm', P), scr);

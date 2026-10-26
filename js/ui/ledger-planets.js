@@ -25,7 +25,7 @@
     .lp-tbl td.idx { color:var(--rose); opacity:.85; width:2.4rem; }
     .lp-tbl td.nm { font-family:var(--font-title); font-size:1.1rem; color:var(--brass-hi); }
     .lp-tbl td.dim, .lp-tbl .dim { color:var(--fog); opacity:1; }
-    .lp-tbl tbody tr { cursor:pointer; }
+    .lp-tbl tbody tr { cursor:var(--hand); }
     .lp-tbl tbody tr:hover { background:rgba(98,216,255,.09); }
     .lp-tbl tbody tr.sel { background:rgba(214,179,106,.17); box-shadow:inset 3px 0 0 var(--brass); }
     .lp-tbl tbody tr.unrest td:first-child { box-shadow:inset 3px 0 0 var(--ember); } .lp-tbl tbody tr.rebel td:first-child { box-shadow:inset 3px 0 0 var(--rose); }

@@ -62,7 +62,7 @@ html:root:root[data-phone] :is(.op-hint, .ld-hint) { font-size: max(12px, .85rem
 html[data-phone] .ph-back {
   position: fixed; z-index: 250; top: calc(.45rem + env(safe-area-inset-top)); left: calc(.45rem + env(safe-area-inset-left));
   display: none; align-items: center; gap: .25rem; min-height: var(--tap); padding: .25rem .9rem .25rem .55rem; border: 1px solid var(--brass-lo);
-  background: rgba(8, 12, 34, .92); color: var(--brass-hi); font: 400 .95rem var(--font-display); letter-spacing: .06em; cursor: pointer;
+  background: rgba(8, 12, 34, .92); color: var(--brass-hi); font: 400 .95rem var(--font-display); letter-spacing: .06em; cursor: var(--hand);
   clip-path: polygon(.4rem 0, 100% 0, 100% calc(100% - .4rem), calc(100% - .4rem) 100%, 0 100%, 0 .4rem);
 }
 html[data-phone] .ph-back.on { display: inline-flex; }
@@ -114,14 +114,14 @@ html:root:root[data-phone] .gx-side:not(.gx-float)[data-held] { z-index: 21; }
 html:root:root[data-phone] .gx-side:not(.gx-float) .panel { box-shadow: 0 -8px 22px rgba(0, 0, 0, .55), 0 0 0 1px rgba(0, 0, 0, .8); }
 html:root:root[data-phone] .gx-side:not(.gx-float)[data-sheet="strip"] .gx-sidebody { overflow: hidden; }
 html:root:root[data-phone] .gx-side:not(.gx-float):not([data-sheet="full"]) > div:not(.panel):not(.ph-grip) { display: none; }   /* the turn log: full only */
-html:root:root[data-phone] .gx-side:not(.gx-float) .side-title { cursor: pointer; }
+html:root:root[data-phone] .gx-side:not(.gx-float) .side-title { cursor: var(--hand); }
 html:root:root[data-phone] .gx-sidebody { padding: .3rem .5rem .6rem; }   /* the tab bar under the sheet pads for the home indicator */
 /* a panel opened beside a map tap: pinned to the bottom edge of the map instead of UI.Side.place()'s inline position */
 html:root:root[data-phone] .gx-side.gx-float {
   left: .5rem !important; top: auto !important; right: .5rem; bottom: .5rem; width: auto; max-height: 58%;
 }
 /* top: year / treasury plate and the message list stack, leaving the map's control column free on the right */
-html:root:root[data-phone] .gx-top { left: .4rem; right: calc(var(--tap) + 1.1rem); top: .35rem; flex-direction: column; align-items: stretch; gap: .3rem; }
+html:root:root[data-phone] .gx-top { left: .4rem; right: .4rem; top: .35rem; flex-direction: column; align-items: stretch; gap: .3rem; }
 html:root:root[data-phone] .gx-hud { flex-wrap: wrap; gap: .2rem .7rem; padding: .3rem .6rem; font-size: .9rem; }
 html:root:root[data-phone] .gx-hud .y { font-size: 1.15rem; }
 html:root:root[data-phone] .gx-msg { margin-left: 0; max-width: none; }
@@ -130,6 +130,10 @@ html:root:root[data-phone] .gmap-ctrl .btn, html:root:root[data-phone] .gmap-ctr
    a half-open sheet never covers its lower buttons; when the uncovered band is too short for one column it becomes two (.ph-ctl-tight) */
 html:root:root[data-phone] .gmap-ctrl { top: auto; bottom: calc(var(--ph-inset, 0px) + .5rem); transition: bottom .22s var(--ease); }
 html:root:root[data-phone] .gx.ph-ctl-tight .gmap-ctrl { display: grid; grid-template-columns: repeat(2, var(--tap)); }
+/* the column on a phone: Show all, Centre and More; More unfolds the key / routes / declutter toggles (galaxymap.js). + / − are gone: pinch and
+   double-tap zoom. With three buttons the column never reaches the HUD, so the HUD uses the map's whole width in portrait. */
+html:root:root[data-phone] .gmap-ctrl .gmap-zoom, html:root:root[data-phone] .gmap-ctrl:not(.open) .gmap-extra { display: none; }
+html:root:root[data-phone] .gmap-ctrl .gmap-btn.gmap-more { display: grid; }
 html[data-phone] .gmap canvas { -webkit-touch-callout: none; -webkit-user-select: none; user-select: none; }   /* a long press on the map is its tooltip, not iOS's callout */
 /* bottom bar: fixed tabs (phone-galaxy.js tags galaxy.js's own buttons) — Planets · Fleet · Tech · Races · More, then a wide Next turn.
    Game, Design and Map live in More (the game menu as a bottom sheet, gamemenu.js). Icon over label. */
@@ -220,7 +224,7 @@ html[data-phone] .ph-dz .dz-cvw { touch-action: pan-y; }
 html[data-phone] .ph-dz .dz-cvw .tag { display: none; }                                   /* "drag to turn" collided with the part labels; the reset button stays */
 html[data-phone] .ph-dz .ph-pv-reset {
   position: absolute; right: .35rem; bottom: .35rem; z-index: 2; min-height: var(--tap); padding: .2rem .8rem; border: 1px solid rgba(255, 255, 255, .25);
-  background: rgba(0, 0, 0, .55); color: #ddd; font: 400 .8rem var(--font-ui); cursor: pointer;
+  background: rgba(0, 0, 0, .55); color: #ddd; font: 400 .8rem var(--font-ui); cursor: var(--hand);
 }
 /* the six stat tiles: 3 × 2 */
 html[data-phone] .ph-dz .dz-strip { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: .35rem; }
@@ -257,7 +261,7 @@ html[data-phone] .ph-dz .ph-dz-id { display: grid; grid-template-columns: auto m
 html[data-phone] .ph-dz .dz-id { margin: 0; }
 html[data-phone] .ph-dz .ph-fold { border: 1px solid #4d4d4d; background: rgba(0, 0, 0, .3); }
 html[data-phone] .ph-dz .ph-fold-h {
-  display: flex; width: 100%; align-items: center; justify-content: space-between; min-height: var(--tap); padding: .3rem .7rem; border: 0; cursor: pointer;
+  display: flex; width: 100%; align-items: center; justify-content: space-between; min-height: var(--tap); padding: .3rem .7rem; border: 0; cursor: var(--hand);
   background: linear-gradient(180deg, #3d3d3d, #2c2c2c); color: #f2f2f2; font: 600 .9rem var(--font-display); letter-spacing: .08em; text-transform: uppercase;
 }
 html[data-phone] .ph-dz .ph-fold-ch { transition: transform .15s; } html[data-phone] .ph-dz .ph-fold.open .ph-fold-ch { transform: rotate(90deg); }
@@ -276,7 +280,7 @@ html[data-phone] .ph-dz .ph-pop-lk input { width: 1.4rem; height: 1.4rem; }
 html[data-phone] .ph-dz .dz-pop.ph-pop .dz-kf { flex-wrap: nowrap; overflow-x: auto; padding: .2rem .5rem .35rem; scrollbar-width: none; }
 html[data-phone] .ph-dz .dz-pop.ph-pop .dz-kf button { flex: none; min-height: var(--tap); padding: .2rem .8rem; }
 html[data-phone] .ph-dz .ph-pop-b { flex: 1 1 auto; min-height: 0; overflow-y: auto; overscroll-behavior: contain; display: flex; flex-direction: column; gap: .35rem; padding: .3rem .45rem .6rem; }
-html[data-phone] .ph-dz .ph-pc { flex: none; padding: .5rem .6rem; cursor: pointer; background: linear-gradient(180deg, #161616, #0a0a0a); box-shadow: 0 0 0 1px #000, inset 1px 1px 0 #2a2a2a, inset -1px -1px 0 #5a5a5a; }
+html[data-phone] .ph-dz .ph-pc { flex: none; padding: .5rem .6rem; cursor: var(--hand); background: linear-gradient(180deg, #161616, #0a0a0a); box-shadow: 0 0 0 1px #000, inset 1px 1px 0 #2a2a2a, inset -1px -1px 0 #5a5a5a; }
 html[data-phone] .ph-dz .ph-pc:active { background: linear-gradient(180deg, #2a2a2a, #141414); }
 html[data-phone] .ph-dz .ph-pc.cur { background: var(--o-sel, #7a4c12); }
 html[data-phone] .ph-dz .ph-pc.lock, html[data-phone] .ph-dz .ph-pc.conf { opacity: .55; }
@@ -462,6 +466,8 @@ html:root:root[data-phone] .rp-left { overflow: visible; } html:root:root[data-p
 html:root:root[data-phone] .rp-right { min-height: auto; }
 html:root:root[data-phone] .rp-techs { flex: none; grid-template-columns: repeat(2, minmax(0, 1fr)); grid-template-rows: none; }
 html:root:root[data-phone] .rp-tb .rp-tl { max-height: 11rem; }
+html:root:root[data-phone] .rp-dossier { min-height: 0; flex: none; padding: 6rem 1rem 1rem; }      /* the card grows with its text; the art shows above it */
+html:root:root[data-phone] .rp-dossier .t { font-size: 1.3rem; }
 /* racial stats: the six boxes in one column */
 html:root:root[data-phone] .sx-grid { flex: none; grid-template-columns: minmax(0, 1fr); grid-template-rows: none; gap: .5rem; }
 html:root:root[data-phone] .sx-row { grid-template-columns: .85rem 6.4rem minmax(0, 1fr) 2.6rem; min-height: var(--row); }
@@ -498,8 +504,13 @@ html:root:root[data-phone] .ov-modes { flex-direction: row; flex-wrap: wrap; } h
   html:root:root[data-phone] .sv-tl { top: 19%; left: 2%; max-width: 56%; }
   html:root:root[data-phone] .sv.plate .sv-tl { left: 2%; right: auto; align-items: flex-start; text-align: left; }
   html:root:root[data-phone] .sv-lab { font-size: .95rem; padding: .2rem .55rem; } html:root:root[data-phone] .sv-note { font-size: .88rem; }
-  html:root:root[data-phone] .sv-fleets, html:root:root[data-phone] .sv.plate .sv-fleets { top: 30%; right: 2%; max-width: 32%; max-height: 34%; }
-  html:root:root[data-phone] .sv-tile { width: 6.4rem; height: 4.2rem; }
+  html:root:root[data-phone] .sv-fleets, html:root:root[data-phone] .sv.plate .sv-fleets { top: 30%; right: 2%; max-width: 46%; max-height: 38%; }
+  /* the group heading on one line ("· in orbit" goes: this screen is the orbit), and design names (up to 12 letters) wrap under a fixed-height
+     ship picture instead of being cut to "COLONY SH…" */
+  html:root:root[data-phone] .sv-gh { white-space: nowrap; }
+  html:root:root[data-phone] .sv-tile { width: 7.4rem; height: auto; display: flex; flex-direction: column; }
+  html:root:root[data-phone] .sv-tile canvas { position: relative; inset: auto; flex: none; height: 3.1rem; }
+  html:root:root[data-phone] .sv-tile .nm { position: static; white-space: normal; overflow-wrap: anywhere; line-height: 1.15; padding: .1rem .3rem .2rem; }
   html:root:root[data-phone] .sv-star { top: 23%; left: 84%; }
   html:root:root[data-phone] .sv-info { left: 2%; right: 2%; min-width: 0; bottom: 2.6rem; }
   html:root:root[data-phone] .sv-icons { display: none; }                          /* the same population / factory counts are in the data panel */
@@ -549,6 +560,19 @@ html:root:root[data-phone] .su-fleet { min-height: 4rem; margin-top: .4rem; }
 html:root:root[data-phone] .su-note { font-size: .85rem; }
 html:root:root[data-phone] .su-id { display: none; }                                       /* the identity card repeats the two name fields above it */
 html:root:root[data-phone] .tl-r { min-height: var(--row); align-items: center; }
+/* the turn log on a phone: opaque (the map's control column and parsec ruler showed through it at full sheet height), and in portrait a chip in
+   the HUD (galaxy.js logChip) opens the whole log in a dialog, since the sheet shows it only at full height */
+html:root:root[data-phone] .gx-side .tl { margin-top: 0; border-top: 1px solid rgba(0, 0, 0, .8); }   /* no gap between the panel and the log for the map to show through */
+html:root:root[data-phone] .gx-side .tl-h { background: var(--pk-bar, #141920); }
+html:root:root[data-phone] .gx-side .tl-b { background: var(--pk-surface, #1a1f26); }
+html:root:root[data-phone] .gx-logc { display: inline-flex; align-items: center; gap: .3rem; min-height: var(--tap); padding: 0 .6rem; margin-left: auto; margin-right: -.2rem; cursor: var(--hand);
+  border: 1px solid rgba(255, 255, 255, .22); color: var(--pk-ink, #e6eaf0); font-size: .9rem; }
+html:root:root[data-phone] .gx-logc .ico { width: 1rem; height: 1rem; }
+html:root:root[data-phone] .gx-logc + span { flex-basis: auto; }
+html:root:root[data-phone] .gx-hud:has(.gx-logc) { width: 100%; }
+html:root:root[data-phone] .gx-logc.r { border-color: #ff7a6a; color: #ffb3a8; } html:root:root[data-phone] .gx-logc.w { border-color: #f0a040; color: #ffd08a; }
+html:root:root[data-phone] .tl-modal .tl-sheet { margin: 0; max-height: none; font-size: .95rem; }
+html:root:root[data-phone] .tl-modal .tl-b { border: 0; background: none; padding: 0; }
 html:root:root[data-phone] .tl-a { display: inline-block; padding: .55rem .1rem; margin: -.55rem 0; }   /* a taller tap box for the turn log's links, same line height */
 html[data-phone] #toasts { bottom: calc(var(--ph-strip) + var(--tap) + 1.4rem + env(safe-area-inset-bottom)); max-width: 94vw; }
 
@@ -564,9 +588,12 @@ html[data-phone] #toasts { bottom: calc(var(--ph-strip) + var(--tap) + 1.4rem + 
   html[data-phone] .gx-sidebody:has(.ph-sum) .sm-range { display: block; }
   html:root:root[data-phone] .gx-side:not(.gx-float)[data-sheet] .gx-sidebody { overflow-y: auto; }
   html:root:root[data-phone] .gx-side:not(.gx-float):not([data-sheet="full"]) > div:not(.panel):not(.ph-grip) { display: block; }
+  html:root:root[data-phone] .gx-logc { display: none; }                         /* landscape: the log is in the sidebar column */
   html:root:root[data-phone] .gx-side.gx-float { right: auto; width: min(24rem, 52%); max-height: calc(100% - 1rem); }
-  html:root:root[data-phone] .gx-top { right: calc(2 * var(--tap) + 1.4rem); flex-direction: row; }
-  html:root:root[data-phone] .gmap-ctrl { top: .4rem; bottom: auto; display: grid; grid-template-columns: repeat(2, var(--tap)); }   /* seven controls in a 390px-tall map: two columns */
+  html:root:root[data-phone] .gx-top { right: calc(var(--tap) + 1.1rem); flex-direction: row; }
+  html:root:root[data-phone] .gmap-ctrl { top: .4rem; bottom: auto; display: flex; flex-direction: column; }                     /* Show all, Centre, More: one column */
+  html:root:root[data-phone] .gmap-ctrl.open { display: grid; grid-template-columns: repeat(2, var(--tap)); }                    /* unfolded: six, two wide */
+  html:root:root[data-phone] .gx:has(.gmap-ctrl.open) .gx-top { right: calc(2 * var(--tap) + 1.4rem); }
   html:root:root[data-phone] .gx-bar.ph-tabs .btn { flex-direction: row; gap: .35rem; min-height: var(--tap); padding: .2rem .3rem; }
   html:root:root[data-phone] .gx-bar.ph-tabs .btn .ico { width: 1.15rem; height: 1.15rem; }
   html:root:root[data-phone] .gmap-mini { bottom: .5rem !important; }

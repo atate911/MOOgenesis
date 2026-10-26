@@ -48,7 +48,7 @@
     .au-menu { display:flex; flex-direction:column; gap:.05rem; margin-top:.55rem; padding-top:.5rem; border-top:1px solid rgba(214,179,106,.3); min-height:0; overflow-y:auto; }
     .au-menu:empty { display:none; }
     .au-mh { margin:0 0 .15rem .15rem; color:var(--brass); font:400 .92rem var(--font-display); letter-spacing:.1em; text-transform:uppercase; }
-    .au-item { position:relative; display:flex; align-items:baseline; gap:.75rem; width:100%; padding:.3rem .7rem .3rem .5rem; border:0; border-left:3px solid transparent; background:transparent; text-align:left; cursor:pointer; color:var(--ivory); font:400 1.14rem/1.25 var(--font-title); animation:au-item-in .3s var(--ease) both; animation-delay:calc(var(--i, 0) * 28ms); }
+    .au-item { position:relative; display:flex; align-items:baseline; gap:.75rem; width:100%; padding:.3rem .7rem .3rem .5rem; border:0; border-left:3px solid transparent; background:transparent; text-align:left; cursor:var(--hand); color:var(--ivory); font:400 1.14rem/1.25 var(--font-title); animation:au-item-in .3s var(--ease) both; animation-delay:calc(var(--i, 0) * 28ms); }
     @keyframes au-item-in { from { opacity:0; transform:translateX(-.5rem); } to { opacity:1; transform:none; } }
     .au-item kbd { flex:none; min-width:1.5rem; font:600 .82rem var(--font-ui); color:var(--brass); text-align:center; padding:.02rem .25rem; box-shadow:inset 0 0 0 1px rgba(214,179,106,.45); }
     .au-item .d { margin-left:auto; padding-left:1rem; color:var(--mist); font:400 .9rem var(--font-ui); white-space:nowrap; }
@@ -373,7 +373,8 @@
     let ok = false;
     if (S && S.audience && S.audience.draw && A.race) { try { S.audience.draw(g, w, hh, t, { race: A.race, mood: A.mood, talking: A.talking, color: A.color }); ok = true; } catch (e) { if (!A.warned) { A.warned = 1; console.warn('[audience] scene failed', e); } } }
     if (!ok) fallbackScene(g, w, hh, t);
-    if (!drawEnvoyArt(g, w, hh, t)) drawEmperor(g, w, hh, t, A.myColor, A.talking ? 1 : 0);
+    // your envoy stands at the left; a portrait screen (phones) has no room beside the leader, who is centred there (Scenes audGeo)
+    if (w >= hh * 0.8 && !drawEnvoyArt(g, w, hh, t)) drawEmperor(g, w, hh, t, A.myColor, A.talking ? 1 : 0);
     // materialise: scan-lines clear and the room brightens when the audience opens; "signal lost" when the ambassador is recalled
     const k = clamp((t - A.openT) / 1.1, 0, 1);
     if (k < 1) {

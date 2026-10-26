@@ -20,7 +20,7 @@
     .lf-body { flex:1 1 auto; min-height:0; overflow:auto; background:rgba(3,5,18,.5); box-shadow:inset 0 0 0 1px rgba(214,179,106,.2); }
     .lf-grid { --cols:15.5rem repeat(6, minmax(6.6rem, 1fr)); min-width:min-content; display:flex; flex-direction:column; min-height:100%; }
     .lf-grid .lf-row.total { margin-top:auto; }
-    .lf-row { display:grid; grid-template-columns:var(--cols); align-items:stretch; border-bottom:1px solid rgba(255,255,255,.05); cursor:pointer; transition:background .1s; }
+    .lf-row { display:grid; grid-template-columns:var(--cols); align-items:stretch; border-bottom:1px solid rgba(255,255,255,.05); cursor:var(--hand); transition:background .1s; }
     .lf-row:hover { background:rgba(98,216,255,.09); } .lf-row.head { position:sticky; top:0; z-index:2; cursor:default; background:#0d1540; border-bottom:1px solid rgba(214,179,106,.45); }
     .lf-row.head:hover { background:#0d1540; } .lf-row.total { position:sticky; bottom:0; z-index:2; cursor:default; background:#0d1540; border-top:1px solid rgba(214,179,106,.45); border-bottom:0; }
     .lf-row.total:hover { background:#0d1540; }
@@ -29,7 +29,7 @@
     .lf-h .sub { display:block; margin-top:.15rem; font-size:.9rem; color:var(--mist); letter-spacing:.04em; }
     .lf-h.none .nm { color:var(--fog); font-family:var(--font-display); font-size:.95rem; letter-spacing:.07em; text-transform:uppercase; }
     .lf-h.st { text-align:left; padding-left:.9rem; border-left:0; font:400 .95rem var(--font-display); color:var(--brass); letter-spacing:.07em; text-transform:uppercase; align-self:center; }
-    .lf-scrapmode .lf-h:not(.none):not(.st) { cursor:pointer; box-shadow:inset 0 -2px 0 var(--rose); background:rgba(255,92,106,.1); }
+    .lf-scrapmode .lf-h:not(.none):not(.st) { cursor:var(--hand); box-shadow:inset 0 -2px 0 var(--rose); background:rgba(255,92,106,.1); }
     .lf-scrapmode .lf-h:not(.none):not(.st):hover { background:rgba(255,92,106,.24); }
     .lf-st { display:flex; align-items:center; gap:.75rem; padding:.45rem .6rem .45rem .9rem; min-width:0; }
     .lf-pic { flex:none; width:3.7rem; height:3.7rem; display:grid; place-items:center; position:relative; }
@@ -51,7 +51,7 @@
     .lf-maint .x { color:var(--mist); font-size:.88rem; }
     .lf-note { flex:1; color:var(--mist); font-size:.88rem; }
     .lf-foot .sp { flex:1; }
-    .lf-srow { display:grid; grid-template-columns:9rem 11.5rem minmax(21rem, 1.7fr) minmax(8rem, 1fr) minmax(8rem, 1fr) 6.5rem; gap:.9rem; align-items:center; padding:.7rem 1rem; border-bottom:1px solid rgba(255,255,255,.06); cursor:pointer; transition:background .1s; }
+    .lf-srow { display:grid; grid-template-columns:9rem 11.5rem minmax(21rem, 1.7fr) minmax(8rem, 1fr) minmax(8rem, 1fr) 6.5rem; gap:.9rem; align-items:center; padding:.7rem 1rem; border-bottom:1px solid rgba(255,255,255,.06); cursor:var(--hand); transition:background .1s; }
     .lf-srow:hover { background:rgba(98,216,255,.07); } .lf-srow.none { cursor:default; opacity:.55; } .lf-srow.none:hover { background:none; }
     .lf-spic { position:relative; height:5.2rem; display:grid; place-items:center; background:radial-gradient(ellipse at 50% 50%, rgba(40,58,140,.55), rgba(5,8,26,.4) 70%); box-shadow:inset 0 0 0 1px rgba(214,179,106,.32); }
     .lf-spic canvas { width:100%; height:100%; object-fit:contain; }

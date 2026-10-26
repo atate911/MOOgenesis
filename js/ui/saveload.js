@@ -18,6 +18,33 @@
   const plural = (n, a, b) => n + ' ' + (n === 1 ? a : b);
   const titleOf = mode => (mode === 'save' ? 'Save game' : 'Load game');
 
+  // the slot's thumbnail: the galaxy sketch saved in its metadata (MOO.Save meta.map: x, y, what the player knew of each star), drawn as a
+  // star chart — dim points for unexplored stars, pale for explored free ones, banner colours for owned ones, a ring on the player's capital
+  function mapThumb(meta) {
+    const m = meta && meta.map, box = h('div.sl-map');
+    if (!m || !m.d || typeof atob !== 'function') { box.classList.add('none'); return box; }
+    const W = 120, H = 76, dpr = Math.min(2, window.devicePixelRatio || 1), c = h('canvas', { width: Math.round(W * dpr), height: Math.round(H * dpr) }), g = c.getContext('2d');
+    box.appendChild(c);
+    let raw = ''; try { raw = atob(m.d); } catch (e) { box.classList.add('none'); return box; }
+    const cs = getComputedStyle(document.documentElement), emp = [0, 1, 2, 3, 4, 5].map(k => (cs.getPropertyValue('--emp' + k) || '').trim() || '#ccc');
+    g.scale(dpr, dpr);
+    const pad = 5, k = Math.min((W - 2 * pad) / m.w, (H - 2 * pad) / m.h), ox = (W - m.w * k) / 2, oy = (H - m.h * k) / 2;
+    const X = v => ox + v / 255 * m.w * k, Y = v => oy + v / 255 * m.h * k;
+    const pts = [];
+    for (let i = 0; i + 2 < raw.length; i += 3) pts.push([X(raw.charCodeAt(i)), Y(raw.charCodeAt(i + 1)), raw.charCodeAt(i + 2)]);
+    // territory glow first, then the points on top
+    g.globalCompositeOperation = 'lighter';
+    for (const [x, y, code] of pts) { const o = (code & 63) - 2; if (o < 0) continue; const gr = g.createRadialGradient(x, y, 0, x, y, 11); gr.addColorStop(0, emp[o] + '66'); gr.addColorStop(1, emp[o] + '00'); g.fillStyle = gr; g.fillRect(x - 11, y - 11, 22, 22); }
+    g.globalCompositeOperation = 'source-over';
+    for (const [x, y, code] of pts) {
+      const c0 = code & 63;
+      g.fillStyle = c0 >= 2 ? emp[c0 - 2] : c0 === 1 ? 'rgba(232,236,248,.95)' : 'rgba(170,180,215,.55)';
+      const r = c0 >= 2 ? 2.3 : c0 === 1 ? 1.6 : 1.15; g.beginPath(); g.arc(x, y, r, 0, 6.2832); g.fill();
+      if (code & 64) { g.strokeStyle = '#f3dca0'; g.lineWidth = 1.4; g.beginPath(); g.arc(x, y, 4.6, 0, 6.2832); g.stroke(); }
+    }
+    return box;
+  }
+
   function describe(meta) {
     if (!meta) return 'an empty slot';
     const race = meta.race ? C().raceName(meta.race) : 'Unknown';
@@ -181,12 +208,14 @@
         const size = SIZE_NAMES[meta.size] || (meta.size ? U.cap(String(meta.size)) : null);
         mid = [
           h('div.sl-badge', meta.race ? ctl.raceBadge(meta.race, 2.9, meta.color) : h('div.sl-nobadge')),
-          h('div.sl-main', h('div.sl-lead', h('b', meta.leader || 'Unnamed emperor'), h('span', race)), h('div.sl-sub', 'Year ' + (meta.year === undefined ? '?' : ctl.calendarYear(meta.year)) + ' · Turn ' + (meta.turn === undefined ? '?' : meta.turn))),
-          h('div.sl-main', h('div.sl-lead', h('span.t-ivory', plural(meta.planets || 0, 'colony', 'colonies'))),
+          mapThumb(meta),
+          h('div.sl-main.a', h('div.sl-lead', h('b', meta.leader || 'Unnamed emperor'), h('span', race)), h('div.sl-sub', 'Year ' + (meta.year === undefined ? '?' : ctl.calendarYear(meta.year)) + ' · Turn ' + (meta.turn === undefined ? '?' : meta.turn))),
+          h('div.sl-main.b', h('div.sl-lead', h('span.t-ivory', plural(meta.planets || 0, 'colony', 'colonies'))),
             h('div.sl-sub', [size ? size + (meta.stars ? ' · ' + meta.stars + ' stars' : '') : null, meta.difficulty ? U.cap(String(meta.difficulty)) : null].filter(Boolean).join(' · ') || '—')),
           h('div.sl-time', { tip: meta.at ? new Date(meta.at).toLocaleString() : null }, meta.at ? ctl.ago(meta.at) : ''),
         ];
-      } else mid = [h('div.sl-badge', h('div.sl-nobadge')), h('div.sl-empty', 'Empty slot'), h('div.sl-time')];
+      } else mid = [h('div.sl-badge', h('div.sl-nobadge')), h('div.sl-map.none'), h('div.sl-empty', 'Empty slot'), h('div.sl-time')];
+      if (!actions.childNodes.length) actions.classList.add('none');
       const row = h('div.cx.sl-row' + (meta ? '' : '.empty'), { role: 'option', tabindex: 0, dataset: { slot }, onclick: () => select(slot), ondblclick: () => primary(slot) }, slotCol, mid, actions);
       return row;
     }
@@ -315,8 +344,8 @@
     .sl-warn b { color:#ffc08a; font-weight:600; }
     .sl-list { display:flex; flex-direction:column; gap:.45rem; min-height:0; flex:1 1 auto; overflow-y:auto; overflow-x:hidden; padding:2px 6px 2px 2px; }
     .sl-modal .sl-list { max-height:min(60vh, 34rem); }
-    .sl-row { --ch:.5rem; position:relative; isolation:isolate; flex:none; display:grid; grid-template-columns:6.6rem 3rem minmax(0,1.25fr) minmax(0,1.2fr) 6.2rem auto; align-items:center; gap:.9rem;
-      padding:.34rem .9rem .34rem .8rem; cursor:pointer; outline:none; background:linear-gradient(135deg, var(--brass-lo), #2a3260 35%, #2a3260 65%, var(--brass-lo)); transition: filter .15s; }
+    .sl-row { --ch:.5rem; position:relative; isolation:isolate; flex:none; display:grid; grid-template-columns:6.6rem 3rem 5.6rem minmax(0,1.25fr) minmax(0,1.2fr) 6.2rem auto; align-items:center; gap:.9rem;
+      padding:.34rem .9rem .34rem .8rem; cursor:var(--hand); outline:none; background:linear-gradient(135deg, var(--brass-lo), #2a3260 35%, #2a3260 65%, var(--brass-lo)); transition: filter .15s; }
     .sl-row::before { content:""; position:absolute; inset:1px; z-index:-1; clip-path:var(--poly); background:linear-gradient(180deg, rgba(24,34,80,.96), rgba(10,15,40,.97)); transition: background .2s, box-shadow .2s; }
     .sl-row:hover { filter:brightness(1.14); }
     .sl-row.sel { background:linear-gradient(135deg, var(--brass-hi), var(--brass) 45%, var(--brass-lo)); }
@@ -336,11 +365,22 @@
     .sl-empty { grid-column:span 2; color:var(--fog); font:400 1.05rem var(--font-display); letter-spacing:.04em; }
     .sl-time { text-align:right; color:var(--mist); font-size:.88rem; white-space:nowrap; }
     .sl-act { display:flex; align-items:center; justify-content:flex-end; gap:.35rem; min-width:7.2rem; }
-    .sl-ib { display:grid; place-items:center; width:1.9rem; height:1.9rem; padding:0; border:1px solid rgba(214,179,106,.38); background:rgba(255,255,255,.04); color:var(--brass-hi); cursor:pointer; transition: background .15s, color .15s, border-color .15s; }
+    .sl-ib { display:grid; place-items:center; width:1.9rem; height:1.9rem; padding:0; border:1px solid rgba(214,179,106,.38); background:rgba(255,255,255,.04); color:var(--brass-hi); cursor:var(--hand); transition: background .15s, color .15s, border-color .15s; }
     .sl-ib .ico { width:1.1rem; height:1.1rem; }
     .sl-ib:hover { background:rgba(214,179,106,.2); } .sl-ib.del:hover { background:rgba(255,92,106,.18); color:var(--rose); border-color:var(--rose); }
     .sl-ib:focus-visible { outline:none; box-shadow: inset 0 0 0 2px var(--cyan); }
     .sl-importwarn { margin:.5rem 0 0; min-height:1.2em; color:var(--ember); font-size:.9rem; }
-    @media (max-width: 900px) { .sl-row { grid-template-columns:5.4rem 3rem minmax(0,1fr) auto; } .sl-row > :nth-child(4), .sl-row > :nth-child(5) { display:none; } }
+    .sl-map { width:5.6rem; height:3.55rem; background:radial-gradient(ellipse at 50% 50%, #121a3c, #060a1c); box-shadow:inset 0 0 0 1px rgba(214,179,106,.28); }
+    .sl-map canvas { display:block; width:100%; height:100%; }
+    .sl-map.none { background:none; box-shadow:inset 0 0 0 1px rgba(214,179,106,.14); }
+    /* narrow (phones, small windows): a card — the map, the slot with its leader and year beside it, the buttons on a line of their own. The old
+       four-column row squeezed the leader and year to nothing beside the buttons and hid an empty slot's "Save here" */
+    @media (max-width: 900px) {
+      .sl-row { grid-template-columns:5.6rem minmax(0,1fr); grid-template-areas:"map slot" "map main" "act act"; row-gap:.25rem; column-gap:.8rem; padding:.5rem .8rem; }
+      .sl-row > .sl-badge, .sl-row > .sl-main.b, .sl-row > .sl-time { display:none; }
+      .sl-row > .sl-map { grid-area:map; align-self:center; } .sl-row > .sl-slot { grid-area:slot; flex-direction:row; align-items:baseline; gap:.6rem; }
+      .sl-row > .sl-main.a, .sl-row > .sl-empty { grid-area:main; } .sl-row > .sl-act { grid-area:act; justify-content:flex-start; min-width:0; }
+      .sl-row > .sl-act.none { display:none; }
+    }
   `);
 })(window.MOO);

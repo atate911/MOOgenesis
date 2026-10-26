@@ -23,7 +23,7 @@
     :root .scrim.scrim:has(> .cb-spm) { background:rgba(2,4,14,.22); backdrop-filter:none; }   /* the Special menu beside the ship keeps the board in view */
     .cb-field { position:relative; min-height:0; overflow:hidden; }
     .cb-canvas { position:absolute; inset:0; width:100%; height:100%; touch-action:none; }
-    .cb-canvas.hit { cursor:crosshair; } .cb-canvas.go { cursor:pointer; } .cb-canvas.wait { cursor:progress; }
+    .cb-canvas.hit { cursor:crosshair; } .cb-canvas.go { cursor:var(--hand); } .cb-canvas.wait { cursor:progress; }
     .cb-top { position:absolute; left:.6rem; right:.6rem; top:.4rem; display:grid; grid-template-columns:1fr auto 1fr; gap:.6rem; align-items:start; pointer-events:none; z-index:3; }
     .cb-glass { background:rgba(8,12,34,.74); backdrop-filter:blur(4px); border:1px solid rgba(214,179,106,.35); clip-path:polygon(.4rem 0,100% 0,100% calc(100% - .4rem),calc(100% - .4rem) 100%,0 100%,0 .4rem); pointer-events:auto; }
     .cb-side { display:flex; align-items:center; gap:.55rem; padding:.28rem .75rem; min-width:0; max-width:19rem; justify-self:start; }
@@ -324,7 +324,7 @@
     Promise.all(jobs).then(() => { if (!token.dead && res.n) onUpdate(res); });
   }
 
-  UI.css('combat-autoall', `.pb-autoall { display:flex; align-items:center; gap:.4rem; margin:.5rem 0 0; font-size:.85rem; color:var(--mist); cursor:pointer; } .pb-autoall input { accent-color:var(--brass-hi); }`);
+  UI.css('combat-autoall', `.pb-autoall { display:flex; align-items:center; gap:.4rem; margin:.5rem 0 0; font-size:.85rem; color:var(--mist); cursor:var(--hand); } .pb-autoall input { accent-color:var(--brass-hi); }`);
   UI.Side.register('prebattle', {
     render(host, ctx) {
       this.off = buildPreBattle(ctx.params, host, v => { if (this.off) { this.off(); this.off = null; } if (ctx.params.resolve) ctx.params.resolve(v); });

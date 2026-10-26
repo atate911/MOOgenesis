@@ -18,7 +18,7 @@
     .tt-bar { flex:none; display:flex; align-items:center; flex-wrap:wrap; gap:.5rem .9rem; padding:0 0 .55rem; }
     .tt-search { position:relative; display:flex; align-items:center; }
     .tt-search input { min-width:16rem; padding-right:2rem; }
-    .tt-search .x { position:absolute; right:.35rem; width:1.4rem; height:1.4rem; padding:0; border:0; background:none; color:var(--mist); cursor:pointer; font-size:1rem; line-height:1; }
+    .tt-search .x { position:absolute; right:.35rem; width:1.4rem; height:1.4rem; padding:0; border:0; background:none; color:var(--mist); cursor:var(--hand); font-size:1rem; line-height:1; }
     .tt-search .x:hover { color:var(--ivory); }
     .tt-count { color:var(--mist); font-size:.88rem; min-width:7rem; }
     .tt-leg { margin-left:auto; display:flex; align-items:center; flex-wrap:wrap; gap:.3rem 1rem; font-size:.8rem; color:var(--mist); }
@@ -36,7 +36,7 @@
     .tt-tier small { font:400 .68rem var(--font-ui); color:var(--fog); }
     .tt-tier.adv { color:var(--gold); }
     .tt-cell { display:flex; flex-direction:column; gap:.2rem; min-width:0; padding:.3rem .1rem .3rem; border-top:1px solid rgba(214,179,106,.18); }
-    .tt-chip { position:relative; display:flex; align-items:center; gap:.4rem; min-width:0; padding:.22rem .45rem; border-left:3px solid var(--sw, transparent); background:rgba(255,255,255,.045); cursor:pointer;
+    .tt-chip { position:relative; display:flex; align-items:center; gap:.4rem; min-width:0; padding:.22rem .45rem; border-left:3px solid var(--sw, transparent); background:rgba(255,255,255,.045); cursor:var(--hand);
       font-size:.84rem; line-height:1.12; transition:background .1s, opacity .12s; }
     .tt-chip .ico { width:.95rem; height:.95rem; flex:none; color:var(--sw); opacity:.9; }
     .tt-chip .nm { flex:1; min-width:0; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }

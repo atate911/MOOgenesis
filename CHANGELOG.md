@@ -5,6 +5,25 @@ Versions follow `MAJOR.MINOR.PATCH`; the live version is the `VERSION` file.
 
 ## Unreleased
 
+- Polish pass (PC and phone). Desktop: the original's hand cursor is back, redrawn as a brass gauntlet, on everything that can be clicked
+  (phones keep none). The colony panel's empty lower third now holds a colony postcard: the art for that world (domes on a hostile planet,
+  mines on a barren one, a fortress, smog, industry or a city) with what the colony is and the ships in orbit (a click sends them).
+  Ending a turn plays its stamp-and-sweep sound (defined but never played before) and the HUD year rolls over like an odometer. Save
+  slots show a small chart of the galaxy as the player knew it when the game was saved (colonies in banner colours, a ring on the
+  capital); the save list on a narrow screen is a card per slot with the leader and year, and an empty slot keeps its "Save here". The
+  loading screen shows the galaxy art and one of the 60 tips (never the same twice running), and on Simple / Easy the same tip waits on
+  the map on the first turn. Two tips were wrong for this game and are replaced (no outposts; no Antarans: monsters instead). The
+  Research screen's picture pane drew its motif below the visible edge (the canvas was twice the panel's height) and showed an empty
+  grid: it now fits. A rival's Report with nothing on file shows one card over their homeworld with a way to the spy networks instead of
+  six empty boxes. Options › Display › Empire marks (off by default) is a colour-blind aid: every empire's owner rings get a pattern of
+  their own (solid, long dashes, dots, dash-dot, double, short dashes, one per banner) and a race code (HU, MR, SI …) beside the flag,
+  under foreign fleets and in the map key. Phones: the audience keeps the leader in view in portrait (sized by the width, above the
+  dialogue panel; the envoy is left out there). The HUD has a "Last turn" / "Coming up" chip that opens the whole turn log, and the
+  log in the full sheet is opaque. The map's control column is Show all, Centre and a More button that unfolds the key, routes and
+  declutter (pinch and double-tap zoom), so the HUD gets the map's full width. The title screen on a phone held sideways is two
+  columns (the wordmark and the last entries were cut off). The star system's fleet heading stays on one line and ship names wrap
+  instead of being cut. The star-chart grid is off by default on phones. From the second visit in a browser tab, a card says how to
+  add the game to the home screen (with an Install button where the browser offers one), once.
 - Title screen. The world in the corner turns smoothly and visibly: its axis now tilts away from the viewer so mid-latitudes sweep
   past instead of a polar cap turning in place, one turn takes about a minute, the sun sits low on the galaxy's side so the terminator, the
   night-side city lights and the cloud shadows cross the visible half, and it drifts a little against the galaxy's slow zoom. Clouds on

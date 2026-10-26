@@ -63,7 +63,7 @@
 @keyframes v2-scr-in { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
 
 /* boot splash */
-:root[data-theme="v2"] #boot { background: radial-gradient(ellipse at 50% 42%, #0f1a26 0%, var(--bg-0) 70%); }
+:root[data-theme="v2"] #boot { background: radial-gradient(ellipse at 50% 46%, rgba(5, 8, 12, .35) 0%, rgba(5, 8, 12, .9) 72%), url('../assets/art/scene/scene-galaxy.webp') 50% 50% / cover no-repeat, radial-gradient(ellipse at 50% 42%, #0f1a26 0%, var(--bg-0) 70%); }
 :root[data-theme="v2"] .boot-mark { color: var(--ink-0); text-shadow: none; letter-spacing: .14em; font-weight: 500; }
 :root[data-theme="v2"] .boot-bar { background: var(--line-1); height: 2px; }
 :root[data-theme="v2"] .boot-bar i { background: var(--accent); }

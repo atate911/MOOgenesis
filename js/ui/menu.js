@@ -28,6 +28,18 @@
     .menu-list .btn { justify-content:flex-start; padding:.6em 1.3em; font-size:1.25rem; }
     .menu-foot { position:absolute; left:0; right:0; bottom:.8rem; text-align:center; font-size:.8rem; color:var(--fog); }
     .menu-meta { margin:.2rem 0 0 .2rem; font-size:.82rem; color:var(--mist); }
+    /* a short landscape screen (a phone on its side, a small window): the column was taller than the screen and its centre crop cut the wordmark
+       and the last entries. Wordmark and text on the left, the entries beside them on the right. */
+    @media (orientation: landscape) and (max-height: 520px) {
+      .menu-col { left:clamp(1.2rem, 5vw, 4rem); right:clamp(1.2rem, 5vw, 4rem); width:auto; display:grid; grid-template-columns:minmax(0, 1.3fr) minmax(0, 1fr); column-gap:clamp(1rem, 4vw, 3rem); align-items:start; }
+      .menu-kicker, .menu-title, .menu-ver, .menu-sub { grid-column:1; }
+      .menu-list { grid-column:2; grid-row:1 / span 4; align-self:center; width:auto; }
+      .menu-meta { grid-column:2; }
+      .menu-title { font-size:clamp(2.2rem, 10vh, 3.8rem); }
+      .menu-kicker { font-size:.9rem; }
+      .menu-sub { margin-bottom:0; font-size:.95rem; }
+      .menu-foot { bottom:.35rem; font-size:.7rem; }
+    }
     @keyframes menu-fade { from { opacity:0; transform:translateY(10px);} to { opacity:1; transform:none; } }
     @keyframes menu-sweep { from { background-position: 160% 0, 0 0; } to { background-position: -60% 0, 0 0; } }
   `);

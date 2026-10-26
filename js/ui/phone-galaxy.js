@@ -51,6 +51,7 @@
     sheet.on(st => { if (st === 'half') requestAnimationFrame(fitHalf); scheduleInset(); });
     side.addEventListener('transitionend', e => { if (e.propertyName === 'height') syncInset(); });        // the sheet's height has settled: measure now, not on the timer
     const wrap = scr.querySelector('.gx-mapwrap'); if (wrap) wrap.addEventListener('pointerdown', () => syncInset(true), true);   // and right before a drag / tap on the map (soft: the view must not move under the finger)
+    if (UI.Galaxy.map && UI.Galaxy.map.on) UI.Galaxy.map.on('controls', () => syncInset(true));        // More unfolded or folded the map's toggles: re-check the column fits
     window.addEventListener('resize', () => { requestAnimationFrame(fitHalf); scheduleInset(); });
     if (M.Bus) { M.Bus.on('turn:processing', on => { if (!active() || !sheet) return; if (on) { holding = false; sheet.set('strip'); markPick(false); } markHeld(false); }); M.Bus.on('screen', id => { if (id === 'galaxy') scheduleInset(); }); }
     scheduleInset();
@@ -122,7 +123,8 @@
       const b = bottom >= w.height * 0.75 ? 0 : bottom;                                      // the map is hidden, not inset: the column stays put
       gx.style.setProperty('--ph-inset', Math.round(b) + 'px');
       const tap = parseFloat(getComputedStyle(root).getPropertyValue('--tap')) || 44, free = w.height - b - (top ? top.getBoundingClientRect().bottom - w.top : 0);
-      gx.classList.toggle('ph-ctl-tight', !!ctl && ctl.children.length * tap + 24 > free);
+      const shownCtl = ctl ? Array.from(ctl.children).filter(c => c.offsetParent !== null || getComputedStyle(c).display !== 'none').length : 0;   // the folded toggles do not count
+      gx.classList.toggle('ph-ctl-tight', !!ctl && shownCtl * tap + 24 > free);
     }
   }
   const markPick = on => { const scr = UI.Screens.el && UI.Screens.el('galaxy'), gx = scr && scr.querySelector('.gx'); if (gx) gx.classList.toggle('ph-pick', !!on); };
@@ -173,6 +175,30 @@
     }, 900);
   }
 
+  // ---- the install card: from the second visit in a browser tab (never in the installed app), once. Android Chrome hands over its own install
+  // prompt (beforeinstallprompt) when the page qualifies, so the card's button installs at once; elsewhere it says where the menu item is.
+  const standalone = () => { try { return matchMedia('(display-mode: standalone)').matches || navigator.standalone === true; } catch (e) { return false; } };
+  const ios = () => /iP(hone|ad|od)/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+  let installEvt = null;
+  window.addEventListener('beforeinstallprompt', e => { e.preventDefault(); installEvt = e; });
+  if (active() && M.Settings && !standalone()) M.Settings.set('phoneVisits', (M.Settings.get('phoneVisits') | 0) + 1);
+  let installTimer = 0;
+  function installHint() {
+    clearTimeout(installTimer);
+    if (!active() || !M.Settings || standalone() || M.Settings.get('installHint') || (M.Settings.get('phoneVisits') | 0) < 2 || !M.Settings.get('phoneHints')) return;
+    installTimer = setTimeout(() => {
+      const cur = UI.Screens.current;
+      if (!cur || cur.id !== 'galaxy' || (UI.modalOpen && UI.modalOpen()) || UI.Side.held || G.busy) return;
+      M.Settings.set('installHint', true);
+      const how = installEvt ? 'Install it and it opens full screen, without the browser bars, straight from your home screen.'
+        : ios() ? 'In Safari, tap the Share button, then “Add to Home Screen”. It then opens full screen, without the browser bars.'
+          : 'Open your browser’s menu and choose “Install app” or “Add to Home screen”. It then opens full screen, without the browser bars.';
+      const buttons = installEvt ? [{ label: 'Not now', value: false }, { label: 'Install', value: true, primary: true }] : [{ label: 'Got it', value: true, primary: true }];
+      UI.modal({ title: 'Keep the game on your home screen', cls: 'ph-hints', width: '26rem', buttons, body: h('div.ph-hints-b', h('div.ph-hint', UI.icon('home'), h('span', how))) })
+        .then(v => { if (v && installEvt) { try { installEvt.prompt(); } catch (e) { /* the browser said no */ } installEvt = null; } });
+    }, 1500);
+  }
+
   function installOverview() {
     const scr = UI.Screens.el('mapoverview'); if (!scr) return;
     const side = scr.querySelector('.ov-side'); if (!side || side.phSheet) return;
@@ -181,7 +207,7 @@
 
   if (M.Bus) M.Bus.on('screen', id => {
     if (!active()) return;
-    if (id === 'galaxy') { installGalaxy(); firstRunHints(); } else if (id === 'mapoverview') installOverview();
+    if (id === 'galaxy') { installGalaxy(); firstRunHints(); installHint(); } else if (id === 'mapoverview') installOverview();
   });
   UI.Phone.galaxySheet = () => sheet;
 })(window.MOO);

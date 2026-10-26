@@ -300,6 +300,12 @@
     const q = r * (k || 0.32); g.beginPath();
     g.moveTo(x, y - r); g.lineTo(x + q, y - q); g.lineTo(x + r, y); g.lineTo(x + q, y + q); g.lineTo(x, y + r); g.lineTo(x - q, y + q); g.lineTo(x - r, y); g.lineTo(x - q, y - q); g.closePath();
   }
+  // Colour-blind aid (Settings 'empireMarks'): owner rings get a dash pattern per banner (blue solid, green long dashes, purple dots, red
+  // dash-dot, white double, yellow short dashes; the six banners never share one) and the race code rides on the flag. The original's banners stay
+  // the default: the marks are off unless the player turns them on.
+  const RING_DASH = [[], [7, 3], [1.4, 2.6], [6, 2.4, 1.4, 2.4], [], [3, 3]];
+  const RACE_CODE = { human: 'HU', mrrshan: 'MR', silicoid: 'SI', sakkra: 'SA', psilon: 'PS', alkari: 'AL', klackon: 'KL', bulrathi: 'BU', meklar: 'ME', darlok: 'DA' };
+  const raceCode = E => (E && (RACE_CODE[E.race] || String(E.race || E.name || '?').slice(0, 2).toUpperCase())) || '?';
   // swallow-tail banner on a pole (the owner flag); (x,y) = foot of the pole
   function drawFlag(g, x, y, hgt, col, capital, t, ph, a) {
     const w = hgt * 0.78, wv = Math.sin(t * 3.1 + ph) * hgt * 0.05, ty = y - hgt;
@@ -483,13 +489,14 @@
     const css = `
     .gmap { position:relative; width:100%; height:100%; overflow:hidden; background:#04061a; outline:none; touch-action:none; user-select:none; -webkit-user-select:none; }
     .gmap-cv { position:absolute; inset:0; width:100%; height:100%; cursor:grab; }
-    .gmap.dragging .gmap-cv { cursor:grabbing; } .gmap.hot .gmap-cv { cursor:pointer; } .gmap.route .gmap-cv { cursor:crosshair; }
+    .gmap.dragging .gmap-cv { cursor:grabbing; } .gmap.hot .gmap-cv { cursor:var(--hand); } .gmap.route .gmap-cv { cursor:crosshair; }
     .gmap-ctrl { position:absolute; right:.75rem; top:1.9rem; display:flex; flex-direction:column; gap:.3rem; z-index:3; }
-    .gmap-btn { --ch:.3rem; position:relative; isolation:isolate; width:2rem; height:2rem; padding:0; border:0; cursor:pointer; color:var(--brass-hi); display:grid; place-items:center;
+    .gmap-btn { --ch:.3rem; position:relative; isolation:isolate; width:2rem; height:2rem; padding:0; border:0; cursor:var(--hand); color:var(--brass-hi); display:grid; place-items:center;
       background:linear-gradient(180deg,var(--brass),var(--brass-lo)); transition:filter .15s; }
     .gmap-btn::before { content:""; position:absolute; inset:1px; z-index:-1; clip-path:var(--poly); background:linear-gradient(180deg,#27336d,#161e4a); transition:background .15s; }
     .gmap-btn.lit { color:#fff4c8; filter:drop-shadow(0 0 6px rgba(243,220,160,.75)); } .gmap-btn.lit::before { background:linear-gradient(180deg,#8a6a24,#4a3410); }
     .gmap-btn.off { opacity:.5; } .gmap-btn.off svg { stroke-dasharray:none; }
+    .gmap-btn.gmap-more { display:none; }                                                  /* phones only (css/phone.css) */
     .gmap-btn:hover { filter:brightness(1.15); } .gmap-btn:hover::before { background:linear-gradient(180deg,#34448c,#1c2760); } .gmap-btn:active { transform:translateY(1px); }
     .gmap-btn svg { width:1.05rem; height:1.05rem; fill:none; stroke:currentColor; stroke-width:2; stroke-linecap:square; stroke-linejoin:miter; }
     .gmap-mini { --ch:.55rem; position:absolute; z-index:3; padding:1px; background:linear-gradient(135deg,var(--brass),var(--brass-lo) 50%,var(--brass)); }
@@ -504,10 +511,11 @@
     .gmap-legend .gl-sw { flex:none; width:.78rem; height:.78rem; background:var(--c); box-shadow:0 0 7px var(--c); transform:rotate(45deg) scale(.86); }
     .gmap-legend .gl-sw.dot { transform:none; border-radius:50%; width:.7rem; height:.7rem; margin:0 .04rem; }
     .gmap-legend .gl-sw.hollow { background:transparent; box-shadow:none; border:1.5px solid var(--c); }
+    .gmap-legend .gl-sw.ring { width:1rem; height:1rem; background:none; box-shadow:none; transform:none; } .gmap-legend .gl-sw.ring svg { display:block; width:100%; height:100%; }
     .gmap-legend .gl-txt { min-width:0; } .gmap-legend .gl-sub { display:block; color:var(--mist); font-size:.72rem; }
     .gmap-legend .gl-n { margin-left:auto; color:var(--mist); font-variant-numeric:tabular-nums; }
     .gmap-legend .gl-gl { flex:none; width:1rem; height:1rem; display:grid; place-items:center; } .gmap-legend .gl-gl svg { width:100%; height:100%; }
-    .gmap-legend .gl-tog { margin-top:.2rem; width:100%; padding:.18rem .4rem; font:400 .8rem var(--font-ui); color:var(--brass-hi); background:rgba(0,0,0,.3); border:1px solid rgba(214,179,106,.4); cursor:pointer; } .gmap-legend .gl-tog:hover { background:rgba(214,179,106,.14); }
+    .gmap-legend .gl-tog { margin-top:.2rem; width:100%; padding:.18rem .4rem; font:400 .8rem var(--font-ui); color:var(--brass-hi); background:rgba(0,0,0,.3); border:1px solid rgba(214,179,106,.4); cursor:var(--hand); } .gmap-legend .gl-tog:hover { background:rgba(214,179,106,.14); }
     .gmap-legend .gl-sep { height:1px; margin:.35rem 0; background:linear-gradient(90deg,transparent,rgba(214,179,106,.35),transparent); }
     .gmap-tip { --ch:.35rem; position:absolute; z-index:6; left:0; top:0; display:none; max-width:21rem; min-width:9rem; padding:.45rem .75rem .55rem; font-size:.88rem; line-height:1.38; pointer-events:none;
       color:var(--ivory); background:linear-gradient(135deg,var(--brass),var(--brass-lo)); isolation:isolate; }
@@ -557,13 +565,20 @@
       () => { if (M.Settings) M.Settings.set('mapRoutes', !routesOn()); syncRoutesBtn(); });
     const syncRoutesBtn = () => routesBtn.classList.toggle('off', !routesOn());
     syncRoutesBtn();
-    const ctrlEl = h('div.gmap-ctrl',
-      svgBtn('<path d="M12 5v14M5 12h14"/>', 'Zoom in <b>+</b>', () => zoomStep(1.45)),
-      svgBtn('<path d="M5 12h14"/>', 'Zoom out <b>−</b>', () => zoomStep(1 / 1.45)),
+    const legendBtn = svgBtn('<circle cx="7" cy="7" r="2.6"/><path d="M13 7h8M13 17h8M4.4 14.4l5 5M9.4 14.4l-5 5"/>', 'Map key and planet icons <b>K</b>', () => api.showLegend(!legendShown()));
+    // phones (css/phone.css): pinch and double-tap zoom, so + / − are hidden, and the key / routes / declutter toggles fold behind one button —
+    // seven stacked buttons took a column of the map's width in portrait and forced a two-wide grid in landscape
+    const moreBtn = svgBtn('<circle cx="5" cy="12" r="1.4"/><circle cx="12" cy="12" r="1.4"/><circle cx="19" cy="12" r="1.4"/>', 'More map controls: key, routes, declutter', () => {
+      const on = !ctrlEl.classList.contains('open'); ctrlEl.classList.toggle('open', on); moreBtn.classList.toggle('lit', on); moreBtn.setAttribute('aria-expanded', String(on)); emit('controls', on);
+    });
+    moreBtn.classList.add('gmap-more'); moreBtn.setAttribute('aria-expanded', 'false');
+    [legendBtn, routesBtn, dcBtn].forEach(b => b.classList.add('gmap-extra'));
+    const zoomIn = svgBtn('<path d="M12 5v14M5 12h14"/>', 'Zoom in <b>+</b>', () => zoomStep(1.45)), zoomOut = svgBtn('<path d="M5 12h14"/>', 'Zoom out <b>−</b>', () => zoomStep(1 / 1.45));
+    zoomIn.classList.add('gmap-zoom'); zoomOut.classList.add('gmap-zoom');
+    const ctrlEl = h('div.gmap-ctrl', zoomIn, zoomOut,
       svgBtn('<path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/>', 'Show the whole galaxy', () => api.fit()),
       svgBtn('<path d="M12 3l9 9-9 9-9-9z"/><circle cx="12" cy="12" r="2.2"/>', 'Centre on your capital <b>Home</b>', () => api.home()),
-      svgBtn('<circle cx="7" cy="7" r="2.6"/><path d="M13 7h8M13 17h8M4.4 14.4l5 5M9.4 14.4l-5 5"/>', 'Map key and planet icons <b>K</b>', () => api.showLegend(!legendShown())),
-      routesBtn, dcBtn);
+      moreBtn, legendBtn, routesBtn, dcBtn);
     const root = h('div.gmap', { tabindex: 0, role: 'application', 'aria-label': 'Galaxy map' }, canvas, miniEl, ctrlEl, legendEl, hintEl, tipEl);
     if (opts.controls === false) ctrlEl.style.display = 'none';
     container.appendChild(root);
@@ -592,6 +607,8 @@
     const empCol = id => { const E = S && S.empires && S.empires[id]; const ci = E && E.color !== undefined ? E.color : id; return th.empRGB[(((ci | 0) % 6) + 6) % 6] || th.rgb.mist; };
     const empHex = id => { const E = S && S.empires && S.empires[id]; const ci = E && E.color !== undefined ? E.color : id; return th.emp[(((ci | 0) % 6) + 6) % 6] || th.mist; };
     const pidOf = () => (S && S.playerId !== undefined ? S.playerId : 0) | 0;
+    const empBanner = id => { const E = S && S.empires && S.empires[id]; const ci = E && E.color !== undefined ? E.color : id; return (((ci | 0) % 6) + 6) % 6; };
+    const marksOn = () => !!(M.Settings && M.Settings.get('empireMarks'));
 
     function on(evt, fn) { (handlers[evt] || (handlers[evt] = [])).push(fn); return () => off(evt, fn); }
     function off(evt, fn) { const a = handlers[evt]; if (!a) return api; const i = a.indexOf(fn); if (i >= 0) a.splice(i, 1); return api; }
@@ -1449,7 +1466,7 @@
         ctx.globalAlpha = 1; ctx.globalCompositeOperation = 'source-over';
       }
       // ---- markers: ownership, population pips, special marks, overlay badges
-      const pid = pidOf(), flagH0 = clamp(9 + znv * 0.034, 11, 25) * uk;
+      const pid = pidOf(), flagH0 = clamp(9 + znv * 0.034, 11, 25) * uk, marks = marksOn();
       for (let i = 0; i < n; i++) {
         const s = SD[i]; if (!s.on) continue;
         const x = s.sx, y = s.sy, r = s.r;
@@ -1460,11 +1477,21 @@
         // owner ring + flag
         if (s.owner >= 0) {
           const col = empCol(s.owner), rr = r * 1.95 + 3 + (s.capital ? 2.5 : 0), bold = 1 + wCol * 0.9;
+          if (marks) {                                                  // colour-blind aid: a ring pattern per banner (RING_DASH), drawn bolder
+            const bi = empBanner(s.owner), dash = RING_DASH[bi] || [];
+            ctx.setLineDash(dash.map(d => d * uk)); ctx.beginPath(); ctx.arc(x, y, rr, 0, TAU); ctx.lineWidth = 2 * bold; ctx.strokeStyle = rgba(col, 0.95); ctx.stroke(); ctx.setLineDash([]);
+            ctx.beginPath(); ctx.arc(x, y, rr + 2.8, 0, TAU); ctx.lineWidth = bi === 4 ? 1.6 : 0.8; ctx.strokeStyle = rgba(col, bi === 4 ? 0.9 : 0.28); ctx.stroke();
+          } else {
           ctx.beginPath(); ctx.arc(x, y, rr, 0, TAU); ctx.lineWidth = 1.4 * bold; ctx.strokeStyle = rgba(col, 0.82); ctx.stroke();
           ctx.beginPath(); ctx.arc(x, y, rr + 2.6, 0, TAU); ctx.lineWidth = 0.8; ctx.strokeStyle = rgba(col, 0.28); ctx.stroke();
+          }
           if (s.capital) { ctx.setLineDash([2, 3]); ctx.lineDashOffset = -t * 5; ctx.beginPath(); ctx.arc(x, y, rr + 6, 0, TAU); ctx.lineWidth = 1; ctx.strokeStyle = 'rgba(255,214,106,0.7)'; ctx.stroke(); ctx.setLineDash([]); }
           const fh = flagH0 * (1 + 0.5 * wCol) * (s.capital ? 1.18 : 1);
           drawFlag(ctx, x + rr * 0.72, y - rr * 0.55, fh, col, s.capital, t, s.ph, 1);
+          if (marks && (znv > 34 || wCol > 0.2)) {                      // the race code beside the banner
+            const lb = labelSprite(raceCode(S.empires[s.owner]), Math.round(Math.max(10, fh * 0.72)), '#f6efd8', dpr, th.fontUi);
+            ctx.drawImage(lb.c, Math.round(x + rr * 0.72 + fh * 0.78 - 2), Math.round(y - rr * 0.55 - fh - 2), lb.w, lb.h);
+          }
           // population pips (filled share of max population)
           if (znv > 52 || wCol > 0.2) {
             const np = 5, fill = s.maxPop > 0 ? clamp(Math.ceil(np * s.pop / s.maxPop - 1e-6), s.pop > 0 ? 1 : 0, np) : 0, pw = Math.max(2.4, 2.2 * uk + wCol * 1.2), gap = pw * 0.55, tw0 = np * pw + (np - 1) * gap, py = y + rr + 5.5;
@@ -1681,6 +1708,10 @@
         if (count > 1) { const b = badgeSprite(count); ctx.globalAlpha = a; ctx.drawImage(b.c, x + sz * 0.5, y - sz * 0.5 - b.h + 3, b.w, b.h); }
       }
       if (kind !== 'war') drawKindMark(x - sz * 0.68, y - sz * 0.62, Math.max(3.4, sz * 0.27), kind, a);
+      if (owner !== pidOf() && marksOn()) {                          // colour-blind aid: whose fleet, in letters
+        const lb = labelSprite(raceCode(S.empires[owner]), Math.round(Math.max(10, sz * 0.58)), '#f6efd8', dpr, th.fontUi);
+        ctx.globalAlpha = a; ctx.drawImage(lb.c, Math.round(x - lb.w / 2), Math.round(y + sz * 0.42), lb.w, lb.h);
+      }
       ctx.globalAlpha = 1;
       return usedExt;
     }
@@ -1849,7 +1880,9 @@
         sub = 'Colonies';
         const per = {}; for (const s of SD) if (s.owner >= 0) per[s.owner] = (per[s.owner] || 0) + 1;
         Object.keys(per).map(Number).sort((a, b) => (a === pid ? -1 : b === pid ? 1 : a - b)).forEach(id => {
-          const E = emps[id] || {}; kids.push(row('', empHex(id), (E.name || E.race || 'Empire ' + id) + (id === pid ? ' (you)' : ''), '', per[id]));
+          const E = emps[id] || {}, r0 = row('', empHex(id), (E.name || E.race || 'Empire ' + id) + (id === pid ? ' (you)' : ''), marksOn() ? raceCode(E) : '', per[id]);
+          if (marksOn()) { const sw = r0.querySelector('.gl-sw'); if (sw) { const d = RING_DASH[empBanner(id)] || []; sw.classList.add('ring'); sw.innerHTML = '<svg viewBox="0 0 16 16" width="16" height="16"><circle cx="8" cy="8" r="5.5" fill="none" stroke="' + empHex(id) + '" stroke-width="2" stroke-dasharray="' + d.join(' ') + '"/>' + (empBanner(id) === 4 ? '<circle cx="8" cy="8" r="7.4" fill="none" stroke="' + empHex(id) + '" stroke-width="1.2"/>' : '') + '</svg>'; } }
+          kids.push(r0);
         });
         const free = SD.filter(s => s.owner < 0 && s.known).length;
         kids.push(h('div.gl-sep')); kids.push(row('.dot', '#c9d4ff', 'Free stars', 'known, no colony', free)); kids.push(row('.dot.hollow', '#7b89bd', 'Unexplored', '', SD.filter(s => !s.known).length));

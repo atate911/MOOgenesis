@@ -6,7 +6,7 @@
   const UI = M.UI, h = UI.h, G = M.Game, Q = M.Sim.Q, U = M.Util;
 
   UI.css('star-system', `
-    .sv { position:absolute; inset:0; overflow:hidden; background:#04061a; cursor:pointer; user-select:none; }
+    .sv { position:absolute; inset:0; overflow:hidden; background:#04061a; cursor:var(--hand); user-select:none; }
     .sv-cv { position:absolute; inset:0; width:100%; height:100%; }
     .sv::after { content:""; position:absolute; inset:0; pointer-events:none; background:radial-gradient(120% 100% at 50% 40%, rgba(0,0,0,0) 55%, rgba(0,0,6,.55) 100%); }
     .sv > *:not(.sv-cv) { z-index:2; }
@@ -184,7 +184,7 @@
         st.tiles.push(tile);
         rowEl.appendChild(h('div.sv-tile' + (g.mine ? '' : '.foe'), { tip: g.mine ? '<b>' + d.name + '</b><br>' + HULL_NAME[hull] + ' hull · ' + n + (n === 1 ? ' ship' : ' ships') : HULL_NAME[hull] + ' hull · ' + n + (n === 1 ? ' ship' : ' ships') }, c, h('span.n', U.fmt(n)), h('span.nm', g.mine ? d.name : HULL_NAME[hull] + ' hull')));
       }
-      fl.appendChild(h('div.sv-grp', h('div.sv-gh', h('span.empire-dot', { style: { '--c': 'var(--emp' + E.color + ')' } }), g.mine ? 'Your fleet' : E.plural + ' fleet', ' · in orbit'), rowEl));
+      fl.appendChild(h('div.sv-grp', h('div.sv-gh', h('span.empire-dot', { style: { '--c': 'var(--emp' + E.color + ')' } }), g.mine ? 'Your fleet' : E.plural + ' fleet', M.Phone && M.Phone.active() ? null : ' · in orbit'), rowEl));   // phones: the screen is the orbit, and the heading must fit one line
     }
     if (i.groups.length) kids.push(fl);
     // --- info box
