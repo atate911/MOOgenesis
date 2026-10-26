@@ -137,7 +137,20 @@
     });
     ['pointerup', 'keyup', 'click', 'focusout'].forEach(ev => scale.addEventListener(ev, flush));
     sync.push(() => { pending = null; scale.api.set(Math.round(U.clamp(Number(S.get('uiScale')) || 1, .85, maxScale()) * 100)); });
+    // the phone layout: pinned on / off from here (index.html reads the setting before the first stylesheet), so a wrong guess — a phone read as
+    // a desktop, a tablet or a docked phone read as a phone — or trouble with the layout itself has a way out that is not a URL parameter
+    const phoneMode = ctl.segmented([{ id: 'auto', label: 'Auto' }, { id: 'on', label: 'On' }, { id: 'off', label: 'Off' }], S.get('phoneMode') || 'auto', v => {
+      if (v === (S.get('phoneMode') || 'auto')) return;
+      S.set('phoneMode', v);
+      UI.confirm('The layout is chosen when the game loads. Reload now?' + (M.Game && M.Game.S ? ' The game is autosaved first.' : ''), { title: 'Phone layout' }).then(ok => {
+        if (!ok) { UI.toast('Phone layout: ' + v + ' — applies at the next reload', 'ok', 4000); return; }
+        try { if (M.Game && M.Game.S && !M.Game.busy) M.Game.autosave(); } catch (e) { /* best effort */ }
+        location.reload();
+      });
+    }, { block: true, label: 'Phone layout' });
+    sync.push(() => phoneMode.set(S.get('phoneMode') || 'auto'));
     const iface = section('Display & animation', 'monitor', [
+      row('Phone layout', 'Auto picks it for phones (a touch screen 600px or narrower). On / Off pins it; the game reloads to apply. Now: ' + (M.Phone && M.Phone.active() ? 'phone' : 'desktop') + ' layout.', phoneMode, 'stack'),
       row('Animation speed', 'Fleet movement and battle playback.', anim, 'stack'),
       bool('showTips', 'Tooltips', UI.Phone.say('Hover hints on buttons, numbers and map objects.', 'Tap a number, label or chip to read about it (a long press always works, on buttons too).'), true),
       bool('reduceMotion', 'Reduce motion', 'Calmer screens: fewer sweeps, particles and twinkling.', false),

@@ -29,7 +29,7 @@ const { serve, open, sleep } = require('./lib');
     if (process.env.V) console.log('step', steps);
     const st = await page.evaluate(() => {
       const scr = MOO.UI.Screens.current.id, o = { scr };
-      if (scr === 'galaxy') { const b = [...document.querySelectorAll('.pb-acts button')].map(b => b.textContent.trim()); o.btns = b.slice(0, 8); }
+      if (scr === 'galaxy') { const b = [...document.querySelectorAll('.pb-acts button')].map(b => b.textContent.trim()); o.btns = b.slice(0, 8); o.side = MOO.UI.Side.current(); }
       if (scr === 'combat') { const s = MOO.UI.Combat.session(); if (s) { const B = s.B; o.over = B.over; o.active = B.active; o.round = B.round; } }
       return o;
     });
@@ -38,8 +38,11 @@ const { serve, open, sleep } = require('./lib');
       if (!shot++) await snap('prebattle');
       const want = mode === 'auto' ? /^Auto/i : mode === 'retreat' ? /^Retreat/i : /^Continue/i;
       await page.evaluate(re => { const b = [...document.querySelectorAll('.pb-acts button')].find(b => new RegExp(re, 'i').test(b.textContent.trim())); if (b) b.click(); }, want.source);
-      await sleep(600); continue;
+      await sleep(600);
+      await page.evaluate(() => { const m = [...document.querySelectorAll('.scrim .modal')].pop(); if (m) { const b = [...m.querySelectorAll('.modal-f button')]; (b.find(x => x.classList.contains('primary')) || b[b.length - 1]).click(); } });   // Retreat with no other colony asks first
+      await sleep(300); continue;
     }
+    if (st.scr === 'galaxy' && st.side === 'combatResult') { await snap('result'); await page.keyboard.press('Space'); await sleep(400); continue; }   // Auto / Retreat end on the result card
     if (st.scr === 'combat') {
       if (st.over !== undefined && st.over) { await sleep(500); await snap('over'); await page.keyboard.press('Space'); await sleep(400); continue; }
       const plan = await page.evaluate(() => {
@@ -68,6 +71,7 @@ const { serve, open, sleep } = require('./lib');
     await sleep(300);
   }
   const res = await Promise.race([turnP, sleep(5000).then(() => 'unfinished')]);
+  turnP.catch(() => {});                                  // an unfinished turn must not throw after the browser is closed
   console.log('result', JSON.stringify(res), 'steps', steps);
   const after = await page.evaluate(() => { const S = MOO.Game.S; return { turn: S.turn, mine: S.fleets.filter(f => f.owner === 0).map(f => f.ships.join('/') + '@' + f.star), theirs: S.fleets.filter(f => f.owner === 1).map(f => f.ships.join('/') + '@' + f.star), scr: MOO.UI.Screens.current.id }; });
   console.log('after', JSON.stringify(after));

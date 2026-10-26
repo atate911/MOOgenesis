@@ -29,10 +29,14 @@
     };
     window.addEventListener('pointerdown', unlock); window.addEventListener('keydown', unlock);
 
-    // surface uncaught errors in-game (first few only) so problems are visible during development
+    // surface uncaught errors in-game (first few only) so problems are visible during development. Only the game's own: browsers
+    // and extensions inject scripts into the page (Brave's wallet: "window.ethereum…", cross-origin ones: a bare "Script error."),
+    // and their errors land here too. Ours come from a file under <origin>/js/ (or a worker blob); the rest only go to the console.
     let shown = 0;
-    window.addEventListener('error', e => { if (shown++ < 4) UI.toast('Error: ' + (e.message || e.error), 'bad', 9000); });
-    window.addEventListener('unhandledrejection', e => { if (shown++ < 4) UI.toast('Error: ' + (e.reason && e.reason.message || e.reason), 'bad', 9000); });
+    let jsBase = '/js/'; try { jsBase = new URL('js/', location.href).href; } catch (e) { /* the page's own js/ folder, wherever the game is hosted */ }
+    const ours = s => typeof s === 'string' && (s.indexOf(jsBase) >= 0 || s.indexOf('blob:') >= 0);
+    window.addEventListener('error', e => { if (ours(e.filename) && shown++ < 4) UI.toast('Error: ' + (e.message || e.error), 'bad', 9000); });
+    window.addEventListener('unhandledrejection', e => { const r = e.reason, st = r && r.stack; if ((typeof st === 'string' ? ours(st) : true) && shown++ < 4) UI.toast('Error: ' + (r && r.message || r), 'bad', 9000); });   // no stack to judge by: show it
 
     const q = new URLSearchParams(location.search);
     let first = q.get('screen');

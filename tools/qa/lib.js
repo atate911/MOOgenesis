@@ -22,7 +22,7 @@ async function open(opts = {}) {
   const page = await ctx.newPage();
   if (process.env.TIER) { const go = page.goto.bind(page); page.goto = (u, o) => go(u + (u.includes('?') ? '&' : '?') + 'tier=' + process.env.TIER, o); }   // TIER=low|medium|high|ultra forces a perf tier (software GL is detected as 'low')
   const errors = [];
-  page.on('console', m => { if (m.type() === 'error' || m.type() === 'warning') errors.push(m.type() + ': ' + m.text()); });
+  page.on('console', m => { if (m.type() === 'error' || m.type() === 'warning') { const u = (m.location() || {}).url; errors.push(m.type() + ': ' + m.text() + (u && /^Failed to load resource/.test(m.text()) ? ' @ ' + u : '')); } });   // a failed load names its URL
   page.on('response', r => { if (r.status() >= 400) errors.push('HTTP ' + r.status() + ' ' + r.url()); });
   page.on('pageerror', e => errors.push('pageerror: ' + e.message + ' @ ' + (e.stack || '').split('\n')[1]));
   return { browser, ctx, page, errors };
