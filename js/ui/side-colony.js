@@ -48,7 +48,7 @@
     .sc-tpop b { color:var(--leaf); } .sc-tpop b.over { color:var(--amber, #f0b050); }
     .empire-dot { display:inline-block; width:.7em; height:.7em; margin-right:.2em; transform:rotate(45deg); background:var(--c, var(--brass)); box-shadow:0 0 6px var(--c, var(--brass)); }
     .sc-stats .cell > span:last-child.chg { animation:sc-chg 1.2s ease-out both; }   /* a readout that changed over the turn (galaxy.js lights the HUD the same way) */
-    @keyframes sc-chg { 0%, 25% { background:#7a5a14; color:#fff8dc; box-shadow:inset 0 0 0 1px #f0d048, 0 0 8px rgba(240,208,72,.6); } 100% { } }
+    @keyframes sc-chg { 0%, 25% { background:#7a5a14; color:#fff8dc; box-shadow:inset 0 0 0 1px var(--slot-ink, #f0d048), 0 0 8px rgba(240,208,72,.6); } 100% { } }
     /* the colony postcard under the build box (desktop): the panel's lower third was an empty band. The body becomes a column so the card takes
        whatever height is left; the container query hides it when that is too little to read. Phones: never (the sheet shows the controls). */
     .sc-post { display:none; }
@@ -63,11 +63,11 @@
     .sc-post::after { content:""; position:absolute; inset:0; pointer-events:none; box-shadow:inset 0 0 0 1px rgba(214,179,106,.3), inset 0 0 2.5rem rgba(0,0,0,.55);
       background:linear-gradient(180deg, rgba(0,0,0,.5), rgba(0,0,0,0) 30%, rgba(0,0,0,0) 55%, rgba(0,0,0,.75)); }
     .sc-pc { position:absolute; left:.65rem; top:.45rem; right:.65rem; z-index:1; line-height:1.25; text-shadow:0 1px 2px #000, 0 0 8px rgba(0,0,0,.9); }
-    .sc-pc b { display:block; font:600 .8rem var(--font-display); letter-spacing:.12em; text-transform:uppercase; color:#f0d048; } .sc-pc span { font-size:.85rem; color:#e6e2d4; }
+    .sc-pc b { display:block; font:600 .8rem var(--font-display); letter-spacing:.12em; text-transform:uppercase; color:var(--slot-ink, #f0d048); } .sc-pc span { font-size:.85rem; color:#e6e2d4; }
     .sc-orb { position:absolute; left:.5rem; right:.5rem; bottom:.4rem; z-index:1; display:flex; flex-wrap:wrap; align-items:center; gap:.3rem; }
     .sc-orb .k { font:600 .72rem var(--font-display); letter-spacing:.12em; text-transform:uppercase; color:#cfd6e2; text-shadow:0 1px 2px #000; margin-right:.15rem; }
     .sc-oc { display:inline-flex; align-items:center; gap:.15rem; padding:.05rem .4rem .05rem .1rem; background:rgba(6,9,16,.82); border:1px solid rgba(214,179,106,.45); cursor:var(--hand); font:600 .82rem var(--font-ui); color:#f3e6c0; font-variant-numeric:tabular-nums; }
-    .sc-oc:hover { border-color:#f0d048; background:rgba(40,32,12,.9); } .sc-oc canvas { width:3.2rem; height:1.9rem; }
+    .sc-oc:hover { border-color:var(--slot-ink, #f0d048); background:rgba(40,32,12,.9); } .sc-oc canvas { width:3.2rem; height:1.9rem; }
     .sc-oc.foe { border-color:rgba(255,92,106,.65); color:#ffc2b8; cursor:default; } .sc-oc.none { cursor:default; color:#aab3c0; border-color:rgba(255,255,255,.18); font-weight:400; padding-left:.4rem; }
     @container (max-height: 5.5rem) { .sc-pc { display:none; } }
     @container (max-height: 3.2rem) { .sc-orb, .sc-post > :is(canvas, img) { display:none; } }
@@ -80,7 +80,7 @@
     .sc-card { gap:.6rem; padding:.3rem; background:radial-gradient(1px 1px at 12% 22%, #fff9 50%, transparent), radial-gradient(1px 1px at 38% 78%, #fff7 50%, transparent), radial-gradient(1px 1px at 88% 18%, #fff8 50%, transparent), radial-gradient(1px 1px at 63% 62%, #fff6 50%, transparent), linear-gradient(180deg, #0b0e13, #05070a); border:0; box-shadow:0 0 0 1px var(--frame-red), inset 0 0 0 1px rgba(0,0,0,.9), inset 0 0 18px rgba(208,64,48,.12); }
     .sc-pic { filter:drop-shadow(0 2px 6px rgba(0,0,0,.7)); }
     .sc-info { text-align:right; }
-    .sc-info .cls { font:600 1rem var(--font-display); letter-spacing:.12em; text-transform:uppercase; color:#f0d048; text-shadow:0 1px 0 #000; }
+    .sc-info .cls { font:600 1rem var(--font-display); letter-spacing:.12em; text-transform:uppercase; color:var(--slot-ink, #f0d048); text-shadow:0 1px 0 #000; }
     .sc-info .tag { display:block; margin:.15rem 0 0; border:0; padding:0; font:600 .78rem var(--font-display); letter-spacing:.12em; text-transform:uppercase; }
     .sc-info .tag.good, .sc-info .tag.cy { color:#8ab0f0; }
     .sc-info .pm { font-family:var(--font-mono, monospace); color:var(--lime); text-shadow:0 0 8px rgba(112,224,96,.35); }
@@ -112,7 +112,7 @@
     .sc-bbox:hover { border-color:#f4d868 #a88420 #a88420 #f4d868; }
     .sc-bbox canvas { width:100%; height:3.2rem; object-fit:contain; filter:drop-shadow(0 2px 4px rgba(0,0,0,.7)); }
     .sc-bbox > div { margin:0 -.3rem; padding:.12rem .3rem; text-align:center; background:#3a2810; border-top:1px solid #000; }
-    .sc-bbox .bn { font:600 .8rem var(--font-display); letter-spacing:.12em; text-transform:uppercase; color:#f0d048; } .sc-bbox .bc { font-size:.7rem; color:#c8b078; }
+    .sc-bbox .bn { font:600 .8rem var(--font-display); letter-spacing:.12em; text-transform:uppercase; color:var(--slot-ink, #f0d048); } .sc-bbox .bc { font-size:.7rem; color:#c8b078; }
     .sc-btns { gap:.25rem; min-width:4.8rem; }
     .sc-btns .btn, .sm-actions .btn { flex:1; clip-path:none; justify-content:center; padding:.2em .4em; font:600 .8rem var(--font-display); letter-spacing:.12em; text-transform:uppercase; color:#fff; text-shadow:0 1px 0 #000; background:rgba(0,0,0,.8); box-shadow:none; }
     .sc-btns .btn::before, .sm-actions .btn::before { clip-path:none; inset:1px; background:linear-gradient(180deg, #6a7480, #474f59); box-shadow:inset 1px 1px 0 rgba(255,255,255,.28), inset -1px -1px 0 rgba(0,0,0,.5); }

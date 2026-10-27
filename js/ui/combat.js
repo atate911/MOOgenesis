@@ -125,7 +125,7 @@
     :root:root .cb-btns .btn:active:not(:disabled) { filter:brightness(.9); box-shadow:0 0 0 1px #000, inset -1px -1px 0 #c8ff9c, inset 1px 1px 0 #1f5a0c; }
     :root:root .cb-btns .btn:nth-child(1) { color:#fff; text-shadow:1px 1px 0 #3a0600; background:linear-gradient(180deg,#e04a34,#c02818 50%,#8c1608); box-shadow:0 0 0 1px #000, inset 1px 1px 0 #ff9a88, inset -1px -1px 0 #5a0c02; }
     :root:root .cb-btns .btn:nth-child(n+2):nth-child(-n+5):not(:disabled) { color:#fff; text-shadow:1px 1px 0 #101830; background:linear-gradient(180deg,#6a7cb0,#4a5a90 50%,#323f70); box-shadow:0 0 0 1px #000, inset 1px 1px 0 #a4b4e4, inset -1px -1px 0 #1a2248; }
-    :root:root .cb-btns .btn.on { color:#2a1405; background:linear-gradient(180deg,#ffd36a,#e3a420 50%,#a86c08); box-shadow:0 0 0 1px #000, inset 1px 1px 0 #fff0b0, inset -1px -1px 0 #6a4004; }
+    :root:root .cb-btns .btn.on { color:#2a1405; background:linear-gradient(180deg,var(--title-hi, #ffd36a),#e3a420 50%,#a86c08); box-shadow:0 0 0 1px #000, inset 1px 1px 0 #fff0b0, inset -1px -1px 0 #6a4004; }
     :root:root .cb-btns .btn:disabled { color:#808088; text-shadow:none; filter:none; opacity:1; background:#505058; box-shadow:0 0 0 1px #000, inset 1px 1px 0 #6a6a72, inset -1px -1px 0 #34343a; }
     .cb-btns .btn .kbd { color:inherit; opacity:.6; border-color:currentColor; }
     .cb-glass { background:linear-gradient(180deg,rgba(58,62,72,.92),rgba(28,30,36,.92)); border:0; clip-path:none; box-shadow:0 0 0 1px #000, inset 1px 1px 0 #9298a6, inset -1px -1px 0 #14161a; }

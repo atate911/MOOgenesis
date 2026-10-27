@@ -1066,7 +1066,7 @@
     .tch-trow { color:var(--o-tan); text-transform:uppercase; letter-spacing:.03em; font-size:.92rem; border-left-width:0; }
     .tch-trow + .tch-trow { border-top:0; }
     .tch-trow:hover { background:#52402f; color:#fff; }
-    .tch-trow.sel, .tt-chip.sel { background:var(--o-sel); color:#fff; box-shadow:inset 0 0 0 1px #ffc860; border-left-color:transparent; }
+    .tch-trow.sel, .tt-chip.sel { background:var(--o-sel); color:#fff; box-shadow:inset 0 0 0 1px var(--sel-line, #ffc860); border-left-color:transparent; }
     .tch-trow.sel .lv, .tch-trow.sel .nm { color:#fff; }
     .tch-trow.proj { background:linear-gradient(90deg, rgba(64,208,64,.32) var(--p,0%), rgba(64,208,64,.08) var(--p,0%)); } .tch-trow.proj .nm, .tch-trow.proj .lv { color:var(--o-green); }
     .tch-row { border-left-width:0; } .tch-row + .tch-row { border-top:1px solid #4a382a; box-shadow:0 1px 0 rgba(179,150,119,.35) inset; }
@@ -1084,12 +1084,12 @@
     .tt-chip { background:#5b4533; color:var(--o-tan); box-shadow:inset 1px 1px 0 rgba(255,235,205,.18), inset -1px -1px 0 rgba(0,0,0,.35); text-transform:uppercase; letter-spacing:.02em; }
     .tt-chip:hover { background:#6d5645; }
     .tt-chip.done { background:#4a5a36; } .tt-chip.avail { background:#7a5a36; } .tt-chip.avail .nm { color:#fff; } .tt-chip.proj { background:#2f5a2c; box-shadow:inset 0 0 0 1px #40d040; animation:none; }
-    .tt-chip.queued .nm, .tt-chip.locked .nm { color:var(--o-tan); } .tt-chip.hit { box-shadow:inset 0 0 0 1px #ffd36a; background:#7a5a36; }
+    .tt-chip.queued .nm, .tt-chip.locked .nm { color:var(--o-tan); } .tt-chip.hit { box-shadow:inset 0 0 0 1px var(--title-hi, #ffd36a); background:#7a5a36; }
     .tt-leg, .tt-count { color:var(--o-tan); }
     /* races */
     .rc-slot { --e1:#9c8466; --e2:#6d5645; }
     .rc-slot .rc-acc { width:.22rem; box-shadow:none; }
-    .rc-slot.sel { filter:brightness(1.1); box-shadow:0 0 0 2px #ffd36a, 0 0 0 3px #2f231a; }
+    .rc-slot.sel { filter:brightness(1.1); box-shadow:0 0 0 2px var(--title-hi, #ffd36a), 0 0 0 3px #2f231a; }
     .rc-pic, .rp-pic { clip-path:none; background:#2f231a; box-shadow:0 0 0 1px #000, 0 0 0 .2rem var(--c, #b39677), 0 0 0 calc(.2rem + 1px) #2f231a; margin:.25rem; }
     .rc-pic canvas, .rp-pic canvas { left:0; top:0; width:100%; height:100%; background:#000; }
     .rc-treaty { color:var(--o-cream); text-transform:uppercase; text-shadow:1px 1px 0 rgba(0,0,0,.45); }

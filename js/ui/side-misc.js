@@ -36,7 +36,7 @@
     .sm-range.out { color:#ff7a5a; background:#1a1210; }
     .sm-fleet { grid-template-columns:3.8rem 1fr auto; gap:.4rem; padding:.2rem; border:0; background:linear-gradient(180deg, #59636f, #454d57); box-shadow:inset 1px 1px 0 rgba(255,255,255,.2), inset -1px -1px 0 rgba(0,0,0,.5), 0 0 0 1px rgba(0,0,0,.6); }
     .sm-fleet canvas { background:#000; box-shadow:inset 0 0 0 1px rgba(0,0,0,.9), 0 0 0 1px rgba(255,255,255,.12); }
-    .sm-fleet .nm { display:inline-block; padding:.05rem .35rem; font:600 .8rem var(--font-display); letter-spacing:.12em; text-transform:uppercase; color:#f0d048; background:#3a2810; box-shadow:inset 1px 1px 2px rgba(0,0,0,.8); }
+    .sm-fleet .nm { display:inline-block; padding:.05rem .35rem; font:600 .8rem var(--font-display); letter-spacing:.12em; text-transform:uppercase; color:var(--slot-ink, #f0d048); background:#3a2810; box-shadow:inset 1px 1px 2px rgba(0,0,0,.8); }
     .sm-fleet .ct { margin-top:.15rem; color:#e4e8ee; font-size:.78rem; }
     .sm-step { gap:.22rem; }
     .sm-sb { position:relative; width:1.45rem; height:1.45rem; padding:0; border:0; cursor:var(--hand); background:linear-gradient(135deg, var(--bev-hi, #8a9aac), var(--bev-mid, #3a4656) 35%, var(--bev-lo, #11161e)); box-shadow:0 0 0 1px #000; }

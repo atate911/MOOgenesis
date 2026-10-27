@@ -46,6 +46,17 @@ Versions follow `MAJOR.MINOR.PATCH`; the live version is the `VERSION` file.
   fuzz): they are drawn at the size of the cell they sit in, and the Small / Medium / Large / Huge hierarchy holds on both axes whatever
   the cell's shape. The "Build a new colony?" card shows the colony ship coming down (art that was never used) instead of the orbit
   plate the scout's report already showed.
+- Visual system, phase 1: one place, three layers. One sky: every procedural backdrop (the galaxy map, the title's fallback sky,
+  the menus) starts from one definition tuned against the title galaxy art: mostly black, dusty violet and blue wisps, a warm heart,
+  dust lanes; the map's cloud layers take the same hues at a lower strength and its gameplay nebulae go dustier; on the GPU at the
+  high tiers the sky is rendered at the screen's own resolution instead of a 1600-wide upscale. The same sky now sits under every
+  screen: Options, New game, Load game and the Almanac go transparent over it, the Fleets and Planets ledgers float on it and their
+  empty tables are windows on the part of the sky behind them, and a screen change is a cross-fade instead of a cut. One glass: the
+  tooltip, the toast, the map key, the turn log, the star system's labels and planet-data box, the pre-battle card's boxes, the
+  council tally and the audience's dialogue panel are one dark translucent slab with a brass hairline (the audience's teal fill is
+  gone; its brass frame carries the colour). Dark wells with brass hairlines: the Research, Races, Report and Tech tree wells, the
+  ledgers' cells and boxes and the colony panel's slots go near-black so data and art pop, and table rules are a 1px brass hairline
+  that scales with the interface. The near-duplicate yellows in the stylesheets collapse into the title and slot tokens.
 - Title screen. The world in the corner turns smoothly and visibly: its axis now tilts away from the viewer so mid-latitudes sweep
   past instead of a polar cap turning in place, one turn takes about a minute, the sun sits low on the galaxy's side so the terminator, the
   night-side city lights and the cloud shadows cross the visible half, and it drifts a little against the galaxy's slow zoom. Clouds on

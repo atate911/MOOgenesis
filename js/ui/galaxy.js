@@ -53,7 +53,7 @@
   const bump = css => css.replace(/(^|[}])([^{}]*)[{]/g, (m, a, sel) => a + sel.replace(/[/][*][^]*?[*][/]/g, '').split(',').map(s => s.trim()).filter(Boolean).map(s => ':root:root ' + s).join(', ') + ' {');   // raise specificity over the theme-v2 .panel/.btn rules
   // Restyle (original-game feel, modern rendering): gunmetal bevelled frame, indigo/gold title plate, equal-width steel button row.
   UI.css('galaxy-orig', bump(`
-    .gx { --bv-hi:rgba(255,255,255,.2); --bv-lo:rgba(0,0,0,.6); --gold-ink:#e8c850;
+    .gx { --bv-hi:rgba(255,255,255,.2); --bv-lo:rgba(0,0,0,.6); --gold-ink:var(--title, #e8c850);
       padding:.4rem; gap:.4rem; background:linear-gradient(135deg, #8d98a4 0%, #4d5662 38%, #2a313a 100%);
       box-shadow:inset 1px 1px 0 rgba(255,255,255,.35), inset -1px -1px 0 rgba(0,0,0,.7), inset 0 0 0 .22rem rgba(0,0,0,.18); }
     .gx-mapwrap { background:#000; box-shadow:0 0 0 1px rgba(0,0,0,.9), 0 1px 0 1px rgba(255,255,255,.18); overflow:hidden; }
@@ -80,11 +80,11 @@
     /* title plate (shared by every side panel) */
     .side-title { justify-content:center; align-items:center; gap:.6rem; margin:-.05rem 0 .5rem; padding:.28rem .5rem; border-bottom:0;
       background:linear-gradient(180deg, #3d4780 0%, #2a3263 55%, #202750 100%); box-shadow:inset 1px 1px 0 rgba(255,255,255,.25), inset -1px -1px 0 rgba(0,0,0,.6), 0 0 0 1px rgba(0,0,0,.7); }
-    .side-title .nm { font:400 1.35rem/1.1 var(--font-title); letter-spacing:.06em; color:#e8c850; text-shadow:0 1px 0 #6b4f12, 0 0 12px rgba(232,200,80,.25); }
+    .side-title .nm { font:400 1.35rem/1.1 var(--font-title); letter-spacing:.06em; color:var(--title, #e8c850); text-shadow:0 1px 0 #6b4f12, 0 0 12px rgba(232,200,80,.25); }
     .side-title .own { margin-left:0; font-size:.8rem; letter-spacing:.06em; text-transform:uppercase; color:#cfd6ee; }
     .side-title .cyc { flex:none; width:1.35rem; height:1.35rem; padding:0; border:0; background:none; cursor:var(--hand); color:#cfd6ee; opacity:.7; }
     .side-title .cyc:first-child { margin-right:auto; } .side-title .cyc:last-child { margin-left:auto; }
-    .side-title .cyc:hover { opacity:1; color:#e8c850; }
+    .side-title .cyc:hover { opacity:1; color:var(--title, #e8c850); }
     .side-title .cyc::after { content:''; display:block; width:.55rem; height:.7rem; margin:auto; background:currentColor; clip-path:polygon(100% 0,0 50%,100% 100%); }
     .side-title .cyc.nx::after { clip-path:polygon(0 0,100% 50%,0 100%); }
     .gx-side h3 { font:600 .95rem var(--font-display); letter-spacing:.14em; text-transform:uppercase; color:#e0553a; margin:.2rem 0 .4rem; text-align:center; }

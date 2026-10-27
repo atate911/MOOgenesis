@@ -69,6 +69,20 @@ Done when: `tools/qa/art-shots.js` at 1920×1080 and 3840×2160 (`TIER=high` and
 per screen are in `tools/out/`, phone QA (three profiles), rules tests and the layout fingerprint are green, and the owner has looked at
 the map on a real GPU (the headless renderer is software: the GL nebula and bloom cannot be judged here).
 
+## Phase 1 — done (branch `claude/visual-system`, five commits)
+
+| Step | Commit | What landed | Notes for the next pass |
+|---|---|---|---|
+| 1.1 one sky | `Visual system 1.1` | `Gfx.Space.SKY` + `Space.sky(over)`; `floor` and `warm`/`warmK` options in both painters (`space.js`, `gl-space.js`: `uFloor`, `uWarm`); the map (`ensureAmbient`), the title fallback (`menu.js`) and `UI.Controls.backdrop` read it; the map's cloud layers recoloured, gameplay nebulae dustier, GPU backdrop at device resolution on the high tiers. | The CPU painter has no tone curve, so `sky()` marks its options and the CPU path halves the intensity (`opts.sky`). Tuned on contact sheets (`scratchpad/qa/skytest.js`, variants over `Space.sky`). The gameplay nebulae must stay readable (a rule): they are dustier, not dimmer; check them on a real GPU. |
+| 1.2 persistent sky | `Visual system 1.2` | `js/ui/sky.js` (`UI.Sky.install()` from `main.js`): `<canvas id="sky">` under `#screens`, painted once per size, drift on the high tiers only, `--sky-img` data URL for the ledger wells (`background … fixed`), `<html class="has-sky">`; Options / Save-Load / Setup drop their painted backdrop; `screens.js` adds `.fade-out`. | `background-attachment: fixed` is not honoured on iOS, so phones keep the plain well (the rule is `:not([data-phone])`). The data URL is ~30–150 KB; encoded in an idle callback. |
+| 1.3 one glass | `Visual system 1.3` | `--glass-bg`, `--glass-line`, `--glass-filter` and a central list of glass surfaces in `theme-v2.css` (section 7b, triple-`:root` so it beats the per-screen restyles): tooltip, toast, map key, planet-data box and labels, pre-battle boxes, turn log, council tally, audience panel (teal fill gone, brass frame + rails). | The news lower third is drawn on canvas (`gnn.js`), so it is not on the list: Phase 2 (scene grade) is where it changes. `backdrop-filter` is off on phones and `data-fx="off"`. |
+| 1.4 wells + hairlines | `Visual system 1.4` | `--well-leather`, `--well-leather-2`, `--well-steel`, `--hair`, `--hair-w`; the brown family's wells (`tech.js` orig-brown tokens, `.tch-list`, `.tt-scroll`, `.rp-age`), the ledgers' `--bz-slot`, boxes and stat slots, the Map overview key face, the colony panel's `--slotbg`; table rules and dividers on the hairline. Contrast of every ink over the new wells is 7:1 or better (`scratchpad/qa/contrast.py`). | The Races screen's section boxes (`.rc-sec`) and the Design screen's panes were left as they are (already dark). |
+| 1.5 palette | this commit | CSS contexts only: `#f0d048` → `--slot-ink`, `#e8c850` → `--title`, literal `#ffd36a` → `--title-hi`, `#ffc860` selection rings → `--sel-line`. | The ~90 remaining literal golds are in canvas code (tech motifs, news graphics, setup badges) where a CSS token cannot be read; they are the same three values everywhere (`#f3dca0`, `#d6b36a`, `#ffd54f`). A shared JS palette constant would be the next consolidation if one is wanted. |
+
+Verified per step with screenshots (`scratchpad/shots/fix/vs*-*.png`, before/after pairs at the low and high tiers), `check.js`, the rules tests,
+and at the end the three phone QA profiles and a 30-turn run. The headless GPU is software (SwiftShader): the GPU sky, bloom and
+drift were seen here at `TIER=high` but judge them on real hardware.
+
 ## Phase 2 — combat, continuity, scenes
 
 **6. Combat as a tactical hologram.** `combat-fx.js`: checker alpha from 0.028 to 0.015 and the intersection dots a shade dimmer; the
