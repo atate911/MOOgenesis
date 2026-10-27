@@ -7,6 +7,15 @@ Docs: `PROGRESS.md` (plan/status/25-feature acceptance checklist) · `CONVENTION
 Commands: `node tools/check.js` (syntax of every manifest file) · `node tools/rules-test.js [area]` · `node tools/soak.js` (24-thread AI-vs-AI soak/balance; `tools/SOAK.md`) · `node tools/headless.js`.
 Browser-pane tip: animations use requestAnimationFrame, so in the built-in browser pane a tab must be fronted (`tabs_select`) for anything animated (GNN, audiences, scenes, combat) to advance.
 
+## Session 8 (October 2026) — polish pass, branch `claude/polish-pass`
+`tools/handoff/polish-2026-10.md`: fifteen fixes from a screen-by-screen review on desktop (1080p) and phones (portrait, landscape,
+small). Desktop: hand cursor (`--hand` in base.css, every `cursor:pointer` reads it), colony postcard + ships in orbit (side-colony.js),
+turn sound + HUD year odometer (galaxy.js), save-slot galaxy thumbnails (`meta.map` in save.js, drawn in saveload.js), boot splash art +
+tip (loader.js, `MOO_BOOT_TIP`, first-turn tip on Simple/Easy in help.js), research picture fit (tech.js grid row), empty Report dossier
+(races.js), Options › Empire marks (galaxymap.js `RING_DASH`, `raceCode`). Phones: audience crop (scenes.js `audGeo` portrait branch),
+HUD turn-log chip + log dialog (turnlog.js `counts` / `openSheet`), map controls folded behind More, landscape title in two columns
+(menu.js), system view labels, grid off by default, second-visit install card (phone-galaxy.js).
+
 ## Session 7 (October 2026) — phone mode, branch `claude/phone-mode`
 `tools/handoff/phone-2026-10.md`: a phone layout layer gated on `<html data-phone>` (desktop layouts proven identical to `main`):
 galaxy bottom sheet, one Back control + the phone's back gesture (both dispatch Escape), auto-only battles, a one-column ship design

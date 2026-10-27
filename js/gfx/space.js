@@ -155,6 +155,18 @@
 
   /* ================================================================ backdrop + starfields */
   var DEF_PAL = ['#3c40b4', '#7a3cc4', '#1f90b4', '#c4408c'];
+  /* THE ONE SKY (tools/handoff/visual-system-plan.md, phase 1): every backdrop in the game — the galaxy map, the title, the menus, the
+     ledgers — starts from these knobs, so the universe looks the same wherever it shows. Tuned against the title art
+     (assets/art/scene/scene-galaxy.webp): 40 % of it is near-black, its gas is dusty mauve and grey-blue, its core is warm; nothing in it
+     is the saturated indigo the backdrops used to ask for. A caller adds only what its screen needs (seed, size, an intensity scale):
+     Space.sky({ intensity: .5 }). floor: the share of the frame the gas may cover even away from the band and the cloud (0.30 was the
+     old everywhere-haze); warm / warmK: the hue hot cores drift toward and how far (the old look: lilac-white, .30). */
+  var SKY = {
+    palette: ['#4e4668', '#3c4660', '#64524c', '#44506a'],       // dusty violet · slate · dusty umber · slate blue (thin wisps): the art skies' neutrals, measured (tools/qa/histo.py)
+    warm: '#e4b690', warmK: 0.9,                                 // dense gas drifts to this warm hue (the title galaxy's heart)
+    intensity: 0.85, floor: 0.05, dust: 1.2, stars: 0.6, vignette: true   // bright where the gas is, true black elsewhere
+  };
+  function sky(over) { var o = { sky: true }, k; for (k in SKY) o[k] = SKY[k]; if (over) for (k in over) o[k] = over[k]; return o; }
   var TINTS = [[176, 200, 255], [236, 242, 255], [255, 248, 228], [255, 226, 186], [255, 190, 160]];
   function tintIndex(u) { return u < 0.22 ? 0 : u < 0.50 ? 1 : u < 0.74 ? 2 : u < 0.90 ? 3 : 4; }
 
@@ -247,8 +259,11 @@
     opts = opts || {};
     w = max(16, w | 0); h = max(16, h | 0);
     var sd = seedOf(seed), rnd = rng32(sub(sd, 1));
-    var intensity = opts.intensity !== undefined ? clamp(opts.intensity, 0, 1.5) : 0.55;
+    var intensity = (opts.intensity !== undefined ? clamp(opts.intensity, 0, 1.5) : 0.55) * (opts.sky ? 0.5 : 1);   // the sky is tuned on the GPU's tone curve; this painter is linear, so half
     var starDens = opts.stars !== undefined ? max(0, opts.stars) : 1, vig = opts.vignette !== false;
+    var floor = opts.floor !== undefined ? clamp(opts.floor, 0, 1) : 0.30;                      // gas outside the band / cloud
+    var wc = opts.warm ? parseHex(opts.warm) : [235, 224, 255], wr = wc[0] / 255, wg = wc[1] / 255, wb = wc[2] / 255;   // hot-core hue
+    var wk = opts.warmK !== undefined ? clamp(opts.warmK, 0, 1) : 0.30;
     var pal = (opts.palette && opts.palette.length ? opts.palette : DEF_PAL).map(function (c) {
       var v = parseHex(c), m = Math.max(v[0], v[1], v[2], 1); return [v[0] / m, v[1] / m, v[2] / m];   // hue only: brightness is controlled below
     });
@@ -270,20 +285,21 @@
         var big = nz.fbm(wx * 0.55 + 9, wy * 0.55, 3), mid = nz.fbm(wx * 1.3, wy * 1.3, 5);
         var dist = (u - bcx) * bnx + (v - bcy) * bny, bd = exp(-(dist * dist) / (bw * bw));
         var gdx = (u - gcx) * asp, gdy = v - gcy, gb = exp(-(gdx * gdx + gdy * gdy) / (gr * gr));
-        var mask = 0.30 + 0.60 * bd + 0.55 * gb; if (mask > 1) mask = 1;
+        var mask = floor + 0.60 * bd + 0.55 * gb; if (mask > 1) mask = 1;
         var A = sstep(-0.35, 0.55, big), B = sstep(-0.10, 0.65, mid * 0.6 + big * 0.4);
         var dens = clamp(0.35 * A + 0.80 * B * (0.4 + 0.6 * A), 0, 1);
         // hue field picks / blends palette colours
         var hf = nh.fbm(px * 0.40 + o3, py * 0.40, 3) * 0.5 + 0.5, hp = clamp((hf - 0.5) * 2.1 + 0.5, 0, 0.999) * (np - 1), hi = hp | 0, hfr = hp - hi, hc = pal[hi], hn = pal[min(hi + 1, np - 1)];
         var cr = mixf(hc[0], hn[0], hfr), cg = mixf(hc[1], hn[1], hfr), cb = mixf(hc[2], hn[2], hfr);
+        if (opts.warm) { var wdn = wk * sstep(0.55, 1.0, dens * mask); cr = mixf(cr, wr, wdn); cg = mixf(cg, wg, wdn); cb = mixf(cb, wb, wdn); }   // dense gas drifts to the warm hue, thin wisps stay cool
         // luminous veins (ionised wisps)
         var fil = pow(nf.ridged(wx * 1.8 + 3, wy * 1.8, 4), 4);
         var L = (dens + 0.55 * fil * dens) * mask;
         // dust lanes absorb light
         var lane = pow(nl.ridged(px * 0.9 + 2 * qx + 4, py * 0.9 + 2 * qy, 3), 4); lane = clamp(lane * 1.9 - 0.1, 0, 1) * (0.35 + 0.65 * mask);
         var Lm = L * (1 - 0.80 * lane) * intensity * GAIN;
-        var core = sstep(0.18, 0.5, Lm);           // hot cores drift toward white-lilac
-        LR[i] = baseR + Lm * mixf(cr, 0.92, core * 0.30); LG[i] = baseG + Lm * mixf(cg, 0.88, core * 0.30); LB[i] = baseB + Lm * mixf(cb, 1.0, core * 0.30);
+        var core = sstep(0.18, 0.5, Lm);           // hot cores drift toward the warm hue (default: white-lilac)
+        LR[i] = baseR + Lm * mixf(cr, wr, core * wk); LG[i] = baseG + Lm * mixf(cg, wg, core * wk); LB[i] = baseB + Lm * mixf(cb, wb, core * wk);
         LANE[i] = lane; BAND[i] = mask;
       }
     }
@@ -774,6 +790,6 @@
 
   Gfx.Space = {
     STAR_KINDS: STAR_KINDS, starColor: starColor, makeBackdrop: makeBackdrop, makeStarfield: makeStarfield,
-    starSprite: starSprite, drawStarSurface: drawStarSurface
+    starSprite: starSprite, drawStarSurface: drawStarSurface, SKY: SKY, sky: sky
   };
 })(window.MOO);

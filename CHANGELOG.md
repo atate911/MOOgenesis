@@ -5,6 +5,112 @@ Versions follow `MAJOR.MINOR.PATCH`; the live version is the `VERSION` file.
 
 ## Unreleased
 
+- Polish pass (PC and phone). Desktop: the original's hand cursor is back, redrawn as a brass gauntlet, on everything that can be clicked
+  (phones keep none). The colony panel's empty lower third now holds a colony postcard: the art for that world (domes on a hostile planet,
+  mines on a barren one, a fortress, smog, industry or a city) with what the colony is and the ships in orbit (a click sends them).
+  Ending a turn plays its stamp-and-sweep sound (defined but never played before) and the HUD year rolls over like an odometer. Save
+  slots show a small chart of the galaxy as the player knew it when the game was saved (colonies in banner colours, a ring on the
+  capital); the save list on a narrow screen is a card per slot with the leader and year, and an empty slot keeps its "Save here". The
+  loading screen shows the galaxy art and one of the 60 tips (never the same twice running), and on Simple / Easy the same tip waits on
+  the map on the first turn. Two tips were wrong for this game and are replaced (no outposts; no Antarans: monsters instead). The
+  Research screen's picture pane drew its motif below the visible edge (the canvas was twice the panel's height) and showed an empty
+  grid: it now fits. A rival's Report with nothing on file shows one card over their homeworld with a way to the spy networks instead of
+  six empty boxes. Options › Display › Empire marks (off by default) is a colour-blind aid: every empire's owner rings get a pattern of
+  their own (solid, long dashes, dots, dash-dot, double, short dashes, one per banner) and a race code (HU, MR, SI …) beside the flag,
+  under foreign fleets and in the map key. Phones: the audience keeps the leader in view in portrait (sized by the width, above the
+  dialogue panel; the envoy is left out there). The HUD has a "Last turn" / "Coming up" chip that opens the whole turn log, and the
+  log in the full sheet is opaque. The map's control column is Show all, Centre and a More button that unfolds the key, routes and
+  declutter (pinch and double-tap zoom), so the HUD gets the map's full width. The title screen on a phone held sideways is two
+  columns (the wordmark and the last entries were cut off). The star system's fleet heading stays on one line and ship names wrap
+  instead of being cut. The star-chart grid is off by default on phones. From the second visit in a browser tab, a card says how to
+  add the game to the home screen (with an Install button where the browser offers one), once.
+- Tuning pass. The Fleets, Ship specifications, Planets and Galaxy Map titles take the caps display style the Research, Races and
+  Racial Stats screens already use (the original's screens all had caps titles), so every tool screen opens the same way. At the end of a
+  turn the HUD values and the colony panel's readouts that changed (reserve, income, research, colonies; population, bases, factories,
+  waste, production) light up for a second, alongside the year's roll. The Fleets and Planets ledgers, mostly empty early in a game,
+  sit on a faint star chart instead of flat brown. A fleet column with no design reads as empty. Phones: the research allocation row
+  keeps the capability line whole and gives the project its own line with a full-width bar; the fleet grid's column headers stay on one line.
+- Galaxy map, thinned. The whole-galaxy view (the fit, or a step past it) now carries fewer marks per star: the star-chart grid and its
+  parsec ruler are off by default (the original had none; Options › Display turns them on), only owned stars, the selected one and Orion
+  carry names, and the colonisation glyphs show only on stars a colony ship can reach this turn. Zoom in and every explored star is named
+  and marked as before. A colony has one owner ring instead of a ring and a faint echo, the scan ring sits under the range ring in weight
+  and its radar sweep is gone, and the map's control column reads as two groups (view, layers).
+- Harmony and art pass. One gold for every tool screen's title (Research, Races and the Report had a more orange one than Fleets,
+  Planets and the Galaxy Map), one orange for every box title (the Planets ledger's Spending costs, Total income and Reserve were mint),
+  and every slider readout on every screen is the same yellow in its slot (the colony panel's; Research, Options, Races and the Planets
+  ledger showed lime-green). The map key's title and the Galaxy Map screen's box titles take the caps of their siblings, and the Fleets
+  ledger's planet thumbnails sit in the same recessed tile as the Planets ledger's. Art: the planet pictures and plates in the side
+  panels and ledgers, on the Races screen, the Report, the New game race card and the event cards were fixed-size bitmaps that the
+  browser then scaled (soft on a 2x screen and at a large interface scale); they are now images the browser fits itself, sharp at any
+  scale and decoded once. The ship pictures in the Fleets ledger and on the pre-battle card were small bitmaps enlarged up to 1.6x (the
+  fuzz): they are drawn at the size of the cell they sit in, and the Small / Medium / Large / Huge hierarchy holds on both axes whatever
+  the cell's shape. The "Build a new colony?" card shows the colony ship coming down (art that was never used) instead of the orbit
+  plate the scout's report already showed.
+- Visual system, phase 1: one place, three layers. One sky: every procedural backdrop (the galaxy map, the title's fallback sky,
+  the menus) starts from one definition tuned against the title galaxy art: mostly black, dusty violet and blue wisps, a warm heart,
+  dust lanes; the map's cloud layers take the same hues at a lower strength and its gameplay nebulae go dustier; on the GPU at the
+  high tiers the sky is rendered at the screen's own resolution instead of a 1600-wide upscale. The same sky now sits under every
+  screen: Options, New game, Load game and the Almanac go transparent over it, the Fleets and Planets ledgers float on it and their
+  empty tables are windows on the part of the sky behind them, and a screen change is a cross-fade instead of a cut. One glass: the
+  tooltip, the toast, the map key, the turn log, the star system's labels and planet-data box, the pre-battle card's boxes, the
+  council tally and the audience's dialogue panel are one dark translucent slab with a brass hairline (the audience's teal fill is
+  gone; its brass frame carries the colour). Dark wells with brass hairlines: the Research, Races, Report and Tech tree wells, the
+  ledgers' cells and boxes and the colony panel's slots go near-black so data and art pop, and table rules are a 1px brass hairline
+  that scales with the interface. The near-duplicate yellows in the stylesheets collapse into the title and slot tokens.
+- Visual system, phase 2: combat, continuity, scenes. The tactical board reads as a hologram: the checker and the intersection dots are
+  fainter, the planet is a little larger and carries its atmosphere, clouds, cloud shadows and night lights, idling drives breathe, and
+  when no battle backdrop fits the board sits on the star's own planet-free sky instead of the bright system plate. Opening a star system
+  from the map is a continuation of the zoom: the map flies in on the star, the system view cross-fades in, and on the way back the map
+  flies out to where it was (reduce motion and phones cut straight across). The system view's fallback sky is the one sky, warmed by the
+  star. One grade on every plate: the title's galaxy, the news studio, the exile ending and the ground-battle art take the same light
+  colour grade the other scenes have, the art in the panels and ledgers gets the same touch, and the audience hall breathes behind the
+  leader (a slow push-in and back over forty seconds, off under reduce motion). The ship design hologram floats on the one sky. Phones:
+  the family wells and separators take the phase 1 values.
+- Balance pass: luminosity, contrast, highlights. Measured, not eyeballed: every visible text element on fifteen screens was scored
+  against the pixels behind it. The brown-leather screens (Research, Races, Report, Tech tree, the ledgers' frames, the Map overview) were two
+  to three times brighter than every other screen and their frame text (subtitles, prompts, even the gold titles on the bright corner) sat
+  at 2.3 to 3:1; the leather is darker and flatter now, its corner highlight a narrow rim, and that text reads at 4 to 5:1. The copper
+  primary buttons' dark ink was haloed by its own light text shadow and fell to 3:1 at small sizes; the lower stop of the copper is lifted and
+  the ink near-black. A disabled button used to be the whole plate at half opacity, which collapsed ink and face together (1.5:1); it is a
+  grey plate with readable ink now (the design screen's Build button too). The Report dossier's dark scrim had been painted under the image
+  since it was made, so its caption sat on bright clouds; it is above the image now. Text that was dimmed for the old brown wells had gone
+  near-invisible in the new black ones (empty design slots, zero-count rows in the map keys, locked tech chips) and is lifted. The orange
+  box-title tier is a lighter orange in bold so it clears as large text on every face. Effects that added nothing are gone: the 1px
+  scanlines over the whole screen (a second grain, moiré at 4K) and the teal scanlines on the audience panel; the territory haze on the map
+  is a quarter softer; the Design screen's five bright orange section slabs and its white-on-orange hull pick take the copper tier with dark
+  ink; the Research level numbers are quiet cream figures (green is for research points only). The bevel highlight is one brightness
+  everywhere (twelve values from .08 to .4 before).
+- Finish pass: consistency, shading, histograms. The raster art was measured as a family (RGB statistics of every file by set):
+  mid-keyed, warm by +5 to +33, deep blacks, nothing clipped, and the same cool-space / warm-people split the interface draws between the
+  sky and the leather. The one mismatch was the leather itself, a third warmer than any art it frames, so portraits and planets read
+  cooler than they are; every leather tone is retoned toward neutral at the same luminance (the ledger heads from +42 to +30 red over
+  blue). The files that sit far from their set's exposure (the Darlok halls a third as bright as their peers, the Psilon chambers nearly
+  twice, the white Alkari homeworld) are nudged toward it on every draw path, so the council booths, the Races cards and the Report no
+  longer jump in brightness from one empire to the next. Shading: three shadow elevations replace twenty-four drop shadows; one
+  text-shadow direction replaces two; every art plate in the DOM (colony card, side cards, setup homeworld, Report dossier) is a recessed
+  window with an inner vignette instead of a sticker; the galaxy console casts onto the map; the Fleets cell plate takes the well's black.
+  Consistency: the Report's ◀ ▶ match their neighbours; the last chamfers on the rectangular theme (save slots, race name plates) are
+  square; NO TRADE and the Report's traits take the caps of their neighbours; the growth mark is ↑1.8, not ↑ +1.8; the ticker's "..." is an
+  ellipsis; the disabled Build button's key chip is readable; near-identical type sizes collapse into one (Research 22 → 16 distinct
+  sizes).
+- Unify pass. Every conclusion of the visual passes reviewed as one system (three layers, four materials on one warm axis anchored on
+  the art, one light, one tiered palette, one type scale, one motion) and the interface cleaned up against it. The rendered screens move
+  a little toward the art's histograms: the galaxy sky loses most of its magenta cast and takes the art skies' dusty neutrals with a
+  warmer heart; the gameplay nebulae are dustier and sit in the sky instead of on it; every steel face (the galaxy console, its buttons,
+  the command bar, the dark base tones, the phone gunmetal) has half its blue taken out at the same brightness, so the chrome reads as
+  grey steel beside the warm leather rather than a second colour. One label tier: the Research screen's column, section and project
+  heads take the cream capitals the ledgers and the console already use; orange is the bold box-title tier only. One type scale: every
+  size snaps to a regular step (36 distinct sizes, down from 65). One hairline system: the brass lines on borders, rules and frame edges
+  are three weights instead of fourteen.
+- Race photos, matched to their screens. The seventy race photos (portraits, figures, audience halls, council chambers, scientists,
+  homeworlds) were measured one by one: each is sound on its own (black shadows, no clipped highlights), but within a set the exposure
+  spans three to five times from the Darlok to the Psilon, and the game puts those sets side by side. Every draw path now reads one
+  measured table and brings a file toward its set: people photos all the way, plates three quarters of the way. The correction is tonal,
+  not a brightness slider: a dark photo's midtones are lifted while its blacks stay black and its highlights stay put, a bright photo's
+  exposure comes down with its highlights, and a plate in the page is capped so nothing clips. In the Races cards the portraits used to
+  span 16 to 46 in brightness; nine of ten now sit between 32 and 37 and the Darlok, dark on purpose, at 21 with the face readable. The
+  council booths, the Report, the Almanac, the New game race pick, the audience leader and the player's own figure in the audience follow
+  the same table, and the correction now survives the low effects tier and phones, which used to drop it with the plate grade.
 - Title screen. The world in the corner turns smoothly and visibly: its axis now tilts away from the viewer so mid-latitudes sweep
   past instead of a polar cap turning in place, one turn takes about a minute, the sun sits low on the galaxy's side so the terminator, the
   night-side city lights and the cloud shadows cross the visible half, and it drifts a little against the galaxy's slow zoom. Clouds on

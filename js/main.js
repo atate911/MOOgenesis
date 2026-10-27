@@ -6,6 +6,7 @@
     const UI = M.UI;
     UI.init();
     UI.startLoop();
+    try { if (UI.Sky && UI.Sky.install) UI.Sky.install(); } catch (e) { console.warn('sky install failed', e); }          // the one sky under every screen
     try { if (UI.Help && UI.Help.install) UI.Help.install(); } catch (e) { console.warn('help install failed', e); }      // F1 context help overlay + tutor tips
 
     // Web Audio needs a user gesture; unlock on the first one.

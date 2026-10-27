@@ -78,7 +78,7 @@
     .end-gnn b { margin-right:.7rem; font:400 .95rem var(--font-display); color:var(--brass-hi); letter-spacing:.14em; }
     .end-act { margin-top:1.1rem; display:flex; gap:.8rem; justify-content:center; }
     .end-hint { position:absolute; left:1rem; bottom:.6rem; font:400 .8rem var(--font-ui); color:var(--mist); opacity:.85; pointer-events:none; }
-    .end-hint kbd { padding:.04rem .38rem; margin-right:.3rem; font:600 .72rem var(--font-ui); color:var(--brass-hi); background:rgba(214,179,106,.14); box-shadow:inset 0 0 0 1px rgba(214,179,106,.4); }
+    .end-hint kbd { padding:.04rem .38rem; margin-right:.3rem; font:600 .7rem var(--font-ui); color:var(--brass-hi); background:rgba(214,179,106,.14); box-shadow:inset 0 0 0 1px var(--brass-line-3); }
   `);
   const EN = {};
   let RUN = null, chain = Promise.resolve();
@@ -110,11 +110,12 @@
     const bg = stillIm ? WA.draw(g, stillIm, 0, 0, w, hh, { fx: 0.6, fy: 0.45, zoom: 1 + 0.06 * (1 - k) }) : WA.draw(g, scene, 0, 0, w, hh, { fx: 0.62, fy: 0.42, zoom: 1.08 - 0.08 * k });
     if (!bg) return false;
     g.fillStyle = 'rgba(2,3,12,.38)'; g.fillRect(0, 0, w, hh);                                   // the plate sits low-key under the caption
+    if (M.Gfx && M.Gfx.Grade) { try { M.Gfx.Grade.apply(g, w, hh, t, 'plate'); } catch (e) { /* optional */ } }
     if (!stillIm) {                                                                              // the homeworld shrinks into the distance
       const hp = WA.race(R.T.race, 'homeworld'), r = hh * (0.19 - 0.13 * k), cx = w * (0.8 - 0.05 * k), cy = hh * 0.3;
       if (hp && WA.get(hp) && r > 2) {
         g.save(); g.globalAlpha = 0.95 - 0.45 * k; g.beginPath(); g.arc(cx, cy, r, 0, TAU); g.clip();
-        WA.draw(g, hp, cx - r * 1.35, cy - r * 1.35, r * 2.7, r * 2.7, { fx: 0.5, fy: 0.5 });
+        WA.draw(g, hp, cx - r * 1.35, cy - r * 1.35, r * 2.7, r * 2.7, { fx: 0.5, fy: 0.5, tone: WA.raceTone ? WA.raceTone(R.T.race, 'homeworld') : null });   // the homeworld set's tone, like every other site
         const sh = g.createRadialGradient(cx - r * 0.35, cy - r * 0.3, r * 0.2, cx, cy, r); sh.addColorStop(0, 'rgba(0,0,0,0)'); sh.addColorStop(0.75, 'rgba(0,0,0,.25)'); sh.addColorStop(1, 'rgba(0,0,0,.9)');
         g.fillStyle = sh; g.fillRect(cx - r, cy - r, r * 2, r * 2); g.restore();
         g.save(); g.globalCompositeOperation = 'lighter'; const gl = g.createRadialGradient(cx, cy, r * 0.9, cx, cy, r * 1.6); gl.addColorStop(0, 'rgba(120,150,255,.22)'); gl.addColorStop(1, 'rgba(0,0,0,0)'); g.fillStyle = gl; g.fillRect(cx - r * 2, cy - r * 2, r * 4, r * 4); g.restore();

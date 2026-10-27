@@ -4,25 +4,25 @@
   const UI = M.UI, h = UI.h, G = M.Game, Q = M.Sim.Q, U = M.Util;
 
   UI.css('side-misc', `
-    .sm-card { display:flex; gap:.7rem; align-items:center; margin:.2rem 0 .55rem; padding:.45rem; background:rgba(0,0,0,.28); border:1px solid rgba(214,179,106,.28); }
+    .sm-card { display:flex; gap:.7rem; align-items:center; margin:.2rem 0 .55rem; padding:.45rem; background:rgba(0,0,0,.28); border:1px solid var(--brass-line-2); }
     .sm-card.unexp { border-color:var(--rose); } .sm-card .un { font:400 1.3rem var(--font-display); color:var(--leaf); letter-spacing:.12em; }
-    .sm-pic { flex:none; width:5.2rem; height:5.2rem; } .sm-pic canvas { width:100%; height:100%; }
-    .sm-desc { margin:.4rem 0; color:var(--mist); font-size:.92rem; line-height:1.35; }
+    .sm-pic { flex:none; width:5.2rem; height:5.2rem; } .sm-pic :is(canvas, img) { width:100%; height:100%; }
+    .sm-desc { margin:.4rem 0; color:var(--mist); font-size:.9rem; line-height:1.35; }
     .sm-range { margin:.5rem 0; padding:.35rem .6rem; border-left:3px solid var(--cyan); background:rgba(98,216,255,.07); }
     .sm-range.out { border-left-color:var(--rose); background:rgba(255,92,106,.07); }
-    .sm-fleet { display:grid; grid-template-columns: 3.6rem 1fr auto; align-items:center; gap:.5rem; padding:.3rem .4rem; margin:.25rem 0; background:rgba(0,0,0,.28); border:1px solid rgba(214,179,106,.2); }
+    .sm-fleet { display:grid; grid-template-columns: 3.6rem 1fr auto; align-items:center; gap:.5rem; padding:.3rem .4rem; margin:.25rem 0; background:rgba(0,0,0,.28); border:1px solid var(--brass-line-1); }
     .sm-fleet canvas { width:3.6rem; height:2.6rem; object-fit:contain; } .sm-fleet .nm { font:400 1rem var(--font-display); color:var(--brass-hi); } .sm-fleet .ct { color:var(--mist); font-size:.85rem; }
     .sm-step { display:flex; align-items:center; gap:.2rem; } .sm-step .btn { padding:.1em .5em; font-size:.85rem; } .sm-step .n { min-width:2.2rem; text-align:center; font-weight:600; font-variant-numeric:tabular-nums; }
-    .sm-route { margin:.5rem 0; padding:.45rem .6rem; font-size:.92rem; border:1px solid var(--leaf); background:rgba(95,220,143,.08); } .sm-route.bad { border-color:var(--rose); background:rgba(255,92,106,.08); }
+    .sm-route { margin:.5rem 0; padding:.45rem .6rem; font-size:.9rem; border:1px solid var(--leaf); background:rgba(95,220,143,.08); } .sm-route.bad { border-color:var(--rose); background:rgba(255,92,106,.08); }
     .sm-actions { display:flex; gap:.5rem; justify-content:flex-end; margin-top:.6rem; }
     .sm-event h4 { font:400 1.15rem var(--font-display); color:var(--brass-hi); margin:.2rem 0 .4rem; line-height:1.2; }
     .sm-event p { color:var(--ivory); margin:.3rem 0; line-height:1.4; } .sm-event .flag { margin:.35rem 0; padding:.3rem .55rem; border-left:3px solid var(--ember); background:rgba(255,148,64,.08); font-size:.9rem; }
     .sm-event .flag.good { border-left-color:var(--leaf); background:rgba(95,220,143,.07); }
     .sm-card.wide { display:block; padding:0; position:relative; overflow:hidden; aspect-ratio:16 / 7; }
-    .sm-card.wide .sm-pic { width:100%; height:100%; } .sm-card.wide .sm-pic canvas { display:block; width:100%; height:100%; object-fit:cover; }
+    .sm-card.wide .sm-pic { width:100%; height:100%; } .sm-card.wide .sm-pic :is(canvas, img) { display:block; width:100%; height:100%; object-fit:cover; }
     .sm-card.wide .sc-info { position:absolute; right:.6rem; bottom:.45rem; z-index:1; text-align:right; text-shadow:0 1px 2px #000, 0 0 10px rgba(0,0,0,.9); }
-    .sm-card.wide::after { content:''; position:absolute; inset:0; pointer-events:none; background:linear-gradient(180deg, rgba(0,0,0,0) 45%, rgba(0,0,0,.55) 100%); }
-    .sm-flavor { margin:.35rem 0 .1rem; color:var(--mist); font-size:.88rem; line-height:1.4; font-style:italic; }
+    .sm-card.wide::after { content:''; position:absolute; inset:0; pointer-events:none; background:linear-gradient(180deg, rgba(0,0,0,0) 45%, rgba(0,0,0,.55) 100%); box-shadow:inset 0 0 0 1px rgba(0,0,0,.7), inset 0 0 1.6rem rgba(0,0,0,.4); }
+    .sm-flavor { margin:.35rem 0 .1rem; color:var(--mist); font-size:.85rem; line-height:1.4; font-style:italic; }
   `);
   const bump = css => css.replace(/(^|[}])([^{}]*)[{]/g, (m, a, sel) => a + sel.replace(/[/][*][^]*?[*][/]/g, '').split(',').map(s => s.trim()).filter(Boolean).map(s => ':root:root ' + s).join(', ') + ' {');   // raise specificity over the theme-v2 .panel/.btn rules
   // the fleet steppers: the sliders' steel buttons with drawn red arrows (single = one step, double = none / all), not text glyphs
@@ -31,16 +31,16 @@
   UI.css('side-misc-orig', bump(`
     .sm-card { gap:.6rem; padding:.3rem; border:0; background:linear-gradient(180deg, #0b0e13, #05070a); box-shadow:0 0 0 1px #d04030, inset 0 0 0 1px rgba(0,0,0,.9); }
     .sm-card.unexp { box-shadow:0 0 0 1px #d04030, inset 0 0 18px rgba(208,64,48,.18); } .sm-card .un { font:600 1.05rem var(--font-display); color:#50e050; letter-spacing:.14em; }
-    .sm-desc { color:#e4e8ee; font-size:.88rem; }
-    .sm-range { border-left:0; background:#12161b; color:#40e060; font:600 .78rem var(--font-display); letter-spacing:.1em; text-transform:uppercase; text-align:center; box-shadow:inset 1px 1px 2px rgba(0,0,0,.9), 0 1px 0 rgba(255,255,255,.12); }
+    .sm-desc { color:#e4e8ee; font-size:.85rem; }
+    .sm-range { border-left:0; background:#12161b; color:#40e060; font:600 .8rem var(--font-display); letter-spacing:.1em; text-transform:uppercase; text-align:center; box-shadow:inset 1px 1px 2px rgba(0,0,0,.9), 0 1px 0 rgba(255,255,255,.12); }
     .sm-range.out { color:#ff7a5a; background:#1a1210; }
-    .sm-fleet { grid-template-columns:3.8rem 1fr auto; gap:.4rem; padding:.2rem; border:0; background:linear-gradient(180deg, #59636f, #454d57); box-shadow:inset 1px 1px 0 rgba(255,255,255,.2), inset -1px -1px 0 rgba(0,0,0,.5), 0 0 0 1px rgba(0,0,0,.6); }
+    .sm-fleet { grid-template-columns:3.8rem 1fr auto; gap:.4rem; padding:.2rem; border:0; background:linear-gradient(180deg, #5f626a, #4c4d52); box-shadow:inset 1px 1px 0 rgba(255,255,255,.2), inset -1px -1px 0 rgba(0,0,0,.5), 0 0 0 1px rgba(0,0,0,.6); }
     .sm-fleet canvas { background:#000; box-shadow:inset 0 0 0 1px rgba(0,0,0,.9), 0 0 0 1px rgba(255,255,255,.12); }
-    .sm-fleet .nm { display:inline-block; padding:.05rem .35rem; font:600 .8rem var(--font-display); letter-spacing:.12em; text-transform:uppercase; color:#f0d048; background:#3a2810; box-shadow:inset 1px 1px 2px rgba(0,0,0,.8); }
-    .sm-fleet .ct { margin-top:.15rem; color:#e4e8ee; font-size:.78rem; }
+    .sm-fleet .nm { display:inline-block; padding:.05rem .35rem; font:600 .8rem var(--font-display); letter-spacing:.12em; text-transform:uppercase; color:var(--slot-ink, #f0d048); background:#3a2810; box-shadow:inset 1px 1px 2px rgba(0,0,0,.8); }
+    .sm-fleet .ct { margin-top:.15rem; color:#e4e8ee; font-size:.8rem; }
     .sm-step { gap:.22rem; }
-    .sm-sb { position:relative; width:1.45rem; height:1.45rem; padding:0; border:0; cursor:pointer; background:linear-gradient(135deg, var(--bev-hi, #8a9aac), var(--bev-mid, #3a4656) 35%, var(--bev-lo, #11161e)); box-shadow:0 0 0 1px #000; }
-    .sm-sb:hover { background:linear-gradient(135deg, #8fa3b8, #3a4a60 35%, #141b26); } .sm-sb:active { background:linear-gradient(135deg, var(--bev-lo, #11161e), var(--bev-mid, #3a4656) 70%, var(--bev-hi, #8a9aac)); }
+    .sm-sb { position:relative; width:1.45rem; height:1.45rem; padding:0; border:0; cursor:var(--hand); background:linear-gradient(135deg, var(--bev-hi, #8a9aac), var(--bev-mid, #40454e) 35%, var(--bev-lo, #14161a)); box-shadow:0 0 0 1px #000; }
+    .sm-sb:hover { background:linear-gradient(135deg, #8fa3b8, #3a4a60 35%, #181a21); } .sm-sb:active { background:linear-gradient(135deg, var(--bev-lo, #14161a), var(--bev-mid, #40454e) 70%, var(--bev-hi, #8a9aac)); }
     .sm-sb:focus-visible { outline:1px solid var(--brass-hi); outline-offset:1px; }
     .sm-sb::after { content:""; position:absolute; inset:24% 26%; background:#d04a4a; filter:drop-shadow(0 1px 0 #000); }
     .sm-sb:hover::after { background:#ff6a5a; }
@@ -51,7 +51,7 @@
     .sm-route { border:0; background:#12161b; color:#40e060; box-shadow:inset 1px 1px 2px rgba(0,0,0,.9), 0 1px 0 rgba(255,255,255,.12); } .sm-route.bad { color:#ff7a5a; background:#1a1210; }
     .sm-actions { justify-content:stretch; }
     .sm-event h4 { font:600 .95rem var(--font-display); letter-spacing:.08em; color:#f0d8b0; text-shadow:0 1px 0 #000; }
-    .sm-event .flag { border-left:0; background:rgba(0,0,0,.35); color:#d8c8a8; font:600 .74rem/1.4 var(--font-display); letter-spacing:.07em; text-transform:uppercase; box-shadow:inset 1px 1px 2px rgba(0,0,0,.7); }
+    .sm-event .flag { border-left:0; background:rgba(0,0,0,.35); color:#d8c8a8; font:600 .75rem/1.4 var(--font-display); letter-spacing:.07em; text-transform:uppercase; box-shadow:inset 1px 1px 2px rgba(0,0,0,.7); }
   `));
 
   const STAR_TEXT = {
@@ -69,7 +69,7 @@
   }
   function planetPic(card, size, owner) {
     const WA = M.Gfx.WorldArt, art = WA && WA.enabled ? WA.orbit(card, M.Game && M.Game.S) : null;   // photoreal orbit card, else the procedural sprite
-    if (art) return h('div.sm-pic', WA.canvas(art, size * 2, size * 2, { fit: 'contain' }));
+    if (art) return h('div.sm-pic', WA.image(art, { fit: 'contain' }));
     const c = h('canvas', { width: size * 2, height: size * 2 });
     try {
       const P = M.Gfx.pick('planets'); const look = card.type === 'none' ? 'asteroids' : card.growth === 'gaia' ? 'gaia' : card.type;
@@ -203,7 +203,8 @@
   });
 
   // ---- generic event card (exploration, colonisation prompt, notices, pre-battle) ---------------------------------------------------------------------
-  //   UI.Flow.card({title, planetCard?, owner?, body:[strings|Nodes], flags:[{text,good}], buttons:[{label,value,primary}]}) → Promise(value)
+  //   UI.Flow.card({title, planetCard?, scene?, owner?, body:[strings|Nodes], flags:[{text,good}], buttons:[{label,value,primary}]}) → Promise(value)
+  //   scene: a WorldArt scene key shown in the planet box instead of the orbit plate (the colonise prompt: 'first-landing')
   let cardOffs = [];
   UI.Side.register('card', {
     render(host, ctx) {
@@ -212,8 +213,8 @@
       host.appendChild(p.star !== undefined ? UI.Side.title(p.star, p.ownerId) : h('div.side-title', h('span.nm', p.heading || '')));
       const body = h('div.sm-event');
       if (p.planetCard) {
-        const c = p.planetCard, WA = M.Gfx && M.Gfx.WorldArt, art = WA && WA.enabled ? WA.orbit(c, G.S) : null;     // the original's wide planet box: the orbit plate, else the sprite
-        body.appendChild(h('div.sm-card' + (art ? '.wide' : ''), art ? h('div.sm-pic', WA.canvas(art, 560, 245, { fx: 0.5, fy: 0.5 })) : planetPic(c, 44, p.ownerId),
+        const c = p.planetCard, WA = M.Gfx && M.Gfx.WorldArt, art = WA && WA.enabled ? (p.scene && WA.scene(p.scene)) || WA.orbit(c, G.S) : null;     // the original's wide planet box: the card's scene (colonise: the landing) or the orbit plate, else the sprite
+        body.appendChild(h('div.sm-card' + (art ? '.wide' : ''), art ? h('div.sm-pic', WA.image(art, { fx: 0.5, fy: p.scene ? 0.45 : 0.5 })) : planetPic(c, 44, p.ownerId),
           h('div.sc-info', h('div', h('span.cls', { style: { font: '400 1.2rem var(--font-display)', color: 'var(--brass-hi)' } }, c.typeLabel), c.growthLabel ? h('span.chip' + (c.growth === 'hostile' ? '.warn' : '.ok'), { style: { marginLeft: '.4rem' } }, c.growthLabel) : null),
             c.type !== 'none' ? h('div', 'POP ', h('b.t-leaf', c.maxPop), ' max') : h('div.dim', 'No habitable planet'), c.specialLabel ? h('div.t-cyan.small', c.specialLabel) : null)));
       }

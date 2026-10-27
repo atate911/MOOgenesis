@@ -154,8 +154,9 @@
       row('Animation speed', 'Fleet movement and battle playback.', anim, 'stack'),
       bool('showTips', 'Tooltips', UI.Phone.say('Hover hints on buttons, numbers and map objects.', 'Tap a number, label or chip to read about it (a long press always works, on buttons too).'), true),
       bool('reduceMotion', 'Reduce motion', 'Calmer screens: fewer sweeps, particles and twinkling.', false),
+      bool('empireMarks', 'Empire marks', 'For colour-blind players: every empire\'s colonies get a ring pattern of their own and a race code (HU, MR, …) on the galaxy map, its key and foreign fleets.', false),
       row('Map labels', 'Which stars show their names on the galaxy map.', labels, 'stack'),
-      bool('mapGrid', 'Star-chart grid', 'Draw the graticule behind the galaxy map.', true),
+      bool('mapGrid', 'Star-chart grid', 'Draw the graticule behind the galaxy map.', S.DEFAULTS.mapGrid),
       M.Phone && M.Phone.active() ? bool('haptics', 'Haptics', 'A short vibration on Next turn, slider steps, switches and errors (Android; iPhones with iOS 18 or later tick).', true) : null,
       M.Phone && M.Phone.active() ? bool('perfOverlay', 'Performance overlay', 'Frame rate, graphics tier and worker load in the top corner.', false) : null,
       row('Interface scale', 'Resizes the whole interface. Applied when you let go of the slider.', null, 'stack'),
@@ -202,7 +203,7 @@
   UI.Screens.register('options', {
     create(el) {
       const ctl = C();
-      bg = ctl.backdrop('ui');
+      bg = UI.Sky && UI.Sky.el ? null : ctl.backdrop('ui');          // the one sky (js/ui/sky.js) shows through; the painted one is the fallback
       holder = h('div.op-scroll');
       resetBtn = ctl.hotkey(UI.button('Reset to defaults', () => view && resetFlow(view)), 'r');
       const doneBtn = ctl.hotkey(UI.button('Done', goBack, { primary: true, big: true, kbd: 'Space' }), 'd');
@@ -216,7 +217,7 @@
     },
     enter(params) {
       from = (params && params.from) || 'menu';
-      bg.paint();
+      if (bg) bg.paint();
       view = buildOptions();
       UI.mount(holder, view.el);
     },
@@ -234,7 +235,7 @@
     .op-inner { width:min(100%, 60rem); display:flex; flex-direction:column; gap:.9rem; min-height:0; }
     .op-head { flex:none; }
     .op-scroll { flex:1 1 auto; min-height:0; overflow-y:auto; overflow-x:hidden; padding:2px 6px 2px 2px; }
-    .op-foot { flex:none; display:flex; align-items:center; gap:.7rem; padding-top:.75rem; border-top:1px solid rgba(214,179,106,.28); }
+    .op-foot { flex:none; display:flex; align-items:center; gap:.7rem; padding-top:.75rem; border-top:1px solid var(--brass-line-2); }
     .op-modal .op-foot { margin-top:.9rem; }
     .op-foot-hint { color:var(--fog); font-size:.85rem; margin-left:.5rem; }
     .op-body { display:grid; grid-template-columns:repeat(2, minmax(0,1fr)); gap:.9rem; align-items:start; }
@@ -247,8 +248,8 @@
     .op-row.stack .op-ctl { grid-row:2; }
     .op-row.slr { grid-template-columns:minmax(0,1fr); padding:.3rem 0; }
     .op-row.slr .slider { margin:.15rem 0; }
-    .op-name { color:var(--ivory); font-size:1.02rem; }
-    .op-hint { margin-top:.1rem; color:var(--mist); font-size:.84rem; line-height:1.28; }
+    .op-name { color:var(--ivory); font-size:1rem; }
+    .op-hint { margin-top:.1rem; color:var(--mist); font-size:.85rem; line-height:1.28; }
     .op-ctl:empty { display:none; }
     .op-body .slider { grid-template-columns:4.4rem 1.45rem minmax(3rem, 1fr) 1.45rem 3rem; }
     .op-body .slider > :last-child { display:none; }

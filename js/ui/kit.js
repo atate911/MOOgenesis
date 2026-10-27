@@ -148,7 +148,7 @@
     b.appendChild(doc.createTextNode(label === undefined || label === null ? '' : String(label)));
     if (o.kbd) b.appendChild(h('span.kbd', o.kbd));
     if (o.tip) UI.setTip(b, o.tip);
-    b.addEventListener('click', e => { UI.sfx(o.sfx || 'click'); if (onclick) onclick(e); });
+    b.addEventListener('click', e => { if (o.sfx !== false) UI.sfx(o.sfx || 'click'); if (onclick) onclick(e); });   // sfx:false — the action plays its own cue
     return b;
   };
   UI.panel = function (title, body, o) {

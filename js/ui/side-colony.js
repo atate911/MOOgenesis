@@ -5,37 +5,37 @@
   const UI = M.UI, h = UI.h, G = M.Game, Q = M.Sim.Q, U = M.Util;
 
   UI.css('side-colony', `
-    .sc-card { display:flex; gap:.7rem; align-items:center; margin-bottom:.5rem; padding:.45rem; background:rgba(0,0,0,.28); border:1px solid rgba(214,179,106,.28); }
+    .sc-card { display:flex; gap:.7rem; align-items:center; margin-bottom:.5rem; padding:.45rem; background:rgba(0,0,0,.28); border:1px solid var(--brass-line-2); }
     .sc-card.wide { display:block; padding:0; position:relative; overflow:hidden; aspect-ratio:16 / 7; }
-    .sc-card.wide .sc-pic { width:100%; height:100%; filter:none; } .sc-card.wide .sc-pic canvas { display:block; object-fit:cover; }
+    .sc-card.wide .sc-pic { width:100%; height:100%; filter:none; } .sc-card.wide .sc-pic :is(canvas, img) { display:block; object-fit:cover; }
     .sc-card.wide .sc-info { position:absolute; right:.6rem; bottom:.45rem; text-align:right; text-shadow:0 1px 2px #000, 0 0 10px rgba(0,0,0,.9); }
-    .sc-card.wide::after { content:''; position:absolute; inset:0; pointer-events:none; background:linear-gradient(180deg, rgba(0,0,0,0) 45%, rgba(0,0,0,.55) 100%); }
+    .sc-card.wide::after { content:''; position:absolute; inset:0; pointer-events:none; background:linear-gradient(180deg, rgba(0,0,0,0) 45%, rgba(0,0,0,.55) 100%); box-shadow:inset 0 0 0 1px rgba(0,0,0,.7), inset 0 0 1.6rem rgba(0,0,0,.4); }
     .sc-card.wide .sc-info { z-index:1; }
-    .sc-pic { flex:none; width:5.6rem; height:5.6rem; display:grid; place-items:center; } .sc-pic canvas { width:100%; height:100%; }
+    .sc-pic { flex:none; width:5.6rem; height:5.6rem; display:grid; place-items:center; } .sc-pic :is(canvas, img) { width:100%; height:100%; }
     .sc-info { flex:1; min-width:0; line-height:1.25; }
-    .sc-info .cls { font:400 1.25rem var(--font-display); color:var(--brass-hi); }
-    .sc-info .tag { display:inline-block; margin-left:.4rem; padding:0 .4em; font-size:.74rem; color:var(--ember); border:1px solid var(--ember); }
+    .sc-info .cls { font:400 1.2rem var(--font-display); color:var(--brass-hi); }
+    .sc-info .tag { display:inline-block; margin-left:.4rem; padding:0 .4em; font-size:.75rem; color:var(--ember); border:1px solid var(--ember); }
     .sc-info .tag.good { color:var(--leaf); border-color:var(--leaf); } .sc-info .tag.cy { color:var(--cyan); border-color:var(--cyan); }
     .sc-info .pm { color:var(--leaf); font-weight:600; font-variant-numeric:tabular-nums; }
     .sc-stats { display:grid; grid-template-columns: repeat(2, 1fr); gap:.3rem .6rem; margin:.3rem 0 .45rem; font-variant-numeric:tabular-nums; }
-    .sc-stats .cell { display:flex; justify-content:space-between; padding:.12rem .45rem; background:rgba(0,0,0,.25); border:1px solid rgba(214,179,106,.18); }
+    .sc-stats .cell { display:flex; justify-content:space-between; padding:.12rem .45rem; background:rgba(0,0,0,.25); border:1px solid var(--brass-line-1); }
     .sc-stats .cell span:first-child { color:var(--mist); } .sc-stats .wide { grid-column:1 / -1; }
     .sc-sliders { margin:.2rem 0 .5rem; }
     .sc-sliders .slider { grid-template-columns: 4.1rem 1.35rem 1fr 1.35rem 4.1rem 1.4rem; margin:.2rem 0; font-size:.95rem; }
-    .sc-sliders .s-val { font-size:.78rem; letter-spacing:.02em; color:var(--ivory); text-align:right; white-space:nowrap; }
+    .sc-sliders .s-val { font-size:.8rem; letter-spacing:.02em; color:var(--ivory); text-align:right; white-space:nowrap; }
     .sc-sliders .s-val.warn { color:var(--rose); } .sc-sliders .s-val.dim { color:var(--mist); }
-    .sc-sliders .s-label small { color:var(--mist); margin-left:.25rem; font-size:.72rem; }
+    .sc-sliders .s-label small { color:var(--mist); margin-left:.25rem; font-size:.7rem; }
     .sc-build { display:grid; grid-template-columns: 1fr auto; gap:.5rem; align-items:stretch; margin-top:.2rem; }
-    .sc-bbox { display:flex; align-items:center; gap:.5rem; padding:.35rem .5rem; cursor:pointer; background:rgba(0,0,0,.3); border:1px solid var(--brass-lo); min-height:4rem; position:relative; overflow:hidden; }
-    .sc-bbox .yard { position:absolute; inset:0; z-index:0; pointer-events:none; filter:brightness(.45) saturate(.8); } .sc-bbox .yard canvas { display:block; width:100%; height:100%; }
+    .sc-bbox { display:flex; align-items:center; gap:.5rem; padding:.35rem .5rem; cursor:var(--hand); background:rgba(0,0,0,.3); border:1px solid var(--brass-lo); min-height:4rem; position:relative; overflow:hidden; }
+    .sc-bbox .yard { position:absolute; inset:0; z-index:0; pointer-events:none; filter:brightness(.45) saturate(.8); } .sc-bbox .yard :is(canvas, img) { display:block; width:100%; height:100%; }
     .sc-bbox .yard::after { content:""; position:absolute; inset:0; background:linear-gradient(90deg, rgba(0,0,0,.15), rgba(0,0,0,.6)); }
     .sc-bbox > :not(.yard) { position:relative; z-index:1; }
     .sc-bbox:hover { border-color:var(--brass-hi); background:rgba(214,179,106,.08); }
-    .sc-bbox canvas { width:3.6rem; height:3rem; flex:none; object-fit:contain; } .sc-bbox .bn { font:400 1.05rem var(--font-display); color:var(--brass-hi); } .sc-bbox .bc { font-size:.82rem; color:var(--mist); }
-    .sc-btns { display:flex; flex-direction:column; gap:.3rem; } .sc-btns .btn { padding:.25em .9em; font-size:.92rem; }
-    .sc-note { margin:.4rem 0; padding:.35rem .6rem; border-left:3px solid var(--ember); background:rgba(255,148,64,.08); font-size:.88rem; }
+    .sc-bbox canvas { width:3.6rem; height:3rem; flex:none; object-fit:contain; } .sc-bbox .bn { font:400 1.05rem var(--font-display); color:var(--brass-hi); } .sc-bbox .bc { font-size:.8rem; color:var(--mist); }
+    .sc-btns { display:flex; flex-direction:column; gap:.3rem; } .sc-btns .btn { padding:.25em .9em; font-size:.9rem; }
+    .sc-note { margin:.4rem 0; padding:.35rem .6rem; border-left:3px solid var(--ember); background:rgba(255,148,64,.08); font-size:.85rem; }
     .sc-pickhint { margin:.6rem 0; padding:.6rem .7rem; background:rgba(98,216,255,.08); border:1px dashed var(--cyan); color:var(--ivory); }
-    .sc-rally { grid-column:1 / -1; padding:.15rem .4rem; font-size:.85rem; color:var(--mist); cursor:pointer; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .sc-rally { grid-column:1 / -1; padding:.15rem .4rem; font-size:.85rem; color:var(--mist); cursor:var(--hand); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
     .sc-rally .k { color:#9fb2d8; text-transform:uppercase; letter-spacing:.08em; font-size:.75rem; } .sc-rally b { color:var(--ivory); font-weight:600; }
     .sc-gate { color:#c7a6ff; }
     .sc-relocmsg { margin:.2rem 0 .5rem; text-align:center; color:var(--ivory); min-height:1.3em; }
@@ -43,31 +43,55 @@
     .sc-trans .big { font:400 1.4rem var(--font-display); color:var(--brass-hi); text-align:center; margin:.4rem 0; }
     .sc-tpop { margin:.45rem 0 .3rem; font-variant-numeric:tabular-nums; }
     .sc-tpop .r { display:grid; grid-template-columns:2.6rem 1fr auto; gap:.4rem; align-items:baseline; padding:.12rem .3rem; }
-    .sc-tpop .r + .r { border-top:1px solid rgba(214,179,106,.15); }
-    .sc-tpop .k { color:var(--mist); font-size:.78rem; text-transform:uppercase; letter-spacing:.08em; } .sc-tpop .nm { color:var(--ivory); }
+    .sc-tpop .r + .r { border-top:1px solid var(--brass-line-1); }
+    .sc-tpop .k { color:var(--mist); font-size:.8rem; text-transform:uppercase; letter-spacing:.08em; } .sc-tpop .nm { color:var(--ivory); }
     .sc-tpop b { color:var(--leaf); } .sc-tpop b.over { color:var(--amber, #f0b050); }
     .empire-dot { display:inline-block; width:.7em; height:.7em; margin-right:.2em; transform:rotate(45deg); background:var(--c, var(--brass)); box-shadow:0 0 6px var(--c, var(--brass)); }
+    .sc-stats .cell > span:last-child.chg { animation:sc-chg 1.2s ease-out both; }   /* a readout that changed over the turn (galaxy.js lights the HUD the same way) */
+    @keyframes sc-chg { 0%, 25% { background:#7a5a14; color:#fff8dc; box-shadow:inset 0 0 0 1px var(--slot-ink, #f0d048), 0 0 8px rgba(240,208,72,.6); } 100% { } }
+    /* the colony postcard under the build box (desktop): the panel's lower third was an empty band. The body becomes a column so the card takes
+       whatever height is left; the container query hides it when that is too little to read. Phones: never (the sheet shows the controls). */
+    .sc-post { display:none; }
+    :root:not([data-phone]) .sc-post { position:relative; display:block; aspect-ratio:16 / 7; margin-top:.55rem; container-type:size; overflow:hidden; background:#05070a; }
+    :root:not([data-phone]) .gx-sidebody:has(> .sc-post) { display:flex; flex-direction:column; }
+    :root:not([data-phone]) .gx-sidebody:has(> .sc-post) > * { flex:none; }
+    /* a flex column does not collapse margins: keep the block layout's collapsed gaps (card .5 | stats, stats .45 | sliders, sliders .5 | build,
+       and a note's .4 against its neighbours) so nothing above the postcard moves */
+    :root:not([data-phone]) .gx-sidebody:has(> .sc-post) > :is(.sc-stats, .sc-sliders, .sc-build), :root:not([data-phone]) .gx-sidebody:has(> .sc-post) .sc-note { margin-top:0; }
+    :root:not([data-phone]) .gx-sidebody:has(> .sc-post) > .sc-post { flex:1 1 0; min-height:0; aspect-ratio:auto; max-height:26rem; }
+    .sc-post > :is(canvas, img) { position:absolute; inset:0; width:100%; height:100%; object-fit:cover; object-position:50% 60%; }
+    .sc-post::after { content:""; position:absolute; inset:0; pointer-events:none; box-shadow:inset 0 0 0 1px var(--brass-line-2), inset 0 0 2.5rem rgba(0,0,0,.55);
+      background:linear-gradient(180deg, rgba(0,0,0,.5), rgba(0,0,0,0) 30%, rgba(0,0,0,0) 55%, rgba(0,0,0,.75)); }
+    .sc-pc { position:absolute; left:.65rem; top:.45rem; right:.65rem; z-index:1; line-height:1.25; text-shadow:0 1px 2px #000, 0 0 8px rgba(0,0,0,.9); }
+    .sc-pc b { display:block; font:600 .8rem var(--font-display); letter-spacing:.12em; text-transform:uppercase; color:var(--slot-ink, #f0d048); } .sc-pc span { font-size:.85rem; color:#e6e2d4; }
+    .sc-orb { position:absolute; left:.5rem; right:.5rem; bottom:.4rem; z-index:1; display:flex; flex-wrap:wrap; align-items:center; gap:.3rem; }
+    .sc-orb .k { font:600 .7rem var(--font-display); letter-spacing:.12em; text-transform:uppercase; color:#cfd6e2; text-shadow:0 1px 2px #000; margin-right:.15rem; }
+    .sc-oc { display:inline-flex; align-items:center; gap:.15rem; padding:.05rem .4rem .05rem .1rem; background:rgba(6,9,16,.82); border:1px solid var(--brass-line-3); cursor:var(--hand); font:600 .8rem var(--font-ui); color:#f3e6c0; font-variant-numeric:tabular-nums; }
+    .sc-oc:hover { border-color:var(--slot-ink, #f0d048); background:rgba(40,32,12,.9); } .sc-oc canvas { width:3.2rem; height:1.9rem; }
+    .sc-oc.foe { border-color:rgba(255,92,106,.65); color:#ffc2b8; cursor:default; } .sc-oc.none { cursor:default; color:#aab3c0; border-color:rgba(255,255,255,.18); font-weight:400; padding-left:.4rem; }
+    @container (max-height: 5.5rem) { .sc-pc { display:none; } }
+    @container (max-height: 3.2rem) { .sc-orb, .sc-post > :is(canvas, img) { display:none; } }
   `);
 
   const bump = css => css.replace(/(^|[}])([^{}]*)[{]/g, (m, a, sel) => a + sel.replace(/[/][*][^]*?[*][/]/g, '').split(',').map(s => s.trim()).filter(Boolean).map(s => ':root:root ' + s).join(', ') + ' {');   // raise specificity over the theme-v2 .panel/.btn rules
   // Restyle: red-framed planet portrait, inset readout slots, bevelled label plates, red-triangle slider arrows, gantry build box.
   UI.css('side-colony-orig', bump(`
-    .gx-side { --slotbg:#12161b; --slot-edge:rgba(255,255,255,.14); --amber:#f0e060; --lime:#70e060; --red-arrow:#c8453a; --frame-red:#d04030; --gold-frame:#c8a030; }
+    .gx-side { --slotbg:var(--well-steel, #0b0d12); --slot-edge:var(--hair, rgba(255,255,255,.14)); --amber:#f0e060; --lime:#70e060; --red-arrow:#c8453a; --frame-red:#d04030; --gold-frame:#c8a030; }
     .sc-card { gap:.6rem; padding:.3rem; background:radial-gradient(1px 1px at 12% 22%, #fff9 50%, transparent), radial-gradient(1px 1px at 38% 78%, #fff7 50%, transparent), radial-gradient(1px 1px at 88% 18%, #fff8 50%, transparent), radial-gradient(1px 1px at 63% 62%, #fff6 50%, transparent), linear-gradient(180deg, #0b0e13, #05070a); border:0; box-shadow:0 0 0 1px var(--frame-red), inset 0 0 0 1px rgba(0,0,0,.9), inset 0 0 18px rgba(208,64,48,.12); }
     .sc-pic { filter:drop-shadow(0 2px 6px rgba(0,0,0,.7)); }
     .sc-info { text-align:right; }
-    .sc-info .cls { font:600 1rem var(--font-display); letter-spacing:.12em; text-transform:uppercase; color:#f0d048; text-shadow:0 1px 0 #000; }
-    .sc-info .tag { display:block; margin:.15rem 0 0; border:0; padding:0; font:600 .78rem var(--font-display); letter-spacing:.12em; text-transform:uppercase; }
+    .sc-info .cls { font:600 1rem var(--font-display); letter-spacing:.12em; text-transform:uppercase; color:var(--slot-ink, #f0d048); text-shadow:0 1px 0 #000; }
+    .sc-info .tag { display:block; margin:.15rem 0 0; border:0; padding:0; font:600 .8rem var(--font-display); letter-spacing:.12em; text-transform:uppercase; }
     .sc-info .tag.good, .sc-info .tag.cy { color:#8ab0f0; }
     .sc-info .pm { font-family:var(--font-mono, monospace); color:var(--lime); text-shadow:0 0 8px rgba(112,224,96,.35); }
     .sc-stats { gap:.2rem .3rem; }
-    .sc-stats .cell { align-items:center; padding:.1rem .2rem .1rem .4rem; background:linear-gradient(180deg, #5a636e, #454d57); border:0; box-shadow:inset 1px 1px 0 rgba(255,255,255,.22), inset -1px -1px 0 rgba(0,0,0,.5), 0 0 0 1px rgba(0,0,0,.6); }
-    .sc-stats .cell span:first-child { color:#eef1f5; font:600 .78rem var(--font-display); letter-spacing:.1em; text-transform:uppercase; text-shadow:0 1px 0 rgba(0,0,0,.6); }
-    .sc-stats .cell > span:last-child { min-width:3.3rem; text-align:right; padding:.04rem .4rem; background:var(--slotbg); color:var(--amber); font-family:var(--font-mono, monospace); font-size:.92rem; box-shadow:inset 1px 1px 2px rgba(0,0,0,.9), 0 1px 0 var(--slot-edge); }
+    .sc-stats .cell { align-items:center; padding:.1rem .2rem .1rem .4rem; background:linear-gradient(180deg, #5e6268, #494c52); border:0; box-shadow:inset 1px 1px 0 rgba(255,255,255,.22), inset -1px -1px 0 rgba(0,0,0,.5), 0 0 0 1px rgba(0,0,0,.6); }
+    .sc-stats .cell span:first-child { color:#eef1f5; font:600 .8rem var(--font-display); letter-spacing:.1em; text-transform:uppercase; text-shadow:0 1px 0 rgba(0,0,0,.6); }
+    .sc-stats .cell > span:last-child { min-width:3.3rem; text-align:right; padding:.04rem .4rem; background:var(--slotbg); color:var(--amber); font-family:var(--font-mono, monospace); font-size:.9rem; box-shadow:inset 1px 1px 2px rgba(0,0,0,.9), 0 1px 0 var(--slot-edge); }
     .sc-stats .cell b.t-ember { color:var(--amber); } .sc-stats .cell .dim { color:var(--lime); opacity:1; }
     .sc-sliders { padding:.3rem .2rem; background:rgba(0,0,0,.18); box-shadow:inset 1px 1px 0 rgba(0,0,0,.5), inset -1px -1px 0 rgba(255,255,255,.08); }
     .sc-sliders .slider { grid-template-columns:4.4rem 1.2rem 1fr 1.2rem 4.2rem 1.4rem; gap:.25rem; margin:.22rem 0; }
-    .sc-sliders .s-label { justify-content:center; padding:.1rem .2rem; background:linear-gradient(180deg, #6a7480, #4b535d); color:#fff; font:600 .78rem var(--font-display); letter-spacing:.1em; text-transform:uppercase; text-shadow:0 1px 0 #000; box-shadow:inset 1px 1px 0 rgba(255,255,255,.28), inset -1px -1px 0 rgba(0,0,0,.5), 0 0 0 1px rgba(0,0,0,.65); }
+    .sc-sliders .s-label { justify-content:center; padding:.1rem .2rem; background:linear-gradient(180deg, #6f737a, #4f5258); color:#fff; font:600 .8rem var(--font-display); letter-spacing:.1em; text-transform:uppercase; text-shadow:0 1px 0 #000; box-shadow:inset 1px 1px 0 var(--spec, rgba(255,245,225,.22)), inset -1px -1px 0 rgba(0,0,0,.5), 0 0 0 1px rgba(0,0,0,.65); }
     .sc-sliders .slider.locked .s-label { background:linear-gradient(180deg, #a85a3a, #7c3a24); }
     .sc-sliders .s-label small { display:none; }
     .sc-sliders .s-btn { font-size:0; width:1.2rem; height:1.2rem; border:0; background:var(--slotbg); box-shadow:inset 1px 1px 2px rgba(0,0,0,.9), 0 1px 0 var(--slot-edge); position:relative; }
@@ -79,32 +103,38 @@
     .sc-sliders .s-fill { background:linear-gradient(180deg, color-mix(in srgb, var(--c) 82%, #fff), color-mix(in srgb, var(--c) 78%, #000)); box-shadow:inset 0 1px 0 rgba(255,255,255,.35); opacity:1; }
     .sc-sliders .slider.locked .s-fill { background:linear-gradient(180deg, #d4693a, #a84418); }
     .sc-sliders .s-knob { display:none; }
-    .sc-sliders .s-val { padding:.12rem .35rem; background:var(--slotbg); color:var(--amber); font-family:var(--font-mono, monospace); font-size:.74rem; box-shadow:inset 1px 1px 2px rgba(0,0,0,.9), 0 1px 0 var(--slot-edge); overflow:hidden; text-overflow:ellipsis; }
-    .sc-sliders .s-val.dim { color:#8a94a0; } .sc-sliders .s-val.warn { color:#ff7a5a; }
-    .sc-sliders .s-lock { width:1.4rem; height:1.2rem; border:0; background:linear-gradient(180deg, #5f6974, #454d57); box-shadow:inset 1px 1px 0 rgba(255,255,255,.2), 0 0 0 1px rgba(0,0,0,.6); }
+    .sc-sliders .s-val { padding:.12rem .35rem; background:var(--slotbg); color:var(--amber); font-family:var(--font-mono, monospace); font-size:.75rem; box-shadow:inset 1px 1px 2px rgba(0,0,0,.9), 0 1px 0 var(--slot-edge); overflow:hidden; text-overflow:ellipsis; }
+    .sc-sliders .s-val.dim { color:#a8b0bc; } .sc-sliders .s-val.warn { color:#ff7a5a; }
+    .sc-sliders .s-lock { width:1.4rem; height:1.2rem; border:0; background:linear-gradient(180deg, #64686e, #494c52); box-shadow:inset 1px 1px 0 rgba(255,255,255,.2), 0 0 0 1px rgba(0,0,0,.6); }
     .sc-build { gap:.4rem; }
     .sc-bbox { flex-direction:column; justify-content:flex-end; align-items:stretch; gap:.1rem; padding:.3rem .3rem 0; min-height:5.2rem; border:2px solid; border-color:#e0bc48 #8a6a18 #8a6a18 #e0bc48;
       background:repeating-linear-gradient(45deg, rgba(190,140,70,.2) 0 2px, transparent 2px 9px), repeating-linear-gradient(-45deg, rgba(190,140,70,.2) 0 2px, transparent 2px 9px), linear-gradient(180deg, #2a2016, #130d08); }
     .sc-bbox:hover { border-color:#f4d868 #a88420 #a88420 #f4d868; }
     .sc-bbox canvas { width:100%; height:3.2rem; object-fit:contain; filter:drop-shadow(0 2px 4px rgba(0,0,0,.7)); }
     .sc-bbox > div { margin:0 -.3rem; padding:.12rem .3rem; text-align:center; background:#3a2810; border-top:1px solid #000; }
-    .sc-bbox .bn { font:600 .8rem var(--font-display); letter-spacing:.12em; text-transform:uppercase; color:#f0d048; } .sc-bbox .bc { font-size:.7rem; color:#c8b078; }
+    .sc-bbox .bn { font:600 .8rem var(--font-display); letter-spacing:.12em; text-transform:uppercase; color:var(--slot-ink, #f0d048); } .sc-bbox .bc { font-size:.7rem; color:#c8b078; }
     .sc-btns { gap:.25rem; min-width:4.8rem; }
     .sc-btns .btn, .sm-actions .btn { flex:1; clip-path:none; justify-content:center; padding:.2em .4em; font:600 .8rem var(--font-display); letter-spacing:.12em; text-transform:uppercase; color:#fff; text-shadow:0 1px 0 #000; background:rgba(0,0,0,.8); box-shadow:none; }
-    .sc-btns .btn::before, .sm-actions .btn::before { clip-path:none; inset:1px; background:linear-gradient(180deg, #6a7480, #474f59); box-shadow:inset 1px 1px 0 rgba(255,255,255,.28), inset -1px -1px 0 rgba(0,0,0,.5); }
-    .sc-btns .btn:hover::before, .sm-actions .btn:hover::before { background:linear-gradient(180deg, #7b8693, #565e69); }
-    .sc-btns .btn:active::before, .sm-actions .btn:active::before { background:linear-gradient(180deg, #3a414a, #474f59); box-shadow:inset 1px 1px 0 rgba(0,0,0,.6); }
+    .sc-btns .btn::before, .sm-actions .btn::before { clip-path:none; inset:1px; background:linear-gradient(180deg, #6f737a, #4b4e54); box-shadow:inset 1px 1px 0 var(--spec, rgba(255,245,225,.22)), inset -1px -1px 0 rgba(0,0,0,.5); }
+    .sc-btns .btn:hover::before, .sm-actions .btn:hover::before { background:linear-gradient(180deg, #80858c, #5a5d64); }
+    .sc-btns .btn:active::before, .sm-actions .btn:active::before { background:linear-gradient(180deg, #3d4045, #4b4e54); box-shadow:inset 1px 1px 0 rgba(0,0,0,.6); }
     .sm-actions .btn.primary::before { background:linear-gradient(180deg, #6f7fb0, #46548a); }
     .sc-note { background:rgba(208,64,48,.12); border-left-color:var(--frame-red); }
-    .sc-pickhint { background:#12161b; border:0; color:#40e060; font:600 .78rem/1.35 var(--font-display); letter-spacing:.1em; text-transform:uppercase; text-align:center; box-shadow:inset 1px 1px 2px rgba(0,0,0,.9), 0 1px 0 rgba(255,255,255,.12); }
+    .sc-pickhint { background:#12161b; border:0; color:#40e060; font:600 .8rem/1.35 var(--font-display); letter-spacing:.1em; text-transform:uppercase; text-align:center; box-shadow:inset 1px 1px 2px rgba(0,0,0,.9), 0 1px 0 rgba(255,255,255,.12); }
     .sc-trans .big { font:600 1rem var(--font-display); letter-spacing:.1em; text-transform:uppercase; color:var(--amber); background:var(--slotbg); padding:.2rem; box-shadow:inset 1px 1px 2px rgba(0,0,0,.9); }
   `));
 
   const LABELS =[['Ship', 'ship', 'var(--c-ship)'], ['Def', 'def', 'var(--c-def)'], ['Ind', 'ind', 'var(--c-ind)'], ['Eco', 'eco', 'var(--c-eco)'], ['Tech', 'tech', 'var(--c-res)']];
 
+  // the readouts as the turn began (taken from the panel on show at turn:processing): the first refresh after turn:end lights the ones that changed
+  let statSnap = null, statFlashUntil = 0, statChg = {};
+  const statVals = host => { const o = {}; host.querySelectorAll('.sc-stats .cell[data-k] > span:last-child').forEach(v => { o[v.parentElement.dataset.k] = v.textContent; }); return o; };
+  M.Bus.on('turn:processing', on => { if (!on) return; const scr = UI.Screens.el && UI.Screens.el('galaxy'), host = scr && scr.querySelector('.gx-side:not(.gx-float) .gx-sidebody'); statSnap = host && host.querySelector('.sc-stats') ? { pid: G.sel.star, v: statVals(host) } : null; });
+  M.Bus.on('turn:end', () => { statFlashUntil = performance.now() + 4000; });
+
   function planetCanvas(card, size) {
     const WA = M.Gfx && M.Gfx.WorldArt, art = WA && WA.enabled ? WA.orbit(card, M.Game && M.Game.S) : null;   // photoreal orbit card, else the procedural sprite
-    if (art) return WA.canvas(art, size * 2, size * 2, { fit: 'contain' });
+    if (art) return WA.image(art, { fit: 'contain' });
     const c = h('canvas', { width: size * 2, height: size * 2 });
     const look = card.type === 'none' ? 'asteroids' : (card.growth === 'gaia' ? 'gaia' : card.type);
     const P = M.Gfx && M.Gfx.pick('planets');
@@ -123,7 +153,7 @@
   function yardPlate() {
     const WA = M.Gfx && M.Gfx.WorldArt; if (!WA || !WA.enabled) return null;
     const still = WA.still('inst-spaceport'), path = still && WA.get(still) ? still : 'colony/colony-industrial';
-    return h('div.yard', WA.canvas(path, 320, 100, { fx: 0.5, fy: 0.55 }));
+    return h('div.yard', WA.image(path, { fx: 0.5, fy: 0.55 }));
   }
 
   // ------------------------------------------------------------------------------------------------------------------------------------------------
@@ -132,7 +162,7 @@
       const S = ctx.S, pid = ctx.params.star !== undefined ? ctx.params.star : G.sel.star, p = S.planets[pid];
       const st = { pid, sliders: [], labels: [] };
       this.st = st;
-      st.title = h('div.side-title'); st.card = h('div.sc-card'); st.stats = h('div.sc-stats'); st.note = h('div'); st.sl = h('div.sc-sliders'); st.build = h('div.sc-build');
+      st.title = h('div.side-title'); st.card = h('div.sc-card'); st.stats = h('div.sc-stats'); st.note = h('div'); st.sl = h('div.sc-sliders'); st.build = h('div.sc-build'); st.post = h('div.sc-post');
       LABELS.forEach(([name, key, color], i) => {
         const lbl = h('span', name, h('small', ''));
         const s = UI.slider({ label: lbl, color, value: p.sliders[i], step: 4, min: 0, max: 100, fmt: () => '',
@@ -141,7 +171,7 @@
         st.sliders.push(s); st.labels.push(lbl); st.sl.appendChild(s);
       });
       st.sync = () => this.refresh(host, ctx);
-      host.appendChild(st.title); host.appendChild(st.card); host.appendChild(st.stats); host.appendChild(st.note); host.appendChild(st.sl); host.appendChild(st.build);
+      host.appendChild(st.title); host.appendChild(st.card); host.appendChild(st.stats); host.appendChild(st.note); host.appendChild(st.sl); host.appendChild(st.build); host.appendChild(st.post);
       this.refresh(host, ctx);
     },
     refresh(host, ctx) {
@@ -149,7 +179,7 @@
       const c = Q.colony(S, st.pid); if (!c || c.owner !== S.playerId) { ctx.defaultPanel(); return; }
       const E = S.empires[c.owner];
       // title (click to rename)
-      UI.mount(st.title, h('span.nm', { style: { cursor: 'pointer' }, tip: 'Click to rename', onclick: async () => { const n = await UI.prompt('Rename this planet', c.name, { maxlength: 11 }); if (n) { G.order({ t: 'rename', planet: c.id, name: n }); } } }, c.name),
+      UI.mount(st.title, h('span.nm', { style: { cursor: 'var(--hand)' }, tip: 'Click to rename', onclick: async () => { const n = await UI.prompt('Rename this planet', c.name, { maxlength: 11 }); if (n) { G.order({ t: 'rename', planet: c.id, name: n }); } } }, c.name),
         h('span.own', h('span.empire-dot', { style: { '--c': 'var(--emp' + E.color + ')' } }), E.plural));
       if (S.planets.filter(p => p.owner === S.playerId).length > 1) {                 // ◀ ▶ step through your colonies without the map (F2 / F3)
         const cyc = (dir, tip) => h('button.cyc' + (dir > 0 ? '.nx' : ''), { type: 'button', 'aria-label': tip.replace(/<[^>]+>/g, ''), tip, onclick: () => UI.Galaxy.cycleColony(dir) });
@@ -165,7 +195,7 @@
         st.cardKey = key;
         const WA = M.Gfx && M.Gfx.WorldArt, art = WA && WA.enabled ? WA.orbit(c, G.S) : null;
         st.card.classList.toggle('wide', !!art);                                          // the original's wide landscape planet box, with the photoreal orbit plate
-        st.picHost = h('div.sc-pic', art ? WA.canvas(art, 560, 245, { fx: 0.5, fy: 0.5 }) : planetCanvas(c, 52));   // WA.canvas paints itself when the plate lands
+        st.picHost = h('div.sc-pic', art ? WA.image(art, { fx: 0.5, fy: 0.5 }) : planetCanvas(c, 52));   // an <img>: sharp at any pixel ratio, fills in when the plate lands
       }
       UI.mount(st.card, st.picHost, h('div.sc-info',
         h('div', h('span.cls', c.typeLabel), c.growthLabel ? h('span.tag' + (c.growth === 'hostile' ? '' : '.good'), c.growthLabel) : null, c.specialLabel ? h('span.tag.cy', c.specialLabel) : null),
@@ -174,9 +204,12 @@
       // stats
       const grow = c.growthTenths; const popTxt = h('span', U.fmt(c.pop), grow ? h('span' + (grow > 0 ? '.t-leaf' : '.t-rose') + '.small', (grow > 0 ? ' ↑' : ' ↓') + Math.abs(grow / 10).toFixed(1)) : null);
       UI.mount(st.stats,
-        h('div.cell', h('span', 'Pop'), popTxt), h('div.cell', h('span', 'Bases'), h('span', c.bases)),
-        h('div.cell', h('span', 'Factories'), h('span', c.factories + ' / ' + c.maxFactories)), h('div.cell', h('span', 'Waste'), h('span' + (c.waste > 0 ? '.t-ember' : ''), c.waste)),
-        h('div.cell.wide', h('span', 'Production'), h('span', h('b.t-ember', c.production), h('span.dim', ' (' + c.gross + ')'), c.shield ? h('span.t-azure.small', '  shield ' + c.shield) : null, c.stargate ? h('span.sc-gate.small', { tip: 'This colony has a stargate: ships and transports sent to another of your stargates arrive the next turn.' }, '  stargate') : null)));
+        h('div.cell', { dataset: { k: 'pop' } }, h('span', 'Pop'), popTxt), h('div.cell', { dataset: { k: 'bases' } }, h('span', 'Bases'), h('span', c.bases)),
+        h('div.cell', { dataset: { k: 'fact' } }, h('span', 'Factories'), h('span', c.factories + ' / ' + c.maxFactories)), h('div.cell', { dataset: { k: 'waste' } }, h('span', 'Waste'), h('span' + (c.waste > 0 ? '.t-ember' : ''), c.waste)),
+        h('div.cell.wide', { dataset: { k: 'prod' } }, h('span', 'Production'), h('span', h('b.t-ember', c.production), h('span.dim', ' (' + c.gross + ')'), c.shield ? h('span.t-azure.small', '  shield ' + c.shield) : null, c.stargate ? h('span.sc-gate.small', { tip: 'This colony has a stargate: ships and transports sent to another of your stargates arrive the next turn.' }, '  stargate') : null)));
+      const tNow = performance.now();
+      if (statSnap && statSnap.pid === st.pid && tNow < statFlashUntil) { const cur = statVals(st.stats); for (const k in cur) if (statSnap.v[k] !== undefined && statSnap.v[k] !== cur[k]) statChg[st.pid + ':' + k] = tNow + 1400; statSnap = null; }
+      for (const key in statChg) { const [pid, k] = key.split(':'); if (tNow >= statChg[key]) delete statChg[key]; else if (+pid === st.pid) { const v = st.stats.querySelector('.cell[data-k="' + k + '"] > span:last-child'); if (v) v.classList.add('chg'); } }
       UI.mount(st.note, c.rebels || c.unrest ? h('div.sc-note', c.unrest === 2 ? 'Rebellion! Production has stopped.' : 'Unrest: ' + c.rebels + 'M rebels.') : (c.event ? h('div.sc-note', 'Event: ' + c.event.type) : null));
       // sliders
       c.sliders.forEach((v, i) => {
@@ -196,9 +229,38 @@
         h('div.sc-btns', UI.button('Ships', () => chooseBuild(c, E), { small: true }), UI.button('Reloc', () => ctx.show('reloc', { planet: c.id }), { small: true, tip: 'Set the rally point for newly built ships' }),
           UI.button('Trans', () => ctx.show('trans', { planet: c.id }), { small: true, tip: 'Send up to half of the population to another colony', disabled: c.pop < 2 })),
         rallyLine(c, E));
+      postcard(st, c, E);
     },
     dispose() { this.st = null; },
   });
+
+  // the colony postcard (desktop): the colony art for this world (domes on a hostile planet, mines on a barren one, a fortress when well defended,
+  // smog when waste builds up, industry when the factories are many, else a city), what the colony is, and what is in orbit — your ships (a click
+  // opens their deployment) and any foreign ones
+  function postcard(st, c, E) {
+    if (UI.Phone && UI.Phone.active()) return;
+    const S = G.S, WA = M.Gfx && M.Gfx.WorldArt;
+    const path = WA && WA.enabled && WA.colony ? WA.colony(c, { fortified: c.bases >= 8 || c.shield >= 10, polluted: c.waste > 0 && c.readouts.eco.text === 'WASTE', industrial: c.factories >= 120 }) : null;
+    if (st.postKey !== path) { st.postKey = path; st.postArt = path ? WA.image(path, { fx: 0.5, fy: 0.6 }) : null; }
+    if (!st.postArt) { UI.clear(st.post); st.post.style.display = 'none'; return; }
+    st.post.style.display = '';
+    const capital = E.capital === c.id, pop = U.fmt(c.pop) + ' million ' + (c.pop === 1 ? 'colonist' : 'colonists');
+    const cap = h('div.sc-pc', h('b', capital ? 'Imperial capital' : c.factories >= 120 ? 'Industrial world' : c.bases >= 8 || c.shield >= 10 ? 'Fortified colony' : 'Colony'), h('span', pop + ' · ' + U.fmt(c.factories) + ' factories'));
+    const orb = h('div.sc-orb', h('span.k', 'In orbit'));
+    const mine = S.fleets.find(f => f.owner === E.id && f.star === c.id);
+    if (mine) mine.ships.forEach((n, slot) => {
+      if (!(n > 0) || !E.designs[slot]) return;
+      orb.appendChild(h('span.sc-oc', { tip: '<b>' + E.designs[slot].name + '</b> × ' + n + '<br>Click to send them somewhere', onclick: () => { G.sel.fleet = mine.id; UI.Side.show('fleetDeploy', { star: c.id, fleet: mine.id }); } },
+        shipCanvas(E, slot, 44, 26), U.fmt(n)));
+    });
+    for (const f of S.fleets) {
+      if (f.owner === E.id || f.star !== c.id) continue;
+      const O = S.empires[f.owner], n = f.ships.reduce((a, b) => a + (b | 0), 0); if (!O || !n) continue;
+      orb.appendChild(h('span.sc-oc.foe', { tip: n + ' ' + O.name + ' ' + (n === 1 ? 'ship' : 'ships') + ' in orbit' }, UI.icon('warning'), U.fmt(n) + ' ' + O.name));
+    }
+    if (orb.children.length === 1) orb.appendChild(h('span.sc-oc.none', 'No ships'));
+    UI.mount(st.post, st.postArt, cap, orb);
+  }
 
   function cycleBuild(c, E, dir) {
     const slots = E.designs.map((d, i) => d ? i : -1).filter(i => i >= 0); if (E.mods.stargate && !G.S.planets[c.id].stargate) slots.push(-1);

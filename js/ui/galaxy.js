@@ -17,27 +17,35 @@
     .gx-sidebody.reveal { animation: gx-reveal .16s ease-out; }                /* panel change: a short settle, never on refresh (immersion review, Phase C) */
     @keyframes gx-reveal { from { opacity:.35; transform:translateX(6px); } to { opacity:1; transform:none; } }
     :root[data-reduce-motion] .gx-sidebody.reveal { animation:none; }
-    .gx-bar { grid-column:1 / -1; grid-row:2; display:flex; gap:.4rem; align-items:center; padding:.45rem .6rem; background:linear-gradient(180deg, rgba(14,20,52,.96), rgba(6,9,25,.98)); border-top:1px solid rgba(214,179,106,.45); }
+    .gx-bar { grid-column:1 / -1; grid-row:2; display:flex; gap:.4rem; align-items:center; padding:.45rem .6rem; background:linear-gradient(180deg, rgba(14,20,52,.96), rgba(6,9,25,.98)); border-top:1px solid var(--brass-line-3); }
     .gx-bar .btn { padding:.4em 1em; }
     .gx-bar .gx-spacer { flex:1; }
     .gx-top { position:absolute; left:.7rem; top:.6rem; right:.7rem; display:flex; gap:.5rem; align-items:flex-start; pointer-events:none; z-index:3; }
-    .gx-hud { pointer-events:auto; display:flex; gap:1.1rem; align-items:center; padding:.35rem .9rem; background:rgba(8,12,34,.72); backdrop-filter:blur(4px); border:1px solid rgba(214,179,106,.35); clip-path:polygon(.45rem 0,100% 0,100% calc(100% - .45rem),calc(100% - .45rem) 100%,0 100%,0 .45rem); font-size:.98rem; }
+    .gx-hud { pointer-events:auto; display:flex; gap:1.1rem; align-items:center; padding:.35rem .9rem; background:rgba(8,12,34,.72); backdrop-filter:blur(4px); border:1px solid var(--brass-line-3); clip-path:polygon(.45rem 0,100% 0,100% calc(100% - .45rem),calc(100% - .45rem) 100%,0 100%,0 .45rem); font-size:1rem; }
     .gx-hud .y { font:400 1.3rem var(--font-display); color:var(--brass-hi); letter-spacing:.04em; }
-    .gx-hud .k { color:var(--mist); font-size:.82rem; margin-right:.3em; }
+    .gx-hudr, .gx-chip { display:contents; }                                      /* the HUD minus the year: rebuilt on every state change (phones lay them out as rows) */
+    .gx-hud .od { display:inline-block; height:1.2em; line-height:1.2em; overflow:hidden; vertical-align:bottom; }
+    .gx-hud .od-in { display:flex; flex-direction:column; animation:gx-od .6s cubic-bezier(.3,.7,.2,1) both; }
+    .gx-hud .od-in > span { height:1.2em; }
+    @keyframes gx-od { from { transform:translateY(0); } to { transform:translateY(-50%); } }
+    .gx-hud b.chg { animation:gx-chg 1.1s ease-out both; }                       /* a value that changed over the turn */
+    @keyframes gx-chg { 0%, 25% { color:#fff8dc; text-shadow:0 0 10px rgba(255,214,106,.95), 0 0 2px #fff; } 100% { } }
+    .gx-hud .k { color:var(--mist); font-size:.8rem; margin-right:.3em; }
     .gx-hud b { font-weight:600; font-variant-numeric:tabular-nums; }
-    .gx-att { display:flex; gap:.45rem; cursor:pointer; font-weight:600; font-variant-numeric:tabular-nums; } .gx-att span { padding:.05rem .4rem; border:1px solid currentColor; border-radius:.2rem; }
+    .gx-att { display:flex; gap:.45rem; cursor:var(--hand); font-weight:600; font-variant-numeric:tabular-nums; } .gx-att span { padding:.05rem .4rem; border:1px solid currentColor; border-radius:.2rem; }
     .gx-att .r { color:#ff7a6a; } .gx-att .w { color:var(--ember, #f0a040); } .gx-att:hover span { background:rgba(255,255,255,.08); }
+    .gx-logc { display:none; }                                                    /* the turn log's chip: portrait phones only (css/phone.css) */
     .gx-msg { pointer-events:auto; margin-left:auto; max-width:28rem; display:flex; flex-direction:column; gap:.3rem; }
     .gx-msg .m { padding:.3rem .7rem; background:rgba(8,12,34,.78); border-left:3px solid var(--brass); font-size:.9rem; }
     .gx-msg .m.bad { border-left-color:var(--rose); } .gx-msg .m.ok { border-left-color:var(--leaf); }
-    .gx-msg .m { cursor:pointer; } .gx-msg .m.link:hover { background:rgba(214,179,106,.18); } .gx-msg .m.link::after { content:' ›'; color:var(--brass-hi); }
+    .gx-msg .m { cursor:var(--hand); } .gx-msg .m.link:hover { background:rgba(214,179,106,.18); } .gx-msg .m.link::after { content:' ›'; color:var(--brass-hi); }
     .gx-wait { margin-right:.8rem; font:500 .85rem var(--font-display); letter-spacing:.06em; color:var(--brass-hi); opacity:.9; white-space:nowrap; }
     .gx-busy { position:absolute; inset:0; z-index:20; display:none; align-items:center; justify-content:center; background:rgba(3,5,16,.45); backdrop-filter:blur(1.5px); }
     .gx-busy.on { display:flex; } .gx-busy .box { padding:1rem 2rem; font:400 1.4rem var(--font-display); color:var(--brass-hi); background:rgba(8,12,34,.9); border:1px solid var(--brass-lo); }
     .gx-busy .spin { display:inline-block; width:1.1rem; height:1.1rem; margin-right:.7rem; vertical-align:-.15rem; border:2px solid var(--brass-lo); border-top-color:var(--brass-hi); border-radius:50%; animation:gx-spin 1s linear infinite; }
     @keyframes gx-spin { to { transform:rotate(360deg); } }
     .gx-side h3 { font:400 1.15rem var(--font-display); color:var(--brass-hi); }
-    .side-title { display:flex; align-items:baseline; gap:.5rem; padding-bottom:.4rem; margin-bottom:.5rem; border-bottom:1px solid rgba(214,179,106,.3); }
+    .side-title { display:flex; align-items:baseline; gap:.5rem; padding-bottom:.4rem; margin-bottom:.5rem; border-bottom:1px solid var(--brass-line-2); }
     .side-title .nm { font:400 1.5rem var(--font-title); color:var(--brass-hi); letter-spacing:.02em; }
     .side-title .own { margin-left:auto; display:flex; align-items:center; gap:.35rem; color:var(--mist); font-size:.9rem; }
   `);
@@ -45,38 +53,38 @@
   const bump = css => css.replace(/(^|[}])([^{}]*)[{]/g, (m, a, sel) => a + sel.replace(/[/][*][^]*?[*][/]/g, '').split(',').map(s => s.trim()).filter(Boolean).map(s => ':root:root ' + s).join(', ') + ' {');   // raise specificity over the theme-v2 .panel/.btn rules
   // Restyle (original-game feel, modern rendering): gunmetal bevelled frame, indigo/gold title plate, equal-width steel button row.
   UI.css('galaxy-orig', bump(`
-    .gx { --bv-hi:rgba(255,255,255,.2); --bv-lo:rgba(0,0,0,.6); --gold-ink:#e8c850;
-      padding:.4rem; gap:.4rem; background:linear-gradient(135deg, #8d98a4 0%, #4d5662 38%, #2a313a 100%);
-      box-shadow:inset 1px 1px 0 rgba(255,255,255,.35), inset -1px -1px 0 rgba(0,0,0,.7), inset 0 0 0 .22rem rgba(0,0,0,.18); }
+    .gx { --bv-hi:rgba(255,255,255,.2); --bv-lo:rgba(0,0,0,.6); --gold-ink:var(--title, #e8c850);
+      padding:.4rem; gap:.4rem; background:linear-gradient(135deg, #92979d 0%, #52555c 38%, #2d3035 100%);
+      box-shadow:inset 1px 1px 0 var(--spec, rgba(255,245,225,.22)), inset -1px -1px 0 rgba(0,0,0,.7), inset 0 0 0 .22rem rgba(0,0,0,.18); }
     .gx-mapwrap { background:#000; box-shadow:0 0 0 1px rgba(0,0,0,.9), 0 1px 0 1px rgba(255,255,255,.18); overflow:hidden; }
     .gx-mapwrap::after { content:""; position:absolute; inset:0; z-index:4; pointer-events:none; box-shadow:inset 0 0 0 1px rgba(0,0,0,.9), inset 2px 2px 3px rgba(0,0,0,.65), inset -1px -1px 0 rgba(255,255,255,.1); }
     .gx-side { padding:0; background:none; }
-    .gx-side .panel { clip-path:none; padding:.3rem; background:linear-gradient(180deg, #59636f, #3a424c); box-shadow:inset 1px 1px 0 var(--bv-hi), inset -1px -1px 0 var(--bv-lo), 0 0 0 1px rgba(0,0,0,.8); }
-    .gx-side .panel::before { inset:.2rem; clip-path:none; background:linear-gradient(180deg, #313840, #262c33); box-shadow:inset 1px 1px 0 var(--bv-lo), inset -1px -1px 0 rgba(255,255,255,.1); }
+    .gx-side .panel { clip-path:none; padding:.3rem; background:linear-gradient(180deg, #5f626a, #3e4149); box-shadow:-10px 0 28px rgba(0,0,0,.45), inset 1px 1px 0 var(--bv-hi), inset -1px -1px 0 var(--bv-lo), 0 0 0 1px rgba(0,0,0,.8); }
+    .gx-side .panel::before { inset:.2rem; clip-path:none; background:linear-gradient(180deg, #34373c, #282c32); box-shadow:inset 1px 1px 0 var(--bv-lo), inset -1px -1px 0 rgba(255,255,255,.1); }
     .gx-side .panel::after { display:none; }
     .gx-sidebody { padding:.4rem .45rem; }
     .gx-bar { padding:.2rem 0 0; gap:.25rem; border-top:0; background:none; }
     .gx-bar .gx-spacer { display:none; }
-    .gx-bar .btn { flex:1 1 0; min-width:0; clip-path:none; padding:.5em .3em; font:600 .86rem/1.1 var(--font-display); letter-spacing:.1em; text-transform:uppercase; color:#ecf0f6; text-shadow:0 1px 0 rgba(0,0,0,.7);
+    .gx-bar .btn { flex:1 1 0; min-width:0; clip-path:none; padding:.5em .3em; font:600 .85rem/1.1 var(--font-display); letter-spacing:.1em; text-transform:uppercase; color:#ecf0f6; text-shadow:0 1px 0 rgba(0,0,0,.7);
       background:rgba(0,0,0,.85); box-shadow:none; }
-    .gx-bar .btn::before { inset:1px; clip-path:none; background:linear-gradient(180deg, #6f7b94 0%, #4c566e 52%, #424b61 100%); box-shadow:inset 1px 1px 0 rgba(255,255,255,.28), inset -1px -1px 0 rgba(0,0,0,.45); }
+    .gx-bar .btn::before { inset:1px; clip-path:none; background:linear-gradient(180deg, #777a89 0%, #535564 52%, #494a58 100%); box-shadow:inset 1px 1px 0 var(--spec, rgba(255,245,225,.22)), inset -1px -1px 0 rgba(0,0,0,.45); }
     .gx-bar .btn:hover { filter:none; }
-    .gx-bar .btn:hover::before { background:linear-gradient(180deg, #8794b0 0%, #5a6584 52%, #4e5873 100%); }
-    .gx-bar .btn:active::before { background:linear-gradient(180deg, #3d4659, #4c566e); box-shadow:inset 1px 1px 0 rgba(0,0,0,.55), inset -1px -1px 0 rgba(255,255,255,.18); }
+    .gx-bar .btn:hover::before { background:linear-gradient(180deg, #8794b0 0%, #5a6584 52%, #565768 100%); }
+    .gx-bar .btn:active::before { background:linear-gradient(180deg, #434551, #535564); box-shadow:inset 1px 1px 0 rgba(0,0,0,.55), inset -1px -1px 0 rgba(255,255,255,.18); }
     .gx-bar .btn .kbd { display:none; }
     .gx-bar .btn.primary { flex:1.25 1 0; }   /* colours come from theme-v2 (gold primary slab) */
-    .gx-hud { background:rgba(6,9,14,.78); border:1px solid rgba(255,255,255,.14); border-top-color:rgba(255,255,255,.28); clip-path:none; box-shadow:inset 0 1px 0 rgba(255,255,255,.08), 0 2px 10px rgba(0,0,0,.5); }
+    .gx-hud { background:rgba(6,9,14,.78); border:1px solid rgba(255,255,255,.14); border-top-color:rgba(255,255,255,.28); clip-path:none; box-shadow:inset 0 1px 0 rgba(255,255,255,.08), var(--shadow-1); }
     .gx-hud .y { color:var(--gold-ink); text-shadow:0 1px 0 #6b4f12; }
-    .gx-hud { background:rgba(6,9,14,.88); } .gx-hud .k { font-size:.92rem; color:#c9d3df; } .gx-hud b { font-size:1.02rem; }
+    .gx-hud { background:rgba(6,9,14,.88); } .gx-hud .k { font-size:.9rem; color:#c9d3df; } .gx-hud b { font-size:1rem; }
     .gx-msg .m { background:rgba(6,9,14,.82); border-left-width:2px; }
     /* title plate (shared by every side panel) */
     .side-title { justify-content:center; align-items:center; gap:.6rem; margin:-.05rem 0 .5rem; padding:.28rem .5rem; border-bottom:0;
-      background:linear-gradient(180deg, #3d4780 0%, #2a3263 55%, #202750 100%); box-shadow:inset 1px 1px 0 rgba(255,255,255,.25), inset -1px -1px 0 rgba(0,0,0,.6), 0 0 0 1px rgba(0,0,0,.7); }
-    .side-title .nm { font:400 1.35rem/1.1 var(--font-title); letter-spacing:.06em; color:#e8c850; text-shadow:0 1px 0 #6b4f12, 0 0 12px rgba(232,200,80,.25); }
+      background:linear-gradient(180deg, #3d4780 0%, #2a3263 55%, #202750 100%); box-shadow:inset 1px 1px 0 var(--spec, rgba(255,245,225,.22)), inset -1px -1px 0 rgba(0,0,0,.6), 0 0 0 1px rgba(0,0,0,.7); }
+    .side-title .nm { font:400 1.4rem/1.1 var(--font-title); letter-spacing:.06em; color:var(--title, #e8c850); text-shadow:0 1px 0 #6b4f12, 0 0 12px rgba(232,200,80,.25); }
     .side-title .own { margin-left:0; font-size:.8rem; letter-spacing:.06em; text-transform:uppercase; color:#cfd6ee; }
-    .side-title .cyc { flex:none; width:1.35rem; height:1.35rem; padding:0; border:0; background:none; cursor:pointer; color:#cfd6ee; opacity:.7; }
+    .side-title .cyc { flex:none; width:1.35rem; height:1.35rem; padding:0; border:0; background:none; cursor:var(--hand); color:#cfd6ee; opacity:.7; }
     .side-title .cyc:first-child { margin-right:auto; } .side-title .cyc:last-child { margin-left:auto; }
-    .side-title .cyc:hover { opacity:1; color:#e8c850; }
+    .side-title .cyc:hover { opacity:1; color:var(--title, #e8c850); }
     .side-title .cyc::after { content:''; display:block; width:.55rem; height:.7rem; margin:auto; background:currentColor; clip-path:polygon(100% 0,0 50%,100% 100%); }
     .side-title .cyc.nx::after { clip-path:polygon(0 0,100% 50%,0 100%); }
     .gx-side h3 { font:600 .95rem var(--font-display); letter-spacing:.14em; text-transform:uppercase; color:#e0553a; margin:.2rem 0 .4rem; text-align:center; }
@@ -198,16 +206,45 @@
     endTurn,
   };
 
+  // the year is an odometer: it stays in place while the rest of the HUD is rebuilt (on every state change), and the digits that change at the end
+  // of a turn roll over (css .od); a new or loaded game sets it without the roll. Reduce motion makes the roll instant (base.css / options.js).
+  let yearEl = null, yearNum = null, chipEl = null, restEl = null, yearShown = '';
+  // the values of the HUD as the turn began (hudSnap, taken at turn:processing) against which the first HUD after turn:end is compared: the
+  // reserve, income, research and colony count that changed light up (css .chg), so the end of a turn reads as a beat, not a silent swap
+  let hudSnap = null, hudFlashUntil = 0, hudChg = {};
+  const hudVals = () => { const o = {}; if (restEl) restEl.querySelectorAll('b[data-k]').forEach(b => { o[b.dataset.k] = b.textContent; }); return o; };
+  function setYear(y) {
+    const s = String(y), prev = yearShown; yearShown = s;
+    if (!prev || prev === s || prev.length !== s.length) { yearNum.textContent = s; return; }
+    UI.clear(yearNum);
+    for (let i = 0; i < s.length; i++) yearNum.appendChild(s[i] === prev[i] ? document.createTextNode(s[i]) : h('span.od', h('span.od-in', h('span', prev[i]), h('span', s[i]))));
+    const settle = () => { if (yearShown === s && yearNum.querySelector('.od')) yearNum.textContent = s; };   // plain text again once rolled (screen readers, scripts)
+    yearNum.addEventListener('animationend', settle, { once: true }); setTimeout(settle, 1200);
+  }
   function updateHud() {
     if (!hudEl || !G.S) return;
     const S = G.S, E = G.player(), f = E.flow || {}, rp = E.research.total | 0;
     const colonies = S.planets.filter(p => p.owner === E.id).length;
-    UI.mount(hudEl,
-      h('span.y', 'Year ' + Q.year(S)),
-      h('span', h('span.k', 'Reserve'), h('b.t-gold', U.fmt(E.bc)), ' ', h('span.t-gold', 'BC'), f.taxToReserve ? h('span.t-leaf.small', ' +' + f.taxToReserve) : null),
-      h('span', h('span.k', 'Income'), h('b' + ((f.net | 0) < (f.gross | 0) * 0.6 ? '.t-rose' : '.t-leaf'), U.fmt(f.net | 0)), h('span.k', ' of ' + U.fmt(f.gross | 0))),
-      h('span', h('span.k', 'Research'), h('b.t-cyan', U.fmt(rp)), h('span.t-cyan', ' RP')),
-      h('span', h('span.k', 'Colonies'), h('b', colonies)), attentionChips());
+    if (!yearEl) { yearNum = h('span.yn'); yearEl = h('span.y', 'Year ', yearNum); chipEl = h('span.gx-chip'); restEl = h('span.gx-hudr'); UI.mount(hudEl, yearEl, chipEl, restEl); }
+    setYear(Q.year(S));
+    UI.mount(chipEl, logChip());                                                       // phones only: the turn log's chip beside the year (css/phone.css lays the HUD out as year | chip / values)
+    UI.mount(restEl,
+      h('span', h('span.k', 'Reserve'), h('b.t-gold', { dataset: { k: 'bc' } }, U.fmt(E.bc)), ' ', h('span.t-gold', 'BC'), f.taxToReserve ? h('span.t-leaf.small', ' +' + f.taxToReserve) : null),
+      h('span', h('span.k', 'Income'), h('b' + ((f.net | 0) < (f.gross | 0) * 0.6 ? '.t-rose' : '.t-leaf'), { dataset: { k: 'net' } }, U.fmt(f.net | 0)), h('span.k.gx-gross', ' of ' + U.fmt(f.gross | 0))),
+      h('span', h('span.k', 'Research'), h('b.t-cyan', { dataset: { k: 'rp' } }, U.fmt(rp)), h('span.t-cyan', ' RP')),
+      h('span', h('span.k', 'Colonies'), h('b', { dataset: { k: 'col' } }, colonies)), attentionChips());
+    const now = performance.now();
+    if (hudSnap && now < hudFlashUntil) { restEl.querySelectorAll('b[data-k]').forEach(b => { if (hudSnap[b.dataset.k] !== undefined && hudSnap[b.dataset.k] !== b.textContent) hudChg[b.dataset.k] = now + 1300; }); hudSnap = null; }
+    for (const k in hudChg) { if (now < hudChg[k]) { const b = restEl.querySelector('b[data-k="' + k + '"]'); if (b) b.classList.add('chg'); } else delete hudChg[k]; }
+  }
+  // phones: the turn log's count in the HUD. In portrait the sidebar is a bottom sheet and the log under it was only seen at full height; the
+  // chip opens the whole log (css/phone.css shows it in portrait only — landscape keeps the sidebar column with the log in it)
+  function logChip() {
+    if (!(M.Phone && M.Phone.active()) || !UI.TurnLog || !UI.TurnLog.counts) return null;
+    const c = UI.TurnLog.counts(); if (!c.log && !c.next) return null;
+    const tone = c.worst === 0 ? '.r' : c.worst === 1 ? '.w' : '';
+    return h('span.gx-logc' + tone, { tip: 'What happened last turn and what is coming up. Tap to read it; each line takes you to its star.', onclick: () => UI.TurnLog.openSheet() },
+      UI.icon('list'), c.log ? h('span', 'Last turn ', h('b', c.log)) : h('span', 'Coming up ', h('b', c.next)));
   }
   // the HUD's count of colonies needing a look: a click (or I) steps through them, most urgent first
   function attentionChips() {
@@ -232,6 +269,7 @@
       if (issues.length) { const ok = await UI.confirm(h('div', h('p', 'End the turn anyway?'), h('ul', issues.slice(0, 6).map(li))), { title: 'Before you end the turn' }); if (!ok) return; }
     }
     UI.Galaxy.busy(true, 'Year ' + Q.year(G.S) + ' …');
+    UI.sfx('turn');                                                                           // the stamp and rising sweep (the 'newturn' chime answers it at turn:end, soundscape.js)
     if (UI.Phone) UI.Phone.haptic('turn');                                                    // phones: a tick as the turn starts
     // 10 s without an answer is normal while the player reads a scene (combat, GNN, council, audience, landing), a modal or a held side-panel prompt:
     // those all carry their own controls, so the Skip escape is offered ONLY when nothing visible can answer the pending step (a genuinely stuck turn).
@@ -311,7 +349,7 @@
       const side = h('aside.gx-side', h('div.panel', host), logEl);
       if (UI.TurnLog) UI.TurnLog.mount(logEl);                                                              // "Last turn": links to where things happened
       const navBtns = NAV.map(([name, key, fn]) => UI.button(name, fn, { kbd: key.toUpperCase() }));
-    const nextBtn = UI.button('Next turn', () => endTurn(), { primary: true, big: true, kbd: 'N' });
+    const nextBtn = UI.button('Next turn', () => endTurn(), { primary: true, big: true, kbd: 'N', sfx: false });   // endTurn plays the turn cue once the turn really starts
     const bar = h('nav.gx-bar', navBtns, h('span.gx-spacer'), nextBtn);
     const waitEl = h('span.gx-wait');
     bar.insertBefore(waitEl, nextBtn);
@@ -333,6 +371,10 @@
       }, true);
       bindKeys();
       M.Bus.on('state', () => { if (UI.Screens.current && UI.Screens.current.id === 'galaxy') { updateHud(); UI.Side.refresh(); } });
+      M.Bus.on('turnlog', () => updateHud());
+      M.Bus.on('turn:processing', on => { if (on) hudSnap = hudVals(); });
+      M.Bus.on('turn:end', () => { hudFlashUntil = performance.now() + 4000; });
+      M.Bus.on('game:new', () => { yearShown = ''; }); M.Bus.on('game:loaded', () => { yearShown = ''; });   // a jump in years is not a turn: no roll
       M.Bus.on('turn:aborted', () => UI.Side.drop()); M.Bus.on('turn:skipped', () => UI.Side.drop());    // the prompt is moot: let it resolve and go
       let saveWarned = false;                                                                               // a silently failing autosave used to be discovered only at the Save screen
       M.Bus.on('save:failed', slot => { if (slot !== 'auto' || saveWarned) return; saveWarned = true; UI.toast('Autosave failed: browser storage is full or blocked. Export a save file from Game › Save.', 'bad', 10000); });
@@ -343,7 +385,17 @@
       if (!map && M.UI.GalaxyMap) {
         map = UI.Galaxy.map = M.UI.GalaxyMap.create(mapWrap, {});
         map.on('selectStar', id => { if (UI.Galaxy.pick) UI.Galaxy.pick(id); else UI.Galaxy.selectStar(id); });
-        map.on('dblStar', id => { G.sel.star = id; if (UI.Screens.has('system')) UI.Screens.go('system', { star: id, from: 'galaxy' }); });
+        map.on('dblStar', id => {
+          G.sel.star = id; if (!UI.Screens.has('system')) return;
+          // the system view is a continuation of the zoom (visual-system-plan.md 2.7): fly in on the star, then cross-fade; the galaxy
+          // screen flies back out to this camera when the player returns. Reduce motion and phones cut straight across.
+          const cam = map.getCamera ? map.getCamera() : null, cut = !cam || (M.Settings && M.Settings.get('reduceMotion')) || (M.Phone && M.Phone.active());
+          const go = () => UI.Screens.go('system', { star: id, from: 'galaxy' });
+          if (cut) { go(); return; }
+          UI.Galaxy.camBeforeSystem = { x: cam.x, y: cam.y, zoom: cam.zoom };
+          map.centerOn(id, { zoom: Math.min(cam.maxZoom || 12, Math.max(5, cam.zoom * 1.6)), animate: true });
+          setTimeout(go, 420);
+        });
         // your fleet in orbit opens its deployment in the sidebar, leaving the map clear; the panel floats beside the destination once one is picked
         map.on('selectFleet', fid => { G.sel.fleet = fid; const f = G.S.fleets.find(x => x.id === fid); if (f && f.owner === G.S.playerId) UI.Side.show(f.star >= 0 ? 'fleetDeploy' : 'fleetInfo', { star: f.star, fleet: fid }); else if (f) UI.Side.show('fleetInfo', { fleet: fid }); });
         map.on('moveOrder', o => {
@@ -356,6 +408,8 @@
       if (UI.Side.held) { UI.Side.showHeld(); return; }                                    // back from another screen while the turn waits on a prompt: the prompt, not the default panel
       const star = G.sel.star >= 0 ? G.sel.star : G.player().capital;
       if (map) map.centerOn(star, { animate: false });
+      const back = UI.Galaxy.camBeforeSystem; UI.Galaxy.camBeforeSystem = null;
+      if (map && back) map.centerOn({ x: back.x, y: back.y }, { zoom: back.zoom, animate: true });     // back from the system view: fly out to where the map was
       UI.Galaxy.selectStar(star);
     },
     leave() { },

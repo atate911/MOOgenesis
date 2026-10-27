@@ -101,6 +101,7 @@ window.MOO_MANIFEST = {
     // ---- ui foundation ----
     'js/ui/kit.js',
     'js/ui/screens.js',
+    'js/ui/sky.js',               // the one sky under every screen (visual-system-plan.md 1.2)
     'js/ui/phone.js',
     'js/ui/styleguide.js',
     'js/ui/galaxymap.js',

@@ -15,12 +15,38 @@
   // calendar year (Config.displayYear), not the S.year turn counter
   function calYear(S) { try { return M.Data.Config.displayYear(S); } catch (e) { return S.year; } }
 
+  // The galaxy as the player knew it when the game was saved, for the save list's thumbnail (saveload.js): three bytes per star — x and y over the
+  // galaxy (0..255) and what the player knows of it (0 unexplored, 1 explored and free, 2 + k an empire with banner colour k; +64 the player's
+  // capital) — base64 in the slot metadata (~0.6 KB for 160 stars: it rides in the server's X-Save-Meta header, 4 KB at most). Fog of war
+  // holds: live stars show their owner, remembered ones the last report, unexplored ones nothing.
+  function b64(bytes) {
+    let s = ''; for (let i = 0; i < bytes.length; i++) s += String.fromCharCode(bytes[i]);
+    if (typeof btoa === 'function') return btoa(s);
+    return typeof Buffer !== 'undefined' ? Buffer.from(bytes).toString('base64') : '';
+  }
+  function sketch(S) {
+    try {
+      const E = S.empires && S.empires[S.playerId], g = S.galaxy || {}, n = S.stars ? S.stars.length : 0;
+      if (!E || !n || !(g.w > 0) || !(g.h > 0)) return null;
+      const b = new Uint8Array(n * 3), q = (v, m) => Math.max(0, Math.min(255, Math.round(v / m * 255)));
+      for (let i = 0; i < n; i++) {
+        const st = S.stars[i], p = S.planets && S.planets[i], vis = E.vis ? E.vis[i] | 0 : 0, ex = (E.explored && E.explored[i]) || vis === 2;
+        let own = -1;
+        if (vis === 2) own = p ? p.owner : -1; else if (E.seen && E.seen[i]) own = E.seen[i].owner;
+        if (p && p.owner === E.id) own = E.id;
+        const O = own >= 0 ? S.empires[own] : null;
+        b[i * 3] = q(st.x, g.w); b[i * 3 + 1] = q(st.y, g.h);
+        b[i * 3 + 2] = (O ? 2 + ((O.color | 0) % 6) : ex ? 1 : 0) | (E.capital === i ? 64 : 0);
+      }
+      return { w: g.w, h: g.h, d: b64(b) };
+    } catch (e) { return null; }
+  }
   function meta(S) {
     const me = S.empires && S.empires[S.playerId];
     return {
       turn: S.turn, year: calYear(S), race: me && me.race, leader: me && me.leader, color: me && me.color,
       size: S.settings && S.settings.size, difficulty: S.settings && S.settings.difficulty, stars: S.stars ? S.stars.length : 0,
-      planets: S.planets ? S.planets.filter(p => p.owner === S.playerId).length : 0, at: Date.now(),
+      planets: S.planets ? S.planets.filter(p => p.owner === S.playerId).length : 0, at: Date.now(), map: sketch(S),
     };
   }
 

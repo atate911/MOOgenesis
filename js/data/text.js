@@ -676,7 +676,7 @@
       "Colony ships only settle worlds your people can live on. Check the environment before you launch.",
       "Unexplored stars may hide monsters. Send a scout before a colony ship.",
       "Ships can only travel within fuel range of your colonies. Settle stepping-stone systems to push the frontier.",
-      "Even a tiny outpost extends your fuel range and claims the system for later.",
+      "Transports carry people, not cargo: each colonist costs a BC to move, and an unescorted convoy can be shot down on arrival.",
       "Use the galaxy map filters: colonies, environments and minerals show you where to expand next.",
       // ship design
       "Computers raise accuracy, shields cut each hit, armor adds hit points. You cannot max all three: design for a role.",
@@ -717,7 +717,7 @@
       "If the Council elects a rival, you may bow or refuse. Refusal can mean war with everyone who voted for them.",
       "Win the Council and you win the game without a final war. Cultivate friends before the vote.",
       // odds and ends
-      "Antaran raiders can strike anywhere, anytime. Keep a strong reserve fleet near your core.",
+      "Space monsters roam the galaxy. A Crystal or an Amoeba can strip a colony bare; meet them with a real fleet, not a scout.",
       "The Orion Guardian protects an ancient treasure. Only a mighty fleet can claim it.",
       "Save before a risky war. A careful emperor outlasts a bold one more often than the songs suggest.",
     ],

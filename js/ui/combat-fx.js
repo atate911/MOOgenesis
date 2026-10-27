@@ -52,6 +52,8 @@
   const misKind = id => MIS_FX[String(id || '').replace(/-5$/, '')] || 'nuclear';
 
   // ---- tiny canvas helpers ------------------------------------------------------------------------------------------------------------------------------
+  // where the star sits on each planet-free system sky (assets/art/system-sky, fractions of the plate): the board is lit from it
+  const SKY_STAR = { yellow: { x: 0.858, y: 0.236 }, red: { x: 0.858, y: 0.237 }, green: { x: 0.875, y: 0.234 }, blue: { x: 0.861, y: 0.266 }, white: { x: 0.860, y: 0.243 }, purple: { x: 0.842, y: 0.230 } };
   function mk(w, h) { const c = document.createElement('canvas'); c.width = max(1, w | 0); c.height = max(1, h | 0); return c; }
   function rng32(a) { a = a >>> 0; return function () { a = (a + 0x6D2B79F5) >>> 0; let t = a; t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; }
   function chamfer(g, x, y, w, h, c) {
@@ -223,7 +225,7 @@
       gridKey = '';                                             // rebuild the cached grid layer
     }
     function sizeUnit(u) {
-      if (u.kind === 'planet') { u.R = min(grid.ch * 0.8, grid.cw * 0.42); u.len = u.R * 2; return; }
+      if (u.kind === 'planet') { u.R = min(grid.ch * 0.9, grid.cw * 0.46); u.len = u.R * 2; return; }   // a little bigger: the world the battle is over
       const mon = u.kind === 'monster';
       u.len = grid.base * (mon ? 1.55 : HULL_LEN[clamp(u.hull | 0, 0, 3)]);
       u.copies = u.count >= 40 ? 4 : u.count >= 10 ? 3 : u.count >= 2 ? 2 : 1;
@@ -806,10 +808,10 @@
         g.fillStyle = gr; g.fillRect(s ? x0 + gw - cw * 2.2 : x0, y0, cw * 2.2, gh);
       }
       // checker
-      g.fillStyle = 'rgba(190,210,255,0.028)';
+      g.fillStyle = 'rgba(190,210,255,0.015)';                   // a hologram's checker: barely there (visual-system-plan.md 2.6)
       for (let j = 0; j < 8; j++) for (let i = 0; i < 10; i++) if ((i + j) & 1) g.fillRect(x0 + i * cw, y0 + j * ch, cw, ch);
       // no full line grid: the cells only show near the cursor and the selected unit (drawGridNear); faint intersection dots keep the board readable
-      g.fillStyle = ('rgba(' + BH + ',0.22)');
+      g.fillStyle = ('rgba(' + BH + ',0.16)');
       for (let i = 1; i < 10; i++) for (let j = 1; j < 8; j++) g.fillRect(x0 + i * cw - 0.75, y0 + j * ch - 0.75, 1.5, 1.5);
       // frame + corner brackets
       g.lineWidth = 1;
@@ -842,25 +844,27 @@
       const WA = G.WorldArt; if (!WA || !WA.enabled) return false;
       const kind = B && B.nebula ? 'nebula' : rocks.length >= 5 ? 'asteroids' : planetU ? 'planet' : 'deep';
       let path = WA.battle(kind), im = path ? WA.get(path) : null, mode = 'battle';
+      if (!im && WA.systemSky) { path = WA.systemSky(backdrop.star); im = path ? WA.get(path) : null; mode = 'sky'; }   // the star's own planet-free sky before the bright system plate (2.6)
       if (!im) { path = WA.system(backdrop.star); im = path ? WA.get(path) : null; mode = 'system'; }
       if (!im) return false;
       const iw = im.naturalWidth, ih = im.naturalHeight, drift = reduceMotion() ? 0 : 1;
       const dx = sin(t * 0.05) * 2 * drift, dy = cos(t * 0.037) * 1.5 * drift;
       let sx = 0, sy = 0, sw = iw, sh = ih, starU = 0.84, starV = 0.16;
       if (mode === 'system') { sx = iw * 0.42; sy = 0; sw = iw * 0.58; sh = ih * 0.56; starU = (0.86 * iw - sx) / sw; starV = 0.17 * ih / sh; }   // top-right of the plate: the star, no planet
+      else if (mode === 'sky') { const ss = SKY_STAR[backdrop.star] || SKY_STAR.yellow; starU = ss.x; starV = ss.y; }
       else if (kind === 'star') { starU = 0.9; starV = 0.5; }
       const s = max(W / sw, H / sh) * 1.02, dw = sw * s, dh = sh * s, ox = (W - dw) / 2 + dx, oy = (H - dh) / 2 + dy;
       ctx.save(); ctx.imageSmoothingQuality = 'high';
       ctx.drawImage(im, sx, sy, sw, sh, ox, oy, dw, dh);
       // the stand-in system plate is a bright illustration and goes down to ~55 %; the battle backdrops are painted dark for the board already
-      ctx.fillStyle = mode === 'battle' ? 'rgba(2,4,12,0.12)' : 'rgba(2,4,12,0.45)'; ctx.fillRect(0, 0, W, H);
+      ctx.fillStyle = mode === 'battle' ? 'rgba(2,4,12,0.12)' : mode === 'sky' ? 'rgba(2,4,12,0.22)' : 'rgba(2,4,12,0.45)'; ctx.fillRect(0, 0, W, H);
       if (B && B.nebula && mode === 'system') {                                                       // inside a nebula: a soft two-hue haze over the plate (shields are weaker here)
         const n1 = ctx.createRadialGradient(W * 0.3 + dx * 4, H * 0.6, 0, W * 0.3, H * 0.6, W * 0.5), n2 = ctx.createRadialGradient(W * 0.75, H * 0.3 + dy * 4, 0, W * 0.75, H * 0.3, W * 0.45);
         n1.addColorStop(0, 'rgba(120,70,190,0.26)'); n1.addColorStop(1, 'rgba(120,70,190,0)'); n2.addColorStop(0, 'rgba(60,150,170,0.2)'); n2.addColorStop(1, 'rgba(60,150,170,0)');
         ctx.fillStyle = n1; ctx.fillRect(0, 0, W, H); ctx.fillStyle = n2; ctx.fillRect(0, 0, W, H);
       }
       const vg = ctx.createRadialGradient(W * 0.5, H * 0.5, min(W, H) * 0.3, W * 0.5, H * 0.5, hypot(W, H) * 0.6);
-      vg.addColorStop(0, 'rgba(1,2,8,0)'); vg.addColorStop(1, mode === 'battle' ? 'rgba(1,2,8,0.3)' : 'rgba(1,2,8,0.5)'); ctx.fillStyle = vg; ctx.fillRect(0, 0, W, H);
+      vg.addColorStop(0, 'rgba(1,2,8,0)'); vg.addColorStop(1, mode === 'battle' ? 'rgba(1,2,8,0.3)' : mode === 'sky' ? 'rgba(1,2,8,0.4)' : 'rgba(1,2,8,0.5)'); ctx.fillStyle = vg; ctx.fillRect(0, 0, W, H);
       ctx.restore();
       star.x = ox + starU * dw; star.y = oy + starV * dh;
       return true;
@@ -1042,7 +1046,7 @@
           for (let i = copies - 1; i >= 0; i--) {
             const off = COPY_OFF[i], main = i === 0, sz = main ? u.len : u.len * 0.84;
             const o = { race: u.race, hull: u.kind === 'monster' ? 4 : clamp(u.hull | 0, 0, 3), x: x + off[0] * u.len * dir * 0.55, y: y + off[1] * grid.ch * 0.62 * (u.side === 0 ? 1 : 1), size: sz, angle: main ? u.angle : u.angle * 0.9 + (i % 2 ? 0.05 : -0.05), color: u.color, flags: u.flags, t: t + i * 1.7,
-              thrust: u.moving ? 1 : 0.28, damage: main ? clamp(u.hploss / max(1, u.hp1), 0, 1) * (u.count > 0 ? 1 : 0) : 0, shield: main ? clamp(u.shieldGlow, 0, 1) : 0, cloaked: u.cloak, seed: u.seed + i * 17, vkey: u.vkey };
+              thrust: u.moving ? 1 : 0.3 + 0.05 * sin(t * 1.7 + (u.seed || 0)),   /* idling drives breathe */ damage: main ? clamp(u.hploss / max(1, u.hp1), 0, 1) * (u.count > 0 ? 1 : 0) : 0, shield: main ? clamp(u.shieldGlow, 0, 1) : 0, cloaked: u.cloak, seed: u.seed + i * 17, vkey: u.vkey };
             if (!main) ctx.globalAlpha = A * (warpK > 0 ? 1 - warpK : 0.82);
             try { S0.draw(ctx, o); } catch (err) { if (!view._shipWarn) { view._shipWarn = 1; console.warn('[CombatFx] Ships.draw failed', err); } fallbackShip(x, y, u); break; }
           }
@@ -1108,7 +1112,7 @@
       let drawn = false;
       const P = G.GLPlanets || G.Planets;
       if (P && P.draw && u.planetDesc) {
-        try { P.draw(ctx, u.planetDesc, x, y, R, t, { dpr: dpr, lightAngle: la, spin: 0.01 }); drawn = true; } catch (err) { if (!view._plWarn) { view._plWarn = 1; console.warn('[CombatFx] planet draw failed', err); } }
+        try { P.draw(ctx, u.planetDesc, x, y, R, t, { dpr: dpr, lightAngle: la, spin: 0.01, atmosphere: true, clouds: true, cloudShadows: true, lights: true }); drawn = true; } catch (err) { if (!view._plWarn) { view._plWarn = 1; console.warn('[CombatFx] planet draw failed', err); } }
       }
       if (!drawn) { const g2 = ctx.createRadialGradient(x - R * 0.3, y - R * 0.3, R * 0.1, x, y, R); g2.addColorStop(0, '#6a8ccf'); g2.addColorStop(1, '#10204a'); ctx.fillStyle = g2; ctx.beginPath(); ctx.arc(x, y, R, 0, TAU); ctx.fill(); }
       // limb glow: a soft atmosphere ring that follows the edge, brighter on the side facing the star

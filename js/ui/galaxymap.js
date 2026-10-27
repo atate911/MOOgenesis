@@ -19,6 +19,8 @@
 // REAL STATE (js/sim): star.color = class, star.nebula, S.orion + S.guardian{alive}, ONE planet per star (S.planets[star.id]); empire.vis[] = 0 unexplored (class visible, planet hidden) |
 //   1 explored, out of scanner range (owner/pop from empire.seen[star]) | 2 explored and live; fleets come from MOO.Sim.Q.mapFleets (already fog-filtered, with kind + eta, transports have string ids).
 //   The mock (tools/mockstate.js) emits the same shape plus legacy aliases (kind, inNebula), and the component accepts either.
+// Two levels of detail by zoom: the OVERVIEW (the fit-all zoom, or a step past it: overview()) names only owned stars, the selected one and Orion
+//   and marks colonisation only on stars within fuel range, so the whole-galaxy chart stays readable; one zoom step in, every explored star is named and marked.
 // Rendering scales with MOO.Perf.q (glow / nebula / particles / dpr / animFps): low = no twinkle, parallax or spikes; high/ultra = everything. Gfx.Space (backdrop, star sprites, living sun surfaces),
 //   Gfx.Planets (lit planet spheres) and Gfx.Ships.drawFleetMarker are used when present, with built-in fallbacks for each.
 (function (M) {
@@ -300,6 +302,12 @@
     const q = r * (k || 0.32); g.beginPath();
     g.moveTo(x, y - r); g.lineTo(x + q, y - q); g.lineTo(x + r, y); g.lineTo(x + q, y + q); g.lineTo(x, y + r); g.lineTo(x - q, y + q); g.lineTo(x - r, y); g.lineTo(x - q, y - q); g.closePath();
   }
+  // Colour-blind aid (Settings 'empireMarks'): owner rings get a dash pattern per banner (blue solid, green long dashes, purple dots, red
+  // dash-dot, white double, yellow short dashes; the six banners never share one) and the race code rides on the flag. The original's banners stay
+  // the default: the marks are off unless the player turns them on.
+  const RING_DASH = [[], [7, 3], [1.4, 2.6], [6, 2.4, 1.4, 2.4], [], [3, 3]];
+  const RACE_CODE = { human: 'HU', mrrshan: 'MR', silicoid: 'SI', sakkra: 'SA', psilon: 'PS', alkari: 'AL', klackon: 'KL', bulrathi: 'BU', meklar: 'ME', darlok: 'DA' };
+  const raceCode = E => (E && (RACE_CODE[E.race] || String(E.race || E.name || '?').slice(0, 2).toUpperCase())) || '?';
   // swallow-tail banner on a pole (the owner flag); (x,y) = foot of the pole
   function drawFlag(g, x, y, hgt, col, capital, t, ph, a) {
     const w = hgt * 0.78, wv = Math.sin(t * 3.1 + ph) * hgt * 0.05, ty = y - hgt;
@@ -399,7 +407,7 @@
       const a = sstep(-13, 13, best + (n1 - 0.5) * 34), i = (y * W + x) * 4;
       const cloud = 0.42 + 1.05 * n2 * (0.55 + 0.9 * n1), rim = Math.exp(-Math.pow((a - 0.42) / 0.16, 2)) * 0.5;
       const k = a * cloud + rim * 0.5 * a, wisp = Math.pow(1 - Math.abs(nz.fbm(nx * 3.1 + 21, ny * 3.1 + 9, 4) * 2 - 1), 3) * a * 0.26, hue = sstep(0.25, 0.75, n1), dith = (rnd() - 0.5) * 1.3;
-      d[i] = (lerp(70, 128, hue) * k + 205 * wisp) * 0.5 + dith; d[i + 1] = (lerp(34, 52, hue) * k + 140 * wisp) * 0.5 + dith; d[i + 2] = (lerp(128, 176, hue) * k + 255 * wisp) * 0.5 + dith; d[i + 3] = 255;
+      d[i] = (lerp(76, 108, hue) * k + 182 * wisp) * 0.5 + dith; d[i + 1] = (lerp(56, 72, hue) * k + 160 * wisp) * 0.5 + dith; d[i + 2] = (lerp(100, 134, hue) * k + 210 * wisp) * 0.5 + dith; d[i + 3] = 255;   // dusty violet, the sky's family
     }
     g.putImageData(img, 0, 0);
     return { canvas: c, x0, y0, w: x1 - x0, h: y1 - y0 };
@@ -448,7 +456,7 @@
       if (b < 0 || v1 < 0.004) continue;
       const u = 1 - Math.exp(-1.7 * v1);
       const edge = Math.exp(-Math.pow((u - 0.27) / 0.05, 2));
-      let a = (0.13 * sstep(0.04, 0.5, u) + 0.06 * sstep(0.55, 0.95, u) + 0.11 * edge) * strength;        // a soft tint with a faint contour, not a glowing ring
+      let a = (0.10 * sstep(0.04, 0.5, u) + 0.045 * sstep(0.55, 0.95, u) + 0.08 * edge) * strength;        // a soft tint with a faint contour, not a glowing ring
       const cont = v2 / v1; if (cont > 0.5) a *= 1 - 0.55 * sstep(0.5, 0.95, cont);
       if (a < 0.002) continue;
       const col = empires[b].rgb, j = i * 4, br = 1 + 0.15 * edge;
@@ -483,45 +491,48 @@
     const css = `
     .gmap { position:relative; width:100%; height:100%; overflow:hidden; background:#04061a; outline:none; touch-action:none; user-select:none; -webkit-user-select:none; }
     .gmap-cv { position:absolute; inset:0; width:100%; height:100%; cursor:grab; }
-    .gmap.dragging .gmap-cv { cursor:grabbing; } .gmap.hot .gmap-cv { cursor:pointer; } .gmap.route .gmap-cv { cursor:crosshair; }
+    .gmap.dragging .gmap-cv { cursor:grabbing; } .gmap.hot .gmap-cv { cursor:var(--hand); } .gmap.route .gmap-cv { cursor:crosshair; }
     .gmap-ctrl { position:absolute; right:.75rem; top:1.9rem; display:flex; flex-direction:column; gap:.3rem; z-index:3; }
-    .gmap-btn { --ch:.3rem; position:relative; isolation:isolate; width:2rem; height:2rem; padding:0; border:0; cursor:pointer; color:var(--brass-hi); display:grid; place-items:center;
+    .gmap-btn { --ch:.3rem; position:relative; isolation:isolate; width:2rem; height:2rem; padding:0; border:0; cursor:var(--hand); color:var(--brass-hi); display:grid; place-items:center;
       background:linear-gradient(180deg,var(--brass),var(--brass-lo)); transition:filter .15s; }
     .gmap-btn::before { content:""; position:absolute; inset:1px; z-index:-1; clip-path:var(--poly); background:linear-gradient(180deg,#27336d,#161e4a); transition:background .15s; }
     .gmap-btn.lit { color:#fff4c8; filter:drop-shadow(0 0 6px rgba(243,220,160,.75)); } .gmap-btn.lit::before { background:linear-gradient(180deg,#8a6a24,#4a3410); }
     .gmap-btn.off { opacity:.5; } .gmap-btn.off svg { stroke-dasharray:none; }
+    .gmap-btn.gmap-more { display:none; }                                                  /* phones only (css/phone.css) */
+    .gmap-ctrl > .gmap-more + .gmap-extra { margin-top:.5rem; }                              /* a breath between the view buttons and the layer toggles */
     .gmap-btn:hover { filter:brightness(1.15); } .gmap-btn:hover::before { background:linear-gradient(180deg,#34448c,#1c2760); } .gmap-btn:active { transform:translateY(1px); }
     .gmap-btn svg { width:1.05rem; height:1.05rem; fill:none; stroke:currentColor; stroke-width:2; stroke-linecap:square; stroke-linejoin:miter; }
     .gmap-mini { --ch:.55rem; position:absolute; z-index:3; padding:1px; background:linear-gradient(135deg,var(--brass),var(--brass-lo) 50%,var(--brass)); }
     .gmap-mini canvas { display:block; clip-path:var(--poly); background:rgba(5,8,24,.88); cursor:crosshair; }
     .gmap .gmap-legend.panel { position:absolute; left:.75rem; bottom:2.7rem; z-index:3; width:16rem; max-height:70%; overflow:hidden; transition:opacity .25s; }
     .gmap .gmap-legend.off { opacity:0; pointer-events:none; }
-    .gmap-legend .gl-h { display:flex; align-items:baseline; justify-content:space-between; gap:.5rem; padding-bottom:.3rem; margin-bottom:.35rem; border-bottom:1px solid rgba(214,179,106,.28);
-      font:400 1.02rem var(--font-display); color:var(--brass-hi); letter-spacing:.04em; }
-    .gmap-legend .gl-h small { font:400 .74rem var(--font-ui); color:var(--mist); letter-spacing:0; }
-    .gmap-legend .gl-row { display:flex; align-items:center; gap:.55rem; padding:.1rem 0; font-size:.86rem; color:var(--ivory); line-height:1.15; }
-    .gmap-legend .gl-row.dim { opacity:.45; }
+    .gmap-legend .gl-h { display:flex; align-items:baseline; justify-content:space-between; gap:.5rem; padding-bottom:.3rem; margin-bottom:.35rem; border-bottom:1px solid var(--brass-line-2);
+      font:400 1rem var(--font-display); color:var(--brass-hi); letter-spacing:.06em; text-transform:uppercase; }
+    .gmap-legend .gl-h small { font:400 .75rem var(--font-ui); color:var(--mist); letter-spacing:0; text-transform:none; }
+    .gmap-legend .gl-row { display:flex; align-items:center; gap:.55rem; padding:.1rem 0; font-size:.85rem; color:var(--ivory); line-height:1.15; }
+    .gmap-legend .gl-row.dim { opacity:.6; }
     .gmap-legend .gl-sw { flex:none; width:.78rem; height:.78rem; background:var(--c); box-shadow:0 0 7px var(--c); transform:rotate(45deg) scale(.86); }
     .gmap-legend .gl-sw.dot { transform:none; border-radius:50%; width:.7rem; height:.7rem; margin:0 .04rem; }
     .gmap-legend .gl-sw.hollow { background:transparent; box-shadow:none; border:1.5px solid var(--c); }
-    .gmap-legend .gl-txt { min-width:0; } .gmap-legend .gl-sub { display:block; color:var(--mist); font-size:.72rem; }
+    .gmap-legend .gl-sw.ring { width:1rem; height:1rem; background:none; box-shadow:none; transform:none; } .gmap-legend .gl-sw.ring svg { display:block; width:100%; height:100%; }
+    .gmap-legend .gl-txt { min-width:0; } .gmap-legend .gl-sub { display:block; color:var(--mist); font-size:.7rem; }
     .gmap-legend .gl-n { margin-left:auto; color:var(--mist); font-variant-numeric:tabular-nums; }
     .gmap-legend .gl-gl { flex:none; width:1rem; height:1rem; display:grid; place-items:center; } .gmap-legend .gl-gl svg { width:100%; height:100%; }
-    .gmap-legend .gl-tog { margin-top:.2rem; width:100%; padding:.18rem .4rem; font:400 .8rem var(--font-ui); color:var(--brass-hi); background:rgba(0,0,0,.3); border:1px solid rgba(214,179,106,.4); cursor:pointer; } .gmap-legend .gl-tog:hover { background:rgba(214,179,106,.14); }
+    .gmap-legend .gl-tog { margin-top:.2rem; width:100%; padding:.18rem .4rem; font:400 .8rem var(--font-ui); color:var(--brass-hi); background:rgba(0,0,0,.3); border:1px solid var(--brass-line-3); cursor:var(--hand); } .gmap-legend .gl-tog:hover { background:rgba(214,179,106,.14); }
     .gmap-legend .gl-sep { height:1px; margin:.35rem 0; background:linear-gradient(90deg,transparent,rgba(214,179,106,.35),transparent); }
-    .gmap-tip { --ch:.35rem; position:absolute; z-index:6; left:0; top:0; display:none; max-width:21rem; min-width:9rem; padding:.45rem .75rem .55rem; font-size:.88rem; line-height:1.38; pointer-events:none;
+    .gmap-tip { --ch:.35rem; position:absolute; z-index:6; left:0; top:0; display:none; max-width:21rem; min-width:9rem; padding:.45rem .75rem .55rem; font-size:.9rem; line-height:1.38; pointer-events:none;
       color:var(--ivory); background:linear-gradient(135deg,var(--brass),var(--brass-lo)); isolation:isolate; }
     .gmap-tip::before { content:""; position:absolute; inset:1px; z-index:-1; clip-path:var(--poly); background:linear-gradient(180deg,#101a46,#0a1030); }
     .gmap-tip b { color:var(--brass-hi); font-weight:600; }
-    .gmap-tip .gt-h { display:flex; align-items:baseline; gap:.7rem; padding-bottom:.25rem; margin-bottom:.25rem; border-bottom:1px solid rgba(214,179,106,.25); font:400 1.1rem var(--font-display); color:var(--brass-hi); letter-spacing:.03em; }
-    .gmap-tip .gt-k { margin-left:auto; display:flex; align-items:center; gap:.35rem; font:400 .76rem var(--font-ui); color:var(--mist); letter-spacing:0; white-space:nowrap; }
+    .gmap-tip .gt-h { display:flex; align-items:baseline; gap:.7rem; padding-bottom:.25rem; margin-bottom:.25rem; border-bottom:1px solid var(--brass-line-2); font:400 1.1rem var(--font-display); color:var(--brass-hi); letter-spacing:.03em; }
+    .gmap-tip .gt-k { margin-left:auto; display:flex; align-items:center; gap:.35rem; font:400 .75rem var(--font-ui); color:var(--mist); letter-spacing:0; white-space:nowrap; }
     .gmap-tip .gt-k i { display:inline-block; width:.62em; height:.62em; border-radius:50%; background:var(--c); box-shadow:0 0 6px var(--c); }
     .gmap-tip .gt-r { margin-top:.12rem; } .gmap-tip .gt-d { color:var(--mist); } .gmap-tip .gt-w { color:var(--ember); } .gmap-tip .gt-v { color:var(--violet); }
     .gmap-tip i.sw { display:inline-block; width:.62em; height:.62em; background:var(--c); transform:rotate(45deg); margin:0 .4em 0 .1em; box-shadow:0 0 5px var(--c); }
-    .gmap-hint { --ch:.4rem; position:absolute; z-index:4; left:50%; top:1.9rem; transform:translateX(-50%); display:none; padding:.4rem 1rem; font-size:.92rem; color:var(--brass-hi); pointer-events:none;
+    .gmap-hint { --ch:.4rem; position:absolute; z-index:4; left:50%; top:1.9rem; transform:translateX(-50%); display:none; padding:.4rem 1rem; font-size:.9rem; color:var(--brass-hi); pointer-events:none;
       background:linear-gradient(180deg,var(--brass),var(--brass-lo)); isolation:isolate; white-space:nowrap; }
     .gmap-hint::before { content:""; position:absolute; inset:1px; z-index:-1; clip-path:var(--poly); background:linear-gradient(180deg,#27336d,#161e4a); }
-    .gmap-hint kbd { font:600 .74rem var(--font-ui); color:var(--mist); padding:0 .35em; border:1px solid rgba(214,179,106,.5); margin:0 .15em; }
+    .gmap-hint kbd { font:600 .75rem var(--font-ui); color:var(--mist); padding:0 .35em; border:1px solid var(--brass-line-3); margin:0 .15em; }
     .gmap.route .gmap-hint { display:block; animation:gmap-pulse 1.6s ease-in-out infinite; }
     @keyframes gmap-pulse { 50% { filter:brightness(1.25); } }
     `;
@@ -557,13 +568,20 @@
       () => { if (M.Settings) M.Settings.set('mapRoutes', !routesOn()); syncRoutesBtn(); });
     const syncRoutesBtn = () => routesBtn.classList.toggle('off', !routesOn());
     syncRoutesBtn();
-    const ctrlEl = h('div.gmap-ctrl',
-      svgBtn('<path d="M12 5v14M5 12h14"/>', 'Zoom in <b>+</b>', () => zoomStep(1.45)),
-      svgBtn('<path d="M5 12h14"/>', 'Zoom out <b>−</b>', () => zoomStep(1 / 1.45)),
+    const legendBtn = svgBtn('<circle cx="7" cy="7" r="2.6"/><path d="M13 7h8M13 17h8M4.4 14.4l5 5M9.4 14.4l-5 5"/>', 'Map key and planet icons <b>K</b>', () => api.showLegend(!legendShown()));
+    // phones (css/phone.css): pinch and double-tap zoom, so + / − are hidden, and the key / routes / declutter toggles fold behind one button —
+    // seven stacked buttons took a column of the map's width in portrait and forced a two-wide grid in landscape
+    const moreBtn = svgBtn('<circle cx="5" cy="12" r="1.4"/><circle cx="12" cy="12" r="1.4"/><circle cx="19" cy="12" r="1.4"/>', 'More map controls: key, routes, declutter', () => {
+      const on = !ctrlEl.classList.contains('open'); ctrlEl.classList.toggle('open', on); moreBtn.classList.toggle('lit', on); moreBtn.setAttribute('aria-expanded', String(on)); emit('controls', on);
+    });
+    moreBtn.classList.add('gmap-more'); moreBtn.setAttribute('aria-expanded', 'false');
+    [legendBtn, routesBtn, dcBtn].forEach(b => b.classList.add('gmap-extra'));
+    const zoomIn = svgBtn('<path d="M12 5v14M5 12h14"/>', 'Zoom in <b>+</b>', () => zoomStep(1.45)), zoomOut = svgBtn('<path d="M5 12h14"/>', 'Zoom out <b>−</b>', () => zoomStep(1 / 1.45));
+    zoomIn.classList.add('gmap-zoom'); zoomOut.classList.add('gmap-zoom');
+    const ctrlEl = h('div.gmap-ctrl', zoomIn, zoomOut,
       svgBtn('<path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/>', 'Show the whole galaxy', () => api.fit()),
       svgBtn('<path d="M12 3l9 9-9 9-9-9z"/><circle cx="12" cy="12" r="2.2"/>', 'Centre on your capital <b>Home</b>', () => api.home()),
-      svgBtn('<circle cx="7" cy="7" r="2.6"/><path d="M13 7h8M13 17h8M4.4 14.4l5 5M9.4 14.4l-5 5"/>', 'Map key and planet icons <b>K</b>', () => api.showLegend(!legendShown())),
-      routesBtn, dcBtn);
+      moreBtn, legendBtn, routesBtn, dcBtn);
     const root = h('div.gmap', { tabindex: 0, role: 'application', 'aria-label': 'Galaxy map' }, canvas, miniEl, ctrlEl, legendEl, hintEl, tipEl);
     if (opts.controls === false) ctrlEl.style.display = 'none';
     container.appendChild(root);
@@ -592,6 +610,8 @@
     const empCol = id => { const E = S && S.empires && S.empires[id]; const ci = E && E.color !== undefined ? E.color : id; return th.empRGB[(((ci | 0) % 6) + 6) % 6] || th.rgb.mist; };
     const empHex = id => { const E = S && S.empires && S.empires[id]; const ci = E && E.color !== undefined ? E.color : id; return th.emp[(((ci | 0) % 6) + 6) % 6] || th.mist; };
     const pidOf = () => (S && S.playerId !== undefined ? S.playerId : 0) | 0;
+    const empBanner = id => { const E = S && S.empires && S.empires[id]; const ci = E && E.color !== undefined ? E.color : id; return (((ci | 0) % 6) + 6) % 6; };
+    const marksOn = () => !!(M.Settings && M.Settings.get('empireMarks'));
 
     function on(evt, fn) { (handlers[evt] || (handlers[evt] = [])).push(fn); return () => off(evt, fn); }
     function off(evt, fn) { const a = handlers[evt]; if (!a) return api; const i = a.indexOf(fn); if (i >= 0) a.splice(i, 1); return api; }
@@ -643,6 +663,7 @@
         sd.env = sd.known && pl ? (opts.envOf ? opts.envOf(pl, st) : envClassOf(pl)) : -1;
         sd.min = sd.known && pl ? mineralClassOf(pl) : -1;
         sd.art = sd.known && !!pl && pl.special === 'artifacts';
+        sd.near = me && me.frange ? (me.frange[st.id] | 0) === 1 : true;          // within fuel range (E.frange: 1 in range, 2 with reserve tanks, 0 not)
         sd.hab = habKind(sd, pl, st); if (reachSet !== null) { sd.rkT = (typeof reachSet === 'function' ? reachSet(sd.id) : reachSet.has(sd.id)) ? 1 : 0.2; reachAnim = true; }
         sd.nebula = !!(st.inNebula || st.nebula);
         sd.pop = vis === 2 ? (pl ? pl.pop || 0 : 0) : (seen ? seen.pop || 0 : 0); sd.maxPop = sd.known && pl ? pl.maxPop || 0 : 0;
@@ -1007,8 +1028,9 @@
       if (amb.key !== galaxyKey || !amb.world) {
         amb.key = galaxyKey;
         const asp = gh / gw, w = 240, hh = Math.round(clamp(240 * asp, 120, 300));
-        amb.world = { canvas: buildAmbientNebula(w, hh, 7, { scale: 3.1, warp: 1.5, t0: 0.4, t1: 0.92, gain: 0.42, wisp: 0.5, lens: true, colors: [[30, 44, 118], [64, 38, 120], [44, 130, 170]] }), x0: -gw * 0.2, y0: -gh * 0.2, w: gw * 1.4, h: gh * 1.4 };
-        if (!amb.far) amb.far = buildAmbientNebula(320, 180, 91, { scale: 4.2, warp: 1.9, t0: 0.42, t1: 0.92, gain: 0.3, wisp: 0.38, lens: false, colors: [[20, 34, 92], [54, 34, 104], [60, 108, 160]] });
+        // the galaxy-anchored cloud and the far dust in the one sky's hues (dusty mauve, grey navy, a warm wisp), not the old indigo / cyan
+        amb.world = { canvas: buildAmbientNebula(w, hh, 7, { scale: 3.1, warp: 1.5, t0: 0.4, t1: 0.92, gain: 0.36, wisp: 0.42, lens: true, colors: [[62, 48, 84], [52, 58, 100], [150, 118, 110]] }), x0: -gw * 0.2, y0: -gh * 0.2, w: gw * 1.4, h: gh * 1.4 };
+        if (!amb.far) amb.far = buildAmbientNebula(320, 180, 91, { scale: 4.2, warp: 1.9, t0: 0.42, t1: 0.92, gain: 0.28, wisp: 0.32, lens: false, colors: [[40, 34, 62], [44, 42, 80], [120, 100, 110]] });
       }
       const td = Math.min(2, dpr);
       if (!amb.tiles || amb.tileDpr !== td) {
@@ -1020,9 +1042,12 @@
       // optional external backdrop (MOO.Gfx.Space.makeBackdrop), rebuilt a little after a resize settles
       const Sp = M.Gfx && M.Gfx.pick('space');
       if (opts.backdrop !== 'builtin' && Sp && Sp.makeBackdrop && !amb.extFailed) {
-        const key = (W >> 5) + 'x' + (H >> 5);
+        // the GPU renders the sky at device resolution (a 4K screen is not an upscaled 1600-wide image); the CPU path keeps its 1600×900 cap
+        const gpu = M.Gfx.GLSpace && M.Gfx.GLSpace.supported && M.Gfx.GLSpace.supported() && Q.glow >= 0.75, bk = gpu ? Math.min(dpr, 2) : 1;
+        const bw = Math.min(Math.round(W * bk), gpu ? 3840 : 1600), bh = Math.min(Math.round(H * bk), gpu ? 2160 : 900);
+        const key = (bw >> 5) + 'x' + (bh >> 5);
         if (key !== amb.extKey && (!amb.ext || clock - amb.extAt > 0.4)) {
-          try { const c = Sp.makeBackdrop(Math.min(W, 1600), Math.min(H, 900), 'galaxymap', { intensity: 0.42, stars: 0.5, palette: ['#2a1d78', '#14357a', '#3a2a7a', '#0d4f7a'] }); if (c && (c.width || c.naturalWidth)) { amb.ext = c; amb.extKey = key; amb.extAt = clock; } else amb.extFailed = true; }
+          try { const c = Sp.makeBackdrop(bw, bh, 'galaxymap', Sp.sky ? Sp.sky({ stars: 0.5 }) : { intensity: 0.42, stars: 0.5, palette: ['#2a1d78', '#14357a', '#3a2a7a', '#0d4f7a'] }); if (c && (c.width || c.naturalWidth)) { amb.ext = c; amb.extKey = key; amb.extAt = clock; } else amb.extFailed = true; }
           catch (e) { amb.extFailed = true; console.warn('[GalaxyMap] Space.makeBackdrop failed, using built-in backdrop', e); }
         }
       }
@@ -1077,11 +1102,11 @@
     function paintBackdropStatic(g, z, px, py, zr, par, nl, drx, dry) {
       if (amb.ext) {
         const r = farRect(drx, dry);
-        g.fillStyle = '#03051a'; g.fillRect(0, 0, W, H);
+        g.fillStyle = '#030309'; g.fillRect(0, 0, W, H);
         g.drawImage(amb.ext, r.x, r.y, r.w, r.h);
       } else {
         const gk = W + 'x' + H;
-        if (amb.gradKey !== gk) { const gr = g.createRadialGradient(W * 0.5, H * 0.46, 0, W * 0.5, H * 0.5, Math.hypot(W, H) * 0.62); gr.addColorStop(0, '#0c1442'); gr.addColorStop(0.55, '#070c2b'); gr.addColorStop(1, '#03051a'); amb.grad = gr; amb.gradKey = gk; }
+        if (amb.gradKey !== gk) { const gr = g.createRadialGradient(W * 0.5, H * 0.46, 0, W * 0.5, H * 0.5, Math.hypot(W, H) * 0.62); gr.addColorStop(0, '#0e0c1e'); gr.addColorStop(0.55, '#070614'); gr.addColorStop(1, '#030309'); amb.grad = gr; amb.gradKey = gk; }
         g.fillStyle = amb.grad; g.fillRect(0, 0, W, H);
         // far dust layer (parallax)
         const far = amb.far, r = farRect(drx, dry);
@@ -1090,7 +1115,7 @@
       }
       // galaxy-anchored ambient cloud
       const wd = amb.world, wx = (wd.x0 - cam.x) * z + W / 2, wy = (wd.y0 - cam.y) * z + H / 2;
-      g.globalCompositeOperation = 'lighter'; g.globalAlpha = clamp((amb.ext ? 0.32 : 0.85) * Q.nebula, 0, 1);
+      g.globalCompositeOperation = 'lighter'; g.globalAlpha = clamp((amb.ext ? 0.16 : 0.85) * Q.nebula, 0, 1);   // over the sky painting the cloud is a hint, not a haze
       g.drawImage(wd.canvas, wx, wy, wd.w * z, wd.h * z);
       // parallax star layers
       g.globalCompositeOperation = 'lighter';
@@ -1208,13 +1233,11 @@
       const rr = (me.range || 0) * pcU * z, sr = scanOf() * pcU * z, ep = easeOut(clamp(selT / 0.5, 0, 1));
       ctx.fillStyle = rgba(th.rgb.brass, 0.03 * ep); ctx.beginPath(); ctx.arc(cx, cy, rr * ep, 0, TAU); ctx.fill();
       ring(cx, cy, rr * ep, th.rgb.brass, 0.62, 1.4, [8, 7], -t * 7);
-      ring(cx, cy, sr * ep, th.rgb.cyan, 0.5, 1.2, [2, 6], t * 4);
-      // radar sweep pulse from the selected colony / fleet
-      if (!Q.reduce) { const u = mod(t * 0.42, 1), rp = sr * u; ring(cx, cy, rp, th.rgb.cyan, 0.16 * (1 - u), 1); }   // a faint sweep, not a glowing ring
+      ring(cx, cy, sr * ep, th.rgb.cyan, 0.34, 1.1, [2, 6], t * 4);                      // the scan ring sits under the range ring in weight (no sweep pulse: motion that said nothing)
       // labels
       ctx.font = Math.round(10 * uk) + 'px ' + th.fontUi; ctx.textAlign = 'center'; ctx.lineJoin = 'round'; ctx.lineWidth = 3; ctx.strokeStyle = 'rgba(3,5,18,0.85)';
       const lbl = (txt, ang, r, col) => { const x = cx + Math.cos(ang) * r, y = cy + Math.sin(ang) * r; ctx.strokeText(txt, x, y); ctx.fillStyle = col; ctx.fillText(txt, x, y); };
-      lbl('range ' + me.range + ' pc', -PI * 0.5, rr * ep + 11 * uk, rgba(th.rgb.brassHi, 0.9)); lbl('scan ' + scanOf() + ' pc', PI * 0.5, sr * ep + 13 * uk, rgba(th.rgb.cyan, 0.9));
+      lbl('range ' + me.range + ' pc', -PI * 0.5, rr * ep + 11 * uk, rgba(th.rgb.brassHi, 0.9)); lbl('scan ' + scanOf() + ' pc', PI * 0.5, sr * ep + 13 * uk, rgba(th.rgb.cyan, 0.7));
       ctx.textAlign = 'left';
     }
     // ------------------------------------------------------------------ logistics: rally lines (RELOC) and stargates
@@ -1340,6 +1363,9 @@
       }
     }
     function zn() { return cam.z * SPACING; }
+    const overview = () => cam.z <= fitZ * 1.4;                                          // the whole-galaxy view (fit, or a step past it): fewer marks per star
+    // colonisation glyphs: in the overview only on stars a colony ship can reach this turn (and the selected / hovered one); every explored star once zoomed in
+    const habShow = s => !!s.hab && (!overview() || s.near || s.id === selStar || s.id === hoverStar);
     const STAR_LODS = [32, 48, 64, 96, 128, 192, 256];
     const warm = { q: [], key: '' };
     function queueWarmup() {                                       // build the star sprites we will need during idle frames (each one costs a few ms)
@@ -1449,22 +1475,31 @@
         ctx.globalAlpha = 1; ctx.globalCompositeOperation = 'source-over';
       }
       // ---- markers: ownership, population pips, special marks, overlay badges
-      const pid = pidOf(), flagH0 = clamp(9 + znv * 0.034, 11, 25) * uk;
+      const pid = pidOf(), flagH0 = clamp(9 + znv * 0.034, 11, 25) * uk, marks = marksOn();
       for (let i = 0; i < n; i++) {
         const s = SD[i]; if (!s.on) continue;
         const x = s.sx, y = s.sy, r = s.r;
         ctx.globalAlpha = s.rk;
         // unexplored stars carry no ring at rest (they are lit points like the rest); the hover ring and the selection brackets are drawn in drawOverlays
         // inside a gameplay nebula
-        if (s.nebula && ovAny < 0.6) { ctx.setLineDash([2, 3.5]); ctx.lineDashOffset = -t * 4; ctx.beginPath(); ctx.arc(x, y, r * 2.15 + 3.5, 0, TAU); ctx.strokeStyle = 'rgba(190,130,255,0.5)'; ctx.lineWidth = 1.1; ctx.stroke(); ctx.setLineDash([]); }
+        if (s.nebula && ovAny < 0.6) { ctx.setLineDash([2, 3.5]); ctx.lineDashOffset = -t * 4; ctx.beginPath(); ctx.arc(x, y, r * 2.15 + 3.5, 0, TAU); ctx.strokeStyle = 'rgba(186,150,236,0.5)'; ctx.lineWidth = 1.1; ctx.stroke(); ctx.setLineDash([]); }
         // owner ring + flag
         if (s.owner >= 0) {
           const col = empCol(s.owner), rr = r * 1.95 + 3 + (s.capital ? 2.5 : 0), bold = 1 + wCol * 0.9;
+          if (marks) {                                                  // colour-blind aid: a ring pattern per banner (RING_DASH), drawn bolder
+            const bi = empBanner(s.owner), dash = RING_DASH[bi] || [];
+            ctx.setLineDash(dash.map(d => d * uk)); ctx.beginPath(); ctx.arc(x, y, rr, 0, TAU); ctx.lineWidth = 2 * bold; ctx.strokeStyle = rgba(col, 0.95); ctx.stroke(); ctx.setLineDash([]);
+            ctx.beginPath(); ctx.arc(x, y, rr + 2.8, 0, TAU); ctx.lineWidth = bi === 4 ? 1.6 : 0.8; ctx.strokeStyle = rgba(col, bi === 4 ? 0.9 : 0.28); ctx.stroke();
+          } else {
           ctx.beginPath(); ctx.arc(x, y, rr, 0, TAU); ctx.lineWidth = 1.4 * bold; ctx.strokeStyle = rgba(col, 0.82); ctx.stroke();
-          ctx.beginPath(); ctx.arc(x, y, rr + 2.6, 0, TAU); ctx.lineWidth = 0.8; ctx.strokeStyle = rgba(col, 0.28); ctx.stroke();
+          }
           if (s.capital) { ctx.setLineDash([2, 3]); ctx.lineDashOffset = -t * 5; ctx.beginPath(); ctx.arc(x, y, rr + 6, 0, TAU); ctx.lineWidth = 1; ctx.strokeStyle = 'rgba(255,214,106,0.7)'; ctx.stroke(); ctx.setLineDash([]); }
           const fh = flagH0 * (1 + 0.5 * wCol) * (s.capital ? 1.18 : 1);
           drawFlag(ctx, x + rr * 0.72, y - rr * 0.55, fh, col, s.capital, t, s.ph, 1);
+          if (marks && (znv > 34 || wCol > 0.2)) {                      // the race code beside the banner
+            const lb = labelSprite(raceCode(S.empires[s.owner]), Math.round(Math.max(10, fh * 0.72)), '#f6efd8', dpr, th.fontUi);
+            ctx.drawImage(lb.c, Math.round(x + rr * 0.72 + fh * 0.78 - 2), Math.round(y - rr * 0.55 - fh - 2), lb.w, lb.h);
+          }
           // population pips (filled share of max population)
           if (znv > 52 || wCol > 0.2) {
             const np = 5, fill = s.maxPop > 0 ? clamp(Math.ceil(np * s.pop / s.maxPop - 1e-6), s.pop > 0 ? 1 : 0, np) : 0, pw = Math.max(2.4, 2.2 * uk + wCol * 1.2), gap = pw * 0.55, tw0 = np * pw + (np - 1) * gap, py = y + rr + 5.5;
@@ -1481,7 +1516,7 @@
         }
         // overlay badges
         if (wEnv > 0.01 || wMin > 0.01) drawBadge(s, t, znv);
-        if (s.hab && habOn(znv)) { ctx.globalAlpha = s.rk * (1 - Math.min(1, ovAny * 2)); drawHab(s, znv); }
+        if (habOn(znv) && habShow(s)) { ctx.globalAlpha = s.rk * (1 - Math.min(1, ovAny * 2)); drawHab(s, znv); }
         ctx.globalAlpha = 1;
       }
       ctx.globalAlpha = 1;
@@ -1573,7 +1608,7 @@
       const znv = zn(), lm = (M.Settings && M.Settings.get('mapLabels')) || 'auto', px = clamp(Math.round((10.5 + znv * 0.016) * uk), 10, 17);
       const lr = lblRects; lr.length = 0;
       for (let i = 0; i < SD.length; i++) { const s = SD[i]; if (!s.on) continue; const rr = s.r * 2 + 3; lr.push(s.sx - rr, s.sy - rr, s.sx + rr, s.sy + rr); }
-      if (habIcons && habOn(znv)) for (let i = 0; i < SD.length; i++) { const s = SD[i]; if (s.on && s.hab) { const g = habPos(s, znv); lr.push(g.x - g.r - 1, g.y - g.r - 1, g.x + g.r + 1, g.y + g.r + 1); } }
+      if (habIcons && habOn(znv)) for (let i = 0; i < SD.length; i++) { const s = SD[i]; if (s.on && habShow(s)) { const g = habPos(s, znv); lr.push(g.x - g.r - 1, g.y - g.r - 1, g.x + g.r + 1, g.y + g.r + 1); } }
       // keep the ranges/flags area of owned stars free too
       for (let i = 0; i < SD.length; i++) { const s = SD[i]; if (s.on && s.owner >= 0) { const rr = s.r * 1.95 + 5; lr.push(s.sx + rr * 0.5, s.sy - rr * 2, s.sx + rr * 2.2, s.sy - rr * 0.3); } }
       const own = lr.length;
@@ -1587,7 +1622,7 @@
         else if (dcOn()) want = s.owner >= 0 && s.owner === pidOf();                       // decluttered: your own colonies only
         else if (lm === 'owned') want = s.owner >= 0;
         else if (lm === 'all') want = true;
-        else want = s.owner >= 0 || (s.known && znv >= 40);
+        else want = s.owner >= 0 || (s.known && znv >= 40 && !overview());
         if (wEnv > 0.5 || wMin > 0.5) want = want && (s.known || s.orion) && (s.owner >= 0 || znv >= 70);
         if (!want) { s.lblA = Math.max(0, s.lblA - dt * 6); if (s.lblA <= 0.01) continue; }
         const tone = s.id === selStar ? 'sel' : s.orion ? 'violet' : s.capital ? 'gold' : s.owner >= 0 ? 'own' : s.known ? 'ivory' : 'mist';
@@ -1681,6 +1716,10 @@
         if (count > 1) { const b = badgeSprite(count); ctx.globalAlpha = a; ctx.drawImage(b.c, x + sz * 0.5, y - sz * 0.5 - b.h + 3, b.w, b.h); }
       }
       if (kind !== 'war') drawKindMark(x - sz * 0.68, y - sz * 0.62, Math.max(3.4, sz * 0.27), kind, a);
+      if (owner !== pidOf() && marksOn()) {                          // colour-blind aid: whose fleet, in letters
+        const lb = labelSprite(raceCode(S.empires[owner]), Math.round(Math.max(10, sz * 0.58)), '#f6efd8', dpr, th.fontUi);
+        ctx.globalAlpha = a; ctx.drawImage(lb.c, Math.round(x - lb.w / 2), Math.round(y + sz * 0.42), lb.w, lb.h);
+      }
       ctx.globalAlpha = 1;
       return usedExt;
     }
@@ -1849,7 +1888,9 @@
         sub = 'Colonies';
         const per = {}; for (const s of SD) if (s.owner >= 0) per[s.owner] = (per[s.owner] || 0) + 1;
         Object.keys(per).map(Number).sort((a, b) => (a === pid ? -1 : b === pid ? 1 : a - b)).forEach(id => {
-          const E = emps[id] || {}; kids.push(row('', empHex(id), (E.name || E.race || 'Empire ' + id) + (id === pid ? ' (you)' : ''), '', per[id]));
+          const E = emps[id] || {}, r0 = row('', empHex(id), (E.name || E.race || 'Empire ' + id) + (id === pid ? ' (you)' : ''), marksOn() ? raceCode(E) : '', per[id]);
+          if (marksOn()) { const sw = r0.querySelector('.gl-sw'); if (sw) { const d = RING_DASH[empBanner(id)] || []; sw.classList.add('ring'); sw.innerHTML = '<svg viewBox="0 0 16 16" width="16" height="16"><circle cx="8" cy="8" r="5.5" fill="none" stroke="' + empHex(id) + '" stroke-width="2" stroke-dasharray="' + d.join(' ') + '"/>' + (empBanner(id) === 4 ? '<circle cx="8" cy="8" r="7.4" fill="none" stroke="' + empHex(id) + '" stroke-width="1.2"/>' : '') + '</svg>'; } }
+          kids.push(r0);
         });
         const free = SD.filter(s => s.owner < 0 && s.known).length;
         kids.push(h('div.gl-sep')); kids.push(row('.dot', '#c9d4ff', 'Free stars', 'known, no colony', free)); kids.push(row('.dot.hollow', '#7b89bd', 'Unexplored', '', SD.filter(s => !s.known).length));

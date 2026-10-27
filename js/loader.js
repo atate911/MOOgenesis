@@ -30,10 +30,24 @@
     document.head.appendChild(l);
   });
 
+  // A tip while it loads (Data.text.tips, the Almanac's list), never the same one twice running; kept in MOO_BOOT_TIP so the first turn of an
+  // easy game can show it again (help.js). Shown once the text module has run (about a fifth of the way in).
+  var tipEl = document.getElementById('boot-tip'), tipShown = false;
+  function bootTip() {
+    if (tipShown || !tipEl) return;
+    var T = window.MOO && window.MOO.Data && window.MOO.Data.text && window.MOO.Data.text.tips; if (!T || !T.length) return;
+    tipShown = true;
+    var last = -1; try { last = +localStorage.getItem('moo.bootTip'); } catch (e) { /* no storage */ }
+    var i = Math.floor(Math.random() * T.length); if (i === last && T.length > 1) i = (i + 1) % T.length;
+    try { localStorage.setItem('moo.bootTip', String(i)); } catch (e) { /* no storage */ }
+    window.MOO_BOOT_TIP = T[i];
+    tipEl.innerHTML = '<b>Tip</b>'; tipEl.appendChild(document.createTextNode(T[i])); tipEl.className = 'boot-tip on';
+  }
   var total = man.js.length, done = 0;
   function step() {
     done++;
     if (fill) fill.style.width = Math.round(done / total * 100) + '%';
+    bootTip();
     if (done === total) finish();
   }
   function finish() {

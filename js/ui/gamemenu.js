@@ -108,13 +108,13 @@
 
   UI.css('gamemenu', `
     .gm-modal { min-width:0; }
-    .gm-info { display:flex; align-items:center; gap:.85rem; padding:.05rem 0 .75rem; margin-bottom:.7rem; border-bottom:1px solid rgba(214,179,106,.22); }
-    .gm-info-t b { display:block; font:400 1.25rem/1.1 var(--font-display); color:var(--brass-hi); }
+    .gm-info { display:flex; align-items:center; gap:.85rem; padding:.05rem 0 .75rem; margin-bottom:.7rem; border-bottom:1px solid var(--brass-line-1); }
+    .gm-info-t b { display:block; font:400 1.2rem/1.1 var(--font-display); color:var(--brass-hi); }
     .gm-info-t span { color:var(--mist); font-size:.9rem; }
     .gm-list { display:flex; flex-direction:column; gap:.5rem; }
     .gm-sep { height:1px; margin:.25rem 0; background:linear-gradient(90deg, transparent, rgba(214,179,106,.4), transparent); }
-    .gm-item .btn { width:100%; justify-content:flex-start; gap:.7em; padding:.55em 1.1em; font-size:1.18rem; }
+    .gm-item .btn { width:100%; justify-content:flex-start; gap:.7em; padding:.55em 1.1em; font-size:1.2rem; }
     .gm-item .btn .ico { width:1.2em; height:1.2em; }
-    .gm-item .btn .kbd { margin-left:auto; padding-left:1em; font-size:.78rem; }
+    .gm-item .btn .kbd { margin-left:auto; padding-left:1em; font-size:.8rem; }
   `);
 })(window.MOO);
