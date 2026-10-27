@@ -26,19 +26,19 @@
     .hp-main small { display:block; margin-top:.4rem; color:var(--mist); letter-spacing:.08em; }
     .al { position:absolute; inset:0; display:flex; padding:1rem 1.3rem; overflow:hidden; background:radial-gradient(110% 80% at 10% 0%, #1a2672 0%, rgba(26,38,114,0) 58%), radial-gradient(90% 70% at 100% 100%, #2c1a5c 0%, rgba(44,26,92,0) 62%), var(--void); }
     .al-sheet { flex:1 1 auto; min-width:0; max-width:112rem; margin:0 auto; display:flex; flex-direction:column; min-height:0; padding:.8rem 1rem .9rem; }
-    .al-head { display:flex; align-items:flex-end; gap:1rem; padding-bottom:.55rem; margin-bottom:.4rem; border-bottom:1px solid rgba(214,179,106,.38); }
+    .al-head { display:flex; align-items:flex-end; gap:1rem; padding-bottom:.55rem; margin-bottom:.4rem; border-bottom:1px solid var(--brass-line-3); }
     .al-title { font:400 2.1rem/1 var(--font-title); color:var(--brass-hi); letter-spacing:.05em; text-shadow:0 0 22px rgba(214,179,106,.28); } .al-sub { padding-bottom:.18rem; color:var(--mist); }
     .al-search { margin-left:auto; width:min(22rem, 40%); } .al-body { flex:1 1 auto; min-height:0; overflow:auto; padding:.2rem .3rem .6rem 0; }
-    .al-foot { display:flex; justify-content:flex-end; gap:.6rem; padding-top:.6rem; border-top:1px solid rgba(214,179,106,.2); margin-top:.4rem; }
-    .al .tabs { flex-wrap:wrap; } .al .tabs button .n { margin-left:.35em; font:500 .72rem var(--font-ui); color:var(--cyan); }
+    .al-foot { display:flex; justify-content:flex-end; gap:.6rem; padding-top:.6rem; border-top:1px solid var(--brass-line-1); margin-top:.4rem; }
+    .al .tabs { flex-wrap:wrap; } .al .tabs button .n { margin-left:.35em; font:500 .7rem var(--font-ui); color:var(--cyan); }
     .al-grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(26rem, 1fr)); gap:.7rem; }
-    .al-card { position:relative; padding:.6rem .8rem .7rem; background:linear-gradient(180deg, rgba(18,26,66,.7), rgba(8,12,34,.75)); border:1px solid rgba(214,179,106,.25); }
-    .al-card h3 { font:400 1.35rem var(--font-title); color:var(--brass-hi); margin-bottom:.15rem; } .al-card h3 small { font:400 .85rem var(--font-ui); color:var(--mist); margin-left:.5rem; letter-spacing:.04em; }
+    .al-card { position:relative; padding:.6rem .8rem .7rem; background:linear-gradient(180deg, rgba(18,26,66,.7), rgba(8,12,34,.75)); border:1px solid var(--brass-line-2); }
+    .al-card h3 { font:400 1.4rem var(--font-title); color:var(--brass-hi); margin-bottom:.15rem; } .al-card h3 small { font:400 .85rem var(--font-ui); color:var(--mist); margin-left:.5rem; letter-spacing:.04em; }
     .al-card p { margin:.25rem 0; line-height:1.4; } .al-card ul { margin:.25rem 0 .1rem 1.1rem; padding:0; } .al-card li { margin:.18rem 0; line-height:1.35; }
-    .al-race { display:grid; grid-template-columns:7.2rem 1fr; gap:.7rem; } .al-race canvas { width:100%; height:auto; display:block; background:rgba(0,0,0,.3); border:1px solid rgba(214,179,106,.3); }
+    .al-race { display:grid; grid-template-columns:7.2rem 1fr; gap:.7rem; } .al-race canvas { width:100%; height:auto; display:block; background:rgba(0,0,0,.3); border:1px solid var(--brass-line-2); }
     .al-chips { display:flex; flex-wrap:wrap; gap:.3rem; margin:.3rem 0; } .al-dim { color:var(--mist); font-size:.9rem; }
-    .al-sec { margin:1rem 0 .4rem; font:400 1.25rem var(--font-display); color:var(--brass); letter-spacing:.1em; text-transform:uppercase; border-bottom:1px solid rgba(214,179,106,.25); padding-bottom:.2rem; }
-    .al .tbl td, .al .tbl th { padding:.22rem .5rem; } .al .tbl td.d { color:var(--mist); font-size:.92rem; white-space:normal; min-width:16rem; } .al .tbl td.k { color:var(--cyan); white-space:nowrap; }
+    .al-sec { margin:1rem 0 .4rem; font:400 1.2rem var(--font-display); color:var(--brass); letter-spacing:.1em; text-transform:uppercase; border-bottom:1px solid var(--brass-line-2); padding-bottom:.2rem; }
+    .al .tbl td, .al .tbl th { padding:.22rem .5rem; } .al .tbl td.d { color:var(--mist); font-size:.9rem; white-space:normal; min-width:16rem; } .al .tbl td.k { color:var(--cyan); white-space:nowrap; }
     .al-hit { background:rgba(243,220,160,.1); }
     .tu-box h4 { font:400 1.2rem var(--font-title); color:var(--brass-hi); margin-bottom:.4rem; } .tu-box p { line-height:1.45; }
   `);

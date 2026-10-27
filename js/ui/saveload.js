@@ -331,7 +331,7 @@
     .sl-inner { width:min(100%, 66rem); display:flex; flex-direction:column; gap:.9rem; min-height:0; }
     .sl-head { flex:none; }
     .sl-holder { flex:1 1 auto; min-height:0; display:flex; flex-direction:column; }
-    .sl-foot { flex:none; display:flex; align-items:center; gap:.7rem; padding-top:.75rem; border-top:1px solid rgba(214,179,106,.28); }
+    .sl-foot { flex:none; display:flex; align-items:center; gap:.7rem; padding-top:.75rem; border-top:1px solid var(--brass-line-2); }
     .sl-modal .sl-foot { margin-top:.8rem; }
     .sl-foot-hint { color:var(--fog); font-size:.85rem; }
     .sl { display:flex; flex-direction:column; gap:.7rem; min-height:0; flex:1 1 auto; }
@@ -339,7 +339,7 @@
     .sl-count { margin-left:auto; color:var(--mist); font-size:.9rem; }
     .sl-tools { display:flex; gap:.6rem; flex:none; }
     .sl-warns:empty { display:none; }
-    .sl-warn { display:flex; align-items:flex-start; gap:.7rem; padding:.6rem .85rem; color:var(--ember); font-size:.92rem; line-height:1.35; background:rgba(255,148,64,.08); box-shadow: inset 0 0 0 1px rgba(255,148,64,.42); }
+    .sl-warn { display:flex; align-items:flex-start; gap:.7rem; padding:.6rem .85rem; color:var(--ember); font-size:.9rem; line-height:1.35; background:rgba(255,148,64,.08); box-shadow: inset 0 0 0 1px rgba(255,148,64,.42); }
     .sl-warn .ico { width:1.3rem; height:1.3rem; flex:none; margin-top:.1rem; }
     .sl-warn b { color:#ffc08a; font-weight:600; }
     .sl-list { display:flex; flex-direction:column; gap:.45rem; min-height:0; flex:1 1 auto; overflow-y:auto; overflow-x:hidden; padding:2px 6px 2px 2px; }
@@ -349,30 +349,30 @@
     .sl-row::before { content:""; position:absolute; inset:1px; z-index:-1; clip-path:var(--poly); background:linear-gradient(180deg, rgba(24,34,80,.96), rgba(10,15,40,.97)); transition: background .2s, box-shadow .2s; }
     .sl-row:hover { filter:brightness(1.14); }
     .sl-row.sel { background:linear-gradient(135deg, var(--brass-hi), var(--brass) 45%, var(--brass-lo)); }
-    .sl-row.sel::before { background:linear-gradient(180deg, rgba(54,62,120,.97), rgba(21,29,72,.98)); box-shadow: inset 0 0 1.6rem rgba(214,179,106,.18); }
+    .sl-row.sel::before { background:linear-gradient(180deg, rgba(54,62,120,.97), rgba(21,29,72,.98)); box-shadow: inset 0 0 1.6rem var(--brass-line-1); }
     .sl-row:focus-visible::before { box-shadow: inset 0 0 0 2px var(--cyan); }
     .sl-row.empty { opacity:.78; }
     .sl-slot { display:flex; flex-direction:column; min-width:0; }
     .sl-slot-n { font:400 1.15rem/1.1 var(--font-display); color:var(--brass-hi); letter-spacing:.03em; }
-    .sl-slot-t { margin-top:.1rem; font-size:.68rem; letter-spacing:.16em; text-transform:uppercase; color:var(--fog); }
+    .sl-slot-t { margin-top:.1rem; font-size:.7rem; letter-spacing:.16em; text-transform:uppercase; color:var(--fog); }
     .sl-badge { display:grid; place-items:center; }
-    .sl-nobadge { width:2.9rem; height:2.9rem; border:1px dashed rgba(214,179,106,.3); border-radius:50%; }
+    .sl-nobadge { width:2.9rem; height:2.9rem; border:1px dashed var(--brass-line-2); border-radius:50%; }
     .sl-main { min-width:0; display:flex; flex-direction:column; gap:.12rem; }
     .sl-lead { display:flex; align-items:baseline; gap:.5rem; min-width:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-    .sl-lead b { font-weight:500; font-size:1.08rem; color:var(--ivory); overflow:hidden; text-overflow:ellipsis; }
-    .sl-lead span { color:var(--mist); font-size:.92rem; }
-    .sl-sub { color:var(--mist); font-size:.88rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; font-variant-numeric:tabular-nums; }
+    .sl-lead b { font-weight:500; font-size:1.1rem; color:var(--ivory); overflow:hidden; text-overflow:ellipsis; }
+    .sl-lead span { color:var(--mist); font-size:.9rem; }
+    .sl-sub { color:var(--mist); font-size:.9rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; font-variant-numeric:tabular-nums; }
     .sl-empty { grid-column:span 2; color:var(--fog); font:400 1.05rem var(--font-display); letter-spacing:.04em; }
-    .sl-time { text-align:right; color:var(--mist); font-size:.88rem; white-space:nowrap; }
+    .sl-time { text-align:right; color:var(--mist); font-size:.9rem; white-space:nowrap; }
     .sl-act { display:flex; align-items:center; justify-content:flex-end; gap:.35rem; min-width:7.2rem; }
-    .sl-ib { display:grid; place-items:center; width:1.9rem; height:1.9rem; padding:0; border:1px solid rgba(214,179,106,.38); background:rgba(255,255,255,.04); color:var(--brass-hi); cursor:var(--hand); transition: background .15s, color .15s, border-color .15s; }
+    .sl-ib { display:grid; place-items:center; width:1.9rem; height:1.9rem; padding:0; border:1px solid var(--brass-line-3); background:rgba(255,255,255,.04); color:var(--brass-hi); cursor:var(--hand); transition: background .15s, color .15s, border-color .15s; }
     .sl-ib .ico { width:1.1rem; height:1.1rem; }
     .sl-ib:hover { background:rgba(214,179,106,.2); } .sl-ib.del:hover { background:rgba(255,92,106,.18); color:var(--rose); border-color:var(--rose); }
     .sl-ib:focus-visible { outline:none; box-shadow: inset 0 0 0 2px var(--cyan); }
     .sl-importwarn { margin:.5rem 0 0; min-height:1.2em; color:var(--ember); font-size:.9rem; }
-    .sl-map { width:5.6rem; height:3.55rem; background:radial-gradient(ellipse at 50% 50%, #121a3c, #060a1c); box-shadow:inset 0 0 0 1px rgba(214,179,106,.28); }
+    .sl-map { width:5.6rem; height:3.55rem; background:radial-gradient(ellipse at 50% 50%, #121a3c, #060a1c); box-shadow:inset 0 0 0 1px var(--brass-line-2); }
     .sl-map canvas { display:block; width:100%; height:100%; }
-    .sl-map.none { background:none; box-shadow:inset 0 0 0 1px rgba(214,179,106,.14); }
+    .sl-map.none { background:none; box-shadow:inset 0 0 0 1px var(--brass-line-1); }
     /* narrow (phones, small windows): a card — the map, the slot with its leader and year beside it, the buttons on a line of their own. The old
        four-column row squeezed the leader and year to nothing beside the buttons and hid an empty slot's "Save here" */
     @media (max-width: 900px) {

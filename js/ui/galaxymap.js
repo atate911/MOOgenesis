@@ -407,7 +407,7 @@
       const a = sstep(-13, 13, best + (n1 - 0.5) * 34), i = (y * W + x) * 4;
       const cloud = 0.42 + 1.05 * n2 * (0.55 + 0.9 * n1), rim = Math.exp(-Math.pow((a - 0.42) / 0.16, 2)) * 0.5;
       const k = a * cloud + rim * 0.5 * a, wisp = Math.pow(1 - Math.abs(nz.fbm(nx * 3.1 + 21, ny * 3.1 + 9, 4) * 2 - 1), 3) * a * 0.26, hue = sstep(0.25, 0.75, n1), dith = (rnd() - 0.5) * 1.3;
-      d[i] = (lerp(66, 118, hue) * k + 196 * wisp) * 0.5 + dith; d[i + 1] = (lerp(40, 58, hue) * k + 150 * wisp) * 0.5 + dith; d[i + 2] = (lerp(112, 158, hue) * k + 236 * wisp) * 0.5 + dith; d[i + 3] = 255;   // dusty violet, the sky's family
+      d[i] = (lerp(76, 108, hue) * k + 182 * wisp) * 0.5 + dith; d[i + 1] = (lerp(56, 72, hue) * k + 160 * wisp) * 0.5 + dith; d[i + 2] = (lerp(100, 134, hue) * k + 210 * wisp) * 0.5 + dith; d[i + 3] = 255;   // dusty violet, the sky's family
     }
     g.putImageData(img, 0, 0);
     return { canvas: c, x0, y0, w: x1 - x0, h: y1 - y0 };
@@ -506,33 +506,33 @@
     .gmap-mini canvas { display:block; clip-path:var(--poly); background:rgba(5,8,24,.88); cursor:crosshair; }
     .gmap .gmap-legend.panel { position:absolute; left:.75rem; bottom:2.7rem; z-index:3; width:16rem; max-height:70%; overflow:hidden; transition:opacity .25s; }
     .gmap .gmap-legend.off { opacity:0; pointer-events:none; }
-    .gmap-legend .gl-h { display:flex; align-items:baseline; justify-content:space-between; gap:.5rem; padding-bottom:.3rem; margin-bottom:.35rem; border-bottom:1px solid rgba(214,179,106,.28);
-      font:400 1.02rem var(--font-display); color:var(--brass-hi); letter-spacing:.06em; text-transform:uppercase; }
-    .gmap-legend .gl-h small { font:400 .74rem var(--font-ui); color:var(--mist); letter-spacing:0; text-transform:none; }
-    .gmap-legend .gl-row { display:flex; align-items:center; gap:.55rem; padding:.1rem 0; font-size:.86rem; color:var(--ivory); line-height:1.15; }
+    .gmap-legend .gl-h { display:flex; align-items:baseline; justify-content:space-between; gap:.5rem; padding-bottom:.3rem; margin-bottom:.35rem; border-bottom:1px solid var(--brass-line-2);
+      font:400 1rem var(--font-display); color:var(--brass-hi); letter-spacing:.06em; text-transform:uppercase; }
+    .gmap-legend .gl-h small { font:400 .75rem var(--font-ui); color:var(--mist); letter-spacing:0; text-transform:none; }
+    .gmap-legend .gl-row { display:flex; align-items:center; gap:.55rem; padding:.1rem 0; font-size:.85rem; color:var(--ivory); line-height:1.15; }
     .gmap-legend .gl-row.dim { opacity:.6; }
     .gmap-legend .gl-sw { flex:none; width:.78rem; height:.78rem; background:var(--c); box-shadow:0 0 7px var(--c); transform:rotate(45deg) scale(.86); }
     .gmap-legend .gl-sw.dot { transform:none; border-radius:50%; width:.7rem; height:.7rem; margin:0 .04rem; }
     .gmap-legend .gl-sw.hollow { background:transparent; box-shadow:none; border:1.5px solid var(--c); }
     .gmap-legend .gl-sw.ring { width:1rem; height:1rem; background:none; box-shadow:none; transform:none; } .gmap-legend .gl-sw.ring svg { display:block; width:100%; height:100%; }
-    .gmap-legend .gl-txt { min-width:0; } .gmap-legend .gl-sub { display:block; color:var(--mist); font-size:.72rem; }
+    .gmap-legend .gl-txt { min-width:0; } .gmap-legend .gl-sub { display:block; color:var(--mist); font-size:.7rem; }
     .gmap-legend .gl-n { margin-left:auto; color:var(--mist); font-variant-numeric:tabular-nums; }
     .gmap-legend .gl-gl { flex:none; width:1rem; height:1rem; display:grid; place-items:center; } .gmap-legend .gl-gl svg { width:100%; height:100%; }
-    .gmap-legend .gl-tog { margin-top:.2rem; width:100%; padding:.18rem .4rem; font:400 .8rem var(--font-ui); color:var(--brass-hi); background:rgba(0,0,0,.3); border:1px solid rgba(214,179,106,.4); cursor:var(--hand); } .gmap-legend .gl-tog:hover { background:rgba(214,179,106,.14); }
+    .gmap-legend .gl-tog { margin-top:.2rem; width:100%; padding:.18rem .4rem; font:400 .8rem var(--font-ui); color:var(--brass-hi); background:rgba(0,0,0,.3); border:1px solid var(--brass-line-3); cursor:var(--hand); } .gmap-legend .gl-tog:hover { background:rgba(214,179,106,.14); }
     .gmap-legend .gl-sep { height:1px; margin:.35rem 0; background:linear-gradient(90deg,transparent,rgba(214,179,106,.35),transparent); }
-    .gmap-tip { --ch:.35rem; position:absolute; z-index:6; left:0; top:0; display:none; max-width:21rem; min-width:9rem; padding:.45rem .75rem .55rem; font-size:.88rem; line-height:1.38; pointer-events:none;
+    .gmap-tip { --ch:.35rem; position:absolute; z-index:6; left:0; top:0; display:none; max-width:21rem; min-width:9rem; padding:.45rem .75rem .55rem; font-size:.9rem; line-height:1.38; pointer-events:none;
       color:var(--ivory); background:linear-gradient(135deg,var(--brass),var(--brass-lo)); isolation:isolate; }
     .gmap-tip::before { content:""; position:absolute; inset:1px; z-index:-1; clip-path:var(--poly); background:linear-gradient(180deg,#101a46,#0a1030); }
     .gmap-tip b { color:var(--brass-hi); font-weight:600; }
-    .gmap-tip .gt-h { display:flex; align-items:baseline; gap:.7rem; padding-bottom:.25rem; margin-bottom:.25rem; border-bottom:1px solid rgba(214,179,106,.25); font:400 1.1rem var(--font-display); color:var(--brass-hi); letter-spacing:.03em; }
-    .gmap-tip .gt-k { margin-left:auto; display:flex; align-items:center; gap:.35rem; font:400 .76rem var(--font-ui); color:var(--mist); letter-spacing:0; white-space:nowrap; }
+    .gmap-tip .gt-h { display:flex; align-items:baseline; gap:.7rem; padding-bottom:.25rem; margin-bottom:.25rem; border-bottom:1px solid var(--brass-line-2); font:400 1.1rem var(--font-display); color:var(--brass-hi); letter-spacing:.03em; }
+    .gmap-tip .gt-k { margin-left:auto; display:flex; align-items:center; gap:.35rem; font:400 .75rem var(--font-ui); color:var(--mist); letter-spacing:0; white-space:nowrap; }
     .gmap-tip .gt-k i { display:inline-block; width:.62em; height:.62em; border-radius:50%; background:var(--c); box-shadow:0 0 6px var(--c); }
     .gmap-tip .gt-r { margin-top:.12rem; } .gmap-tip .gt-d { color:var(--mist); } .gmap-tip .gt-w { color:var(--ember); } .gmap-tip .gt-v { color:var(--violet); }
     .gmap-tip i.sw { display:inline-block; width:.62em; height:.62em; background:var(--c); transform:rotate(45deg); margin:0 .4em 0 .1em; box-shadow:0 0 5px var(--c); }
-    .gmap-hint { --ch:.4rem; position:absolute; z-index:4; left:50%; top:1.9rem; transform:translateX(-50%); display:none; padding:.4rem 1rem; font-size:.92rem; color:var(--brass-hi); pointer-events:none;
+    .gmap-hint { --ch:.4rem; position:absolute; z-index:4; left:50%; top:1.9rem; transform:translateX(-50%); display:none; padding:.4rem 1rem; font-size:.9rem; color:var(--brass-hi); pointer-events:none;
       background:linear-gradient(180deg,var(--brass),var(--brass-lo)); isolation:isolate; white-space:nowrap; }
     .gmap-hint::before { content:""; position:absolute; inset:1px; z-index:-1; clip-path:var(--poly); background:linear-gradient(180deg,#27336d,#161e4a); }
-    .gmap-hint kbd { font:600 .74rem var(--font-ui); color:var(--mist); padding:0 .35em; border:1px solid rgba(214,179,106,.5); margin:0 .15em; }
+    .gmap-hint kbd { font:600 .75rem var(--font-ui); color:var(--mist); padding:0 .35em; border:1px solid var(--brass-line-3); margin:0 .15em; }
     .gmap.route .gmap-hint { display:block; animation:gmap-pulse 1.6s ease-in-out infinite; }
     @keyframes gmap-pulse { 50% { filter:brightness(1.25); } }
     `;
@@ -1482,7 +1482,7 @@
         ctx.globalAlpha = s.rk;
         // unexplored stars carry no ring at rest (they are lit points like the rest); the hover ring and the selection brackets are drawn in drawOverlays
         // inside a gameplay nebula
-        if (s.nebula && ovAny < 0.6) { ctx.setLineDash([2, 3.5]); ctx.lineDashOffset = -t * 4; ctx.beginPath(); ctx.arc(x, y, r * 2.15 + 3.5, 0, TAU); ctx.strokeStyle = 'rgba(190,130,255,0.5)'; ctx.lineWidth = 1.1; ctx.stroke(); ctx.setLineDash([]); }
+        if (s.nebula && ovAny < 0.6) { ctx.setLineDash([2, 3.5]); ctx.lineDashOffset = -t * 4; ctx.beginPath(); ctx.arc(x, y, r * 2.15 + 3.5, 0, TAU); ctx.strokeStyle = 'rgba(186,150,236,0.5)'; ctx.lineWidth = 1.1; ctx.stroke(); ctx.setLineDash([]); }
         // owner ring + flag
         if (s.owner >= 0) {
           const col = empCol(s.owner), rr = r * 1.95 + 3 + (s.capital ? 2.5 : 0), bold = 1 + wCol * 0.9;

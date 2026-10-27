@@ -72,7 +72,7 @@ html[data-phone] .ph-back:active { filter: brightness(1.2); }
 /* ---- long-press tooltip popover -------------------------------------------- */
 html[data-phone] .ph-tip {
   --ch: .35rem; position: fixed; z-index: 260; left: 0; top: 0; display: none; max-width: min(22rem, 88vw); padding: .5rem .75rem;
-  font-size: .92rem; line-height: 1.35; color: var(--ivory); background: var(--glass-hi); border: 1px solid var(--brass-lo);
+  font-size: .9rem; line-height: 1.35; color: var(--ivory); background: var(--glass-hi); border: 1px solid var(--brass-lo);
   box-shadow: 0 8px 24px rgba(0, 0, 0, .6); pointer-events: none;
 }
 html[data-phone] .ph-tip.on { display: block; }
@@ -86,7 +86,7 @@ html[data-phone] .ph-sheet[data-sheet="half"] { height: var(--ph-half, 52%); }
 html[data-phone] .ph-sheet[data-sheet="full"] { height: var(--ph-full, 100%); }
 html[data-phone] .ph-grip {
   flex: none; position: relative; display: flex; align-items: center; justify-content: center; height: var(--grip, 2rem); cursor: grab; touch-action: none; user-select: none;
-  background: linear-gradient(180deg, #59636f, #3a424c); box-shadow: inset 0 1px 0 rgba(255, 255, 255, .25), 0 -6px 18px rgba(0, 0, 0, .45);
+  background: linear-gradient(180deg, #5f626a, #3e4149); box-shadow: inset 0 1px 0 rgba(255, 255, 255, .25), 0 -6px 18px rgba(0, 0, 0, .45);
 }
 html[data-phone] .ph-grip::before { content: ""; width: 3rem; height: .3rem; border-radius: .2rem; background: rgba(255, 255, 255, .5); }
 html[data-phone] .ph-grip::after { content: ""; position: absolute; left: 0; right: 0; bottom: 0; top: calc(var(--grip, 2rem) - var(--tap)); }   /* a --tap tall hit area, reaching up over the map */
@@ -144,7 +144,7 @@ html[data-phone] .gmap canvas { -webkit-touch-callout: none; -webkit-user-select
    Game, Design and Map live in More (the game menu as a bottom sheet, gamemenu.js). Icon over label. */
 html:root:root[data-phone] .gx-bar.ph-tabs {
   display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)) minmax(0, 1.55fr); gap: .2rem; overflow: hidden;
-  padding: .25rem .25rem calc(.25rem + env(safe-area-inset-bottom)); background: linear-gradient(180deg, #3a424c, #262c33);
+  padding: .25rem .25rem calc(.25rem + env(safe-area-inset-bottom)); background: linear-gradient(180deg, #3e4149, #282c32);
 }
 html:root:root[data-phone] .gx-bar.ph-tabs > :is(.gx-spacer, .gx-wait, .ph-tab-game, .ph-tab-design, .ph-tab-map) { display: none; }
 html:root:root[data-phone] .gx-bar.ph-tabs .ph-tab-planets { order: 1; } html:root:root[data-phone] .gx-bar.ph-tabs .ph-tab-fleet { order: 2; }
@@ -152,10 +152,10 @@ html:root:root[data-phone] .gx-bar.ph-tabs .ph-tab-tech { order: 3; } html:root:
 html:root:root[data-phone] .gx-bar.ph-tabs .ph-tab-more { order: 5; } html:root:root[data-phone] .gx-bar.ph-tabs .ph-next { order: 6; }
 html:root:root[data-phone] .gx-bar.ph-tabs .btn {
   flex-direction: column; justify-content: center; gap: .15rem; min-width: 0; min-height: calc(var(--tap) + .5rem); padding: .3rem .1rem;
-  font: 600 max(12px, .76rem)/1.1 var(--font-ui); letter-spacing: 0; text-transform: none; white-space: nowrap;
+  font: 600 max(12px, .75rem)/1.1 var(--font-ui); letter-spacing: 0; text-transform: none; white-space: nowrap;
 }
 html:root:root[data-phone] .gx-bar.ph-tabs .btn .ico { width: 1.35rem; height: 1.35rem; margin: 0; }
-html:root:root[data-phone] .gx-bar.ph-tabs .ph-next { font: 700 max(12px, .82rem)/1.1 var(--font-display); letter-spacing: .04em; text-transform: uppercase; }
+html:root:root[data-phone] .gx-bar.ph-tabs .ph-next { font: 700 max(12px, .8rem)/1.1 var(--font-display); letter-spacing: .04em; text-transform: uppercase; }
 /* the pre-battle / result cards inside the sheet */
 /* the minimap and the map key sit above the collapsed sheet (galaxymap.js positions the minimap inline per its corner setting) */
 html:root:root[data-phone] .gmap-mini { left: .5rem !important; right: auto !important; top: auto !important; bottom: calc(var(--ph-strip) + .5rem) !important; }
@@ -167,7 +167,7 @@ html[data-phone] .ph-thumb :is(canvas, img), html[data-phone] .ph-thumb .sm-pic 
 html[data-phone] .ph-thumb.star { --sc: #ffe27a; width: 2rem; height: 2rem; border-radius: 50%; background: radial-gradient(circle, #fff 0 14%, var(--sc) 34%, color-mix(in srgb, var(--sc) 40%, transparent) 52%, transparent 70%); }
 html[data-phone] .ph-thumb.star[data-c="red"] { --sc: #ff6a4a; } html[data-phone] .ph-thumb.star[data-c="green"] { --sc: #7ae07a; }
 html[data-phone] .ph-thumb.star[data-c="blue"] { --sc: #6aa8ff; } html[data-phone] .ph-thumb.star[data-c="white"] { --sc: #e8f0ff; } html[data-phone] .ph-thumb.star[data-c="purple"] { --sc: #c08aff; }
-html[data-phone] .ph-sum { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: .15rem .75rem; padding: 0 .3rem .45rem; font-size: max(12px, .86rem); line-height: 1.35; color: #d6dce6; text-align: center; }
+html[data-phone] .ph-sum { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: .15rem .75rem; padding: 0 .3rem .45rem; font-size: max(12px, .85rem); line-height: 1.35; color: #d6dce6; text-align: center; }
 html[data-phone] .ph-sum b { color: #fff; font-weight: 600; font-variant-numeric: tabular-nums; }
 html[data-phone] .ph-sum .up { color: var(--leaf); } html[data-phone] .ph-sum .dn { color: var(--rose); }
 html[data-phone] .ph-sum .w { padding: 0 .45rem; color: #ffb27a; border: 1px solid currentColor; border-radius: .2rem; }
@@ -207,7 +207,7 @@ html[data-phone] .ph-dz .ph-dz-hrow .dz-name label { display: none; }
 html[data-phone] .ph-dz .ph-dz-hrow .dz-name input { min-height: var(--tap); font-size: max(16px, 1rem); }
 html[data-phone] .ph-dz .ph-dz-hrow .btn { flex: none; }
 html[data-phone] .ph-dz .ph-dz-head .dz-spc { margin: 0; padding: .3rem .5rem .35rem; }
-html[data-phone] .ph-dz .ph-dz-head .dz-legend { margin: .2rem 0 .25rem; font-size: max(12px, .76rem); gap: .05rem .6rem; }
+html[data-phone] .ph-dz .ph-dz-head .dz-legend { margin: .2rem 0 .25rem; font-size: max(12px, .75rem); gap: .05rem .6rem; }
 html[data-phone] .ph-dz .ph-dz-body {
   flex: 1 1 auto; min-height: 0; overflow-x: hidden; overflow-y: auto; overscroll-behavior: contain; -webkit-overflow-scrolling: touch;
   display: flex; flex-direction: column; gap: .6rem; padding: .55rem .5rem 1rem;
@@ -222,7 +222,7 @@ html[data-phone] .ph-dz .ph-dz-hulls { display: flex; flex-direction: column; ga
 html[data-phone] .ph-dz .dz-hull { min-height: 3rem; justify-content: center; }
 html[data-phone] .ph-dz .dz-auto { display: flex; flex-wrap: wrap; gap: .35rem; padding: 0; }
 html[data-phone] .ph-dz .dz-auto .lb { width: 100%; }
-html[data-phone] .ph-dz .dz-auto .btn { flex: 1 1 0; min-height: var(--tap); font-size: .88rem; }
+html[data-phone] .ph-dz .dz-auto .btn { flex: 1 1 0; min-height: var(--tap); font-size: .9rem; }
 /* preview */
 html[data-phone] .ph-dz .dz-pv { flex: none; min-height: 0; height: 15rem; }
 html[data-phone] .ph-dz .dz-cvw { touch-action: pan-y; }
@@ -250,8 +250,8 @@ html[data-phone] .ph-dz .dz-wr.empty { grid-template-areas: "sel sel sel"; }
 html[data-phone] .ph-dz .dz-wr .dz-count { display: none; }
 html[data-phone] .ph-dz .dz-wr > .dz-sel { grid-area: sel; }
 html[data-phone] .ph-dz .dz-wr .dmg { grid-area: dmg; } html[data-phone] .ph-dz .dz-wr .rng { grid-area: rng; }
-html[data-phone] .ph-dz .dz-wr .dmg::before { content: "dmg "; color: var(--fog); font-size: .78rem; font-weight: 400; }
-html[data-phone] .ph-dz .dz-wr .rng::before { content: "rng "; color: var(--fog); font-size: .78rem; font-weight: 400; }
+html[data-phone] .ph-dz .dz-wr .dmg::before { content: "dmg "; color: var(--fog); font-size: .8rem; font-weight: 400; }
+html[data-phone] .ph-dz .dz-wr .rng::before { content: "rng "; color: var(--fog); font-size: .8rem; font-weight: 400; }
 html[data-phone] .ph-dz .dz-wr.empty .dmg, html[data-phone] .ph-dz .dz-wr.empty .rng, html[data-phone] .ph-dz .dz-wr.empty .note { display: none; }
 html[data-phone] .ph-dz .dz-wr .ph-step { grid-area: step; justify-content: space-between; }
 html[data-phone] .ph-dz .dz-wr .note { grid-area: note; }
@@ -278,7 +278,7 @@ html[data-phone] .ph-dz .dz-cmpg { grid-template-columns: minmax(0, 1fr); }
 html[data-phone] .ph-dz .dz-pop.ph-pop { position: absolute; inset: var(--ph-head, 0px) 0 0 0; z-index: 8; border: 0; }
 html[data-phone] .ph-dz .dz-pop.ph-pop .dz-pop-h { padding: .35rem .5rem; }
 html[data-phone] .ph-dz .dz-pop.ph-pop .dz-pop-h .t { font-size: 1.05rem; white-space: normal; }
-html[data-phone] .ph-dz .ph-pop-s { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: .3rem .8rem; padding: .3rem .6rem; color: var(--mist); font-size: .88rem; }
+html[data-phone] .ph-dz .ph-pop-s { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: .3rem .8rem; padding: .3rem .6rem; color: var(--mist); font-size: .9rem; }
 html[data-phone] .ph-dz .ph-pop-s b { color: var(--ivory); }
 html[data-phone] .ph-dz .ph-pop-lk { display: inline-flex; align-items: center; gap: .5rem; min-height: var(--tap); }
 html[data-phone] .ph-dz .ph-pop-lk input { width: 1.4rem; height: 1.4rem; }
@@ -295,11 +295,11 @@ html[data-phone] .ph-dz .ph-pc-h { display: flex; align-items: center; gap: .45r
 html[data-phone] .ph-dz .ph-pc-h .nm { flex: 1 1 auto; min-width: 0; color: var(--o-orange, var(--brass-hi)); font: 600 1rem var(--font-ui); text-transform: uppercase; letter-spacing: .03em; }
 html[data-phone] .ph-dz .ph-pc-h .ico { width: 1.1rem; height: 1.1rem; color: var(--o-teal, var(--brass)); flex: none; }
 html[data-phone] .ph-dz .ph-pc-h .mk { color: #fff; }
-html[data-phone] .ph-dz .ph-pc-h .fit { flex: none; font-size: .82rem; font-weight: 600; color: var(--leaf); white-space: nowrap; }
+html[data-phone] .ph-dz .ph-pc-h .fit { flex: none; font-size: .8rem; font-weight: 600; color: var(--leaf); white-space: nowrap; }
 html[data-phone] .ph-dz .ph-pc-h .fit.no { color: var(--rose); }
-html[data-phone] .ph-dz .ph-pc-d { margin-top: .2rem; color: var(--mist); font-size: .86rem; line-height: 1.3; }
-html[data-phone] .ph-dz .ph-pc .req { margin-top: .2rem; color: var(--ember); font-size: .84rem; } html[data-phone] .ph-dz .ph-pc .req .ico { width: .85rem; height: .85rem; vertical-align: -.1rem; margin-right: .25rem; }
-html[data-phone] .ph-dz .ph-pc-x { margin-top: .25rem; font-size: .84rem; color: var(--mist); }
+html[data-phone] .ph-dz .ph-pc-d { margin-top: .2rem; color: var(--mist); font-size: .85rem; line-height: 1.3; }
+html[data-phone] .ph-dz .ph-pc .req { margin-top: .2rem; color: var(--ember); font-size: .85rem; } html[data-phone] .ph-dz .ph-pc .req .ico { width: .85rem; height: .85rem; vertical-align: -.1rem; margin-right: .25rem; }
+html[data-phone] .ph-dz .ph-pc-x { margin-top: .25rem; font-size: .85rem; color: var(--mist); }
 html[data-phone] .ph-dz .ph-pc-c { display: flex; flex-wrap: wrap; gap: .25rem; margin-top: .35rem; }
 html[data-phone] .ph-dz .ph-pc-c .chip { padding: .1rem .45rem; font-size: .8rem; color: var(--mist); background: rgba(255, 255, 255, .06); clip-path: none; }
 html[data-phone] .ph-dz .ph-pc-c .chip b { color: var(--ivory); font-weight: 600; }
@@ -311,7 +311,7 @@ html[data-phone] .ph-dz .dz-lib.ph-lib.on { display: flex; animation: ph-up .2s 
 html[data-phone] .ph-dz .ph-lib .panel-h { gap: .5rem; } html[data-phone] .ph-dz .ph-lib .panel-h .btn { margin-left: auto; }
 html[data-phone] .ph-dz .ph-lib .dz-cards { display: grid; grid-template-columns: minmax(0, 1fr); grid-auto-rows: min-content; gap: .4rem; overflow-y: auto; }
 html[data-phone] .ph-dz .ph-lib .dz-card { min-height: 5rem; }
-html[data-phone] .ph-dz .ph-lib .dz-ci .ft .btn { min-height: var(--tap); padding: .2em .8em; font-size: .82rem; }
+html[data-phone] .ph-dz .ph-lib .dz-ci .ft .btn { min-height: var(--tap); padding: .2em .8em; font-size: .8rem; }
 html[data-phone] .ph-dz .dz-pop.ph-pop { background: #050505; }
 html[data-phone] .ph-dz .ph-pc-c .chip { text-transform: none; letter-spacing: 0; }
 html[data-phone] .ph-dz .dz-msg { height: auto; min-height: 2.6rem; padding: .35rem .6rem; line-height: 1.3; }
@@ -329,20 +329,20 @@ html[data-phone] .gm-sheet .modal-h { margin-bottom: .4rem; padding-bottom: .35r
 html[data-phone] .gm-sheet .gm-info { padding-bottom: .5rem; margin-bottom: .5rem; }
 html[data-phone] .gm-sheet .gm-list { gap: .35rem; }
 html[data-phone] .gm-sheet .gm-nav { display: grid; grid-template-columns: 1fr 1fr; gap: .35rem; margin-bottom: .25rem; }
-html:root:root[data-phone] .gm-sheet .gm-item .btn { min-height: var(--tap); padding: .35em .9em; font-size: 1.02rem; }
+html:root:root[data-phone] .gm-sheet .gm-item .btn { min-height: var(--tap); padding: .35em .9em; font-size: 1rem; }
 html[data-phone] .gm-sheet .gm-sep { margin: .1rem 0; }
 
 /* ---- app bar: every screen but the map, the menu and the design editor gets a slim bar holding Back (js/ui/phone.js) ---- */
 html[data-phone] .ph-appbar {
   display: none; position: fixed; left: 0; right: 0; top: 0; z-index: 240; height: calc(3.1rem + env(safe-area-inset-top));
-  background: linear-gradient(180deg, #161c36, #0a0e22); box-shadow: 0 1px 0 rgba(214, 179, 106, .35), 0 4px 12px rgba(0, 0, 0, .5);
+  background: linear-gradient(180deg, #161c36, #0a0e22); box-shadow: 0 1px 0 var(--brass-line-3), 0 4px 12px rgba(0, 0, 0, .5);
 }
 html[data-phone][data-ph-bar] .ph-appbar { display: block; }
 html[data-phone][data-ph-bar] #screens { top: calc(3.1rem + env(safe-area-inset-top)); }
 html[data-phone][data-ph-bar] .ph-back { top: calc(.3rem + env(safe-area-inset-top)); }
 html[data-phone] .ph-bar-t {
   position: absolute; left: 7.4rem; right: .8rem; bottom: 0; height: 3.1rem; display: flex; align-items: center; justify-content: flex-end;
-  overflow: hidden; white-space: nowrap; text-overflow: ellipsis; font: 400 1.25rem var(--font-title); letter-spacing: .04em; color: var(--brass-hi);
+  overflow: hidden; white-space: nowrap; text-overflow: ellipsis; font: 400 1.2rem var(--font-title); letter-spacing: .04em; color: var(--brass-hi);
 }
 
 /* ---- tool screens: the app bar carries the title and Back, so the in-screen title and the OK / Done / Back that only close the screen go */
@@ -367,7 +367,7 @@ html:root:root[data-phone] .tch::after, html:root:root[data-phone] .rx::after, h
 html:root:root[data-phone] .lp-tablewrap { flex: none; min-height: 0; max-height: 52vh; background: #2b241e; }   /* no empty block under a short table (and no chart behind it) */
 html:root:root[data-phone] .lf-body { background: #2b241e; }
 html:root:root[data-phone] .lp-line { padding-top: .22rem; padding-bottom: .22rem; }           /* read-only lines: not tap targets */
-html:root:root[data-phone] .lp-reserve b { font-size: 1.45rem; }
+html:root:root[data-phone] .lp-reserve b { font-size: 1.4rem; }
 html:root:root[data-phone] .lp-foot { margin-top: .4rem; }
 html:root:root[data-phone] .lp-box { padding-top: .25rem; padding-bottom: .35rem; }
 html:root:root[data-phone] .lp-sl .slider { margin: .1rem 0; }
@@ -398,7 +398,7 @@ html:root:root[data-phone] .lf-cost { text-align: left; display: flex; align-ite
 /* ---- research: one column — field sliders first (full width), the project, then the list and the detail ---- */
 html:root:root[data-phone] .tch { padding: .35rem .4rem .5rem; gap: .45rem; overflow-x: hidden; overflow-y: auto; overscroll-behavior: contain; }
 html:root:root[data-phone] .tch-head { flex-wrap: wrap; gap: .25rem .8rem; }
-html:root:root[data-phone] .tch-title { font-size: 1.45rem; } html:root:root[data-phone] .tch-total b { font-size: 1.6rem; }
+html:root:root[data-phone] .tch-title { font-size: 1.4rem; } html:root:root[data-phone] .tch-total b { font-size: 1.6rem; }
 html:root:root[data-phone] .tch-tabs { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .25rem; overflow: visible; }   /* all six fields in view */
 html:root:root[data-phone] .tch-tab { min-width: 0; min-height: var(--tap); padding: .2rem .5rem; }
 html:root:root[data-phone] .tch-tab .nm { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -441,7 +441,7 @@ html:root:root[data-phone] .tch-head { justify-content: center; }
 
 /* ---- tech tree (its own screen, or Research › Overview): the tree on top, the detail under it ---- */
 html:root:root[data-phone] .ttp { padding: .35rem .4rem .5rem; gap: .45rem; overflow-y: auto; }
-html:root:root[data-phone] .ttp-head { flex-wrap: wrap; gap: .3rem .8rem; } html:root:root[data-phone] .ttp-head h1 { font-size: 1.45rem; }
+html:root:root[data-phone] .ttp-head { flex-wrap: wrap; gap: .3rem .8rem; } html:root:root[data-phone] .ttp-head h1 { font-size: 1.4rem; }
 html:root:root[data-phone] .tt { flex: none; grid-template-columns: minmax(0, 1fr); gap: .6rem; }
 html:root:root[data-phone] .tt-main { min-height: auto; }
 html:root:root[data-phone] .tt-search, html:root:root[data-phone] .tt-search input { min-width: 0; width: 100%; }
@@ -484,10 +484,10 @@ html:root:root[data-phone] .sx-row { grid-template-columns: .85rem 6.4rem minmax
 html:root:root[data-phone] .al-search { margin-left: 0; width: 100%; }
 /* the search and the tabs stay at the top while a long page scrolls under them; the tabs are one sideways row */
 html:root:root[data-phone] .al-sub { display: none; }
-html:root:root[data-phone] .al-head { position: sticky; top: -.3rem; z-index: 5; margin: -.5rem -.5rem 0; padding: .5rem .5rem .3rem; background: #141b29; }
+html:root:root[data-phone] .al-head { position: sticky; top: -.3rem; z-index: 5; margin: -.5rem -.5rem 0; padding: .5rem .5rem .3rem; background: #191a23; }
 html:root:root[data-phone] .al-sheet > .tabs {
   position: sticky; top: calc(var(--tap) + .5rem); z-index: 5; flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none;
-  margin: 0 -.5rem; padding: .1rem .5rem .35rem; background: #141b29; box-shadow: 0 6px 10px rgba(0, 0, 0, .35);
+  margin: 0 -.5rem; padding: .1rem .5rem .35rem; background: #191a23; box-shadow: 0 6px 10px rgba(0, 0, 0, .35);
 }
 html:root:root[data-phone] .al-sheet > .tabs::-webkit-scrollbar { display: none; }
 html:root:root[data-phone] .al-sheet > .tabs button { flex: none; }
@@ -503,7 +503,7 @@ html:root:root[data-phone] .ov-side { flex: none; width: auto; --ph-strip: 5.4re
 html:root:root[data-phone] .ov-side .panel { padding: .3rem; }
 html:root:root[data-phone] .ov-side[data-sheet="strip"] .panel > :not(.ov-modes) { display: none; }   /* collapsed: the three map modes (the app bar says "Galaxy map") */
 html:root:root[data-phone] .ov-title { font-size: 1.4rem; } html:root:root[data-phone] .ov-title small { display: none; }
-html:root:root[data-phone] .ov-modes { flex-direction: row; flex-wrap: wrap; } html:root:root[data-phone] .ov-modes .btn { flex: 1 1 0; min-width: 0; width: auto; justify-content: center; padding: .4em .2em; letter-spacing: .02em; font-size: max(12px, .82rem); }
+html:root:root[data-phone] .ov-modes { flex-direction: row; flex-wrap: wrap; } html:root:root[data-phone] .ov-modes .btn { flex: 1 1 0; min-width: 0; width: auto; justify-content: center; padding: .4em .2em; letter-spacing: .02em; font-size: max(12px, .8rem); }
 
 /* ---- star system: portrait placement (system.js geometry() places the planet and star), panels along the edges ---- (landscape phones keep the desktop placement) */
 @media (orientation: portrait) {
@@ -511,7 +511,7 @@ html:root:root[data-phone] .ov-modes { flex-direction: row; flex-wrap: wrap; } h
   html:root:root[data-phone] .sv-name { font-size: 2.6rem; } html:root:root[data-phone] .sv-env { font-size: 1rem; letter-spacing: .1em; }
   html:root:root[data-phone] .sv-tl { top: 19%; left: 2%; max-width: 56%; }
   html:root:root[data-phone] .sv.plate .sv-tl { left: 2%; right: auto; align-items: flex-start; text-align: left; }
-  html:root:root[data-phone] .sv-lab { font-size: .95rem; padding: .2rem .55rem; } html:root:root[data-phone] .sv-note { font-size: .88rem; }
+  html:root:root[data-phone] .sv-lab { font-size: .95rem; padding: .2rem .55rem; } html:root:root[data-phone] .sv-note { font-size: .9rem; }
   html:root:root[data-phone] .sv-fleets, html:root:root[data-phone] .sv.plate .sv-fleets { top: 30%; right: 2%; max-width: 46%; max-height: 38%; }
   /* the group heading on one line ("· in orbit" goes: this screen is the orbit), and design names (up to 12 letters) wrap under a fixed-height
      ship picture instead of being cut to "COLONY SH…" */
@@ -548,8 +548,8 @@ html:root:root[data-phone] .ctl-eyebrow { letter-spacing: .2em; }
 html:root:root[data-phone] .su-step:not(.cur) .su-step-l { display: none; }        /* the tracker: numbers, plus the current step's name */
 html:root:root[data-phone] .su-sizes { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 html:root:root[data-phone] .su-race { gap: .5rem; padding: .35rem .5rem .35rem .35rem; }
-html:root:root[data-phone] .su-race-n { font-size: 1.02rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-html:root:root[data-phone] .su-race-g { font-size: .82rem; }
+html:root:root[data-phone] .su-race-n { font-size: 1rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+html:root:root[data-phone] .su-race-g { font-size: .8rem; }
 /* cinematic captions use the width */
 html:root:root[data-phone] .end-cap { width: 92%; }
 html:root:root[data-phone] .su-thumb-w { max-height: 4.8rem; min-height: 3.6rem; }
@@ -562,7 +562,7 @@ html:root:root[data-phone] .su-d-desc { font-size: .9rem; line-height: 1.35; mar
 html:root:root[data-phone] .su-homeart { display: none; }                                   /* the homeworld illustration: the galaxy shows it soon enough */
 html:root:root[data-phone] .su-facts { display: grid; grid-template-columns: 1fr 1fr; gap: .4rem; }
 html:root:root[data-phone] .su-traits { gap: .3rem; }
-html:root:root[data-phone] .su-trait { grid-template-columns: minmax(6.2rem, auto) minmax(0, 1fr); gap: .5rem; font-size: .88rem; }
+html:root:root[data-phone] .su-trait { grid-template-columns: minmax(6.2rem, auto) minmax(0, 1fr); gap: .5rem; font-size: .9rem; }
 html:root:root[data-phone] .su-banner > canvas { height: 2.6rem; }
 html:root:root[data-phone] .su-fleet { min-height: 4rem; margin-top: .4rem; }
 html:root:root[data-phone] .su-note { font-size: .85rem; }
@@ -571,8 +571,8 @@ html:root:root[data-phone] .tl-r { min-height: var(--row); align-items: center; 
 /* the turn log on a phone: opaque (the map's control column and parsec ruler showed through it at full sheet height), and in portrait a chip in
    the HUD (galaxy.js logChip) opens the whole log in a dialog, since the sheet shows it only at full height */
 html:root:root[data-phone] .gx-side .tl { margin-top: 0; border-top: 1px solid rgba(0, 0, 0, .8); }   /* no gap between the panel and the log for the map to show through */
-html:root:root[data-phone] .gx-side .tl-h { background: var(--pk-bar, #141920); }
-html:root:root[data-phone] .gx-side .tl-b { background: var(--pk-surface, #1a1f26); }
+html:root:root[data-phone] .gx-side .tl-h { background: var(--pk-bar, #161920); }
+html:root:root[data-phone] .gx-side .tl-b { background: var(--pk-surface, #1c1f24); }
 html:root:root[data-phone] .gx-logc { display: inline-flex; align-items: center; gap: .3rem; min-height: max(36px, 2.2rem); padding: 0 .6rem; margin: -.15rem -.2rem -.15rem 0; cursor: var(--hand);
   border: 1px solid rgba(255, 255, 255, .22); color: var(--pk-ink, #e6eaf0); font-size: .9rem; }
 html:root:root[data-phone] .gx-logc .ico { width: 1rem; height: 1rem; }

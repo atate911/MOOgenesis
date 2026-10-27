@@ -93,6 +93,15 @@ Versions follow `MAJOR.MINOR.PATCH`; the live version is the `VERSION` file.
   square; NO TRADE and the Report's traits take the caps of their neighbours; the growth mark is ↑1.8, not ↑ +1.8; the ticker's "..." is an
   ellipsis; the disabled Build button's key chip is readable; near-identical type sizes collapse into one (Research 22 → 16 distinct
   sizes).
+- Unify pass. Every conclusion of the visual passes reviewed as one system (three layers, four materials on one warm axis anchored on
+  the art, one light, one tiered palette, one type scale, one motion) and the interface cleaned up against it. The rendered screens move
+  a little toward the art's histograms: the galaxy sky loses most of its magenta cast and takes the art skies' dusty neutrals with a
+  warmer heart; the gameplay nebulae are dustier and sit in the sky instead of on it; every steel face (the galaxy console, its buttons,
+  the command bar, the dark base tones, the phone gunmetal) has half its blue taken out at the same brightness, so the chrome reads as
+  grey steel beside the warm leather rather than a second colour. One label tier: the Research screen's column, section and project
+  heads take the cream capitals the ledgers and the console already use; orange is the bold box-title tier only. One type scale: every
+  size snaps to a regular step (36 distinct sizes, down from 65). One hairline system: the brass lines on borders, rules and frame edges
+  are three weights instead of fourteen.
 - Title screen. The world in the corner turns smoothly and visibly: its axis now tilts away from the viewer so mid-latitudes sweep
   past instead of a polar cap turning in place, one turn takes about a minute, the sun sits low on the galaxy's side so the terminator, the
   night-side city lights and the cloud shadows cross the visible half, and it drifts a little against the galaxy's slow zoom. Clouds on

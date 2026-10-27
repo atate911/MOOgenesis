@@ -243,6 +243,79 @@ baseline: mean luminance per screen within ±0.5 (the retone kept it, by constru
 box face at 3.9–4.4:1 that sat at 4.0–4.5 before). The small orange label tier on the leather box faces is the one open contrast item:
 a lighter orange (#ffa73a) or cream for the 15 px column heads would clear 4.5:1 at the cost of the tier's identity. Owner's call.
 
+## Synthesis — how it all works together (read this before the next pass)
+
+Six passes (harmony and art, visual system 1 and 2, balance, finish, unify) measured and moved the same few things. Put together they
+are one system, and every later change should be checked against it:
+
+**1. Three layers, one place.** The sky at the back (the universe: procedural, persistent under every screen, continuous across screen
+changes), glass in the middle (dark translucent surfaces that carry data and art), the frame in front (the ship's chrome). Every screen
+is built from these three; a screen's family changes only the frame's material and the colour of its rails. Nothing in the original's
+layouts moved.
+
+**2. Four materials, each with a measured target anchored on the art.** The raster art is one family (`histo.py`): mid-key (L 30–58),
+warm (+9 to +23 red over blue), a slight magenta tint, deep blacks, nothing clipped. The rendered materials sit on one warm axis around it:
+
+| Material | Where | L | warm (R − B) | Role |
+|---|---|---|---|---|
+| sky | map, menus, ledger wells, the design pane | 21 | −9 (was −10; the art's skies −1) | the deep background; the one cool surface, by design |
+| glass and wells | overlays, data boxes, every art plate | ≤ 35 | 0 to +3 | near-black and neutral so the art carries the colour |
+| steel | galaxy console, nav bar, map controls, combat bar | 43–98 | −8 to −19 (was −10 to −20) | cool chrome: the bridge |
+| leather | Research, Races, Report, Status, Tech tree, the ledgers' frames, Map overview | 86 frame / 35 boxes | +30 / +13 (was +42 / +16) | warm chrome: the original's screens |
+| indigo rails, grey metal | Options and menus, Design | 42 / 25 | −14 / +5 | the family colour as a rail or plate, never a fill |
+
+The rule that falls out: the art is the middle of the axis. Whatever frames art is warmer than it (leather); whatever shows art is darker
+and more neutral than it (wells, glass); the sky is cooler than everything and the steel sits between the sky and the art. The files that
+fall outside their own set (Darlok, Psilon, the Alkari homeworld) are corrected in code (`WorldArt.raceExposure`) until re-rendered.
+
+**3. One light.** Top-left. Every raised face has `--bv-hi` / `--bv-lo` and the one `--spec`; a recessed well shows its far-wall rim (the
+only light from below, and it reads as a well); everything that floats takes one of three elevations (`--shadow-1/2/3`); text shadows go
+one way (`0 1px 0`); every art plate is a window (inset vignette), never a sticker; the console casts onto the map.
+
+**4. One palette, tiered by job.** Gold display for screen titles and section heads (`--title`, `--title-hi`); orange bold for box titles
+(`--head-orange`, large-text rule, never below 18 px); cream caps for column and field heads (`--o-tan`, `--fog`); cream for body
+(`--ivory`, `--mist`); yellow in a well for every slider readout (`--slot-ink`); copper for the one primary action with near-black ink;
+a family colour (teal, indigo, bronze) only as a rail, a plate or a frame; brass lines in three weights for dividers, rules and frame
+edges (`--brass-line-1/2/3`), the pale `--hair` on wells. Green means research points, red means danger, nothing else.
+
+**5. One type scale.** .7 .75 .8 .85 .9 .95 1 1.05 1.1 1.15 1.2 rem, then tenths (36 distinct sizes, down from 65): a display face for
+titles and heads, the UI face for body, the mono face for figures, each with four to six steps on a screen.
+
+**6. One motion.** A cross-fade between screens; slow drift on stills; idle breathing on drives; the HUD year's roll and the changed
+readouts' flash; all off under reduce motion and cheaper on phones. Nothing moves that is not information or atmosphere.
+
+**7. Verification is part of the system.** `check.js`, the rules tests, the three phone QA profiles, the turn soak, the layout fingerprint,
+and the measured audits (`audit.js` + `audit.py` for contrast and balance, `finish.js` for the tells, `histo.py` for the histograms).
+A visual change is done when the numbers say the same thing the eye does.
+
+## Unify pass — done (same branch, one commit)
+
+The owner asked for the conclusions above to be reviewed as one system and for the interface to be cleaned up against it, including
+nudging the rendered screens toward the art's histograms. What moved:
+
+| Gap | What landed | Measured |
+|---|---|---|
+| The sky was the one rendered surface far from the art skies' histogram (warm −10, tint −7 against −1 / −2) | `Space.SKY` palette toward the art's neutrals (dusty violet · slate · dusty umber · slate blue), the warm core a shade warmer and stronger (`#e4b690`, k .9), intensity .85, floor .05; chosen on two GL contact sheets (`scratchpad/shots/fix/sky-unify*.png`) | map sky warm −10 → −9, tint −7 → −4, L 21 → 22 |
+| The gameplay nebulae sat on the sky like stickers (saturated violet) | a third less saturated in two steps, same hue and alpha; the in-nebula star ring the same lilac | still the one violet thing on the map: readable |
+| Steel was blue-steel (−12 to −37 red over blue) while every art set is neutral or warm | every low-saturation blue-grey in the steel family (console gradients, the galaxy screen's button faces, the v2 base and line tokens, the combat bar, the phone gunmetal) has half its blue taken out at the same luminance (51 literals, programmatic) | console face −10 → −9, button faces −37 → −18, base tokens −21 → −10 |
+| Two label tiers for the same job: Research's column, section and project heads in orange at 13–15 px, the ledgers' and console's in cream caps | the Research heads take the cream caps (`--o-tan`, 600); orange is the bold box-title tier only | the 15 px orange fails on Research gone; one convention |
+| 65 distinct rem type sizes | every size snaps to a .05 step below 1.2 rem and a .1 step above (290 declarations) | 36 distinct sizes; 8–14 per screen |
+| 175 brass `rgba(214,179,106,a)` literals at fourteen alphas on borders, rules and edges | three tokens by weight: `--brass-line-1` (.2, faint divider), `-2` (.3, rule), `-3` (.45, frame edge); 148 border / box-shadow / outline sites | one hairline system with `--hair` on wells |
+
+Left by choice, and why: the indigo title plates (`--plate-1/2`, the original's #302870, an identity element); the Design and Options
+big primary; the Design trapezoid tabs; CAPS labels beside sentence-case values; the spacing rhythm (sub-pixel); the Research rows'
+orange field names at 16 px (4.2:1, the row's own title); the ~90 gold literals in canvas code (same three values; a shared JS palette
+constant when wanted); the `room` grade and the GL bloom (hardware); Phase 3 assets.
+
+Verification: `check.js` 118 files clean, `rules-test.js` 845 pass; the three phone QA profiles 263 / 231 / 254 pass; 30 turns on hard
+with no errors; the layout fingerprint against the finish-pass commit: 35 of 186 entries differ, every one a height within 3 px from the
+type snap except the Almanac's article grid (+5 / +10 px over a 2,770 px scroll, body text .98 → 1 rem), no display, grid, position or
+width change. Contrast against the finish-pass baseline: per-screen mean luminance within ±1; fail counts flat or down (Research 19 → 15,
+Design 5 → 3, the rest unchanged); the finished-game sweep shows fewer distinct type sizes on every screen (Galaxy 16 → 9, Research
+16 → 12, Options 13 → 9) and no new clipping, unequal buttons or chamfers. Histograms after: sky L 22 warm −9 tint −4; console −1;
+leather frame +29; options cards −9 (was −14, the de-blued base); Research +21; system view +16. Known and left: the Tech tree's locked
+chips at 2.9:1 (dim by meaning) and the sampler's copper-glyph edges.
+
 ## Phase 3 — assets (rows for `ART-NEEDED.md`)
 
 **11. Full-screen scenes at 3840×2160**, in order of screen time: `scene-galaxy` (title, boot, ledgers), the 10 audience halls, the

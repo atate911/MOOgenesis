@@ -25,9 +25,9 @@
     .menu-ver { margin:.7rem 0 0 .3rem; font:400 clamp(.8rem, 1vw, .98rem) var(--font-display); color:var(--brass); letter-spacing:.2em; opacity:0; animation: menu-fade .5s .1s ease-out forwards; }
     .menu-sub { margin:.5rem 0 2.4rem .2rem; color:var(--mist); font-size:clamp(1rem,1.25vw,1.35rem); max-width:28rem; opacity:0; animation: menu-fade .5s .15s ease-out forwards; }
     .menu-list { display:flex; flex-direction:column; gap:.7rem; width:min(21rem, 80vw); opacity:0; animation: menu-fade .4s .1s ease-out forwards; }
-    .menu-list .btn { justify-content:flex-start; padding:.6em 1.3em; font-size:1.25rem; }
+    .menu-list .btn { justify-content:flex-start; padding:.6em 1.3em; font-size:1.2rem; }
     .menu-foot { position:absolute; left:0; right:0; bottom:.8rem; text-align:center; font-size:.8rem; color:var(--fog); }
-    .menu-meta { margin:.2rem 0 0 .2rem; font-size:.82rem; color:var(--mist); }
+    .menu-meta { margin:.2rem 0 0 .2rem; font-size:.8rem; color:var(--mist); }
     /* a short landscape screen (a phone on its side, a small window): the column was taller than the screen and its centre crop cut the wordmark
        and the last entries. Wordmark and text on the left, the entries beside them on the right. */
     @media (orientation: landscape) and (max-height: 520px) {
@@ -68,7 +68,7 @@
     .menu-list .btn.primary.primary.primary.primary { background:none; box-shadow:none; color:#fff1a8; text-shadow:0 2px 0 #4a3408, 0 0 22px rgba(255,226,120,.45); }
     .menu-list .btn.disabled, .menu-list .btn:disabled { opacity:.5; }
     .menu-list .btn .kbd { display:none; }
-    .menu-foot { color:#b8b0d0; letter-spacing:.06em; text-transform:uppercase; font-size:.8rem; } .menu-sub { color:#d8dff5; } .menu-meta { color:#d8dff5; font-size:.92rem; }
+    .menu-foot { color:#b8b0d0; letter-spacing:.06em; text-transform:uppercase; font-size:.8rem; } .menu-sub { color:#d8dff5; } .menu-meta { color:#d8dff5; font-size:.9rem; }
     .menu-ver { color:#dcc07c; text-shadow:0 1px 0 rgba(0,0,0,.6); }
   `));
 

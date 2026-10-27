@@ -162,9 +162,9 @@
      Space.sky({ intensity: .5 }). floor: the share of the frame the gas may cover even away from the band and the cloud (0.30 was the
      old everywhere-haze); warm / warmK: the hue hot cores drift toward and how far (the old look: lilac-white, .30). */
   var SKY = {
-    palette: ['#5a4070', '#2c3a68', '#6a4050', '#2e4a78'],       // dusty violet · deep blue · dusty rose · steel blue (thin wisps)
-    warm: '#e8b890', warmK: 0.8,                                 // dense gas drifts to this warm hue (the title galaxy's heart)
-    intensity: 0.9, floor: 0.06, dust: 1.2, stars: 0.6, vignette: true   // bright where the gas is, true black elsewhere
+    palette: ['#4e4668', '#3c4660', '#64524c', '#44506a'],       // dusty violet · slate · dusty umber · slate blue (thin wisps): the art skies' neutrals, measured (scratchpad/qa/histo.py)
+    warm: '#e4b690', warmK: 0.9,                                 // dense gas drifts to this warm hue (the title galaxy's heart)
+    intensity: 0.85, floor: 0.05, dust: 1.2, stars: 0.6, vignette: true   // bright where the gas is, true black elsewhere
   };
   function sky(over) { var o = { sky: true }, k; for (k in SKY) o[k] = SKY[k]; if (over) for (k in over) o[k] = over[k]; return o; }
   var TINTS = [[176, 200, 255], [236, 242, 255], [255, 248, 228], [255, 226, 186], [255, 190, 160]];

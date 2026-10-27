@@ -78,7 +78,7 @@
     .end-gnn b { margin-right:.7rem; font:400 .95rem var(--font-display); color:var(--brass-hi); letter-spacing:.14em; }
     .end-act { margin-top:1.1rem; display:flex; gap:.8rem; justify-content:center; }
     .end-hint { position:absolute; left:1rem; bottom:.6rem; font:400 .8rem var(--font-ui); color:var(--mist); opacity:.85; pointer-events:none; }
-    .end-hint kbd { padding:.04rem .38rem; margin-right:.3rem; font:600 .72rem var(--font-ui); color:var(--brass-hi); background:rgba(214,179,106,.14); box-shadow:inset 0 0 0 1px rgba(214,179,106,.4); }
+    .end-hint kbd { padding:.04rem .38rem; margin-right:.3rem; font:600 .7rem var(--font-ui); color:var(--brass-hi); background:rgba(214,179,106,.14); box-shadow:inset 0 0 0 1px var(--brass-line-3); }
   `);
   const EN = {};
   let RUN = null, chain = Promise.resolve();

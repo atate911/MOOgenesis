@@ -11,20 +11,20 @@
     .ov-main { position:relative; flex:1 1 auto; min-width:0; }
     .ov-side { flex:none; width:clamp(18rem, 22vw, 24rem); padding:.7rem .7rem .7rem .3rem; display:flex; flex-direction:column; background:linear-gradient(90deg, rgba(6,9,25,0), rgba(6,9,25,.92) 10%); }
     .ov-side .panel { flex:1 1 auto; min-height:0; display:flex; flex-direction:column; gap:.65rem; padding:.8rem .9rem; }
-    .ov-title { font:400 1.9rem/1 var(--font-title); color:var(--brass-hi); letter-spacing:.05em; text-shadow:0 0 20px rgba(214,179,106,.28); padding-bottom:.5rem; border-bottom:1px solid rgba(214,179,106,.38); }
+    .ov-title { font:400 1.9rem/1 var(--font-title); color:var(--brass-hi); letter-spacing:.05em; text-shadow:0 0 20px rgba(214,179,106,.28); padding-bottom:.5rem; border-bottom:1px solid var(--brass-line-3); }
     .ov-title small { display:block; margin-top:.35rem; font:400 .85rem var(--font-ui); color:var(--mist); letter-spacing:0; }
     .ov-modes { display:flex; flex-direction:column; gap:.4rem; } .ov-modes .btn { justify-content:flex-start; padding:.5em 1em; width:100%; } .ov-modes .btn .kbd { margin-left:auto; }
-    .ov-key { flex:1 1 auto; min-height:0; overflow:auto; padding:.5rem .7rem .6rem; background:rgba(3,5,18,.55); box-shadow:inset 0 0 0 1px rgba(214,179,106,.28); }
-    .ov-kt { display:flex; align-items:baseline; justify-content:space-between; margin-bottom:.4rem; padding-bottom:.3rem; border-bottom:1px solid rgba(214,179,106,.28); font:400 1.1rem var(--font-display); letter-spacing:.06em; color:var(--brass-hi); }
+    .ov-key { flex:1 1 auto; min-height:0; overflow:auto; padding:.5rem .7rem .6rem; background:rgba(3,5,18,.55); box-shadow:inset 0 0 0 1px var(--brass-line-2); }
+    .ov-kt { display:flex; align-items:baseline; justify-content:space-between; margin-bottom:.4rem; padding-bottom:.3rem; border-bottom:1px solid var(--brass-line-2); font:400 1.1rem var(--font-display); letter-spacing:.06em; color:var(--brass-hi); }
     .ov-kt small { font:400 .8rem var(--font-ui); color:var(--mist); letter-spacing:0; }
     .ov-kh { margin:.55rem 0 .2rem; font:400 .85rem var(--font-display); letter-spacing:.09em; color:var(--brass); text-transform:uppercase; }
     .ov-kr { display:flex; align-items:center; gap:.6rem; padding:.14rem 0; font-size:.95rem; line-height:1.2; } .ov-kr .n { margin-left:auto; color:var(--mist); font-variant-numeric:tabular-nums; }
-    .ov-kr.zero { opacity:.58; } .ov-kr small { display:block; color:var(--mist); font-size:.76rem; }
+    .ov-kr.zero { opacity:.58; } .ov-kr small { display:block; color:var(--mist); font-size:.75rem; }
     .ov-sw { flex:none; width:.9rem; height:.9rem; background:var(--c); box-shadow:0 0 7px var(--c); transform:rotate(45deg) scale(.85); }
     .ov-sw.dot { transform:none; border-radius:50%; width:.78rem; height:.78rem; margin:0 .06rem; } .ov-sw.ring { transform:none; border-radius:50%; background:transparent; box-shadow:none; border:1.5px solid var(--c); width:.82rem; height:.82rem; }
     .ov-sw.line { transform:none; width:1.3rem; height:0; background:none; box-shadow:0 0 6px var(--c); border-top:2px solid var(--c); } .ov-sw.dash { transform:none; width:1.3rem; height:0; background:none; box-shadow:none; border-top:2px dotted var(--c); }
     .ov-let { flex:none; width:1.35rem; height:1.35rem; display:grid; place-items:center; font:700 .85rem/1 var(--font-ui); color:var(--c); border:1.5px solid var(--c); background:rgba(0,0,0,.35); box-shadow:0 0 6px color-mix(in srgb, var(--c) 40%, transparent); }
-    .ov-note { margin-top:.6rem; padding-top:.45rem; border-top:1px solid rgba(214,179,106,.2); color:var(--mist); font-size:.82rem; line-height:1.35; }
+    .ov-note { margin-top:.6rem; padding-top:.45rem; border-top:1px solid var(--brass-line-1); color:var(--mist); font-size:.8rem; line-height:1.35; }
     .ov-cv { position:absolute; inset:0; width:100%; height:100%; pointer-events:none; }
     .ov-ok { display:flex; gap:.5rem; } .ov-ok .btn { flex:1; }
   `);
@@ -39,17 +39,17 @@
     .ov-side .panel::before { inset:.2rem; clip-path:none; background:var(--well-leather, #181411); box-shadow:inset 1px 1px 2px rgba(0,0,0,.8); }
     .ov-side .panel::after { display:none; }
     .ov-side .panel > * { position:relative; margin-left:.45rem; margin-right:.45rem; } .ov-side .panel > :first-child { margin-top:.45rem; } .ov-side .panel > :last-child { margin-bottom:.45rem; }
-    .ov-title { text-align:center; padding:.35rem .4rem; font:400 1.35rem/1 var(--font-display); letter-spacing:.06em; text-transform:uppercase; color:var(--title-hi); text-shadow:var(--title-shadow); border-bottom:0;
+    .ov-title { text-align:center; padding:.35rem .4rem; font:400 1.4rem/1 var(--font-display); letter-spacing:.06em; text-transform:uppercase; color:var(--title-hi); text-shadow:var(--title-shadow); border-bottom:0;
       background:linear-gradient(180deg, #54463a, #372d25); box-shadow:inset 1px 1px 0 var(--spec, rgba(255,245,225,.22)), inset -1px -1px 0 rgba(0,0,0,.6); }
     .ov-title small { color:#f0dcc0; font-size:1rem; margin-top:.3rem; text-transform:none; letter-spacing:0; }
     .ov-side .panel { flex:0 1 auto; }
-    .ov-modes .btn { clip-path:none; justify-content:center; padding:.4em .6em; background:rgba(0,0,0,.85); box-shadow:none; color:#0b0e13; font:700 .92rem var(--font-display); letter-spacing:.1em; text-transform:uppercase; }
+    .ov-modes .btn { clip-path:none; justify-content:center; padding:.4em .6em; background:rgba(0,0,0,.85); box-shadow:none; color:#0b0e13; font:700 .9rem var(--font-display); letter-spacing:.1em; text-transform:uppercase; }
     .ov-modes .btn::before { clip-path:none; inset:1px; background:linear-gradient(180deg, #a0a3ae, #6c707c); box-shadow:inset 1px 1px 0 var(--spec, rgba(255,245,225,.22)), inset -1px -1px 0 rgba(0,0,0,.45); }
     .ov-modes .btn.active { color:#25100a; text-shadow:0 1px 0 rgba(255,230,170,.5); } .ov-modes .btn.active::before { background:linear-gradient(180deg, #ffd070, #c8741a); box-shadow:inset 1px 1px 3px rgba(0,0,0,.35), 0 0 0 1px #ffc860; }
     .ov-modes .btn .kbd { display:none; }
     .ov-key { background:#372d25; box-shadow:inset 1px 1px 3px rgba(0,0,0,.9), 0 0 0 1px rgba(255,235,200,.14); }
     .ov-kt { color:var(--head-orange); border-bottom-color:rgba(255,235,200,.14); font-size:1.05rem; text-shadow:0 1px 0 #000; text-transform:uppercase; letter-spacing:.08em; } .ov-kt small { text-transform:none; letter-spacing:0; }   /* the box-title tier: as Planets' SPENDING COSTS and Research's section heads */
-    .ov-kh { color:#f0b868; font-size:.92rem; } .ov-kr { color:#f0dcc0; } .ov-kr small { font-size:.85rem; color:#e0cba8; } .ov-kt small { font-size:.9rem; color:#e0cba8; } .ov-note { color:#ead4b0; font-size:.9rem; border-top-color:rgba(255,235,200,.14); }
+    .ov-kh { color:#f0b868; font-size:.9rem; } .ov-kr { color:#f0dcc0; } .ov-kr small { font-size:.85rem; color:#e0cba8; } .ov-kt small { font-size:.9rem; color:#e0cba8; } .ov-note { color:#ead4b0; font-size:.9rem; border-top-color:rgba(255,235,200,.14); }
     .ov-ok .btn { clip-path:none; background:rgba(0,0,0,.85); box-shadow:none; color:#0b0e13; font:700 .85rem var(--font-display); letter-spacing:.14em; text-transform:uppercase; }
     .ov-ok .btn::before { clip-path:none; inset:1px; background:linear-gradient(180deg, #a0a3ae, #6c707c); box-shadow:inset 1px 1px 0 var(--spec, rgba(255,245,225,.22)), inset -1px -1px 0 rgba(0,0,0,.45); }
   `));
