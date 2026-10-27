@@ -497,12 +497,13 @@
     { id: 'hard', label: 'Hard', text: 'Shrewd rivals, and your homeworld begins with fewer people.' },
     { id: 'impossible', label: 'Impossible', text: 'Ruthless rivals and a thin starting population. Expect no mercy.' },
   ];
-  const OPT_DEFAULTS = { randomEvents: true, council: true, fogOfWar: true, monsters: true };
+  const OPT_DEFAULTS = { randomEvents: true, council: true, fogOfWar: true, monsters: true, expandedTech: false };
   const OPTS = [
     { id: 'randomEvents', label: 'Random events', short: 'Events', text: 'Plagues, raids, supernovae and other upsets.' },
     { id: 'council', label: 'Galactic council', short: 'Council', text: 'Rivals vote for a galactic leader.' },
     { id: 'fogOfWar', label: 'Fog of war', short: 'Fog', text: 'See only what you currently observe.' },
     { id: 'monsters', label: 'Space monsters', short: 'Monsters', text: 'Guardians and wandering beasts roam the lanes.' },
+    { id: 'expandedTech', label: 'Expanded technology', short: 'New tech', text: 'New technologies join the pool every research tree is dealt from (experimental).' },
   ];
   const BANNER_NAMES = ['Blue', 'Green', 'Purple', 'Red', 'White', 'Yellow'];      // = --emp0..--emp5 (css/base.css)
   const STEPS = [
@@ -564,7 +565,8 @@
       leader: clean(st.leader) || defaultLeader(st.race), homeworld: clean(st.homeworld) || defaultHome(st.race),
       seed: clean(st.seed) || randomSeed(),
       // `tactical` is only the default battle mode preference (Options screen): true = fight battles yourself, false = auto-resolve
-      options: { tactical: M.Settings.get('tactical') !== false, randomEvents: !!st.options.randomEvents, council: !!st.options.council, fogOfWar: !!st.options.fogOfWar, monsters: !!st.options.monsters },
+      options: { tactical: M.Settings.get('tactical') !== false, randomEvents: !!st.options.randomEvents, council: !!st.options.council, fogOfWar: !!st.options.fogOfWar, monsters: !!st.options.monsters,
+        techPool: st.options.expandedTech ? 'expanded' : 'classic' },
     };
   }
 

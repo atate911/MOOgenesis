@@ -49,7 +49,8 @@
       case 'notice': {
         const p = it.planet !== undefined && it.planet >= 0 ? S.planets[it.planet] : null, st = p ? p.starId : (it.star !== undefined ? it.star : -1);
         const T = { industryMax: [2, ': factories at maximum'], popMax: [2, ': population at maximum'], ecoDone: [2, ': terraformed (' + (it.growth === 'gaia' ? 'Gaia' : 'fertile') + ')'], atmosDone: [2, ': atmosphere terraformed'],
-          shieldDone: [2, ': planetary shield finished'], stargate: [2, ': stargate finished'], outOfFuel: [0, 'Ships lost, out of fuel, at '], transportLost: [0, 'Transports lost at '] }[it.kind];
+          shieldDone: [2, ': planetary shield finished'], stargate: [2, ': stargate finished'], outOfFuel: [0, 'Ships lost, out of fuel, at '], transportLost: [0, 'Transports lost at '],
+          salvage: [2, 'Wrecks salvaged (' + it.bc + ' BC) at '], evacuated: [2, ': refugees arrived (' + it.n + ' million)'] }[it.kind];
         if (T) { if (T[1].startsWith(':')) add(T[0], '', st, { suffix: T[1] }); else add(T[0], T[1], st); }
         else if (it.kind === 'contactLost') add(1, 'Lost contact with the ' + (S.empires[it.other] ? S.empires[it.other].plural : 'other empire'));
         break;

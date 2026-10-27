@@ -65,6 +65,8 @@
       else if (e.kind === 'stargate') { text = name + ' has finished a stargate. Ships sent between stargates arrive the next turn.'; kind = 'ok'; }
       else if (e.kind === 'outOfFuel') text = 'Ships ran out of fuel at ' + S.stars[e.star].name + ' and were lost.';
       else if (e.kind === 'transportLost') text = 'Transports with ' + e.n + ' million colonists were lost at ' + name + '.';
+      else if (e.kind === 'salvage') { text = 'Salvage crews recover ' + e.bc + ' BC from the wrecks at ' + (S.stars[e.star] ? S.stars[e.star].name : 'the battlefield') + '.'; kind = 'ok'; }
+      else if (e.kind === 'evacuated') { const fp = S.planets[e.from]; text = e.n + ' million colonists escaped from ' + (fp ? (fp.name || S.stars[fp.starId].name) : 'a lost colony') + ' to ' + name + '.'; kind = 'ok'; }
       else if (e.kind === 'contactLost') text = 'Contact with the ' + (e.other !== undefined && S.empires[e.other] ? S.empires[e.other].plural : 'other empire') + ' has been lost: no colony of theirs is within range any more.';
       if (text) UI.Galaxy.message(text, kind, { star: p ? p.starId : (e.star !== undefined ? e.star : -1), sticky: true });
     };

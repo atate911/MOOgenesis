@@ -313,6 +313,7 @@ MOO.def(function (M) {
     if (Tg.personality === XENO) { if (dv < 0) dv = tdiv(dv * 3, 2); else if (dv > 0) dv = tdiv(dv * 3, 4); }
     const v1 = dv;
     if (dv > 0) dv *= raceMod(A, 'posActMul');                                                                        // "Humans double positive DP"
+    if (dv > 0 && A.mods && A.mods.posAct) dv = tdiv(dv * (100 + A.mods.posAct), 100);                               // expansion: Holovision Broadcast Network
     if (rt.treaty === T.WAR && dtype >= 4 && dtype <= 12 && dv < 0) {                                                // at war incidents only dent the peace mood
       if (A.human) { const q = tdiv(dv, 4); rt.moodPeace += q; ra.moodPeace -= q; }
       dv = 0;

@@ -357,7 +357,7 @@ tm 41-50 :  31 30 29 28 27 27 26 25 24 24
       t.ok(typeof x.name === 'string' && x.name.length > 2 && typeof x.type === 'string' && typeof x.group === 'string', x.id);
       t.ok(Array.isArray(x.grants) && x.effects && typeof x.effects === 'object', x.id);
     }
-    t.eq(Object.keys(T.byId).length, T.list.length);
+    t.eq(Object.keys(T.byId).length, T.list.length + (T.X ? T.X.list.length : 0));      // byId also resolves the expansion pool (data/techs-x.js)
     for (let f = 0; f < 6; f++) {
       const lv = {};
       for (const x of T.byField[f]) if (!x.free) { t.ok(!lv[x.level], 'two techs on level ' + x.level + ' of field ' + f); lv[x.level] = 1; t.eq(T.byFL[f][x.level], x); }
@@ -366,7 +366,8 @@ tm 41-50 :  31 30 29 28 27 27 26 25 24 24
       t.eq(T.techAt(f, 20) === T.byFL[f][20], true);
     }
     t.eq(T.techAt('we', 36), T.byId['we-36-death-ray']);
-    t.eq(T.techAt('cm', 3), null);
+    t.eq(T.techAt('cm', 6), null);                                                  // (CM 3 now holds an expansion tech: data/techs-x.js)
+    t.eq(T.techAt('cm', 3).pool, 'x');
     t.deep([T.fieldIndex('we'), T.fieldIndex('computers'), T.fieldIndex(3), T.fieldIndex('forcefields'), T.fieldIndex('pr'), T.fieldIndex('cn')], [5, 0, 3, 2, 4, 1]);
   });
 

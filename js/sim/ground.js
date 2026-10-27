@@ -111,7 +111,8 @@ MOO.def(function (M) {
     const g = mods(E).ground || {};
     const armor = 5 * clamp(g.armor | 0, 0, 6), suit = 10 * clamp(g.suit | 0, 0, 3), shield = 10 * clamp(g.shield | 0, 0, 3);
     const w = clamp(g.weapon | 0, 0, 5), weapon = 5 * (w <= 2 ? w : w + 1), race = raceBonus(E), defender = isDefender ? 5 : 0;
-    return { armor, suit, shield, weapon, race, defender, total: armor + suit + shield + weapon + race + defender };
+    const tech = (mods(E)[isDefender ? 'groundDef' : 'groundOff'] | 0);                  // expansion: Robotic Garrisons / Siege Engineering / Clone Troopers
+    return { armor, suit, shield, weapon, race, defender, tech, total: armor + suit + shield + weapon + race + defender + tech };
   };
   G.force = (S, E, isDefender) => G.forceParts(S, E, isDefender).total;
 
@@ -262,6 +263,8 @@ MOO.def(function (M) {
     for (const t of types) { if (dmg >= totalHp) break; dmg += shootDamage(K_.WEAPONS[t], sh.shots[t], out.level, R); }   // …until every transport is dead
     out.damage = dmg;
     let killed = R ? Math.min(n, idiv(dmg, hp)) : Math.min(n, dmg / hp);
+    const gp = owner ? mods(owner).gauntletPct | 0 : 0, gop = mods(att).gauntletOwnPct || 100;      // expansion: Repulsor Field Net / Stealth Landing Craft
+    if (killed > 0 && (gp || gop !== 100)) { const k = killed * (100 + gp) * gop / 10000; killed = Math.min(n, R ? Math.floor(k) : k); }
     let recovered = 0;
     if (killed > 0 && out.combatTransporters) {
       const inter = !!(owner && mods(owner).interdictor);
@@ -291,7 +294,7 @@ MOO.def(function (M) {
   const GROUP_MUL = { 'robotic-controls': 6, waste: 3, 'eco-restoration': 3 };
   const ownsTech = (E, t) => !!t.free || E.research.completed[t.field].indexOf(t.level) >= 0;
   function groupTier(T, E, g) {                                // the empire's best tier (gtier) in an obsolescence group
-    let best = 0; const ids = T.GROUPS[g];
+    let best = 0; const ids = T.GROUPS[g] || (T.X && T.X.GROUPS[g]);
     if (ids) for (const id of ids) { const t = T.byId[id]; if (t.gtier > best && ownsTech(E, t)) best = t.gtier; }
     return best;
   }
@@ -397,6 +400,7 @@ MOO.def(function (M) {
     p.gross = 0; p.spendable = 0;
     let slot = 0; for (let i = 0; i < 6; i++) if (E.designs && E.designs[i]) { slot = i; break; }
     p.build = slot;
+    if (M.Sim.XTech) M.Sim.XTech.improve(S, E, p);                                    // expansion: the new owner's permanent improvements
     if (C && C.applyEcoFloor) C.applyEcoFloor(S, E, p);
     if (M.Sim.Vis) { M.Sim.Vis.explore(S, E, p.starId); M.Sim.Vis.snapshot(S, E, p.starId); }
     return p;
@@ -424,6 +428,7 @@ MOO.def(function (M) {
     gt.landed[key] = (gt.landed[key] | 0) + rec.landed;
     const popKilled = rec.defenders - rec.defendersLeft;
     if (rec.success) {
+      if (M.Sim.XTech) M.Sim.XTech.evacuate(S, def, p, rec.defenders);              // expansion: Lifeboat Protocols
       G.capture(S, p, att, rec.survivors);
       for (const t of rec.captured.techs) M.Sim.Research.grant(S, att, t.field, t.level, 'loot');
       news(S, 'invasionSuccess', att.id, def.id, p);
@@ -521,6 +526,10 @@ MOO.def(function (M) {
     plan.compLevel = cl; plan.comp = clamp((cl - 1) * 2 + 6, 1, 20);              // Mark I → 6 … Mark VIII → 20 hits in 20
     if (!plan.any) { plan.reason = 'no armed ships'; return plan; }
     plan.antidote = mods(S.empires[p.owner]).antidote | 0;
+    // expansion techs: Siege Engineering / Antimatter Warheads (attacker), Repulsor Field Net (defender)
+    const xa = mods(E), xd = mods(S.empires[p.owner]);
+    if (xa.bombPct || xd.bombDefPct) plan.xmul = Math.floor((100 + (xa.bombPct | 0)) * (xd.bombDefPct || 100) / 100);
+    if (xa.warheadPct) plan.warhead = xa.warheadPct | 0;
     plan.ok = true; return plan;
   }
   G.canBombard = function (S, empire, planet) {
@@ -533,6 +542,7 @@ MOO.def(function (M) {
     const K_ = K(), st = S.stars[p.starId], shield = st && st.nebula ? 0 : (p.shield | 0), comp = plan.comp, antidote = plan.antidote;
     const types = Object.keys(plan.shots).map(Number).sort((x, y) => K_.WEAPONS[x].n - K_.WEAPONS[y].n);
     let dmg = 0, bio = 0;
+    const wm = plan.warhead ? (100 + plan.warhead) / 100 : 1;                   // expansion Antimatter Warheads: missiles, torpedoes and bombs
     for (const ty of types) {
       const w = K_.WEAPONS[ty], n = plan.shots[ty];
       let v = 1, rolls = n; if (n >= 10) { v = idiv(n, 10); rolls = 10; }          // big stacks roll ten times with a multiplier
@@ -544,9 +554,11 @@ MOO.def(function (M) {
         let d = w.dmg[1];
         if (w.kind === (RULES.orbitalTorpedoHalf ? 'torpedo' : 'missile')) d = idiv(d, 2);
         d *= Math.max(1, w.warheads | 0);
+        if (wm !== 1) d = Math.floor(d * wm);
         if (d > shield) { if (R) { for (let i = 0; i < rolls; i++) if (R.int(1, 20) <= comp) dmg += v * (d - shield); } else dmg += rolls * v * (comp / 20) * (d - shield); }
       } else {                                                 // beams (halved vs planets) and bombs: comp·shots/20 damage rolls, each reduced by the planetary shield
         let mn = w.dmg[0], mx = w.dmg[1]; if (w.kind === 'beam') { mn = idiv(mn, 2); mx = idiv(mx, 2); }
+        if (wm !== 1 && w.kind === 'bomb') { mn = Math.floor(mn * wm); mx = Math.floor(mx * wm); }
         if (mx > shield) {
           const cnt = Math.min(100000, idiv(comp * rolls * v, 20));
           if (R) { for (let i = 0; i < cnt; i++) { const x = R.int(mn, mx) - shield; if (x > 0) dmg += x; } }
@@ -554,6 +566,7 @@ MOO.def(function (M) {
         }
       }
     }
+    if (plan.xmul && plan.xmul !== 100) dmg = R ? Math.floor(dmg * plan.xmul / 100) : dmg * plan.xmul / 100;
     dmg = Math.min(dmg, 100000); bio = Math.min(bio, 10000);
     const fact = p.factories | 0, pop = p.pop | 0;
     let factoriesLost, popLost;
@@ -583,7 +596,9 @@ MOO.def(function (M) {
   function runBombard(S, a, p, plan, R) {
     const E = S.empires[a], vicId = p.owner, vic = S.empires[vicId];
     const core = bombCore(S, p, plan, R);
-    const before = { pop: p.pop | 0, factories: p.factories | 0 }, popKilled = core.popLost, factKilled = core.factoriesLost;
+    const before = { pop: p.pop | 0, factories: p.factories | 0 }, factKilled = core.factoriesLost;
+    let popKilled = core.popLost;
+    if (M.Sim.XTech) { const fl = M.Sim.XTech.siegeFloor(S, p); if (fl) popKilled = Math.max(0, Math.min(popKilled, before.pop - fl)); }    // expansion: Planetary Stasis Field
     p.pop = before.pop - popKilled; p.factories = before.factories - factKilled;
     shrinkMaxPop(p, core.maxPopLoss);
     if (popKilled > 0 && (p.rebels | 0) > 0) { p.rebels = Math.max(0, p.rebels - (idiv(popKilled, 2) + 1)); if (p.rebels > p.pop) p.rebels = p.pop; if (p.rebels === 0) p.unrest = 0; }
@@ -598,6 +613,7 @@ MOO.def(function (M) {
     if (vic.human && !rec.ineffective) push(S, { type: 'notice', kind: 'bombarded', empire: vicId, by: a, planet: p.id, star: p.starId, popKilled, factoriesKilled: factKilled, destroyed });
     if (core.bio > 0) incident(S, 'bio', a, vicId, { planet: p.id, bio: core.bio, popLost: popKilled });          // −max(5·pop, 10·bio) for an AI victim, −10 with every other AI
     else if (popKilled > 0) incident(S, 'combat', a, vicId, { planet: p.id, popLost: popKilled, bio: 0 });
+    if (destroyed && M.Sim.XTech) M.Sim.XTech.evacuate(S, vic, p, before.pop);          // expansion: Lifeboat Protocols
     if (destroyed) destroyedBy(S, a, p, R);
     return rec;
   }

@@ -40,7 +40,7 @@ MOO.def(function (M) {
     for (const E of S.empires) {
       if (!E.alive) continue;
       E.scanned.fill(0);
-      const range = V.scanRange(E), adv = E.mods && E.mods.advScanner;
+      const range = V.scanRange(E), adv = E.mods && E.mods.advScanner, survey = (E.mods && E.mods.survey) | 0;   // survey: expansion Stellar Survey Probes
       for (const p of S.planets) {
         if (p.owner !== E.id) continue;                                    // planet scanners are OWN planets only — allied planets extend fuel range, not scanning (1oom game_update_within_range)
         const sid = p.starId;
@@ -49,6 +49,7 @@ MOO.def(function (M) {
           if (j === sid) continue;
           if (Geo.parsecs(S, sid, j) <= range) E.scanned[j] = 1;
           if (adv && !E.explored[j] && Geo.unitDist(S, sid, j) <= 110) V.explore(S, E, j);   // Advanced Space Scanner auto-explores
+          if (survey && !E.explored[j] && Geo.parsecs(S, sid, j) <= range + survey) V.explore(S, E, j);
         }
       }
       // ships in orbit explore and see their own star

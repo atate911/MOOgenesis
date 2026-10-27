@@ -63,6 +63,7 @@ MOO.def(function (M) {
     if (!it.tech || (it.flags && it.flags.monster)) return false;
     if (it.tech.l <= 1) return true;
     const rs = E && E.research, done = rs && rs.completed && rs.completed[it.tech.f];
+    if (rs && Array.isArray(rs.nullify) && rs.nullify.some(x => x[0] === it.tech.f && x[1] === it.tech.l)) return false;   // tools/techlab twin trials only: owned but switched off
     if (done && done.indexOf(it.tech.l) >= 0) return true;
     return !!(it.grant && E && E.grants && E.grants[it.grant]);
   }
@@ -185,6 +186,8 @@ MOO.def(function (M) {
     const warp = eng.warp, engines = Math.max(1, Math.floor(power / (eng.power / 10)));
     { const p = part(E, eng, h, false); cost += Math.floor(Math.max(p.cost, 5) * engines / 10); used += Math.floor(p.space * engines / 10); }
 
+    const xc = costPct(E, colonyMin > 0);                                    // expansion: Modular Shipyards / Cryogenic Colony Berths
+    if (xc !== 100) cost = Math.floor(cost * xc / 100);
     const space = hull.space + Math.floor(hull.space * tlOf(E, 1) / 50), free = space - used;
     if (free < 0) reason = reason || 'Not enough space (' + (-free) + ' over)';
     const beamDef = man + hull.defense + extraman + 1;
@@ -193,8 +196,15 @@ MOO.def(function (M) {
       hp: Math.floor(hull.hits * arm.pct / 100), man, rating: man + 1, combatSpeed: Math.floor((man + 3) / 2) + Math.floor(extraman / 2),
       beamDef, missDef: beamDef + ecmLevel, attack: compLevel + (scanner ? 1 : 0), absorb, repair, extraman, misshield, rangeBonus: extrarange, pulsar, stream, cloak, teleport, scanner,
       stasis, repulsor, dissipator, blackhole, technull, oracle, displacement, tanks, colonyMin, weapons, specials, weaponCount: count, armed, bombs, bio, hullW: hull.w,
-      compLevel, ecmLevel, key: keyOf(draft || d),
+      compLevel, ecmLevel, key: keyOf(draft || d), ...(xc !== 100 ? { xc } : {}),
     };
+  }
+  // percent of the normal price an empire pays for a design (expansion techs; 100 in a classic game)
+  function costPct(E, colony) {
+    const m = (E && E.mods) || {};
+    let pct = m.shipCostPct || 100;
+    if (colony && m.colonyShipCostPct) pct = Math.floor(pct * m.colonyShipCostPct / 100);
+    return pct;
   }
 
   // ---- public queries ---------------------------------------------------------------------------------------------------------------------------------
@@ -210,7 +220,7 @@ MOO.def(function (M) {
     if (!d) return emptyStats();
     if (!E.dstats) E.dstats = [];
     let c = E.dstats[slot];
-    if (!c || c.key !== keyOf(d)) c = E.dstats[slot] = calc(E, d);
+    if (!c || c.key !== keyOf(d) || (c.valid !== undefined && (c.xc || 100) !== costPct(E, (c.colonyMin | 0) > 0))) c = E.dstats[slot] = calc(E, d);
     return c;
   };
   D.cost = (S, E, slot) => D.stats(S, E, slot).cost;
@@ -315,6 +325,7 @@ MOO.def(function (M) {
       const tab = cfg().AI_BASE_COST || AI_BASE_MUL, di = S && S.settings ? (S.settings.diffIdx | 0) : 2;
       cost = Math.floor(cost * tab[clamp(di, 0, tab.length - 1)] / 100);
     }
+    if (E && E.mods && E.mods.baseCostPct) cost = Math.floor(cost * E.mods.baseCostPct / 100);      // expansion: Hardened Missile Silos (the 50 BC floor still holds)
     return Math.max(50, cost);
   };
 
@@ -325,8 +336,8 @@ MOO.def(function (M) {
     let value = 0, bases = 0, gates = 0;
     for (const f of (S.fleets || [])) if (f.owner === E.id) for (let i = 0; i < SLOTS; i++) value += (f.ships[i] | 0) * cost[i];
     for (const p of (S.planets || [])) if (p.owner === E.id) { bases += p.bases | 0; if (p.stargate) gates++; }
-    const div = cfg().SHIP_UPKEEP_DIV || 50;
-    const ships = Math.min(32000, Math.floor(value / div)), baseM = Math.floor(bases * D.baseCost(S, E) / div), gateM = gates * (cfg().STARGATE_UPKEEP || 100);
+    const div = cfg().SHIP_UPKEEP_DIV || 50, upk = (E.mods && E.mods.shipUpkeepPct) || 100;     // upk: expansion Orbital Drydocks
+    const ships = Math.min(32000, Math.floor(upk === 100 ? value / div : value * upk / (100 * div))), baseM = Math.floor(bases * D.baseCost(S, E) / div), gateM = gates * (cfg().STARGATE_UPKEEP || 100);
     return { ships, bases: baseM, gates: gateM, total: ships + baseM + gateM };
   };
 

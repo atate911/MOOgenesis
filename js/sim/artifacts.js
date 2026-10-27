@@ -33,6 +33,7 @@ MOO.def(function (M) {
       if (level > cap) continue;
       const t = Tc.byFL[f][level];
       if (!t || t.group === 'advanced') continue;
+      if (t.pool === 'x' && rs.pool !== 'x') continue;                             // expansion techs exist only in expanded games
       if (rs.completed[f].indexOf(level) >= 0) continue;
       return { field: f, level, tech: t };
     }
