@@ -53,6 +53,7 @@ MOO.def(function (M) {
     if (xm.workerPct) perPop = Math.floor(perPop * (100 + xm.workerPct) / 100);       // expansion: Biomass Reactors
     let g = opFact + perPop;
     if (xm.asteroid && M.Sim.XTech) { const a = M.Sim.XTech.grossPct(S, E, p); if (a) g = Math.floor(g * (100 + a) / 100); }   // expansion: Asteroid Mining
+    if (p.focus && M.Sim.Strat) { const f = M.Sim.Strat.prodPct(p); if (f) g = Math.floor(g * (100 + f) / 100); }              // Strategic choices: colony focus
     if (!E.human) g = Math.floor(g * (M.Data.Config ? M.Data.Config.aiProdFactor(S.settings.diffIdx | 0, S) : 1));
     g += Math.min(p.bank | 0, g);                                         // transferred reserve can at most double output
     return g;
@@ -185,6 +186,7 @@ MOO.def(function (M) {
       if (E.race === 'sakkra') v *= 2;
     }
     if (v > 0 && E.mods && E.mods.growthPct) v = Math.floor(v * (100 + E.mods.growthPct) / 100);      // expansion: Accelerated Gestation / Hyper-Fertility
+    if (v > 0 && p.focus && M.Sim.Strat) { const f = M.Sim.Strat.growthPct(p); if (f) v = Math.floor(v * (100 + f) / 100); }      // Strategic choices: growth / industry focus
     let natural = Math.trunc((v * p.pop + 5) / 100);
     // original v1.3 quirk (research/04-verification C7): the carried tenths are added to the natural growth AND again to the total — small colonies grow ~2× faster than the
     // plain formula (pop 2 → 50 on a max-100 world takes 29 turns instead of 46). Switch off with Data.Config.QUIRKS.popTenthsTwice = false.
@@ -226,7 +228,9 @@ MOO.def(function (M) {
   // ---- defence: upgrade existing bases → planetary shield → new bases (§3.4/3.10) -----------------------------------
   C.shieldLevel = (S, p) => p.shield | 0;
   C.buildDefense = function (S, E, p) {
-    let bc = C.richMul(p, Math.floor(p.spendable * p.sliders[DEF] / 100)) + p.acc.base;
+    let bc = C.richMul(p, Math.floor(p.spendable * p.sliders[DEF] / 100));
+    if (p.focus && bc > 0 && M.Sim.Strat) { const f = M.Sim.Strat.defPct(p); if (f) bc = Math.floor(bc * (100 + f) / 100); }   // Strategic choices: fortress focus
+    bc += p.acc.base;
     p.acc.base = 0;
     if (bc <= 0) return;
     const Dz = M.Sim.Design, baseCost = Dz ? Dz.baseCost(S, E) : 250;

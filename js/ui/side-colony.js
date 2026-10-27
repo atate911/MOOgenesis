@@ -21,6 +21,12 @@
     .sc-stats .cell { display:flex; justify-content:space-between; padding:.12rem .45rem; background:rgba(0,0,0,.25); border:1px solid var(--brass-line-1); }
     .sc-stats .cell span:first-child { color:var(--mist); } .sc-stats .wide { grid-column:1 / -1; }
     .sc-sliders { margin:.2rem 0 .5rem; }
+    .sc-focus { display:flex; flex-wrap:wrap; gap:.25rem; align-items:center; margin:.05rem 0 .4rem; font-size:.8rem; }
+    .sc-focus:empty { display:none; }
+    .sc-focus .k { color:var(--mist); margin-right:.15rem; text-transform:uppercase; letter-spacing:.08em; font-size:.7rem; }
+    .sc-focus button { font:inherit; padding:.08rem .45rem; color:var(--ivory); background:rgba(0,0,0,.3); border:1px solid var(--brass-line-2); cursor:var(--hand); }
+    .sc-focus button:hover { border-color:var(--brass-hi); } .sc-focus button.on { color:var(--brass-hi); border-color:var(--brass-hi); background:rgba(214,179,106,.14); }
+    .sc-focus .rt { color:var(--ember); font-size:.75rem; margin-left:.2rem; }
     .sc-sliders .slider { grid-template-columns: 4.1rem 1.35rem 1fr 1.35rem 4.1rem 1.4rem; margin:.2rem 0; font-size:.95rem; }
     .sc-sliders .s-val { font-size:.8rem; letter-spacing:.02em; color:var(--ivory); text-align:right; white-space:nowrap; }
     .sc-sliders .s-val.warn { color:var(--rose); } .sc-sliders .s-val.dim { color:var(--mist); }
@@ -162,7 +168,7 @@
       const S = ctx.S, pid = ctx.params.star !== undefined ? ctx.params.star : G.sel.star, p = S.planets[pid];
       const st = { pid, sliders: [], labels: [] };
       this.st = st;
-      st.title = h('div.side-title'); st.card = h('div.sc-card'); st.stats = h('div.sc-stats'); st.note = h('div'); st.sl = h('div.sc-sliders'); st.build = h('div.sc-build'); st.post = h('div.sc-post');
+      st.title = h('div.side-title'); st.card = h('div.sc-card'); st.stats = h('div.sc-stats'); st.note = h('div'); st.sl = h('div.sc-sliders'); st.focus = h('div.sc-focus'); st.build = h('div.sc-build'); st.post = h('div.sc-post');
       LABELS.forEach(([name, key, color], i) => {
         const lbl = h('span', name, h('small', ''));
         const s = UI.slider({ label: lbl, color, value: p.sliders[i], step: 4, min: 0, max: 100, fmt: () => '',
@@ -171,7 +177,7 @@
         st.sliders.push(s); st.labels.push(lbl); st.sl.appendChild(s);
       });
       st.sync = () => this.refresh(host, ctx);
-      host.appendChild(st.title); host.appendChild(st.card); host.appendChild(st.stats); host.appendChild(st.note); host.appendChild(st.sl); host.appendChild(st.build); host.appendChild(st.post);
+      host.appendChild(st.title); host.appendChild(st.card); host.appendChild(st.stats); host.appendChild(st.note); host.appendChild(st.focus); host.appendChild(st.sl); host.appendChild(st.build); host.appendChild(st.post);
       this.refresh(host, ctx);
     },
     refresh(host, ctx) {
@@ -211,6 +217,7 @@
       if (statSnap && statSnap.pid === st.pid && tNow < statFlashUntil) { const cur = statVals(st.stats); for (const k in cur) if (statSnap.v[k] !== undefined && statSnap.v[k] !== cur[k]) statChg[st.pid + ':' + k] = tNow + 1400; statSnap = null; }
       for (const key in statChg) { const [pid, k] = key.split(':'); if (tNow >= statChg[key]) delete statChg[key]; else if (+pid === st.pid) { const v = st.stats.querySelector('.cell[data-k="' + k + '"] > span:last-child'); if (v) v.classList.add('chg'); } }
       UI.mount(st.note, c.rebels || c.unrest ? h('div.sc-note', c.unrest === 2 ? 'Rebellion! Production has stopped.' : 'Unrest: ' + c.rebels + 'M rebels.') : (c.event ? h('div.sc-note', 'Event: ' + c.event.type) : null));
+      focusRow(st, S, c);
       // sliders
       c.sliders.forEach((v, i) => {
         const sl = st.sliders[i], ro = c.readouts[LABELS[i][1]];
@@ -233,6 +240,18 @@
     },
     dispose() { this.st = null; },
   });
+
+  // Strategic choices (sim/strat.js): the colony focus row, only in a game with the option on
+  function focusRow(st, S, c) {
+    const St = M.Sim.Strat, p = S.planets[c.id];
+    if (!St || !St.on(S) || !p) { UI.mount(st.focus); return; }
+    const set = f => { G.order({ t: 'focus', planet: c.id, focus: f }); UI.sfx('click'); st.sync(); };
+    const cur = p.focus || null;
+    const btn = (f, label, tip) => h('button' + (cur === f ? '.on' : ''), { type: 'button', tip, 'aria-pressed': String(cur === f), onclick: () => { if (cur !== f) set(f); } }, label);
+    UI.mount(st.focus, h('span.k', 'Focus'), btn(null, 'None', 'No focus: the colony works as in the original rules'),
+      ...St.FOCUS_KEYS.map(k => btn(k, St.FOCUS[k].name, '<b>' + St.FOCUS[k].name + '</b><br>' + St.FOCUS[k].text + '<br><span class="dim">A new focus takes ' + St.RETOOL + ' turns of retooling before it works.</span>')),
+      p.focusT > 0 ? h('span.rt', 'retooling, ' + p.focusT + (p.focusT === 1 ? ' turn' : ' turns')) : null);
+  }
 
   // the colony postcard (desktop): the colony art for this world (domes on a hostile planet, mines on a barren one, a fortress when well defended,
   // smog when waste builds up, industry when the factories are many, else a city), what the colony is, and what is in orbit — your ships (a click

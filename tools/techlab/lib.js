@@ -28,7 +28,7 @@ exports.settings = (job, pool) => ({
   size: job.size || 'medium', age: 'average', difficulty: job.difficulty || 'average', opponents: job.opponents === undefined ? 3 : job.opponents,
   race: job.race || 'human', seed: job.seed, playerAI: true,
   // playOn: a council verdict or a conquest does not end the game (the twins must run their full horizon); the council still meets and votes
-  options: { tactical: false, randomEvents: true, antarans: true, council: true, playOn: job.playOn !== false, techPool: pool === 'classic' ? 'classic' : 'expanded' },
+  options: { tactical: false, randomEvents: true, antarans: true, council: true, playOn: job.playOn !== false, techPool: pool === 'classic' || pool === 'strat' ? 'classic' : 'expanded', strategic: pool === 'strat' || pool === 'xstrat' },   // strat / xstrat: + Strategic choices
 });
 exports.playTo = function (Sim, S, turn) { while (S.turn < turn && !Sim.isOver(S).over) Sim.autoTurn(S); return S; };
 exports.clone = S => JSON.parse(JSON.stringify(S));

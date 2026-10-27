@@ -46,6 +46,7 @@ window.MOO_MANIFEST = {
     'js/sim/vis.js',
     'js/sim/research.js',
     'js/sim/xtech.js',            // hooks of the expansion techs (no-ops unless an empire owns one)
+    'js/sim/strat.js',            // Strategic choices option: colony focus, galactic projects, research pacts (no-ops when off)
     'js/data/components.js',
     'js/data/config.js',
     'js/sim/design.js',
@@ -72,6 +73,7 @@ window.MOO_MANIFEST = {
     'js/ai/military.js',
     'js/ai/diplomacy.js',
     'js/ai/spy.js',
+    'js/ai/strat.js',
     'js/data/races.js',
     'js/sim/setup.js',
     'js/sim/turn.js',

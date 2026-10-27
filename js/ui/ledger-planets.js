@@ -60,6 +60,8 @@
     .lp-sl .slider .s-val { font-size:.95rem; }
     .lp-btns { display:flex; flex-direction:column; justify-content:flex-end; gap:.5rem; min-width:9.5rem; padding:0 0 .1rem; }
     .lp-btns .btn { width:100%; }
+    .lp-proj { display:grid; gap:.55rem; } .lp-pj { display:grid; grid-template-columns:minmax(0,1fr) auto; gap:.15rem .8rem; padding:.5rem .6rem; background:rgba(0,0,0,.28); border:1px solid var(--brass-line-1); }
+    .lp-pj > :not(.lp-pjb) { grid-column:1; } .lp-pjb { grid-column:2; grid-row:1 / span 3; align-self:center; } .lp-pj.done { opacity:.7; } .lp-pjt b { font:400 1.05rem var(--font-title); color:var(--brass-hi); }
     .lp-xo { margin:.6rem 0 .3rem; padding:.5rem .7rem; background:rgba(0,0,0,.28); border-left:3px solid var(--gold); font-size:1.05rem; }
     .lp-q { display:flex; gap:.4rem; margin:.5rem 0 .2rem; }
     @media (max-width: 62rem) { .lp-foot { grid-template-columns:1fr 1fr; } .lp-btns { flex-direction:row; justify-content:flex-end; } }
@@ -244,7 +246,9 @@
     const reserve = box('Reserve', h('div.lp-reserve', st.reserve, h('span', 'BC'), st.reserveD), h('div.lp-sl', st.tax, st.sec), st.taxHint);
     st.btnX = UI.button('Transfer', () => toggleXfer(), { kbd: 'T', tip: 'Move reserve BC into a colony: it can then spend up to twice its normal output' });
     st.btnOk = UI.button('OK', () => close(), { primary: true, kbd: 'Space', sfx: 'confirm' });
-    return h('div.lp-foot', spending, income, reserve, h('div.lp-btns', st.btnX, st.btnOk));
+    const St = M.Sim.Strat;                                                             // Strategic choices: galactic projects, paid from the reserve
+    st.btnP = St && St.on(G.S) ? UI.button('Projects', () => openProjects(), { kbd: 'P', tip: 'One-time empire projects, paid from the reserve' }) : null;
+    return h('div.lp-foot', spending, income, reserve, h('div.lp-btns', st.btnP, st.btnX, st.btnOk));
   }
   function paintFooter(d) {
     const E = d.E, L = d.L, f = E.flow || {};
@@ -306,6 +310,23 @@
     st.sel = st.sorted[i].id; st.table.paint();
     const tr = st.table.tbody.querySelector('tr.sel'); if (tr && tr.scrollIntoView) tr.scrollIntoView({ block: 'nearest' });
   }
+  // Strategic choices: the galactic projects, each bought once from the reserve when its field's tech level allows
+  function openProjects() {
+    const St = M.Sim.Strat, S = G.S, E = G.player(); if (!St || !E) return;
+    const list = h('div.lp-proj');
+    const paint = () => UI.mount(list, h('p', 'Reserve: ', h('b.t-gold', U.fmt(E.bc) + ' BC')), ...St.PROJECTS.map(x => {
+      const done = E.projects && E.projects[x.id] !== undefined, why = done ? '' : St.canBuy(S, E, x.id), cost = St.projectCost(S, E, x.id);
+      const btn = done ? h('span.t-leaf', 'Done') : UI.button('Fund ' + U.fmt(cost) + ' BC', () => fund(x), { small: true, primary: !why, disabled: !!why, tip: why || null });
+      return h('div.lp-pj' + (done ? '.done' : ''), h('div.lp-pjt', h('b', x.name), h('span.dim.small', ' · ' + M.Data.Techs.FIELD_NAMES[x.field] + ' ' + x.tl)), h('div.small', x.text), why && !done ? h('div.small.t-ember', why) : null, h('div.lp-pjb', btn));
+    }));
+    const fund = x => {
+      const res = G.order({ t: 'project', id: x.id });
+      if (!res.ok) { UI.toast(res.msg || 'Not possible', 'bad'); UI.sfx('error'); return; }
+      UI.sfx('coins'); UI.toast(x.name + ' funded for ' + U.fmt(res.cost) + ' BC', 'ok'); paint(); refresh();
+    };
+    paint();
+    UI.modal({ title: 'Galactic projects', body: list, width: '34rem', buttons: [{ label: 'Close', value: true, primary: true }] });
+  }
   async function openTransfer(r) {
     const E = G.player();
     if (!(E.bc > 0)) { UI.toast('The reserve is empty', 'warn'); return; }
@@ -339,6 +360,7 @@
       UI.bindKey('o', () => close('confirm'), scr); UI.bindKey('space', () => close('confirm'), scr);
       UI.bindKey('escape', () => { if (st.xfer) setXfer(false); else close('cancel'); }, scr);
       UI.bindKey('t', toggleXfer, scr);
+      if (M.Sim.Strat && M.Sim.Strat.on(G.S)) UI.bindKey('p', () => openProjects(), scr);
       UI.bindKey('arrowdown', () => moveSel(1), scr); UI.bindKey('arrowup', () => moveSel(-1), scr);
       UI.bindKey('pagedown', () => moveSel(10), scr); UI.bindKey('pageup', () => moveSel(-10), scr);
       UI.bindKey('.', () => moveSel(10), scr); UI.bindKey(',', () => moveSel(-10), scr);

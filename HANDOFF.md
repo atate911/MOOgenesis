@@ -7,6 +7,11 @@ Docs: `PROGRESS.md` (plan/status/25-feature acceptance checklist) · `CONVENTION
 Commands: `node tools/check.js` (syntax of every manifest file) · `node tools/rules-test.js [area]` · `node tools/soak.js` (24-thread AI-vs-AI soak/balance; `tools/SOAK.md`) · `node tools/headless.js`.
 Browser-pane tip: animations use requestAnimationFrame, so in the built-in browser pane a tab must be fronted (`tabs_select`) for anything animated (GNN, audiences, scenes, combat) to advance.
 
+## Session 9b (October 2026) — Strategic choices, branch `claude/strategic-choices`
+`tools/handoff/strategic-2026-10.md`: a second off-by-default Remake option with colony focus, galactic projects and research agreements
+(`js/sim/strat.js`, `js/ai/strat.js`, guarded hooks; UI in the colony panel, the Planets ledger and the audience's treaty menu). Tuned in
+lab leagues until tech pace and economy sit within about 3% of classic. Open: a human playtest; tooltips in the Almanac.
+
 ## Session 9 (October 2026) — Tech Lab, branch `claude/tech-lab`
 `tools/handoff/techlab-2026-10.md`: an Expanded technology option (New game › Remake options, off by default) that adds 45 new techs to the pool
 research trees are dealt from, without changing tree sizes (`js/data/techs-x.js`, effects in `js/sim/xtech.js` + guarded hooks; classic games

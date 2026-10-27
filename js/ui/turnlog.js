@@ -52,6 +52,7 @@
           shieldDone: [2, ': planetary shield finished'], stargate: [2, ': stargate finished'], outOfFuel: [0, 'Ships lost, out of fuel, at '], transportLost: [0, 'Transports lost at '],
           salvage: [2, 'Wrecks salvaged (' + it.bc + ' BC) at '], evacuated: [2, ': refugees arrived (' + it.n + ' million)'] }[it.kind];
         if (T) { if (T[1].startsWith(':')) add(T[0], '', st, { suffix: T[1] }); else add(T[0], T[1], st); }
+        else if (it.kind === 'project') add(2, 'Project complete: ' + it.name);
         else if (it.kind === 'contactLost') add(1, 'Lost contact with the ' + (S.empires[it.other] ? S.empires[it.other].plural : 'other empire'));
         break;
       }

@@ -44,6 +44,8 @@ MOO.def(function (M) {
         for (const r of E.relations || []) if (r.with !== E.id && (r.treaty === 1 || r.treaty === 2) && S.empires[r.with] && S.empires[r.with].alive) n++;
         if (n) t = Math.min(32767, Math.floor(t * (100 + rt * Math.min(4, n)) / 100));
       }
+      const St = M.Sim.Strat, pp = St && t > 0 ? St.researchPct(S, E) : 0;                // Strategic choices: research pacts
+      if (pp) t = Math.min(32767, Math.floor(t * (100 + pp) / 100));
       E.research.total = t;
     }
   };

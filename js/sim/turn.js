@@ -33,6 +33,7 @@ MOO.def(function (M) {
     Sim.Econ.stepResearchTotal(S);
     // (9–11) trade growth, spies built, diplomacy adjust
     if (has('Diplo') && Sim.Diplo.economyTurn) Sim.Diplo.economyTurn(S, R);
+    if (has('Strat') && Sim.Strat.on(S)) Sim.Strat.turn(S, R);                // Strategic choices: retooling, AI research pacts (option off: no draws)
     if (has('Spy') && Sim.Spy.buildTurn) Sim.Spy.buildTurn(S, R);
     // production is recomputed ONCE MORE here (1oom "hidden child labor", default on in v1.3; research/04 verification C5): defence / ships / industry spend the output of
     // the population AFTER this turn's growth, while ecology and research used the earlier figures. Switch off with Data.Config.QUIRKS.hiddenChildLabor = false.

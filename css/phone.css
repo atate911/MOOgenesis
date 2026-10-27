@@ -174,6 +174,8 @@ html[data-phone] .ph-sum .w { padding: 0 .45rem; color: #ffb27a; border: 1px sol
 html[data-phone] .gx-sidebody:has(.ph-sum) .sm-range { display: none; }   /* the star's range is in its summary */
 /* the colony's build row: the box (picture and design) on its own line, Ships · Reloc · Trans as a row under it */
 html:root:root[data-phone] .sc-build { grid-template-columns: minmax(0, 1fr); }
+html:root:root[data-phone] .sc-focus { font-size: max(12px, .8rem); }
+html:root:root[data-phone] .sc-focus button { min-height: var(--tap); padding: 0 .6rem; }
 html:root:root[data-phone] .sc-btns { flex-direction: row; } html:root:root[data-phone] .sc-btns .btn { flex: 1 1 0; }
 /* half height = the controls (portrait): the picture, the stats, the build box, the rally line and the star's planet card wait for full */
 @media (orientation: portrait) {

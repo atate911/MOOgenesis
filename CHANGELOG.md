@@ -5,6 +5,14 @@ Versions follow `MAJOR.MINOR.PATCH`; the live version is the `VERSION` file.
 
 ## Unreleased
 
+- Strategic choices (New game › Remake options, off by default): three decisions the original lacks. Colony focus: each colony may
+  take one focus from its panel (Industry: production +10%, its research −20%; Science: its research +30%, production −10%; Growth:
+  population growth +50%, production −10%; Fortress: defence spending +50% and +15 ground troops when defending, production −10%),
+  working after 3 turns of retooling. Galactic projects (Planets › Projects, key P): Stellar Cartography, Envoy Corps, Orbital
+  Habitats and the Grand Archive, each bought once from the reserve when a field's tech level allows. Research Agreements (Propose
+  Treaty in an audience; AIs also sign them with each other): +5% research per agreement, at most two count; war ends one. The AI
+  uses all three. In 479 paired AI games tech pace, production and population stay within about 3% of classic; mid-game fleets are
+  larger. Classic games are unchanged.
 - Expanded technology (New game › Remake options, off by default): 45 new technologies join the pool every research tree is dealt
   from, a quarter of the 180 classic ones. Trees keep their size: after the classic tree is dealt, some of its slots are swapped for new
   techs of the same field and tier, so the number of choices, tier unlocks and the tech-level formula are unchanged; essential techs and
