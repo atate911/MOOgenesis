@@ -104,7 +104,7 @@
     return 'colony/colony-terran-city';
   }
   const GNN = 'gnn/race-neutral-gnn-studio-background';
-  /* The measured tone of every race photo: [mean luma 0–255, 99th percentile] per race and purpose (scratchpad/qa, PIL over the files),
+  /* The measured tone of every race photo: [mean luma 0–255, 99th percentile] per race and purpose (tools/qa/racesite.py measures them in place; the file statistics came from Pillow over the assets),
      and each set's mean. A file far from its set's mean (a Darlok hall at a third of the others, a Psilon chamber at twice) is brought
      three quarters of the way back, so side by side (the council booths, the Races cards, the Report, the Almanac) the empires sit in
      one exposure while each file keeps some of its own key. The op is tonal, not a brightness slider: on canvas a self-screen pass lifts

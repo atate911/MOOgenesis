@@ -73,13 +73,13 @@ the map on a real GPU (the headless renderer is software: the GL nebula and bloo
 
 | Step | Commit | What landed | Notes for the next pass |
 |---|---|---|---|
-| 1.1 one sky | `Visual system 1.1` | `Gfx.Space.SKY` + `Space.sky(over)`; `floor` and `warm`/`warmK` options in both painters (`space.js`, `gl-space.js`: `uFloor`, `uWarm`); the map (`ensureAmbient`), the title fallback (`menu.js`) and `UI.Controls.backdrop` read it; the map's cloud layers recoloured, gameplay nebulae dustier, GPU backdrop at device resolution on the high tiers. | The CPU painter has no tone curve, so `sky()` marks its options and the CPU path halves the intensity (`opts.sky`). Tuned on contact sheets (`scratchpad/qa/skytest.js`, variants over `Space.sky`). The gameplay nebulae must stay readable (a rule): they are dustier, not dimmer; check them on a real GPU. |
+| 1.1 one sky | `Visual system 1.1` | `Gfx.Space.SKY` + `Space.sky(over)`; `floor` and `warm`/`warmK` options in both painters (`space.js`, `gl-space.js`: `uFloor`, `uWarm`); the map (`ensureAmbient`), the title fallback (`menu.js`) and `UI.Controls.backdrop` read it; the map's cloud layers recoloured, gameplay nebulae dustier, GPU backdrop at device resolution on the high tiers. | The CPU painter has no tone curve, so `sky()` marks its options and the CPU path halves the intensity (`opts.sky`). Tuned on contact sheets (`tools/qa/skytest.js`, variants over `Space.sky`). The gameplay nebulae must stay readable (a rule): they are dustier, not dimmer; check them on a real GPU. |
 | 1.2 persistent sky | `Visual system 1.2` | `js/ui/sky.js` (`UI.Sky.install()` from `main.js`): `<canvas id="sky">` under `#screens`, painted once per size, drift on the high tiers only, `--sky-img` data URL for the ledger wells (`background … fixed`), `<html class="has-sky">`; Options / Save-Load / Setup drop their painted backdrop; `screens.js` adds `.fade-out`. | `background-attachment: fixed` is not honoured on iOS, so phones keep the plain well (the rule is `:not([data-phone])`). The data URL is ~30–150 KB; encoded in an idle callback. |
 | 1.3 one glass | `Visual system 1.3` | `--glass-bg`, `--glass-line`, `--glass-filter` and a central list of glass surfaces in `theme-v2.css` (section 7b, triple-`:root` so it beats the per-screen restyles): tooltip, toast, map key, planet-data box and labels, pre-battle boxes, turn log, council tally, audience panel (teal fill gone, brass frame + rails). | The news lower third is drawn on canvas (`gnn.js`), so it is not on the list: Phase 2 (scene grade) is where it changes. `backdrop-filter` is off on phones and `data-fx="off"`. |
-| 1.4 wells + hairlines | `Visual system 1.4` | `--well-leather`, `--well-leather-2`, `--well-steel`, `--hair`, `--hair-w`; the brown family's wells (`tech.js` orig-brown tokens, `.tch-list`, `.tt-scroll`, `.rp-age`), the ledgers' `--bz-slot`, boxes and stat slots, the Map overview key face, the colony panel's `--slotbg`; table rules and dividers on the hairline. Contrast of every ink over the new wells is 7:1 or better (`scratchpad/qa/contrast.py`). | The Races screen's section boxes (`.rc-sec`) and the Design screen's panes were left as they are (already dark). |
+| 1.4 wells + hairlines | `Visual system 1.4` | `--well-leather`, `--well-leather-2`, `--well-steel`, `--hair`, `--hair-w`; the brown family's wells (`tech.js` orig-brown tokens, `.tch-list`, `.tt-scroll`, `.rp-age`), the ledgers' `--bz-slot`, boxes and stat slots, the Map overview key face, the colony panel's `--slotbg`; table rules and dividers on the hairline. Contrast of every ink over the new wells is 7:1 or better (`tools/qa/contrast.py`). | The Races screen's section boxes (`.rc-sec`) and the Design screen's panes were left as they are (already dark). |
 | 1.5 palette | this commit | CSS contexts only: `#f0d048` → `--slot-ink`, `#e8c850` → `--title`, literal `#ffd36a` → `--title-hi`, `#ffc860` selection rings → `--sel-line`. | The ~90 remaining literal golds are in canvas code (tech motifs, news graphics, setup badges) where a CSS token cannot be read; they are the same three values everywhere (`#f3dca0`, `#d6b36a`, `#ffd54f`). A shared JS palette constant would be the next consolidation if one is wanted. |
 
-Verified per step with screenshots (`scratchpad/shots/fix/vs*-*.png`, before/after pairs at the low and high tiers), `check.js`, the rules tests,
+Verified per step with before/after screenshot pairs at the low and high tiers (working shots, not kept), `check.js`, the rules tests,
 and at the end the three phone QA profiles and a 30-turn run. The headless GPU is software (SwiftShader): the GPU sky, bloom and
 drift were seen here at `TIER=high` but judge them on real hardware.
 
@@ -121,9 +121,9 @@ system compressed; surfaces stay flat (no blur on phones).
 ## Balance pass — done (same branch, one commit)
 
 The owner asked for a look at spacing, overuse of visuals, colour and luminosity balance, specular highlights and contrast before a live
-review. Harness: `scratchpad/qa/audit.js` (per screen: a screenshot plus every visible text element's rect, colour, size and every box's
+review. Harness: `tools/qa/audit.js` (per screen: a screenshot plus every visible text element's rect, colour, size and every box's
 padding / gap) and `audit.py` (WCAG contrast of each text against the most common colour behind it in the screenshot; mean luminance,
-black and highlight shares, saturation; distinct spacing values in rem). Worth keeping as `tools/qa/audit.js` if the owner wants it.
+black and highlight shares, saturation; distinct spacing values in rem). Now `tools/qa/audit.js` + `audit.py`.
 
 | Finding | Numbers | Fix |
 |---|---|---|
@@ -150,10 +150,10 @@ copper buttons (anti-aliased glyph edges; the ink itself is 5:1).
 ## Finish pass — done (same branch, one commit)
 
 The owner asked for the tells of an unfinished interface, for where shading and shadowing are strong or weak, and for the histograms of
-the raster art against each other and against the interface. Harness in the scratchpad: `finish.js` (per screen, in the DOM: clipped
+the raster art against each other and against the interface. Harness: `tools/qa/finish.js` (per screen, in the DOM: clipped
 text, sibling buttons of unequal height, distinct font sizes, edge colours, drop shadows, chamfers, mixed capitalisation inside one
 container, three-dot truncations, the light direction of every bevel) and `histo.py` (RGB statistics of every raster by set, the outliers
-inside each set, and the same statistics for regions of the audit screenshots). Worth promoting to `tools/qa/` with `audit.js`.
+inside each set, and the same statistics for regions of the audit screenshots). All of them live in `tools/qa/` now (the `.py` scores need Python 3 with Pillow; outputs go to the ignored `tools/out/`).
 
 ### Histograms (RGB; L = mean luma 0–255, p50 its median, warm = R − B of the mean colour)
 
@@ -295,7 +295,7 @@ nudging the rendered screens toward the art's histograms. What moved:
 
 | Gap | What landed | Measured |
 |---|---|---|
-| The sky was the one rendered surface far from the art skies' histogram (warm −10, tint −7 against −1 / −2) | `Space.SKY` palette toward the art's neutrals (dusty violet · slate · dusty umber · slate blue), the warm core a shade warmer and stronger (`#e4b690`, k .9), intensity .85, floor .05; chosen on two GL contact sheets (`scratchpad/shots/fix/sky-unify*.png`) | map sky warm −10 → −9, tint −7 → −4, L 21 → 22 |
+| The sky was the one rendered surface far from the art skies' histogram (warm −10, tint −7 against −1 / −2) | `Space.SKY` palette toward the art's neutrals (dusty violet · slate · dusty umber · slate blue), the warm core a shade warmer and stronger (`#e4b690`, k .9), intensity .85, floor .05; chosen on two GL contact sheets (`tools/qa/skytest.js`, sheets in `tools/out/sky/`) | map sky warm −10 → −9, tint −7 → −4, L 21 → 22 |
 | The gameplay nebulae sat on the sky like stickers (saturated violet) | a third less saturated in two steps, same hue and alpha; the in-nebula star ring the same lilac | still the one violet thing on the map: readable |
 | Steel was blue-steel (−12 to −37 red over blue) while every art set is neutral or warm | every low-saturation blue-grey in the steel family (console gradients, the galaxy screen's button faces, the v2 base and line tokens, the combat bar, the phone gunmetal) has half its blue taken out at the same luminance (51 literals, programmatic) | console face −10 → −9, button faces −37 → −18, base tokens −21 → −10 |
 | Two label tiers for the same job: Research's column, section and project heads in orange at 13–15 px, the ledgers' and console's in cream caps | the Research heads take the cream caps (`--o-tan`, 600); orange is the bold box-title tier only | the 15 px orange fails on Research gone; one convention |
@@ -320,7 +320,7 @@ chips at 2.9:1 (dim by meaning) and the sampler's copper-glyph edges.
 
 The owner asked for the race photos to be reviewed as they are used throughout the game, individually and situationally, for brightness,
 midtones, highlights and shadows against the screens they sit in. Seventy files: ten races × portrait, figure, audience hall, council
-chamber, scientist, homeworld, homeworld-square. Harness: `scratchpad/qa/racesite.js` + `racesite.py` (every race at the Races cards, the
+chamber, scientist, homeworld, homeworld-square. Harness: `tools/qa/racesite.js` + `racesite.py` (every race at the Races cards, the
 Report portrait and dossier, the audience hall / leader / envoy, the Almanac; the art rectangle's luma distribution against its surround)
 and `racesite2.js` (the council demo chamber, the New game race pick, the research breakthrough scene).
 
@@ -382,7 +382,7 @@ homeworlds a stop darker, the Human figure and hall half a stop brighter; the Al
 
 Verification: `check.js` clean, `rules-test.js` 845 pass, phone QA 263 pass, 30 turns on hard with no errors; the change is canvas
 compositing and one CSS rule, so the layout fingerprint does not apply. Shots for every race at every site are in
-`scratchpad/racesite/` (`before2-*`, `after3-*`, `after4-*`). Judge the council chamber and the Darlok audience on real hardware: the
+`tools/out/racesite/` when the harness is run (the working set was `before2-*`, `after3-*`, `after4-*`). Judge the council chamber and the Darlok audience on real hardware: the
 headless renderer runs the low tier.
 
 ## Phase 3 — assets (rows for `ART-NEEDED.md`)
