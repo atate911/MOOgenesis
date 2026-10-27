@@ -263,7 +263,7 @@ MOO.def(function (M) {
     for (const t of types) { if (dmg >= totalHp) break; dmg += shootDamage(K_.WEAPONS[t], sh.shots[t], out.level, R); }   // …until every transport is dead
     out.damage = dmg;
     let killed = R ? Math.min(n, idiv(dmg, hp)) : Math.min(n, dmg / hp);
-    const gp = owner ? mods(owner).gauntletPct | 0 : 0, gop = mods(att).gauntletOwnPct || 100;      // expansion: Repulsor Field Net / Assault Shuttles / Stealth Landing Craft
+    const gp = owner ? mods(owner).gauntletPct | 0 : 0, gop = mods(att).gauntletOwnPct || 100;      // expansion: Repulsor Field Net / Stealth Landing Craft
     if (killed > 0 && (gp || gop !== 100)) { const k = killed * (100 + gp) * gop / 10000; killed = Math.min(n, R ? Math.floor(k) : k); }
     let recovered = 0;
     if (killed > 0 && out.combatTransporters) {
@@ -526,11 +526,10 @@ MOO.def(function (M) {
     plan.compLevel = cl; plan.comp = clamp((cl - 1) * 2 + 6, 1, 20);              // Mark I → 6 … Mark VIII → 20 hits in 20
     if (!plan.any) { plan.reason = 'no armed ships'; return plan; }
     plan.antidote = mods(S.empires[p.owner]).antidote | 0;
-    // expansion techs: Siege Engineering / Antimatter Warheads (attacker), Repulsor Field Net / Bio-Containment Fields (defender)
+    // expansion techs: Siege Engineering / Antimatter Warheads (attacker), Repulsor Field Net (defender)
     const xa = mods(E), xd = mods(S.empires[p.owner]);
     if (xa.bombPct || xd.bombDefPct) plan.xmul = Math.floor((100 + (xa.bombPct | 0)) * (xd.bombDefPct || 100) / 100);
     if (xa.warheadPct) plan.warhead = xa.warheadPct | 0;
-    if (xd.bioHalf) plan.bioHalf = true;
     plan.ok = true; return plan;
   }
   G.canBombard = function (S, empire, planet) {
@@ -568,7 +567,6 @@ MOO.def(function (M) {
       }
     }
     if (plan.xmul && plan.xmul !== 100) dmg = R ? Math.floor(dmg * plan.xmul / 100) : dmg * plan.xmul / 100;
-    if (plan.bioHalf) bio = R ? Math.floor(bio / 2) : bio / 2;
     dmg = Math.min(dmg, 100000); bio = Math.min(bio, 10000);
     const fact = p.factories | 0, pop = p.pop | 0;
     let factoriesLost, popLost;

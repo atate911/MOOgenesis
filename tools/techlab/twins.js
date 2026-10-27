@@ -51,9 +51,13 @@ if (!isMainThread) {
           e = cand; break;
         }
         if (e < 0) continue;
-        const ki = alive.indexOf(e);
-        const tr = run(S, S1 => { MOO.Sim.Research.grant(S1, S1.empires[e], t.field, t.level, 'lab'); }, [e]);
-        out.subjects.push({ id: sub.id, band: c, e, race: S.empires[e].race, ctrl: OFFSETS.map(h => ctrl[h][ki]), treat: OFFSETS.map(h => tr[h][0]) });
+        // the control copy ALSO receives the tech, with its effects switched off (Research.recompute honours rs.nullify): both copies then share the tech
+        // level, the unlocked tiers and the research list, and the difference is what the tech DOES. (Without this, a high-level tech granted early
+        // measures mostly the jump in tech level — round 1 of the lab, tools/techlab/REPORT.md.)
+        const grant = (S1, nullify) => { const E1 = S1.empires[e]; if (nullify) E1.research.nullify = [[t.field, t.level]]; MOO.Sim.Research.grant(S1, E1, t.field, t.level, 'lab'); };
+        const cn = run(S, S1 => grant(S1, true), [e]);
+        const tr = run(S, S1 => grant(S1, false), [e]);
+        out.subjects.push({ id: sub.id, band: c, e, race: S.empires[e].race, ctrl: OFFSETS.map(h => cn[h][0]), treat: OFFSETS.map(h => tr[h][0]) });
       }
     }
     return out;

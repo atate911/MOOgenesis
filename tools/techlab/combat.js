@@ -11,12 +11,13 @@ const L = require('./lib');
 const { isMainThread } = require('worker_threads');
 
 const SHIP_EFFECTS = {
-  comp1: { comp: 1 }, comp2: { comp: 2 }, def1: { def: 1 }, mdef2: { mdef: 2 }, absorb1: { absorb: 1 }, absorb2: { absorb: 2 }, hp15: { hpPct: 15 },
-  repair5: { repair: 5 }, mis20: { misshield: 20 }, thrust: { speed: 1, init: 2 }, warhead25: { warhead: 25 },
+  comp1: { comp: 1 }, comp2: { comp: 2 }, mdef2: { mdef: 2 }, absorb1: { absorb: 1 }, absorb2: { absorb: 2 }, mis20: { misshield: 20 }, thrust: { speed: 1, init: 2 },
+  warhead25: { warhead: 25 },
 };
-const PLANET_EFFECTS = { baseComp2: { baseComp: 2 }, baseHp50: { baseHpPct: 50 }, pshield5: { pshield: 5 }, mines8: { mines: 8 } };
+const PLANET_EFFECTS = { baseComp2: { baseComp: 2 }, baseHp50: { baseHpPct: 50 }, mines8: { mines: 8 } };
+// round 1 also measured def1, hp15, repair5 and pshield5 for candidates cut in round 2 (combat-r1.json keeps them); the sim no longer applies those keys.
 const SCALES = [0.8, 0.9, 1.1, 1.25, 1.5];
-const xmOf = fx => Object.assign({ comp: 0, def: 0, mdef: 0, absorb: 0, hpPct: 0, repair: 0, misshield: 0, speed: 0, init: 0, warhead: 0, mines: 0, baseComp: 0, baseHpPct: 0, pshield: 0 }, fx);
+const xmOf = fx => Object.assign({ comp: 0, mdef: 0, absorb: 0, misshield: 0, speed: 0, init: 0, warhead: 0, mines: 0, baseComp: 0, baseHpPct: 0 }, fx);
 
 // ---- worker ------------------------------------------------------------------------------------------------------------------------------------------------
 if (!isMainThread) {
@@ -72,10 +73,8 @@ if (!isMainThread) {
     const effects = planetSub ? PLANET_EFFECTS : SHIP_EFFECTS, out = {};
     for (const name in effects) {
       const b = JSON.parse(JSON.stringify(base));
-      if (name === 'pshield5') { if (!b.planet) continue; b.planet.shield = Math.max(5, b.planet.shield | 0); }
       const pe = winRate(Object.assign(b, { sides: b.sides.map((s, j) => (j === i ? Object.assign({}, s, { xm: xmOf(effects[name]) }) : s)) }), 'e' + name);
-      let pb = p0;
-      if (name === 'pshield5') { const bb = JSON.parse(JSON.stringify(base)); bb.planet.shield = Math.max(5, bb.planet.shield | 0); pb = winRate(bb, 'pb'); }
+      const pb = p0;
       // k*: where the curve reaches pe (relative to the condition's own baseline pb)
       const target = pe - pb + p0;
       let ks = null;
@@ -90,7 +89,7 @@ if (!isMainThread) {
           const ss = s.designs[k], n = s.ships[k]; if (!ss || !n) continue;
           const w = n * (ss.hullW || 1); tot += w;
           const on = name.startsWith('absorb') ? ss.absorb > 0 : name === 'warhead25' ? ss.weapons.some(x => x.kind === 'missile' || x.kind === 'torpedo')
-            : name === 'repair5' ? ss.repair < 5 : name === 'mis20' ? ss.misshield < 20 : true;
+            : name === 'mis20' ? ss.misshield < 20 : true;
           if (on) hit += w;
         }
         share = tot ? hit / tot : 0;

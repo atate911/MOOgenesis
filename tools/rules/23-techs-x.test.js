@@ -12,10 +12,12 @@ module.exports = function (M, t) {
   const without = (E, keys, fn) => { const keep = {}; for (const k of [].concat(keys)) { keep[k] = E.mods[k]; delete E.mods[k]; } try { return fn(); } finally { Object.assign(E.mods, keep); } };
 
   // ---- data ---------------------------------------------------------------------------------------------------------------------------------------------
-  t.test('techs-x: 60 candidates on free levels, outside the single-tech tiers, every effect key documented, chains ranked', () => {
-    t.eq(X.list.length, 60);
-    t.deep(X.byField.map(a => a.length), [12, 12, 11, 11, 12, 2]);
-    const keys = new Set(X.KEYS);
+  t.test('techs-x: 45 techs on free levels, outside the single-tech tiers, every effect key documented and used, chains ranked', () => {
+    t.eq(X.list.length, 45, 'a quarter of the 180 classic researchable techs');
+    t.deep(X.byField.map(a => a.length), [9, 11, 6, 8, 9, 2]);
+    const keys = new Set(X.KEYS), used = new Set();
+    for (const x of X.list) for (const k in x.effects) used.add(k);
+    for (const k of X.KEYS) t.ok(used.has(k), 'documented key without a tech: ' + k);
     for (const x of X.list) {
       t.eq(T.byId[x.id], x); t.eq(T.byFL[x.field][x.level], x); t.eq(x.pool, 'x');
       t.ok(T.list.indexOf(x) < 0 && T.byField[x.field].indexOf(x) < 0, 'not in the classic tables: ' + x.id);
@@ -87,12 +89,9 @@ module.exports = function (M, t) {
   });
 
   // ---- economy hooks -----------------------------------------------------------------------------------------------------------------------------------
-  t.test('techs-x economy: automated factories, worker output, asteroid fields', () => {
+  t.test('techs-x economy: worker output, asteroid fields', () => {
     const S = xgame('eco'), E = S.empires[0], p = home(S, E);
     p.pop = 50; p.factories = 200; p.rocks = 'many';
-    own(S, E, 'factory-supervisor-ai');
-    t.eq(C.maxFactories(E, p), Math.min(2700, p.mp3 * C.oper(E)) + 3);
-    t.eq(C.gross(S, E, p), without(E, 'autoFactories', () => C.gross(S, E, p)) + 3);
     own(S, E, 'biomass-reactors');
     const perPop = Math.floor(p.pop * (3 * C.plLevel(E) + 50) / 100);
     t.eq(C.gross(S, E, p), without(E, 'workerPct', () => C.gross(S, E, p)) - perPop + Math.floor(perPop * 110 / 100));
@@ -147,7 +146,7 @@ module.exports = function (M, t) {
     const hmp = h.mp1 || h.maxPop; C.found(S, E, h, 2);
     t.ok(h.xi.domes >= 5); t.eq(!!h.xi.smallWorld, h.maxPop <= 40); t.ok(h.mp1 > hmp);
   });
-  t.test('techs-x population: growth bonuses, hostile growth, project and terraform prices', () => {
+  t.test('techs-x population: growth bonuses, hostile growth, terraform prices', () => {
     const S = xgame('grow'), E = S.empires[0];
     const p = S.planets.find(q => q.owner < 0 && q.typeIdx >= 1 && q.typeIdx <= 6 && q.maxPop >= 20);
     C.found(S, E, p, 2); p.pop = 5; p.popFrac = 0; p.waste = 0;
@@ -156,13 +155,9 @@ module.exports = function (M, t) {
     const base = grow(clone());
     own(S, E, 'adaptive-genetics'); const g1 = grow(clone()); t.ok(g1 > base, 'hostile grows like normal');
     own(S, E, 'accelerated-gestation'); const g2 = grow(clone()); t.ok(g2 > g1);
-    own(S, E, 'bio-engineered-soil'); E.mods.soil = true;
-    const q = home(S, E); q.growth = 'normal'; q.acc.eco = 0; q.spendable = 120; q.sliders = [0, 0, 0, 100, 0]; q.waste = 0; q.factories = 0;
-    const q2 = JSON.parse(JSON.stringify(q));
-    without(E, 'projectCostPct', () => C.buildEco(S, E, q2)); t.eq(q2.growth, 'normal', '120 BC is not enough at the classic price');
-    C.buildEco(S, E, q); t.eq(q.growth, 'fertile', 'soil enrichment at 100 BC instead of 150');
+    own(S, E, 'hyper-fertility-treatments'); const g3 = grow(clone()); t.ok(g3 > g2, 'the better growth tech of the chain wins');
     own(S, E, 'terraforming-nanites'); E.mods.terraform = 20; E.mods.terraformCost = 5;
-    const r = home(S, E); r.acc.eco = 0; r.spendable = 40; r.mp3 = r.mp2; r.growth = 'gaia';
+    const r = home(S, E); r.acc.eco = 0; r.spendable = 40; r.sliders = [0, 0, 0, 100, 0]; r.waste = 0; r.factories = 0; r.mp3 = r.mp2; r.growth = 'gaia';
     const before = r.mp3; C.buildEco(S, E, r); t.eq(r.mp3 - before, 10, '40 BC at 4 BC a point');
   });
 
@@ -179,10 +174,12 @@ module.exports = function (M, t) {
     M.Sim.Design.refresh(S, A); M.Sim.Design.refresh(S, B);
     const battle = () => ({ v: 1, star: 0, starName: 'x', planet: null, sides: [sideOf(S, A, [0, 5, 0, 0, 0, 0]), sideOf(S, B, [0, 5, 0, 0, 0, 0])], planetSide: -1, nebula: false, bg: 0, rocks: 'none', attacker: 1, defender: 0, human: false, diff: 2, seed: 's' });
     const u0 = Cb.create(null, battle()).units[0], w0 = Cb.sideWeight(battle(), 0);
-    for (const k of ['tactical-combat-analyzers', 'flux-shields', 'inertial-shield-harmonics', 'structural-integrity-fields', 'damage-control-teams', 'point-defense-lasers', 'combat-thrusters']) own(S, A, k);
+    for (const k of ['tactical-combat-analyzers', 'inertial-shield-harmonics', 'absorption-lattice', 'point-defense-lasers', 'combat-thrusters']) own(S, A, k);
     const u1 = Cb.create(null, battle()).units[0];
-    t.eq(u1.comp, u0.comp + 1); t.eq(u1.def, u0.def + 1); t.eq(u1.mdef, u0.mdef + 2); t.eq(u1.hp1, Math.floor(u0.hp1 * 1.15));
-    t.eq(u1.repair, Math.max(u0.repair, 5)); t.eq(u1.misshield, Math.max(u0.misshield, 20)); t.eq(u1.speed, u0.speed + 1); t.eq(u1.init, u0.init + 2);
+    t.eq(u1.comp, u0.comp + 1); t.eq(u1.def, u0.def); t.eq(u1.mdef, u0.mdef + 2); t.eq(u1.hp1, u0.hp1); t.eq(u1.repair, u0.repair);
+    t.eq(u1.absorb, u0.absorb + (u0.absorb > 0 ? 2 : 0), 'the lattice only strengthens an existing deflector');
+    t.eq(u1.misshield, Math.max(u0.misshield, 20)); t.eq(u1.speed, u0.speed + 1); t.eq(u1.init, u0.init + 2);
+    own(S, A, 'predictive-fire-control'); t.eq(Cb.create(null, battle()).units[0].comp, u0.comp + 2, 'the better fire-control tech replaces the first');
     t.ok(Cb.sideWeight(battle(), 0) > w0, 'heavier in the weight model');
     t.eq(Cb.sideWeight(battle(), 1), Cb.sideWeight(battle(), 1), 'the other side unchanged');
   });
@@ -193,9 +190,9 @@ module.exports = function (M, t) {
     const pl = { id: p.id, owner: A.id, name: 'H', pop: p.pop, factories: p.factories, bases: 3, shield: 5, type: p.type, special: p.special, maxPop: p.mp3, baseHp: 50, comp: 1, ecm: 0, absorb: 1, weapon: 'nuclear-missile', weapon2: 'nuclear-missile', interdictor: false, antidote: 0 };
     const battle = () => ({ v: 1, star: p.starId, starName: 'H', planet: pl, sides: [sideOf(S, A, [0, 0, 0, 0, 0, 0]), sideOf(S, B, [0, 20, 0, 0, 0, 0])], planetSide: 0, nebula: false, bg: 0, rocks: 'none', attacker: 1, defender: 0, human: false, diff: 2, seed: 's' });
     const B0 = Cb.create(null, battle()), wE0 = Cb.sideWeight(battle(), 1), wP0 = Cb.sideWeight(battle(), 0);
-    own(S, A, 'orbital-minefields'); own(S, A, 'orbital-targeting-arrays'); own(S, A, 'hardened-missile-silos'); own(S, A, 'phase-barrier');
+    own(S, A, 'orbital-minefields'); own(S, A, 'orbital-targeting-arrays'); own(S, A, 'hardened-missile-silos');
     const B1 = Cb.create(null, battle()), pu0 = B0.units[0], pu1 = B1.units[0];
-    t.eq(pu1.comp, pu0.comp + 2); t.eq(pu1.hp1, Math.floor(pu0.hp1 * 1.5)); t.eq(pu1.absorb, pu0.absorb + 5);
+    t.eq(pu1.comp, pu0.comp + 2); t.eq(pu1.hp1, Math.floor(pu0.hp1 * 1.5)); t.eq(pu1.absorb, pu0.absorb);
     const e0 = B0.units.find(u => u.side === 1), e1 = B1.units.find(u => u.side === 1);
     t.eq((e1.count - 1) * e1.hp1 + e1.hp1 - e1.hploss, (e0.count - 1) * e0.hp1 + e0.hp1 - Math.floor(e0.hp1 * e0.count * 8 / 100), 'mines take 8 % of the hit points');
     t.eq(Cb.sideWeight(battle(), 1), Math.floor(wE0 * Xt.mineFactor({ mines: 8 }))); t.ok(Cb.sideWeight(battle(), 0) > wP0);
@@ -250,32 +247,32 @@ module.exports = function (M, t) {
   });
 
   // ---- espionage, diplomacy, council, events -----------------------------------------------------------------------------------------------------------
-  t.test('techs-x intrigue: spy rolls and prices, goodwill, trade, council weight, disasters', () => {
+  t.test('techs-x intrigue: infiltration rolls and spy prices, goodwill, council weight', () => {
     const S = xgame('int'), A = S.empires[0], B = S.empires[1], Sp = M.Sim.Spy;
-    own(S, B, 'quantum-encryption'); own(S, A, 'neural-infiltration-net');
+    A.race = B.race = 'human';                                                   // no racial spy modifiers (Darlok) in the comparison
+    own(S, A, 'neural-infiltration-net');
     A.research.tl[0] = 10; B.research.tl[0] = 10;
-    const d0 = without(A, 'spyOff', () => without(B, 'spyDef', () => Sp.dts(S, A, B, 1)));
-    t.eq(without(A, 'spyOff', () => Sp.dts(S, A, B, 1)).dt2, d0.dt2 + 15);
-    t.eq(Sp.dts(S, A, B, 1).dt1, Math.max(0, d0.dt1 + 20 - 15));
+    const d0 = without(A, 'spyOff', () => Sp.dts(S, A, B, 1)), d1 = Sp.dts(S, A, B, 1);
+    t.eq(d1.dt1, d0.dt1 + 20, 'equal Computers: the infiltrator gains 20 points');
+    B.research.tl[0] = 30;
+    t.eq(Sp.dts(S, A, B, 1).dt2, without(A, 'spyOff', () => Sp.dts(S, A, B, 1)).dt2 - 20, 'a better-defended target loses 20 points of its margin');
+    B.research.tl[0] = 10;
     t.eq(Sp.baseCost(S, A), Math.floor((2 * 10 + 25) * 75 / 100));
-    own(S, A, 'universal-translator');
-    t.eq(A.mods.tradePts, 15); t.eq(A.mods.posAct, 50);
-    A.relations[1].trade = 100; A.relations[1].tradePct = 50; A.relations[1].contact = true; A.relations[1].treaty = 0;
-    t.eq(M.Sim.Diplo.tradeIncomeFrom(S, A.id, 1), Math.trunc(100 * (50 + 15 + (A.race === 'human' ? 25 : 0)) / 100));
-    own(S, A, 'holovision-broadcast-network'); t.eq(A.mods.councilBonus, 20);
-    own(S, A, 'planetary-disaster-response'); own(S, A, 'bio-containment-fields');
-    const Ev = M.Sim.Events, p = home(S, A); p.pop = 90;
-    t.ok(Ev.rejects(S, 2, A.id, p) && Ev.rejects(S, 4, A.id, p) && Ev.rejects(S, 7, A.id, p) && Ev.rejects(S, 1, A.id, p));
-    t.ok(!Ev.rejects(S, 15, A.id, p), 'good events still happen');
+    t.eq(without(A, 'spyCostPct', () => Sp.baseCost(S, A)), 2 * 10 + 25, 'the classic price without the net');
+    // goodwill: an AI actor's positive act on another AI is 25 % larger
+    const P = S.empires[2], Q = S.empires[3], D = M.Sim.Diplo;
+    own(S, P, 'holovision-broadcast-network'); t.eq(P.mods.councilBonus, 20); t.eq(P.mods.posAct, 25);
+    const act = withTech => { const S1 = JSON.parse(JSON.stringify(S)); const P1 = S1.empires[P.id]; if (!withTech) delete P1.mods.posAct; return D.act(S1, 20, P.id, Q.id, 1); };
+    const v0 = act(false), v1 = act(true);
+    t.ok(v0 > 0); t.eq(v1, Math.trunc(v0 * 125 / 100));
   });
 
   // ---- movement and scanning ---------------------------------------------------------------------------------------------------------------------------
-  t.test('techs-x logistics: survey, scanner and fuel bonuses, transports, beacons, slipstream, warp damping', () => {
+  t.test('techs-x logistics: survey, fuel bonus, transports, beacons, slipstream, warp damping', () => {
     const S = xgame('mov'), A = S.empires[0], B = S.empires[1], F = M.Sim.Fleet, V = M.Sim.Vis, Geo = M.Sim.Geo;
     own(S, A, 'stellar-survey-probes'); V.update(S);
     for (let j = 0; j < S.stars.length; j++) if (Geo.parsecs(S, A.capital, j) <= V.scanRange(A) + 2) t.ok(A.explored[j], 'surveyed ' + j);
-    const s0 = A.mods.scan, f0 = A.mods.fuel, tr0 = A.mods.transportSpeed;
-    own(S, A, 'gravitic-lensing-array'); t.eq(A.mods.scan, s0 + 2);
+    const f0 = A.mods.fuel, tr0 = A.mods.transportSpeed;
     own(S, A, 'interstellar-ramscoops'); t.eq(A.mods.fuel, f0 + 1);
     own(S, A, 'hyperlane-transports'); t.eq(A.mods.transportSpeed, tr0 + 3);
     A.mods.fuel = 30; Rs.recompute(A); t.eq(A.mods.fuel, f0 + 1, 'recompute is idempotent');

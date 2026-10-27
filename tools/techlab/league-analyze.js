@@ -12,13 +12,18 @@ function analyze(file) {
   const snapOf = (r, T) => r.snaps.find(s => s.turn === T) || null;
   const gameMean = (r, T, k) => { const s = snapOf(r, T); if (!s) return null; const a = s.e.filter(e => e.alive); return a.length ? L.mean(a.map(e => e[k])) : null; };
   const out = { file, games: pairs.length, turns: D.turns, drop: D.drop || [], paired: {}, byDiff: {}, races: {}, endings: {}, techs: {}, xstats: {} };
-  // paired relative differences of game means
+  // paired relative differences of game means, as the geometric mean of the per-seed ratios (exp of the mean log ratio): the plain mean of ratios is biased
+  // upward by about the squared spread of chaotic games (two unrelated games of equal strength would read several percent "better")
   for (const T of [50, 100, 150, 200]) for (const k of SNAP_KEYS) {
-    const rel = [], base = [];
-    for (const p of pairs) { const a = gameMean(p.classic, T, k), b = gameMean(p.expanded, T, k); if (a === null || b === null || !(a > 0)) continue; rel.push(b / a - 1); base.push(a); }
-    if (rel.length < 5) continue;
-    out.paired[k + '@' + T] = { n: rel.length, classicMean: L.mean(base), rel: L.mean(rel), relTrim: L.trimmed(rel, 0.1), ci: L.bootCI(rel, L.mean, 1000) };
+    const lr = [], base = [];
+    for (const p of pairs) { const a = gameMean(p.classic, T, k), b = gameMean(p.expanded, T, k); if (a === null || b === null || !(a > 0) || !(b > 0)) continue; lr.push(Math.log(b / a)); base.push(a); }
+    if (lr.length < 5) continue;
+    out.paired[k + '@' + T] = { n: lr.length, classicMean: L.mean(base), rel: Math.exp(L.mean(lr)) - 1, relTrim: Math.exp(L.trimmed(lr, 0.1)) - 1, ci: L.bootCI(lr, L.mean, 1000).map(v => Math.exp(v) - 1), sdLog: L.sd(lr) };
   }
+  // game length (turn the game ended, or the cap) and wars declared, paired by seed
+  const pd = f => { const d = pairs.map(p => f(p.expanded) - f(p.classic)).filter(Number.isFinite); return { n: d.length, classic: L.mean(pairs.map(p => f(p.classic))), expanded: L.mean(pairs.map(p => f(p.expanded))), diff: L.mean(d), ci: L.bootCI(d, L.mean, 1000) }; };
+  out.length = pd(r => r.turnEnd);
+  if (pairs.every(p => p.classic.wars !== null && p.expanded.wars !== null)) out.wars = pd(r => r.wars);
   // game endings and length (conquest / council before the turn cap)
   for (const pool of ['classic', 'expanded']) {
     const rs = pairs.map(p => p[pool]);
@@ -80,6 +85,7 @@ if (require.main === module) {
   const pct = L.fmtPct;
   console.log('paired games:', A.games, ' dropped from pool:', A.drop.length);
   console.log(L.table(['metric', 'n', 'classic mean', 'expanded vs classic', '95% CI'], Object.keys(A.paired).map(k => { const o = A.paired[k]; return [k, o.n, o.classicMean.toFixed(1), pct(o.rel), o.ci.map(v => pct(v)).join('…')]; })));
+  console.log('\ngame length (turns):', JSON.stringify(A.length), A.wars ? '\nwars per game: ' + JSON.stringify(A.wars) : '');
   console.log('\nendings:', JSON.stringify(A.endings));
   console.log('\nladder (T100 techs / production):', Object.keys(A.byDiff).sort().map(k => k + ' ' + A.byDiff[k].techs.toFixed(1) + '/' + A.byDiff[k].production.toFixed(0)).join('  '));
   console.log('\nraces (T100 prod ratio):', Object.keys(A.races).sort().map(k => k + ' ' + A.races[k].prod.toFixed(2)).join('  '));

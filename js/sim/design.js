@@ -63,6 +63,7 @@ MOO.def(function (M) {
     if (!it.tech || (it.flags && it.flags.monster)) return false;
     if (it.tech.l <= 1) return true;
     const rs = E && E.research, done = rs && rs.completed && rs.completed[it.tech.f];
+    if (rs && Array.isArray(rs.nullify) && rs.nullify.some(x => x[0] === it.tech.f && x[1] === it.tech.l)) return false;   // tools/techlab twin trials only: owned but switched off
     if (done && done.indexOf(it.tech.l) >= 0) return true;
     return !!(it.grant && E && E.grants && E.grants[it.grant]);
   }

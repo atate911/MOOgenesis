@@ -130,7 +130,7 @@ MOO.def(function (M) {
     return { confess: cnt(100, 1e9), eliminated: cnt(71, 99), stopped: cnt(51, 70), clear: cnt(-1e9, 50) };
   };
   Sp.dts = function (S, A, T, mode) {
-    const comp1T = compTL(T) + (raceMod(T).spyDef | 0) + ((T.mods && T.mods.spyDef) | 0), comp2A = compTL(A) + (raceMod(A).spyOff | 0) + ((A.mods && A.mods.spyOff) | 0);   // + expansion techs
+    const comp1T = compTL(T) + (raceMod(T).spyDef | 0), comp2A = compTL(A) + (raceMod(A).spyOff | 0) + ((A.mods && A.mods.spyOff) | 0);   // + expansion: Neural Infiltration Net
     let dt1 = Math.max(0, comp2A - comp1T);
     const dt2 = Math.max(0, comp1T - comp2A) + Math.floor((T.security | 0) / 5);
     if (mode === 0) dt1 += 30;

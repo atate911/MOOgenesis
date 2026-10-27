@@ -50,7 +50,10 @@ MOO.def(function (M) {
     for (const x of seq) inSeq[x[0] * 1000 + x[1]] = true;
     for (let f = 0; f < 6; f++) for (const lvl of rs.completed[f]) if (!inSeq[f * 1000 + lvl]) order.push([f, lvl]);
     for (const x of seq) if (rs.completed[x[0]].indexOf(x[1]) >= 0) order.push(x);
+    // rs.nullify = [[field, level]…] (tools/techlab twin trials only, never set in a game): those techs count as owned (tech level, tiers, lists) but do nothing
+    const nul = Array.isArray(rs.nullify) && rs.nullify.length ? rs.nullify.map(x => x[0] * 1000 + x[1]) : null;
     for (const [f, lvl] of order) {
+      if (nul && nul.indexOf(f * 1000 + lvl) >= 0) continue;
       {
         // level 1 is the free starting BUNDLE (several techs share it); every other level is exactly one tech
         const list = lvl === 1 ? (T.l1Bundle && T.l1Bundle[f] ? T.l1Bundle[f] : [Rs.techAt(f, 1)]) : [Rs.techAt(f, lvl)];
@@ -144,7 +147,8 @@ MOO.def(function (M) {
     if (rs.project[f] === level) { rs.project[f] = 0; rs.invest[f] = 1; rs.cost[f] = 0; }
     Rs.recompute(E);
     const t = Rs.techAt(f, level);
-    if (t && t.pool === 'x' && M.Sim.XTech) {                     // permanent planet improvements reach every colony the empire already owns
+    const nulled = Array.isArray(rs.nullify) && rs.nullify.some(x => x[0] === f && x[1] === level);
+    if (t && t.pool === 'x' && M.Sim.XTech && !nulled) {          // permanent planet improvements reach every colony the empire already owns
       const fx = t.effects || {};
       if (fx.arcology || fx.domes || fx.smallWorld) M.Sim.XTech.improveAll(S, E);
     }

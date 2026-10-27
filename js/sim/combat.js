@@ -397,10 +397,8 @@ MOO.def(function (M) {
   function mkUnit(B, id, sideIdx, side, ss, slot, count, x, y) {
     const u = mkUnit0(B, id, sideIdx, side, ss, slot, count, x, y), xm = side.xm;
     if (!xm) return u;
-    u.comp += xm.comp; u.def += xm.def; u.mdef += xm.mdef; u.init += xm.init; u.speed += xm.speed; u.actman = u.speed;
+    u.comp += xm.comp; u.mdef += xm.mdef; u.init += xm.init; u.speed += xm.speed; u.actman = u.speed;
     if (xm.absorb && (ss.absorb | 0) > 0 && !B.nebula) u.absorb += xm.absorb;
-    if (xm.hpPct) u.hp1 = u.hp2 = Math.floor(u.hp1 * (100 + xm.hpPct) / 100);
-    if (xm.repair > u.repair) u.repair = xm.repair;
     if (xm.misshield > u.misshield) u.misshield = xm.misshield;
     if (xm.warhead) for (const w of u.weapons) if (w.kind === 'missile' || w.kind === 'torpedo') { w.dmin = Math.floor(w.dmin * (100 + xm.warhead) / 100); w.dmax = Math.floor(w.dmax * (100 + xm.warhead) / 100); }
     return u;
@@ -425,7 +423,6 @@ MOO.def(function (M) {
     if (!xm) return u;
     u.comp += xm.baseComp;
     if (xm.baseHpPct) u.hp1 = u.hp2 = Math.floor(u.hp1 * (100 + xm.baseHpPct) / 100);
-    if (xm.pshield && (pl.shield | 0) > 0 && !B.nebula) u.absorb += xm.pshield;
     return u;
   }
   function mkPlanetUnit0(B, pl, sideIdx, side) {
@@ -1628,7 +1625,7 @@ MOO.def(function (M) {
     for (let k = 0; k < 6; k++) { const n = side.ships ? side.ships[k] | 0 : 0, ss = side.designs && side.designs[k]; if (n > 0 && ss) W += n * designWeight(side, ss); }
     if (battle.planet && battle.planetSide === i) {
       let P = ((side.tl ? (side.tl[5] | 0) + (side.tl[2] | 0) : 2)) * 75 * (battle.planet.bases | 0);
-      if (side.xm && M.Sim.XTech) P = Math.floor(P * (100 + M.Sim.XTech.planetWeightPct(side.xm)) / 100);      // expansion: targeting arrays, silos, phase barrier
+      if (side.xm && M.Sim.XTech) P = Math.floor(P * (100 + M.Sim.XTech.planetWeightPct(side.xm)) / 100);      // expansion: Orbital Targeting Arrays, Hardened Missile Silos
       W += P;
     }
     const other = battle.sides[1 - i];
@@ -1738,8 +1735,7 @@ MOO.def(function (M) {
         p.bases = Math.max(0, (p.bases | 0) - (pr.basesLost | 0));
         p.factories = Math.max(0, (p.factories | 0) - (pr.factoriesKilled | 0));
         popLost = Math.min(p.pop | 0, pr.popKilled | 0); bio = pr.bioDamage | 0;
-        if (M.Sim.XTech) {                                                            // expansion: Bio-Containment Fields, Planetary Stasis Field
-          if (bio && (S.empires[p.owner].mods || {}).bioHalf) bio = Math.floor(bio / 2);
+        if (M.Sim.XTech) {                                                            // expansion: Planetary Stasis Field
           const fl = M.Sim.XTech.siegeFloor(S, p);
           if (fl) popLost = Math.max(0, Math.min(popLost, (p.pop | 0) - fl));
         }

@@ -19,20 +19,18 @@
 //   inPool(E, t) / poolOf(S|E)           does this empire's game use the expansion?  ('x' | '')
 //
 // EFFECT KEYS (fx) — folded by sim/research.js like the classic ones: numbers best value wins (highest; lowest for MIN_KEYS), booleans OR; BONUS_KEYS are
-// then ADDED to a classic key (scanBonus → scan, fuelBonus → fuel unless unlimited, transBonus → transportSpeed). Every hook is a no-op unless owned.
+// then ADDED to a classic key (fuelBonus → fuel unless unlimited, transBonus → transportSpeed). Every hook is a no-op unless owned.
 //   survey            parsecs    stars within (scanner range + survey) of an own colony are explored (planets known)            sim/vis.js
-//   autoFactories     n          every colony may build n more factories, run without workers                                    sim/colony.js
-//   xcomp xdef xmdef  levels     + attack / beam defence / missile defence of every ship (tactical) — weights: sim/combat.js
+//   xcomp xmdef       levels     + attack / missile defence of every ship (tactical) — weights: sim/xtech.js
 //   xabsorb           points     + shield absorption of every ship that carries a deflector
-//   xhpPct            percent    + hit points of every ship                      xrepair  percent  ships repair at least this share of their HP per round
 //   xmisshield        percent    ships shoot down at least this share of incoming missiles      xspeed / xinit  + combat speed / initiative
 //   warheadPct        percent    + damage of missiles, torpedoes and bombs
 //   mines             percent    enemy stacks fighting at your colony lose this share of their hit points as the battle opens (weights: × (1 − mines/100))
-//   baseCompX         levels     + attack level of your missile bases       baseHpPct  percent  + missile-base hit points       pshieldX  + planetary-shield absorption
-//   baseCostPct       percent    price of a missile base (MIN)              planetWeight from the three keys above in AI-vs-AI battles (sim/combat.js)
-//   spyDef / spyOff   points     added to Computers TL in counter-espionage / infiltration rolls      spyCostPct  percent  spy price (MIN)
+//   baseCompX         levels     + attack level of your missile bases       baseHpPct  percent  + missile-base hit points
+//   baseCostPct       percent    price of a missile base (MIN)              planetWeight from the two keys above in AI-vs-AI battles (sim/combat.js)
+//   spyOff            points     added to Computers TL in infiltration rolls      spyCostPct  percent  spy price (MIN)                  sim/spy.js
 //   reserveInterest   percent    the reserve earns this share per turn, at most a tenth of gross production                         sim/econ.js
-//   posAct            percent    + positive relation changes you cause        tradePts  points  + trade efficiency      tradeGrowth  × efficiency growth   sim/diplo.js
+//   posAct            percent    + positive relation changes you cause                                                            sim/diplo.js
 //   councilBonus      votes'     AI voters' weight for you in the Galactic Council                                                  sim/council.js
 //   rpTreaty          percent    research output per empire you have a non-aggression pact or alliance with (at most 4 of them)   sim/econ.js
 //   researchInterest  percent    research interest per year (classic 15) and its cap becomes 3 × this year's RP                    sim/research.js
@@ -47,12 +45,10 @@
 //   bombPct           percent    + bombardment damage you deal          bombDefPct  percent  bombardment damage you suffer (MIN)
 //   gauntletPct       percent    + transport losses of invaders approaching your colonies     gauntletOwnPct  percent  your own transport losses (MIN)
 //   siegeFloor        percent    bombardment / bio-weapons / battle collateral never push a colony below this share of its max population
-//   bioHalf           flag       bio-weapon casualties halved, never struck by plague
 //   arcology / domes / smallWorld  percent  permanent max-population improvements (all worlds / hostile worlds / worlds of base max pop ≤ 40), min +5 each
 //   hostileGrowth     flag       hostile worlds grow at the normal rate       growthPct  percent  + natural growth
-//   projectCostPct    percent    soil enrichment / atmospheric terraforming project prices (MIN)      terraformCostDelta  BC  terraforming per point cheaper
+//   terraformCostDelta  BC       terraforming is this much cheaper per point of max population
 //   seedFertile       flag       new colonies on normal worlds are founded fertile
-//   disaster          flag       no earthquakes, comets or industrial accidents; plague cures / nova stabilisation cost half
 //   beaconWarp        warp       fleets and transports moving between two of your colonies fly faster      warpBonus  warp  every fleet
 //   snare             warp       hostile fleets bound for your colonies slow down within 4 parsecs (never below warp 1)            sim/fleet.js
 //   evacuate          percent    of the population of a colony you lose escapes to your nearest colony with room                       sim/ground.js
@@ -67,18 +63,9 @@ MOO.def(function (M) {
     { l: 3, id: 'stellar-survey-probes', n: 'Stellar Survey Probes', ty: 'scanner', fx: { survey: 2 }, tags: ['logistics'],
       d: 'Cheap robot probes that chart every system just beyond your scanners, revealing its planets.',
       say: [['Survey', 'stars within scanner range + 2 parsecs are explored']] },
-    { l: 9, id: 'factory-supervisor-ai', n: 'Factory Supervisor AI', ty: 'industry', fx: { autoFactories: 3 }, tags: ['economy'],
-      d: 'A supervising intelligence that runs three extra factories on every colony with no workers at all.',
-      say: [['Automated factories', '+3 per colony, no workers needed']] },
     { l: 11, id: 'tactical-combat-analyzers', n: 'Tactical Combat Analyzers', ty: 'computer', g: 'x-fire-control', fx: { xcomp: 1 }, tags: ['combat'],
       d: 'Battle analysis software that feeds every gunner live firing solutions.',
       say: [['Fleet attack', '+1 level for every ship']] },
-    { l: 14, id: 'quantum-encryption', n: 'Quantum Encryption', ty: 'espionage', fx: { spyDef: 15 }, tags: ['espionage'],
-      d: 'Unbreakable entangled-photon codes that make enemy spies far more likely to be caught.',
-      say: [['Counter-espionage', '+15']] },
-    { l: 19, id: 'universal-translator', n: 'Universal Translator', ty: 'diplomacy', fx: { posAct: 50, tradePts: 15 }, tags: ['diplomacy'],
-      d: 'Flawless translation of alien languages and customs: goodwill grows faster and trade runs smoother.',
-      say: [['Goodwill', '+50% to every positive relation change'], ['Trade', '+15 points of efficiency']] },
     { l: 21, id: 'galactic-banking-network', n: 'Galactic Banking Network', ty: 'finance', fx: { reserveInterest: 5 }, tags: ['economy'],
       d: 'A subspace banking network that invests your treasury, earning interest on the reserve every year.',
       say: [['Reserve interest', '5% a year (at most 10% of gross production)']] },
@@ -112,9 +99,6 @@ MOO.def(function (M) {
     { l: 12, id: 'robotic-garrisons', n: 'Robotic Garrisons', ty: 'ground', fx: { groundDef: 10 }, tags: ['defence', 'ground'],
       d: 'Armoured robot militias that stand beside your colonists whenever a colony is invaded.',
       say: [['Ground defence', '+10']] },
-    { l: 19, id: 'damage-control-teams', n: 'Damage Control Teams', ty: 'special', fx: { xrepair: 5 }, tags: ['combat'],
-      d: 'Trained damage-control crews aboard every ship who patch hull breaches in the heat of battle.',
-      say: [['Ship repair', '5% of hit points per round (better repair devices still apply)']] },
     { l: 21, id: 'battlefield-salvage', n: 'Battlefield Salvage', ty: 'salvage', fx: { salvage: 20 }, tags: ['combat', 'economy'],
       d: 'Salvage fleets that strip the wrecks after every battle you win and sell what they recover.',
       say: [['Salvage', '20% of the price of destroyed enemy ships, after battles you win']] },
@@ -145,31 +129,16 @@ MOO.def(function (M) {
     { l: 6, id: 'pressure-domes', n: 'Pressure Domes', ty: 'planetary', fx: { domes: 25 }, tags: ['population'],
       d: 'Force-field domes that seal whole cities against a hostile sky, raising the limit on harsh worlds.',
       say: [['Hostile worlds', '+25% max population (at least +5), a permanent improvement']] },
-    { l: 11, id: 'shield-capacitors', n: 'Shield Capacitors', ty: 'shield', g: 'x-shield-boost', fx: { xabsorb: 1 }, tags: ['combat'],
-      d: 'Capacitor banks that overcharge shipboard deflectors to absorb more of every hit.',
-      say: [['Ship deflectors', 'absorb +1 per hit']] },
     { l: 17, id: 'repulsor-field-net', n: 'Repulsor Field Net', ty: 'planetary', fx: { gauntletPct: 30, bombDefPct: 75 }, tags: ['defence'],
       d: 'A repulsor net around your colonies that batters enemy landing craft and deflects bombardment.',
       say: [['Invaders', '+30% transport losses'], ['Bombardment', '−25% damage taken']] },
-    { l: 23, id: 'flux-shields', n: 'Flux Shields', ty: 'shield', fx: { xdef: 1 }, tags: ['combat'],
-      d: 'Fluctuating shield harmonics that make every ship harder to target with beams.',
-      say: [['Ship defence', '+1 beam defence']] },
-    { l: 25, id: 'stealth-landing-craft', n: 'Stealth Landing Craft', ty: 'invasion', g: 'x-landing', fx: { gauntletOwnPct: 50 }, tags: ['offence', 'ground'],
+    { l: 25, id: 'stealth-landing-craft', n: 'Stealth Landing Craft', ty: 'invasion', fx: { gauntletOwnPct: 50 }, tags: ['offence', 'ground'],
       d: 'Troop transports wrapped in sensor-scattering fields, so far fewer are lost on the run in.',
       say: [['Troop transports', 'losses on approach halved']] },
-    { l: 28, id: 'structural-integrity-fields', n: 'Structural Integrity Fields', ty: 'armor', fx: { xhpPct: 15 }, tags: ['combat'],
-      d: 'Force fields woven through the hull itself, letting every ship take more punishment.',
-      say: [['Ship hit points', '+15%']] },
-    { l: 33, id: 'phase-barrier', n: 'Phase Barrier', ty: 'planetary', fx: { pshieldX: 5 }, tags: ['defence'],
-      d: 'A phase layer beneath every planetary shield that absorbs more of each hit.',
-      say: [['Planetary shields', 'absorb +5 per hit']] },
-    { l: 35, id: 'gravitic-lensing-array', n: 'Gravitic Lensing Array', ty: 'scanner', fx: { scanBonus: 2 }, tags: ['logistics'],
-      d: 'Gravitational lenses that bend distant starlight into your sensors, extending scanner range.',
-      say: [['Scanner range', '+2 parsecs']] },
     { l: 36, id: 'inertial-shield-harmonics', n: 'Inertial Shield Harmonics', ty: 'shield', fx: { xmdef: 2 }, tags: ['combat'],
       d: 'Shield pulses timed to deflect incoming warheads, raising the missile defence of every ship.',
       say: [['Ship missile defence', '+2']] },
-    { l: 41, id: 'absorption-lattice', n: 'Absorption Lattice', ty: 'shield', g: 'x-shield-boost', fx: { xabsorb: 2 }, tags: ['combat'],
+    { l: 41, id: 'absorption-lattice', n: 'Absorption Lattice', ty: 'shield', fx: { xabsorb: 2 }, tags: ['combat'],
       d: 'A lattice of energy sinks behind each deflector that soaks up even more of every hit.',
       say: [['Ship deflectors', 'absorb +2 per hit']] },
     { l: 48, id: 'planetary-stasis-field', n: 'Planetary Stasis Field', ty: 'planetary', fx: { siegeFloor: 25 }, tags: ['defence'],
@@ -187,28 +156,19 @@ MOO.def(function (M) {
     { l: 11, id: 'biomass-reactors', n: 'Biomass Reactors', ty: 'eco', fx: { workerPct: 10 }, tags: ['economy'],
       d: 'Reactors that turn colonial biomass into power, adding to the output of every worker.',
       say: [['Worker output', '+10%']] },
-    { l: 19, id: 'bio-engineered-soil', n: 'Bio-Engineered Soil', ty: 'growth', nv: 1, fx: { projectCostPct: 67 }, tags: ['population'],
-      d: 'Tailored microbes that do much of the work of soil enrichment and atmospheric terraforming.',
-      say: [['Planet projects', 'soil and atmosphere projects cost −33%']] },
+    { l: 19, id: 'gaia-seeding', n: 'Gaia Seeding', ty: 'growth', nv: 1, fx: { seedFertile: true }, tags: ['population', 'expansion'],
+      d: 'Colony ships carry seed banks that make the soil of a new world fertile from the first day.',
+      say: [['New colonies', 'normal worlds are founded fertile']] },
     { l: 25, id: 'terraforming-nanites', n: 'Terraforming Nanites', ty: 'terraform', fx: { terraformCostDelta: 1 }, tags: ['population'],
       d: 'Self-replicating nanites that reshape planets for less: every point of terraforming costs less.',
       say: [['Terraforming', '−1 BC per point (at least 1)']] },
     { l: 28, id: 'small-world-engineering', n: 'Small World Engineering', ty: 'terraform', fx: { smallWorld: 25 }, tags: ['population'],
       d: 'Artificial gravity and buried habitats that let small worlds hold more people.',
       say: [['Small worlds', '+25% max population on worlds of base size 40 or less (at least +5), permanent']] },
-    { l: 29, id: 'planetary-disaster-response', n: 'Planetary Disaster Response', ty: 'resilience', fx: { disaster: true }, tags: ['resilience'],
-      d: 'Seismic dampers, comet interceptors and emergency medical corps: your worlds shrug off disasters.',
-      say: [['Disasters', 'no earthquakes, comets or industrial accidents'], ['Plague / supernova', 'cures and stabilisation cost half']] },
     { l: 33, id: 'clone-troopers', n: 'Clone Troopers', ty: 'ground', fx: { groundOff: 10 }, tags: ['offence', 'ground'],
       d: 'Vat-grown soldiers bred for war who fight much harder when your troops invade a planet.',
       say: [['Invading troops', '+10']] },
-    { l: 37, id: 'bio-containment-fields', n: 'Bio-Containment Fields', ty: 'defense', fx: { bioHalf: true }, tags: ['resilience', 'defence'],
-      d: 'Planet-wide quarantine fields that halve bio-weapon casualties and keep every plague away.',
-      say: [['Bio-weapons', 'casualties halved'], ['Plague', 'never strikes your worlds']] },
-    { l: 39, id: 'gaia-seeding', n: 'Gaia Seeding', ty: 'growth', nv: 1, fx: { seedFertile: true }, tags: ['population', 'expansion'],
-      d: 'Colony ships carry seed banks that make the soil of a new world fertile from the first day.',
-      say: [['New colonies', 'normal worlds are founded fertile']] },
-    { l: 43, id: 'hyper-fertility-treatments', n: 'Hyper-Fertility Treatments', ty: 'growth', g: 'x-growth', fx: { growthPct: 50 }, tags: ['population'],
+    { l: 39, id: 'hyper-fertility-treatments', n: 'Hyper-Fertility Treatments', ty: 'growth', g: 'x-growth', fx: { growthPct: 50 }, tags: ['population'],
       d: 'Advanced fertility medicine that makes natural population growth faster still.',
       say: [['Population growth', '+50%']] },
   ];
@@ -217,21 +177,15 @@ MOO.def(function (M) {
     { l: 7, id: 'interstellar-ramscoops', n: 'Interstellar Ramscoops', ty: 'fuel', fx: { fuelBonus: 1 }, tags: ['expansion', 'logistics'],
       d: 'Ramscoops that harvest interstellar hydrogen in flight, stretching the range of every ship.',
       say: [['Ship range', '+1 parsec on top of your fuel cells']] },
-    { l: 8, id: 'navigation-beacons', n: 'Navigation Beacons', ty: 'logistics', fx: { beaconWarp: 1 }, tags: ['logistics'],
+    { l: 13, id: 'navigation-beacons', n: 'Navigation Beacons', ty: 'logistics', fx: { beaconWarp: 1 }, tags: ['logistics'],
       d: 'A chain of subspace beacons that speeds every fleet and transport flying between your colonies.',
       say: [['Between your colonies', '+1 warp for fleets and transports']] },
-    { l: 13, id: 'assault-shuttles', n: 'Assault Shuttles', ty: 'invasion', g: 'x-landing', fx: { gauntletOwnPct: 75 }, tags: ['offence', 'ground'],
-      d: 'Fast, armoured landing shuttles: fewer troop transports are lost on the run past enemy defences.',
-      say: [['Troop transports', '−25% losses on approach']] },
-    { l: 17, id: 'hyperspace-trade-lanes', n: 'Hyperspace Trade Lanes', ty: 'trade', fx: { tradeGrowth: 2, tradePts: 10 }, tags: ['diplomacy', 'economy'],
-      d: 'Charted merchant lanes on which trade agreements mature faster and run better ever after.',
-      say: [['Trade agreements', 'mature twice as fast, +10 points of efficiency']] },
+    { l: 17, id: 'emergency-warp-capacitors', n: 'Emergency Warp Capacitors', ty: 'engine', fx: { escape: 30 }, tags: ['combat'],
+      d: 'Capacitors that fling a doomed ship into warp, so part of a beaten fleet escapes destruction.',
+      say: [['Lost battles', '30% of the ships that would be destroyed escape']] },
     { l: 22, id: 'cryogenic-colony-berths', n: 'Cryogenic Colony Berths', ty: 'logistics', fx: { colonyShipCostPct: 75 }, tags: ['expansion'],
       d: 'Colonists travel frozen in compact cryo berths, making every colony ship cheaper.',
       say: [['Colony ships', '−25% cost']] },
-    { l: 26, id: 'emergency-warp-capacitors', n: 'Emergency Warp Capacitors', ty: 'engine', fx: { escape: 30 }, tags: ['combat'],
-      d: 'Capacitors that fling a doomed ship into warp, so part of a beaten fleet escapes destruction.',
-      say: [['Lost battles', '30% of the ships that would be destroyed escape']] },
     { l: 28, id: 'combat-thrusters', n: 'Combat Thrusters', ty: 'engine', fx: { xspeed: 1, xinit: 2 }, tags: ['combat'],
       d: 'Vectored thrusters for close manoeuvring: every ship moves further in combat and strikes sooner.',
       say: [['Combat speed', '+1'], ['Initiative', '+2']] },
@@ -241,15 +195,12 @@ MOO.def(function (M) {
     { l: 39, id: 'lifeboat-protocols', n: 'Lifeboat Protocols', ty: 'logistics', fx: { evacuate: 30 }, tags: ['resilience'],
       d: 'Evacuation fleets stand ready at every colony, so some of its people escape when a world falls.',
       say: [['Lost colonies', '30% of the population escapes to your nearest colony with room']] },
-    { l: 44, id: 'slipstream-drives', n: 'Slipstream Drives', ty: 'engine', g: 'x-warp', fx: { warpBonus: 1 }, tags: ['logistics'],
+    { l: 44, id: 'slipstream-drives', n: 'Slipstream Drives', ty: 'engine', fx: { warpBonus: 1 }, tags: ['logistics'],
       d: 'Drives that ride the wake of the engines ahead, pushing every fleet faster than its engines.',
       say: [['Fleet speed', '+1 warp']] },
     { l: 47, id: 'hyperlane-transports', n: 'Hyperlane Transports', ty: 'logistics', fx: { transBonus: 3 }, tags: ['logistics', 'offence'],
       d: 'Dedicated hyperlane carriers that rush colonists and troops between the stars.',
       say: [['Transports', '+3 parsecs per turn']] },
-    { l: 49, id: 'hyperwarp-overdrive', n: 'Hyperwarp Overdrive', ty: 'engine', g: 'x-warp', fx: { warpBonus: 2 }, tags: ['logistics'],
-      d: 'An overdrive that pushes every fleet well beyond what its engines can manage.',
-      say: [['Fleet speed', '+2 warp']] },
   ];
 
   const WE = [
@@ -263,13 +214,13 @@ MOO.def(function (M) {
 
   const ROWS = [CM, CN, FF, PL, PR, WE];
   const pad2 = n => (n < 10 ? '0' + n : String(n));
-  const MIN_KEYS = ['shipUpkeepPct', 'shipCostPct', 'colonyShipCostPct', 'baseCostPct', 'spyCostPct', 'bombDefPct', 'gauntletOwnPct', 'projectCostPct'];
-  const BONUS_KEYS = { scanBonus: 'scan', fuelBonus: 'fuel', transBonus: 'transportSpeed' };
-  const KEYS = ['survey', 'autoFactories', 'xcomp', 'xdef', 'xmdef', 'xabsorb', 'xhpPct', 'xrepair', 'xmisshield', 'xspeed', 'xinit', 'warheadPct', 'mines', 'baseCompX',
-    'baseHpPct', 'pshieldX', 'baseCostPct', 'spyDef', 'spyOff', 'spyCostPct', 'reserveInterest', 'posAct', 'tradePts', 'tradeGrowth', 'councilBonus', 'rpTreaty',
-    'researchInterest', 'colonyPop', 'colonyFac', 'asteroid', 'workerPct', 'groundDef', 'groundOff', 'salvage', 'reverseEng', 'escape', 'shipUpkeepPct', 'shipCostPct',
-    'colonyShipCostPct', 'bombPct', 'bombDefPct', 'gauntletPct', 'gauntletOwnPct', 'siegeFloor', 'bioHalf', 'arcology', 'domes', 'smallWorld', 'hostileGrowth', 'growthPct',
-    'projectCostPct', 'terraformCostDelta', 'seedFertile', 'disaster', 'beaconWarp', 'warpBonus', 'snare', 'evacuate', 'scanBonus', 'fuelBonus', 'transBonus'];
+  const MIN_KEYS = ['shipUpkeepPct', 'shipCostPct', 'colonyShipCostPct', 'baseCostPct', 'spyCostPct', 'bombDefPct', 'gauntletOwnPct'];
+  const BONUS_KEYS = { fuelBonus: 'fuel', transBonus: 'transportSpeed' };
+  const KEYS = ['survey', 'xcomp', 'xmdef', 'xabsorb', 'xmisshield', 'xspeed', 'xinit', 'warheadPct', 'mines', 'baseCompX', 'baseHpPct', 'baseCostPct', 'spyOff',
+    'spyCostPct', 'reserveInterest', 'posAct', 'councilBonus', 'rpTreaty', 'researchInterest', 'colonyPop', 'colonyFac', 'asteroid', 'workerPct', 'groundDef', 'groundOff',
+    'salvage', 'reverseEng', 'escape', 'shipUpkeepPct', 'shipCostPct', 'colonyShipCostPct', 'bombPct', 'bombDefPct', 'gauntletPct', 'gauntletOwnPct', 'siegeFloor',
+    'arcology', 'domes', 'smallWorld', 'hostileGrowth', 'growthPct', 'terraformCostDelta', 'seedFertile', 'beaconWarp', 'warpBonus', 'snare', 'evacuate', 'fuelBonus',
+    'transBonus'];
 
   function make(f, r) {
     const t = {

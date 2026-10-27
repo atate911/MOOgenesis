@@ -21,9 +21,7 @@ MOO.def(function (M) {
   C.wasteScale = E => (E.race === 'silicoid' ? 0 : (E.mods.wasteScale === undefined ? 10 : E.mods.wasteScale));
   C.ecoN = E => E.mods.ecoRestore || 2;                       // waste units removed per BC
   C.plLevel = E => E.research.tl[3];
-  C.autoFac = E => (E.mods && E.mods.autoFactories) | 0;            // Factory Supervisor AI (expansion): factories that need no workers
-  C.maxFactories = (E, p) => Math.min(MAX_FACTORIES, p.mp3 * C.oper(E) + C.autoFac(E));
-  C.operating = (E, p) => Math.min(p.factories, Math.max(0, p.pop - (p.rebels | 0)) * C.oper(E) + C.autoFac(E));
+  C.maxFactories = (E, p) => Math.min(MAX_FACTORIES, p.mp3 * C.oper(E));
   C.richMul = (p, bc) => { const r = RICH[p.special] || [1, 1]; return Math.floor(bc * r[0] / r[1]); };
   C.maxPopDisplay = (E, p) => (E && E.race === 'silicoid' ? p.mp3 : Math.max(10, p.mp3 - (p.waste | 0)));
 
@@ -47,7 +45,8 @@ MOO.def(function (M) {
   // Gross BC of one planet BEFORE empire-wide upkeep/tax. (§3.2)
   C.gross = function (S, E, p) {
     if (p.unrest === 2) return 0;                                         // rebellion: nothing
-    const opFact = C.operating(E, p);
+    const oper = C.oper(E), workers = Math.max(0, p.pop - (p.rebels | 0));
+    const opFact = Math.min(p.factories, workers * oper);
     let perPop = Math.floor(p.pop * (3 * C.plLevel(E) + 50) / 100);
     if (E.race === 'klackon') perPop *= 2;
     const xm = E.mods || {};
@@ -82,7 +81,7 @@ MOO.def(function (M) {
   // Minimum ECO % needed to keep the planet clean this turn (§3.4). Silicoids have none.
   C.ecoFloorPct = function (S, E, p) {
     if (E.race === 'silicoid' || !(p.spendable > 0)) return 0;
-    const operating = C.operating(E, p);
+    const operating = Math.min(p.factories, Math.max(0, p.pop - (p.rebels | 0)) * C.oper(E));
     const newWaste = Math.floor(operating * C.wasteScale(E) / 10);
     const need = Math.floor((newWaste + (p.waste | 0)) / C.ecoN(E));       // BC to clear this turn's and old waste
     return clamp(Math.ceil(100 * need / p.spendable), 0, 100);
@@ -122,7 +121,7 @@ MOO.def(function (M) {
   C.buildEco = function (S, E, p) {
     const sil = E.race === 'silicoid';
     let eco = Math.floor(p.spendable * p.sliders[ECO] / 100);
-    const operating = C.operating(E, p);
+    const operating = Math.min(p.factories, Math.max(0, p.pop - (p.rebels | 0)) * C.oper(E));
     if (!sil) {
       const newWaste = Math.floor(operating * C.wasteScale(E) / 10);
       const pct = Math.floor((p.waste | 0) * 100 / Math.max(1, p.mp2));
@@ -140,18 +139,17 @@ MOO.def(function (M) {
     // leftover flow into the next block. Atmospheric terraforming (hostile): at >= 200 BC. Soil enrichment (normal): at > 150 BC; the progress, capped at 150, is KEPT as the
     // start of advanced soil, so normal -> fertile -> gaia costs 300 in all. Advanced soil (normal or fertile): at > 300 BC, accumulator reset.
     if (!sil) {
-      const pc = E.mods.projectCostPct || 100, A = Math.floor(200 * pc / 100), B = Math.floor(150 * pc / 100), G = Math.floor(300 * pc / 100);   // expansion: Bio-Engineered Soil
       if (eco > 0 && E.mods.atmos && p.growth === 'hostile') {
         p.acc.eco += eco;
-        if (p.acc.eco >= A) { eco = p.acc.eco - A; p.acc.eco = 0; C.atmosTerraform(S, E, p); } else eco = 0;
+        if (p.acc.eco >= 200) { eco = p.acc.eco - 200; p.acc.eco = 0; C.atmosTerraform(S, E, p); } else eco = 0;
       }
       if (eco > 0 && E.mods.soil && p.growth === 'normal') {
         p.acc.eco += eco;
-        if (p.acc.eco > B) { eco = p.acc.eco - B; p.acc.eco = Math.min(p.acc.eco, B); C.soilEnrich(S, E, p, 'fertile'); } else eco = 0;
+        if (p.acc.eco > 150) { eco = p.acc.eco - 150; p.acc.eco = Math.min(p.acc.eco, 150); C.soilEnrich(S, E, p, 'fertile'); } else eco = 0;
       }
       if (eco > 0 && E.mods.advSoil && (p.growth === 'normal' || p.growth === 'fertile')) {
         p.acc.eco += eco;
-        if (p.acc.eco > G) { eco = p.acc.eco - G; p.acc.eco = 0; C.soilEnrich(S, E, p, 'gaia'); } else eco = 0;
+        if (p.acc.eco > 300) { eco = p.acc.eco - 300; p.acc.eco = 0; C.soilEnrich(S, E, p, 'gaia'); } else eco = 0;
       }
     }
     // terraforming increments
