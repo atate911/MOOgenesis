@@ -416,7 +416,7 @@
         const S = M.Gfx && M.Gfx.pick('space');
         if (S && typeof S.makeBackdrop === 'function') {
           try {
-            const src = S.makeBackdrop(Math.min(w, 1280), Math.min(hh, 720), seed, { intensity: .85, stars: 1.1, palette: ['#2b2a86', '#14357a', '#5b2a86', '#0d4f7a'] });
+            const src = S.makeBackdrop(Math.min(w, 1280), Math.min(hh, 720), seed, S.sky ? S.sky({ intensity: .8, stars: 1.1, floor: 0.08 }) : { intensity: .85, stars: 1.1, palette: ['#2b2a86', '#14357a', '#5b2a86', '#0d4f7a'] });   // the one sky
             if (isDrawable(src)) { c.drawImage(src, 0, 0, pw, ph); done = true; }
           } catch (e) { console.warn('[ui] Gfx.Space.makeBackdrop failed, using fallback:', e); }
         }

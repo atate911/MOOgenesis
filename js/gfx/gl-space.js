@@ -125,7 +125,7 @@
   const NEB_FS = HEAD + `
     in vec2 vUv; out vec4 o;
     uniform vec2 uRes; uniform float uT; uniform vec3 uOff; uniform vec2 uPan, uDrift;
-    uniform float uScale, uDust, uInt; uniform vec3 uPal[4]; uniform int uOct; uniform vec4 uBand; uniform vec3 uCloud;
+    uniform float uScale, uDust, uInt, uFloor; uniform vec3 uPal[4]; uniform int uOct; uniform vec4 uBand; uniform vec3 uCloud; uniform vec4 uWarm;
     ${NOISE}
     vec3 palAt(float x){ x = clamp(x, 0.0, 0.999) * 3.0; int i = int(x); float f = x - float(i); f = f * f * (3.0 - 2.0 * f); return mix(uPal[i], uPal[i + 1], f); }
     void main(){
@@ -139,13 +139,13 @@
       float f = fbm(P + vec3(2.7 * r, 0.0), uOct);
       vec2 cd = vec2((vUv.x - uCloud.x) * asp, vUv.y - uCloud.y);
       float bd = exp(-pow(dot(vUv - vec2(0.5), uBand.xy) / uBand.z - uBand.w, 2.0));
-      float mask = clamp(0.30 + 0.55 * bd + 0.60 * exp(-dot(cd, cd) / (uCloud.z * uCloud.z)), 0.0, 1.0);
+      float mask = clamp(uFloor + 0.55 * bd + 0.60 * exp(-dot(cd, cd) / (uCloud.z * uCloud.z)), 0.0, 1.0);
       float gas = ss(0.30, 0.88, f) * (0.35 + 0.65 * ss(0.20, 0.66, big)) * mask;
       float hue = fbm(vec3(p * 0.42 + 40.0, tz * 0.4), 3) * 1.3 - 0.14 + (f - 0.5) * 0.5 + (r.x - 0.5) * 0.45;
-      vec3 c = palAt(hue);
+      vec3 c = mix(palAt(hue), uWarm.rgb, uWarm.w * ss(0.40, 0.95, gas / max(uInt, 0.05) * 0.8));   // dense gas drifts to the warm hue, thin wisps stay cool
       float fil = pow(clamp(ridged(vec3(p * 2.2 + 1.8 * r, tz * 1.3), 4), 0.0, 1.0), 2.4);
       float core = pow(gas, 2.6);
-      vec3 col = c * gas * 0.80 + palAt(hue + 0.3) * fil * gas * 0.95 + (c * 0.7 + 0.10) * core * 0.70;
+      vec3 col = c * gas * 0.80 + palAt(hue + 0.3) * fil * gas * 0.95 + mix(c * 0.7 + 0.10, uWarm.rgb, uWarm.w) * core * 0.70;   // hot cores drift toward the warm hue (w = how far)
       float dust = smoothstep(0.50, 0.78, fbm(vec3(p * 1.3 + 1.6 * r + vec2(4.0, -3.0), tz * 0.7 + 9.0), 4)) * uDust;
       dust *= smoothstep(0.10, 0.50, gas + 0.4 * big);
       col *= 1.0 - 0.84 * dust;
@@ -306,6 +306,8 @@
       int: clamp(o.intensity === undefined ? 0.55 : o.intensity, 0, 1.6) * 1.15 * S.tune.nebGain,
       vig: vg,
       dust: clamp(o.dust === undefined ? 1 : o.dust, 0, 1.5),
+      floor: clamp(o.floor === undefined ? 0.30 : o.floor, 0, 1),                                       // same semantics as the CPU path
+      warm: (function () { if (!o.warm) return [0, 0, 0, 0]; const c = hexRGB(o.warm); return [c[0], c[1], c[2], clamp(o.warmK === undefined ? 0.55 : o.warmK, 0, 1)]; })(),
       scale: clamp(o.scale === undefined ? 3.6 : o.scale, 0.6, 12),
       starK: Math.max(0, o.stars === undefined ? 1 : o.stars),
       twinkle: o.twinkle === undefined ? 1 : o.twinkle,
@@ -348,7 +350,7 @@
     const p = prog('nebula', NEB_FS); if (!p) return false;
     g.bindFramebuffer(g.FRAMEBUFFER, fbo.fb); g.viewport(0, 0, fbo.w, fbo.h); g.disable(g.BLEND);
     p.use().f2('uRes', fbo.w, fbo.h).f1('uT', t).f3('uOff', P.off[0], P.off[1], P.off[2]).f2('uPan', P.pan[0], P.pan[1]).f2('uDrift', 0.0065, 0.0021)
-      .f1('uScale', P.scale).f1('uDust', P.dust).f1('uInt', P.int).i1('uOct', oct).f4('uBand', P.band[0], P.band[1], P.band[2], P.band[3]).f3('uCloud', P.cloud[0], P.cloud[1], P.cloud[2]);
+      .f1('uScale', P.scale).f1('uDust', P.dust).f1('uInt', P.int).f1('uFloor', P.floor).i1('uOct', oct).f4('uBand', P.band[0], P.band[1], P.band[2], P.band[3]).f3('uCloud', P.cloud[0], P.cloud[1], P.cloud[2]).f4('uWarm', P.warm[0], P.warm[1], P.warm[2], P.warm[3]);
     g.uniform3fv(p.u('uPal'), P.pal);
     GL.drawQuad();
     g.bindFramebuffer(g.FRAMEBUFFER, null);
@@ -398,6 +400,9 @@
     return null;
   }
   S.supported = function () { return !!(GL && GL.supported && GL.supported()); };
+  // the one sky (Space.SKY / Space.sky) through whichever module Gfx.pick('space') returns
+  Object.defineProperty(S, 'SKY', { get: function () { return M.Gfx.Space && M.Gfx.Space.SKY; } });
+  S.sky = function (over) { return M.Gfx.Space && M.Gfx.Space.sky ? M.Gfx.Space.sky(over) : Object.assign({}, over || {}); };
 
   S.makeBackdrop = function (w, h, seed, opts) {
     const t0 = now();

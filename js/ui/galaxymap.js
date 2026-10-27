@@ -407,7 +407,7 @@
       const a = sstep(-13, 13, best + (n1 - 0.5) * 34), i = (y * W + x) * 4;
       const cloud = 0.42 + 1.05 * n2 * (0.55 + 0.9 * n1), rim = Math.exp(-Math.pow((a - 0.42) / 0.16, 2)) * 0.5;
       const k = a * cloud + rim * 0.5 * a, wisp = Math.pow(1 - Math.abs(nz.fbm(nx * 3.1 + 21, ny * 3.1 + 9, 4) * 2 - 1), 3) * a * 0.26, hue = sstep(0.25, 0.75, n1), dith = (rnd() - 0.5) * 1.3;
-      d[i] = (lerp(70, 128, hue) * k + 205 * wisp) * 0.5 + dith; d[i + 1] = (lerp(34, 52, hue) * k + 140 * wisp) * 0.5 + dith; d[i + 2] = (lerp(128, 176, hue) * k + 255 * wisp) * 0.5 + dith; d[i + 3] = 255;
+      d[i] = (lerp(66, 118, hue) * k + 196 * wisp) * 0.5 + dith; d[i + 1] = (lerp(40, 58, hue) * k + 150 * wisp) * 0.5 + dith; d[i + 2] = (lerp(112, 158, hue) * k + 236 * wisp) * 0.5 + dith; d[i + 3] = 255;   // dusty violet, the sky's family
     }
     g.putImageData(img, 0, 0);
     return { canvas: c, x0, y0, w: x1 - x0, h: y1 - y0 };
@@ -1028,8 +1028,9 @@
       if (amb.key !== galaxyKey || !amb.world) {
         amb.key = galaxyKey;
         const asp = gh / gw, w = 240, hh = Math.round(clamp(240 * asp, 120, 300));
-        amb.world = { canvas: buildAmbientNebula(w, hh, 7, { scale: 3.1, warp: 1.5, t0: 0.4, t1: 0.92, gain: 0.42, wisp: 0.5, lens: true, colors: [[30, 44, 118], [64, 38, 120], [44, 130, 170]] }), x0: -gw * 0.2, y0: -gh * 0.2, w: gw * 1.4, h: gh * 1.4 };
-        if (!amb.far) amb.far = buildAmbientNebula(320, 180, 91, { scale: 4.2, warp: 1.9, t0: 0.42, t1: 0.92, gain: 0.3, wisp: 0.38, lens: false, colors: [[20, 34, 92], [54, 34, 104], [60, 108, 160]] });
+        // the galaxy-anchored cloud and the far dust in the one sky's hues (dusty mauve, grey navy, a warm wisp), not the old indigo / cyan
+        amb.world = { canvas: buildAmbientNebula(w, hh, 7, { scale: 3.1, warp: 1.5, t0: 0.4, t1: 0.92, gain: 0.36, wisp: 0.42, lens: true, colors: [[62, 48, 84], [52, 58, 100], [150, 118, 110]] }), x0: -gw * 0.2, y0: -gh * 0.2, w: gw * 1.4, h: gh * 1.4 };
+        if (!amb.far) amb.far = buildAmbientNebula(320, 180, 91, { scale: 4.2, warp: 1.9, t0: 0.42, t1: 0.92, gain: 0.28, wisp: 0.32, lens: false, colors: [[40, 34, 62], [44, 42, 80], [120, 100, 110]] });
       }
       const td = Math.min(2, dpr);
       if (!amb.tiles || amb.tileDpr !== td) {
@@ -1041,9 +1042,12 @@
       // optional external backdrop (MOO.Gfx.Space.makeBackdrop), rebuilt a little after a resize settles
       const Sp = M.Gfx && M.Gfx.pick('space');
       if (opts.backdrop !== 'builtin' && Sp && Sp.makeBackdrop && !amb.extFailed) {
-        const key = (W >> 5) + 'x' + (H >> 5);
+        // the GPU renders the sky at device resolution (a 4K screen is not an upscaled 1600-wide image); the CPU path keeps its 1600×900 cap
+        const gpu = M.Gfx.GLSpace && M.Gfx.GLSpace.supported && M.Gfx.GLSpace.supported() && Q.glow >= 0.75, bk = gpu ? Math.min(dpr, 2) : 1;
+        const bw = Math.min(Math.round(W * bk), gpu ? 3840 : 1600), bh = Math.min(Math.round(H * bk), gpu ? 2160 : 900);
+        const key = (bw >> 5) + 'x' + (bh >> 5);
         if (key !== amb.extKey && (!amb.ext || clock - amb.extAt > 0.4)) {
-          try { const c = Sp.makeBackdrop(Math.min(W, 1600), Math.min(H, 900), 'galaxymap', { intensity: 0.42, stars: 0.5, palette: ['#2a1d78', '#14357a', '#3a2a7a', '#0d4f7a'] }); if (c && (c.width || c.naturalWidth)) { amb.ext = c; amb.extKey = key; amb.extAt = clock; } else amb.extFailed = true; }
+          try { const c = Sp.makeBackdrop(bw, bh, 'galaxymap', Sp.sky ? Sp.sky({ stars: 0.5 }) : { intensity: 0.42, stars: 0.5, palette: ['#2a1d78', '#14357a', '#3a2a7a', '#0d4f7a'] }); if (c && (c.width || c.naturalWidth)) { amb.ext = c; amb.extKey = key; amb.extAt = clock; } else amb.extFailed = true; }
           catch (e) { amb.extFailed = true; console.warn('[GalaxyMap] Space.makeBackdrop failed, using built-in backdrop', e); }
         }
       }
@@ -1098,11 +1102,11 @@
     function paintBackdropStatic(g, z, px, py, zr, par, nl, drx, dry) {
       if (amb.ext) {
         const r = farRect(drx, dry);
-        g.fillStyle = '#03051a'; g.fillRect(0, 0, W, H);
+        g.fillStyle = '#030309'; g.fillRect(0, 0, W, H);
         g.drawImage(amb.ext, r.x, r.y, r.w, r.h);
       } else {
         const gk = W + 'x' + H;
-        if (amb.gradKey !== gk) { const gr = g.createRadialGradient(W * 0.5, H * 0.46, 0, W * 0.5, H * 0.5, Math.hypot(W, H) * 0.62); gr.addColorStop(0, '#0c1442'); gr.addColorStop(0.55, '#070c2b'); gr.addColorStop(1, '#03051a'); amb.grad = gr; amb.gradKey = gk; }
+        if (amb.gradKey !== gk) { const gr = g.createRadialGradient(W * 0.5, H * 0.46, 0, W * 0.5, H * 0.5, Math.hypot(W, H) * 0.62); gr.addColorStop(0, '#0e0c1e'); gr.addColorStop(0.55, '#070614'); gr.addColorStop(1, '#030309'); amb.grad = gr; amb.gradKey = gk; }
         g.fillStyle = amb.grad; g.fillRect(0, 0, W, H);
         // far dust layer (parallax)
         const far = amb.far, r = farRect(drx, dry);
@@ -1111,7 +1115,7 @@
       }
       // galaxy-anchored ambient cloud
       const wd = amb.world, wx = (wd.x0 - cam.x) * z + W / 2, wy = (wd.y0 - cam.y) * z + H / 2;
-      g.globalCompositeOperation = 'lighter'; g.globalAlpha = clamp((amb.ext ? 0.32 : 0.85) * Q.nebula, 0, 1);
+      g.globalCompositeOperation = 'lighter'; g.globalAlpha = clamp((amb.ext ? 0.16 : 0.85) * Q.nebula, 0, 1);   // over the sky painting the cloud is a hint, not a haze
       g.drawImage(wd.canvas, wx, wy, wd.w * z, wd.h * z);
       // parallax star layers
       g.globalCompositeOperation = 'lighter';

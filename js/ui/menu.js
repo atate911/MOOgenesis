@@ -127,7 +127,8 @@
     const key = w + 'x' + hh;
     if (key === bgKey || !M.Gfx.pick('space') || !M.Gfx.pick('space').makeBackdrop) return;
     bgKey = key;
-    bg = M.Gfx.pick('space').makeBackdrop(Math.min(w, 1600), Math.min(hh, 900), 'menu', { intensity: .9, stars: 1.3, palette: ['#3b1d86', '#14357a', '#7a2a86', '#0d5a7a'] });
+    const Sp = M.Gfx.pick('space');
+    bg = Sp.makeBackdrop(Math.min(w, 1600), Math.min(hh, 900), 'menu', Sp.sky ? Sp.sky({ intensity: .7, stars: 1.3, floor: 0.08 }) : { intensity: .9, stars: 1.3, palette: ['#3b1d86', '#14357a', '#7a2a86', '#0d5a7a'] });   // the one sky (the photoreal galaxy covers it when loaded)
   }
 
   // Continue = the newest save, in this browser or on the save server (that list arrives a moment later and rebuilds the menu if newer)
