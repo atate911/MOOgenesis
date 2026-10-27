@@ -30,6 +30,11 @@ Versions follow `MAJOR.MINOR.PATCH`; the live version is the `VERSION` file.
   waste, production) light up for a second, alongside the year's roll. The Fleets and Planets ledgers, mostly empty early in a game,
   sit on a faint star chart instead of flat brown. A fleet column with no design reads as empty. Phones: the research allocation row
   keeps the capability line whole and gives the project its own line with a full-width bar; the fleet grid's column headers stay on one line.
+- Galaxy map, thinned. The whole-galaxy view (the fit, or a step past it) now carries fewer marks per star: the star-chart grid and its
+  parsec ruler are off by default (the original had none; Options › Display turns them on), only owned stars, the selected one and Orion
+  carry names, and the colonisation glyphs show only on stars a colony ship can reach this turn. Zoom in and every explored star is named
+  and marked as before. A colony has one owner ring instead of a ring and a faint echo, the scan ring sits under the range ring in weight
+  and its radar sweep is gone, and the map's control column reads as two groups (view, layers).
 - Title screen. The world in the corner turns smoothly and visibly: its axis now tilts away from the viewer so mid-latitudes sweep
   past instead of a polar cap turning in place, one turn takes about a minute, the sun sits low on the galaxy's side so the terminator, the
   night-side city lights and the cloud shadows cross the visible half, and it drifts a little against the galaxy's slow zoom. Clouds on

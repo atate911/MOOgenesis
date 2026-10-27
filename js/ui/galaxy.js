@@ -23,7 +23,7 @@
     .gx-top { position:absolute; left:.7rem; top:.6rem; right:.7rem; display:flex; gap:.5rem; align-items:flex-start; pointer-events:none; z-index:3; }
     .gx-hud { pointer-events:auto; display:flex; gap:1.1rem; align-items:center; padding:.35rem .9rem; background:rgba(8,12,34,.72); backdrop-filter:blur(4px); border:1px solid rgba(214,179,106,.35); clip-path:polygon(.45rem 0,100% 0,100% calc(100% - .45rem),calc(100% - .45rem) 100%,0 100%,0 .45rem); font-size:.98rem; }
     .gx-hud .y { font:400 1.3rem var(--font-display); color:var(--brass-hi); letter-spacing:.04em; }
-    .gx-hudr { display:contents; }                                                /* the HUD minus the year: rebuilt on every state change */
+    .gx-hudr, .gx-chip { display:contents; }                                      /* the HUD minus the year: rebuilt on every state change (phones lay them out as rows) */
     .gx-hud .od { display:inline-block; height:1.2em; line-height:1.2em; overflow:hidden; vertical-align:bottom; }
     .gx-hud .od-in { display:flex; flex-direction:column; animation:gx-od .6s cubic-bezier(.3,.7,.2,1) both; }
     .gx-hud .od-in > span { height:1.2em; }
@@ -208,7 +208,7 @@
 
   // the year is an odometer: it stays in place while the rest of the HUD is rebuilt (on every state change), and the digits that change at the end
   // of a turn roll over (css .od); a new or loaded game sets it without the roll. Reduce motion makes the roll instant (base.css / options.js).
-  let yearEl = null, yearNum = null, restEl = null, yearShown = '';
+  let yearEl = null, yearNum = null, chipEl = null, restEl = null, yearShown = '';
   // the values of the HUD as the turn began (hudSnap, taken at turn:processing) against which the first HUD after turn:end is compared: the
   // reserve, income, research and colony count that changed light up (css .chg), so the end of a turn reads as a beat, not a silent swap
   let hudSnap = null, hudFlashUntil = 0, hudChg = {};
@@ -225,12 +225,12 @@
     if (!hudEl || !G.S) return;
     const S = G.S, E = G.player(), f = E.flow || {}, rp = E.research.total | 0;
     const colonies = S.planets.filter(p => p.owner === E.id).length;
-    if (!yearEl) { yearNum = h('span.yn'); yearEl = h('span.y', 'Year ', yearNum); restEl = h('span.gx-hudr'); UI.mount(hudEl, yearEl, restEl); }
+    if (!yearEl) { yearNum = h('span.yn'); yearEl = h('span.y', 'Year ', yearNum); chipEl = h('span.gx-chip'); restEl = h('span.gx-hudr'); UI.mount(hudEl, yearEl, chipEl, restEl); }
     setYear(Q.year(S));
+    UI.mount(chipEl, logChip());                                                       // phones only: the turn log's chip beside the year (css/phone.css lays the HUD out as year | chip / values)
     UI.mount(restEl,
       h('span', h('span.k', 'Reserve'), h('b.t-gold', { dataset: { k: 'bc' } }, U.fmt(E.bc)), ' ', h('span.t-gold', 'BC'), f.taxToReserve ? h('span.t-leaf.small', ' +' + f.taxToReserve) : null),
-      logChip(),                                                                       // phones only: ends the first line of the wrapped HUD
-      h('span', h('span.k', 'Income'), h('b' + ((f.net | 0) < (f.gross | 0) * 0.6 ? '.t-rose' : '.t-leaf'), { dataset: { k: 'net' } }, U.fmt(f.net | 0)), h('span.k', ' of ' + U.fmt(f.gross | 0))),
+      h('span', h('span.k', 'Income'), h('b' + ((f.net | 0) < (f.gross | 0) * 0.6 ? '.t-rose' : '.t-leaf'), { dataset: { k: 'net' } }, U.fmt(f.net | 0)), h('span.k.gx-gross', ' of ' + U.fmt(f.gross | 0))),
       h('span', h('span.k', 'Research'), h('b.t-cyan', { dataset: { k: 'rp' } }, U.fmt(rp)), h('span.t-cyan', ' RP')),
       h('span', h('span.k', 'Colonies'), h('b', { dataset: { k: 'col' } }, colonies)), attentionChips());
     const now = performance.now();

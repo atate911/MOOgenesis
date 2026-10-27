@@ -16,7 +16,7 @@
     reduceMotion: false,    // less screen motion/particles
     empireMarks: false,     // colour-blind aid: each empire's owner rings get a pattern of their own and its race code (HU, MR, …) on the galaxy map and its key
     mapLabels: 'auto',      // 'auto' | 'all' | 'owned'
-    mapGrid: !(typeof window !== 'undefined' && window.MOO_PHONE),   // star-chart graticule on the galaxy map (the original had none; off by default on phones, where it crowded a small map)
+    mapGrid: false,         // star-chart graticule + parsec ruler on the galaxy map: off by default (the original had none; the lattice of crosses was the map's main noise), Options › Display turns it on
     turnLogOpen: true,      // the galaxy sidebar's "Last turn" log is expanded
     mapRoutes: true,
     mapDeclutter: false,    // the galaxy map's declutter mode (button / V)        // fleet route lines and colony rally lines on the galaxy map (the map's route button / L)

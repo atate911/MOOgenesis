@@ -19,6 +19,8 @@
 // REAL STATE (js/sim): star.color = class, star.nebula, S.orion + S.guardian{alive}, ONE planet per star (S.planets[star.id]); empire.vis[] = 0 unexplored (class visible, planet hidden) |
 //   1 explored, out of scanner range (owner/pop from empire.seen[star]) | 2 explored and live; fleets come from MOO.Sim.Q.mapFleets (already fog-filtered, with kind + eta, transports have string ids).
 //   The mock (tools/mockstate.js) emits the same shape plus legacy aliases (kind, inNebula), and the component accepts either.
+// Two levels of detail by zoom: the OVERVIEW (the fit-all zoom, or a step past it: overview()) names only owned stars, the selected one and Orion
+//   and marks colonisation only on stars within fuel range, so the whole-galaxy chart stays readable; one zoom step in, every explored star is named and marked.
 // Rendering scales with MOO.Perf.q (glow / nebula / particles / dpr / animFps): low = no twinkle, parallax or spikes; high/ultra = everything. Gfx.Space (backdrop, star sprites, living sun surfaces),
 //   Gfx.Planets (lit planet spheres) and Gfx.Ships.drawFleetMarker are used when present, with built-in fallbacks for each.
 (function (M) {
@@ -497,6 +499,7 @@
     .gmap-btn.lit { color:#fff4c8; filter:drop-shadow(0 0 6px rgba(243,220,160,.75)); } .gmap-btn.lit::before { background:linear-gradient(180deg,#8a6a24,#4a3410); }
     .gmap-btn.off { opacity:.5; } .gmap-btn.off svg { stroke-dasharray:none; }
     .gmap-btn.gmap-more { display:none; }                                                  /* phones only (css/phone.css) */
+    .gmap-ctrl > .gmap-more + .gmap-extra { margin-top:.5rem; }                              /* a breath between the view buttons and the layer toggles */
     .gmap-btn:hover { filter:brightness(1.15); } .gmap-btn:hover::before { background:linear-gradient(180deg,#34448c,#1c2760); } .gmap-btn:active { transform:translateY(1px); }
     .gmap-btn svg { width:1.05rem; height:1.05rem; fill:none; stroke:currentColor; stroke-width:2; stroke-linecap:square; stroke-linejoin:miter; }
     .gmap-mini { --ch:.55rem; position:absolute; z-index:3; padding:1px; background:linear-gradient(135deg,var(--brass),var(--brass-lo) 50%,var(--brass)); }
@@ -660,6 +663,7 @@
         sd.env = sd.known && pl ? (opts.envOf ? opts.envOf(pl, st) : envClassOf(pl)) : -1;
         sd.min = sd.known && pl ? mineralClassOf(pl) : -1;
         sd.art = sd.known && !!pl && pl.special === 'artifacts';
+        sd.near = me && me.frange ? (me.frange[st.id] | 0) === 1 : true;          // within fuel range (E.frange: 1 in range, 2 with reserve tanks, 0 not)
         sd.hab = habKind(sd, pl, st); if (reachSet !== null) { sd.rkT = (typeof reachSet === 'function' ? reachSet(sd.id) : reachSet.has(sd.id)) ? 1 : 0.2; reachAnim = true; }
         sd.nebula = !!(st.inNebula || st.nebula);
         sd.pop = vis === 2 ? (pl ? pl.pop || 0 : 0) : (seen ? seen.pop || 0 : 0); sd.maxPop = sd.known && pl ? pl.maxPop || 0 : 0;
@@ -1225,13 +1229,11 @@
       const rr = (me.range || 0) * pcU * z, sr = scanOf() * pcU * z, ep = easeOut(clamp(selT / 0.5, 0, 1));
       ctx.fillStyle = rgba(th.rgb.brass, 0.03 * ep); ctx.beginPath(); ctx.arc(cx, cy, rr * ep, 0, TAU); ctx.fill();
       ring(cx, cy, rr * ep, th.rgb.brass, 0.62, 1.4, [8, 7], -t * 7);
-      ring(cx, cy, sr * ep, th.rgb.cyan, 0.5, 1.2, [2, 6], t * 4);
-      // radar sweep pulse from the selected colony / fleet
-      if (!Q.reduce) { const u = mod(t * 0.42, 1), rp = sr * u; ring(cx, cy, rp, th.rgb.cyan, 0.16 * (1 - u), 1); }   // a faint sweep, not a glowing ring
+      ring(cx, cy, sr * ep, th.rgb.cyan, 0.34, 1.1, [2, 6], t * 4);                      // the scan ring sits under the range ring in weight (no sweep pulse: motion that said nothing)
       // labels
       ctx.font = Math.round(10 * uk) + 'px ' + th.fontUi; ctx.textAlign = 'center'; ctx.lineJoin = 'round'; ctx.lineWidth = 3; ctx.strokeStyle = 'rgba(3,5,18,0.85)';
       const lbl = (txt, ang, r, col) => { const x = cx + Math.cos(ang) * r, y = cy + Math.sin(ang) * r; ctx.strokeText(txt, x, y); ctx.fillStyle = col; ctx.fillText(txt, x, y); };
-      lbl('range ' + me.range + ' pc', -PI * 0.5, rr * ep + 11 * uk, rgba(th.rgb.brassHi, 0.9)); lbl('scan ' + scanOf() + ' pc', PI * 0.5, sr * ep + 13 * uk, rgba(th.rgb.cyan, 0.9));
+      lbl('range ' + me.range + ' pc', -PI * 0.5, rr * ep + 11 * uk, rgba(th.rgb.brassHi, 0.9)); lbl('scan ' + scanOf() + ' pc', PI * 0.5, sr * ep + 13 * uk, rgba(th.rgb.cyan, 0.7));
       ctx.textAlign = 'left';
     }
     // ------------------------------------------------------------------ logistics: rally lines (RELOC) and stargates
@@ -1357,6 +1359,9 @@
       }
     }
     function zn() { return cam.z * SPACING; }
+    const overview = () => cam.z <= fitZ * 1.4;                                          // the whole-galaxy view (fit, or a step past it): fewer marks per star
+    // colonisation glyphs: in the overview only on stars a colony ship can reach this turn (and the selected / hovered one); every explored star once zoomed in
+    const habShow = s => !!s.hab && (!overview() || s.near || s.id === selStar || s.id === hoverStar);
     const STAR_LODS = [32, 48, 64, 96, 128, 192, 256];
     const warm = { q: [], key: '' };
     function queueWarmup() {                                       // build the star sprites we will need during idle frames (each one costs a few ms)
@@ -1483,7 +1488,6 @@
             ctx.beginPath(); ctx.arc(x, y, rr + 2.8, 0, TAU); ctx.lineWidth = bi === 4 ? 1.6 : 0.8; ctx.strokeStyle = rgba(col, bi === 4 ? 0.9 : 0.28); ctx.stroke();
           } else {
           ctx.beginPath(); ctx.arc(x, y, rr, 0, TAU); ctx.lineWidth = 1.4 * bold; ctx.strokeStyle = rgba(col, 0.82); ctx.stroke();
-          ctx.beginPath(); ctx.arc(x, y, rr + 2.6, 0, TAU); ctx.lineWidth = 0.8; ctx.strokeStyle = rgba(col, 0.28); ctx.stroke();
           }
           if (s.capital) { ctx.setLineDash([2, 3]); ctx.lineDashOffset = -t * 5; ctx.beginPath(); ctx.arc(x, y, rr + 6, 0, TAU); ctx.lineWidth = 1; ctx.strokeStyle = 'rgba(255,214,106,0.7)'; ctx.stroke(); ctx.setLineDash([]); }
           const fh = flagH0 * (1 + 0.5 * wCol) * (s.capital ? 1.18 : 1);
@@ -1508,7 +1512,7 @@
         }
         // overlay badges
         if (wEnv > 0.01 || wMin > 0.01) drawBadge(s, t, znv);
-        if (s.hab && habOn(znv)) { ctx.globalAlpha = s.rk * (1 - Math.min(1, ovAny * 2)); drawHab(s, znv); }
+        if (habOn(znv) && habShow(s)) { ctx.globalAlpha = s.rk * (1 - Math.min(1, ovAny * 2)); drawHab(s, znv); }
         ctx.globalAlpha = 1;
       }
       ctx.globalAlpha = 1;
@@ -1600,7 +1604,7 @@
       const znv = zn(), lm = (M.Settings && M.Settings.get('mapLabels')) || 'auto', px = clamp(Math.round((10.5 + znv * 0.016) * uk), 10, 17);
       const lr = lblRects; lr.length = 0;
       for (let i = 0; i < SD.length; i++) { const s = SD[i]; if (!s.on) continue; const rr = s.r * 2 + 3; lr.push(s.sx - rr, s.sy - rr, s.sx + rr, s.sy + rr); }
-      if (habIcons && habOn(znv)) for (let i = 0; i < SD.length; i++) { const s = SD[i]; if (s.on && s.hab) { const g = habPos(s, znv); lr.push(g.x - g.r - 1, g.y - g.r - 1, g.x + g.r + 1, g.y + g.r + 1); } }
+      if (habIcons && habOn(znv)) for (let i = 0; i < SD.length; i++) { const s = SD[i]; if (s.on && habShow(s)) { const g = habPos(s, znv); lr.push(g.x - g.r - 1, g.y - g.r - 1, g.x + g.r + 1, g.y + g.r + 1); } }
       // keep the ranges/flags area of owned stars free too
       for (let i = 0; i < SD.length; i++) { const s = SD[i]; if (s.on && s.owner >= 0) { const rr = s.r * 1.95 + 5; lr.push(s.sx + rr * 0.5, s.sy - rr * 2, s.sx + rr * 2.2, s.sy - rr * 0.3); } }
       const own = lr.length;
@@ -1614,7 +1618,7 @@
         else if (dcOn()) want = s.owner >= 0 && s.owner === pidOf();                       // decluttered: your own colonies only
         else if (lm === 'owned') want = s.owner >= 0;
         else if (lm === 'all') want = true;
-        else want = s.owner >= 0 || (s.known && znv >= 40);
+        else want = s.owner >= 0 || (s.known && znv >= 40 && !overview());
         if (wEnv > 0.5 || wMin > 0.5) want = want && (s.known || s.orion) && (s.owner >= 0 || znv >= 70);
         if (!want) { s.lblA = Math.max(0, s.lblA - dt * 6); if (s.lblA <= 0.01) continue; }
         const tone = s.id === selStar ? 'sel' : s.orion ? 'violet' : s.capital ? 'gold' : s.owner >= 0 ? 'own' : s.known ? 'ivory' : 'mist';

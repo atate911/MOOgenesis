@@ -122,8 +122,13 @@ html:root:root[data-phone] .gx-side.gx-float {
 }
 /* top: year / treasury plate and the message list stack, leaving the map's control column free on the right */
 html:root:root[data-phone] .gx-top { left: .4rem; right: .4rem; top: .35rem; flex-direction: column; align-items: stretch; gap: .3rem; }
-html:root:root[data-phone] .gx-hud { flex-wrap: wrap; gap: .2rem .7rem; padding: .3rem .6rem; font-size: .9rem; }
-html:root:root[data-phone] .gx-hud .y { font-size: 1.15rem; }
+/* the HUD as two rows: the year with the turn log's chip at its right, then the values (which may wrap once more on a narrow phone); the
+   income's "of N" gross is left to the Planets screen here */
+html:root:root[data-phone] .gx-hud { display: grid; grid-template-columns: minmax(0, 1fr) auto; grid-template-areas: "year chip" "rest rest"; gap: .1rem .6rem; align-items: center; padding: .3rem .6rem .35rem; font-size: .9rem; }
+html:root:root[data-phone] .gx-hud .y { grid-area: year; font-size: 1.15rem; }
+html:root:root[data-phone] .gx-hud .gx-chip { grid-area: chip; display: flex; justify-content: flex-end; }
+html:root:root[data-phone] .gx-hud .gx-hudr { grid-area: rest; display: flex; flex-wrap: wrap; gap: .1rem .7rem; }
+html:root:root[data-phone] .gx-hud .gx-gross { display: none; }
 html:root:root[data-phone] .gx-msg { margin-left: 0; max-width: none; }
 html:root:root[data-phone] .gmap-ctrl .btn, html:root:root[data-phone] .gmap-ctrl button { min-width: var(--tap); min-height: var(--tap); }
 /* the map's control column sits just above whatever covers the map's bottom (the sheet, a floating card; phone-galaxy.js sets --ph-inset), so
@@ -568,11 +573,9 @@ html:root:root[data-phone] .tl-r { min-height: var(--row); align-items: center; 
 html:root:root[data-phone] .gx-side .tl { margin-top: 0; border-top: 1px solid rgba(0, 0, 0, .8); }   /* no gap between the panel and the log for the map to show through */
 html:root:root[data-phone] .gx-side .tl-h { background: var(--pk-bar, #141920); }
 html:root:root[data-phone] .gx-side .tl-b { background: var(--pk-surface, #1a1f26); }
-html:root:root[data-phone] .gx-logc { display: inline-flex; align-items: center; gap: .3rem; min-height: var(--tap); padding: 0 .6rem; margin-left: auto; margin-right: -.2rem; cursor: var(--hand);
+html:root:root[data-phone] .gx-logc { display: inline-flex; align-items: center; gap: .3rem; min-height: max(36px, 2.2rem); padding: 0 .6rem; margin: -.15rem -.2rem -.15rem 0; cursor: var(--hand);
   border: 1px solid rgba(255, 255, 255, .22); color: var(--pk-ink, #e6eaf0); font-size: .9rem; }
 html:root:root[data-phone] .gx-logc .ico { width: 1rem; height: 1rem; }
-html:root:root[data-phone] .gx-logc + span { flex-basis: auto; }
-html:root:root[data-phone] .gx-hud:has(.gx-logc) { width: 100%; }
 html:root:root[data-phone] .gx-logc.r { border-color: #ff7a6a; color: #ffb3a8; } html:root:root[data-phone] .gx-logc.w { border-color: #f0a040; color: #ffd08a; }
 html:root:root[data-phone] .tl-modal .tl-sheet { margin: 0; max-height: none; font-size: .95rem; }
 html:root:root[data-phone] .tl-modal .tl-b { border: 0; background: none; padding: 0; }
