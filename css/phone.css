@@ -396,7 +396,7 @@ html:root:root[data-phone] .lf-stats { grid-template-columns: repeat(4, minmax(0
 html:root:root[data-phone] .lf-cost { text-align: left; display: flex; align-items: baseline; gap: .6rem; flex-wrap: wrap; } html:root:root[data-phone] .lf-cost b, html:root:root[data-phone] .lf-cost .l, html:root:root[data-phone] .lf-cost .up { display: inline; }
 
 /* ---- research: one column — field sliders first (full width), the project, then the list and the detail ---- */
-html:root:root[data-phone] .tch { padding: .35rem .4rem .5rem; gap: .45rem; overflow-x: hidden; overflow-y: auto; overscroll-behavior: contain; }
+html:root:root[data-phone] .tch { padding: .35rem calc(.4rem + env(safe-area-inset-right)) calc(.5rem + env(safe-area-inset-bottom)) calc(.4rem + env(safe-area-inset-left)); gap: .45rem; overflow-x: hidden; overflow-y: auto; overscroll-behavior: contain; }
 html:root:root[data-phone] .tch-head { flex-wrap: wrap; gap: .25rem .8rem; }
 html:root:root[data-phone] .tch-title { font-size: 1.4rem; } html:root:root[data-phone] .tch-total b { font-size: 1.6rem; }
 html:root:root[data-phone] .tch-tabs { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .25rem; overflow: visible; }   /* all six fields in view */
@@ -440,14 +440,27 @@ html:root:root[data-phone] .tch[data-ph-seg="techs"] .tch-list { max-height: non
 html:root:root[data-phone] .tch-head { justify-content: center; }
 
 /* ---- tech tree (its own screen, or Research › Overview): the tree on top, the detail under it ---- */
-html:root:root[data-phone] .ttp { padding: .35rem .4rem .5rem; gap: .45rem; overflow-y: auto; }
+html:root:root[data-phone] .ttp { padding: .35rem calc(.4rem + env(safe-area-inset-right)) calc(.5rem + env(safe-area-inset-bottom)) calc(.4rem + env(safe-area-inset-left)); gap: .45rem; overflow-y: auto; }
 html:root:root[data-phone] .ttp-head { flex-wrap: wrap; gap: .3rem .8rem; } html:root:root[data-phone] .ttp-head h1 { font-size: 1.4rem; }
 html:root:root[data-phone] .tt { flex: none; grid-template-columns: minmax(0, 1fr); gap: .6rem; }
+/* the screen's body is pinned to the screen's height inline (techtree.js): on a phone it grows with the tree and the detail under it, so the screen
+   scrolls to the end of the detail and its bottom padding (the home indicator) follows the last line */
+html:root:root[data-phone] .ttp > .ttp-body { flex: none !important; min-height: auto !important; }
 html:root:root[data-phone] .tt-main { min-height: auto; }
 html:root:root[data-phone] .tt-search, html:root:root[data-phone] .tt-search input { min-width: 0; width: 100%; }
 html:root:root[data-phone] .tt-leg { margin-left: 0; }
 html:root:root[data-phone] .tt-scroll { flex: none; height: 58vh; }
-html:root:root[data-phone] .tt-grid { grid-template-columns: 3rem repeat(6, minmax(7.4rem, 1fr)); }
+html:root:root[data-phone] .tt-grid { grid-template-columns: 3rem repeat(6, minmax(9.6rem, 1fr)); }
+/* tech tree names whole on a phone: the icon over the level on the left, the name beside them on up to three lines, sentence case (capitals
+   cost a fifth more width), long words hyphenated and never cut mid-letter; a column header puts its count under the field's name */
+html:root:root[data-phone] .tt-chip { display: grid; grid-template-columns: auto minmax(0, 1fr); grid-template-rows: auto auto; column-gap: .4rem; row-gap: .1rem; align-items: start; padding: .3rem .4rem; }
+html:root:root[data-phone] .tt-chip > .ico { grid-column: 1; grid-row: 1; margin-top: .1rem; }
+html:root:root[data-phone] .tt-chip > .lv { grid-column: 1; grid-row: 2; }
+html:root:root[data-phone] .tt-chip > .nm { grid-column: 2; grid-row: 1 / 3; align-self: center; -webkit-line-clamp: 3; text-transform: none; letter-spacing: 0; line-height: 1.15;
+  hyphens: auto; -webkit-hyphens: auto; overflow-wrap: anywhere; }
+html:root:root[data-phone] .tt-h { flex-wrap: wrap; row-gap: 0; }
+html:root:root[data-phone] .tt-h b { flex: 1 1 0; min-width: 0; overflow-wrap: anywhere; white-space: normal; }
+html:root:root[data-phone] .tt-h small { flex-basis: 100%; margin-left: 0; }
 html:root:root[data-phone] .tt-side, html:root:root[data-phone] .tt-side .panel { min-height: auto; overflow: visible; }
 html:root:root[data-phone] .tch-ovw { min-height: auto; }
 
@@ -605,4 +618,41 @@ html[data-phone] #toasts { bottom: calc(var(--ph-strip) + var(--tap) + 1.4rem + 
   html:root:root[data-phone] .gmap-mini { bottom: .5rem !important; }
   html:root:root[data-phone] .gmap .gmap-legend.panel { bottom: .5rem; }
   html[data-phone] .ph-dz .dz-pv { height: 12rem; }
+}
+
+/* ---- the research scenes (js/ui/tech.js .tsc: the breakthrough card and the research choice) --------------------------------------
+   No pixel placement on a phone: the caption and the card stack from the bottom of the scene in the flow, inside the notch and
+   home-indicator margins, so the card is as tall as its content up to the space there is. The card's picture gives way first (down to a
+   strip); only then does the text scroll, and a scroll box with more below its edge fades out there (iOS shows no scrollbar). On its
+   side the phone puts the picture beside the text. No keyboard hint on a touch screen. */
+html:root:root[data-phone] .tsc { display: flex; flex-direction: column; justify-content: flex-end; gap: .45rem;
+  padding: .5rem calc(.6rem + env(safe-area-inset-right)) calc(.6rem + env(safe-area-inset-bottom)) calc(.6rem + env(safe-area-inset-left)); }
+html:root:root[data-phone] :is(.tsc-cap, .tsc-panel) { position: relative; z-index: 1; left: auto; top: auto; width: auto; height: auto; }
+html:root:root[data-phone] .tsc-cap { flex: none; padding: 0 .15rem; font-size: clamp(1.15rem, 5.6vw, 1.7rem); }
+html:root:root[data-phone] .tsc-panel { flex: 0 1 auto; min-height: 0; }
+html:root:root[data-phone] .tsc-box { flex: 0 1 auto; min-height: 0; max-height: 100%; }
+html:root:root[data-phone] .tsc-box > .tsc-art { flex: 0 1000 12rem; height: auto; min-height: 4.5rem; }   /* shrinks before the text does */
+html:root:root[data-phone] .tsc-card-b { flex: 0 1 auto; min-height: 2.5rem; }
+html:root:root[data-phone] .tsc-list { min-height: 5.5rem; }
+html:root:root[data-phone] .tsc-info { min-height: 0; }
+html:root:root[data-phone] :is(.tsc-card-b, .tsc-list, .tsc-info).more { -webkit-mask-image: linear-gradient(#000 calc(100% - 2rem), rgba(0, 0, 0, .15)); mask-image: linear-gradient(#000 calc(100% - 2rem), rgba(0, 0, 0, .15)); }
+html:root:root[data-phone] .tsc-hint { display: none; }
+@media (orientation: landscape) {
+  html:root:root[data-phone] .tsc { padding-top: .35rem; gap: .3rem; }
+  html:root:root[data-phone] .tsc-cap { font-size: clamp(1rem, 5.4vh, 1.4rem); }
+  html:root:root[data-phone] .tsc-panel { flex: 1 1 auto; }
+  html:root:root[data-phone] .tsc-panel > .tsc-box { height: 100%; }
+  /* the breakthrough card: the picture on the left over the button, the text on the right at full height */
+  html:root:root[data-phone] .tsc-box:has(> .tsc-art) { display: grid; grid-template-columns: minmax(0, 32%) minmax(0, 1fr); grid-template-rows: minmax(0, 1fr) auto; column-gap: .8rem; }
+  html:root:root[data-phone] .tsc-box > .tsc-art { grid-column: 1; grid-row: 1; height: auto; min-height: 0; margin: .2rem; }
+  html:root:root[data-phone] .tsc-box > .tsc-card-b { grid-column: 2; grid-row: 1 / 3; min-height: 0; }
+  html:root:root[data-phone] .tsc-box:has(> .tsc-art) > .tsc-acts { grid-column: 1; grid-row: 2; margin-top: .4rem; }
+  html:root:root[data-phone] .tsc-box:has(> .tsc-art) > .tsc-acts .grow { display: none; }
+  html:root:root[data-phone] .tsc-box:has(> .tsc-art) > .tsc-acts .btn { flex: 1 1 auto; }
+  /* the research choice: the list on the left, what the highlighted technology does on the right */
+  html:root:root[data-phone] .tsc-box:has(> .tsc-list) { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); grid-template-rows: auto minmax(0, 1fr) auto; column-gap: .8rem; }
+  html:root:root[data-phone] .tsc-box > .tsc-box-h { grid-column: 1 / -1; }
+  html:root:root[data-phone] .tsc-box > .tsc-list { grid-column: 1; grid-row: 2 / 4; min-height: 0; }
+  html:root:root[data-phone] .tsc-box > .tsc-info { grid-column: 2; grid-row: 2; margin-top: 0; overflow-y: auto; }
+  html:root:root[data-phone] .tsc-box:has(> .tsc-list) > .tsc-acts { grid-column: 2; grid-row: 3; }
 }
