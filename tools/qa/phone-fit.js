@@ -61,7 +61,7 @@ const PROBE = `((ins, atEnd, recheck) => {
   if (recheck) return [...document.querySelectorAll('[data-pf-cov]')].filter(el => {   // bring it to the middle of whatever scrolls it: still covered there is covered for good
     try { el.scrollIntoView({ block: 'center', inline: 'nearest' }); } catch (e) { /* ignore */ }
     const r = el.getBoundingClientRect(); const x = r.left + r.width / 2, y = r.top + r.height / 2; return x >= 0 && y >= 0 && x < vw && y < vh && !topmost(el, x, y); }).map(el => el.dataset.pfCov);
-  const overlay = el => el && el.closest('.scrim, .modal, .ph-sheet, .ph-appbar, .tsc-panel, #tip, .toast');
+  const overlay = el => el && el.closest('.scrim, .modal, .ph-sheet, .ph-appbar, .ph-back, .tsc-panel, #tip, .toast');
   let covN = 0;
   const inner = new Map();
   const nodes = [...document.body.querySelectorAll('*')].filter(el => !el.closest('#boot, script, style, svg, .rest, #tip'));
@@ -136,15 +136,17 @@ const PROBE = `((ins, atEnd, recheck) => {
       }
       try { await route.continue(); } catch (e) { /* the page moved on */ }
     });
-    const page = await ctx.newPage(); const errors = [];
-    page.on('pageerror', e => errors.push(e.message));
+    const errors = [];
     all[name] = {};
     for (const [view, steps, wait] of VIEWS) {
       if (only && !only.includes(view)) continue;
+      const page = await ctx.newPage(); page.setDefaultTimeout(30000);   // a fresh tab per view: a scene left open (a battle) cannot hold the next one
+      page.on('pageerror', e => errors.push(e.message));
+      try {
       await page.goto(BOOT); for (let i = 0; i < 120; i++) { if (await page.evaluate(() => !!(window.MOO && MOO.Game && MOO.Game.S && MOO.UI.Screens.current))) break; await sleep(250); }
       await page.evaluate(`(()=>{ const S=MOO.Game.S; for (const E of S.empires) for (const o of S.empires) if (E.id!==o.id) MOO.Sim.Diplo.rec(S,E.id,o.id).contact=true; })()`);
       await sleep(900);
-      try { for (const s of steps) { await page.evaluate(s); await sleep(600); } } catch (e) { all[name][view] = { error: e.message }; continue; }
+      try { for (const s of steps) { await page.evaluate(`void (${s})`); await sleep(600); } /* void: a dialog's promise settles when it closes; never wait on it */ } catch (e) { all[name][view] = { error: e.message }; console.log('%s %s error %s', name.padEnd(11), view.padEnd(17), e.message.split('\n')[0]); continue; }
       await sleep(wait || 1300);
       const a = await page.evaluate(`${PROBE}(${JSON.stringify(Z.ins)}, false)`);
       await page.screenshot({ path: path.join(OUT, `${name}-${view}.png`) });
@@ -157,6 +159,8 @@ const PROBE = `((ins, atEnd, recheck) => {
       all[name][view] = { items }; found += items.length;
       const by = {}; for (const x of items) by[x.k] = (by[x.k] || 0) + 1;
       console.log('%s %s %s', name.padEnd(11), view.padEnd(17), Object.keys(by).length ? Object.entries(by).map(([k, n]) => k + ' ' + n).join(' · ') : 'clean');
+      } catch (e) { all[name][view] = { error: e.message }; console.log('%s %s error %s', name.padEnd(11), view.padEnd(17), e.message.split('\n')[0]); }
+      finally { await Promise.race([page.close().catch(() => {}), sleep(5000)]); }
     }
     if (errors.length) console.log(name, 'page errors', JSON.stringify([...new Set(errors)].slice(0, 4)));
     await ctx.close();
