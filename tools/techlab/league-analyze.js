@@ -7,6 +7,8 @@ const SNAP_KEYS = ['techs', 'tl', 'production', 'pop', 'colonies', 'ships', 'res
 
 function analyze(file) {
   const D = L.readJSON(file), by = {};
+  const B = L.arg('b');                                                                  // --b strat: compare classic with another arm (reported as 'expanded')
+  if (B) for (const r of D.results) if (r.pool === B) r.pool = 'expanded';
   for (const r of D.results) (by[r.g] = by[r.g] || {})[r.pool] = r;
   const pairs = Object.values(by).filter(p => p.classic && p.expanded);
   const snapOf = (r, T) => r.snaps.find(s => s.turn === T) || null;

@@ -96,6 +96,7 @@ MOO.def(function (M) {
     if (E.race === 'psilon') v += Math.floor(v / 2);
     if (planet.special === 'artifacts') v *= 2;
     if (planet.special === 'orion') v *= 4;
+    if (planet.focus && M.Sim.Strat) { const f = M.Sim.Strat.rpPct(planet); if (f) v = Math.floor(v * (100 + f) / 100); }   // Strategic choices: science focus
     return Math.min(v, 32767);
   };
 

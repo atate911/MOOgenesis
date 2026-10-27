@@ -370,7 +370,7 @@ MOO.def(function (M) {
     const g = runGauntlet(S, landing, R);
     const room = Math.max(0, G.MAX_LANDING - landedSoFar(S, p, att.id)), arrived = Math.round(g.survivors);
     const landed = Math.min(arrived, room), overflow = arrived - landed;
-    const defenders = p.pop | 0, fa = G.force(S, att, false), fd = G.force(S, def, true);
+    const defenders = p.pop | 0, fa = G.force(S, att, false), fd = G.force(S, def, true) + (p.focus && M.Sim.Strat ? M.Sim.Strat.ground(p) : 0);   // + fortress focus
     const rec = Object.assign(baseRecord(S, att, def, p), {
       sent: g.n, killed: g.killed, recovered: g.recovered, arrived, landed, overflow, defenders, defendersLeft: defenders, force: { a: fa, d: fd },
       rounds: [], exchanges: 0, survivors: 0, captured: { factories: 0, techs: [] }, theftRolls: 0, success: false,
@@ -493,7 +493,7 @@ MOO.def(function (M) {
   G.estimate = function (S, attacker, planet, n) {
     const att = emp(S, attacker), p = plan_(S, planet), def = S.empires[p.owner];
     const g = G.gauntlet(S, { empire: att.id, planet: p.id, n });
-    const landed = Math.min(Math.round(g.survivors), G.MAX_LANDING), fa = G.force(S, att, false), fd = def ? G.force(S, def, true) : 0;
+    const landed = Math.min(Math.round(g.survivors), G.MAX_LANDING), fa = G.force(S, att, false), fd = def ? G.force(S, def, true) + (p.focus && M.Sim.Strat ? M.Sim.Strat.ground(p) : 0) : 0;
     const o = G.odds(fa, fd, landed, p.pop | 0, { human: !!(att.human || (def && def.human)) });
     return { gauntlet: g, landed, defenders: p.pop | 0, force: { a: fa, d: fd }, pWin: o.pWin, expSurvivors: o.expAttackers, expDefendersLeft: o.expDefenders };
   };

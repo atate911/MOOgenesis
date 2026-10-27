@@ -46,6 +46,11 @@ if (!isMainThread) {
     out.warsBy = S.empires.map(E => log.filter(x => x.k === 'war' && x.a === E.id).length);
     out.warsOn = S.empires.map(E => log.filter(x => x.k === 'war' && x.b === E.id).length);
     out.battles = S.labBattles; delete S.labBattles;
+    if (Sim.Strat && Sim.Strat.on(S)) {                                                  // Strategic choices in use: focus counts, projects bought, pacts standing
+      const focus = {}; for (const p of S.planets) if (p.owner >= 0 && p.focus) focus[p.focus] = (focus[p.focus] || 0) + 1;
+      const projects = {}; for (const E of S.empires) for (const k in (E.projects || {})) projects[k] = (projects[k] || 0) + 1;
+      let pacts = 0; for (const E of S.empires) pacts += Sim.Strat.pacts(S, E); out.strat = { focus, projects, pacts: pacts / 2, colonies: S.planets.filter(p => p.owner >= 0).length };
+    }
     return out;
   });
 }

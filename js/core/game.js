@@ -166,10 +166,10 @@
     return G.last;
   };
 
-  // development entry: ?dev=1&screen=galaxy&size=medium&opp=3&race=psilon&seed=abc  (&pool=expanded: the expansion tech pool, data/techs-x.js)
+  // development entry: ?dev=1&screen=galaxy&size=medium&opp=3&race=psilon&seed=abc  (&pool=expanded: the expansion tech pool, data/techs-x.js; &strat=1: Strategic choices, sim/strat.js)
   G.devBoot = function (q) {
     if (G.S) return;
-    G.S = Sim.Setup.create({ size: q.get('size') || 'medium', difficulty: q.get('diff') || 'average', opponents: +(q.get('opp') || 3), race: q.get('race') || 'human', banner: +(q.get('banner') || 0), seed: q.get('seed') || 'dev', playerAI: q.get('ai') === '1', options: q.get('pool') === 'expanded' ? { techPool: 'expanded' } : {} });
+    G.S = Sim.Setup.create({ size: q.get('size') || 'medium', difficulty: q.get('diff') || 'average', opponents: +(q.get('opp') || 3), race: q.get('race') || 'human', banner: +(q.get('banner') || 0), seed: q.get('seed') || 'dev', playerAI: q.get('ai') === '1', options: Object.assign(q.get('pool') === 'expanded' ? { techPool: 'expanded' } : {}, q.get('strat') === '1' ? { strategic: true } : {}) });
     G.sel = { star: G.player().capital, fleet: -1 };
     const n = +(q.get('turns') || 0);
     if (n > 0) { try { Sim.autoPlay(G.S, n); } catch (e) { console.error('[devBoot autoplay]', e); } }

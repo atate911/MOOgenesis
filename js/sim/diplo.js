@@ -363,6 +363,7 @@ MOO.def(function (M) {
     const R = RR(S);
     D.breakTrade(S, a, b);
     D.breakTreaty(S, a, b);
+    if (ra.pact && M.Sim.Strat) M.Sim.Strat.setPact(S, a, b, false);                                  // Strategic choices: war ends a research pact
     if (isHuman(S, a) && !ra.met) ra.met = 1; if (isHuman(S, b) && !rb.met) rb.met = 1;                         // a war marks first contact for human sides
     ra.rel2 = Math.max(ra.rel2 - 5, -100); rb.rel2 = Math.max(rb.rel2 - 5, -100);
     setRel(S, a, b, -75 - rnd(R, 25));
@@ -626,11 +627,12 @@ MOO.def(function (M) {
       case 'askWar': D.declareWar(S, a, prop.target, 'asked by ' + S.empires[h].name); eff.war = [a, prop.target]; break;
       case 'askBreak': D.breakTreaty(S, a, prop.target); eff.broke = [a, prop.target]; break;
       case 'trade': D.setTrade(S, h, a, prop.bc); news(S, 'tradeSigned', h, a, { bc: prop.bc }); log(S, 'trade', h, a, prop.bc); eff.trade = prop.bc; break;
+      case 'research': if (M.Sim.Strat) M.Sim.Strat.setPact(S, h, a, true); log(S, 'pact', h, a); eff.pact = true; break;
     }
     return eff;
   }
-  const OK = { nap: ['proposalAccepted', 62], alliance: ['proposalAccepted', 63], peace: ['acceptPeace', 65], askWar: ['proposalAccepted', 67], askBreak: ['proposalAccepted', 68], trade: ['proposalAccepted', 64] };
-  const NO = { nap: 'proposalRejected', alliance: 'proposalRejected', peace: 'rejectPeace', askWar: 'refuseAid', askBreak: 'refuseAid', trade: 'proposalRejected' };
+  const OK = { nap: ['proposalAccepted', 62], alliance: ['proposalAccepted', 63], peace: ['acceptPeace', 65], askWar: ['proposalAccepted', 67], askBreak: ['proposalAccepted', 68], trade: ['proposalAccepted', 64], research: ['proposalAccepted', 64] };
+  const NO = { nap: 'proposalRejected', alliance: 'proposalRejected', peace: 'rejectPeace', askWar: 'refuseAid', askBreak: 'refuseAid', trade: 'proposalRejected', research: 'proposalRejected' };
   function accepted(S, R, h, a, prop, extraEff) {
     const r = rec(S, h, a), eff = Object.assign(applyAccepted(S, R, h, a, prop), extraEff || {});
     let reply = say(S, a, h, OK[prop.kind][0], { treaty: D.TREATY_NOUN[eff.treaty !== undefined ? eff.treaty : 0] }, OK[prop.kind][1]);
@@ -701,6 +703,8 @@ MOO.def(function (M) {
       { id: 'askWar', label: 'Declaration of War on Another Race', enabled: !atWar && wt.length > 0, targets: wt },
       { id: 'askBreak', label: 'Break Alliance With Another Race', enabled: bt.length > 0 && r.treaty < T.WAR, targets: bt },
     ];
+    const St = M.Sim.Strat;                                                                           // Strategic choices: research pacts
+    if (St && St.on(S)) treaty.push({ id: 'research', label: 'Research Agreement', enabled: r.treaty < T.WAR && !r.pact });
     const levels = atWar ? [] : D.tradeLevels(S, h, a);
     const tc = D.tributeChoices(S, h, a);
     return { ok: true, with: a, atWar, actions: [
@@ -789,6 +793,12 @@ MOO.def(function (M) {
         if (!(x >= 0) || x === h || x === a || rec(S, a, x).treaty !== T.ALLIANCE) return fail('not available');
         if (rec(S, a, h).rel1 <= 24) return refused(S, R, h, a, prop, 0, true);
         return resolveAsk(S, R, h, a, prop, checkMood(S, R, h, a, rec(S, a, x).rel1 + 175, 'treaty'));
+      }
+      case 'research': {                                                                                  // Strategic choices: a research pact
+        const St = M.Sim.Strat;
+        if (!St || !St.on(S) || r.pact || r.treaty >= T.WAR) return fail('not available');
+        if (r.rel1 <= 10) return refused(S, R, h, a, prop, 0, true);
+        return resolveAsk(S, R, h, a, prop, checkMood(S, R, h, a, 40, 'tech'));
       }
       case 'trade': {
         if (r.treaty >= T.WAR) return fail('at war');
@@ -1376,6 +1386,7 @@ MOO.def(function (M) {
 
   // ══════════════════════════════════════ ALIASES / EXPORTS ═════════════════════════════════════════════════════════════════════════════
   D.hostile = D.canFight;
+  D.logEntry = log;                                                                                         // diplomatic log entry (Strategic choices' pacts)
   D.rec = rec;                                                                                              // the relation record of a about b (read-only use)
   D.setRel = setRel;
   D.VERSION = 1;
