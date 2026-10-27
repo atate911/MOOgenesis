@@ -2,7 +2,7 @@
 // Tech Lab · league A/B. Whole games, classic pool against expanded pool, on the SAME seeds (the expanded game starts from the same galaxy, races and S.rs stream;
 // only the swapped tree slots differ — data/techs-x.js). Measures what a player would notice: pace (techs, tech level), economy, expansion, fleets, game length,
 // race strength, and for every expansion tech: how often it is dealt, researched, and whether holding it moves an empire's standing (intent-to-treat).
-//   node tools/techlab/league.js [--games 240] [--first 0] [--threads 4] [--turns 200] [--out league.json] [--set path=value,...] [--drop id,id]  (--drop = remove techs from the pool)
+//   node tools/techlab/league.js [--games 240] [--first 0] [--size colossal] [--threads 4] [--turns 200] [--out league.json] [--set path=value,...] [--drop id,id]  (--drop = remove techs from the pool)
 const L = require('./lib');
 const { isMainThread } = require('worker_threads');
 const SNAP = [50, 100, 150, 200];
@@ -24,7 +24,7 @@ if (!isMainThread) {
       };
     }
     const T = MOO.Data.Techs;
-    const S = Sim.newGame(L.settings({ seed: 'league-' + job.g, size: SIZES[job.g % 3], difficulty: DIFFS[Math.floor(job.g / 3) % 3], opponents: 2 + (job.g % 4), race: L.RACES[job.g % 10], playOn: false }, job.pool));
+    const S = Sim.newGame(L.settings({ seed: 'league-' + job.g, size: data.size || SIZES[job.g % 3], difficulty: DIFFS[Math.floor(job.g / 3) % 3], opponents: 2 + (job.g % 4), race: L.RACES[job.g % 10], playOn: false }, job.pool));
     S.xstats = {}; S.labBattles = S.empires.map(() => ({ n: 0, won: 0, lost: 0, att: 0 }));
     const out = { g: job.g, pool: job.pool, snaps: [], over: null, xstats: null, trees: null, done: null };
     if (job.pool !== 'classic') out.trees = S.empires.map(E => { const ids = []; E.research.list.forEach((tiers, f) => tiers.forEach(tr => tr.forEach(l => { const t = T.byFL[f][l]; if (t.pool === 'x') ids.push(t.id); }))); return ids; });
@@ -68,7 +68,8 @@ if (isMainThread) (async () => {
   const pools = (L.arg('pools', 'classic,expanded')).split(',');
   const jobs = []; for (let g = first; g < first + games; g++) for (const pool of pools) jobs.push({ g, pool });
   const t0 = Date.now();
-  const res = await L.runPool(__filename, jobs, { threads, data: { turns, set, drop }, onResult: L.progress('league') });
+  const size = L.arg('size') || null;
+  const res = await L.runPool(__filename, jobs, { threads, data: { turns, set, drop, size }, onResult: L.progress('league') });
   const errs = res.filter(r => r && r.error); if (errs.length) console.log('errors', errs.length, errs[0].error.slice(0, 600));
   L.writeJSON(file, { at: new Date().toISOString(), games, turns, set, drop, pools, results: res.filter(r => r && !r.error) });
   console.log('done in', Math.round((Date.now() - t0) / 1000), 's →', L.OUT + '/' + file);

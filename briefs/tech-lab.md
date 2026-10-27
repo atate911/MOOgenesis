@@ -13,9 +13,9 @@ fresher, without moving the game's balance or its feel. Design 33 % more candida
   dozen classic economy techs of its level (Terraforming +80 and +100 measure +46 % and +51 %).
 * **The pace holds.** 719 paired AI games, same seeds, classic pool against expanded pool: techs researched +1.2 % at turn 100, tech level −0.6 %,
   production +0.6 %, population −0.3 %, colonies +0.2 %; every race's relative production within 0.04 of classic; the difficulty ladder unchanged.
-* **What changes in feel.** AI empires fight about 22 % more battles per turn and declare about one more war per game (5.2 → 6.1). Ablations that keep
+* **What changes in feel.** Before the Ramscoops retune, AI empires fought about 22 % more battles per turn and declare about one more war per game (5.2 → 6.1). Ablations that keep
   the trees and switch effects off by family show it comes from the reach and growth effects together; the combat effects and the reshuffled trees add
-  nothing, and no single tech accounts for more than a small part. Slightly fewer games end early at the council, and AIs swap about two more techs a
+  nothing, and no single tech accounts for more than a small part. Limiting Interstellar Ramscoops' extra range to colony ships and scouts brought that to +8 % (interval −1 to +19 %), and −2 % on colossal galaxies, with wars unchanged. Slightly fewer games end early at the council, and AIs swap about two more techs a
   game because their trees overlap less.
 * **Classic games are unchanged** (state hashes at turn 150 match the build before the lab).
 
@@ -84,7 +84,7 @@ Full numbers: `tools/techlab/REPORT.md`. Method and commands: `tools/techlab/REA
 | Planetology | 28 | Small World Engineering | Small worlds: +25% max population on worlds of base size 40 or less (at least +5), permanent | population |
 | Planetology | 33 | Clone Troopers | Invading troops: +10 | offence, ground |
 | Planetology | 39 (was 43) | Hyper-Fertility Treatments | Population growth: +50% | population |
-| Propulsion | 7 | Interstellar Ramscoops | Ship range: +1 parsec on top of your fuel cells | expansion, logistics |
+| Propulsion | 7 | Interstellar Ramscoops | Colony ships and scouts: +1 parsec range on top of your fuel cells | expansion, logistics |
 | Propulsion | 13 (was 8) | Navigation Beacons | Between your colonies: +1 warp for fleets and transports | logistics |
 | Propulsion | 17 (was 26) | Emergency Warp Capacitors | Lost battles: 30% of the ships that would be destroyed escape | combat |
 | Propulsion | 22 | Cryogenic Colony Berths | Colony ships: −25% cost | expansion |
@@ -124,6 +124,7 @@ Full numbers: `tools/techlab/REPORT.md`. Method and commands: `tools/techlab/REA
 | Hyper-Fertility Treatments | Planetology 43 → 39 | Its old tier holds one swappable classic tech, Terraforming +100 (worth +51 %), which it halved. |
 | Navigation Beacons | Propulsion 8 → 13 | Propulsion tier 2 held two new techs and cut Nuclear Engines and Irridium Fuel Cells from 57 % to 34 % of trees (now 43 %). |
 | Emergency Warp Capacitors | Propulsion 26 → 17 | Propulsion tier 6 held two new techs; tier 4 has four classic techs to share the slots with. |
+| Interstellar Ramscoops | +1 parsec for every ship → for colony ships and scouts only | After round 3: longer warship range let AI fleets reach more enemy colonies, the main single driver of the extra battles. Afterwards battles per turn are +8 % (−1 to +19 %) on standard galaxies and −2 % on colossal ones; the tech re-tests at +1.9 %. |
 | Slipstream Drives | +1 warp for every fleet → +1 warp for fleets bound for your own colonies | Round 3: as +1 warp for every fleet it hurt AI holders (−4.7 % empire power, fleet −22 %, interval entirely below zero). Retuned, it reads −1.3 % (interval −4.9 to +2.2 %), inside the range of the classic engine techs (Hyper Drives −3.7 % to Impulse Drives +2.4 %). |
 
 ## How they are tested (tools/techlab)

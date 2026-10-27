@@ -71,7 +71,8 @@ MOO.def(function (M) {
     const sh = Intel.init(ctx);
     if (from === to) return null;
     const have = sh.orbit[from]; if (!have) return null;
-    const fr = ctx.range(to), counts = [0, 0, 0, 0, 0, 0]; let any = 0;
+    let civil = true; for (let i = 0; i < 6; i++) if ((only ? Math.min(only[i] | 0, have[i]) : have[i]) > 0 && ctx.designStats(i).armed) civil = false;
+    const fr = ctx.range(to, civil), counts = [0, 0, 0, 0, 0, 0]; let any = 0;
     if (fr === 0) return null;
     for (let i = 0; i < 6; i++) {
       const n = only ? Math.min(only[i] | 0, have[i]) : have[i];
@@ -146,7 +147,7 @@ MOO.def(function (M) {
       if (p.owner >= 0 || !(p.typeIdx >= thr)) continue;
       if (guard && p.id === S.orion) continue;
       have = true;
-      if (ctx.range(p.id) > 0) list.push(p.id);
+      if (ctx.range(p.id, true) > 0) list.push(p.id);
     }
     return { thr, have, list };
   };

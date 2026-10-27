@@ -42,7 +42,7 @@ MOO.def(function (M) {
       mine() { return cache.mine || (cache.mine = S.planets.filter(p => p.owner === eid)); },
       planetsOf(e) { return S.planets.filter(p => p.owner === e); },
       known: star => !!E.explored[star],
-      range: star => (E.frange ? E.frange[star] : 0),
+      range: (star, civil) => { const fr = civil && E.frangeC ? E.frangeC : E.frange; return fr ? fr[star] | 0 : 0; },   // civil: unarmed ships (expansion Ramscoops)
       fleets(owner) { const o = owner === undefined ? eid : owner; return S.fleets.filter(f => f.owner === o && f.ships.reduce((a, b) => a + b, 0) > 0); },
       myStationary() { return S.fleets.filter(f => f.owner === eid && f.star >= 0 && f.ships.reduce((a, b) => a + b, 0) > 0); },
       designStats(slot) { return M.Sim.Design.stats(S, E, slot); },
