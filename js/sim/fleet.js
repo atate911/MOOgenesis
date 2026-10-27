@@ -39,9 +39,13 @@ MOO.def(function (M) {
         for (let j = 0; j < n; j++) { const d = p.starId === j ? 0 : Geo.parsecs(S, p.starId, j); if (d < best[j]) best[j] = d; }
       }
       for (let j = 0; j < n; j++) E.frange[j] = best[j] <= fuel ? 1 : best[j] <= fuel + 3 ? 2 : 0;
+      // expansion Interstellar Ramscoops: unarmed ships (colony ships, scouts) reach `civilRange` parsecs further; warships keep E.frange
+      const cr = (E.mods && E.mods.civilRange) | 0;
+      if (cr > 0 && fuel < 30) { const fc = fuel + cr; E.frangeC = best.map(d => (d <= fc ? 1 : d <= fc + 3 ? 2 : 0)); } else if (E.frangeC) delete E.frangeC;
     }
   };
-  F.canReach = function (S, E, toStar, withTanks) { const v = E.frange ? E.frange[toStar] : 0; return v === 1 || (v === 2 && withTanks); };
+  F.rangeOf = (E, toStar, civil) => { const fr = civil && E.frangeC ? E.frangeC : E.frange; return fr ? fr[toStar] | 0 : 0; };
+  F.canReach = function (S, E, toStar, withTanks, civil) { const v = F.rangeOf(E, toStar, civil); return v === 1 || (v === 2 && withTanks); };
 
   // ---- movement (§5.2): 20 frames; speed N active on frames 0..2N-1; 5 units on even frames, 6 on odd ------------------------------------
   const nebulaAt = (S, x, y) => S.nebulae.some(nb => nb.rects.some(r => x >= r[0] && x <= r[2] && y >= r[1] && y <= r[3]));
@@ -136,15 +140,16 @@ MOO.def(function (M) {
     if (!g) return O.fail('no fleet there');
     if (!S.stars[toStar] || fromStar === toStar) return O.fail(fromStar === toStar ? 'already there' : 'no such star');
     counts = O.counts(counts, 6);                                       // exactly six non-negative ints: a negative count used to CREATE ships and delete the group
-    let any = 0, withTanks = true, speed = 99;
+    let any = 0, withTanks = true, speed = 99, civil = true;
     for (let i = 0; i < 6; i++) {
       const n = Math.min(counts[i], g.ships[i] | 0); counts[i] = n; if (n <= 0) continue;
       any += n; const st = stats(S, E, i);
       if (!st.tanks) withTanks = false;
+      if (st.armed) civil = false;
       speed = Math.min(speed, st.warp);
     }
     if (!any) return O.fail('no ships selected');
-    if (!F.canReach(S, E, toStar, withTanks)) return O.fail('out of range');
+    if (!F.canReach(S, E, toStar, withTanks, civil)) return O.fail('out of range');
     if (E.mods && (E.mods.homeWarp || E.mods.beaconWarp) && M.Sim.XTech) speed = M.Sim.XTech.warpFor(S, E, fromStar, toStar, speed);   // expansion: slipstream / beacons
     // the quickest route, through the empire's stargates when that saves turns: the fleet flies its first leg, the rest wait in f.legs
     const plan = F.plan(S, E, fromStar, toStar, speed), first = plan.legs[0], warp = speed;

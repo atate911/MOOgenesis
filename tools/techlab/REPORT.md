@@ -70,7 +70,7 @@ Verdicts place each tech among the classic techs within six levels of it: top qu
 | Small World Engineering | 28 | 160 | 71 % | +0.8% | +1.8% | +0.9% … +2.7% | +1.8% | +2.4% | +2.5% | -0.6% / +0.9% / +1.9% | 73 | typical |  |
 | Clone Troopers | 33 | 160 | 64 % | +0.5% | +1.7% | +0.4% … +3.1% | +2.1% | +1.7% | +1.3% | -0.7% / +0.8% / +2.1% | 70 | typical |  |
 | Hyper-Fertility Treatments | 39 | 96 | 95 % | +0.6% | +1.4% | -1.4% … +4.2% | +1.7% | +1.4% | -0.8% | -0.7% / +0.0% / +3.3% | 67 | typical | moved from level 43 |
-| Interstellar Ramscoops | 7 | 160 | 97 % | +2.1% | +6.1% | +3.4% … +8.9% | +5.9% | +8.3% | +8.2% | -0.9% / +0.3% / +2.1% | 86 | strong |  |
+| Interstellar Ramscoops | 7 | 96 | 93 % | -0.0% | +1.9% | -0.2% … +4.6% | +0.8% | +1.4% | +4.2% | -0.9% / +0.3% / +2.1% | 56 | typical |  |
 | Navigation Beacons | 13 | 96 | 85 % | +1.3% | +0.3% | -1.6% … +2.1% | +1.3% | -0.6% | -0.3% | -0.7% / +0.6% / +2.4% | 61 | typical | moved from level 8 |
 | Emergency Warp Capacitors | 17 | 96 | 59 % | +0.0% | +0.7% | +0.2% … +1.7% | +0.3% | +0.2% | +2.1% | -0.1% / +0.5% / +2.4% | 54 | typical | moved from level 26 |
 | Cryogenic Colony Berths | 22 | 160 | 99 % | +0.1% | +0.6% | -0.7% … +1.9% | +1.0% | +0.5% | -0.4% | -0.3% / +0.6% / +2.2% | 51 | typical |  |
@@ -209,7 +209,8 @@ Values from round 2 (64 games, effects-off control), on the 60-candidate data.
 | Hyper-Fertility Treatments | Planetology 43 → 39 | Its old tier holds one swappable classic tech, Terraforming +100, which it halved. Level 39 shares a tier with three. |
 | Navigation Beacons | Propulsion 8 → 13 | Propulsion tier 2 held two new techs and cut Nuclear Engines and Irridium Fuel Cells from 57% to 34% of trees. |
 | Emergency Warp Capacitors | Propulsion 26 → 17 | Propulsion tier 6 held two new techs. Tier 4 has four classic techs to share the slots with. |
-| Slipstream Drives | +1 warp for every fleet → for fleets bound for your own colonies | As first designed it hurt AI holders in round 3 (−4.7 % EPI, CI −7.2 … −1.9 %, fleet −22 %); 16 traced games showed fewer battles but a third more ships lost. Re-tested on the round 3 games: −1.3 %, CI −4.9 … +2.2 %. |
+| Slipstream Drives | +1 warp for every fleet → Fleets bound for your colonies: +1 warp | As first designed it hurt AI holders (−4.7% empire power, the whole interval below zero): they fought fewer battles but lost a third more ships. Now it speeds only fleets bound for your own colonies, and re-tests at −1.3% (−4.9% to +2.2%), inside the range of the classic engine techs. |
+| Interstellar Ramscoops | +1 parsec range for every ship → Colony ships and scouts: +1 parsec range on top of your fuel cells | Longer warship range put more enemy colonies within reach of AI attack fleets; with the rest of the pool it raised battles per turn by about a fifth. Now only colony ships and scouts gain the parsec. Battles fell to +8% (interval −1% to +19%) on standard galaxies and −2% on colossal ones; the tech itself re-tests at +1.9%. |
 
 ## 6. Why AI empires fight more: league ablations
 

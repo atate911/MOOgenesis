@@ -34,6 +34,10 @@ with the final list: `briefs/tech-lab.md`. Results: `tools/techlab/REPORT.md` an
   together (not from the combat effects, and not from the reshuffled trees). Wars are not significantly more frequent. A few percent fewer games end
   early at the council.
 
+* Ramscoops retune (after the league): its +1 parsec now applies only to unarmed ships (`civilRange`, `E.frangeC`, `Fleet.rangeOf`,
+  `ctx.range(star, civil)` in the AI's scouting and colonising). Battles per turn vs classic: +21 % → +8 % on standard galaxies, +8 % → −2 %
+  on colossal ones; wars and the economy unchanged; Ramscoops itself +6.1 % → +1.9 %.
+
 ## Notes for the next person
 
 * A new effect key: document it at the top of `techs-x.js`, add it to `KEYS`, guard the consumer with `E.mods`, give it a calibrated weight if it

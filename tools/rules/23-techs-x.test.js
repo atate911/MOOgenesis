@@ -268,14 +268,17 @@ module.exports = function (M, t) {
   });
 
   // ---- movement and scanning ---------------------------------------------------------------------------------------------------------------------------
-  t.test('techs-x logistics: survey, fuel bonus, transports, beacons, slipstream, warp damping', () => {
+  t.test('techs-x logistics: survey, civil range, transports, beacons, slipstream, warp damping', () => {
     const S = xgame('mov'), A = S.empires[0], B = S.empires[1], F = M.Sim.Fleet, V = M.Sim.Vis, Geo = M.Sim.Geo;
     own(S, A, 'stellar-survey-probes'); V.update(S);
     for (let j = 0; j < S.stars.length; j++) if (Geo.parsecs(S, A.capital, j) <= V.scanRange(A) + 2) t.ok(A.explored[j], 'surveyed ' + j);
     const f0 = A.mods.fuel, tr0 = A.mods.transportSpeed;
-    own(S, A, 'interstellar-ramscoops'); t.eq(A.mods.fuel, f0 + 1);
+    own(S, A, 'interstellar-ramscoops'); t.eq(A.mods.fuel, f0, 'warship range unchanged'); t.eq(A.mods.civilRange, 1);
+    F.updateRange(S);
+    const far = S.stars.findIndex((s, j) => A.frange[j] === 0 && A.frangeC[j] === 2 || (A.frange[j] === 2 && A.frangeC[j] === 1));
+    t.ok(far >= 0, 'a star only unarmed ships reach'); t.ok(F.rangeOf(A, far, true) > F.rangeOf(A, far, false));
     own(S, A, 'hyperlane-transports'); t.eq(A.mods.transportSpeed, tr0 + 3);
-    A.mods.fuel = 30; Rs.recompute(A); t.eq(A.mods.fuel, f0 + 1, 'recompute is idempotent');
+    Rs.recompute(A); t.eq(A.mods.fuel, f0, 'recompute is idempotent'); t.eq(A.mods.civilRange, 1);
     const q = S.planets.find(x => x.owner < 0 && x.typeIdx >= 7 && Geo.parsecs(S, A.capital, x.id) <= 3);
     if (q) {
       C.found(S, A, q, 2); F.updateRange(S);

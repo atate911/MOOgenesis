@@ -60,7 +60,7 @@ MOO.def(function (M) {
       if (allied[f.owner] === undefined) allied[f.owner] = !!ctx.allied(f.owner);
       if (!allied[f.owner] && f.ships.some(c => c > 0)) foreign[f.star] = 1;
     }
-    for (let i = 0; i < n; i++) if (E.explored[i] || !ctx.range(i) || foreign[i]) ignore[i] = 1;
+    for (let i = 0; i < n; i++) if (E.explored[i] || !ctx.range(i, true) || foreign[i]) ignore[i] = 1;
     for (const m of sh.moving) ignore[m.to] = 1;
     // need_conquer: 1-in-(8−difficulty); cleared when a colonisable free planet exists anywhere (§3.5 of research/08) or after the game ended
     let need = R.int(0, 7 - ctx.diff) === 0;
@@ -86,7 +86,7 @@ MOO.def(function (M) {
       const have = sh.orbit[src]; let slot = -1;
       for (let i = 0; i < 6; i++) if (have[i] > 0 && (slot < 0 || !ctx.designStats(slot).tanks)) slot = i;   // first design with tanks, else the last one present
       if (slot < 0) continue;
-      const fr = ctx.range(t);
+      const fr = ctx.range(t, true);
       if (!(fr === 1 || (fr === 2 && ctx.designStats(slot).tanks))) continue;
       const num = Math.floor(have[slot] / 4) + 1, only = [0, 0, 0, 0, 0, 0]; only[slot] = num;
       const out = I.send(ctx, src, t, only);
@@ -136,7 +136,7 @@ MOO.def(function (M) {
     const canColonize = (ctx.mod && ctx.mod.allTerrain) || ctx.race === 'silicoid' ? 1 : (des.colonyMin || 7);
     const range = ((E.range | 0) || 3) * 15;
     const ignore = new Uint8Array(n);
-    for (let i = 0; i < n; i++) if (S.planets[i].owner >= 0 || !ctx.range(i)) ignore[i] = 1;
+    for (let i = 0; i < n; i++) if (S.planets[i].owner >= 0 || !ctx.range(i, true)) ignore[i] = 1;
     for (const m of sh.moving) if (m.counts[slot] > 0) ignore[m.to] = 1;
     const guard = !!(S.guardian && S.guardian.alive);
     const targets = [];
@@ -149,7 +149,7 @@ MOO.def(function (M) {
     const stale = ctx.quirk('staleColonyOrbit'), cap = ctx.quirk('colonyRangeCap');
     let sent = 0;
     for (const t of targets) {
-      const fr = ctx.range(t);
+      const fr = ctx.range(t, true);
       if (!(fr === 1 || (fr === 2 && des.tanks))) continue;
       let src = -1, bd = 10000;
       for (let j = 0; j < n; j++) {

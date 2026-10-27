@@ -19,8 +19,9 @@
 //   inPool(E, t) / poolOf(S|E)           does this empire's game use the expansion?  ('x' | '')
 //
 // EFFECT KEYS (fx) — folded by sim/research.js like the classic ones: numbers best value wins (highest; lowest for MIN_KEYS), booleans OR; BONUS_KEYS are
-// then ADDED to a classic key (fuelBonus → fuel unless unlimited, transBonus → transportSpeed). Every hook is a no-op unless owned.
+// then ADDED to a classic key (transBonus → transportSpeed). Every hook is a no-op unless owned.
 //   survey            parsecs    stars within (scanner range + survey) of an own colony are explored (planets known)            sim/vis.js
+//   civilRange        parsecs    unarmed ships (colony ships, scouts) reach this much further than your fuel cells; warships do not   sim/fleet.js
 //   xcomp xmdef       levels     + attack / missile defence of every ship (tactical) — weights: sim/xtech.js
 //   xabsorb           points     + shield absorption of every ship that carries a deflector
 //   xmisshield        percent    ships shoot down at least this share of incoming missiles      xspeed / xinit  + combat speed / initiative
@@ -175,9 +176,9 @@ MOO.def(function (M) {
   ];
 
   const PR = [
-    { l: 7, id: 'interstellar-ramscoops', n: 'Interstellar Ramscoops', ty: 'fuel', fx: { fuelBonus: 1 }, tags: ['expansion', 'logistics'],
-      d: 'Ramscoops that harvest interstellar hydrogen in flight, stretching the range of every ship.',
-      say: [['Ship range', '+1 parsec on top of your fuel cells']] },
+    { l: 7, id: 'interstellar-ramscoops', n: 'Interstellar Ramscoops', ty: 'fuel', fx: { civilRange: 1 }, tags: ['expansion', 'logistics'],
+      d: 'Ramscoops that harvest interstellar hydrogen in flight, stretching the range of colony ships and scouts.',
+      say: [['Colony ships and scouts', '+1 parsec range on top of your fuel cells']] },
     { l: 13, id: 'navigation-beacons', n: 'Navigation Beacons', ty: 'logistics', fx: { beaconWarp: 1 }, tags: ['logistics'],
       d: 'A chain of subspace beacons that speeds every fleet and transport flying between your colonies.',
       say: [['Between your colonies', '+1 warp for fleets and transports']] },
@@ -216,11 +217,11 @@ MOO.def(function (M) {
   const ROWS = [CM, CN, FF, PL, PR, WE];
   const pad2 = n => (n < 10 ? '0' + n : String(n));
   const MIN_KEYS = ['shipUpkeepPct', 'shipCostPct', 'colonyShipCostPct', 'baseCostPct', 'spyCostPct', 'bombDefPct', 'gauntletOwnPct'];
-  const BONUS_KEYS = { fuelBonus: 'fuel', transBonus: 'transportSpeed' };
+  const BONUS_KEYS = { transBonus: 'transportSpeed' };
   const KEYS = ['survey', 'xcomp', 'xmdef', 'xabsorb', 'xmisshield', 'xspeed', 'xinit', 'warheadPct', 'mines', 'baseCompX', 'baseHpPct', 'baseCostPct', 'spyOff',
     'spyCostPct', 'reserveInterest', 'posAct', 'councilBonus', 'rpTreaty', 'researchInterest', 'colonyPop', 'colonyFac', 'asteroid', 'workerPct', 'groundDef', 'groundOff',
     'salvage', 'reverseEng', 'escape', 'shipUpkeepPct', 'shipCostPct', 'colonyShipCostPct', 'bombPct', 'bombDefPct', 'gauntletPct', 'gauntletOwnPct', 'siegeFloor',
-    'arcology', 'domes', 'smallWorld', 'hostileGrowth', 'growthPct', 'terraformCostDelta', 'seedFertile', 'beaconWarp', 'homeWarp', 'snare', 'evacuate', 'fuelBonus',
+    'arcology', 'domes', 'smallWorld', 'hostileGrowth', 'growthPct', 'terraformCostDelta', 'seedFertile', 'beaconWarp', 'homeWarp', 'snare', 'evacuate', 'civilRange',
     'transBonus'];
 
   function make(f, r) {
