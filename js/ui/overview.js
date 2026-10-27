@@ -36,7 +36,7 @@
     .ov-main::after { content:""; position:absolute; inset:0; pointer-events:none; box-shadow:inset 2px 2px 4px rgba(0,0,0,.7), inset -1px -1px 0 rgba(255,235,200,.1); }
     .ov-side { padding:0; background:none; width:clamp(18rem, 21vw, 23rem); }
     .ov-side .panel { clip-path:none; padding:.3rem; gap:.5rem; background:linear-gradient(180deg, #826551, #3a2c21); box-shadow:inset 1px 1px 0 rgba(255,235,200,.3), inset -1px -1px 0 rgba(0,0,0,.6), 0 0 0 1px #000; }
-    .ov-side .panel::before { inset:.2rem; clip-path:none; background:#4a3a2c; box-shadow:inset 1px 1px 2px rgba(0,0,0,.8); }
+    .ov-side .panel::before { inset:.2rem; clip-path:none; background:var(--well-leather, #1a1410); box-shadow:inset 1px 1px 2px rgba(0,0,0,.8); }
     .ov-side .panel::after { display:none; }
     .ov-side .panel > * { position:relative; margin-left:.45rem; margin-right:.45rem; } .ov-side .panel > :first-child { margin-top:.45rem; } .ov-side .panel > :last-child { margin-bottom:.45rem; }
     .ov-title { text-align:center; padding:.35rem .4rem; font:400 1.35rem/1 var(--font-display); letter-spacing:.06em; text-transform:uppercase; color:var(--title-hi); text-shadow:var(--title-shadow); border-bottom:0;

@@ -76,7 +76,7 @@
   const bump = css => css.replace(/(^|[}])([^{}]*)[{]/g, (m, a, sel) => a + sel.replace(/[/][*][^]*?[*][/]/g, '').split(',').map(s => s.trim()).filter(Boolean).map(s => ':root:root ' + s).join(', ') + ' {');   // raise specificity over the theme-v2 .panel/.btn rules
   // Restyle: red-framed planet portrait, inset readout slots, bevelled label plates, red-triangle slider arrows, gantry build box.
   UI.css('side-colony-orig', bump(`
-    .gx-side { --slotbg:#12161b; --slot-edge:rgba(255,255,255,.14); --amber:#f0e060; --lime:#70e060; --red-arrow:#c8453a; --frame-red:#d04030; --gold-frame:#c8a030; }
+    .gx-side { --slotbg:var(--well-steel, #0b0d12); --slot-edge:var(--hair, rgba(255,255,255,.14)); --amber:#f0e060; --lime:#70e060; --red-arrow:#c8453a; --frame-red:#d04030; --gold-frame:#c8a030; }
     .sc-card { gap:.6rem; padding:.3rem; background:radial-gradient(1px 1px at 12% 22%, #fff9 50%, transparent), radial-gradient(1px 1px at 38% 78%, #fff7 50%, transparent), radial-gradient(1px 1px at 88% 18%, #fff8 50%, transparent), radial-gradient(1px 1px at 63% 62%, #fff6 50%, transparent), linear-gradient(180deg, #0b0e13, #05070a); border:0; box-shadow:0 0 0 1px var(--frame-red), inset 0 0 0 1px rgba(0,0,0,.9), inset 0 0 18px rgba(208,64,48,.12); }
     .sc-pic { filter:drop-shadow(0 2px 6px rgba(0,0,0,.7)); }
     .sc-info { text-align:right; }

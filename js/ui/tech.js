@@ -1022,7 +1022,7 @@
   const up = css => css.replace(/(^|})(s*)([^{}@]+){/g, (m, a, ws, sel) => a + ws + sel.split(',').map(x => { x = x.trim(); return x.startsWith(':root') ? x : ':root ' + x; }).join(', ') + ' {');
   UI.css('orig-brown', up(`
     .tch, .rx, .ttp {
-      --o-fill:#826551; --o-hi:#b39677; --o-lo:#2f231a; --o-well:#4a3a2c; --o-well2:#3a2c21; --o-row:#6d5645; --o-sel:#7a4c12;
+      --o-fill:#826551; --o-hi:#b39677; --o-lo:#2f231a; --o-well:var(--well-leather, #1a1410); --o-well2:var(--well-leather-2, #14100c); --o-row:#6d5645; --o-sel:#7a4c12;
       --o-head:#f48201; --o-amber:#e3b327; --o-mint:#7fd8c0; --o-green:#40d040; --o-cream:#f0dcc0; --o-tan:#d9bf9c; --o-dim:#e0c9a6;
       --void:#5b4533; --night:#4a3a2c; --deep:#3a2c21; --glass:rgba(58,44,33,.94); --glass-hi:rgba(98,78,60,.96); --steel:#6d5645; --steel-hi:#9c8466;
       --brass:#e3b327; --brass-hi:#ffd36a; --brass-lo:#7a5a36; --ivory:var(--o-cream); --mist:var(--o-tan); --fog:var(--o-dim);
@@ -1030,7 +1030,7 @@
       --bg-0:#3a2c21; --bg-1:#4a3a2c; --bg-2:#5b4533; --bg-3:#6d5645; --bg-4:#826551;
       --line-0:#3a2c21; --line-1:#6d5645; --line-2:#9c8466; --line-3:#c9ae88;
       --ink-0:var(--o-cream); --ink-1:var(--o-tan); --ink-2:var(--o-dim); --ink-3:#d0b890;
-      --bev-hi:#b39677; --bev-mid:#7a604b; --bev-lo:#3a2c21; --face-1:#8e745d; --face-2:#5b4533; --plate-1:#6d5645; --plate-2:#4a3a2c; --well:#2f231a; --well-2:#3a2c21; --title:#f48201; --title-lo:#8a4a08;
+      --bev-hi:#b39677; --bev-mid:#7a604b; --bev-lo:#3a2c21; --face-1:#8e745d; --face-2:#5b4533; --plate-1:#6d5645; --plate-2:#4a3a2c; --well:var(--well-leather-2, #14100c); --well-2:var(--well-leather, #1a1410); --title:#f48201; --title-lo:#8a4a08;
       --accent:var(--o-amber); --accent-dim:rgba(227,179,39,.16); --accent-line:#b08a2e; --on-accent:#2a1405;
       color:var(--o-cream);
     }
@@ -1062,7 +1062,7 @@
     .tch-tab.on::before { background:linear-gradient(180deg, color-mix(in srgb, var(--tc,#e3b327) 55%, #4a382a), color-mix(in srgb, var(--tc,#e3b327) 28%, #3a2c21)); }
     .tch-tab .tl, .tch-tab .kb { color:var(--o-tan); } .tch-tab.on .tl { color:#fff; }
     /* lists: dark wells, ALL-CAPS rows, dark-red selection with white text */
-    .tch-list, .tt-scroll { background:#3a2c21; box-shadow:inset 1px 1px 0 #1f1610, inset -1px -1px 0 #9c8466; padding:.15rem; }
+    .tch-list, .tt-scroll { background:var(--well-leather, #1a1410); box-shadow:inset 1px 1px 0 #000, inset -1px -1px 0 #9c8466; padding:.15rem; }
     .tch-trow { color:var(--o-tan); text-transform:uppercase; letter-spacing:.03em; font-size:.92rem; border-left-width:0; }
     .tch-trow + .tch-trow { border-top:0; }
     .tch-trow:hover { background:#52402f; color:#fff; }
@@ -1098,7 +1098,7 @@
     .rc-void { background:#5b4533; color:var(--o-dim); } .rc-void::before { background:repeating-linear-gradient(135deg, rgba(255,235,205,.04) 0 .5rem, transparent .5rem 1rem), #4a3a2c; }
     .rc-void .big { color:var(--o-head); text-shadow:1px 1px 0 #2f1a0c; }
     .rc-sec .big { color:var(--o-green); text-shadow:1px 1px 0 #10300f; }
-    .rp-age { background:#3a2c21; box-shadow:inset 1px 1px 0 #1f1610, inset -1px -1px 0 #9c8466; border:0; }
+    .rp-age { background:var(--well-leather, #1a1410); box-shadow:inset 1px 1px 0 #000, inset -1px -1px 0 #9c8466; border:0; }
     .rp-traits .p { color:var(--o-amber); } .rp-traits .o { color:var(--o-cream); }
     ${bx('.rx-plate')} { clip-path:none; border:1px solid #2f231a; box-shadow:inset 1px 1px 0 rgba(255,255,255,.35), inset -1px -1px 0 rgba(0,0,0,.35); text-transform:uppercase; }
     .rx-foot .rx-prompt { color:var(--o-tan); } .rx-foot .rx-prompt b { color:var(--o-amber); }
