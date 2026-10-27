@@ -52,7 +52,7 @@
     .lf-note { flex:1; color:var(--mist); font-size:.88rem; }
     .lf-foot .sp { flex:1; }
     .lf-srow { display:grid; grid-template-columns:9rem 11.5rem minmax(21rem, 1.7fr) minmax(8rem, 1fr) minmax(8rem, 1fr) 6.5rem; gap:.9rem; align-items:center; padding:.7rem 1rem; border-bottom:1px solid rgba(255,255,255,.06); cursor:var(--hand); transition:background .1s; }
-    .lf-srow:hover { background:rgba(98,216,255,.07); } .lf-srow.none { cursor:default; opacity:.55; } .lf-srow.none:hover { background:none; }
+    .lf-srow:hover { background:rgba(98,216,255,.07); } .lf-srow.none { cursor:default; opacity:.7; } .lf-srow.none:hover { background:none; }
     .lf-spic { position:relative; height:5.2rem; display:grid; place-items:center; background:radial-gradient(ellipse at 50% 50%, rgba(40,58,140,.55), rgba(5,8,26,.4) 70%); box-shadow:inset 0 0 0 1px rgba(214,179,106,.32); }
     .lf-spic canvas { width:100%; height:100%; object-fit:contain; }
     .lf-spic .lf-n { right:auto; left:.4rem; bottom:auto; top:.3rem; }
@@ -76,13 +76,13 @@
   const bump = css => css.replace(/(^|[}])([^{}]*)[{]/g, (m, a, sel) => a + sel.replace(/[/][*][^]*?[*][/]/g, '').split(',').map(s => s.trim()).filter(Boolean).map(s => ':root:root ' + s).join(', ') + ' {');   // raise specificity over the theme-v2 .panel/.btn rules
   // Restyle: tool-screen family (bronze bevel frame, recessed cells, black picture tiles, amber/red stat slots, gold names).
   UI.css('ledger-fleets-orig', bump(`
-    .lf { --bz-hi:#b39677; --bz-md:#826551; --bz-lo:#3a2c21; --bz-slot:var(--well-leather, #1a1410); --bz-gold:#f48201; --bz-pale:#f0dcc0;
+    .lf { --bz-hi:#8c7458; --bz-md:#6d5645; --bz-lo:#3a2c21; --bz-slot:var(--well-leather, #1a1410); --bz-gold:#f48201; --bz-pale:#f0dcc0;
       background:radial-gradient(90% 70% at 50% 0%, #2f2218 0%, rgba(47,34,24,0) 70%), #120d09; }
-    .lf-sheet { padding:.7rem .9rem .8rem; background:linear-gradient(135deg, var(--bz-hi), var(--bz-md) 18%, #6d5645 60%, var(--bz-lo)); box-shadow:inset 1px 1px 0 rgba(255,235,200,.35), inset -1px -1px 0 rgba(0,0,0,.65), 0 0 0 1px #000, 0 10px 40px rgba(0,0,0,.6); }
+    .lf-sheet { padding:.7rem .9rem .8rem; background:linear-gradient(135deg, var(--bz-hi), var(--bz-md) 8%, #5b4533 60%, var(--bz-lo)); box-shadow:inset 1px 1px 0 var(--spec, rgba(255,245,225,.22)), inset -1px -1px 0 rgba(0,0,0,.65), 0 0 0 1px #000, 0 10px 40px rgba(0,0,0,.6); }
     .lf-sheet::before, .lf-sheet::after { display:none; }
     .lf-head { border-bottom:0; padding-bottom:.4rem; }
     .lf-title { color:var(--title-hi); text-shadow:var(--title-shadow); font:400 1.85rem/1 var(--font-display); letter-spacing:.06em; text-transform:uppercase; }   /* one title style on every tool screen (Research, Races, Stats) */
-    .lf-h.none .nm { color:var(--bz-pale); opacity:.45; }                                                   /* an empty design slot's column reads as empty, not as a design */
+    .lf-h.none .nm { color:var(--bz-pale); opacity:.55; } .lf-srow.none .nm.dim { color:var(--bz-pale); }                                                   /* an empty design slot's column reads as empty, not as a design */
     .lf-sub { color:#ead4b0; } .lf-sub b { color:var(--bz-pale); }
     .lf-body { background:#2f231a; box-shadow:inset 1px 1px 3px rgba(0,0,0,.9), 0 0 0 1px rgba(0,0,0,.7), 0 1px 0 1px rgba(255,235,200,.15); }
     .lf-body { background:linear-gradient(180deg, rgba(26,20,16,.92) 0%, rgba(26,20,16,.8) 22%, rgba(26,20,16,.62) 100%), url('assets/art/scene/scene-galaxy.webp') 50% 60% / cover no-repeat #120d09; }
@@ -108,7 +108,7 @@
     .lf-sp .ln.col, .lf-sp .ln.tank { color:#70e060; }
     .lf-cost b, .lf-cost .u { color:#f0e060; }
     .lf-foot .btn { clip-path:none; background:rgba(0,0,0,.85); box-shadow:none; color:#fff; text-shadow:0 1px 0 #000; font:600 .85rem var(--font-display); letter-spacing:.12em; text-transform:uppercase; }
-    .lf-foot .btn::before { clip-path:none; inset:1px; background:linear-gradient(180deg, #8c8f9a, #5c606c); box-shadow:inset 1px 1px 0 rgba(255,255,255,.35), inset -1px -1px 0 rgba(0,0,0,.5); }
+    .lf-foot .btn::before { clip-path:none; inset:1px; background:linear-gradient(180deg, #848792, #4e525c); box-shadow:inset 1px 1px 0 var(--spec, rgba(255,245,225,.22)), inset -1px -1px 0 rgba(0,0,0,.5); }
     .lf-foot .btn:hover::before { background:linear-gradient(180deg, #a0a4b0, #6c707c); }
     .lf-head .tabs button { color:#ead4b0; } .lf-head .tabs button.active { color:var(--bz-gold); border-bottom-color:var(--bz-gold); }
   `));

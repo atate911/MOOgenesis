@@ -66,6 +66,20 @@ Versions follow `MAJOR.MINOR.PATCH`; the live version is the `VERSION` file.
   colour grade the other scenes have, the art in the panels and ledgers gets the same touch, and the audience hall breathes behind the
   leader (a slow push-in and back over forty seconds, off under reduce motion). The ship design hologram floats on the one sky. Phones:
   the family wells and separators take the phase 1 values.
+- Balance pass: luminosity, contrast, highlights. Measured, not eyeballed: every visible text element on fifteen screens was scored
+  against the pixels behind it. The brown-leather screens (Research, Races, Report, Tech tree, the ledgers' frames, the Map overview) were two
+  to three times brighter than every other screen and their frame text (subtitles, prompts, even the gold titles on the bright corner) sat
+  at 2.3 to 3:1; the leather is darker and flatter now, its corner highlight a narrow rim, and that text reads at 4 to 5:1. The copper
+  primary buttons' dark ink was haloed by its own light text shadow and fell to 3:1 at small sizes; the lower stop of the copper is lifted and
+  the ink near-black. A disabled button used to be the whole plate at half opacity, which collapsed ink and face together (1.5:1); it is a
+  grey plate with readable ink now (the design screen's Build button too). The Report dossier's dark scrim had been painted under the image
+  since it was made, so its caption sat on bright clouds; it is above the image now. Text that was dimmed for the old brown wells had gone
+  near-invisible in the new black ones (empty design slots, zero-count rows in the map keys, locked tech chips) and is lifted. The orange
+  box-title tier is a lighter orange in bold so it clears as large text on every face. Effects that added nothing are gone: the 1px
+  scanlines over the whole screen (a second grain, moiré at 4K) and the teal scanlines on the audience panel; the territory haze on the map
+  is a quarter softer; the Design screen's five bright orange section slabs and its white-on-orange hull pick take the copper tier with dark
+  ink; the Research level numbers are quiet cream figures (green is for research points only). The bevel highlight is one brightness
+  everywhere (twelve values from .08 to .4 before).
 - Title screen. The world in the corner turns smoothly and visibly: its axis now tilts away from the viewer so mid-latitudes sweep
   past instead of a polar cap turning in place, one turn takes about a minute, the sun sits low on the galaxy's side so the terminator, the
   night-side city lights and the cloud shadows cross the visible half, and it drifts a little against the galaxy's slow zoom. Clouds on

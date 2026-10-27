@@ -19,7 +19,7 @@
     .ov-kt small { font:400 .8rem var(--font-ui); color:var(--mist); letter-spacing:0; }
     .ov-kh { margin:.55rem 0 .2rem; font:400 .85rem var(--font-display); letter-spacing:.09em; color:var(--brass); text-transform:uppercase; }
     .ov-kr { display:flex; align-items:center; gap:.6rem; padding:.14rem 0; font-size:.95rem; line-height:1.2; } .ov-kr .n { margin-left:auto; color:var(--mist); font-variant-numeric:tabular-nums; }
-    .ov-kr.zero { opacity:.42; } .ov-kr small { display:block; color:var(--mist); font-size:.76rem; }
+    .ov-kr.zero { opacity:.58; } .ov-kr small { display:block; color:var(--mist); font-size:.76rem; }
     .ov-sw { flex:none; width:.9rem; height:.9rem; background:var(--c); box-shadow:0 0 7px var(--c); transform:rotate(45deg) scale(.85); }
     .ov-sw.dot { transform:none; border-radius:50%; width:.78rem; height:.78rem; margin:0 .06rem; } .ov-sw.ring { transform:none; border-radius:50%; background:transparent; box-shadow:none; border:1.5px solid var(--c); width:.82rem; height:.82rem; }
     .ov-sw.line { transform:none; width:1.3rem; height:0; background:none; box-shadow:0 0 6px var(--c); border-top:2px solid var(--c); } .ov-sw.dash { transform:none; width:1.3rem; height:0; background:none; box-shadow:none; border-top:2px dotted var(--c); }
@@ -31,27 +31,27 @@
   const bump = css => css.replace(/(^|[}])([^{}]*)[{]/g, (m, a, sel) => a + sel.replace(/[/][*][^]*?[*][/]/g, '').split(',').map(s => s.trim()).filter(Boolean).map(s => ':root:root ' + s).join(', ') + ' {');   // raise specificity over the theme-v2 .panel/.btn rules
   // Restyle: tool-screen family — bronze frame around the map, gold embossed plate, stacked steel mode buttons, brown "Map Key" box.
   UI.css('map-overview-orig', bump(`
-    .ov { padding:.4rem; gap:.4rem; background:linear-gradient(135deg, #b39677, #826551 20%, #6d5645 60%, #3a2c21); box-shadow:inset 1px 1px 0 rgba(255,235,200,.35), inset -1px -1px 0 rgba(0,0,0,.65); }
+    .ov { padding:.4rem; gap:.4rem; background:linear-gradient(135deg, #8c7458, #6d5645 8%, #5b4533 60%, #3a2c21); box-shadow:inset 1px 1px 0 var(--spec, rgba(255,245,225,.22)), inset -1px -1px 0 rgba(0,0,0,.65); }
     .ov-main { background:#000; box-shadow:0 0 0 1px #000, 0 1px 0 1px rgba(255,235,200,.2); overflow:hidden; }
     .ov-main::after { content:""; position:absolute; inset:0; pointer-events:none; box-shadow:inset 2px 2px 4px rgba(0,0,0,.7), inset -1px -1px 0 rgba(255,235,200,.1); }
     .ov-side { padding:0; background:none; width:clamp(18rem, 21vw, 23rem); }
-    .ov-side .panel { clip-path:none; padding:.3rem; gap:.5rem; background:linear-gradient(180deg, #826551, #3a2c21); box-shadow:inset 1px 1px 0 rgba(255,235,200,.3), inset -1px -1px 0 rgba(0,0,0,.6), 0 0 0 1px #000; }
+    .ov-side .panel { clip-path:none; padding:.3rem; gap:.5rem; background:linear-gradient(180deg, #6d5645, #3a2c21); box-shadow:inset 1px 1px 0 var(--spec, rgba(255,245,225,.22)), inset -1px -1px 0 rgba(0,0,0,.6), 0 0 0 1px #000; }
     .ov-side .panel::before { inset:.2rem; clip-path:none; background:var(--well-leather, #1a1410); box-shadow:inset 1px 1px 2px rgba(0,0,0,.8); }
     .ov-side .panel::after { display:none; }
     .ov-side .panel > * { position:relative; margin-left:.45rem; margin-right:.45rem; } .ov-side .panel > :first-child { margin-top:.45rem; } .ov-side .panel > :last-child { margin-bottom:.45rem; }
     .ov-title { text-align:center; padding:.35rem .4rem; font:400 1.35rem/1 var(--font-display); letter-spacing:.06em; text-transform:uppercase; color:var(--title-hi); text-shadow:var(--title-shadow); border-bottom:0;
-      background:linear-gradient(180deg, #5b4533, #3a2c21); box-shadow:inset 1px 1px 0 rgba(255,235,200,.25), inset -1px -1px 0 rgba(0,0,0,.6); }
+      background:linear-gradient(180deg, #5b4533, #3a2c21); box-shadow:inset 1px 1px 0 var(--spec, rgba(255,245,225,.22)), inset -1px -1px 0 rgba(0,0,0,.6); }
     .ov-title small { color:#f0dcc0; font-size:1rem; margin-top:.3rem; text-transform:none; letter-spacing:0; }
     .ov-side .panel { flex:0 1 auto; }
     .ov-modes .btn { clip-path:none; justify-content:center; padding:.4em .6em; background:rgba(0,0,0,.85); box-shadow:none; color:#0b0e13; font:700 .92rem var(--font-display); letter-spacing:.1em; text-transform:uppercase; }
-    .ov-modes .btn::before { clip-path:none; inset:1px; background:linear-gradient(180deg, #a0a3ae, #6c707c); box-shadow:inset 1px 1px 0 rgba(255,255,255,.4), inset -1px -1px 0 rgba(0,0,0,.45); }
+    .ov-modes .btn::before { clip-path:none; inset:1px; background:linear-gradient(180deg, #a0a3ae, #6c707c); box-shadow:inset 1px 1px 0 var(--spec, rgba(255,245,225,.22)), inset -1px -1px 0 rgba(0,0,0,.45); }
     .ov-modes .btn.active { color:#25100a; text-shadow:0 1px 0 rgba(255,230,170,.5); } .ov-modes .btn.active::before { background:linear-gradient(180deg, #ffd070, #c8741a); box-shadow:inset 1px 1px 3px rgba(0,0,0,.35), 0 0 0 1px #ffc860; }
     .ov-modes .btn .kbd { display:none; }
     .ov-key { background:#3a2c21; box-shadow:inset 1px 1px 3px rgba(0,0,0,.9), 0 0 0 1px rgba(255,235,200,.14); }
     .ov-kt { color:var(--head-orange); border-bottom-color:rgba(255,235,200,.14); font-size:1.05rem; text-shadow:0 1px 0 #000; text-transform:uppercase; letter-spacing:.08em; } .ov-kt small { text-transform:none; letter-spacing:0; }   /* the box-title tier: as Planets' SPENDING COSTS and Research's section heads */
     .ov-kh { color:#f0b868; font-size:.92rem; } .ov-kr { color:#f0dcc0; } .ov-kr small { font-size:.86rem; color:#e0cba8; } .ov-kt small { font-size:.9rem; color:#e0cba8; } .ov-note { color:#ead4b0; font-size:.9rem; border-top-color:rgba(255,235,200,.14); }
     .ov-ok .btn { clip-path:none; background:rgba(0,0,0,.85); box-shadow:none; color:#0b0e13; font:700 .85rem var(--font-display); letter-spacing:.14em; text-transform:uppercase; }
-    .ov-ok .btn::before { clip-path:none; inset:1px; background:linear-gradient(180deg, #a0a3ae, #6c707c); box-shadow:inset 1px 1px 0 rgba(255,255,255,.4), inset -1px -1px 0 rgba(0,0,0,.45); }
+    .ov-ok .btn::before { clip-path:none; inset:1px; background:linear-gradient(180deg, #a0a3ae, #6c707c); box-shadow:inset 1px 1px 0 var(--spec, rgba(255,245,225,.22)), inset -1px -1px 0 rgba(0,0,0,.45); }
   `));
 
   // ---- vocabulary (letters match the map component's own) ---------------------------------------------------------------------------------------

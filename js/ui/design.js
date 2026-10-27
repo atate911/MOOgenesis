@@ -135,7 +135,7 @@
     .dz-count .ud button:hover { background:rgba(214,179,106,.32); }
     .dz-count .ud button:active { transform:translateY(1px); }
     .dz-count .ud svg { width:.62rem; height:.62rem; fill:currentColor; }
-    .dz-count.off .n { opacity:.55; }
+    .dz-count.off .n { opacity:.7; }
     @keyframes dz-shake { 0%,100% { transform:none; } 20% { transform:translateX(-4px); } 40% { transform:translateX(4px); } 60% { transform:translateX(-3px); } 80% { transform:translateX(2px); } }
     .shake { animation:dz-shake .3s linear; }
 
@@ -176,7 +176,8 @@
     .dz-read .sm { grid-column:1 / -1; text-align:right; color:var(--fog); font-size:.76rem; margin-top:-.05rem; }
     .dz-btns { display:flex; flex-direction:column; gap:.4rem; justify-content:center; }
     .dz-btns .btn { width:100%; }
-    .btn.dz-off { opacity:.5; filter:grayscale(.55); }
+    .btn.dz-off { opacity:.72; filter:grayscale(.65) brightness(.9); }                                              /* a greyed plate with readable ink, not a dim copper one */
+    :root:root:root .btn.primary.dz-off { color:#ece4d4; text-shadow:none; } :root:root:root .btn.primary.dz-off::before { background:linear-gradient(180deg, #7a7a80, #56565e); box-shadow:inset 0 1px 0 rgba(255,255,255,.18), inset 0 -1px 0 rgba(0,0,0,.45); }
 
     /* narrower windows (below the 1280 px design size): tighter columns, one slot column, the main panel scrolls */
     @media (max-width: 1000px) {
@@ -306,12 +307,13 @@
     .dz-card, .dz-tile, .dz-count .n { background:linear-gradient(180deg,#0e0e0e,#050505); border:0; box-shadow:0 0 0 1px #000, inset 1px 1px 0 #2a2a2a, inset -1px -1px 0 #6c6c6c; }
     .dz-card:hover { background:linear-gradient(180deg,#1c1c1c,#0b0b0b); }
     .dz-card.sel { background:linear-gradient(180deg,#9a6218,#6d430d); box-shadow:0 0 0 1px #000, inset 0 0 0 1px var(--sel-line, #ffc860); }
+    .dz-card.sel .nm .t { color:#fff4e0; } .dz-card.sel :is(.mt, .co, .co b, .no) { color:#f0e6d0; }
     .dz-card .no { color:#f38600; } .dz-card.empty { border:0; background:#0a0a0a; color:#6a6a6a; box-shadow:inset 1px 1px 0 #000, inset -1px -1px 0 #3a3a3a; }
     .dz-ci .nm { color:var(--o-orange); text-transform:uppercase; letter-spacing:.05em; }
     .dz-ci .co b, .dz-ci .mt { color:var(--o-teal); } .dz-ci .co { color:#d2d2d2; }
     .dz-tile .k { color:var(--o-teal); letter-spacing:.08em; } .dz-tile .v { color:#fff; text-shadow:none; font-family:var(--font-ui); font-weight:600; }
     .dz-tile.ghost { background:linear-gradient(180deg,#0c2a24,#04120f); box-shadow:0 0 0 1px #000, inset 0 0 0 1px var(--o-teal); }
-    .dz-sec { color:#1a0c00; font:700 .76rem var(--font-display); letter-spacing:.16em; padding:.12rem .8rem .14rem; width:max-content; background:linear-gradient(180deg,#ffb23c,#e87a00); box-shadow:inset 1px 1px 0 #ffd79a, inset -1px -1px 0 #7a3a00, 0 0 0 1px #000;
+    .dz-sec { color:#1a0c00; font:700 .76rem var(--font-display); letter-spacing:.16em; padding:.12rem .8rem .14rem; width:max-content; background:linear-gradient(180deg,#f0a030,#c8741a); box-shadow:inset 1px 1px 0 rgba(255,235,200,.45), inset -1px -1px 0 #7a3a00, 0 0 0 1px #000;
       clip-path:polygon(.4rem 0,calc(100% - .4rem) 0,100% 100%,0 100%); margin:.2rem 0 .3rem; }
     .dz-sec .hint { color:#3a1c00; font-weight:600; letter-spacing:.04em; }
     .dz-lb { color:var(--o-teal); text-transform:uppercase; letter-spacing:.03em; font-size:.88rem; } .dz-lb .ico { color:var(--o-teal); }
@@ -326,7 +328,7 @@
     .dz-foot { border-top:0; box-shadow:0 -1px 0 #2a2a2a, 0 -2px 0 #797979; background:linear-gradient(180deg,#3d3d3d,#2c2c2c); margin:.3rem -.3rem -.3rem; padding:.5rem .6rem .5rem; }
     .dz-hull { background:linear-gradient(180deg,#0e0e0e,#040404); border:0; color:#9a9a9a; box-shadow:0 0 0 1px #000, inset 1px 1px 0 #2a2a2a, inset -1px -1px 0 #6c6c6c; }
     .dz-hull:hover { color:#fff; }
-    .dz-hull.on { background:linear-gradient(180deg,#ffb23c,#f38600); color:#fff; box-shadow:0 0 0 1px #000, inset 1px 1px 0 #ffd79a, inset -1px -1px 0 #7a3a00; text-shadow:0 1px 0 rgba(0,0,0,.6); }
+    .dz-hull.on { background:linear-gradient(180deg,#f0a030,#c8741a); color:#241a05; box-shadow:0 0 0 1px #000, inset 1px 1px 0 rgba(255,235,200,.45), inset -1px -1px 0 #7a3a00; text-shadow:0 1px 0 rgba(255,230,170,.4); }
     .dz-hull .nm { text-transform:uppercase; }
     .dz-look .pic { border:0; background:#000; box-shadow:inset 1px 1px 0 #000, inset -1px -1px 0 #797979; color:var(--o-orange); }
     .dz-name label, .dz-read .l { color:#fff; font-weight:600; } .dz-read .v { color:#fff; } .dz-read .v.gold { color:var(--o-orange); }

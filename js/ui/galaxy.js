@@ -55,7 +55,7 @@
   UI.css('galaxy-orig', bump(`
     .gx { --bv-hi:rgba(255,255,255,.2); --bv-lo:rgba(0,0,0,.6); --gold-ink:var(--title, #e8c850);
       padding:.4rem; gap:.4rem; background:linear-gradient(135deg, #8d98a4 0%, #4d5662 38%, #2a313a 100%);
-      box-shadow:inset 1px 1px 0 rgba(255,255,255,.35), inset -1px -1px 0 rgba(0,0,0,.7), inset 0 0 0 .22rem rgba(0,0,0,.18); }
+      box-shadow:inset 1px 1px 0 var(--spec, rgba(255,245,225,.22)), inset -1px -1px 0 rgba(0,0,0,.7), inset 0 0 0 .22rem rgba(0,0,0,.18); }
     .gx-mapwrap { background:#000; box-shadow:0 0 0 1px rgba(0,0,0,.9), 0 1px 0 1px rgba(255,255,255,.18); overflow:hidden; }
     .gx-mapwrap::after { content:""; position:absolute; inset:0; z-index:4; pointer-events:none; box-shadow:inset 0 0 0 1px rgba(0,0,0,.9), inset 2px 2px 3px rgba(0,0,0,.65), inset -1px -1px 0 rgba(255,255,255,.1); }
     .gx-side { padding:0; background:none; }
@@ -67,7 +67,7 @@
     .gx-bar .gx-spacer { display:none; }
     .gx-bar .btn { flex:1 1 0; min-width:0; clip-path:none; padding:.5em .3em; font:600 .86rem/1.1 var(--font-display); letter-spacing:.1em; text-transform:uppercase; color:#ecf0f6; text-shadow:0 1px 0 rgba(0,0,0,.7);
       background:rgba(0,0,0,.85); box-shadow:none; }
-    .gx-bar .btn::before { inset:1px; clip-path:none; background:linear-gradient(180deg, #6f7b94 0%, #4c566e 52%, #424b61 100%); box-shadow:inset 1px 1px 0 rgba(255,255,255,.28), inset -1px -1px 0 rgba(0,0,0,.45); }
+    .gx-bar .btn::before { inset:1px; clip-path:none; background:linear-gradient(180deg, #6f7b94 0%, #4c566e 52%, #424b61 100%); box-shadow:inset 1px 1px 0 var(--spec, rgba(255,245,225,.22)), inset -1px -1px 0 rgba(0,0,0,.45); }
     .gx-bar .btn:hover { filter:none; }
     .gx-bar .btn:hover::before { background:linear-gradient(180deg, #8794b0 0%, #5a6584 52%, #4e5873 100%); }
     .gx-bar .btn:active::before { background:linear-gradient(180deg, #3d4659, #4c566e); box-shadow:inset 1px 1px 0 rgba(0,0,0,.55), inset -1px -1px 0 rgba(255,255,255,.18); }
@@ -79,7 +79,7 @@
     .gx-msg .m { background:rgba(6,9,14,.82); border-left-width:2px; }
     /* title plate (shared by every side panel) */
     .side-title { justify-content:center; align-items:center; gap:.6rem; margin:-.05rem 0 .5rem; padding:.28rem .5rem; border-bottom:0;
-      background:linear-gradient(180deg, #3d4780 0%, #2a3263 55%, #202750 100%); box-shadow:inset 1px 1px 0 rgba(255,255,255,.25), inset -1px -1px 0 rgba(0,0,0,.6), 0 0 0 1px rgba(0,0,0,.7); }
+      background:linear-gradient(180deg, #3d4780 0%, #2a3263 55%, #202750 100%); box-shadow:inset 1px 1px 0 var(--spec, rgba(255,245,225,.22)), inset -1px -1px 0 rgba(0,0,0,.6), 0 0 0 1px rgba(0,0,0,.7); }
     .side-title .nm { font:400 1.35rem/1.1 var(--font-title); letter-spacing:.06em; color:var(--title, #e8c850); text-shadow:0 1px 0 #6b4f12, 0 0 12px rgba(232,200,80,.25); }
     .side-title .own { margin-left:0; font-size:.8rem; letter-spacing:.06em; text-transform:uppercase; color:#cfd6ee; }
     .side-title .cyc { flex:none; width:1.35rem; height:1.35rem; padding:0; border:0; background:none; cursor:var(--hand); color:#cfd6ee; opacity:.7; }

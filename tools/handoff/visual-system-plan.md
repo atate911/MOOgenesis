@@ -118,6 +118,35 @@ system compressed; surfaces stay flat (no blur on phones).
 | 2.9 design | `design.js` `makeBg`: the one sky under the hologram grid, the indigo dome as the fallback. | |
 | 2.10 phones | `phone-skin.css`: gunmetal / bronze / leather `--pk-well` → the phase 1 well blacks, `--pk-sep` → the hairline. | |
 
+## Balance pass — done (same branch, one commit)
+
+The owner asked for a look at spacing, overuse of visuals, colour and luminosity balance, specular highlights and contrast before a live
+review. Harness: `scratchpad/qa/audit.js` (per screen: a screenshot plus every visible text element's rect, colour, size and every box's
+padding / gap) and `audit.py` (WCAG contrast of each text against the most common colour behind it in the screenshot; mean luminance,
+black and highlight shares, saturation; distinct spacing values in rem). Worth keeping as `tools/qa/audit.js` if the owner wants it.
+
+| Finding | Numbers | Fix |
+|---|---|---|
+| The leather family was far brighter than the rest and its frame text failed | mean luma 65–95 vs 18–37 elsewhere; `.lp-sub`, `.lf-sub`, `.rx-sub`, `.rx-prompt`, even `.lp-title` on the bright corner: 2.3–3.0:1 | `--bz-hi`/`--bz-md`, `--o-fill`/`--o-hi`, `--bronze*` and the literal leathers darkened (#b39677 → #8c7458, #826551 → #6d5645), sheet gradients reach the mid tone at 8 % instead of 18 %; frame text now 4.2–5:1; Report 95 → 55 mean luma |
+| Copper primary buttons | dark ink sampled at 2.9–3.7:1 at 15 px (its light text shadow haloed it) | `--gold-2` #c8741a → #dc8c2c, `--copper-2` → #c06a20, ink #1a0a02, shadow alpha .3 |
+| Disabled buttons | whole-button opacity .45: 1.5–2.5:1 | opacity .72 + grayscale; a disabled primary (and the Design screen's `.dz-off`) is a grey plate with cream ink |
+| Report dossier caption | 2.3–2.6:1 on dimmed clouds: the `::before` scrim was under the `<img>` (DOM order) | scrim `z-index:1`, caption `z-index:2`, scrim darker from 62 % |
+| Dim text in black wells | `.lf-srow.none` 1.9:1, `.gl-row.dim` 2.9, `.ov-kr.zero` 2.6, `.tt-chip.locked` 2.2 | opacities lifted (.55→.7, .45→.6, .42→.58, .5→.68); the empty-slot name is pale, not dim orange |
+| Orange box-title tier | `#f48201` 3.4:1 on the box faces at 19–21 px regular | `--head-orange` #ff9420 in 600 weight (large-text rule); the family's `--title` and `--o-head` read it |
+| Research screen | tab hotkeys 3.4, rose 3.4, selected row 3.3, unit "RP" 3.2; the per-row level number was a loud green | hotkeys full opacity (white on the active tab), rose #ff9a88, `--o-sel` #5c3810, unit cream, level numbers cream at 1.15rem |
+| Design screen | white on orange hull pick 2.2:1; five bright orange section slabs; selected card's orange/teal ink 3.3–3.6 | copper tier with dark ink for the slabs and the pick; cream ink on the selected card; steel button faces a shade darker (4.1 → 4.6) |
+| Overuse | full-screen 1px scanlines on `#app::after`; teal scanlines on `.au-panel::after`; the territory haze | scanlines removed (vignette stays); haze ×0.75 |
+| Specular | 12 distinct bevel-highlight alphas (.08–.4) | `--spec: rgba(255,245,225,.22)` replaces every value ≥ .25 |
+
+Spacing, measured and left: 14–39 distinct padding/gap values per screen, 66–98 % of them off a ⅛-rem step. At the root size that is
+sub-pixel noise (0.36 vs 0.375 rem = 0.2 px) and the macro rhythm (head bands, box gaps, footers) is consistent screen to screen, so a
+mechanical normalisation to a {.25 .5 .75 1 1.5} scale would move layouts for no visible gain. Recommended as a separate cleanup with the
+layout fingerprint and the phone QA as the guard, not here.
+
+Still failing by the numbers, on purpose: locked tech chips and zero-count key rows at ~3:1 (dimness is their meaning), the phone tab bar's
+Next turn (the sampler reads the bar as its background; the gold plate is 9:1 in the pixels), and the headless sampler's 3.5–3.9 on the
+copper buttons (anti-aliased glyph edges; the ink itself is 5:1).
+
 ## Phase 3 — assets (rows for `ART-NEEDED.md`)
 
 **11. Full-screen scenes at 3840×2160**, in order of screen time: `scene-galaxy` (title, boot, ledgers), the 10 audience halls, the

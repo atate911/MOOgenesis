@@ -47,7 +47,7 @@
     .tt-chip.proj { --sw:var(--cyan); background:rgba(98,216,255,.16); box-shadow:inset 0 0 0 1px rgba(98,216,255,.55); animation:tt-pulse 2.2s ease-in-out infinite; }
     .tt-chip.avail { --sw:var(--brass-hi); background:rgba(214,179,106,.1); } .tt-chip.avail .nm { color:var(--brass-hi); }
     .tt-chip.queued { --sw:var(--brass-lo); } .tt-chip.queued .nm { color:var(--mist); }
-    .tt-chip.locked { --sw:var(--fog); opacity:.5; } .tt-chip.locked .nm { color:var(--mist); }
+    .tt-chip.locked { --sw:var(--fog); opacity:.68; } .tt-chip.locked .nm { color:var(--mist); }
     .tt-chip.miss { opacity:.16; } .tt-chip.hit { box-shadow:inset 0 0 0 1px var(--cyan); background:rgba(98,216,255,.14); opacity:1; }
     .tt-unk { display:flex; flex-wrap:wrap; gap:.2rem; }
     .tt-q { display:inline-grid; place-items:center; width:1.5rem; height:1.25rem; border:1px dashed var(--fog); color:var(--fog); font-size:.8rem; cursor:help; }

@@ -214,9 +214,9 @@
     .rp-note { margin:.2rem 0 .6rem; padding:.5rem .8rem; border-left:3px solid var(--rose); background:rgba(255,92,106,.07); font-size:.98rem; } .rp-note b { color:var(--ivory); }
     /* nothing on file: one dossier card over their homeworld instead of six empty field boxes */
     .rp-dossier { --ch:.6rem; position:relative; flex:1 1 auto; min-height:12rem; overflow:hidden; display:flex; flex-direction:column; justify-content:flex-end; gap:.6rem; padding:1.2rem 1.4rem; background:#05070f; box-shadow:inset 0 0 0 1px rgba(214,179,106,.35); }
-    .rp-dossier > :is(canvas, img) { position:absolute; inset:0; width:100%; height:100%; object-fit:cover; filter:saturate(.75) brightness(.55); }
-    .rp-dossier::before { content:""; position:absolute; inset:0; background:linear-gradient(180deg, rgba(3,5,14,.15) 30%, rgba(3,5,14,.88)); }
-    .rp-dossier > :not(canvas, img) { position:relative; }
+    .rp-dossier > :is(canvas, img) { position:absolute; inset:0; width:100%; height:100%; object-fit:cover; filter:saturate(.75) brightness(.5); }
+    .rp-dossier::before { content:""; position:absolute; inset:0; z-index:1; background:linear-gradient(180deg, rgba(3,5,14,.12) 25%, rgba(3,5,14,.9) 62%, rgba(3,5,14,.96)); }
+    .rp-dossier > :not(canvas, img) { position:relative; z-index:2; }
     .rp-dossier .k { font:400 .82rem var(--font-display); letter-spacing:.24em; text-transform:uppercase; color:var(--rose); }
     .rp-dossier .t { font:400 1.6rem/1.15 var(--font-title); color:var(--ivory); }
     .rp-dossier .d { max-width:40rem; color:#d5dbea; font-size:1rem; line-height:1.4; }

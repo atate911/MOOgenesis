@@ -456,7 +456,7 @@
       if (b < 0 || v1 < 0.004) continue;
       const u = 1 - Math.exp(-1.7 * v1);
       const edge = Math.exp(-Math.pow((u - 0.27) / 0.05, 2));
-      let a = (0.13 * sstep(0.04, 0.5, u) + 0.06 * sstep(0.55, 0.95, u) + 0.11 * edge) * strength;        // a soft tint with a faint contour, not a glowing ring
+      let a = (0.10 * sstep(0.04, 0.5, u) + 0.045 * sstep(0.55, 0.95, u) + 0.08 * edge) * strength;        // a soft tint with a faint contour, not a glowing ring
       const cont = v2 / v1; if (cont > 0.5) a *= 1 - 0.55 * sstep(0.5, 0.95, cont);
       if (a < 0.002) continue;
       const col = empires[b].rgb, j = i * 4, br = 1 + 0.15 * edge;
@@ -510,7 +510,7 @@
       font:400 1.02rem var(--font-display); color:var(--brass-hi); letter-spacing:.06em; text-transform:uppercase; }
     .gmap-legend .gl-h small { font:400 .74rem var(--font-ui); color:var(--mist); letter-spacing:0; text-transform:none; }
     .gmap-legend .gl-row { display:flex; align-items:center; gap:.55rem; padding:.1rem 0; font-size:.86rem; color:var(--ivory); line-height:1.15; }
-    .gmap-legend .gl-row.dim { opacity:.45; }
+    .gmap-legend .gl-row.dim { opacity:.6; }
     .gmap-legend .gl-sw { flex:none; width:.78rem; height:.78rem; background:var(--c); box-shadow:0 0 7px var(--c); transform:rotate(45deg) scale(.86); }
     .gmap-legend .gl-sw.dot { transform:none; border-radius:50%; width:.7rem; height:.7rem; margin:0 .04rem; }
     .gmap-legend .gl-sw.hollow { background:transparent; box-shadow:none; border:1.5px solid var(--c); }

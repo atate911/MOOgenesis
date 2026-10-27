@@ -67,9 +67,9 @@
   const bump = css => css.replace(/(^|[}])([^{}]*)[{]/g, (m, a, sel) => a + sel.replace(/[/][*][^]*?[*][/]/g, '').split(',').map(s => s.trim()).filter(Boolean).map(s => ':root:root ' + s).join(', ') + ' {');   // raise specificity over the theme-v2 .panel/.btn rules
   // Restyle: tool-screen family — bronze bevel frame, recessed dark-brown cells, gold embossed title, blue selected row, lime production.
   UI.css('ledger-planets-orig', bump(`
-    .lp { --bz-hi:#b39677; --bz-md:#826551; --bz-lo:#3a2c21; --bz-slot:var(--well-leather, #1a1410); --bz-gold:#ff9a20; --bz-pale:#f0dcc0;
+    .lp { --bz-hi:#8c7458; --bz-md:#6d5645; --bz-lo:#3a2c21; --bz-slot:var(--well-leather, #1a1410); --bz-gold:#ff9a20; --bz-pale:#f0dcc0;
       background:radial-gradient(90% 70% at 50% 0%, #2f2218 0%, rgba(47,34,24,0) 70%), #120d09; }
-    .lp-sheet { padding:.7rem .9rem .8rem; background:linear-gradient(135deg, var(--bz-hi), var(--bz-md) 18%, #6d5645 60%, var(--bz-lo)); box-shadow:inset 1px 1px 0 rgba(255,235,200,.35), inset -1px -1px 0 rgba(0,0,0,.65), 0 0 0 1px #000, 0 10px 40px rgba(0,0,0,.6); }
+    .lp-sheet { padding:.7rem .9rem .8rem; background:linear-gradient(135deg, var(--bz-hi), var(--bz-md) 8%, #5b4533 60%, var(--bz-lo)); box-shadow:inset 1px 1px 0 var(--spec, rgba(255,245,225,.22)), inset -1px -1px 0 rgba(0,0,0,.65), 0 0 0 1px #000, 0 10px 40px rgba(0,0,0,.6); }
     .lp-sheet::before, .lp-sheet::after { display:none; }
     .lp-head { border-bottom:0; padding-bottom:.4rem; }
     .lp-title { color:var(--title-hi); text-shadow:var(--title-shadow); font:400 1.85rem/1 var(--font-display); letter-spacing:.06em; text-transform:uppercase; }   /* one title style on every tool screen */
@@ -88,13 +88,13 @@
     .lp-tbl tfoot td { background:#4a3a2c; border-top:0; color:var(--bz-pale); }
     .lp-tbl tfoot td.nm { color:var(--bz-gold); }
     .lp-fill { background:linear-gradient(90deg, #4aa84a, var(--bz-lime, #70e060)); box-shadow:none; }
-    .lp-box { clip-path:none; padding:.45rem .7rem .55rem; background:linear-gradient(135deg, var(--bz-hi), var(--bz-md) 25%, var(--bz-lo)); box-shadow:inset 1px 1px 0 rgba(255,235,200,.3), inset -1px -1px 0 rgba(0,0,0,.6), 0 0 0 1px #000; }
+    .lp-box { clip-path:none; padding:.45rem .7rem .55rem; background:linear-gradient(135deg, var(--bz-hi), var(--bz-md) 25%, var(--bz-lo)); box-shadow:inset 1px 1px 0 var(--spec, rgba(255,245,225,.22)), inset -1px -1px 0 rgba(0,0,0,.6), 0 0 0 1px #000; }
     .lp-box::before { inset:.2rem; clip-path:none; background:var(--well-leather, #1a1410); box-shadow:inset 1px 1px 2px rgba(0,0,0,.9), 0 0 0 1px rgba(255,235,200,.12); }
     .lp-bt { margin:0 0 .35rem; padding:0 0 .25rem; border-bottom:1px solid rgba(255,235,200,.14); font:600 .95rem var(--font-display); letter-spacing:.1em; color:var(--head-orange); text-shadow:0 1px 0 #000; }   /* the orange box-title tier of Map Key and Research */
     .lp-line .k { color:#f0b868; font-weight:600; font-size:.9rem; letter-spacing:.06em; text-transform:uppercase; } .lp-line .v { color:var(--bz-pale); }
     .lp-reserve b { color:var(--bz-gold); text-shadow:0 1px 0 #6b4f12; } .lp-reserve span { color:var(--bz-gold); }
     .lp-btns .btn { clip-path:none; background:rgba(0,0,0,.85); box-shadow:none; color:#fff; text-shadow:0 1px 0 #000; font:600 .85rem var(--font-display); letter-spacing:.12em; text-transform:uppercase; }
-    .lp-btns .btn::before { clip-path:none; inset:1px; background:linear-gradient(180deg, #8c8f9a, #5c606c); box-shadow:inset 1px 1px 0 rgba(255,255,255,.35), inset -1px -1px 0 rgba(0,0,0,.5); }
+    .lp-btns .btn::before { clip-path:none; inset:1px; background:linear-gradient(180deg, #848792, #4e525c); box-shadow:inset 1px 1px 0 var(--spec, rgba(255,245,225,.22)), inset -1px -1px 0 rgba(0,0,0,.5); }
     .lp-btns .btn:hover::before { background:linear-gradient(180deg, #a0a4b0, #6c707c); }
     .lp-tag { border-radius:0; }
   `));
