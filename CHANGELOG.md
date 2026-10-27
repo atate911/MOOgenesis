@@ -5,6 +5,19 @@ Versions follow `MAJOR.MINOR.PATCH`; the live version is the `VERSION` file.
 
 ## Unreleased
 
+- Research screens fit iPhones. The breakthrough card (a technology researched, stolen, traded or found) was a fixed share of the
+  screen with a fixed-height picture, so its text got what was left: 0 to 77 pixels on most iPhones for a block that needs 170 to 200,
+  hidden in an inner scroll box iOS shows no scrollbar for. The chips were sliced, the description and effects never showed, and on a
+  phone held sideways nothing below the picture did, the caption's first line sat under the app bar and the Continue button hung off
+  the card. On a phone the caption and the card now stack from the bottom of the scene at their natural height; the picture shrinks
+  first, and only then does the text scroll, with a fade at the edge that says there is more. Sideways, the picture sits beside the text,
+  and the research choice puts its list beside the description. The keyboard hint ("Space continue") is gone on touch screens. The
+  tech tree's names were cut mid-letter on a phone ("IMPROVE", "ECM JAMME…"); each box is wider, a name runs to three lines in sentence
+  case with long words hyphenated, the level sits under the icon, and a column header puts its count under the field's name. The
+  Research screen and the tech tree keep clear of the notch, the Dynamic Island and the home indicator (a home-screen install put the
+  last lines under the home indicator; sideways, the content ran under the notch on both sides). With Reduce motion on, the scientist's
+  photo now replaces the drawn stand-in once it loads (the scene only repainted when something else changed). New QA:
+  `tools/qa/phone-fit.js` checks every screen, scene and dialog at seven iPhone sizes with the iPhone safe areas emulated.
 - Expanded technology (New game › Remake options, off by default): 45 new technologies join the pool every research tree is dealt
   from, a quarter of the 180 classic ones. Trees keep their size: after the classic tree is dealt, some of its slots are swapped for new
   techs of the same field and tier, so the number of choices, tier unlocks and the tech-level formula are unchanged; essential techs and

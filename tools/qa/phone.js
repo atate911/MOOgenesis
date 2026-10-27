@@ -71,11 +71,11 @@ const touchAudit = page => page.evaluate(() => {
   const top = m => [...m.values()].sort((a, b) => b[1] - a[1]).slice(0, 10);
   return { t: top(T), x: top(X) };
 });
-// visible keyboard / mouse wording on the active screen or the top dialog ("Space" as in space dock / combat / monsters is not a key)
+// visible keyboard / mouse wording on the active screen or the top dialog ("Space" as in space dock / combat / monsters / a tech name is not a key)
 const deskWords = page => page.evaluate(() => {
   const scope = [...document.querySelectorAll('.scrim .modal')].pop() || document.querySelector('.screen.active'); if (!scope) return [];
   const t = scope.innerText || '', out = new Set();
-  const RX = /\b(?:double-)?click(?:s|ing)?\b|right-click|mouse|\bwheel\b|\bhover\b|\bEsc\b|\bEnter\b|\bSpace\b(?! (?:[Cc]ombat|[Dd]ock|[Mm]onsters|[Pp]irates|[Cc]rystal|[Aa]moeba|[Tt]eleporter|Academy))|\bpress(?:es)?\s+[A-Z0-9]\b|\bF\d{1,2}\b|\bCtrl\b/g;
+  const RX = /\b(?:double-)?click(?:s|ing)?\b|right-click|mouse|\bwheel\b|\bhover\b|\bEsc\b|\bEnter\b|\bSpace\b(?! (?:[Cc]ombat|[Dd]ock|[Mm]onsters|[Pp]irates|[Cc]rystal|[Aa]moeba|[Gg]ull|[Tt]eleporter|[Ii]nterdictor|[Ss]canner|Academy))|\bpress(?:es)?\s+[A-Z0-9]\b|\bF\d{1,2}\b|\bCtrl\b/g;
   let m; while ((m = RX.exec(t))) out.add(t.slice(Math.max(0, m.index - 24), m.index + m[0].length + 16).replace(/\s+/g, ' '));
   return [...out].slice(0, 4);
 });

@@ -1219,7 +1219,9 @@
     if (w < 40 || hh < 40) return;
     let rects = null;
     const Sc = M.Gfx && M.Gfx.Scenes, WA = M.Gfx && M.Gfx.WorldArt;
-    if (WA && WA.draw(g, WA.race(R.race, 'scientist'), 0, 0, w, hh, { fx: 0.3, fy: 0.5, tone: WA.raceTone ? WA.raceTone(R.race, 'scientist') : null })) {          // photoreal scientist scene; its right 40% is left clear for the panel
+    const sciPath = WA ? WA.race(R.race, 'scientist') : null;
+    if (WA && sciPath && !WA.ready(sciPath) && !R.sciWait) { R.sciWait = true; WA.whenReady(sciPath, () => { if (SC.run === R) R.dirty = true; }); }   // reduce motion repaints only when dirty: the photo must ask
+    if (WA && WA.draw(g, sciPath, 0, 0, w, hh, { fx: 0.3, fy: 0.5, tone: WA.raceTone ? WA.raceTone(R.race, 'scientist') : null })) {          // photoreal scientist scene; its right 40% is left clear for the panel
       glow(g, w * 0.34, hh * 0.78, hh * 0.55, R.F.col, 0.07 + 0.03 * Math.sin(R.t * 1.4));              // research-field tint on the console
       rects = { panel: { x: w * 0.6, y: hh * 0.12, w: w * 0.37, h: hh * 0.7 } };
     } else if (Sc && Sc.lab && Sc.lab.draw && !R.labFailed) {
@@ -1236,7 +1238,10 @@
     layoutScene(rects.panel, w, hh);
   }
   function layoutScene(p, w, hh) {
-    if (M.Phone && M.Phone.active() && hh > w) p = { x: w * 0.04, y: hh * 0.4, w: w * 0.92, h: hh * 0.56 };   // phones in portrait: the choice panel spans the lower half
+    if (M.Phone && M.Phone.active()) {                                // phones: css/phone.css stacks the caption and the card from the bottom, inside the safe areas
+      if (SC.layKey !== 'phone') { SC.layKey = 'phone'; for (const st of [SC.panel.style, SC.cap.style]) st.left = st.top = st.width = st.height = ''; }
+      return;
+    }
     const key = round(p.x) + ',' + round(p.y) + ',' + round(p.w) + ',' + round(p.h) + ',' + round(w) + 'x' + round(hh);
     if (key === SC.layKey) return;
     SC.layKey = key;
@@ -1337,6 +1342,7 @@
     });
     R.listEl = h('div.tsc-list', R.items);
     R.infoEl = h('div.tsc-info');
+    R.scrollEls = [R.listEl, R.infoEl]; R.scrollEls.forEach(el => el.addEventListener('scroll', () => moreBelow(el), { passive: true }));
     R.okBtn = UI.button('Research', () => pick(R.hi), { primary: true, kbd: 'Space' }); UI.attention(R.okBtn);
     R.skipBtn = UI.button(R.manual ? 'Cancel' : 'Decide for me', () => act('skip'), { kbd: 'Esc', tip: R.manual ? 'Keep things as they are' : 'Let the scientists take the cheapest technology' });
     const box = h('div.tsc-box.ch', h('div.tsc-box-h', UI.icon(F.icon), h('span', F.name + ' Technology'), h('small', list.length + (list.length === 1 ? ' choice' : ' choices'))), R.listEl, R.infoEl,
@@ -1387,8 +1393,9 @@
       fx.length ? h('ul.tch-fx', fx.map(l => h('li', h('span.k', l.k), h('span.v', String(l.v))))) : null);
     R.okBtn = UI.button('Continue', () => act('ok'), { primary: true, kbd: 'Space' }); UI.attention(R.okBtn);
     SC.panel.appendChild(h('div.tsc-box.ch', R.art, body, h('div.tsc-acts', h('span.grow'), R.okBtn)));
+    R.scrollEls = [body]; body.addEventListener('scroll', () => moreBelow(body), { passive: true });
     R.fu = t ? followSpec(t, E) : null;
-    SC.hint.innerHTML = '<kbd>Space</kbd> continue';
+    SC.hint.innerHTML = UI.Phone.say('<kbd>Space</kbd> continue', '');
     R.descT.set(t ? t.desc : '', R.rm);
     UI.sfx(src === 'spy' ? 'alert' : 'tech');
   }
@@ -1474,8 +1481,10 @@
     key('space', 'ok'); key('enter', 'ok'); key('escape', 'skip'); key('arrowup', 'up'); key('arrowdown', 'down'); key('home', 'home'); key('end', 'end');
   })();
 
+  function moreBelow(el) { el.classList.toggle('more', el.scrollTop + el.clientHeight < el.scrollHeight - 4); }   // .more fades the bottom edge (css/phone.css)
   function frame(dt) {
     const R = SC.run; if (!R || R.finishing) return;
+    if (R.scrollEls && M.Phone && M.Phone.active()) R.scrollEls.forEach(moreBelow);   // the fade is a phone rule: no layout reads per frame elsewhere
     dt = min(dt, 0.1); R.t += dt; R.acc += dt;
     let typed = R.capT.step(dt, 52); if (R.descT) typed += R.descT.step(dt, 95);
     if (typed) typeTick(typed);
