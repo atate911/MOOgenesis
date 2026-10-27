@@ -21,7 +21,9 @@ MOO.def(function (M) {
   C.wasteScale = E => (E.race === 'silicoid' ? 0 : (E.mods.wasteScale === undefined ? 10 : E.mods.wasteScale));
   C.ecoN = E => E.mods.ecoRestore || 2;                       // waste units removed per BC
   C.plLevel = E => E.research.tl[3];
-  C.maxFactories = (E, p) => Math.min(MAX_FACTORIES, p.mp3 * C.oper(E));
+  C.autoFac = E => (E.mods && E.mods.autoFactories) | 0;            // Factory Supervisor AI (expansion): factories that need no workers
+  C.maxFactories = (E, p) => Math.min(MAX_FACTORIES, p.mp3 * C.oper(E) + C.autoFac(E));
+  C.operating = (E, p) => Math.min(p.factories, Math.max(0, p.pop - (p.rebels | 0)) * C.oper(E) + C.autoFac(E));
   C.richMul = (p, bc) => { const r = RICH[p.special] || [1, 1]; return Math.floor(bc * r[0] / r[1]); };
   C.maxPopDisplay = (E, p) => (E && E.race === 'silicoid' ? p.mp3 : Math.max(10, p.mp3 - (p.waste | 0)));
 
@@ -32,6 +34,11 @@ MOO.def(function (M) {
     p.acc = { ship: 0, factory: 0, base: 0, baseUpg: 0, shield: 0, eco: 0, refit: 0 }; p.build = 0; p.reloc = p.starId; p.trans = null;
     p.gross = 0; p.spendable = 0; p.baseCostPaid = 0; p.mp2 = p.mp2 || p.maxPop; p.mp3 = p.mp3 || p.maxPop; p.mp1 = p.mp1 || p.maxPop;
     if (!p.name) p.name = S.stars[p.starId].name;
+    // expansion: prefabricated modules, Gaia seeding and permanent planet improvements (no-ops unless owned)
+    const xm = E.mods || {};
+    if (colonists > 0 && (xm.colonyPop || xm.colonyFac)) { p.pop = Math.min(p.mp3 || p.pop, p.pop + (xm.colonyPop | 0)); p.factories = xm.colonyFac | 0; }
+    if (colonists > 0 && xm.seedFertile && p.growth === 'normal' && E.race !== 'silicoid') C.soilEnrich(S, E, p, 'fertile', true);
+    if (M.Sim.XTech) M.Sim.XTech.improve(S, E, p);
     C.applyEcoFloor(S, E, p);
   };
   C.abandon = function (S, p) { p.owner = -1; p.pop = 0; p.factories = 0; p.bases = 0; p.shield = 0; p.stargate = false; p.waste = 0; p.rebels = 0; p.unrest = 0; p.trans = null; };
@@ -40,11 +47,13 @@ MOO.def(function (M) {
   // Gross BC of one planet BEFORE empire-wide upkeep/tax. (§3.2)
   C.gross = function (S, E, p) {
     if (p.unrest === 2) return 0;                                         // rebellion: nothing
-    const oper = C.oper(E), workers = Math.max(0, p.pop - (p.rebels | 0));
-    const opFact = Math.min(p.factories, workers * oper);
+    const opFact = C.operating(E, p);
     let perPop = Math.floor(p.pop * (3 * C.plLevel(E) + 50) / 100);
     if (E.race === 'klackon') perPop *= 2;
+    const xm = E.mods || {};
+    if (xm.workerPct) perPop = Math.floor(perPop * (100 + xm.workerPct) / 100);       // expansion: Biomass Reactors
     let g = opFact + perPop;
+    if (xm.asteroid && M.Sim.XTech) { const a = M.Sim.XTech.grossPct(S, E, p); if (a) g = Math.floor(g * (100 + a) / 100); }   // expansion: Asteroid Mining
     if (!E.human) g = Math.floor(g * (M.Data.Config ? M.Data.Config.aiProdFactor(S.settings.diffIdx | 0, S) : 1));
     g += Math.min(p.bank | 0, g);                                         // transferred reserve can at most double output
     return g;
@@ -73,7 +82,7 @@ MOO.def(function (M) {
   // Minimum ECO % needed to keep the planet clean this turn (§3.4). Silicoids have none.
   C.ecoFloorPct = function (S, E, p) {
     if (E.race === 'silicoid' || !(p.spendable > 0)) return 0;
-    const operating = Math.min(p.factories, Math.max(0, p.pop - (p.rebels | 0)) * C.oper(E));
+    const operating = C.operating(E, p);
     const newWaste = Math.floor(operating * C.wasteScale(E) / 10);
     const need = Math.floor((newWaste + (p.waste | 0)) / C.ecoN(E));       // BC to clear this turn's and old waste
     return clamp(Math.ceil(100 * need / p.spendable), 0, 100);
@@ -113,7 +122,7 @@ MOO.def(function (M) {
   C.buildEco = function (S, E, p) {
     const sil = E.race === 'silicoid';
     let eco = Math.floor(p.spendable * p.sliders[ECO] / 100);
-    const operating = Math.min(p.factories, Math.max(0, p.pop - (p.rebels | 0)) * C.oper(E));
+    const operating = C.operating(E, p);
     if (!sil) {
       const newWaste = Math.floor(operating * C.wasteScale(E) / 10);
       const pct = Math.floor((p.waste | 0) * 100 / Math.max(1, p.mp2));
@@ -131,21 +140,22 @@ MOO.def(function (M) {
     // leftover flow into the next block. Atmospheric terraforming (hostile): at >= 200 BC. Soil enrichment (normal): at > 150 BC; the progress, capped at 150, is KEPT as the
     // start of advanced soil, so normal -> fertile -> gaia costs 300 in all. Advanced soil (normal or fertile): at > 300 BC, accumulator reset.
     if (!sil) {
+      const pc = E.mods.projectCostPct || 100, A = Math.floor(200 * pc / 100), B = Math.floor(150 * pc / 100), G = Math.floor(300 * pc / 100);   // expansion: Bio-Engineered Soil
       if (eco > 0 && E.mods.atmos && p.growth === 'hostile') {
         p.acc.eco += eco;
-        if (p.acc.eco >= 200) { eco = p.acc.eco - 200; p.acc.eco = 0; C.atmosTerraform(S, E, p); } else eco = 0;
+        if (p.acc.eco >= A) { eco = p.acc.eco - A; p.acc.eco = 0; C.atmosTerraform(S, E, p); } else eco = 0;
       }
       if (eco > 0 && E.mods.soil && p.growth === 'normal') {
         p.acc.eco += eco;
-        if (p.acc.eco > 150) { eco = p.acc.eco - 150; p.acc.eco = Math.min(p.acc.eco, 150); C.soilEnrich(S, E, p, 'fertile'); } else eco = 0;
+        if (p.acc.eco > B) { eco = p.acc.eco - B; p.acc.eco = Math.min(p.acc.eco, B); C.soilEnrich(S, E, p, 'fertile'); } else eco = 0;
       }
       if (eco > 0 && E.mods.advSoil && (p.growth === 'normal' || p.growth === 'fertile')) {
         p.acc.eco += eco;
-        if (p.acc.eco > 300) { eco = p.acc.eco - 300; p.acc.eco = 0; C.soilEnrich(S, E, p, 'gaia'); } else eco = 0;
+        if (p.acc.eco > G) { eco = p.acc.eco - G; p.acc.eco = 0; C.soilEnrich(S, E, p, 'gaia'); } else eco = 0;
       }
     }
     // terraforming increments
-    const level = E.mods.terraform || 0, cost = E.mods.terraformCost || 5;
+    const level = E.mods.terraform || 0, cost = Math.max(1, (E.mods.terraformCost || 5) - ((E.mods.terraformCostDelta | 0)));      // expansion: Terraforming Nanites
     if (eco > 0 && level > 0 && p.mp3 - p.mp2 < level && p.mp3 < MAX_POP) {
       const room = Math.min(level - (p.mp3 - p.mp2), MAX_POP - p.mp3);
       const inc = Math.min(room, Math.floor(eco / cost));
@@ -168,7 +178,7 @@ MOO.def(function (M) {
     if (E.race === 'silicoid') v = Math.trunc((100 - Math.floor(p.pop * 100 / p.mp3)) / 2);        // C integer division: toward zero when over capacity
     else {
       v = 100 - Math.floor(((p.pop + (p.waste | 0)) * 100) / p.mp3);
-      switch (p.growth) {
+      switch (p.growth === 'hostile' && E.mods && E.mods.hostileGrowth ? 'normal' : p.growth) {     // expansion: Adaptive Genetics
         case 'hostile': v = v >= 0 ? Math.floor(v / 2) : v * 2; break;
         case 'fertile': v = v >= 0 ? v + Math.floor(v / 2) : Math.trunc(v * 2 / 3); break;
         case 'gaia': v = v >= 0 ? v * 2 : Math.trunc(v / 2); break;
@@ -176,6 +186,7 @@ MOO.def(function (M) {
       }
       if (E.race === 'sakkra') v *= 2;
     }
+    if (v > 0 && E.mods && E.mods.growthPct) v = Math.floor(v * (100 + E.mods.growthPct) / 100);      // expansion: Accelerated Gestation / Hyper-Fertility
     let natural = Math.trunc((v * p.pop + 5) / 100);
     // original v1.3 quirk (research/04-verification C7): the carried tenths are added to the natural growth AND again to the total — small colonies grow ~2× faster than the
     // plain formula (pop 2 → 50 on a max-100 world takes 29 turns instead of 46). Switch off with Data.Config.QUIRKS.popTenthsTwice = false.
@@ -200,12 +211,12 @@ MOO.def(function (M) {
     const step = v => Math.max(5, Math.ceil(v / 5) * 5);
     return kind === 'gaia' ? step(mp1 * 0.5) : step(mp1 * 0.25);
   };
-  C.soilEnrich = function (S, E, p, kind) {
+  C.soilEnrich = function (S, E, p, kind, quiet) {
     const inc = C.soilInc(p.mp1, kind), oldMp2 = p.mp2;
     p.mp2 = p.mp1 + inc; p.mp3 += (p.mp2 - oldMp2);
     p.mp3 = Math.min(p.mp3, (E.mods.terraform || 0) + p.mp2, MAX_POP);
     p.growth = kind;
-    if (M.Sim.Ev) M.Sim.Ev.push(S, { type: 'notice', kind: 'ecoDone', empire: E.id, planet: p.id, growth: kind });       // "<planet> has terraformed to a fertile / Gaia environment" (research/05 §11.5)
+    if (!quiet && M.Sim.Ev) M.Sim.Ev.push(S, { type: 'notice', kind: 'ecoDone', empire: E.id, planet: p.id, growth: kind });       // "<planet> has terraformed to a fertile / Gaia environment" (research/05 §11.5)
   };
   C.atmosTerraform = function (S, E, p) {
     const inc = p.typeIdx <= 3 ? 20 : p.typeIdx <= 5 ? 10 : 0;

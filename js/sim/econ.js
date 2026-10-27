@@ -14,7 +14,8 @@ MOO.def(function (M) {
       const ps = owned(S, E.id);
       let G = 0, bases = 0, gates = 0;
       for (const p of ps) { p.gross = C.gross(S, E, p); G += p.gross; bases += p.bases | 0; if (p.stargate) gates++; }
-      const shipM = Math.min(32000, Math.floor(F.shipValue(S, E) / 50)) + 100 * gates;
+      const upk = (E.mods && E.mods.shipUpkeepPct) || 100;                 // expansion: Orbital Drydocks
+      const shipM = Math.min(32000, Math.floor(F.shipValue(S, E) * upk / 5000)) + 100 * gates;
       const baseM = Math.floor(bases * M.Sim.Design.baseCost(S, E) / 50);
       const trade = M.Sim.Diplo && M.Sim.Diplo.tradeIncome ? M.Sim.Diplo.tradeIncome(S, E) : 0;
       const spying = (E.spyBudget || []).reduce((a, b) => a + (b | 0), 0);
@@ -37,6 +38,12 @@ MOO.def(function (M) {
       if (!E.alive) continue;
       let t = 0;
       for (const p of owned(S, E.id)) { if (p.event && (p.event.type === 'plague' || p.event.type === 'nova')) continue; t += M.Sim.Research.planetRP(E, p, p.spendable); }
+      const rt = E.mods && E.mods.rpTreaty;                                  // expansion: Scientific Exchange Protocols — +rt % per pact / alliance partner (≤ 4)
+      if (rt && t > 0) {
+        let n = 0;
+        for (const r of E.relations || []) if (r.with !== E.id && (r.treaty === 1 || r.treaty === 2) && S.empires[r.with] && S.empires[r.with].alive) n++;
+        if (n) t = Math.min(32767, Math.floor(t * (100 + rt * Math.min(4, n)) / 100));
+      }
       E.research.total = t;
     }
   };
@@ -70,6 +77,8 @@ MOO.def(function (M) {
       if (!E.alive) continue;
       for (const p of owned(S, E.id)) p.bank = Math.max(0, (p.bank | 0) - Math.floor(p.spendable / 2));
       E.bc += E.flow ? E.flow.taxToReserve : 0;
+      const ri = E.mods && E.mods.reserveInterest;                           // expansion: Galactic Banking Network — at most a tenth of gross production
+      if (ri && E.bc > 0) { const i = Math.min(Math.floor(E.bc * ri / 100), Math.floor(((E.flow && E.flow.gross) | 0) / 10)); if (i > 0) { E.bc += i; if (M.Sim.XTech) M.Sim.XTech.count(S, 'reserveInterest', i); } }
     }
   };
 

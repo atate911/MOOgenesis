@@ -101,7 +101,7 @@ MOO.def(function (M) {
   // ---- AI ballot (research/05 §6.3) ------------------------------------------------------------------------------------------------------------------
   C.aiVote = function (S, V_, cand, R) {
     const c = state(S), v = V_.id, c1 = cand[0], c2 = cand[1];
-    const w = x => (ownsOrion(S, x) ? 20 : 0) + (raceMod(S.empires[x]).councilBonus | 0) + (c.voted && c.voted[v] === x ? 40 : 0);
+    const w = x => (ownsOrion(S, x) ? 20 : 0) + (raceMod(S.empires[x]).councilBonus | 0) + ((S.empires[x].mods && S.empires[x].mods.councilBonus) | 0) + (c.voted && c.voted[v] === x ? 40 : 0);   // + expansion: Holovision
     if (v === c1) return c1;
     if (v === c2) return c2;
     if (allied(S, v, c1)) return c1;

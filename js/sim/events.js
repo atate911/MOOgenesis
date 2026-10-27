@@ -134,10 +134,11 @@ MOO.def(function (M) {
   Ev.monsterExists = S => (S.monsters || []).some(m => !m.gone && m.killer < 0);
   // the rejection list of §7.1 for a drawn kind
   Ev.rejects = function (S, kind, victim, p) {
-    const e = stateOf(S), V = S.empires[victim], name = KINDS[kind], sp = p.special;
+    const e = stateOf(S), V = S.empires[victim], name = KINDS[kind], sp = p.special, xm = V.mods || {};
     if (e.done[name]) return true;
+    if (xm.disaster && (kind === 2 || kind === 4 || kind === 7)) return true;            // expansion: Planetary Disaster Response
     switch (kind) {
-      case 1: return V.race === 'silicoid' || !!(raceMod(V).noPlague);
+      case 1: return V.race === 'silicoid' || !!(raceMod(V).noPlague) || !!xm.bioHalf;      // expansion: Bio-Containment Fields
       case 2: return (p.pop | 0) < 50;
       case 4: return V.race === 'silicoid' || !!(raceMod(V).noAccident);
       case 5: { if (S.gameOver) return true; return !S.empires.some(a => a.alive && !a.human && a.id !== victim && (treatyOf(S, victim, a.id) === 1 || treatyOf(S, victim, a.id) === 2)); }
@@ -180,7 +181,8 @@ MOO.def(function (M) {
     const base = { empire: victim, planet: p.id, star: p.starId };
     switch (kind) {
       case 1: {                                                // plague
-        const cure = (R.int(1, 8) + 2 * D) * prod;
+        let cure = (R.int(1, 8) + 2 * D) * prod;
+        if (E.mods && E.mods.disaster) cure = Math.floor(cure / 2);                        // expansion: Planetary Disaster Response
         p.event = { type: 'plague', cure, cost: cure, born: S.year };
         crank(S, E, p, true);
         announce(S, out, Object.assign({ kind: 'plague', stage: 'start', cat: 'plague', n: cure, vars: { cure }, text: 'A deadly plague strikes ' + name + '. Until a cure costing ' + cure + ' research points is found, the colony loses population every year.' }, base));
@@ -193,7 +195,9 @@ MOO.def(function (M) {
         break;
       }
       case 3: {                                                // supernova warning
-        const years = R.int(1, 5) + 10 - D, cost = (R.int(1, 5) + 10 - D) * prod;
+        const years = R.int(1, 5) + 10 - D;
+        let cost = (R.int(1, 5) + 10 - D) * prod;
+        if (E.mods && E.mods.disaster) cost = Math.floor(cost / 2);                        // expansion: Planetary Disaster Response
         p.event = { type: 'nova', years, cost, cost0: cost, born: S.year };
         crank(S, E, p, true);
         announce(S, out, Object.assign({ kind: 'nova', stage: 'start', cat: 'novaWarning', n: years, vars: { years, cost }, text: 'The star at ' + starName + ' is about to go nova in ' + years + ' years unless a stabilising effort of ' + cost + ' research points is completed.' }, base));

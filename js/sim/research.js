@@ -7,6 +7,9 @@ MOO.def(function (M) {
   'use strict';
   const Rs = M.Sim.Research = {};
   const MIN_KEYS = { factoryCost: 1, wasteScale: 1, incPopCost: 1, colonyFor: 1 };   // lower is better; every other numeric key: higher is better
+  // expansion pool (data/techs-x.js): its lower-is-better keys and the bonus keys added on top of a classic key after the fold
+  const XT = () => M.Data.Techs.X;
+  if (M.Data.Techs.X) for (const k of M.Data.Techs.X.MIN_KEYS) MIN_KEYS[k] = 1;
   const DEFAULT_SLIDERS = [20, 10, 15, 15, 20, 20];
 
   const TECHS = () => M.Data.Techs;
@@ -15,11 +18,15 @@ MOO.def(function (M) {
     const T = TECHS();
     let list = null;
     for (let i = 0; i < 50 && !list; i++) list = T.generateResearchList(R, E.race);
+    // expanded pool: the classic tree above (same S.rs draws as a classic game), then some slots swapped for expansion techs on a separate stream
+    const expanded = !!(T.X && list && S && S.settings && S.settings.options && S.settings.options.techPool === 'expanded');
+    if (expanded) T.X.expandList(list, E.race, M.RNG.create(String(S.seed) + ':xtree:' + E.id));
     E.research = {
       slider: DEFAULT_SLIDERS.slice(), lock: [false, false, false, false, false, false],
       completed: [[1], [1], [1], [1], [1], [1]], project: [0, 0, 0, 0, 0, 0], invest: [0, 0, 0, 0, 0, 0], cost: [0, 0, 0, 0, 0, 0],
       list, tl: [1, 1, 1, 1, 1, 1], total: 0,
     };
+    if (expanded) E.research.pool = 'x';
     Rs.recompute(E);
     return E.research;
   };
@@ -48,7 +55,7 @@ MOO.def(function (M) {
         // level 1 is the free starting BUNDLE (several techs share it); every other level is exactly one tech
         const list = lvl === 1 ? (T.l1Bundle && T.l1Bundle[f] ? T.l1Bundle[f] : [Rs.techAt(f, 1)]) : [Rs.techAt(f, lvl)];
         for (const t of list) {
-          if (!t) continue;
+          if (!t || (t.pool === 'x' && rs.pool !== 'x')) continue;                  // expansion techs exist only in expanded games
           const fx = t.effects || {};
           for (const k in fx) {
             const v = fx[k];
@@ -63,6 +70,14 @@ MOO.def(function (M) {
           if (t.grants) for (const g of t.grants) grants[g.kind + ':' + g.id] = true;
         }
       }
+    }
+    // expansion bonus keys add to the classic number they modify (scanner range, fuel range unless unlimited, transport speed)
+    const X = XT();
+    if (X) for (const k in X.BONUS_KEYS) {
+      const v = mods[k]; if (!v) continue;
+      const base = X.BONUS_KEYS[k];
+      if (base === 'fuel') { if (mods.fuel < 30) mods.fuel = Math.min(29, mods.fuel + v); }
+      else mods[base] = (mods[base] || 0) + v;
     }
     // Silicoids (original override): colony bases settle anything (Radiated is the floor) and the soil / atmosphere projects never exist for them, whatever they own
     if (E.race === 'silicoid') { mods.colonyFor = 1; delete mods.soil; delete mods.advSoil; delete mods.atmos; }
@@ -123,11 +138,16 @@ MOO.def(function (M) {
   Rs.grant = function (S, E, f, level, source) {
     const rs = E.research;
     if (rs.completed[f].indexOf(level) >= 0) return false;
+    { const tx = Rs.techAt(f, level); if (tx && tx.pool === 'x' && rs.pool !== 'x') return false; }      // expansion techs exist only in expanded games
     rs.completed[f].push(level); rs.completed[f].sort((a, b) => a - b);
     (rs.seq || (rs.seq = [])).push([f, level]);
     if (rs.project[f] === level) { rs.project[f] = 0; rs.invest[f] = 1; rs.cost[f] = 0; }
     Rs.recompute(E);
     const t = Rs.techAt(f, level);
+    if (t && t.pool === 'x' && M.Sim.XTech) {                     // permanent planet improvements reach every colony the empire already owns
+      const fx = t.effects || {};
+      if (fx.arcology || fx.domes || fx.smallWorld) M.Sim.XTech.improveAll(S, E);
+    }
     if (M.Sim.Ev) M.Sim.Ev.push(S, { type: 'tech', empire: E.id, field: f, level, id: t ? t.id : null, source: source || 'research' });
     return true;
   };
@@ -136,10 +156,11 @@ MOO.def(function (M) {
   // Adds this year's RP to every field, applies interest, rolls breakthroughs. Returns [{field, level}] completed this turn.
   Rs.advance = function (S, E, R) {
     const rs = E.research, total = rs.total | 0, done = [];
+    const xi = (E.mods && E.mods.researchInterest) | 0;            // Heuristic Research Engine: interest xi % a year, capped at 3 years of funding (classic 15 %, 2 years)
     for (let f = 0; f < 6; f++) {
       let inv = rs.invest[f];
       const t3 = Math.floor(rs.slider[f] * total / 100);
-      let t1 = Math.floor(inv * 3 / 20); t1 = Math.min(t1, 2 * t3);
+      let t1 = xi ? Math.floor(inv * xi / 100) : Math.floor(inv * 3 / 20); t1 = Math.min(t1, (xi ? 3 : 2) * t3);
       inv += t3 + t1;
       rs.invest[f] = inv;
       const c = rs.cost[f];
@@ -159,8 +180,8 @@ MOO.def(function (M) {
   Rs.breakthroughChance = function (E, f) {
     const rs = E.research, c = rs.cost[f]; if (!c) return 0;
     if (rs.slider[f] === 0 || (rs.total | 0) === 0) return 0;                  // unfunded: advance() never rolls (the pile just decays)
-    const t3 = Math.floor(rs.slider[f] * (rs.total | 0) / 100);
-    let t1 = Math.floor(rs.invest[f] * 3 / 20); t1 = Math.min(t1, 2 * t3);
+    const t3 = Math.floor(rs.slider[f] * (rs.total | 0) / 100), xi = (E.mods && E.mods.researchInterest) | 0;
+    let t1 = xi ? Math.floor(rs.invest[f] * xi / 100) : Math.floor(rs.invest[f] * 3 / 20); t1 = Math.min(t1, (xi ? 3 : 2) * t3);
     const inv = rs.invest[f] + t3 + t1;
     if (inv <= c) return 0;
     return Math.min(1, Math.floor((inv - c) * 250 / c) / 500);

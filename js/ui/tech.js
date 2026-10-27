@@ -116,6 +116,7 @@
     if (fx.baseComp) add('Attack level', fx.baseComp);
     if (fx.baseEcm) add('Missile defence', fx.baseEcm);
     if (fx.tlOnly) add('Effect', 'raises the tech level of the field');
+    for (const s of (t.say || [])) add(s[0], s[1]);                        // expansion techs (data/techs-x.js) describe their own effects
     const parts = partLines(t);
     if (parts.length) add('Ship parts', parts.join('; '));
     return out;

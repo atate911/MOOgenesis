@@ -237,8 +237,11 @@ MOO.def(function (M) {
   function empireSide(S, party, role) {
     const E = S.empires[party.empire], f = party.fleet, designs = [null, null, null, null, null, null], ships = [0, 0, 0, 0, 0, 0];
     if (f) for (let i = 0; i < 6; i++) if ((f.ships[i] | 0) > 0 && E.designs && E.designs[i]) { ships[i] = f.ships[i] | 0; designs[i] = C.snapshotDesign(S, E, i); }
-    return { empire: E.id, fleetId: f ? f.id : -1, ships, designs, role, race: E.race, name: E.plural || E.name || E.race, human: !!E.human, mod: C.raceMod(E.race),
+    const side = { empire: E.id, fleetId: f ? f.id : -1, ships, designs, role, race: E.race, name: E.plural || E.name || E.race, human: !!E.human, mod: C.raceMod(E.race),
       tl: E.research && E.research.tl ? E.research.tl.slice() : [1, 1, 1, 1, 1, 1], autoWeight: C.raceWeight(E.race), antidote: (E.mods && E.mods.antidote) | 0 };
+    const xm = M.Sim.XTech ? M.Sim.XTech.combatMod(E) : null;                       // expansion techs (sim/xtech.js); absent in a classic game
+    if (xm) side.xm = xm;
+    return side;
   }
   function monsterSide(mon, diff) {
     const ss = C.monsterStats(mon.kind, diff);
@@ -392,6 +395,17 @@ MOO.def(function (M) {
       half: !!f.halfShield, stream: !!f.streaming, every2: !!f.everyOtherRound, fade: !!f.damageFade };
   }
   function mkUnit(B, id, sideIdx, side, ss, slot, count, x, y) {
+    const u = mkUnit0(B, id, sideIdx, side, ss, slot, count, x, y), xm = side.xm;
+    if (!xm) return u;
+    u.comp += xm.comp; u.def += xm.def; u.mdef += xm.mdef; u.init += xm.init; u.speed += xm.speed; u.actman = u.speed;
+    if (xm.absorb && (ss.absorb | 0) > 0 && !B.nebula) u.absorb += xm.absorb;
+    if (xm.hpPct) u.hp1 = u.hp2 = Math.floor(u.hp1 * (100 + xm.hpPct) / 100);
+    if (xm.repair > u.repair) u.repair = xm.repair;
+    if (xm.misshield > u.misshield) u.misshield = xm.misshield;
+    if (xm.warhead) for (const w of u.weapons) if (w.kind === 'missile' || w.kind === 'torpedo') { w.dmin = Math.floor(w.dmin * (100 + xm.warhead) / 100); w.dmax = Math.floor(w.dmax * (100 + xm.warhead) / 100); }
+    return u;
+  }
+  function mkUnit0(B, id, sideIdx, side, ss, slot, count, x, y) {
     const rm = side.mod || {};
     const sp = { scanner: !!ss.scanner, cloak: (ss.cloak | 0) > 0, stasis: !!ss.stasis, pulsar: ss.pulsar | 0, stream: ss.stream | 0, bh: !!ss.blackhole, tn: !!ss.technull, wd: !!ss.dissipator,
       repulsor: !!ss.repulsor, teleport: !!ss.teleport, oracle: !!ss.oracle, disp: ss.displacement | 0 };
@@ -407,6 +421,14 @@ MOO.def(function (M) {
     };
   }
   function mkPlanetUnit(B, pl, sideIdx, side) {
+    const u = mkPlanetUnit0(B, pl, sideIdx, side), xm = side.xm;
+    if (!xm) return u;
+    u.comp += xm.baseComp;
+    if (xm.baseHpPct) u.hp1 = u.hp2 = Math.floor(u.hp1 * (100 + xm.baseHpPct) / 100);
+    if (xm.pshield && (pl.shield | 0) > 0 && !B.nebula) u.absorb += xm.pshield;
+    return u;
+  }
+  function mkPlanetUnit0(B, pl, sideIdx, side) {
     const rm = side.mod || {}, w0 = C.compWeapon(pl.weapon || 'nuclear-missile', 3, 0), w1 = C.compWeapon(pl.weapon2 || pl.weapon || 'nuclear-missile', 3, 1);
     w0.range = 40; w1.range = 40; w0.ammo = -1; w1.ammo = -1;
     return {
@@ -469,6 +491,15 @@ MOO.def(function (M) {
       }
     }
     placeRocks(B, battle.rocks);
+    // expansion Orbital Minefields: every enemy stack fighting at the planet owner's colony loses mines % of its hit points before the first shot
+    const ps = B.planetSide >= 0 ? battle.sides[B.planetSide] : null;
+    if (ps && ps.xm && ps.xm.mines && B.planet) for (const u of B.units) {
+      if (u.side === B.planetSide || u.kind !== 'ship' || !(u.count > 0)) continue;
+      const dmg = Math.floor(u.hp1 * u.count * ps.xm.mines / 100), n = Math.min(u.count, Math.floor(dmg / u.hp1));
+      u.count -= n; u.hploss = u.count > 0 ? dmg - n * u.hp1 : 0;
+      if (u.count <= 0) { u.count = 0; u.gone = true; }
+      B.log.push('Minefields strike ' + u.name + ': ' + n + ' destroyed');
+    }
     // a Subspace Interdictor over the planet cancels every teleporter if the attackers own any (research/03 §4.4)
     if (B.planet && B.planet.interdictor && B.units.some(u => u.sp.teleport && B.sides[u.side].role === 'attacker')) for (const u of B.units) if (u.sp.teleport) u.st.subspace = -1;
     for (const u of B.units) if (u.sp.scanner) B.sides[u.side].scanner = true;
@@ -1587,14 +1618,21 @@ MOO.def(function (M) {
   function designWeight(side, ss) {
     const wt = weightInfo(ss);
     const sum = wt.shield * 5 + wt.comp * 5 + wt.w0 + wt.armor * 10 + 2 * (wt.sp[0] + wt.sp[1] + wt.sp[2]) + Math.floor((side.tl ? side.tl[1] | 0 : 0) / 2) + (side.autoWeight | 0);
-    return sum * ((ss.hullW | 0) || C.HULL_W[ss.hull | 0] || 1);
+    const w = sum * ((ss.hullW | 0) || C.HULL_W[ss.hull | 0] || 1);
+    return side.xm && M.Sim.XTech ? Math.floor(w * (100 + M.Sim.XTech.weightPct(side.xm, ss)) / 100) : w;      // expansion techs (calibrated, sim/xtech.js)
   }
   C.sideWeight = function (battle, i) {
     const side = battle.sides[i];
     if (side.monster) return C.MONSTER_WEIGHT[side.monster.kind] || 30000;
     let W = 0;
     for (let k = 0; k < 6; k++) { const n = side.ships ? side.ships[k] | 0 : 0, ss = side.designs && side.designs[k]; if (n > 0 && ss) W += n * designWeight(side, ss); }
-    if (battle.planet && battle.planetSide === i) W += ((side.tl ? (side.tl[5] | 0) + (side.tl[2] | 0) : 2)) * 75 * (battle.planet.bases | 0);
+    if (battle.planet && battle.planetSide === i) {
+      let P = ((side.tl ? (side.tl[5] | 0) + (side.tl[2] | 0) : 2)) * 75 * (battle.planet.bases | 0);
+      if (side.xm && M.Sim.XTech) P = Math.floor(P * (100 + M.Sim.XTech.planetWeightPct(side.xm)) / 100);      // expansion: targeting arrays, silos, phase barrier
+      W += P;
+    }
+    const other = battle.sides[1 - i];
+    if (battle.planet && battle.planetSide === 1 - i && other && other.xm && other.xm.mines && M.Sim.XTech) W = Math.floor(W * M.Sim.XTech.mineFactor(other.xm));   // expansion: minefields
     return W;
   };
   function resolveWeights(battle, R) {
@@ -1676,7 +1714,6 @@ MOO.def(function (M) {
   }
   function news(S, o) { if (M.Sim.Ev) M.Sim.Ev.push(S, Object.assign({ type: 'news' }, o)); }
   C.applyResults = function (S, results, R) {
-    void R;
     const F = M.Sim.Fleet, Ev = M.Sim.Ev, D = M.Sim.Diplo;
     S.bombard = S.bombard || [];
     for (const res of results || []) {
@@ -1684,6 +1721,7 @@ MOO.def(function (M) {
       const mi = res.sides.findIndex(s => s.monster);
       if (mi >= 0 && monsterDead(S, res.sides[mi].monster) && res.sides[mi].destroyed) continue;      // another fleet already slew it this turn
       const star = res.star, p = S.planets[star], winner = res.winner, loser = 1 - winner;
+      if (M.Sim.XTech) M.Sim.XTech.preApply(S, res);                                // expansion: emergency warp (the loser's part of the losses escapes)
       // 1. casualties
       const fleets = [null, null];
       for (let i = 0; i < 2; i++) {
@@ -1700,10 +1738,16 @@ MOO.def(function (M) {
         p.bases = Math.max(0, (p.bases | 0) - (pr.basesLost | 0));
         p.factories = Math.max(0, (p.factories | 0) - (pr.factoriesKilled | 0));
         popLost = Math.min(p.pop | 0, pr.popKilled | 0); bio = pr.bioDamage | 0;
+        if (M.Sim.XTech) {                                                            // expansion: Bio-Containment Fields, Planetary Stasis Field
+          if (bio && (S.empires[p.owner].mods || {}).bioHalf) bio = Math.floor(bio / 2);
+          const fl = M.Sim.XTech.siegeFloor(S, p);
+          if (fl) popLost = Math.max(0, Math.min(popLost, (p.pop | 0) - fl));
+        }
         p.pop = Math.max(0, (p.pop | 0) - popLost);
         if (bio > 0 && p.mp3 !== undefined) p.mp3 = Math.max(Math.min(p.mp3, 10), p.mp3 - bio);
         if (p.pop <= 0 && popLost > 0) {
           const other = res.sides[res.sides[0].empire === p.owner ? 1 : 0];
+          if (M.Sim.XTech) M.Sim.XTech.evacuate(S, S.empires[p.owner], p, popLost);     // expansion: Lifeboat Protocols
           if (M.Sim.Colony && M.Sim.Colony.abandon) M.Sim.Colony.abandon(S, p);
           planetWiped = true;
           if (other.empire >= 0) news(S, { cat: 'planetDestroyed', empire: other.empire, planet: p.id, star });
@@ -1746,6 +1790,7 @@ MOO.def(function (M) {
         for (let k = 0; k < 6; k++) if ((wf.ships[k] | 0) > 0 && S.empires[wsd.empire].designs[k] && M.Sim.Design.stats(S, S.empires[wsd.empire], k).weapons.length > 0) armed = true;
         if (armed && !S.bombard.some(b => b.empire === wsd.empire && b.planet === p.id)) S.bombard.push({ empire: wsd.empire, planet: p.id, target: p.owner, star });
       }
+      if (M.Sim.XTech) M.Sim.XTech.postApply(S, res, R);                           // expansion: salvage, reverse engineering
       // 6. events, news, diplomacy
       const lostN = [total(res.sides[0].lost), total(res.sides[1].lost)];
       if (Ev) Ev.push(S, { type: 'battle', star, planet: p ? p.id : -1, attacker: res.attacker, defender: res.defender, winner: res.winnerEmpire, loser: res.loserEmpire, rounds: res.rounds, human: !!res.human,

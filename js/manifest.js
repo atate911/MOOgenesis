@@ -38,12 +38,14 @@ window.MOO_MANIFEST = {
 
     // ---- simulation (worker-safe) ----
     'js/data/techs.js',
+    'js/data/techs-x.js',         // expansion tech pool (options.techPool 'expanded'; the Tech Lab experiment)
     'js/sim/geo.js',
     'js/sim/galaxy.js',
     'js/sim/ev.js',
     'js/sim/orders.js',
     'js/sim/vis.js',
     'js/sim/research.js',
+    'js/sim/xtech.js',            // hooks of the expansion techs (no-ops unless an empire owns one)
     'js/data/components.js',
     'js/data/config.js',
     'js/sim/design.js',

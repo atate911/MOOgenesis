@@ -145,6 +145,7 @@ MOO.def(function (M) {
     }
     if (!any) return O.fail('no ships selected');
     if (!F.canReach(S, E, toStar, withTanks)) return O.fail('out of range');
+    if (E.mods && (E.mods.warpBonus || E.mods.beaconWarp) && M.Sim.XTech) speed = M.Sim.XTech.warpFor(S, E, fromStar, toStar, speed);   // expansion: slipstream / beacons
     // the quickest route, through the empire's stargates when that saves turns: the fleet flies its first leg, the rest wait in f.legs
     const plan = F.plan(S, E, fromStar, toStar, speed), first = plan.legs[0], warp = speed;
     speed = first.gate ? STARGATE_SPEED : warp;
@@ -160,6 +161,18 @@ MOO.def(function (M) {
     return { ok: true, fleet, eta: plan.eta, legs: plan.legs };
   };
 
+  // expansion Warp Damping Field: a hostile fleet bound for a colony whose owner has it flies `snare` warp slower (never below 1) within 4 parsecs of it
+  function snared(S, f, B) {
+    const p = S.planets[f.to], sp = f.speed;
+    if (!p || p.owner < 0 || p.owner === f.owner || sp >= STARGATE_SPEED) return sp;
+    const O = S.empires[p.owner], sn = O && O.mods && O.mods.snare;
+    if (!sn || sp <= 1) return sp;
+    if (M.Sim.Combat && M.Sim.Combat.hostile && !M.Sim.Combat.hostile(S, f.owner, p.owner, p.owner)) return sp;
+    if (Math.hypot(B.x - f.x, B.y - f.y) > 50 || Geo.parsecsXY(f.x, f.y, B.x, B.y) > 4) return sp;     // a parsec is ~9-11 map units (sim/geo.js)
+    if (M.Sim.XTech) M.Sim.XTech.count(S, 'snare', 1);
+    return Math.max(1, sp - sn);
+  }
+
   // ---- the movement step ---------------------------------------------------------------------------------------------------------------
   // Moves every in-flight fleet and transport one turn. Returns {arrived:[fleet], landed:[transport]}.
   F.move = function (S) {
@@ -167,7 +180,7 @@ MOO.def(function (M) {
     for (const f of S.fleets) {
       if (f.star >= 0) continue;
       const B = S.stars[f.to];
-      const p = stepTurn(S, f.x, f.y, B.x, B.y, f.speed, false); f.x = p[0]; f.y = p[1];
+      const p = stepTurn(S, f.x, f.y, B.x, B.y, snared(S, f, B), false); f.x = p[0]; f.y = p[1];
       if (f.x === B.x && f.y === B.y) { if (f.legs && f.legs.length) nextLeg(S, f); else arrived.push(f); }   // a waypoint (stargate) of a routed fleet: on to the next leg
     }
     for (const f of arrived) {
@@ -224,7 +237,8 @@ MOO.def(function (M) {
       if (!q.ok || tr.to === p.starId || cnt <= 0) { p.trans = null; continue; }
       p.pop -= cnt; p.rebels = Math.max(0, (p.rebels | 0) - (Math.floor(cnt / 2) + 1)); p.transCost = cnt;
       const A = S.stars[p.starId];
-      const speed = F.gateLink(S, E, p.starId, tr.to) ? STARGATE_SPEED : F.transSpeed(E);
+      let speed = F.gateLink(S, E, p.starId, tr.to) ? STARGATE_SPEED : F.transSpeed(E);
+      if (speed < STARGATE_SPEED && E.mods && E.mods.beaconWarp && S.planets[tr.to] && S.planets[tr.to].owner === E.id) speed += E.mods.beaconWarp;   // expansion: Navigation Beacons
       S.trans.push({ id: nextId(S), owner: E.id, from: p.starId, to: tr.to, n: cnt, x: A.x, y: A.y, speed });
       p.trans = null; n++;
     }

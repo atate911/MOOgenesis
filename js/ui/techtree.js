@@ -84,9 +84,10 @@
     for (let f = 0; f < 6; f++) {
       const done = rs.completed[f], doneSet = new Set(done), choices = R.choices(E, f), cset = new Set(choices), vis = T.visibleTiers(done), proj = rs.project[f];
       const tiers = []; let inTree = 0, valid = 0, doneN = 0, availN = 0;
+      const table = rs.pool === 'x' && T.X ? T.X.researchTable : T.researchTable;      // an expanded game shows the enlarged pool (data/techs-x.js)
       for (let ti = 0; ti < 10; ti++) {
         const mine = (rs.list[f] && rs.list[f][ti]) || [], chips = [];
-        for (const lvl of T.researchTable[f][ti]) {
+        for (const lvl of table[f][ti]) {
           const t = TI().techOf(f, lvl); valid++;
           let state;
           if (doneSet.has(lvl)) { state = 'done'; doneN++; }

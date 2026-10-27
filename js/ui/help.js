@@ -275,7 +275,8 @@
     const S = G && G.S, E = S && G.player(), race = E ? E.race : 'human', di = S ? S.settings.diffIdx | 0 : 2, out = [];
     out.push(h('p.al-dim', 'Research cost is shown for ' + (E ? 'your empire' : 'a Human empire on Average') + ' (race and difficulty multiply a cost that grows with the square of the tech level). Each game offers a random subset of these techs.'));
     for (let f = 0; f < 6; f++) {
-      const list = (T.byField[f] || []).filter(t => t.type !== 'advanced').slice().sort((a, b) => a.level - b.level);
+      const xs = E && E.research && E.research.pool === 'x' && T.X ? T.X.byField[f] : [];     // an expanded game lists its new techs too (data/techs-x.js)
+      const list = (T.byField[f] || []).concat(xs).filter(t => t.type !== 'advanced').slice().sort((a, b) => a.level - b.level);
       out.push(sec(T.FIELD_NAMES[f] + ' — ' + list.length + ' technologies'));
       out.push(tbl([{ t: 'Lv', r: 1 }, { t: 'Technology' }, { t: 'RP', r: 1 }, { t: 'Effect' }], list.map(t => [String(t.level), { n: h('b', t.name), s: t.name }, t.free ? 'start' : U.fmt(T.costHuman(t.level, race, f, di)), { n: t.desc, s: t.desc + ' ' + t.type }])));
     }

@@ -277,12 +277,12 @@ MOO.def(function (M) {
   D.tradeIncome = function (S, E) {
     if (typeof E === 'number') E = S.empires[E];
     const rs = E.relations; if (!rs) return 0;
-    const bonus = raceMod(E, 'tradePts');
+    const bonus = raceMod(E, 'tradePts') + ((E.mods && E.mods.tradePts) | 0);                                       // expansion: trade efficiency points
     let sum = 0;
     for (let j = 0; j < rs.length; j++) { const r = rs[j]; if (j === E.id || !(r.trade > 0) || !r.contact || r.treaty >= T.WAR) continue; sum += tdiv(r.trade * (r.tradePct + bonus), 100); }
     return sum;
   };
-  D.tradeIncomeFrom = function (S, a, b) { const E = S.empires[a], r = rec(S, a, b); return r.trade > 0 && r.contact && r.treaty < T.WAR ? tdiv(r.trade * (r.tradePct + raceMod(E, 'tradePts')), 100) : 0; };
+  D.tradeIncomeFrom = function (S, a, b) { const E = S.empires[a], r = rec(S, a, b); return r.trade > 0 && r.contact && r.treaty < T.WAR ? tdiv(r.trade * (r.tradePct + raceMod(E, 'tradePts') + ((E.mods && E.mods.tradePts) | 0)), 100) : 0; };
 
   // ── status for UIs / AI planners ──────────────────────────────────────────────────────────────────────────────────────────────
   D.status = function (S, a, b) {
@@ -313,6 +313,7 @@ MOO.def(function (M) {
     if (Tg.personality === XENO) { if (dv < 0) dv = tdiv(dv * 3, 2); else if (dv > 0) dv = tdiv(dv * 3, 4); }
     const v1 = dv;
     if (dv > 0) dv *= raceMod(A, 'posActMul');                                                                        // "Humans double positive DP"
+    if (dv > 0 && A.mods && A.mods.posAct) dv = tdiv(dv * (100 + A.mods.posAct), 100);                               // expansion: Universal Translator / Holovision
     if (rt.treaty === T.WAR && dtype >= 4 && dtype <= 12 && dv < 0) {                                                // at war incidents only dent the peace mood
       if (A.human) { const q = tdiv(dv, 4); rt.moodPeace += q; ra.moodPeace -= q; }
       dv = 0;
@@ -497,7 +498,9 @@ MOO.def(function (M) {
     for (let a = 0; a < n; a++) for (let b = a + 1; b < n; b++) {                                               // trade efficiency: +0..3 per turn, better with good relations
       const r = rec(S, a, b); if (!r.trade) continue;
       if (!r.contact || !isAlive(S, a) || !isAlive(S, b)) { D.breakTrade(S, a, b); continue; }
-      const g = Math.max(0, tdiv(rnd(R, 200) + r.rel1 + 25, 60));
+      let g = Math.max(0, tdiv(rnd(R, 200) + r.rel1 + 25, 60));
+      const tg = Math.max((S.empires[a].mods && S.empires[a].mods.tradeGrowth) | 0, (S.empires[b].mods && S.empires[b].mods.tradeGrowth) | 0);   // expansion: Hyperspace Trade Lanes
+      if (tg > 1) g *= tg;
       rec(S, a, b).tradePct = rec(S, b, a).tradePct = Math.min(100, r.tradePct + g);
     }
     diploAdjust(S, R);
