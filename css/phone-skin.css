@@ -17,20 +17,20 @@ html[data-phone] {
 }
 html:root:root[data-phone] :is(.gx, .ov) {                                         /* gunmetal */
   --pk-surface: #1a1f26; --pk-card: #2b323c; --pk-edge: rgba(255, 255, 255, .1); --pk-head: #c6ae74; --pk-ink: #e6eaf0; --pk-ink2: #b4bdc9;
-  --pk-btn: #1d232c; --pk-btn-edge: rgba(255, 255, 255, .14); --pk-press: #141920; --pk-well: #12161c; --pk-bar: #141920;
+  --pk-btn: #1d232c; --pk-btn-edge: rgba(255, 255, 255, .14); --pk-press: #141920; --pk-well: #0b0d12; --pk-bar: #141920;
 }
 html:root:root[data-phone] .dz {                                                   /* grey metal */
   --pk-surface: #0e0e0f; --pk-card: #19191b; --pk-edge: rgba(255, 255, 255, .1); --pk-head: #ffad3a; --pk-ink: #ececec; --pk-ink2: #b0b0b0;
   --pk-btn: #262628; --pk-btn-edge: rgba(255, 255, 255, .16); --pk-press: #18181a; --pk-well: #080808; --pk-sel: rgba(255, 173, 58, .18); --pk-bar: #1d1d1f;
 }
 html:root:root[data-phone] :is(.lp, .lf) {                                          /* bronze */
-  --pk-surface: #241a13; --pk-card: #3a2c22; --pk-edge: rgba(255, 225, 180, .13); --pk-sep: rgba(255, 235, 200, .08); --pk-head: #e3b56a;
-  --pk-ink: #f0e2c8; --pk-ink2: #c9b394; --pk-btn: #4a382b; --pk-btn-edge: rgba(255, 225, 180, .2); --pk-press: #33261d; --pk-well: #1d1510;
+  --pk-surface: #241a13; --pk-card: #3a2c22; --pk-edge: rgba(255, 225, 180, .13); --pk-sep: rgba(255, 235, 200, .14); --pk-head: #e3b56a;
+  --pk-ink: #f0e2c8; --pk-ink2: #c9b394; --pk-btn: #4a382b; --pk-btn-edge: rgba(255, 225, 180, .2); --pk-press: #33261d; --pk-well: #14100c;
   --pk-sel: rgba(232, 160, 60, .2);
 }
 html:root:root[data-phone] :is(.tch, .rx, .ttp) {                                   /* brown leather */
-  --pk-surface: #6c5240; --pk-card: #57422f; --pk-edge: rgba(255, 225, 190, .16); --pk-sep: rgba(255, 235, 205, .1); --pk-head: #ffb04a;
-  --pk-ink: #f6e6cc; --pk-ink2: #e0c9a6; --pk-btn: #6d5645; --pk-btn-edge: rgba(255, 225, 190, .24); --pk-press: #4a3a2c; --pk-well: #3a2c21;
+  --pk-surface: #6c5240; --pk-card: #57422f; --pk-edge: rgba(255, 225, 190, .16); --pk-sep: rgba(255, 235, 200, .14); --pk-head: #ffb04a;
+  --pk-ink: #f6e6cc; --pk-ink2: #e0c9a6; --pk-btn: #6d5645; --pk-btn-edge: rgba(255, 225, 190, .24); --pk-press: #4a3a2c; --pk-well: #1a1410;
   --pk-sel: rgba(255, 176, 74, .2);
 }
 

@@ -200,6 +200,10 @@
 :root:root:root[data-theme="v2"] .au-panel::before { background: linear-gradient(180deg, rgba(8, 12, 24, .88), rgba(4, 7, 16, .93)); box-shadow: none; }
 :root:root:root[data-theme="v2"] .cou-tally.panel { background: var(--glass-bg); }
 
+/* ---- 7c. DOM art plates (WorldArt.image): the light grade the canvas plates get (Gfx.Grade 'plate'); a screen's own filter wins (lower specificity here) */
+:where(:root[data-theme="v2"]) img.wa-plate { filter: saturate(.92) contrast(1.04); }
+:root[data-theme="v2"][data-fx="off"] img.wa-plate { filter: none; }
+
 /* ---- 8. fields: recessed wells ------------------------------------------------------------------------------------------ */
 :root[data-theme="v2"] .field { background: linear-gradient(135deg, var(--bev-hi), var(--bev-mid) 35%, var(--bev-lo)); color: var(--ink-0); box-shadow: 0 0 0 1px #000; }
 :root[data-theme="v2"] input.field, :root[data-theme="v2"] select.field { background: var(--well); box-shadow: inset 1px 1px 0 #000, inset -1px -1px 0 rgba(255, 255, 255, .13), 0 0 0 1px rgba(0, 0, 0, .7); }

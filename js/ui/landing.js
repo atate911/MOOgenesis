@@ -745,7 +745,7 @@
         ctx.save(); if (shake[0] || shake[1]) ctx.translate(shake[0], shake[1]);
         const Sc = gfx('Scenes'); let ok = false;
         const WA = gfx('WorldArt');
-        if (WA && WA.draw(ctx, WA.scene('ground-battle'), 0, 0, w, hh, { fx: 0.5, fy: 0.6 })) ok = true;   // purpose-made ground-battle art, else the planet's surface scene
+        if (WA && WA.draw(ctx, WA.scene('ground-battle'), 0, 0, w, hh, { fx: 0.5, fy: 0.6 })) { ok = true; const GR = gfx('Grade'); if (GR) { try { GR.apply(ctx, w, hh, t, 'scene'); } catch (e) { /* optional */ } } }   // purpose-made ground-battle art (graded as a scene), else the planet's surface scene
         else if (Sc && Sc.surface) { try { Sc.surface.draw(ctx, w, hh, t, { look, seed, populated: true, color: DF.color }); ok = true; } catch (e) { warnOnce('surface', e); } }
         if (!ok) { const g = ctx.createLinearGradient(0, 0, 0, hh); g.addColorStop(0, '#0a1030'); g.addColorStop(1, '#2a1a1a'); ctx.fillStyle = g; ctx.fillRect(-20, -20, w + 40, hh + 40); }
         if (dimA > 0) { ctx.fillStyle = 'rgba(2,4,14,' + 0.76 * dimA + ')'; ctx.fillRect(-20, -20, w + 40, hh + 40); }

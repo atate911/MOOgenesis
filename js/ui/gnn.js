@@ -717,7 +717,10 @@
   // Scenes.newsroom when present (its layout rects drive every DOM overlay), otherwise the built-in set. Returns {L, scene, cam}.
   let sceneBroken = false;
   function paintBackdrop(g, w, hh, t, o, S) {
-    try { const PL = photoStudio(g, w, hh, t, o); if (PL) return { L: sanitizeRects(PL, w, hh), scene: false, cam: { z: 1, dx: 0, dy: 0 } }; } catch (e) { warnOnce('WorldArt.gnn', e); }
+    try {
+      const PL = photoStudio(g, w, hh, t, o);
+      if (PL) { const GR = M.Gfx && M.Gfx.Grade; if (GR) { try { GR.apply(g, w, hh, t, 'plate'); } catch (e) { /* optional */ } } return { L: sanitizeRects(PL, w, hh), scene: false, cam: { z: 1, dx: 0, dy: 0 } }; }   // graded like every plate
+    } catch (e) { warnOnce('WorldArt.gnn', e); }
     const SC = M.Gfx && M.Gfx.Scenes, ns = SC && SC.newsroom;
     if (!sceneBroken && ns && typeof ns.draw === 'function') {
       try {

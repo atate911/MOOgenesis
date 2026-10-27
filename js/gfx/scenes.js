@@ -3031,7 +3031,7 @@
       t = tm(t);
       o = o || {};
       const race = HALLS[o.race] ? o.race : 'human', hall = HALLS[race], S = begin(ctx, w, h), G0 = audGeo(w, h);
-      const photo = artBG(ctx, G.WorldArt && G.WorldArt.race(race, 'audience'), w, h, { fx: 0.62, fy: 0.5 });
+      const photo = artBG(ctx, G.WorldArt && G.WorldArt.race(race, 'audience'), w, h, { fx: 0.62, fy: 0.5, drift: 0.035, t: t });   // the hall breathes behind the leader
       const e = photo ? { d: {} } : layer('aud.' + race, w, h, S, (g, ww, hh, c) => { const d = hall.bg(g, ww, hh, c, G0); bakeGrain(g, ww, hh, 0.05); return d; });
       if (!photo) ctx.drawImage(e.c, 0, 0, w, h);
       /* conference-deck lighting: the sunlit hall is multiplied down into a deep-navy dome, leaving a warm pool of light on the leader */

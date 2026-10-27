@@ -57,6 +57,15 @@ Versions follow `MAJOR.MINOR.PATCH`; the live version is the `VERSION` file.
   gone; its brass frame carries the colour). Dark wells with brass hairlines: the Research, Races, Report and Tech tree wells, the
   ledgers' cells and boxes and the colony panel's slots go near-black so data and art pop, and table rules are a 1px brass hairline
   that scales with the interface. The near-duplicate yellows in the stylesheets collapse into the title and slot tokens.
+- Visual system, phase 2: combat, continuity, scenes. The tactical board reads as a hologram: the checker and the intersection dots are
+  fainter, the planet is a little larger and carries its atmosphere, clouds, cloud shadows and night lights, idling drives breathe, and
+  when no battle backdrop fits the board sits on the star's own planet-free sky instead of the bright system plate. Opening a star system
+  from the map is a continuation of the zoom: the map flies in on the star, the system view cross-fades in, and on the way back the map
+  flies out to where it was (reduce motion and phones cut straight across). The system view's fallback sky is the one sky, warmed by the
+  star. One grade on every plate: the title's galaxy, the news studio, the exile ending and the ground-battle art take the same light
+  colour grade the other scenes have, the art in the panels and ledgers gets the same touch, and the audience hall breathes behind the
+  leader (a slow push-in and back over forty seconds, off under reduce motion). The ship design hologram floats on the one sky. Phones:
+  the family wells and separators take the phase 1 values.
 - Title screen. The world in the corner turns smoothly and visibly: its axis now tilts away from the viewer so mid-latitudes sweep
   past instead of a polar cap turning in place, one turn takes about a minute, the sun sits low on the galaxy's side so the terminator, the
   night-side city lights and the cloud shadows cross the visible half, and it drifts a little against the galaxy's slow zoom. Clouds on

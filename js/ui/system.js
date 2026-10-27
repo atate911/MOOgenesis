@@ -268,8 +268,8 @@
     }
     if (!bg) {
       try {
-        const o = { palette: BACKDROP[i.kind] || BACKDROP.yellow, intensity: 0.6, stars: 1, vignette: true };
-        const Sp = Gfx().Space;
+        const Sp = Gfx().Space, glow = Sp && Sp.starColor ? Sp.starColor(i.kind).glow : null;
+        const o = Sp && Sp.sky ? Sp.sky({ intensity: 0.8, stars: 1, warm: glow || undefined, warmK: 0.6 }) : { palette: BACKDROP[i.kind] || BACKDROP.yellow, intensity: 0.6, stars: 1, vignette: true };   // the one sky, warmed by the star
         bg = gpu ? Gfx().GLSpace.makeBackdrop(w, hh, seed, o) : (Sp && Sp.makeBackdrop ? Sp.makeBackdrop(w, hh, seed, o) : null);
       } catch (e) { console.warn('[system] backdrop', e); bg = null; }
     }

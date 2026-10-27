@@ -229,6 +229,7 @@
           ctx.globalAlpha = 1;
         } catch (e) { /* ignore */ }
       }
+      if (art && M.Gfx.Grade) { try { M.Gfx.Grade.apply(ctx, w, hh, t, 'plate'); } catch (e) { /* optional */ } }   // one grade on every plate (visual-system-plan.md 2.8)
     },
   });
 })(window.MOO);

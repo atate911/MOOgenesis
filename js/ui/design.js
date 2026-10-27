@@ -1141,12 +1141,17 @@
   function makeBg(w, hh, dpr) {
     const c = document.createElement('canvas'); c.width = Math.round(w * dpr); c.height = Math.round(hh * dpr);
     const g = c.getContext('2d'); g.scale(dpr, dpr);
-    const gr = g.createRadialGradient(w * .5, hh * .5, 0, w * .5, hh * .5, Math.max(w, hh) * .72);
-    gr.addColorStop(0, '#16235f'); gr.addColorStop(.5, '#0b1239'); gr.addColorStop(1, '#04060f');
-    g.fillStyle = gr; g.fillRect(0, 0, w, hh);
-    // faint starfield
-    let seed = 7; const rnd = () => { seed = (seed * 16807) % 2147483647; return seed / 2147483647; };
-    for (let i = 0; i < Math.round(w * hh / 2600); i++) { const x = rnd() * w, y = rnd() * hh, a = 0.1 + rnd() * 0.5; g.fillStyle = 'rgba(190,210,255,' + a.toFixed(2) + ')'; g.fillRect(x, y, rnd() < .15 ? 2 : 1, 1); }
+    // the one sky behind the hologram (visual-system-plan.md 2.9), else the old indigo dome + starfield
+    let sky = null;
+    try { const Sp = M.Gfx && M.Gfx.pick ? M.Gfx.pick('space') : null; if (Sp && Sp.makeBackdrop && Sp.sky) sky = Sp.makeBackdrop(Math.min(1280, Math.round(w)), Math.min(720, Math.round(hh)), 'design', Sp.sky({ intensity: 0.55, stars: 0.8, floor: 0.06 })); } catch (e) { sky = null; }
+    if (sky && (sky.width || sky.naturalWidth)) g.drawImage(sky, 0, 0, w, hh);
+    else {
+      const gr = g.createRadialGradient(w * .5, hh * .5, 0, w * .5, hh * .5, Math.max(w, hh) * .72);
+      gr.addColorStop(0, '#16235f'); gr.addColorStop(.5, '#0b1239'); gr.addColorStop(1, '#04060f');
+      g.fillStyle = gr; g.fillRect(0, 0, w, hh);
+      let seed = 7; const rnd = () => { seed = (seed * 16807) % 2147483647; return seed / 2147483647; };
+      for (let i = 0; i < Math.round(w * hh / 2600); i++) { const x = rnd() * w, y = rnd() * hh, a = 0.1 + rnd() * 0.5; g.fillStyle = 'rgba(190,210,255,' + a.toFixed(2) + ')'; g.fillRect(x, y, rnd() < .15 ? 2 : 1, 1); }
+    }
     // blueprint grid
     g.strokeStyle = 'rgba(98,150,255,.07)'; g.lineWidth = 1; const step = Math.max(16, Math.round(w / 22));
     g.beginPath(); for (let x = (w % step) / 2; x < w; x += step) { g.moveTo(x + .5, 0); g.lineTo(x + .5, hh); } for (let y = (hh % step) / 2; y < hh; y += step) { g.moveTo(0, y + .5); g.lineTo(w, y + .5); } g.stroke();

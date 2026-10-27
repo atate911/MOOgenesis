@@ -108,6 +108,16 @@ Report dossier and the colony postcard; off under `reduceMotion`.
 **10. Phones.** Map the `--pk-*` family tokens (`css/phone-skin.css`) to the new well, hairline and glass values so the phone is the same
 system compressed; surfaces stay flat (no blur on phones).
 
+## Phase 2 — done (same branch, one commit)
+
+| Step | What landed | Notes |
+|---|---|---|
+| 2.6 combat | `combat-fx.js`: checker .028 → .015, dots .22 → .16; `drawPlate` tries `WA.systemSky(star)` (mode `sky`, star position from a local `SKY_STAR` table, lighter darkening) before the system plate; idle `thrust` breathes; the planet is `GLPlanets`/`Planets.draw` with `atmosphere, clouds, cloudShadows, lights` and `R` ×1.1. | The steel command bar and its blue-steel name plate stay (the original's). Beam bloom through `gl-fx` was not added: the beams already go through `Gfx.Fx`, and a bloom pass needs the GL path, which cannot be judged here. |
+| 2.7 continuity | `galaxy.js` `dblStar`: `centerOn(id, {zoom: max(5, zoom×1.6), animate})`, then `Screens.go('system')` 420 ms later; `UI.Galaxy.camBeforeSystem` holds the camera and `enter()` flies back to it. `system.js`: the no-art fallback backdrop is `Space.sky({warm: starColor(kind).glow})`. | Reduce motion and phones cut straight across. The system view's star corona was left: with the sky plates the plate carries the star. |
+| 2.8 grade | `WorldArt.draw` gains `drift` (+`t`): a slow push-in over ~40 s, off under reduce motion; the audience hall uses it (`scenes.js`). `WorldArt.image` tags `img.wa-plate`; `theme-v2.css` 7c gives it the plate grade as a CSS filter (a screen's own filter wins). `Grade.apply('plate')` on the title's galaxy (`menu.js`), the news studio photo (`gnn.js`), the exile plate (`endings.js`); `'scene'` on the ground-battle art (`landing.js`). | The council plate was not given drift: its booths are placed in plate coordinates and would slide. The `room` preset was not re-tuned (owner's call on hardware). |
+| 2.9 design | `design.js` `makeBg`: the one sky under the hologram grid, the indigo dome as the fallback. | |
+| 2.10 phones | `phone-skin.css`: gunmetal / bronze / leather `--pk-well` → the phase 1 well blacks, `--pk-sep` → the hairline. | |
+
 ## Phase 3 — assets (rows for `ART-NEEDED.md`)
 
 **11. Full-screen scenes at 3840×2160**, in order of screen time: `scene-galaxy` (title, boot, ledgers), the 10 audience halls, the

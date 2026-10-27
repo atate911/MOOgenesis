@@ -110,6 +110,7 @@
     const bg = stillIm ? WA.draw(g, stillIm, 0, 0, w, hh, { fx: 0.6, fy: 0.45, zoom: 1 + 0.06 * (1 - k) }) : WA.draw(g, scene, 0, 0, w, hh, { fx: 0.62, fy: 0.42, zoom: 1.08 - 0.08 * k });
     if (!bg) return false;
     g.fillStyle = 'rgba(2,3,12,.38)'; g.fillRect(0, 0, w, hh);                                   // the plate sits low-key under the caption
+    if (M.Gfx && M.Gfx.Grade) { try { M.Gfx.Grade.apply(g, w, hh, t, 'plate'); } catch (e) { /* optional */ } }
     if (!stillIm) {                                                                              // the homeworld shrinks into the distance
       const hp = WA.race(R.T.race, 'homeworld'), r = hh * (0.19 - 0.13 * k), cx = w * (0.8 - 0.05 * k), cy = hh * 0.3;
       if (hp && WA.get(hp) && r > 2) {

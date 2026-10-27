@@ -385,7 +385,17 @@
       if (!map && M.UI.GalaxyMap) {
         map = UI.Galaxy.map = M.UI.GalaxyMap.create(mapWrap, {});
         map.on('selectStar', id => { if (UI.Galaxy.pick) UI.Galaxy.pick(id); else UI.Galaxy.selectStar(id); });
-        map.on('dblStar', id => { G.sel.star = id; if (UI.Screens.has('system')) UI.Screens.go('system', { star: id, from: 'galaxy' }); });
+        map.on('dblStar', id => {
+          G.sel.star = id; if (!UI.Screens.has('system')) return;
+          // the system view is a continuation of the zoom (visual-system-plan.md 2.7): fly in on the star, then cross-fade; the galaxy
+          // screen flies back out to this camera when the player returns. Reduce motion and phones cut straight across.
+          const cam = map.getCamera ? map.getCamera() : null, cut = !cam || (M.Settings && M.Settings.get('reduceMotion')) || (M.Phone && M.Phone.active());
+          const go = () => UI.Screens.go('system', { star: id, from: 'galaxy' });
+          if (cut) { go(); return; }
+          UI.Galaxy.camBeforeSystem = { x: cam.x, y: cam.y, zoom: cam.zoom };
+          map.centerOn(id, { zoom: Math.min(cam.maxZoom || 12, Math.max(5, cam.zoom * 1.6)), animate: true });
+          setTimeout(go, 420);
+        });
         // your fleet in orbit opens its deployment in the sidebar, leaving the map clear; the panel floats beside the destination once one is picked
         map.on('selectFleet', fid => { G.sel.fleet = fid; const f = G.S.fleets.find(x => x.id === fid); if (f && f.owner === G.S.playerId) UI.Side.show(f.star >= 0 ? 'fleetDeploy' : 'fleetInfo', { star: f.star, fleet: fid }); else if (f) UI.Side.show('fleetInfo', { fleet: fid }); });
         map.on('moveOrder', o => {
@@ -398,6 +408,8 @@
       if (UI.Side.held) { UI.Side.showHeld(); return; }                                    // back from another screen while the turn waits on a prompt: the prompt, not the default panel
       const star = G.sel.star >= 0 ? G.sel.star : G.player().capital;
       if (map) map.centerOn(star, { animate: false });
+      const back = UI.Galaxy.camBeforeSystem; UI.Galaxy.camBeforeSystem = null;
+      if (map && back) map.centerOn({ x: back.x, y: back.y }, { zoom: back.zoom, animate: true });     // back from the system view: fly out to where the map was
       UI.Galaxy.selectStar(star);
     },
     leave() { },

@@ -112,7 +112,8 @@
     if (!im) return false;
     o = o || {};
     const iw = im.naturalWidth, ih = im.naturalHeight, fx = o.fx == null ? 0.5 : o.fx, fy = o.fy == null ? 0.5 : o.fy;
-    const z = o.zoom > 1 ? o.zoom : 1;
+    let z = o.zoom > 1 ? o.zoom : 1;
+    if (o.drift > 0 && !(M.Settings && M.Settings.get && M.Settings.get('reduceMotion'))) z *= 1 + o.drift * (0.5 - 0.5 * Math.cos((o.t || 0) * 0.157));   // a still breathes: a slow push-in and back over ~40 s
     let sx, sy, sw, sh;
     if (o.fit === 'contain') {
       const s = Math.min(w / iw, h / ih), dw = iw * s, dh = ih * s;
@@ -141,7 +142,7 @@
   function image(path, o) {
     o = o || {};
     const im = document.createElement('img');
-    im.alt = o.alt || ''; im.decoding = 'async'; im.draggable = false;
+    im.alt = o.alt || ''; im.decoding = 'async'; im.draggable = false; im.className = 'wa-plate';   // theme-v2: the same light grade the canvas plates get
     im.style.cssText = 'display:block;width:100%;height:100%;object-fit:' + (o.fit === 'contain' ? 'contain' : 'cover') +
       ';object-position:' + ((o.fx == null ? 0.5 : o.fx) * 100).toFixed(1) + '% ' + ((o.fy == null ? 0.5 : o.fy) * 100).toFixed(1) + '%' + (o.alpha != null ? ';opacity:' + o.alpha : '');
     im.onerror = function () { im.style.visibility = 'hidden'; };
