@@ -346,6 +346,8 @@
     e.clearRect(0, 0, cw, ch);
     try { e.filter = 'blur(1.4px) brightness(0.8) saturate(0.9)'; } catch (x2) { /* optional */ }
     e.drawImage(im, x, y, fw * breathe, fh * breathe);
+    const tone = WA.raceTone ? WA.raceTone(me0 ? me0.race : 'human', 'figure') : null;   // the figure set's outliers toward its mean (the human figure is a dark one)
+    if (tone && tone.k && WA.tonePass) WA.tonePass(e, tone.k, () => e.drawImage(im, x, y, fw * breathe, fh * breathe), { x: x, y: y, w: fw * breathe, h: fh * breathe });
     try { e.filter = 'none'; } catch (x2) { /* optional */ }
     // the plate's studio black must not cut a hard edge into the hall: feather the right side and the bottom
     e.globalCompositeOperation = 'destination-in';

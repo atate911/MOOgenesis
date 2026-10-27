@@ -104,16 +104,45 @@
     return 'colony/colony-terran-city';
   }
   const GNN = 'gnn/race-neutral-gnn-studio-background';
-  /* Exposure nudges for the files that sit far from their set's mean luminance (measured: scratchpad/qa/histo.py). A Darlok hall is a
-     third as bright as the other halls, a Psilon council chamber nearly twice; side by side (the council booths, the Races cards, the
-     Report) the jump reads as a mistake rather than a mood. Brightness only, so blacks stay black and the mood stays. The real fix is
-     re-rendering those files; until then every draw path reads this table. */
-  const EXPO = {
-    darlok: { portrait: 1.4, audience: 1.35, council: 1.4, figure: 1.3, scientist: 1.4, homeworld: 1.45, 'homeworld-square': 1.4 },
-    psilon: { portrait: 0.82, council: 0.72, figure: 0.8, scientist: 0.75 },
-    alkari: { homeworld: 0.75, 'homeworld-square': 0.72 },
+  /* The measured tone of every race photo: [mean luma 0–255, 99th percentile] per race and purpose (scratchpad/qa, PIL over the files),
+     and each set's mean. A file far from its set's mean (a Darlok hall at a third of the others, a Psilon chamber at twice) is brought
+     three quarters of the way back, so side by side (the council booths, the Races cards, the Report, the Almanac) the empires sit in
+     one exposure while each file keeps some of its own key. The op is tonal, not a brightness slider: on canvas a self-screen pass lifts
+     the midtones and leaves black black and the highlights near where they were (a self-multiply pass drops them the same way); in the
+     DOM, where only CSS brightness exists, the lift is capped by the file's highlight headroom so nothing clips. The real fix is
+     re-rendering the outliers (Phase 3); until then every draw path reads this table. */
+  const TONE = {
+    portrait: { human: [38, 182], mrrshan: [42, 177], silicoid: [45, 195], sakkra: [42, 190], psilon: [56, 216], alkari: [51, 198], klackon: [35, 183], bulrathi: [32, 145], meklar: [32, 203], darlok: [16, 126] },
+    figure: { human: [23, 138], mrrshan: [29, 150], silicoid: [38, 187], sakkra: [30, 147], psilon: [41, 209], alkari: [37, 177], klackon: [27, 133], bulrathi: [27, 115], meklar: [26, 151], darlok: [19, 101] },
+    audience: { human: [31, 185], mrrshan: [54, 217], silicoid: [42, 183], sakkra: [56, 219], psilon: [69, 230], alkari: [68, 238], klackon: [47, 194], bulrathi: [46, 228], meklar: [42, 203], darlok: [24, 123] },
+    council: { human: [58, 227], mrrshan: [58, 210], silicoid: [53, 200], sakkra: [54, 203], psilon: [86, 229], alkari: [70, 236], klackon: [44, 178], bulrathi: [47, 190], meklar: [42, 206], darlok: [28, 155] },
+    scientist: { human: [50, 232], mrrshan: [47, 207], silicoid: [44, 202], sakkra: [45, 203], psilon: [70, 231], alkari: [67, 243], klackon: [47, 194], bulrathi: [46, 221], meklar: [48, 223], darlok: [27, 163] },
+    homeworld: { human: [52, 235], mrrshan: [56, 227], silicoid: [47, 215], sakkra: [65, 240], psilon: [81, 243], alkari: [93, 246], klackon: [44, 200], bulrathi: [62, 231], meklar: [52, 232], darlok: [24, 173] },
+    'homeworld-square': { human: [61, 241], mrrshan: [73, 239], silicoid: [52, 227], sakkra: [81, 246], psilon: [97, 247], alkari: [109, 248], klackon: [57, 217], bulrathi: [79, 239], meklar: [64, 241], darlok: [34, 193] },
   };
-  function raceExposure(race, purpose) { const r = EXPO[race]; return (r && r[purpose]) || 1; }
+  const TONE_MEAN = { portrait: 39, figure: 30, audience: 48, council: 54, scientist: 49, homeworld: 58, 'homeworld-square': 71 };
+  const NO_TONE = { ratio: 1, b: 1, k: 0 };
+  function raceTone(race, purpose) {
+    const t = TONE[purpose] && TONE[purpose][race]; if (!t) return NO_TONE;
+    let r = Math.pow(TONE_MEAN[purpose] / t[0], purpose === 'portrait' || purpose === 'figure' ? 1 : 0.75);   // people side by side go all the way; a hall or a plate keeps a quarter of its own key
+    if (Math.abs(r - 1) < 0.06) return NO_TONE;
+    r = Math.max(0.6, Math.min(2, r));
+    const a = t[0] / 255;
+    // a lift is a self-screen pass: m' = a + k·a(1−a)  →  k = (r−1)/(1−a), two passes when k > 1; a drop is black at alpha 1 − r over the pixels (stored as k = r − 1 < 0)
+    const k = r > 1 ? (r - 1) / (1 - a) : r - 1;
+    const b = r > 1 ? Math.min(r, 245 / t[1]) : r;
+    return { ratio: r, b: Math.round(b * 100) / 100, k: Math.round(k * 100) / 100 };
+  }
+  function raceExposure(race, purpose) { return raceTone(race, purpose).b; }   // the DOM form (CSS brightness, capped)
+  /* the canvas form: k > 0 lifts (self-screen: `drawAgain` redraws exactly what was just drawn; k > 1 is two passes); k < 0 drops (black at
+     alpha −k over the drawn pixels only, so a feathered photo keeps its edge); rect = {x, y, w, h} of what was drawn */
+  function tonePass(ctx, k, drawAgain, rect) {
+    if (!k) return;
+    ctx.save();
+    if (k > 0) { ctx.globalCompositeOperation = 'screen'; let rem = Math.min(2, k); while (rem > 0.01) { ctx.globalAlpha = Math.min(1, rem); drawAgain(); rem -= 1; } }
+    else if (rect) { ctx.globalCompositeOperation = 'source-atop'; ctx.globalAlpha = Math.min(1, -k); ctx.fillStyle = '#000'; ctx.fillRect(rect.x, rect.y, rect.w, rect.h); }
+    ctx.restore();
+  }
 
   /* Paint an image into the box. fit: 'cover' (default, crops) | 'contain'. (fx, fy) = focal point 0..1 kept in view when cropping.
      o.zoom >= 1 zooms in about the focal point (slow push-ins).  Returns false when the image is not ready. */
@@ -136,7 +165,9 @@
     sx = Math.max(0, Math.min(iw - sw, fx * iw - sw * fx)); sy = Math.max(0, Math.min(ih - sh, fy * ih - sh * fy));
     ctx.save(); if (o.alpha != null) ctx.globalAlpha *= o.alpha; ctx.imageSmoothingQuality = 'high';
     if (o.exposure && o.exposure !== 1 && 'filter' in ctx) { try { ctx.filter = 'brightness(' + o.exposure + ')'; } catch (e) { /* no filters */ } }
-    ctx.drawImage(im, sx, sy, sw, sh, x, y, w, h); ctx.restore();
+    ctx.drawImage(im, sx, sy, sw, sh, x, y, w, h);
+    if (o.tone && o.tone.k) tonePass(ctx, o.tone.k, () => ctx.drawImage(im, sx, sy, sw, sh, x, y, w, h), { x: x, y: y, w: w, h: h });   // the measured tone of this file toward its set
+    ctx.restore();
     return true;
   }
   /* a canvas element holding the image (thumbnails / DOM use). Starts as a transparent canvas and fills in when loaded. */
@@ -172,7 +203,7 @@
   M.Gfx.WorldArt = {
     get: get, ready: ready, whenReady: whenReady, draw: draw, canvas: canvas, image: image, preload: preload,
     orbit: orbitPath, surface: surfacePath, system: systemPath, event: eventPath, scene: scenePath, race: racePath, colony: colonyPath, gnn: GNN,
-    systemSky: systemSkyPath, battle: battlePath, fx: fxPath, still: stillPath, raceExposure: raceExposure,
+    systemSky: systemSkyPath, battle: battlePath, fx: fxPath, still: stillPath, raceExposure: raceExposure, raceTone: raceTone, tonePass: tonePass,
     get enabled() { return W.enabled; }, set enabled(v) { W.enabled = !!v; },
     lists: { orbit: ORBIT, surface: SURFACE, system: SYSTEM, events: EVENTS, colony: COLONY, scenes: SCENES, races: RACES, purposes: PURPOSES, battle: BATTLE, fx: FX, stills: STILLS },
     _state: W,

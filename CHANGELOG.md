@@ -102,6 +102,15 @@ Versions follow `MAJOR.MINOR.PATCH`; the live version is the `VERSION` file.
   heads take the cream capitals the ledgers and the console already use; orange is the bold box-title tier only. One type scale: every
   size snaps to a regular step (36 distinct sizes, down from 65). One hairline system: the brass lines on borders, rules and frame edges
   are three weights instead of fourteen.
+- Race photos, matched to their screens. The seventy race photos (portraits, figures, audience halls, council chambers, scientists,
+  homeworlds) were measured one by one: each is sound on its own (black shadows, no clipped highlights), but within a set the exposure
+  spans three to five times from the Darlok to the Psilon, and the game puts those sets side by side. Every draw path now reads one
+  measured table and brings a file toward its set: people photos all the way, plates three quarters of the way. The correction is tonal,
+  not a brightness slider: a dark photo's midtones are lifted while its blacks stay black and its highlights stay put, a bright photo's
+  exposure comes down with its highlights, and a plate in the page is capped so nothing clips. In the Races cards the portraits used to
+  span 16 to 46 in brightness; nine of ten now sit between 32 and 37 and the Darlok, dark on purpose, at 21 with the face readable. The
+  council booths, the Report, the Almanac, the New game race pick, the audience leader and the player's own figure in the audience follow
+  the same table, and the correction now survives the low effects tier and phones, which used to drop it with the plate grade.
 - Title screen. The world in the corner turns smoothly and visibly: its axis now tilts away from the viewer so mid-latitudes sweep
   past instead of a polar cap turning in place, one turn takes about a minute, the sun sits low on the galaxy's side so the terminator, the
   night-side city lights and the cloud shadows cross the visible half, and it drifts a little against the galaxy's slow zoom. Clouds on

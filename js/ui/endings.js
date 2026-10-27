@@ -115,7 +115,7 @@
       const hp = WA.race(R.T.race, 'homeworld'), r = hh * (0.19 - 0.13 * k), cx = w * (0.8 - 0.05 * k), cy = hh * 0.3;
       if (hp && WA.get(hp) && r > 2) {
         g.save(); g.globalAlpha = 0.95 - 0.45 * k; g.beginPath(); g.arc(cx, cy, r, 0, TAU); g.clip();
-        WA.draw(g, hp, cx - r * 1.35, cy - r * 1.35, r * 2.7, r * 2.7, { fx: 0.5, fy: 0.5 });
+        WA.draw(g, hp, cx - r * 1.35, cy - r * 1.35, r * 2.7, r * 2.7, { fx: 0.5, fy: 0.5, tone: WA.raceTone ? WA.raceTone(R.T.race, 'homeworld') : null });   // the homeworld set's tone, like every other site
         const sh = g.createRadialGradient(cx - r * 0.35, cy - r * 0.3, r * 0.2, cx, cy, r); sh.addColorStop(0, 'rgba(0,0,0,0)'); sh.addColorStop(0.75, 'rgba(0,0,0,.25)'); sh.addColorStop(1, 'rgba(0,0,0,.9)');
         g.fillStyle = sh; g.fillRect(cx - r, cy - r, r * 2, r * 2); g.restore();
         g.save(); g.globalCompositeOperation = 'lighter'; const gl = g.createRadialGradient(cx, cy, r * 0.9, cx, cy, r * 1.6); gl.addColorStop(0, 'rgba(120,150,255,.22)'); gl.addColorStop(1, 'rgba(0,0,0,0)'); g.fillStyle = gl; g.fillRect(cx - r * 2, cy - r * 2, r * 4, r * 4); g.restore();

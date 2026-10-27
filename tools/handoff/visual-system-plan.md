@@ -316,6 +316,75 @@ Design 5 → 3, the rest unchanged); the finished-game sweep shows fewer distinc
 leather frame +29; options cards −9 (was −14, the de-blued base); Research +21; system view +16. Known and left: the Tech tree's locked
 chips at 2.9:1 (dim by meaning) and the sampler's copper-glyph edges.
 
+## Race photos — done (same branch, one commit)
+
+The owner asked for the race photos to be reviewed as they are used throughout the game, individually and situationally, for brightness,
+midtones, highlights and shadows against the screens they sit in. Seventy files: ten races × portrait, figure, audience hall, council
+chamber, scientist, homeworld, homeworld-square. Harness: `scratchpad/qa/racesite.js` + `racesite.py` (every race at the Races cards, the
+Report portrait and dossier, the audience hall / leader / envoy, the Almanac; the art rectangle's luma distribution against its surround)
+and `racesite2.js` (the council demo chamber, the New game race pick, the research breakthrough scene).
+
+### The files (mean luma 0–255, 10th / 50th / 90th / 99th percentile, by set)
+
+| Set | Set mean | Shadows (p10) | Mid (p50) | Highlights (p99) | Outliers |
+|---|---|---|---|---|---|
+| portraits | 39 | 0–10 | 8–34 | 126–216 | Darlok 16 (half the image under 8), Psilon 56 |
+| figures | 30 | 3–9 | 13–22 | 101–209 | Darlok 19, Human 23 (the one most players see), Psilon 41 |
+| audience halls | 48 | 1–12 | 10–53 | 123–238 | Darlok 24, Human 31, Psilon 69, Alkari 68 |
+| council chambers | 54 | 3–28 | 17–73 | 155–236 | Darlok 28, Psilon 86 (p50 73), Alkari 70 |
+| scientists | 49 | 5–16 | 12–52 | 163–243 | Darlok 27, Psilon 70, Alkari 67 |
+| homeworlds | 58 | 1–6 | 9–85 | 173–246 | Darlok 24, Alkari 93, Psilon 81 |
+| homeworld-square | 71 | 2–8 | 16–108 | 193–248 | Darlok 34, Alkari 109, Psilon 97 |
+
+Individually every file is sound: shadows reach black (p10 under 12 almost everywhere), nothing clips (whites over 245 under 2 %), the
+highlights sit at 125–245. The problem is between files: within a set the mean spans 3–5× (Darlok to Psilon), and the game shows those
+sets side by side (council booths, Races cards, the Almanac grid, the Report, one audience after another), where a 3× jump in exposure
+reads as a mistake rather than a mood. The same three races are the outliers in every set: Darlok dark, Psilon and Alkari bright, plus
+the Human figure and hall on the dark side.
+
+### The op
+
+`WorldArt.raceTone(race, purpose)` replaces the hand exposure table with the measured one (`TONE`: mean and p99 per file; `TONE_MEAN` per
+set). People photos (portrait, figure) go all the way to their set's mean; plates (halls, chambers, scientists, homeworlds) go three
+quarters of the way and keep a quarter of their own key. The correction is tonal, not a brightness slider:
+
+- canvas lift: a self-screen pass (the image drawn over itself with `screen` at alpha k, two passes when k > 1) raises the midtones and
+  leaves black black and the highlights near where they were, so a dark file is not fogged and nothing clips;
+- canvas drop: black at alpha 1 − r over the drawn pixels only (`source-atop`), an exact exposure drop that brings highlights down with
+  the midtones, so a bright file does not keep burnt highlights; a feathered photo keeps its edge;
+- DOM plates (`<img>`): CSS brightness, capped by the file's highlight headroom (245 / p99) so nothing clips; kept when effects are off
+  (the low tier and phones used to drop the whole plate filter, exposure included).
+
+Every draw path reads it: `WorldArt.draw` (`tone` option), the portrait scaler (`Portraits.phScaled`: Races cards, Report, Almanac,
+council booths, New game, GNN badges, the audience leader), the audience envoy (the player's figure), the audience and council halls, the
+research scene's scientist, the ending's homeworld, the Report dossier, the Races void plate and the New game homeworld.
+
+### In situ, before → after (luma of the art rectangle in the screenshot; the surround is the frame it sits in)
+
+| Site | Before (darkest … brightest) | After | Surround |
+|---|---|---|---|
+| Races card portraits | Darlok 16, Meklar 27, Bulrathi 28, Klackon 30 … Psilon 43, Alkari 46 (2.9×) | Darlok 21, then 32–37 for the other nine (1.2×) | leather 65–71 |
+| Report portrait | 15 … 46 | 21 … 38 | leather 64–73 |
+| Almanac portraits (visible six) | 26 … 45 | 26 … 40 | glass 28–38 |
+| New game race pick: portrait / homeworld plate | — / 22 … 89 (the low tier dropped the plate filter, exposure included) | Darlok 27, the rest 37–43 / 31 … 63 | glass |
+| Audience hall (right third, after the room grade) | Human 34, Darlok 34 … Psilon 54, Mrrshan 54 | 29 … 50; Human 42, Psilon 42, Alkari 33, Darlok 38 | — |
+| Audience leader | Darlok 14, Bulrathi 28 … Psilon 52, Alkari 57 (4×) | Darlok 19, then 32–44 (1.4×) | — |
+| Audience envoy (the Human figure) | 25 in every hall | 30 in every hall | — |
+| Report dossier (dimmed to half under the caption) | 18 … 48 | unchanged (the DOM cap equals the old hand value) | — |
+
+Highlights: p99 of every portrait in situ 119–173, no white clipping anywhere (0.0 %). Shadows: p10 unchanged (1–9), the black share of
+the dark files down (Darlok portrait 49 % → 40 %), never up. Darlok stays the dark one on purpose: its portrait is a hood with half the
+pixels under 8, and a midtone lift cannot (and should not) raise black; the face and the red eyes now read in every frame, which is the
+point. Its council booth, Races card and audience read as a moody figure rather than an empty well.
+
+Left for the files themselves (Phase 3 rows): the Darlok set re-rendered a stop brighter in the midtones, the Psilon and Alkari halls and
+homeworlds a stop darker, the Human figure and hall half a stop brighter; the Almanac's Sakkra crop (dark at 26: the crop, not the file).
+
+Verification: `check.js` clean, `rules-test.js` 845 pass, phone QA 263 pass, 30 turns on hard with no errors; the change is canvas
+compositing and one CSS rule, so the layout fingerprint does not apply. Shots for every race at every site are in
+`scratchpad/racesite/` (`before2-*`, `after3-*`, `after4-*`). Judge the council chamber and the Darlok audience on real hardware: the
+headless renderer runs the low tier.
+
 ## Phase 3 — assets (rows for `ART-NEEDED.md`)
 
 **11. Full-screen scenes at 3840×2160**, in order of screen time: `scene-galaxy` (title, boot, ledgers), the 10 audience halls, the

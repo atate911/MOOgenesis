@@ -3031,7 +3031,7 @@
       t = tm(t);
       o = o || {};
       const race = HALLS[o.race] ? o.race : 'human', hall = HALLS[race], S = begin(ctx, w, h), G0 = audGeo(w, h);
-      const photo = artBG(ctx, G.WorldArt && G.WorldArt.race(race, 'audience'), w, h, { fx: 0.62, fy: 0.5, drift: 0.035, t: t, exposure: G.WorldArt && G.WorldArt.raceExposure ? G.WorldArt.raceExposure(race, 'audience') : 1 });   // the hall breathes behind the leader; the dark halls lifted toward the set
+      const photo = artBG(ctx, G.WorldArt && G.WorldArt.race(race, 'audience'), w, h, { fx: 0.62, fy: 0.5, drift: 0.035, t: t, tone: G.WorldArt && G.WorldArt.raceTone ? G.WorldArt.raceTone(race, 'audience') : null });   // the hall breathes behind the leader; the dark halls lifted toward the set
       const e = photo ? { d: {} } : layer('aud.' + race, w, h, S, (g, ww, hh, c) => { const d = hall.bg(g, ww, hh, c, G0); bakeGrain(g, ww, hh, 0.05); return d; });
       if (!photo) ctx.drawImage(e.c, 0, 0, w, h);
       /* conference-deck lighting: the sunlit hall is multiplied down into a deep-navy dome, leaving a warm pool of light on the leader */
@@ -3703,7 +3703,7 @@
       const WA = G.WorldArt, hallPath = WA ? WA.race(race, 'council') : null;
       if (hallPath && WA.get(hallPath)) {
         // the council plate already shows the sovereign enthroned among the delegates: a slow push-in, a warm wash for a victory, a cold red one for conquest
-        artBG(ctx, hallPath, w, h, { fx: 0.5, fy: 0.42, zoom: 1 + 0.05 * sstep(0, 40, t), exposure: WA.raceExposure ? WA.raceExposure(race, 'council') : 1 });
+        artBG(ctx, hallPath, w, h, { fx: 0.5, fy: 0.42, zoom: 1 + 0.05 * sstep(0, 40, t), tone: WA.raceTone ? WA.raceTone(race, 'council') : null });
         ctx.fillStyle = o.color === '#b0303a' ? 'rgba(40,6,10,0.3)' : 'rgba(4,6,16,0.22)'; ctx.fillRect(0, 0, w, h);
         const rays = sstep(0.2, 3, t);
         for (let i = 0; i < 2; i++) { const bx = [w * 0.3, w * 0.7][i], sw = sin(t * 0.3 + i * 2) * w * 0.06; beam(ctx, bx, h * 0.75, bx + sw, -h * 0.1, 12, w * 0.07, '#ffe9b0', 0.04 * rays); }

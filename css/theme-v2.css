@@ -205,7 +205,7 @@
 
 /* ---- 7c. DOM art plates (WorldArt.image): the light grade the canvas plates get (Gfx.Grade 'plate'); a screen's own filter wins (lower specificity here) */
 :where(:root[data-theme="v2"]) img.wa-plate { filter: saturate(.92) contrast(1.04) brightness(var(--expo, 1)); }
-:root[data-theme="v2"][data-fx="off"] img.wa-plate { filter: none; }
+:root[data-theme="v2"][data-fx="off"] img.wa-plate { filter: brightness(var(--expo, 1)); }   /* effects off drops the grade, never the measured tone (the low tier and phones) */
 
 /* ---- 8. fields: recessed wells ------------------------------------------------------------------------------------------ */
 :root[data-theme="v2"] .field { background: linear-gradient(135deg, var(--bev-hi), var(--bev-mid) 35%, var(--bev-lo)); color: var(--ink-0); box-shadow: 0 0 0 1px #000; }

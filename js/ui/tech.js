@@ -1210,7 +1210,7 @@
     if (w < 40 || hh < 40) return;
     let rects = null;
     const Sc = M.Gfx && M.Gfx.Scenes, WA = M.Gfx && M.Gfx.WorldArt;
-    if (WA && WA.draw(g, WA.race(R.race, 'scientist'), 0, 0, w, hh, { fx: 0.3, fy: 0.5, exposure: WA.raceExposure ? WA.raceExposure(R.race, 'scientist') : 1 })) {          // photoreal scientist scene; its right 40% is left clear for the panel
+    if (WA && WA.draw(g, WA.race(R.race, 'scientist'), 0, 0, w, hh, { fx: 0.3, fy: 0.5, tone: WA.raceTone ? WA.raceTone(R.race, 'scientist') : null })) {          // photoreal scientist scene; its right 40% is left clear for the panel
       glow(g, w * 0.34, hh * 0.78, hh * 0.55, R.F.col, 0.07 + 0.03 * Math.sin(R.t * 1.4));              // research-field tint on the console
       rects = { panel: { x: w * 0.6, y: hh * 0.12, w: w * 0.37, h: hh * 0.7 } };
     } else if (Sc && Sc.lab && Sc.lab.draw && !R.labFailed) {
