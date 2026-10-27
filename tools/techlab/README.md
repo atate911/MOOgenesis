@@ -20,6 +20,7 @@ node tools/techlab/twins.js --games 96 --first 64 --classic 0   # more trials fo
 node tools/techlab/analyze.js --in twins-r2.json,twins-r3.json --replace twins-r2c.json --out analysis-final.json
 node tools/techlab/league.js --games 240 [--drop id,id]         # --drop removes techs from the pool (a cull before editing the data)
 node tools/techlab/league-analyze.js --in league-r3.json
+node tools/techlab/rounds.js                                    # round record (cuts, moves, ablations) from tools/techlab/decisions.json
 node tools/techlab/report.js --combat combat-r1.json --analysis analysis-final.json --league league-analysis.json --rounds rounds.json
 ```
 
@@ -36,4 +37,5 @@ their placebo pairs are not counted twice. Trials of techs the data no longer ha
 | 1 | `combat.js` on 32 games; `twins.js` on 64 games with a plain control | Combat weights calibrated. The plain control credited every tech with its tech-level bump (Planetology's drives worker output), so Planetology candidates looked overpowered. |
 | 2 | `twins.js` with the effects-off control, same 64 games | Values per candidate. 15 cut (duds, near-duplicates, one harmful), Gaia Seeding moved from level 39 to 19. |
 | 2c | the 112 classic component techs again | Ship components were invisible to the effects-off control (designs read the completed list); fixed in `Design.owned`, re-run for the reference band. |
-| 3 | `twins.js --classic 0` on 96 fresh games; `league.js` on 240 paired games | The final 45 at their final levels; the pool against the classic one. |
+| 3 | `twins.js --classic 0` on 96 fresh games; `league.js` on 240 + 480 paired games | The final 45 at their final levels: 7 strong, 37 typical, 1 low. Pace and economy within about 2 % of classic; AI empires fight about 22 % more battles. |
+| 3b | ablations (`--set` effects off by family, by tech); Slipstream Drives re-test | The extra battles come from the reach and growth effects together. Slipstream Drives retuned (fleets bound for your own colonies only). |

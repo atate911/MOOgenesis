@@ -1,0 +1,47 @@
+{
+ "cut": {
+  "cm-09-factory-supervisor-ai": "Fired in 92% of trials but worth nothing measurable: three worker-free factories a colony are noise beside hundreds, and it blurs the Robotic Controls line.",
+  "cm-14-quantum-encryption": "Fired in 2% of trials. The AI rarely spies at that stage, so better counter-espionage almost never matters.",
+  "cm-19-universal-translator": "No measurable value, and its goodwill half duplicates Holovision Broadcast Network.",
+  "cn-19-damage-control-teams": "A near-copy of the classic Automated Repair System, with no measurable value.",
+  "ff-11-shield-capacitors": "Never fired: early AI designs carry no deflectors, so there was nothing to strengthen. Absorption Lattice keeps the idea later.",
+  "ff-23-flux-shields": "+1 beam defence is the weakest combat effect calibrated (about 5% more ships) and showed no value in trials.",
+  "ff-28-structural-integrity-fields": "Slightly negative in trials; +15% hit points is worth only about 6% more ships.",
+  "ff-33-phase-barrier": "Never fired, and the combat calibration found +5 planetary-shield absorption worth nothing.",
+  "ff-35-gravitic-lensing-array": "Never fired: a longer scanner range changes nothing the AI does.",
+  "pl-19-bio-engineered-soil": "Fired in 12% of trials with no measurable value: few soil projects are left when it arrives.",
+  "pl-29-planetary-disaster-response": "Random disasters are too rare to matter (17% of trials, no measurable value).",
+  "pl-37-bio-containment-fields": "Bio-weapons and plague are too rare to matter (9% of trials, no measurable value).",
+  "pr-13-assault-shuttles": "A weaker duplicate of Stealth Landing Craft (the same effect), active in 9% of trials.",
+  "pr-17-hyperspace-trade-lanes": "Fired in 14% of trials with no measurable value: trade agreements mature anyway.",
+  "pr-49-hyperwarp-overdrive": "Harmful in AI hands: +2 warp hurried its holder into wars it lost (fleet -53%, empire power -6%)."
+ },
+ "moved": {
+  "pl-19-gaia-seeding": {
+   "from": 39,
+   "to": 19,
+   "why": "At level 39 almost no new normal colonies are founded (9% of trials fired)."
+  },
+  "pl-39-hyper-fertility-treatments": {
+   "from": 43,
+   "to": 39,
+   "why": "Its old tier holds one swappable classic tech, Terraforming +100, which it halved. Level 39 shares a tier with three."
+  },
+  "pr-13-navigation-beacons": {
+   "from": 8,
+   "to": 13,
+   "why": "Propulsion tier 2 held two new techs and cut Nuclear Engines and Irridium Fuel Cells from 57% to 34% of trees."
+  },
+  "pr-17-emergency-warp-capacitors": {
+   "from": 26,
+   "to": 17,
+   "why": "Propulsion tier 6 held two new techs. Tier 4 has four classic techs to share the slots with."
+  }
+ },
+ "retuned": {
+  "pr-44-slipstream-drives": {
+   "from": "+1 warp for every fleet",
+   "why": "As first designed it hurt AI holders (−4.7% empire power, the whole interval below zero): they fought fewer battles but lost a third more ships. Now it speeds only fleets bound for your own colonies, and re-tests at −1.3% (−4.9% to +2.2%), inside the range of the classic engine techs."
+  }
+ }
+}
