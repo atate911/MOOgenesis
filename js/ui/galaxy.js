@@ -59,7 +59,7 @@
     .gx-mapwrap { background:#000; box-shadow:0 0 0 1px rgba(0,0,0,.9), 0 1px 0 1px rgba(255,255,255,.18); overflow:hidden; }
     .gx-mapwrap::after { content:""; position:absolute; inset:0; z-index:4; pointer-events:none; box-shadow:inset 0 0 0 1px rgba(0,0,0,.9), inset 2px 2px 3px rgba(0,0,0,.65), inset -1px -1px 0 rgba(255,255,255,.1); }
     .gx-side { padding:0; background:none; }
-    .gx-side .panel { clip-path:none; padding:.3rem; background:linear-gradient(180deg, #59636f, #3a424c); box-shadow:inset 1px 1px 0 var(--bv-hi), inset -1px -1px 0 var(--bv-lo), 0 0 0 1px rgba(0,0,0,.8); }
+    .gx-side .panel { clip-path:none; padding:.3rem; background:linear-gradient(180deg, #59636f, #3a424c); box-shadow:-10px 0 28px rgba(0,0,0,.45), inset 1px 1px 0 var(--bv-hi), inset -1px -1px 0 var(--bv-lo), 0 0 0 1px rgba(0,0,0,.8); }
     .gx-side .panel::before { inset:.2rem; clip-path:none; background:linear-gradient(180deg, #313840, #262c33); box-shadow:inset 1px 1px 0 var(--bv-lo), inset -1px -1px 0 rgba(255,255,255,.1); }
     .gx-side .panel::after { display:none; }
     .gx-sidebody { padding:.4rem .45rem; }
@@ -73,7 +73,7 @@
     .gx-bar .btn:active::before { background:linear-gradient(180deg, #3d4659, #4c566e); box-shadow:inset 1px 1px 0 rgba(0,0,0,.55), inset -1px -1px 0 rgba(255,255,255,.18); }
     .gx-bar .btn .kbd { display:none; }
     .gx-bar .btn.primary { flex:1.25 1 0; }   /* colours come from theme-v2 (gold primary slab) */
-    .gx-hud { background:rgba(6,9,14,.78); border:1px solid rgba(255,255,255,.14); border-top-color:rgba(255,255,255,.28); clip-path:none; box-shadow:inset 0 1px 0 rgba(255,255,255,.08), 0 2px 10px rgba(0,0,0,.5); }
+    .gx-hud { background:rgba(6,9,14,.78); border:1px solid rgba(255,255,255,.14); border-top-color:rgba(255,255,255,.28); clip-path:none; box-shadow:inset 0 1px 0 rgba(255,255,255,.08), var(--shadow-1); }
     .gx-hud .y { color:var(--gold-ink); text-shadow:0 1px 0 #6b4f12; }
     .gx-hud { background:rgba(6,9,14,.88); } .gx-hud .k { font-size:.92rem; color:#c9d3df; } .gx-hud b { font-size:1.02rem; }
     .gx-msg .m { background:rgba(6,9,14,.82); border-left-width:2px; }

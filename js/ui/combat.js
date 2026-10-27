@@ -111,7 +111,7 @@
   UI.css('combat-orig', `
     .cb-bar { background:linear-gradient(180deg,#4a4e58 0,#33363e 8%,#23262c 100%); border-top:0; box-shadow:0 -1px 0 #000, 0 -2px 0 #9298a6, inset 0 1px 0 rgba(255,255,255,.18); }
     .cb-who { align-items:center; }
-    .cb-who .nm { padding:.1em .7em .12em; font:700 1rem/1.15 var(--font-display); letter-spacing:.1em; text-transform:uppercase; color:#e8f0ff; text-shadow:1px 1px 0 #10204a;
+    .cb-who .nm { padding:.1em .7em .12em; font:700 1rem/1.15 var(--font-display); letter-spacing:.1em; text-transform:uppercase; color:#e8f0ff; text-shadow:0 1px 0 #10204a;
       background:linear-gradient(180deg,#6890d0,#3860a0 50%,#2c4c88); box-shadow:inset 1px 1px 0 #9ab8ee, inset -1px -1px 0 #14264d, 0 0 0 1px #000; }
     .cb-who .ct { color:#fff; } .cb-who .tag.me { color:#8fe6c8; } .cb-who .tag.foe { color:#ff7a68; }
     .cb-st { background:#14161b; border:0; color:#c8d0e4; box-shadow:inset 1px 1px 0 #000, inset -1px -1px 0 #596070; } .cb-st b { color:#fff; }
@@ -123,13 +123,13 @@
     :root:root .cb-btns .btn::before, :root:root .cb-btns .btn::after { display:none; }
     :root:root .cb-btns .btn:hover:not(:disabled) { filter:brightness(1.12); }
     :root:root .cb-btns .btn:active:not(:disabled) { filter:brightness(.9); box-shadow:0 0 0 1px #000, inset -1px -1px 0 #c8ff9c, inset 1px 1px 0 #1f5a0c; }
-    :root:root .cb-btns .btn:nth-child(1) { color:#fff; text-shadow:1px 1px 0 #3a0600; background:linear-gradient(180deg,#e04a34,#c02818 50%,#8c1608); box-shadow:0 0 0 1px #000, inset 1px 1px 0 #ff9a88, inset -1px -1px 0 #5a0c02; }
-    :root:root .cb-btns .btn:nth-child(n+2):nth-child(-n+5):not(:disabled) { color:#fff; text-shadow:1px 1px 0 #101830; background:linear-gradient(180deg,#6a7cb0,#4a5a90 50%,#323f70); box-shadow:0 0 0 1px #000, inset 1px 1px 0 #a4b4e4, inset -1px -1px 0 #1a2248; }
+    :root:root .cb-btns .btn:nth-child(1) { color:#fff; text-shadow:0 1px 0 #3a0600; background:linear-gradient(180deg,#e04a34,#c02818 50%,#8c1608); box-shadow:0 0 0 1px #000, inset 1px 1px 0 #ff9a88, inset -1px -1px 0 #5a0c02; }
+    :root:root .cb-btns .btn:nth-child(n+2):nth-child(-n+5):not(:disabled) { color:#fff; text-shadow:0 1px 0 #101830; background:linear-gradient(180deg,#6a7cb0,#4a5a90 50%,#323f70); box-shadow:0 0 0 1px #000, inset 1px 1px 0 #a4b4e4, inset -1px -1px 0 #1a2248; }
     :root:root .cb-btns .btn.on { color:#2a1405; background:linear-gradient(180deg,var(--title-hi, #ffd36a),#e3a420 50%,#a86c08); box-shadow:0 0 0 1px #000, inset 1px 1px 0 #fff0b0, inset -1px -1px 0 #6a4004; }
     :root:root .cb-btns .btn:disabled { color:#808088; text-shadow:none; filter:none; opacity:1; background:#505058; box-shadow:0 0 0 1px #000, inset 1px 1px 0 #6a6a72, inset -1px -1px 0 #34343a; }
     .cb-btns .btn .kbd { color:inherit; opacity:.6; border-color:currentColor; }
     .cb-glass { background:linear-gradient(180deg,rgba(58,62,72,.92),rgba(28,30,36,.92)); border:0; clip-path:none; box-shadow:0 0 0 1px #000, inset 1px 1px 0 #9298a6, inset -1px -1px 0 #14161a; }
-    .cb-side .nm, .cb-order .rd { text-transform:uppercase; letter-spacing:.08em; color:#e8f0ff; text-shadow:1px 1px 0 #000; }
+    .cb-side .nm, .cb-order .rd { text-transform:uppercase; letter-spacing:.08em; color:#e8f0ff; text-shadow:0 1px 0 #000; }
     .cb-chip { clip-path:none; background:#14161b; box-shadow:inset 1px 1px 0 #000, inset -1px -1px 0 #596070; }
     .cb-chip.active { box-shadow:0 0 0 1px #c04030, 0 0 .9rem var(--c); border-color:#c04030; }
     .cb-ticker { color:#c8d0e4; }

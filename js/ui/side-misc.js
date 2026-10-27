@@ -21,8 +21,8 @@
     .sm-card.wide { display:block; padding:0; position:relative; overflow:hidden; aspect-ratio:16 / 7; }
     .sm-card.wide .sm-pic { width:100%; height:100%; } .sm-card.wide .sm-pic :is(canvas, img) { display:block; width:100%; height:100%; object-fit:cover; }
     .sm-card.wide .sc-info { position:absolute; right:.6rem; bottom:.45rem; z-index:1; text-align:right; text-shadow:0 1px 2px #000, 0 0 10px rgba(0,0,0,.9); }
-    .sm-card.wide::after { content:''; position:absolute; inset:0; pointer-events:none; background:linear-gradient(180deg, rgba(0,0,0,0) 45%, rgba(0,0,0,.55) 100%); }
-    .sm-flavor { margin:.35rem 0 .1rem; color:var(--mist); font-size:.88rem; line-height:1.4; font-style:italic; }
+    .sm-card.wide::after { content:''; position:absolute; inset:0; pointer-events:none; background:linear-gradient(180deg, rgba(0,0,0,0) 45%, rgba(0,0,0,.55) 100%); box-shadow:inset 0 0 0 1px rgba(0,0,0,.7), inset 0 0 1.6rem rgba(0,0,0,.4); }
+    .sm-flavor { margin:.35rem 0 .1rem; color:var(--mist); font-size:.85rem; line-height:1.4; font-style:italic; }
   `);
   const bump = css => css.replace(/(^|[}])([^{}]*)[{]/g, (m, a, sel) => a + sel.replace(/[/][*][^]*?[*][/]/g, '').split(',').map(s => s.trim()).filter(Boolean).map(s => ':root:root ' + s).join(', ') + ' {');   // raise specificity over the theme-v2 .panel/.btn rules
   // the fleet steppers: the sliders' steel buttons with drawn red arrows (single = one step, double = none / all), not text glyphs
@@ -31,7 +31,7 @@
   UI.css('side-misc-orig', bump(`
     .sm-card { gap:.6rem; padding:.3rem; border:0; background:linear-gradient(180deg, #0b0e13, #05070a); box-shadow:0 0 0 1px #d04030, inset 0 0 0 1px rgba(0,0,0,.9); }
     .sm-card.unexp { box-shadow:0 0 0 1px #d04030, inset 0 0 18px rgba(208,64,48,.18); } .sm-card .un { font:600 1.05rem var(--font-display); color:#50e050; letter-spacing:.14em; }
-    .sm-desc { color:#e4e8ee; font-size:.88rem; }
+    .sm-desc { color:#e4e8ee; font-size:.85rem; }
     .sm-range { border-left:0; background:#12161b; color:#40e060; font:600 .78rem var(--font-display); letter-spacing:.1em; text-transform:uppercase; text-align:center; box-shadow:inset 1px 1px 2px rgba(0,0,0,.9), 0 1px 0 rgba(255,255,255,.12); }
     .sm-range.out { color:#ff7a5a; background:#1a1210; }
     .sm-fleet { grid-template-columns:3.8rem 1fr auto; gap:.4rem; padding:.2rem; border:0; background:linear-gradient(180deg, #59636f, #454d57); box-shadow:inset 1px 1px 0 rgba(255,255,255,.2), inset -1px -1px 0 rgba(0,0,0,.5), 0 0 0 1px rgba(0,0,0,.6); }

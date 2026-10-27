@@ -9,7 +9,7 @@
     .sc-card.wide { display:block; padding:0; position:relative; overflow:hidden; aspect-ratio:16 / 7; }
     .sc-card.wide .sc-pic { width:100%; height:100%; filter:none; } .sc-card.wide .sc-pic :is(canvas, img) { display:block; object-fit:cover; }
     .sc-card.wide .sc-info { position:absolute; right:.6rem; bottom:.45rem; text-align:right; text-shadow:0 1px 2px #000, 0 0 10px rgba(0,0,0,.9); }
-    .sc-card.wide::after { content:''; position:absolute; inset:0; pointer-events:none; background:linear-gradient(180deg, rgba(0,0,0,0) 45%, rgba(0,0,0,.55) 100%); }
+    .sc-card.wide::after { content:''; position:absolute; inset:0; pointer-events:none; background:linear-gradient(180deg, rgba(0,0,0,0) 45%, rgba(0,0,0,.55) 100%); box-shadow:inset 0 0 0 1px rgba(0,0,0,.7), inset 0 0 1.6rem rgba(0,0,0,.4); }
     .sc-card.wide .sc-info { z-index:1; }
     .sc-pic { flex:none; width:5.6rem; height:5.6rem; display:grid; place-items:center; } .sc-pic :is(canvas, img) { width:100%; height:100%; }
     .sc-info { flex:1; min-width:0; line-height:1.25; }
@@ -33,7 +33,7 @@
     .sc-bbox:hover { border-color:var(--brass-hi); background:rgba(214,179,106,.08); }
     .sc-bbox canvas { width:3.6rem; height:3rem; flex:none; object-fit:contain; } .sc-bbox .bn { font:400 1.05rem var(--font-display); color:var(--brass-hi); } .sc-bbox .bc { font-size:.82rem; color:var(--mist); }
     .sc-btns { display:flex; flex-direction:column; gap:.3rem; } .sc-btns .btn { padding:.25em .9em; font-size:.92rem; }
-    .sc-note { margin:.4rem 0; padding:.35rem .6rem; border-left:3px solid var(--ember); background:rgba(255,148,64,.08); font-size:.88rem; }
+    .sc-note { margin:.4rem 0; padding:.35rem .6rem; border-left:3px solid var(--ember); background:rgba(255,148,64,.08); font-size:.85rem; }
     .sc-pickhint { margin:.6rem 0; padding:.6rem .7rem; background:rgba(98,216,255,.08); border:1px dashed var(--cyan); color:var(--ivory); }
     .sc-rally { grid-column:1 / -1; padding:.15rem .4rem; font-size:.85rem; color:var(--mist); cursor:var(--hand); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
     .sc-rally .k { color:#9fb2d8; text-transform:uppercase; letter-spacing:.08em; font-size:.75rem; } .sc-rally b { color:var(--ivory); font-weight:600; }

@@ -432,7 +432,7 @@
     .gnn-lt-hl { color:#c2d6ff; font-weight:500; line-height:1.3; text-shadow:0 1px 0 #000; }
     .gnn-lt-sub { color:#98b8f0; line-height:1.35; }
     .gnn-tk { background:#02030c; }
-    .gnn-mon-cap b { color:#f8e080; text-shadow:1px 1px 0 #000; }
+    .gnn-mon-cap b { color:#f8e080; text-shadow:0 1px 0 #000; }
     .gnn-mon-tag { background:rgba(2,3,12,.88); }
   `);
 
@@ -1175,7 +1175,7 @@
       } else {
         let L = ln; const maxW = w * 0.78, fs = max(10, hh * 0.052);
         g.font = '500 ' + fs + 'px ' + FONT_U; while (L.length > 4 && g.measureText(L).width > maxW) L = L.slice(0, -2);
-        text(g, L === ln ? L : L.trim() + '...', w * 0.15, y, fs, '#dfe6ff', 'left', FONT_U, 500);
+        text(g, L === ln ? L : L.trim() + '…', w * 0.15, y, fs, '#dfe6ff', 'left', FONT_U, 500);
       }
     }
     g.restore(); g.globalAlpha = 1;

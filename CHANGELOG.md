@@ -80,6 +80,19 @@ Versions follow `MAJOR.MINOR.PATCH`; the live version is the `VERSION` file.
   is a quarter softer; the Design screen's five bright orange section slabs and its white-on-orange hull pick take the copper tier with dark
   ink; the Research level numbers are quiet cream figures (green is for research points only). The bevel highlight is one brightness
   everywhere (twelve values from .08 to .4 before).
+- Finish pass: consistency, shading, histograms. The raster art was measured as a family (RGB statistics of every file by set):
+  mid-keyed, warm by +5 to +33, deep blacks, nothing clipped, and the same cool-space / warm-people split the interface draws between the
+  sky and the leather. The one mismatch was the leather itself, a third warmer than any art it frames, so portraits and planets read
+  cooler than they are; every leather tone is retoned toward neutral at the same luminance (the ledger heads from +42 to +30 red over
+  blue). The files that sit far from their set's exposure (the Darlok halls a third as bright as their peers, the Psilon chambers nearly
+  twice, the white Alkari homeworld) are nudged toward it on every draw path, so the council booths, the Races cards and the Report no
+  longer jump in brightness from one empire to the next. Shading: three shadow elevations replace twenty-four drop shadows; one
+  text-shadow direction replaces two; every art plate in the DOM (colony card, side cards, setup homeworld, Report dossier) is a recessed
+  window with an inner vignette instead of a sticker; the galaxy console casts onto the map; the Fleets cell plate takes the well's black.
+  Consistency: the Report's ◀ ▶ match their neighbours; the last chamfers on the rectangular theme (save slots, race name plates) are
+  square; NO TRADE and the Report's traits take the caps of their neighbours; the growth mark is ↑1.8, not ↑ +1.8; the ticker's "..." is an
+  ellipsis; the disabled Build button's key chip is readable; near-identical type sizes collapse into one (Research 22 → 16 distinct
+  sizes).
 - Title screen. The world in the corner turns smoothly and visibly: its axis now tilts away from the viewer so mid-latitudes sweep
   past instead of a polar cap turning in place, one turn takes about a minute, the sun sits low on the galaxy's side so the terminator, the
   night-side city lights and the cloud shadows cross the visible half, and it drifts a little against the galaxy's slow zoom. Clouds on

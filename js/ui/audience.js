@@ -71,8 +71,8 @@
       background:repeating-linear-gradient(180deg,#b8582c 0 .3rem,#6a2c14 .3rem .42rem,#d88a48 .42rem .5rem,#6a2c14 .5rem .62rem); clip-path:none; }
     .au-cap.l { left:.4rem; } .au-cap.r { right:.4rem; }
     .au-cap::after { content:""; position:absolute; inset:.18rem .28rem; border:1px solid rgba(255,220,170,.55); border-left-color:rgba(80,30,10,.8); }
-    .au-speaker { color:#e0b040; text-shadow:1px 1px 0 #000; }
-    .au-text { color:#bcdcf8; font-family:var(--font-ui); font-size:1.18rem; line-height:1.4; text-shadow:1px 1px 0 #000; }
+    .au-speaker { color:#e0b040; text-shadow:0 1px 0 #000; }
+    .au-text { color:#bcdcf8; font-family:var(--font-ui); font-size:1.18rem; line-height:1.4; text-shadow:0 1px 0 #000; }
     .au-text.dim { color:#8fb0c8; }
     .au-terms .tm { background:rgba(0,0,0,.35); box-shadow:inset 1px 1px 0 #000, inset -1px -1px 0 rgba(126,200,196,.4); }
     .au-menu { border-top:1px solid rgba(126,200,196,.35); }

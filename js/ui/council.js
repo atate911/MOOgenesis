@@ -156,14 +156,14 @@
   UI.css('council-orig', `
     .cou-tally { --bev-hi:#c08a50; --bev-mid:#6a4326; --bev-lo:#2a160a; }
     :root:root .cou-tally::before { background:linear-gradient(180deg,rgba(24,12,6,.93),rgba(10,5,3,.95)); }
-    .cou-cand .nm { color:var(--c, #a0e050); text-shadow:1px 1px 0 #000; letter-spacing:.05em; text-transform:uppercase; font-size:1rem; }
-    .cou-cand .vt { color:#a0e050; text-shadow:1px 1px 0 #1c3408; }
-    .cou-mid b { color:#a0e050; text-shadow:1px 1px 0 #1c3408; } .cou-mid span { color:#d0a040; }
+    .cou-cand .nm { color:var(--c, #a0e050); text-shadow:0 1px 0 #000; letter-spacing:.05em; text-transform:uppercase; font-size:1rem; }
+    .cou-cand .vt { color:#a0e050; text-shadow:0 1px 0 #1c3408; }
+    .cou-mid b { color:#a0e050; text-shadow:0 1px 0 #1c3408; } .cou-mid span { color:#d0a040; }
     .cou-meter { background:#10080a; box-shadow:inset 1px 1px 0 #000, inset -1px -1px 0 rgba(208,160,64,.5); }
     .cou-meter u { background:#d0a040; box-shadow:none; } .cou-meter u::after { color:#d0a040; }
     .cou-shade { background:linear-gradient(0deg, rgba(6,2,2,.9), rgba(6,2,2,.55) 58%, rgba(6,2,2,0)); }
-    .cou-msg { color:#e0b040; font-family:var(--font-display); font-weight:600; letter-spacing:.04em; text-shadow:1px 1px 0 #2a1808, 0 2px 12px #000; }
-    .cou-msg b { color:var(--c, #f0d070); text-shadow:1px 1px 0 #2a1808, 0 2px 12px #000; }
+    .cou-msg { color:#e0b040; font-family:var(--font-display); font-weight:600; letter-spacing:.04em; text-shadow:0 1px 0 #2a1808, 0 2px 12px #000; }
+    .cou-msg b { color:var(--c, #f0d070); text-shadow:0 1px 0 #2a1808, 0 2px 12px #000; }
     .cou-card { clip-path:none; background:linear-gradient(180deg,#e8c070,var(--cc, #b07a38) 30%,#4a2c12); box-shadow:0 0 0 1px #000; } .cou-card::before { clip-path:none; background:linear-gradient(180deg,#0e3a3a,#06201f); inset:2px; }
     .cou-card:hover::before { background:linear-gradient(180deg,#165252,#0a2e2e); }
     .cou-card .t1 { text-transform:uppercase; letter-spacing:.05em; color:#e8d098; } .cou-card .t2 { color:#9ed8cc; } .cou-card .cnt { color:#a0e050; }

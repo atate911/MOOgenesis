@@ -57,12 +57,12 @@
   UI.css('star-system-orig', bump(`
     .sv-name { color:var(--title, #e8c850); text-shadow:0 2px 0 #6b4f12, 0 4px 18px rgba(0,0,10,.95); }
     .sv-env { color:#f0d8b0; }
-    .sv-own, .sv-lab, .sv-icons, .sv-unex { background:rgba(8,10,14,.72); border:0; backdrop-filter:blur(3px); box-shadow:inset 1px 1px 0 rgba(255,255,255,.2), inset -1px -1px 0 rgba(0,0,0,.7), 0 0 0 1px rgba(0,0,0,.75), 0 6px 18px rgba(0,0,0,.45); }
-    .sv-tile { background:#000; border:0; box-shadow:inset 0 0 0 1px rgba(0,0,0,.9), 0 0 0 1px rgba(255,235,200,.22), 0 4px 10px rgba(0,0,0,.5); }
-    .sv-tile.foe { box-shadow:inset 0 0 0 1px rgba(0,0,0,.9), 0 0 0 1px rgba(255,92,106,.55), 0 4px 10px rgba(0,0,0,.5); }
+    .sv-own, .sv-lab, .sv-icons, .sv-unex { background:rgba(8,10,14,.72); border:0; backdrop-filter:blur(3px); box-shadow:inset 1px 1px 0 rgba(255,255,255,.2), inset -1px -1px 0 rgba(0,0,0,.7), 0 0 0 1px rgba(0,0,0,.75), var(--shadow-2); }
+    .sv-tile { background:#000; border:0; box-shadow:inset 0 0 0 1px rgba(0,0,0,.9), 0 0 0 1px rgba(255,235,200,.22), var(--shadow-2); }
+    .sv-tile.foe { box-shadow:inset 0 0 0 1px rgba(0,0,0,.9), 0 0 0 1px rgba(255,92,106,.55), var(--shadow-2); }
     .sv-tile .nm { color:var(--slot-ink, #f0d048); background:#3a2810; bottom:0; padding:.05rem .25rem; font:600 .86rem var(--font-display); letter-spacing:.06em; text-transform:uppercase; }
     .sv-tile .n { background:transparent; border:0; clip-path:none; color:#f0e060; text-shadow:0 1px 0 #000, 0 0 3px #000; font-family:var(--font-mono, monospace); }
-    .sv-info { clip-path:none; padding:.4rem; background:linear-gradient(135deg, #59636f, #3a424c); box-shadow:inset 1px 1px 0 var(--spec, rgba(255,245,225,.22)), inset -1px -1px 0 rgba(0,0,0,.6), 0 0 0 1px #000, 0 8px 24px rgba(0,0,0,.5); }
+    .sv-info { clip-path:none; padding:.4rem; background:linear-gradient(135deg, #59636f, #3a424c); box-shadow:inset 1px 1px 0 var(--spec, rgba(255,245,225,.22)), inset -1px -1px 0 rgba(0,0,0,.6), 0 0 0 1px #000, var(--shadow-2); }
     .sv-info::before { inset:.2rem; clip-path:none; background:rgba(10,13,17,.94); box-shadow:inset 1px 1px 2px rgba(0,0,0,.9); }
     .sv-info::after { display:none; }
     .sv-it { color:#50d0b0; border-bottom-color:rgba(255,255,255,.14); }

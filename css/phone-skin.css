@@ -24,13 +24,13 @@ html:root:root[data-phone] .dz {                                                
   --pk-btn: #262628; --pk-btn-edge: rgba(255, 255, 255, .16); --pk-press: #18181a; --pk-well: #080808; --pk-sel: rgba(255, 173, 58, .18); --pk-bar: #1d1d1f;
 }
 html:root:root[data-phone] :is(.lp, .lf) {                                          /* bronze */
-  --pk-surface: #241a13; --pk-card: #3a2c22; --pk-edge: rgba(255, 225, 180, .13); --pk-sep: rgba(255, 235, 200, .14); --pk-head: #e3b56a;
-  --pk-ink: #f0e2c8; --pk-ink2: #c9b394; --pk-btn: #4a382b; --pk-btn-edge: rgba(255, 225, 180, .2); --pk-press: #33261d; --pk-well: #14100c;
+  --pk-surface: #201b16; --pk-card: #372d25; --pk-edge: rgba(255, 225, 180, .13); --pk-sep: rgba(255, 235, 200, .14); --pk-head: #e3b56a;
+  --pk-ink: #f0e2c8; --pk-ink2: #c9b394; --pk-btn: #45392f; --pk-btn-edge: rgba(255, 225, 180, .2); --pk-press: #2e2721; --pk-well: #13100d;
   --pk-sel: rgba(232, 160, 60, .2);
 }
 html:root:root[data-phone] :is(.tch, .rx, .ttp) {                                   /* brown leather */
-  --pk-surface: #6c5240; --pk-card: #57422f; --pk-edge: rgba(255, 225, 190, .16); --pk-sep: rgba(255, 235, 200, .14); --pk-head: #ffb04a;
-  --pk-ink: #f6e6cc; --pk-ink2: #e0c9a6; --pk-btn: #6d5645; --pk-btn-edge: rgba(255, 225, 190, .24); --pk-press: #4a3a2c; --pk-well: #1a1410;
+  --pk-surface: #645446; --pk-card: #50433a; --pk-edge: rgba(255, 225, 190, .16); --pk-sep: rgba(255, 235, 200, .14); --pk-head: #ffb04a;
+  --pk-ink: #f6e6cc; --pk-ink2: #e0c9a6; --pk-btn: #66584a; --pk-btn-edge: rgba(255, 225, 190, .24); --pk-press: #45392f; --pk-well: #181411;
   --pk-sel: rgba(255, 176, 74, .2);
 }
 

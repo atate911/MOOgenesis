@@ -104,6 +104,16 @@
     return 'colony/colony-terran-city';
   }
   const GNN = 'gnn/race-neutral-gnn-studio-background';
+  /* Exposure nudges for the files that sit far from their set's mean luminance (measured: scratchpad/qa/histo.py). A Darlok hall is a
+     third as bright as the other halls, a Psilon council chamber nearly twice; side by side (the council booths, the Races cards, the
+     Report) the jump reads as a mistake rather than a mood. Brightness only, so blacks stay black and the mood stays. The real fix is
+     re-rendering those files; until then every draw path reads this table. */
+  const EXPO = {
+    darlok: { portrait: 1.4, audience: 1.35, council: 1.4, figure: 1.3, scientist: 1.4, homeworld: 1.45, 'homeworld-square': 1.4 },
+    psilon: { portrait: 0.82, council: 0.72, figure: 0.8, scientist: 0.75 },
+    alkari: { homeworld: 0.75, 'homeworld-square': 0.72 },
+  };
+  function raceExposure(race, purpose) { const r = EXPO[race]; return (r && r[purpose]) || 1; }
 
   /* Paint an image into the box. fit: 'cover' (default, crops) | 'contain'. (fx, fy) = focal point 0..1 kept in view when cropping.
      o.zoom >= 1 zooms in about the focal point (slow push-ins).  Returns false when the image is not ready. */
@@ -125,6 +135,7 @@
     sw = w / s; sh = h / s;
     sx = Math.max(0, Math.min(iw - sw, fx * iw - sw * fx)); sy = Math.max(0, Math.min(ih - sh, fy * ih - sh * fy));
     ctx.save(); if (o.alpha != null) ctx.globalAlpha *= o.alpha; ctx.imageSmoothingQuality = 'high';
+    if (o.exposure && o.exposure !== 1 && 'filter' in ctx) { try { ctx.filter = 'brightness(' + o.exposure + ')'; } catch (e) { /* no filters */ } }
     ctx.drawImage(im, sx, sy, sw, sh, x, y, w, h); ctx.restore();
     return true;
   }
@@ -145,6 +156,7 @@
     im.alt = o.alt || ''; im.decoding = 'async'; im.draggable = false; im.className = 'wa-plate';   // theme-v2: the same light grade the canvas plates get
     im.style.cssText = 'display:block;width:100%;height:100%;object-fit:' + (o.fit === 'contain' ? 'contain' : 'cover') +
       ';object-position:' + ((o.fx == null ? 0.5 : o.fx) * 100).toFixed(1) + '% ' + ((o.fy == null ? 0.5 : o.fy) * 100).toFixed(1) + '%' + (o.alpha != null ? ';opacity:' + o.alpha : '');
+    if (o.exposure && o.exposure !== 1) im.style.setProperty('--expo', String(o.exposure));   // theme-v2: brightness(var(--expo)) on .wa-plate and the dossier
     im.onerror = function () { im.style.visibility = 'hidden'; };
     if (W.enabled && path) im.src = W.base + path + '.webp';
     return im;
@@ -160,7 +172,7 @@
   M.Gfx.WorldArt = {
     get: get, ready: ready, whenReady: whenReady, draw: draw, canvas: canvas, image: image, preload: preload,
     orbit: orbitPath, surface: surfacePath, system: systemPath, event: eventPath, scene: scenePath, race: racePath, colony: colonyPath, gnn: GNN,
-    systemSky: systemSkyPath, battle: battlePath, fx: fxPath, still: stillPath,
+    systemSky: systemSkyPath, battle: battlePath, fx: fxPath, still: stillPath, raceExposure: raceExposure,
     get enabled() { return W.enabled; }, set enabled(v) { W.enabled = !!v; },
     lists: { orbit: ORBIT, surface: SURFACE, system: SYSTEM, events: EVENTS, colony: COLONY, scenes: SCENES, races: RACES, purposes: PURPOSES, battle: BATTLE, fx: FX, stills: STILLS },
     _state: W,

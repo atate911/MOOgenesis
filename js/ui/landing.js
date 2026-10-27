@@ -102,7 +102,7 @@
     .ld-hud > div { display:flex; align-items:center; gap:.7rem; padding:.3rem .9rem; background:rgba(5,8,24,.78); border-left:3px solid var(--c, var(--brass)); font-size:1.12rem; letter-spacing:.02em; text-shadow:0 1px 3px #000; backdrop-filter:blur(3px); }
     .ld-hud b { font-weight:600; font-variant-numeric:tabular-nums; color:var(--c, var(--ivory)); } .ld-hud .dim { color:var(--mist); }
     .ld-hud .bad { color:var(--rose); }
-    .ld-colhd { position:absolute; display:flex; align-items:center; gap:.6rem; padding:.25rem .8rem; color:var(--ivory); background:linear-gradient(90deg, color-mix(in srgb, var(--c) 26%, rgba(5,8,24,.9)), rgba(5,8,24,.78)); border-bottom:2px solid var(--c); box-shadow:0 2px 12px rgba(0,0,0,.5); opacity:0; transition:opacity .6s; }
+    .ld-colhd { position:absolute; display:flex; align-items:center; gap:.6rem; padding:.25rem .8rem; color:var(--ivory); background:linear-gradient(90deg, color-mix(in srgb, var(--c) 26%, rgba(5,8,24,.9)), rgba(5,8,24,.78)); border-bottom:2px solid var(--c); box-shadow:var(--shadow-1); opacity:0; transition:opacity .6s; }
     .ld-colhd.on { opacity:1; } .ld-colhd.att { flex-direction:row-reverse; text-align:right; background:linear-gradient(270deg, color-mix(in srgb, var(--c) 26%, rgba(5,8,24,.9)), rgba(5,8,24,.78)); }
     .ld-colhd .who { font:400 1.15rem var(--font-display); letter-spacing:.1em; color:var(--ivory); text-transform:uppercase; } .ld-colhd .role { font-size:.82rem; letter-spacing:.14em; color:var(--c); text-transform:uppercase; }
     .ld-colhd .n { margin-left:auto; font:400 1.7rem/1 var(--font-title); font-variant-numeric:tabular-nums; color:var(--ivory); } .ld-colhd.att .n { margin-left:0; margin-right:auto; }
@@ -133,12 +133,12 @@
   // "original" restyle (research/ui-ref C 3b): off-white outlined slab captions straight over the painting, pale-blue bevelled dialog, steel bevel info bars.
   UI.css('landing-orig', `
     .ld-top { background:linear-gradient(180deg, rgba(2,3,10,.7), rgba(2,3,10,0)); }
-    .ld-year { color:#f6eed6; font-family:var(--font-display); font-weight:700; letter-spacing:.08em; text-shadow:-1px -1px 0 #1a1208, 1px -1px 0 #1a1208, -1px 1px 0 #1a1208, 1px 1px 0 #1a1208, 0 3px 10px rgba(0,0,0,.6); }
-    .ld-race { color:#e0d4b8; text-shadow:1px 1px 0 #000; }
+    .ld-year { color:#f6eed6; font-family:var(--font-display); font-weight:700; letter-spacing:.08em; text-shadow:-1px -1px 0 #1a1208, 1px -1px 0 #1a1208, -1px 1px 0 #1a1208, 1px 1px 0 #1a1208, var(--shadow-1); }
+    .ld-race { color:#e0d4b8; text-shadow:0 1px 0 #000; }
     .ld-kind { color:#f0c060; font-weight:700; text-shadow:-1px -1px 0 #1a1208, 1px -1px 0 #1a1208, -1px 1px 0 #1a1208, 1px 1px 0 #1a1208; }
     .ld-panel { --bev-hi:#e8eef8; --bev-mid:#8e9ab4; --bev-lo:#2c3446; }
     :root:root .ld-panel::before { background:linear-gradient(180deg, rgba(10,16,34,.95), rgba(4,8,20,.97)) !important; }
-    .ld-eyebrow { color:#f0c060; text-shadow:1px 1px 0 #000; }
+    .ld-eyebrow { color:#f0c060; text-shadow:0 1px 0 #000; }
     .ld-title { color:#f6eed6; font-family:var(--font-display); font-weight:700; text-shadow:-1px -1px 0 #1a1208, 1px -1px 0 #1a1208, -1px 1px 0 #1a1208, 1px 1px 0 #1a1208; }
     .ld-hud > div { background:linear-gradient(180deg, rgba(58,62,72,.9), rgba(22,24,30,.92)); border-left-width:4px; box-shadow:0 0 0 1px #000, inset 1px 1px 0 rgba(255,255,255,.2), inset -1px -1px 0 rgba(0,0,0,.6); }
     .ld-colhd { box-shadow:0 0 0 1px #000, inset 1px 1px 0 rgba(255,255,255,.18); }
@@ -1032,7 +1032,7 @@
       if (p && p.event && (it.kind === 'plague' || it.kind === 'nova') && p.owner === S.playerId && (G.player().bc | 0) > 0) buttons.unshift({ label: 'Pay toward the cure', value: 'cure' });
       sfx(bad ? 'alert' : 'confirm', { vol: 0.7 });
       const WA = M.Gfx && M.Gfx.WorldArt, apath = WA && WA.enabled && EVENT_ART[it.kind] && (it.stage === 'destroyed' ? WA.event('planet-destroyed') : WA.event(EVENT_ART[it.kind]));
-      const plate = apath ? h('div', { style: { margin: '-.2rem 0 .8rem', borderRadius: '2px', overflow: 'hidden', boxShadow: '0 0 0 1px rgba(0,0,0,.6), 0 6px 18px rgba(0,0,0,.45)', aspectRatio: '460 / 200', background: '#05070f' } },
+      const plate = apath ? h('div', { style: { margin: '-.2rem 0 .8rem', borderRadius: '2px', overflow: 'hidden', boxShadow: '0 0 0 1px rgba(0,0,0,.6), var(--shadow-2)', aspectRatio: '460 / 200', background: '#05070f' } },
         WA.image(apath, { fx: 0.5, fy: 0.45 })) : null;
       return UI.modal({ title: (EVENT_TITLE[it.kind] || 'Event') + (p ? ' — ' + planetName(S, p) : ''), cls: 'ld-event', width: apath ? '32rem' : '30rem', buttons,
         body: h('div', plate, h('div', { style: { display: 'flex', gap: '.8rem', alignItems: 'flex-start' } }, h('div', { style: { color: bad ? 'var(--rose)' : 'var(--leaf)', width: '2.6rem', height: '2.6rem', flex: 'none' } }, UI.icon(EVENT_ICON[it.kind] || 'event')), h('p', { style: { lineHeight: 1.45, margin: 0 } }, it.text || ''))) })

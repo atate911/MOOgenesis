@@ -344,7 +344,7 @@
     .sl-warn b { color:#ffc08a; font-weight:600; }
     .sl-list { display:flex; flex-direction:column; gap:.45rem; min-height:0; flex:1 1 auto; overflow-y:auto; overflow-x:hidden; padding:2px 6px 2px 2px; }
     .sl-modal .sl-list { max-height:min(60vh, 34rem); }
-    .sl-row { --ch:.5rem; position:relative; isolation:isolate; flex:none; display:grid; grid-template-columns:6.6rem 3rem 5.6rem minmax(0,1.25fr) minmax(0,1.2fr) 6.2rem auto; align-items:center; gap:.9rem;
+    .sl-row { --ch:0; position:relative; isolation:isolate; flex:none; display:grid; grid-template-columns:6.6rem 3rem 5.6rem minmax(0,1.25fr) minmax(0,1.2fr) 6.2rem auto; align-items:center; gap:.9rem;
       padding:.34rem .9rem .34rem .8rem; cursor:var(--hand); outline:none; background:linear-gradient(135deg, var(--brass-lo), #2a3260 35%, #2a3260 65%, var(--brass-lo)); transition: filter .15s; }
     .sl-row::before { content:""; position:absolute; inset:1px; z-index:-1; clip-path:var(--poly); background:linear-gradient(180deg, rgba(24,34,80,.96), rgba(10,15,40,.97)); transition: background .2s, box-shadow .2s; }
     .sl-row:hover { filter:brightness(1.14); }

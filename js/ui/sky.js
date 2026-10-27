@@ -22,7 +22,7 @@
     html.has-sky:root:root .al { background:radial-gradient(110% 80% at 10% 0%, rgba(26,38,114,.55) 0%, rgba(26,38,114,0) 58%), radial-gradient(90% 70% at 100% 100%, rgba(44,26,92,.5) 0%, rgba(44,26,92,0) 62%); }
     html.has-sky:root:root :is(.lp, .lf) { background:radial-gradient(90% 70% at 50% 0%, rgba(47,34,24,.55) 0%, rgba(47,34,24,0) 70%); }
     /* the ledgers' empty tables are windows on the sky behind the sheet (fixed attachment: the well shows the part of the sky it covers) */
-    html.has-sky:root:root:not([data-phone]) :is(.lp-tablewrap, .lf-body) { background:linear-gradient(180deg, rgba(26,20,16,.9) 0%, rgba(26,20,16,.72) 18%, rgba(26,20,16,.52) 100%), var(--sky-img, none) 50% 50% / cover fixed no-repeat #120d09; }
+    html.has-sky:root:root:not([data-phone]) :is(.lp-tablewrap, .lf-body) { background:linear-gradient(180deg, rgba(25,21,17,.9) 0%, rgba(25,21,17,.72) 18%, rgba(25,21,17,.52) 100%), var(--sky-img, none) 50% 50% / cover fixed no-repeat #0f0e0b; }
   `);
 
   function dpr() {

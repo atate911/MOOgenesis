@@ -140,7 +140,9 @@
     }
     const c = document.createElement('canvas'); c.width = dw; c.height = dh;
     const g = c.getContext('2d'); g.imageSmoothingQuality = 'high';
-    g.drawImage(src, sx, sy, sw, sh, 0, 0, dw, dh);
+    const ex = M.Gfx.WorldArt && M.Gfx.WorldArt.raceExposure ? M.Gfx.WorldArt.raceExposure(race, 'portrait') : 1;   // the set's outliers brought toward its mean
+    if (ex !== 1 && 'filter' in g) { try { g.filter = 'brightness(' + ex + ')'; } catch (e) { /* no filters */ } }
+    g.drawImage(src, sx, sy, sw, sh, 0, 0, dw, dh); g.filter = 'none';
     if (feather) {
       // A photo placed on a scene must not read as a pasted square: the mask is a soft bust-shaped ellipse (no straight edge anywhere), full over
       // the face and shoulders, running off the bottom of the box, fading out well inside the left/right/top edges; the photo's own studio

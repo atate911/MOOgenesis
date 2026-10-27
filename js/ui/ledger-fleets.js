@@ -37,7 +37,7 @@
     .lf-pic.mv { width:3.7rem; height:3.1rem; background:radial-gradient(circle at 30% 40%, #1a2468, #070b24 75%); box-shadow:inset 0 0 0 1px rgba(214,179,106,.4); }
     .lf-pic.mv canvas { width:100%; height:100%; }
     .lf-info { min-width:0; line-height:1.2; } .lf-info .nm { font:400 1.12rem var(--font-title); color:var(--brass-hi); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-    .lf-info .stt { font-size:.86rem; color:var(--mist); } .lf-info .stt b { color:var(--cyan); font-weight:600; } .lf-info .stt .own { color:var(--leaf); } .lf-info .stt .foe { color:var(--rose); }
+    .lf-info .stt { font-size:.85rem; color:var(--mist); } .lf-info .stt b { color:var(--cyan); font-weight:600; } .lf-info .stt .own { color:var(--leaf); } .lf-info .stt .foe { color:var(--rose); }
     .lf-cell { position:relative; display:grid; place-items:center; min-height:4.4rem; border-left:var(--hair-w, 1px) solid var(--hair, rgba(255,255,255,.05)); }
     .lf-cell canvas { width:100%; height:3.6rem; object-fit:contain; }
     .lf-n { position:absolute; right:.45rem; bottom:.3rem; min-width:1.5rem; padding:0 .4rem; text-align:center; font:600 .95rem/1.5 var(--font-ui); color:var(--ivory); font-variant-numeric:tabular-nums;
@@ -48,8 +48,8 @@
     .lf-foot { margin-top:.7rem; display:flex; align-items:center; gap:.8rem; }
     .lf-maint { display:flex; align-items:baseline; gap:.6rem; padding:.45rem .9rem; background:rgba(5,8,26,.6); border:1px solid rgba(214,179,106,.3); }
     .lf-maint .k { font:400 .95rem var(--font-display); color:var(--brass); letter-spacing:.06em; text-transform:uppercase; } .lf-maint b { font:400 1.5rem var(--font-title); color:var(--gold); font-variant-numeric:tabular-nums; } .lf-maint .u { color:var(--gold); }
-    .lf-maint .x { color:var(--mist); font-size:.88rem; }
-    .lf-note { flex:1; color:var(--mist); font-size:.88rem; }
+    .lf-maint .x { color:var(--mist); font-size:.85rem; }
+    .lf-note { flex:1; color:var(--mist); font-size:.85rem; }
     .lf-foot .sp { flex:1; }
     .lf-srow { display:grid; grid-template-columns:9rem 11.5rem minmax(21rem, 1.7fr) minmax(8rem, 1fr) minmax(8rem, 1fr) 6.5rem; gap:.9rem; align-items:center; padding:.7rem 1rem; border-bottom:1px solid rgba(255,255,255,.06); cursor:var(--hand); transition:background .1s; }
     .lf-srow:hover { background:rgba(98,216,255,.07); } .lf-srow.none { cursor:default; opacity:.7; } .lf-srow.none:hover { background:none; }
@@ -69,40 +69,40 @@
     .lf-wl .ln .c { color:var(--mist); font-variant-numeric:tabular-nums; } .lf-wl .none { color:var(--fog); }
     .lf-sp .ln { font-size:.98rem; line-height:1.4; } .lf-sp .ln.col { color:var(--leaf); } .lf-sp .ln.tank { color:var(--cyan); } .lf-sp .none { color:var(--fog); }
     .lf-cost { text-align:right; } .lf-cost .l { display:block; font-size:.8rem; letter-spacing:.08em; color:var(--mist); text-transform:uppercase; } .lf-cost b { display:block; font:400 1.6rem/1.15 var(--font-title); color:var(--gold); font-variant-numeric:tabular-nums; }
-    .lf-cost .u { color:var(--gold); font-size:.9rem; } .lf-cost .up { display:block; margin-top:.1rem; font-size:.86rem; color:var(--mist); }
+    .lf-cost .u { color:var(--gold); font-size:.9rem; } .lf-cost .up { display:block; margin-top:.1rem; font-size:.85rem; color:var(--mist); }
     .lf-srow .btn { margin-top:.1rem; }
     .lf-hint { display:flex; gap:.35rem; align-items:center; color:var(--fog); font-size:.9rem; margin-left:.5rem; }
   `);
   const bump = css => css.replace(/(^|[}])([^{}]*)[{]/g, (m, a, sel) => a + sel.replace(/[/][*][^]*?[*][/]/g, '').split(',').map(s => s.trim()).filter(Boolean).map(s => ':root:root ' + s).join(', ') + ' {');   // raise specificity over the theme-v2 .panel/.btn rules
   // Restyle: tool-screen family (bronze bevel frame, recessed cells, black picture tiles, amber/red stat slots, gold names).
   UI.css('ledger-fleets-orig', bump(`
-    .lf { --bz-hi:#8c7458; --bz-md:#6d5645; --bz-lo:#3a2c21; --bz-slot:var(--well-leather, #1a1410); --bz-gold:#f48201; --bz-pale:#f0dcc0;
-      background:radial-gradient(90% 70% at 50% 0%, #2f2218 0%, rgba(47,34,24,0) 70%), #120d09; }
-    .lf-sheet { padding:.7rem .9rem .8rem; background:linear-gradient(135deg, var(--bz-hi), var(--bz-md) 8%, #5b4533 60%, var(--bz-lo)); box-shadow:inset 1px 1px 0 var(--spec, rgba(255,245,225,.22)), inset -1px -1px 0 rgba(0,0,0,.65), 0 0 0 1px #000, 0 10px 40px rgba(0,0,0,.6); }
+    .lf { --bz-hi:#857561; --bz-md:#66584a; --bz-lo:#372d25; --bz-slot:var(--well-leather, #181411); --bz-gold:#f48201; --bz-pale:#f0dcc0;
+      background:radial-gradient(90% 70% at 50% 0%, #2f2218 0%, rgba(47,34,24,0) 70%), #0f0e0b; }
+    .lf-sheet { padding:.7rem .9rem .8rem; background:linear-gradient(135deg, var(--bz-hi), var(--bz-md) 8%, #54463a 60%, var(--bz-lo)); box-shadow:inset 1px 1px 0 var(--spec, rgba(255,245,225,.22)), inset -1px -1px 0 rgba(0,0,0,.65), 0 0 0 1px #000, var(--shadow-3); }
     .lf-sheet::before, .lf-sheet::after { display:none; }
     .lf-head { border-bottom:0; padding-bottom:.4rem; }
     .lf-title { color:var(--title-hi); text-shadow:var(--title-shadow); font:400 1.85rem/1 var(--font-display); letter-spacing:.06em; text-transform:uppercase; }   /* one title style on every tool screen (Research, Races, Stats) */
     .lf-h.none .nm { color:var(--bz-pale); opacity:.55; } .lf-srow.none .nm.dim { color:var(--bz-pale); }                                                   /* an empty design slot's column reads as empty, not as a design */
     .lf-sub { color:#ead4b0; } .lf-sub b { color:var(--bz-pale); }
-    .lf-body { background:#2f231a; box-shadow:inset 1px 1px 3px rgba(0,0,0,.9), 0 0 0 1px rgba(0,0,0,.7), 0 1px 0 1px rgba(255,235,200,.15); }
-    .lf-body { background:linear-gradient(180deg, rgba(26,20,16,.92) 0%, rgba(26,20,16,.8) 22%, rgba(26,20,16,.62) 100%), url('assets/art/scene/scene-galaxy.webp') 50% 60% / cover no-repeat #120d09; }
+    .lf-body { background:#2b241e; box-shadow:inset 1px 1px 3px rgba(0,0,0,.9), 0 0 0 1px rgba(0,0,0,.7), 0 1px 0 1px rgba(255,235,200,.15); }
+    .lf-body { background:linear-gradient(180deg, rgba(25,21,17,.92) 0%, rgba(25,21,17,.8) 22%, rgba(25,21,17,.62) 100%), url('assets/art/scene/scene-galaxy.webp') 50% 60% / cover no-repeat #0f0e0b; }
     .lf-row { border-bottom:1px solid rgba(0,0,0,.55); box-shadow:0 1px 0 rgba(255,235,200,.06); } .lf-row:hover { background:rgba(255,215,140,.07); }
-    .lf-row.head, .lf-row.total, .lf-row.head:hover, .lf-row.total:hover { background:#4a3a2c; border-color:rgba(0,0,0,.7); }
+    .lf-row.head, .lf-row.total, .lf-row.head:hover, .lf-row.total:hover { background:#45392f; border-color:rgba(0,0,0,.7); }
     .lf-h { border-left-color:rgba(0,0,0,.5); box-shadow:inset 1px 0 0 rgba(255,235,200,.08); }
     .lf-h .nm { color:var(--bz-gold); font-family:var(--font-display); font-size:.98rem; letter-spacing:.07em; text-transform:uppercase; }
     .lf-h .sub { color:#ead4b0; } .lf-h.st, .lf-total.lbl { color:var(--bz-pale); }
     .lf-cell { border-left-color:rgba(0,0,0,.6); box-shadow:inset 1px 0 0 var(--hair, rgba(255,235,200,.06)); background:var(--bz-slot); }
-    .lf-cell canvas { background:radial-gradient(ellipse at 50% 40%, #3b2e22 0%, #1d1610 100%); margin:.15rem; width:calc(100% - .3rem); box-shadow:inset 1px 1px 3px rgba(0,0,0,.8), inset -1px -1px 0 rgba(255,235,200,.12), 0 0 0 1px rgba(255,235,200,.22); }
+    .lf-cell canvas { background:radial-gradient(ellipse at 50% 40%, #2a241f 0%, #110e0b 100%); margin:.15rem; width:calc(100% - .3rem); box-shadow:inset 1px 1px 3px rgba(0,0,0,.8), inset -1px -1px 0 rgba(255,235,200,.12), 0 0 0 1px rgba(255,235,200,.22); }
     .lf-n { background:transparent; border:0; clip-path:none; color:#f0e060; text-shadow:0 1px 0 #000, 0 0 3px #000; font-family:var(--font-mono, monospace); }
-    .lf-pic, .lf-pic.mv { background:radial-gradient(ellipse at 50% 40%, #3b2e22 0%, #1d1610 100%); box-shadow:inset 0 0 0 1px rgba(0,0,0,.9), 0 0 0 1px rgba(255,235,200,.18); }   /* one tile for planet and moving-fleet thumbnails (and the Planets ledger's) */
+    .lf-pic, .lf-pic.mv { background:radial-gradient(ellipse at 50% 40%, #2a241f 0%, #110e0b 100%); box-shadow:inset 0 0 0 1px rgba(0,0,0,.9), 0 0 0 1px rgba(255,235,200,.18); }   /* one tile for planet and moving-fleet thumbnails (and the Planets ledger's) */
     .lf-info .nm { color:var(--bz-gold); } .lf-info .stt { color:#ead4b0; }
-    .lf-maint { background:var(--well-leather, #1a1410); border:0; box-shadow:inset 1px 1px 3px rgba(0,0,0,.9), 0 0 0 1px rgba(255,235,200,.14); }
+    .lf-maint { background:var(--well-leather, #181411); border:0; box-shadow:inset 1px 1px 3px rgba(0,0,0,.9), 0 0 0 1px rgba(255,235,200,.14); }
     .lf-maint .k { color:var(--bz-pale); } .lf-maint b, .lf-maint .u { color:#f0e060; }
     .lf-srow { border-bottom:1px solid rgba(0,0,0,.55); box-shadow:0 1px 0 rgba(255,235,200,.06); }
-    .lf-spic { background:radial-gradient(ellipse at 50% 40%, #3b2e22 0%, #1d1610 100%); box-shadow:inset 0 0 0 1px rgba(0,0,0,.9), 0 0 0 1px rgba(255,235,200,.18); }
+    .lf-spic { background:radial-gradient(ellipse at 50% 40%, #2a241f 0%, #110e0b 100%); box-shadow:inset 0 0 0 1px rgba(0,0,0,.9), 0 0 0 1px rgba(255,235,200,.18); }
     .lf-sname .nm { color:var(--bz-gold); font-family:var(--font-display); letter-spacing:.06em; text-shadow:0 1px 0 #000; }
     .lf-sname .cls { color:#ead4b0; }
-    .lf-stat { background:var(--well-leather-2, #14100c); border:0; box-shadow:inset 1px 1px 2px rgba(0,0,0,.9), 0 1px 0 rgba(255,235,200,.12); }
+    .lf-stat { background:var(--well-leather-2, #13100d); border:0; box-shadow:inset 1px 1px 2px rgba(0,0,0,.9), 0 1px 0 rgba(255,235,200,.12); }
     .lf-stat .v { color:#ff9a62; font-family:var(--font-mono, monospace); font-size:1.15rem; } .lf-stat .l { color:#f0b868; }
     .lf-stat.warp .v, .lf-stat.hits .v, .lf-stat.att .v, .lf-stat.shd .v, .lf-stat.bdef .v, .lf-stat.mdef .v { color:#ff9a62; } .lf-stat.zero .v { color:#b9a68c; }
     .lf-sp .ln.col, .lf-sp .ln.tank { color:#70e060; }

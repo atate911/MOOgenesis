@@ -40,12 +40,13 @@
   --title-hi: #ffd36a; --title-shadow: 0 1px 0 #2f1a0c, 0 2px 0 rgba(0, 0, 0, .5), 0 0 22px rgba(232, 200, 80, .2);   /* one title on every tool screen (Fleets, Planets, Research, Races, Map) */
   --head-orange: #ff9420; --slot-ink: #f0e060;         /* orange box titles; yellow numerals in a recessed slot (original: #f0e060) */
   --mint: #58e69c; --amber: #f0a030; --lime: #78e060; --cream: #f0d8b0; --sel: #2f4f9e;
-  --bronze-hi: #8c7458; --bronze: #5b4533; --bronze-lo: #3a2c20; --bronze-well: #2a2019;
+  --bronze-hi: #857561; --bronze: #54463a; --bronze-lo: #372d25; --bronze-well: #26211b;
   --copper-1: #f0a040; --copper-2: #c06a20;
   --glass-bg: rgba(6, 9, 20, .74); --glass-line: rgba(214, 179, 106, .36); --glass-filter: blur(4px);   /* the one translucent data surface (visual-system-plan.md 1.3) */
-  --well-leather: #1a1410; --well-leather-2: #14100c; --well-steel: #0b0d12;                         /* near-black wells: data and art pop, the sky shows through (1.4) */
+  --well-leather: #181411; --well-leather-2: #13100d; --well-steel: #0b0d12;                         /* near-black wells: data and art pop, the sky shows through (1.4) */
   --hair: rgba(255, 235, 200, .14); --hair-w: max(1px, .06rem);
-  --spec: rgba(255, 245, 225, .22);                                                                    /* the one bevel highlight (top-left edge) */                                       /* brass hairline for table rules and dividers; fine at 4K, never chunky */
+  --spec: rgba(255, 245, 225, .22);
+  --shadow-1: 0 2px 8px rgba(0, 0, 0, .5); --shadow-2: 0 .4rem 1.2rem rgba(0, 0, 0, .55); --shadow-3: 0 .8rem 2.6rem rgba(0, 0, 0, .65);   /* three elevations: chips and bars · panels, keys, tips · sheets and modals */                                                                    /* the one bevel highlight (top-left edge) */                                       /* brass hairline for table rules and dividers; fine at 4K, never chunky */
   --noise: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 .9 -.25'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.07'/%3E%3C/svg%3E");
   --font-ui: 'IBM Plex Sans Condensed', 'Bahnschrift SemiCondensed', 'Bahnschrift', 'Segoe UI', system-ui, sans-serif;
   --font-display: 'Oxanium', 'Saira Semi Condensed', 'Bahnschrift SemiBold', 'Bahnschrift', 'DIN Condensed', 'Segoe UI Semibold', system-ui, sans-serif;
@@ -90,7 +91,7 @@
 :root[data-theme="v2"] :is(.panel, .modal) {
   padding: .75rem .9rem;
   background: linear-gradient(135deg, var(--bev-hi) 0, var(--bev-mid) 22%, var(--bev-mid) 70%, var(--bev-lo) 100%);   /* = the 2px frame */
-  box-shadow: 0 0 0 1px #000, 0 .5rem 1.4rem -.4rem rgba(0, 0, 0, .65);
+  box-shadow: 0 0 0 1px #000, var(--shadow-2);
 }
 :root[data-theme="v2"] :is(.panel, .modal)::before {
   inset: 2px;
@@ -101,8 +102,8 @@
 :root[data-theme="v2"] .panel.clear::before { background: rgba(8, 12, 17, .55); }
 :root[data-theme="v2"] .panel::after { display: none; }
 /* warm bronze "tool screen" frame (planets / fleets / races / specs) */
-:root[data-theme="v2"] .panel.bronze { background: linear-gradient(135deg, var(--bronze-hi) 0, #6d5645 10%, #5b4533 65%, var(--bronze-lo) 100%); }
-:root[data-theme="v2"] .panel.bronze::before { background: var(--noise), linear-gradient(180deg, #4d3d30, #382b21); box-shadow: inset 1px 1px 0 rgba(0, 0, 0, .7), inset -1px -1px 0 rgba(255, 220, 170, .1); }
+:root[data-theme="v2"] .panel.bronze { background: linear-gradient(135deg, var(--bronze-hi) 0, #66584a 10%, #54463a 65%, var(--bronze-lo) 100%); }
+:root[data-theme="v2"] .panel.bronze::before { background: var(--noise), linear-gradient(180deg, #493e33, #342c25); box-shadow: inset 1px 1px 0 rgba(0, 0, 0, .7), inset -1px -1px 0 rgba(255, 220, 170, .1); }
 /* light silver "live map" frame */
 :root[data-theme="v2"] .panel.silver { background: linear-gradient(135deg, #d4d8e0 0, #8c909c 25%, #6a6e7a 70%, #30343e 100%); }
 :root[data-theme="v2"] .panel.silver::before { background: var(--noise), linear-gradient(180deg, #232a38, #121722); }
@@ -123,7 +124,7 @@
   padding: .5em 1.1em; font: 600 .8rem/1.1 var(--font-display); letter-spacing: .1em; text-transform: uppercase;
   color: #e4ebf2; text-shadow: 0 1px 0 rgba(0, 0, 0, .8);
   background: linear-gradient(135deg, var(--bev-hi), var(--bev-mid) 30%, var(--bev-lo));
-  box-shadow: 0 0 0 1px #000, 0 2px 3px rgba(0, 0, 0, .5); transition: background var(--dur-1), box-shadow var(--dur-1);
+  box-shadow: 0 0 0 1px #000, var(--shadow-1); transition: background var(--dur-1), box-shadow var(--dur-1);
 }
 :root[data-theme="v2"] .btn::before {
   inset: 2px; background: linear-gradient(180deg, var(--face-1), var(--face-2));
@@ -190,7 +191,7 @@
    card's boxes, the audience's dialogue panel, the council tally. A screen family's colour stays on its frame or rail, never as the fill.
    Phones and data-fx="off" draw the same slab without the blur (a per-frame composite). ------------------------------------------------- */
 :root[data-theme="v2"][data-fx="off"], html[data-phone] { --glass-filter: none; }
-:root:root:root[data-theme="v2"] :is(.gmap .gmap-legend.panel, .sv-info.panel, .cou-tally.panel) { background: var(--glass-bg); box-shadow: 0 0 0 1px var(--glass-line), 0 .5rem 1.4rem -.4rem rgba(0, 0, 0, .65); backdrop-filter: var(--glass-filter); -webkit-backdrop-filter: var(--glass-filter); clip-path: none; }
+:root:root:root[data-theme="v2"] :is(.gmap .gmap-legend.panel, .sv-info.panel, .cou-tally.panel) { background: var(--glass-bg); box-shadow: 0 0 0 1px var(--glass-line), var(--shadow-2); backdrop-filter: var(--glass-filter); -webkit-backdrop-filter: var(--glass-filter); clip-path: none; }
 :root:root:root[data-theme="v2"] :is(.gmap .gmap-legend.panel, .sv-info.panel, .cou-tally.panel)::before { display: none; }
 :root:root:root[data-theme="v2"] :is(.sv-own, .sv-lab, .pb-pl, .pb-f, .pb-odds) { background: var(--glass-bg); border-color: var(--glass-line); backdrop-filter: var(--glass-filter); -webkit-backdrop-filter: var(--glass-filter); }
 :root:root:root[data-theme="v2"] .pb-odds { border-color: rgba(98, 216, 255, .3); }
@@ -202,7 +203,7 @@
 :root:root:root[data-theme="v2"] .cou-tally.panel { background: var(--glass-bg); }
 
 /* ---- 7c. DOM art plates (WorldArt.image): the light grade the canvas plates get (Gfx.Grade 'plate'); a screen's own filter wins (lower specificity here) */
-:where(:root[data-theme="v2"]) img.wa-plate { filter: saturate(.92) contrast(1.04); }
+:where(:root[data-theme="v2"]) img.wa-plate { filter: saturate(.92) contrast(1.04) brightness(var(--expo, 1)); }
 :root[data-theme="v2"][data-fx="off"] img.wa-plate { filter: none; }
 
 /* ---- 8. fields: recessed wells ------------------------------------------------------------------------------------------ */
@@ -229,15 +230,15 @@
 
 /* ---- 11. modal, tooltip, toast ------------------------------------------------------------------------------------------- */
 :root[data-theme="v2"] .scrim { background: rgba(2, 4, 8, .72); backdrop-filter: blur(2px); animation-duration: .14s; }
-:root[data-theme="v2"] .modal { animation: v2-modal-in var(--dur-2) var(--ease) both; box-shadow: 0 0 0 1px #000, 0 1.2rem 3rem -.6rem rgba(0, 0, 0, .85); }
+:root[data-theme="v2"] .modal { animation: v2-modal-in var(--dur-2) var(--ease) both; box-shadow: 0 0 0 1px #000, var(--shadow-3); }
 @keyframes v2-modal-in { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
 :root[data-theme="v2"] .modal-h { margin: -.2rem -.45rem .75rem; padding: .4rem .7rem; font: 600 1rem var(--font-display); letter-spacing: .12em; text-transform: uppercase; color: var(--title); text-shadow: 0 1px 0 #000; border: 0; background: linear-gradient(180deg, var(--plate-1), var(--plate-2)); box-shadow: inset 0 1px 0 rgba(255, 255, 255, .22), inset 0 -1px 0 rgba(0, 0, 0, .7), 0 0 0 1px rgba(0, 0, 0, .55); }
 :root[data-theme="v2"] .modal-f { border-top: 1px solid #000; box-shadow: 0 -1px 0 rgba(255, 255, 255, .07); }
-:root[data-theme="v2"] #tip { background: var(--glass-bg); color: var(--ink-0); font-size: .82rem; line-height: 1.4; box-shadow: 0 0 0 1px var(--glass-line), 0 .4rem 1rem rgba(0, 0, 0, .6); backdrop-filter: var(--glass-filter); -webkit-backdrop-filter: var(--glass-filter); }
+:root[data-theme="v2"] #tip { background: var(--glass-bg); color: var(--ink-0); font-size: .82rem; line-height: 1.4; box-shadow: 0 0 0 1px var(--glass-line), var(--shadow-2); backdrop-filter: var(--glass-filter); -webkit-backdrop-filter: var(--glass-filter); }
 :root[data-theme="v2"] #tip::before { display: none; }
 :root[data-theme="v2"] #tip::after { display: none; }
 :root[data-theme="v2"] #tip b { color: var(--title); font-weight: 600; }
-:root[data-theme="v2"] .toast { background: var(--glass-bg); animation-duration: .18s; box-shadow: 0 0 0 1px var(--glass-line), 0 .3rem .9rem rgba(0, 0, 0, .6); backdrop-filter: var(--glass-filter); -webkit-backdrop-filter: var(--glass-filter); }
+:root[data-theme="v2"] .toast { background: var(--glass-bg); animation-duration: .18s; box-shadow: 0 0 0 1px var(--glass-line), var(--shadow-2); backdrop-filter: var(--glass-filter); -webkit-backdrop-filter: var(--glass-filter); }
 :root[data-theme="v2"] .toast::before { display: none; }
 :root[data-theme="v2"] .toast.ok { color: var(--a-leaf); } :root[data-theme="v2"] .toast.warn { color: var(--a-ember); } :root[data-theme="v2"] .toast.bad { color: var(--a-rose); }
 
@@ -277,7 +278,7 @@
 :root[data-theme="v2"] {
   --ink-2: #a3afbc; --ink-3: #8794a2;                 /* secondary text was 3.3:1 on panels; now >= 4.5:1 */
   --sel-1: #9a6218; --sel-2: #6d430d; --sel-ink: #fff4d8; --sel-line: #ffc860;
-  --bz-dim: #d2bc9a;                                  /* secondary text on bronze/brown tool screens (6.5:1 on #3a2c21) */
+  --bz-dim: #d2bc9a;                                  /* secondary text on bronze/brown tool screens (6.5:1 on #372d25) */
   --gold-1: #ffd070; --gold-2: #dc8c2c; --gold-3: #6a3208;   /* the lower stop lifted: the dark ink reads at 15px (4.8:1), not 3:1 */
 }
 /* min sizes: no tiny all-caps labels */

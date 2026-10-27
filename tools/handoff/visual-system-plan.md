@@ -147,6 +147,102 @@ Still failing by the numbers, on purpose: locked tech chips and zero-count key r
 Next turn (the sampler reads the bar as its background; the gold plate is 9:1 in the pixels), and the headless sampler's 3.5–3.9 on the
 copper buttons (anti-aliased glyph edges; the ink itself is 5:1).
 
+## Finish pass — done (same branch, one commit)
+
+The owner asked for the tells of an unfinished interface, for where shading and shadowing are strong or weak, and for the histograms of
+the raster art against each other and against the interface. Harness in the scratchpad: `finish.js` (per screen, in the DOM: clipped
+text, sibling buttons of unequal height, distinct font sizes, edge colours, drop shadows, chamfers, mixed capitalisation inside one
+container, three-dot truncations, the light direction of every bevel) and `histo.py` (RGB statistics of every raster by set, the outliers
+inside each set, and the same statistics for regions of the audit screenshots). Worth promoting to `tools/qa/` with `audit.js`.
+
+### Histograms (RGB; L = mean luma 0–255, p50 its median, warm = R − B of the mean colour)
+
+| Set | n | L | p50 | warm | blacks < 8 | whites > 248 |
+|---|---|---|---|---|---|---|
+| audience halls | 10 | 48 | 31 | +20 | 19 % | 0.1 % |
+| council chambers | 10 | 54 | 42 | +23 | 8 % | 0.1 % |
+| figures | 10 | 30 | 17 | +11 | 13 % | 0 |
+| scientists | 10 | 49 | 30 | +19 | 7 % | 0.1 % |
+| homeworlds | 10 | 58 | 39 | +10 | 29 % | 0.2 % |
+| portraits | 10 | 39 | 25 | +9 | 14 % | 0 |
+| orbits | 17 | 41 | 9 | +7 | 49 % | 0.1 % |
+| surfaces | 14 | 78 | 71 | +33 | 3 % | 0 |
+| events | 8 | 43 | 28 | +10 | 18 % | 0.1 % |
+| colony plates | 6 | 42 | 18 | +5 | 43 % | 0.1 % |
+| system skies | 6 | 21 | 7 | −1 | 57 % | 0 |
+| battle boards | 4 | 9 | 4 | −7 | 71 % | 0 |
+
+Reading: one family. Every peopled set sits between L 30 and 58, warm by +9 to +23 with a slight magenta tint (G two to four below
+the R/B mean), deep blacks (p1 at 0–4) and nothing clipped at the top (p99 150–230, whites under half a percent). The space sets (skies,
+orbits, battle boards) are neutral-to-cool and black-heavy; the surfaces are the one high-key warm set. That is the same cool-space /
+warm-people split the interface draws between the sky and the leather, so the two halves already agree. The outliers inside a set are
+semantic, not errors: the Darlok files are a third as bright as their peers (L 16–28 against 39–54), the Psilon files up to twice
+(56–85), the Alkari homeworld is a white planet (93–109), the nova is a nova, inferno is red.
+
+The interface, from the same statistics on the audit screenshots:
+
+| Region | L | warm | note |
+|---|---|---|---|
+| sky (map, no panel) | 21 | −10 | the system skies are L 21, −1: the map is cooler on purpose |
+| colony console (steel) | 57 | 0 | neutral |
+| leather frame (ledger head) | 88 | **+42 → +30** | the art it frames is +9 to +23 |
+| leather boxes (ledger foot) | 36 | +16 → +13 | |
+| Research screen | 67 | +29 → +22 | |
+| options (indigo cards) | 42 | −14 | |
+| design (grey metal) | 25 | +5 | |
+| system view | 48 | +16 | |
+
+The one real mismatch was the leather: a third warmer than anything it frames, so a portrait or a planet inside it read cooler and
+greener than it is. Retoned: every leather literal and token (`--o-fill`, `--o-hi`, `--bronze*`, the `--pk-*` phone leathers, the ledger
+well gradients, 26 literals) moved toward neutral at the same luminance (#6d5645 → #66584a, #8c7458 → #857561, #5b4533 → #55473b …;
+L within ±1, R − B down by 30 %). The frame sits at +30 now, the same distance from the art as the art sets are from each other.
+Judgement call: it reads as a cooler, greyer leather; the literal map is in the finish-pass commit if the owner wants it half-way back.
+
+Per-race exposure. The outliers above sit side by side in the council booths, the Races cards and the Report, where a jump of two to
+three times in brightness from one empire to the next reads as a mistake, not a mood. `WorldArt.raceExposure(race, purpose)` holds a
+brightness nudge (Darlok ×1.3–1.45, Psilon ×0.72–0.82, the Alkari homeworld ×0.72–0.75) and every draw path reads it: `draw`'s
+`exposure` option as a canvas filter, `image`'s `--expo` custom property on the DOM plates and the Report dossier, the portrait scaler,
+the audience and council scenes, the Research scientist. Brightness only, so the blacks stay black and the mood stays. It is a stand-in
+until those files are re-rendered (rows in Phase 3).
+
+### Shading and shadowing
+
+Strong: the console and ledger bevels (one light, top-left, on every face; the recessed wells' far-wall rims are the only "light from
+below" and read correctly as the inside of a well), the ledger sheet's cast shadow, the modal and tooltip elevations, the GL planets'
+terminator and limb, the title screen's relit world, the glass panels' inner rim. Weak, fixed here:
+
+| Finding | Fix |
+|---|---|
+| 24 distinct drop shadows in the code (14 y/blur signatures across the desktop screens, five on Research alone) | three elevations: `--shadow-1` chips and bars, `--shadow-2` panels, keys and tips, `--shadow-3` sheets and modals; 17 literals replaced; 12 signatures remain, nine of them glows (y = 0) |
+| the DOM art plates (colony card, side cards, setup homeworld, Report dossier) sat flat on the panel like stickers while the canvas plates have an inset vignette | one recessed-well vignette on every plate: `inset 0 0 0 1px rgba(0,0,0,.7), inset 0 0 1.6rem rgba(0,0,0,.4)` |
+| the side console on the galaxy map cast nothing onto the map and read as a layer in the same plane | `-10px 0 28px rgba(0,0,0,.45)` on `.gx-side .panel` |
+| two text-shadow conventions: `1px 1px 0` (light from top-left) in seven files, `0 1px 0` everywhere else | one direction, `0 1px 0` (29 rules) |
+| the Fleets cell plate was a lighter brown than the black well it sits in | the well's own tones (`#2a241f → #110e0b`) |
+
+### Finished-game consistency (`finish.js`, 15 desktop screens)
+
+| Tell | Before → after |
+|---|---|
+| clipped text (overflow hidden, no ellipsis) | 0 → 0 |
+| sibling buttons of unequal height | Report's ◀ ▶ at 25 px beside 33 px → equal; Design and Options keep the big primary (convention) |
+| chamfers on a rectangular theme | Save/Load 7 → 0, Races 3 → 0 (the race name plates); Design 9 kept (the trapezoid tabs are the family motif) |
+| distinct font sizes per screen | Research 22 → 16, Design 15 → 11, Races 17 → 14, Fleets 13 → 11 (.84–.88 → .85, .93–.97 → .95, 1.01–1.04 → 1) |
+| three-dot truncation | the GNN ticker's `...` → `…` |
+| mixed case inside one group | "No trade" beside NO TREATY → NO TRADE; "Honorable" over MILITARIST → caps |
+| redundant marks | the ledger's growth "↑ +1.8" → "↑1.8" |
+| unreadable ink | the disabled Build button's key chip kept the copper's dark ink on the grey plate (1.5:1) → cream |
+
+Left on purpose: the Design/Options big primary; the Design trapezoid tabs; CAPS labels beside sentence-case values (the convention);
+14–16 font sizes per screen (a display scale, a UI scale and a mono scale with four to six steps each).
+
+Verification: `check.js` 118 files clean, `rules-test.js` 845 pass; the three phone QA profiles 263 / 231 / 254 pass; 30 turns on hard
+with no errors; the desktop layout fingerprint differs from the previous commit on 5 of 296 lines, all sub-pixel heights from the type
+collapse (a Design label row 2 px higher, the Fleets ship row 1–3 px shorter), no grid or width change. Contrast against the balance-pass
+baseline: mean luminance per screen within ±0.5 (the retone kept it, by construction), the fail lists the same class as before (Races
+15 → 10, Report 9 → 6, Design 6 → 5 after the key-chip fix; Research 16 → 19 by count, every one a 15–16 px orange or cream label on a
+box face at 3.9–4.4:1 that sat at 4.0–4.5 before). The small orange label tier on the leather box faces is the one open contrast item:
+a lighter orange (#ffa73a) or cream for the 15 px column heads would clear 4.5:1 at the cost of the tier's identity. Owner's call.
+
 ## Phase 3 — assets (rows for `ART-NEEDED.md`)
 
 **11. Full-screen scenes at 3840×2160**, in order of screen time: `scene-galaxy` (title, boot, ledgers), the 10 audience halls, the
