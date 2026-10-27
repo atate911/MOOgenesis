@@ -42,6 +42,7 @@
   --mint: #58e69c; --amber: #f0a030; --lime: #78e060; --cream: #f0d8b0; --sel: #2f4f9e;
   --bronze-hi: #a28a6c; --bronze: #6e5846; --bronze-lo: #3a2c20; --bronze-well: #2a2019;
   --copper-1: #f0a040; --copper-2: #a04c12;
+  --glass-bg: rgba(6, 9, 20, .74); --glass-line: rgba(214, 179, 106, .36); --glass-filter: blur(4px);   /* the one translucent data surface (visual-system-plan.md 1.3) */
   --noise: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 .9 -.25'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.07'/%3E%3C/svg%3E");
   --font-ui: 'IBM Plex Sans Condensed', 'Bahnschrift SemiCondensed', 'Bahnschrift', 'Segoe UI', system-ui, sans-serif;
   --font-display: 'Oxanium', 'Saira Semi Condensed', 'Bahnschrift SemiBold', 'Bahnschrift', 'DIN Condensed', 'Segoe UI Semibold', system-ui, sans-serif;
@@ -183,6 +184,20 @@
 :root[data-theme="v2"] .slider.locked .s-fill { background: linear-gradient(180deg, #ff9a6a, #c05020 45%, #5a2008); }
 :root[data-theme="v2"] .slider .s-val { font-family: var(--font-mono); font-weight: 600; font-size: .85rem; color: var(--slot-ink); padding: .05rem .3rem; background: var(--well); box-shadow: inset 1px 1px 0 #000, inset -1px -1px 0 rgba(255, 255, 255, .1); }
 
+/* ---- 7b. glass surfaces (visual-system-plan.md 1.3): the map key, the planet-data box and labels of the star system, the pre-battle
+   card's boxes, the audience's dialogue panel, the council tally. A screen family's colour stays on its frame or rail, never as the fill.
+   Phones and data-fx="off" draw the same slab without the blur (a per-frame composite). ------------------------------------------------- */
+:root[data-theme="v2"][data-fx="off"], html[data-phone] { --glass-filter: none; }
+:root:root:root[data-theme="v2"] :is(.gmap .gmap-legend.panel, .sv-info.panel, .cou-tally.panel) { background: var(--glass-bg); box-shadow: 0 0 0 1px var(--glass-line), 0 .5rem 1.4rem -.4rem rgba(0, 0, 0, .65); backdrop-filter: var(--glass-filter); -webkit-backdrop-filter: var(--glass-filter); clip-path: none; }
+:root:root:root[data-theme="v2"] :is(.gmap .gmap-legend.panel, .sv-info.panel, .cou-tally.panel)::before { display: none; }
+:root:root:root[data-theme="v2"] :is(.sv-own, .sv-lab, .pb-pl, .pb-f, .pb-odds) { background: var(--glass-bg); border-color: var(--glass-line); backdrop-filter: var(--glass-filter); -webkit-backdrop-filter: var(--glass-filter); }
+:root:root:root[data-theme="v2"] .pb-odds { border-color: rgba(98, 216, 255, .3); }
+:root:root:root[data-theme="v2"] .tl-h { background: var(--glass-bg); border-color: var(--glass-line); backdrop-filter: var(--glass-filter); -webkit-backdrop-filter: var(--glass-filter); }
+:root:root:root[data-theme="v2"] .tl-b { background: var(--glass-bg); border-color: var(--glass-line); }
+:root:root:root[data-theme="v2"] .au-panel { background: linear-gradient(135deg, var(--brass-hi), var(--brass-lo) 22%, var(--brass) 50%, var(--brass-lo) 78%, var(--brass-hi)); }
+:root:root:root[data-theme="v2"] .au-panel::before { background: linear-gradient(180deg, rgba(8, 12, 24, .88), rgba(4, 7, 16, .93)); box-shadow: none; }
+:root:root:root[data-theme="v2"] .cou-tally.panel { background: var(--glass-bg); }
+
 /* ---- 8. fields: recessed wells ------------------------------------------------------------------------------------------ */
 :root[data-theme="v2"] .field { background: linear-gradient(135deg, var(--bev-hi), var(--bev-mid) 35%, var(--bev-lo)); color: var(--ink-0); box-shadow: 0 0 0 1px #000; }
 :root[data-theme="v2"] input.field, :root[data-theme="v2"] select.field { background: var(--well); box-shadow: inset 1px 1px 0 #000, inset -1px -1px 0 rgba(255, 255, 255, .13), 0 0 0 1px rgba(0, 0, 0, .7); }
@@ -211,12 +226,12 @@
 @keyframes v2-modal-in { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
 :root[data-theme="v2"] .modal-h { margin: -.2rem -.45rem .75rem; padding: .4rem .7rem; font: 600 1rem var(--font-display); letter-spacing: .12em; text-transform: uppercase; color: var(--title); text-shadow: 0 1px 0 #000; border: 0; background: linear-gradient(180deg, var(--plate-1), var(--plate-2)); box-shadow: inset 0 1px 0 rgba(255, 255, 255, .22), inset 0 -1px 0 rgba(0, 0, 0, .7), 0 0 0 1px rgba(0, 0, 0, .55); }
 :root[data-theme="v2"] .modal-f { border-top: 1px solid #000; box-shadow: 0 -1px 0 rgba(255, 255, 255, .07); }
-:root[data-theme="v2"] #tip { background: linear-gradient(135deg, #b89850, #5a4720 45%, #2a2010); color: var(--ink-0); font-size: .82rem; line-height: 1.4; box-shadow: 0 0 0 1px #000, 0 .4rem 1rem rgba(0, 0, 0, .6); }
-:root[data-theme="v2"] #tip::before { inset: 1px; background: var(--noise), #0b1018; clip-path: none; }
+:root[data-theme="v2"] #tip { background: var(--glass-bg); color: var(--ink-0); font-size: .82rem; line-height: 1.4; box-shadow: 0 0 0 1px var(--glass-line), 0 .4rem 1rem rgba(0, 0, 0, .6); backdrop-filter: var(--glass-filter); -webkit-backdrop-filter: var(--glass-filter); }
+:root[data-theme="v2"] #tip::before { display: none; }
 :root[data-theme="v2"] #tip::after { display: none; }
 :root[data-theme="v2"] #tip b { color: var(--title); font-weight: 600; }
-:root[data-theme="v2"] .toast { background: linear-gradient(135deg, var(--bev-hi), var(--bev-mid) 35%, var(--bev-lo)); animation-duration: .18s; box-shadow: 0 0 0 1px #000, 0 .3rem .9rem rgba(0, 0, 0, .6); }
-:root[data-theme="v2"] .toast::before { inset: 2px; background: var(--noise), #0b1018; clip-path: none; }
+:root[data-theme="v2"] .toast { background: var(--glass-bg); animation-duration: .18s; box-shadow: 0 0 0 1px var(--glass-line), 0 .3rem .9rem rgba(0, 0, 0, .6); backdrop-filter: var(--glass-filter); -webkit-backdrop-filter: var(--glass-filter); }
+:root[data-theme="v2"] .toast::before { display: none; }
 :root[data-theme="v2"] .toast.ok { color: var(--a-leaf); } :root[data-theme="v2"] .toast.warn { color: var(--a-ember); } :root[data-theme="v2"] .toast.bad { color: var(--a-rose); }
 
 /* ---- 12. misc kit ------------------------------------------------------------------------------------------------------- */
