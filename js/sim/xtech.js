@@ -65,8 +65,13 @@ MOO.def(function (M) {
   };
   // AI-vs-AI weights (research/03 §4.12 has no term for any of these): percent of the design weight per unit of effect. Calibrated against the tactical
   // engine by tools/techlab/combat.js (the same fleets fought out with and without the effect); see tools/techlab/REPORT.md.
-  X.WEIGHT = { comp: 6, def: 6, mdef: 2, absorb: 6, hpPct: 0.6, repair: 0.8, misshield: 0.2, speed: 3, init: 1, warhead: 0.3 };
-  X.PLANET_WEIGHT = { baseComp: 8, baseHpPct: 0.4, pshield: 2 };
+  // round 1 (tools/out/techlab/combat-r1.json, 92 fleet + 21 planet battles, 32 fights per condition): +1 attack ≈ +17 % ships, +2 ≈ +36 %; +1 beam defence ≈ +5 %;
+  // +2 missile defence ≈ +17 %; +1 / +2 absorption ≈ +13 / +25 % of a shielded design; +15 % hit points ≈ +5.6 %; 5 % repair ≈ +2.4 %; 20 % interception ≈ +5 %;
+  // +1 speed and +2 initiative ≈ +12.7 %; +25 % warheads ≈ +16 % of a missile design; bases: +2 attack ≈ +21 %, +50 % hit points ≈ +40 %, +5 planetary shield ≈ 0;
+  // minefields of 8 % ≈ the defence worth 12 % more bases, i.e. the attacker's weight × 0.89.
+  X.WEIGHT = { comp: 17.5, def: 5, mdef: 8.5, absorb: 12.5, hpPct: 0.37, repair: 0.48, misshield: 0.25, speed: 10, init: 1.35, warhead: 0.63 };
+  X.PLANET_WEIGHT = { baseComp: 10.6, baseHpPct: 0.79, pshield: 0 };
+  X.MINE_WEIGHT = 1.35;
   X.weightPct = function (xm, ss) {
     if (!xm || !ss) return 0;
     const W = X.WEIGHT;
@@ -78,7 +83,7 @@ MOO.def(function (M) {
     return pct;
   };
   X.planetWeightPct = function (xm) { if (!xm) return 0; const W = X.PLANET_WEIGHT; return W.baseComp * xm.baseComp + W.baseHpPct * xm.baseHpPct + W.pshield * xm.pshield; };
-  X.mineFactor = xm => (xm && xm.mines ? Math.max(0, 100 - xm.mines) / 100 : 1);
+  X.mineFactor = xm => (xm && xm.mines ? Math.max(0, 100 - X.MINE_WEIGHT * xm.mines) / 100 : 1);
 
   // before the casualties of a battle are applied: emergency warp saves part of the LOSER's losses (the survivors then retreat as usual)
   X.preApply = function (S, res) {

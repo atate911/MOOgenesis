@@ -198,7 +198,7 @@ module.exports = function (M, t) {
     t.eq(pu1.comp, pu0.comp + 2); t.eq(pu1.hp1, Math.floor(pu0.hp1 * 1.5)); t.eq(pu1.absorb, pu0.absorb + 5);
     const e0 = B0.units.find(u => u.side === 1), e1 = B1.units.find(u => u.side === 1);
     t.eq((e1.count - 1) * e1.hp1 + e1.hp1 - e1.hploss, (e0.count - 1) * e0.hp1 + e0.hp1 - Math.floor(e0.hp1 * e0.count * 8 / 100), 'mines take 8 % of the hit points');
-    t.eq(Cb.sideWeight(battle(), 1), Math.floor(wE0 * 0.92)); t.ok(Cb.sideWeight(battle(), 0) > wP0);
+    t.eq(Cb.sideWeight(battle(), 1), Math.floor(wE0 * Xt.mineFactor({ mines: 8 }))); t.ok(Cb.sideWeight(battle(), 0) > wP0);
     // battle results
     own(S, B, 'emergency-warp-capacitors'); own(S, A, 'battlefield-salvage');
     M.Sim.Fleet.addShips(S, B.id, p.starId, 1, 20);

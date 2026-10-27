@@ -47,6 +47,10 @@
     defense: { ico: 'repair', label: 'Bio defence' }, engine: { ico: 'engine', label: 'Engine' }, fuel: { ico: 'fuel', label: 'Fuel cells' },
     invasion: { ico: 'troops', label: 'Invasion' }, beam: { ico: 'beam', label: 'Beam weapon' }, missile: { ico: 'missile', label: 'Missile' },
     bomb: { ico: 'bomb', label: 'Bomb' }, torpedo: { ico: 'missile', label: 'Torpedo' }, advanced: { ico: 'tech', label: 'General improvement' },
+    // expansion pool (data/techs-x.js)
+    espionage: { ico: 'spy', label: 'Espionage' }, diplomacy: { ico: 'diplomacy', label: 'Diplomacy' }, finance: { ico: 'money', label: 'Finance' },
+    research: { ico: 'tech', label: 'Research' }, salvage: { ico: 'money', label: 'Salvage' }, resilience: { ico: 'repair', label: 'Civil defence' },
+    logistics: { ico: 'engine', label: 'Logistics' }, trade: { ico: 'trade', label: 'Trade' },
   };
   const typeInfo = t => TYPES[t] || { ico: 'tech', label: 'Technology' };
   const PLANET_TYPES = { 1: 'radiated', 2: 'toxic', 3: 'inferno', 4: 'dead', 5: 'tundra', 6: 'barren', 7: 'minimal' };
@@ -548,6 +552,10 @@
     if (ty === 'bomb') return ART.bomb;
     if (ty === 'advanced') return ART.advanced;
     if (ty === 'special') return ART.fx;
+    if (ty === 'espionage' || ty === 'research') return ART.chip;          // expansion types (data/techs-x.js)
+    if (ty === 'finance' || ty === 'salvage') return ART.gear;
+    if (ty === 'logistics' || ty === 'trade') return ART.engine;
+    if (ty === 'resilience') return ART.dome;
     return ART.generic;
   }
   // draw one tech into a w x h area. o = {col, race, banner, scan:true}
