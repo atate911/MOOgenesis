@@ -1040,7 +1040,7 @@
     .tch::after, .rx::after, .ttp::after { content:""; position:absolute; inset:0; pointer-events:none; z-index:50; box-shadow:inset 0 0 0 .22rem #866853, inset .22rem .22rem 0 .22rem #b39677, inset -.22rem -.22rem 0 .22rem #3f3028; opacity:.9; }
     .tch, .ttp { padding-left:1.5rem; padding-right:1.5rem; }
     /* headings: orange slab with a hard 1px drop shadow */
-    .tch-title, .rx-title, .ttp-head h1 { color:#ffc04a; text-shadow:1px 1px 0 #2f1a0c; letter-spacing:.06em; text-transform:uppercase; font-family:var(--font-display); }
+    .tch-title, .rx-title, .ttp-head h1 { color:var(--title-hi); text-shadow:var(--title-shadow); letter-spacing:.06em; text-transform:uppercase; font-family:var(--font-display); }
     .tch-title small, .rx-sub, .tch-total .k { color:var(--o-tan); text-shadow:1px 1px 0 rgba(0,0,0,.35); }
     .tch-total b, .tch-total .u { color:var(--o-green); text-shadow:1px 1px 0 #10300f; }
     .tch-head, .rx-head, .ttp-head { border-bottom:0; box-shadow:0 1px 0 #3a2c21, 0 2px 0 #9c8466; }

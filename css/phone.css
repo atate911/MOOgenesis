@@ -163,7 +163,7 @@ html:root:root[data-phone] .gmap .gmap-legend.panel { bottom: calc(var(--ph-stri
 /* the sheet's title row: a thumbnail (side-colony.js / side-misc.js add it on phones), then the summary line (phone-galaxy.js) */
 html:root:root[data-phone] .gx-side .side-title { min-height: var(--tap); gap: .5rem; margin-bottom: .2rem; padding: .15rem .35rem; }
 html[data-phone] .ph-thumb { flex: none; display: grid; place-items: center; width: 2.4rem; height: 2.4rem; overflow: hidden; }
-html[data-phone] .ph-thumb canvas, html[data-phone] .ph-thumb .sm-pic { display: block; width: 100%; height: 100%; }
+html[data-phone] .ph-thumb :is(canvas, img), html[data-phone] .ph-thumb .sm-pic { display: block; width: 100%; height: 100%; }
 html[data-phone] .ph-thumb.star { --sc: #ffe27a; width: 2rem; height: 2rem; border-radius: 50%; background: radial-gradient(circle, #fff 0 14%, var(--sc) 34%, color-mix(in srgb, var(--sc) 40%, transparent) 52%, transparent 70%); }
 html[data-phone] .ph-thumb.star[data-c="red"] { --sc: #ff6a4a; } html[data-phone] .ph-thumb.star[data-c="green"] { --sc: #7ae07a; }
 html[data-phone] .ph-thumb.star[data-c="blue"] { --sc: #6aa8ff; } html[data-phone] .ph-thumb.star[data-c="white"] { --sc: #e8f0ff; } html[data-phone] .ph-thumb.star[data-c="purple"] { --sc: #c08aff; }

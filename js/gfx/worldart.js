@@ -134,6 +134,20 @@
     if (path) { if (ready(path)) paint(); else whenReady(path, paint); }
     return c;
   }
+  /* an <img> holding the image (DOM use: plates, thumbnails, postcards). Unlike a fixed-pixel canvas it stays sharp at any
+     device pixel ratio and UI scale, and the browser decodes it once for every box it appears in. Fills its box (inline
+     display:block; width/height 100%); fit 'cover' (default) | 'contain', (fx, fy) focal point as object-position, o.alt.
+     Disabled art or a missing file leaves an empty box, as canvas() does. */
+  function image(path, o) {
+    o = o || {};
+    const im = document.createElement('img');
+    im.alt = o.alt || ''; im.decoding = 'async'; im.draggable = false;
+    im.style.cssText = 'display:block;width:100%;height:100%;object-fit:' + (o.fit === 'contain' ? 'contain' : 'cover') +
+      ';object-position:' + ((o.fx == null ? 0.5 : o.fx) * 100).toFixed(1) + '% ' + ((o.fy == null ? 0.5 : o.fy) * 100).toFixed(1) + '%' + (o.alpha != null ? ';opacity:' + o.alpha : '');
+    im.onerror = function () { im.style.visibility = 'hidden'; };
+    if (W.enabled && path) im.src = W.base + path + '.webp';
+    return im;
+  }
   /* idle-time warm-up of a list of paths (keeps the first paint of a screen from popping) */
   function preload(paths) {
     if (!W.enabled) return;
@@ -143,7 +157,7 @@
   }
 
   M.Gfx.WorldArt = {
-    get: get, ready: ready, whenReady: whenReady, draw: draw, canvas: canvas, preload: preload,
+    get: get, ready: ready, whenReady: whenReady, draw: draw, canvas: canvas, image: image, preload: preload,
     orbit: orbitPath, surface: surfacePath, system: systemPath, event: eventPath, scene: scenePath, race: racePath, colony: colonyPath, gnn: GNN,
     systemSky: systemSkyPath, battle: battlePath, fx: fxPath, still: stillPath,
     get enabled() { return W.enabled; }, set enabled(v) { W.enabled = !!v; },

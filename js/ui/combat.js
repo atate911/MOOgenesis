@@ -146,16 +146,18 @@
   const HULLN = ['Small', 'Medium', 'Large', 'Huge'];
   const SHIELD_CLASS = { 0: '—', 5: 'Class V', 10: 'Class X', 15: 'Class XV', 20: 'Class XX' };
   const unitHp = u => (u.count > 0 ? (u.count - 1) * u.hp1 + Math.max(0, u.hp1 - u.hploss) : 0);
-  const hullFit = [0.58, 0.7, 0.82, 0.94];
+  const hullFit = [0.58, 0.7, 0.82, 0.94], hullFitH = [0.76, 0.84, 0.92, 0.97];   // a hull's share of the card's width / height (Small … Huge)
 
   // art-variant key of a battle side's design (stable per empire/slot/name, so it matches the ledgers and the design screen)
   const vkOf = (side, d) => (side && !side.monster && d && M.Gfx.Ships && M.Gfx.Ships.designKey ? M.Gfx.Ships.designKey(side.empire, d.slot, d.name) : '');
   function shipCanvas(race, hull, color, flags, w, hh, vk) {
     const c = h('canvas', { width: Math.round(w * 2), height: Math.round(hh * 2) });
     try {
-      const size = Math.round(w * 2 * (hullFit[clamp(hull | 0, 0, 3)]));
-      const sp = M.Gfx.Ships.sprite(race === 'monster' ? 'sakkra' : race, clamp(hull | 0, 0, 3), size, color, flags || {}, vk || null, '3q');   // pre-battle card: the 3/4 render when the class has one
-      const k = Math.min(c.width / sp.width, c.height / sp.height, 1.6), g = c.getContext('2d');
+      const hl = clamp(hull | 0, 0, 3), f = hullFit[hl], rc = race === 'monster' ? 'sakkra' : race;
+      const probe = M.Gfx.Ships.sprite(rc, hl, 64, color, flags || {}, vk || null, '3q');                                   // a small render (cached) tells the hull's aspect
+      const size = Math.max(8, Math.round(64 * Math.min(c.width * f / probe.width, c.height * hullFitH[hl] / probe.height)));   // the hull's share of the box on both axes
+      const sp = M.Gfx.Ships.sprite(rc, hl, size, color, flags || {}, vk || null, '3q');   // pre-battle card: the 3/4 render when the class has one
+      const k = Math.min(c.width / sp.width, c.height / sp.height, 1), g = c.getContext('2d');   // never upscaled (fuzz): rendered at its own size
       g.drawImage(sp, (c.width - sp.width * k) / 2, (c.height - sp.height * k) / 2, sp.width * k, sp.height * k);
     } catch (e) { /* art is optional */ }
     return c;

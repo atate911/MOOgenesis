@@ -43,7 +43,7 @@
 
     H.colonize = async it => {
       const S = G.S, c = planetOf(S, it.planet);
-      const ans = await Flow.card({ star: it.planet, planetCard: c, title: 'Build a new colony?', body: [], buttons: [{ label: 'No', value: false, kbd: 'N' }, { label: 'Yes', value: true, primary: true, kbd: 'Y' }] });
+      const ans = await Flow.card({ star: it.planet, planetCard: c, scene: 'first-landing', title: 'Build a new colony?', body: [], buttons: [{ label: 'No', value: false, kbd: 'N' }, { label: 'Yes', value: true, primary: true, kbd: 'Y' }] });
       if (ans) {
         UI.sfx('colonize');
         if (UI.Landing && UI.Landing.colony && M.Settings.get('animSpeed') > 0 && M.Settings.get('landingScenes') !== false) { try { await UI.Landing.colony(it.planet); } catch (e) { console.warn('[landing]', e); } }   // the colony-ship landing vignette (Options › Gameplay)

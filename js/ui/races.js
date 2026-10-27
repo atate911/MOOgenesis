@@ -179,7 +179,7 @@
       background:linear-gradient(135deg, rgba(93,106,150,.5), rgba(42,50,96,.4) 50%, rgba(93,106,150,.5)); isolation:isolate; }
     .rc-void::before { content:""; position:absolute; inset:1px; z-index:-1; clip-path:var(--poly); background:repeating-linear-gradient(135deg, rgba(255,255,255,.022) 0 .5rem, transparent .5rem 1rem), rgba(5,8,24,.72); }
     .rc-void .big { font:400 1.5rem var(--font-display); letter-spacing:.14em; text-transform:uppercase; } .rc-void .sm { font-size:.9rem; color:var(--fog); opacity:.85; } .rc-void .ico { width:2rem; height:2rem; opacity:.55; }
-    .rc-void .hw { position:absolute; inset:1px; z-index:-1; clip-path:var(--poly); opacity:.35; filter:saturate(.7) brightness(.8); pointer-events:none; } .rc-void .hw canvas { position:absolute; inset:0; width:100%; height:100%; display:block; }
+    .rc-void .hw { position:absolute; inset:1px; z-index:-1; clip-path:var(--poly); opacity:.35; filter:saturate(.7) brightness(.8); pointer-events:none; } .rc-void .hw :is(canvas, img) { position:absolute; inset:0; width:100%; height:100%; display:block; }
     .rc-void .hw::after { content:""; position:absolute; inset:0; background:radial-gradient(ellipse at 50% 50%, rgba(5,8,24,.1), rgba(5,8,24,.75) 100%); }
     .rc-void.gone .big { color:var(--rose); } .rc-void .gpic { position:absolute; left:.8rem; top:.7rem; bottom:.7rem; aspect-ratio:4 / 5; opacity:.55; filter:grayscale(1) brightness(.7); } .rc-void .gpic canvas { position:absolute; inset:0; width:100%; height:100%; }
     .rc-sec { position:absolute; inset:0; --ch:.6rem; display:flex; flex-direction:column; justify-content:space-between; padding:.6rem .85rem .65rem; isolation:isolate; background:linear-gradient(135deg, var(--brass-lo), #2a3260 40%, #2a3260 60%, var(--brass-lo)); }
@@ -214,9 +214,9 @@
     .rp-note { margin:.2rem 0 .6rem; padding:.5rem .8rem; border-left:3px solid var(--rose); background:rgba(255,92,106,.07); font-size:.98rem; } .rp-note b { color:var(--ivory); }
     /* nothing on file: one dossier card over their homeworld instead of six empty field boxes */
     .rp-dossier { --ch:.6rem; position:relative; flex:1 1 auto; min-height:12rem; overflow:hidden; display:flex; flex-direction:column; justify-content:flex-end; gap:.6rem; padding:1.2rem 1.4rem; background:#05070f; box-shadow:inset 0 0 0 1px rgba(214,179,106,.35); }
-    .rp-dossier > canvas { position:absolute; inset:0; width:100%; height:100%; object-fit:cover; filter:saturate(.75) brightness(.55); }
+    .rp-dossier > :is(canvas, img) { position:absolute; inset:0; width:100%; height:100%; object-fit:cover; filter:saturate(.75) brightness(.55); }
     .rp-dossier::before { content:""; position:absolute; inset:0; background:linear-gradient(180deg, rgba(3,5,14,.15) 30%, rgba(3,5,14,.88)); }
-    .rp-dossier > :not(canvas) { position:relative; }
+    .rp-dossier > :not(canvas, img) { position:relative; }
     .rp-dossier .k { font:400 .82rem var(--font-display); letter-spacing:.24em; text-transform:uppercase; color:var(--rose); }
     .rp-dossier .t { font:400 1.6rem/1.15 var(--font-title); color:var(--ivory); }
     .rp-dossier .d { max-width:40rem; color:#d5dbea; font-size:1rem; line-height:1.4; }
@@ -377,7 +377,7 @@
         } else if (kind === 'nocontact') { cell.el.appendChild(mkVoid('', 'No Contact', 'Not yet within range', 'galaxy')); cell.ref = { kind, emp, i }; }
         else {
           const v = mkVoid('', 'Not Present', '', null), WA = M.Gfx && M.Gfx.WorldArt, hp = WA && WA.enabled ? WA.race(me.race, 'homeworld-square') : null;   // the player's own world, dimmed, instead of an empty slab
-          if (hp) v.insertBefore(h('div.hw', WA.canvas(hp, 640, 400, { fx: 0.5, fy: 0.45 })), v.firstChild);
+          if (hp) v.insertBefore(h('div.hw', WA.image(hp, { fx: 0.5, fy: 0.45 })), v.firstChild);
           cell.el.appendChild(v); cell.ref = { kind, emp, i };
         }
         fitPics(R.el);
@@ -505,7 +505,7 @@
     if (data.rep) UI.clear(P.note);
     else {
       const WA = M.Gfx && M.Gfx.WorldArt, path = WA && WA.enabled ? WA.race(T.race, 'homeworld') : null, R = M.Data.Races && M.Data.Races[T.race];
-      if (P.dossKey !== path) { P.dossKey = path; P.dossArt = path ? WA.canvas(path, 960, 540, { fx: 0.5, fy: 0.45 }) : null; }
+      if (P.dossKey !== path) { P.dossKey = path; P.dossArt = path ? WA.image(path, { fx: 0.5, fy: 0.45 }) : null; }
       const toRaces = () => { UI.sfx('click'); if (P.from === 'races') goBack(null, P); else UI.Screens.go('races', { from: 'galaxy' }); };
       UI.mount(P.note, h('div.rp-dossier.ch', P.dossArt, R && R.homeworld ? h('div.hw', 'Homeworld · ' + R.homeworld) : null,
         h('div.k', 'No intelligence on file'), h('div.t', 'What the ' + T.name + ' know is still their secret'),

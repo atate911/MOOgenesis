@@ -6,7 +6,7 @@
   UI.css('side-misc', `
     .sm-card { display:flex; gap:.7rem; align-items:center; margin:.2rem 0 .55rem; padding:.45rem; background:rgba(0,0,0,.28); border:1px solid rgba(214,179,106,.28); }
     .sm-card.unexp { border-color:var(--rose); } .sm-card .un { font:400 1.3rem var(--font-display); color:var(--leaf); letter-spacing:.12em; }
-    .sm-pic { flex:none; width:5.2rem; height:5.2rem; } .sm-pic canvas { width:100%; height:100%; }
+    .sm-pic { flex:none; width:5.2rem; height:5.2rem; } .sm-pic :is(canvas, img) { width:100%; height:100%; }
     .sm-desc { margin:.4rem 0; color:var(--mist); font-size:.92rem; line-height:1.35; }
     .sm-range { margin:.5rem 0; padding:.35rem .6rem; border-left:3px solid var(--cyan); background:rgba(98,216,255,.07); }
     .sm-range.out { border-left-color:var(--rose); background:rgba(255,92,106,.07); }
@@ -19,7 +19,7 @@
     .sm-event p { color:var(--ivory); margin:.3rem 0; line-height:1.4; } .sm-event .flag { margin:.35rem 0; padding:.3rem .55rem; border-left:3px solid var(--ember); background:rgba(255,148,64,.08); font-size:.9rem; }
     .sm-event .flag.good { border-left-color:var(--leaf); background:rgba(95,220,143,.07); }
     .sm-card.wide { display:block; padding:0; position:relative; overflow:hidden; aspect-ratio:16 / 7; }
-    .sm-card.wide .sm-pic { width:100%; height:100%; } .sm-card.wide .sm-pic canvas { display:block; width:100%; height:100%; object-fit:cover; }
+    .sm-card.wide .sm-pic { width:100%; height:100%; } .sm-card.wide .sm-pic :is(canvas, img) { display:block; width:100%; height:100%; object-fit:cover; }
     .sm-card.wide .sc-info { position:absolute; right:.6rem; bottom:.45rem; z-index:1; text-align:right; text-shadow:0 1px 2px #000, 0 0 10px rgba(0,0,0,.9); }
     .sm-card.wide::after { content:''; position:absolute; inset:0; pointer-events:none; background:linear-gradient(180deg, rgba(0,0,0,0) 45%, rgba(0,0,0,.55) 100%); }
     .sm-flavor { margin:.35rem 0 .1rem; color:var(--mist); font-size:.88rem; line-height:1.4; font-style:italic; }
@@ -69,7 +69,7 @@
   }
   function planetPic(card, size, owner) {
     const WA = M.Gfx.WorldArt, art = WA && WA.enabled ? WA.orbit(card, M.Game && M.Game.S) : null;   // photoreal orbit card, else the procedural sprite
-    if (art) return h('div.sm-pic', WA.canvas(art, size * 2, size * 2, { fit: 'contain' }));
+    if (art) return h('div.sm-pic', WA.image(art, { fit: 'contain' }));
     const c = h('canvas', { width: size * 2, height: size * 2 });
     try {
       const P = M.Gfx.pick('planets'); const look = card.type === 'none' ? 'asteroids' : card.growth === 'gaia' ? 'gaia' : card.type;
@@ -203,7 +203,8 @@
   });
 
   // ---- generic event card (exploration, colonisation prompt, notices, pre-battle) ---------------------------------------------------------------------
-  //   UI.Flow.card({title, planetCard?, owner?, body:[strings|Nodes], flags:[{text,good}], buttons:[{label,value,primary}]}) → Promise(value)
+  //   UI.Flow.card({title, planetCard?, scene?, owner?, body:[strings|Nodes], flags:[{text,good}], buttons:[{label,value,primary}]}) → Promise(value)
+  //   scene: a WorldArt scene key shown in the planet box instead of the orbit plate (the colonise prompt: 'first-landing')
   let cardOffs = [];
   UI.Side.register('card', {
     render(host, ctx) {
@@ -212,8 +213,8 @@
       host.appendChild(p.star !== undefined ? UI.Side.title(p.star, p.ownerId) : h('div.side-title', h('span.nm', p.heading || '')));
       const body = h('div.sm-event');
       if (p.planetCard) {
-        const c = p.planetCard, WA = M.Gfx && M.Gfx.WorldArt, art = WA && WA.enabled ? WA.orbit(c, G.S) : null;     // the original's wide planet box: the orbit plate, else the sprite
-        body.appendChild(h('div.sm-card' + (art ? '.wide' : ''), art ? h('div.sm-pic', WA.canvas(art, 560, 245, { fx: 0.5, fy: 0.5 })) : planetPic(c, 44, p.ownerId),
+        const c = p.planetCard, WA = M.Gfx && M.Gfx.WorldArt, art = WA && WA.enabled ? (p.scene && WA.scene(p.scene)) || WA.orbit(c, G.S) : null;     // the original's wide planet box: the card's scene (colonise: the landing) or the orbit plate, else the sprite
+        body.appendChild(h('div.sm-card' + (art ? '.wide' : ''), art ? h('div.sm-pic', WA.image(art, { fx: 0.5, fy: p.scene ? 0.45 : 0.5 })) : planetPic(c, 44, p.ownerId),
           h('div.sc-info', h('div', h('span.cls', { style: { font: '400 1.2rem var(--font-display)', color: 'var(--brass-hi)' } }, c.typeLabel), c.growthLabel ? h('span.chip' + (c.growth === 'hostile' ? '.warn' : '.ok'), { style: { marginLeft: '.4rem' } }, c.growthLabel) : null),
             c.type !== 'none' ? h('div', 'POP ', h('b.t-leaf', c.maxPop), ' max') : h('div.dim', 'No habitable planet'), c.specialLabel ? h('div.t-cyan.small', c.specialLabel) : null)));
       }

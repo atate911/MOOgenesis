@@ -33,7 +33,7 @@
     .lf-scrapmode .lf-h:not(.none):not(.st):hover { background:rgba(255,92,106,.24); }
     .lf-st { display:flex; align-items:center; gap:.75rem; padding:.45rem .6rem .45rem .9rem; min-width:0; }
     .lf-pic { flex:none; width:3.7rem; height:3.7rem; display:grid; place-items:center; position:relative; }
-    .lf-pic canvas { width:100%; height:100%; }
+    .lf-pic :is(canvas, img) { width:100%; height:100%; }
     .lf-pic.mv { width:3.7rem; height:3.1rem; background:radial-gradient(circle at 30% 40%, #1a2468, #070b24 75%); box-shadow:inset 0 0 0 1px rgba(214,179,106,.4); }
     .lf-pic.mv canvas { width:100%; height:100%; }
     .lf-info { min-width:0; line-height:1.2; } .lf-info .nm { font:400 1.12rem var(--font-title); color:var(--brass-hi); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
@@ -81,7 +81,7 @@
     .lf-sheet { padding:.7rem .9rem .8rem; background:linear-gradient(135deg, var(--bz-hi), var(--bz-md) 18%, #6d5645 60%, var(--bz-lo)); box-shadow:inset 1px 1px 0 rgba(255,235,200,.35), inset -1px -1px 0 rgba(0,0,0,.65), 0 0 0 1px #000, 0 10px 40px rgba(0,0,0,.6); }
     .lf-sheet::before, .lf-sheet::after { display:none; }
     .lf-head { border-bottom:0; padding-bottom:.4rem; }
-    .lf-title { color:#ffd36a; text-shadow:0 1px 0 #2f1a0c, 0 2px 0 rgba(0,0,0,.5), 0 0 22px rgba(232,200,80,.2); font:400 1.85rem/1 var(--font-display); letter-spacing:.06em; text-transform:uppercase; }   /* one title style on every tool screen (Research, Races, Stats) */
+    .lf-title { color:var(--title-hi); text-shadow:var(--title-shadow); font:400 1.85rem/1 var(--font-display); letter-spacing:.06em; text-transform:uppercase; }   /* one title style on every tool screen (Research, Races, Stats) */
     .lf-h.none .nm { color:var(--bz-pale); opacity:.45; }                                                   /* an empty design slot's column reads as empty, not as a design */
     .lf-sub { color:#ead4b0; } .lf-sub b { color:var(--bz-pale); }
     .lf-body { background:#2f231a; box-shadow:inset 1px 1px 3px rgba(0,0,0,.9), 0 0 0 1px rgba(0,0,0,.7), 0 1px 0 1px rgba(255,235,200,.15); }
@@ -94,7 +94,7 @@
     .lf-cell { border-left-color:rgba(0,0,0,.5); box-shadow:inset 1px 0 0 rgba(255,235,200,.06); background:var(--bz-slot); }
     .lf-cell canvas { background:radial-gradient(ellipse at 50% 40%, #3b2e22 0%, #1d1610 100%); margin:.15rem; width:calc(100% - .3rem); box-shadow:inset 1px 1px 3px rgba(0,0,0,.8), inset -1px -1px 0 rgba(255,235,200,.12), 0 0 0 1px rgba(255,235,200,.22); }
     .lf-n { background:transparent; border:0; clip-path:none; color:#f0e060; text-shadow:0 1px 0 #000, 0 0 3px #000; font-family:var(--font-mono, monospace); }
-    .lf-pic.mv { background:radial-gradient(ellipse at 50% 40%, #3b2e22 0%, #1d1610 100%); box-shadow:inset 0 0 0 1px rgba(0,0,0,.9), 0 0 0 1px rgba(255,235,200,.18); }
+    .lf-pic, .lf-pic.mv { background:radial-gradient(ellipse at 50% 40%, #3b2e22 0%, #1d1610 100%); box-shadow:inset 0 0 0 1px rgba(0,0,0,.9), 0 0 0 1px rgba(255,235,200,.18); }   /* one tile for planet and moving-fleet thumbnails (and the Planets ledger's) */
     .lf-info .nm { color:var(--bz-gold); } .lf-info .stt { color:#ead4b0; }
     .lf-maint { background:#3a2c21; border:0; box-shadow:inset 1px 1px 3px rgba(0,0,0,.9), 0 0 0 1px rgba(255,235,200,.14); }
     .lf-maint .k { color:var(--bz-pale); } .lf-maint b, .lf-maint .u { color:#f0e060; }
@@ -127,21 +127,24 @@
   }
   // ship sprite on its own canvas (backing store w × hh px, contain-fit); the CSS box is set by the caller's class
   const HULL_FIT = [0.56, 0.68, 0.8, 0.9];          // share of the canvas width a Small / Medium / Large / Huge hull fills: keeps the size hierarchy readable
+  const HULL_FIT_H = [0.74, 0.82, 0.9, 0.96];       // share of its height (looser: the cells are short and wide, a long thin hull must not be shrunk by the height rule)
   function shipCanvas(E, slot, w, hh) {
     const c = h('canvas', { width: w, height: hh }), d = E.designs[slot];
     if (!d) return c;
     try {
-      const st = M.Sim.Design.stats(G.S, E, slot), hull = Math.max(0, Math.min(3, d.hull | 0));
-      const size = Math.round(w * HULL_FIT[hull]);
-      const sp = M.Gfx.Ships.sprite(E.race, hull, size, empCol(E), shipFlags(st), M.Gfx.Ships.designKey ? M.Gfx.Ships.designKey(E.id, slot, d.name) : null);
-      const k = Math.min(w / sp.width, hh / sp.height, 1.6), x = c.getContext('2d');
+      const st = M.Sim.Design.stats(G.S, E, slot), hull = Math.max(0, Math.min(3, d.hull | 0)), f = HULL_FIT[hull];
+      const col = empCol(E), flags = shipFlags(st), vk = M.Gfx.Ships.designKey ? M.Gfx.Ships.designKey(E.id, slot, d.name) : null;
+      const probe = M.Gfx.Ships.sprite(E.race, hull, 64, col, flags, vk);                                          // a small render (cached) tells the hull's aspect
+      const size = Math.max(8, Math.round(64 * Math.min(w * f / probe.width, hh * HULL_FIT_H[hull] / probe.height)));   // the hull's share of the box on both axes, so the hierarchy holds whatever the box's shape
+      const sp = M.Gfx.Ships.sprite(E.race, hull, size, col, flags, vk);
+      const k = Math.min(w / sp.width, hh / sp.height, 1), x = c.getContext('2d');                              // never upscaled: rendered at its own size, so it stays sharp
       x.drawImage(sp, (w - sp.width * k) / 2, (hh - sp.height * k) / 2, sp.width * k, sp.height * k);
     } catch (e) { /* art is optional */ }
     return c;
   }
   function planetPic(p, size) {
     const WA = M.Gfx && M.Gfx.WorldArt, path = WA && WA.enabled ? WA.orbit(p, G.S) : null;     // the orbit plate, else the planet sprite
-    if (path) return WA.canvas(path, size, size, { fx: 0.5, fy: 0.5 });
+    if (path) return WA.image(path, { fx: 0.5, fy: 0.5 });
     const c = h('canvas', { width: size, height: size });
     try {
       const look = p.type === 'none' ? 'asteroids' : (p.growth === 'gaia' ? 'gaia' : p.type);
@@ -259,7 +262,7 @@
       });
       grid.appendChild(head);
       if (!d.rows.length) grid.appendChild(h('div.lf-empty', 'You have no ships. Build some at a colony with the Ships button.'));
-      const px = Math.round(120 * dpr() / 1.5), cw = Math.round(220 * dpr() / 1.5), ch = Math.round(120 * dpr() / 1.5);
+      const px = Math.round(120 * dpr() / 1.5), cells = [];
       for (const r of d.rows) {
         const sub = r.moving ? h('span.stt', 'moving · ', h('b', 'ETA ' + r.eta + (r.eta === 1 ? ' turn' : ' turns')))
           : h('span.stt', 'in orbit', r.colony ? h('span.own', ' · your colony') : r.foe ? h('span.foe', ' · ' + G.S.empires[G.S.planets[r.star].owner].plural + ' colony') : null);
@@ -268,7 +271,9 @@
           h('div.lf-st', pic, h('div.lf-info', h('div.nm', r.moving ? (r.known ? '→ ' + r.name : '→ Unknown system') : r.name), sub)));
         d.designs.forEach(x => {
           const n = r.ships[x.slot] | 0;
-          row.appendChild(h('div.lf-cell', n > 0 && !x.empty ? [shipCanvas(E, x.slot, cw, ch), h('span.lf-n', U.fmt(n))] : null));
+          const cell = h('div.lf-cell', n > 0 && !x.empty ? h('span.lf-n', U.fmt(n)) : null);
+          if (n > 0 && !x.empty) cells.push({ cell, slot: x.slot });
+          row.appendChild(cell);
         });
         grid.appendChild(row);
       }
@@ -276,6 +281,13 @@
       d.designs.forEach(x => tot.appendChild(h('div.lf-total', x.empty ? null : h('span.v', U.fmt(x.count)))));
       grid.appendChild(tot);
       UI.mount(body, grid);
+      // the ship pictures are painted at the size of the cell they sit in (device pixels, measured after mount), so no cell is ever
+      // an upscaled smaller bitmap; off-screen (no layout yet) the old fixed store is used
+      if (cells.length) {
+        const r = cells[0].cell.getBoundingClientRect(), rem = parseFloat(getComputedStyle(document.documentElement).fontSize) || 16, k = dpr();
+        const cw = r.width > 20 ? Math.round((r.width - 0.3 * rem) * k) : Math.round(220 * k / 1.5), ch = r.width > 20 ? Math.round(3.6 * rem * k) : Math.round(120 * k / 1.5);
+        for (const c of cells) c.cell.insertBefore(shipCanvas(E, c.slot, cw, ch), c.cell.firstChild);
+      }
     }
     const scrapTip = x => (st.scrap ? 'Scrap the <b>' + x.name + '</b>' : null);
 

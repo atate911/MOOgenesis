@@ -507,8 +507,8 @@
     .gmap .gmap-legend.panel { position:absolute; left:.75rem; bottom:2.7rem; z-index:3; width:16rem; max-height:70%; overflow:hidden; transition:opacity .25s; }
     .gmap .gmap-legend.off { opacity:0; pointer-events:none; }
     .gmap-legend .gl-h { display:flex; align-items:baseline; justify-content:space-between; gap:.5rem; padding-bottom:.3rem; margin-bottom:.35rem; border-bottom:1px solid rgba(214,179,106,.28);
-      font:400 1.02rem var(--font-display); color:var(--brass-hi); letter-spacing:.04em; }
-    .gmap-legend .gl-h small { font:400 .74rem var(--font-ui); color:var(--mist); letter-spacing:0; }
+      font:400 1.02rem var(--font-display); color:var(--brass-hi); letter-spacing:.06em; text-transform:uppercase; }
+    .gmap-legend .gl-h small { font:400 .74rem var(--font-ui); color:var(--mist); letter-spacing:0; text-transform:none; }
     .gmap-legend .gl-row { display:flex; align-items:center; gap:.55rem; padding:.1rem 0; font-size:.86rem; color:var(--ivory); line-height:1.15; }
     .gmap-legend .gl-row.dim { opacity:.45; }
     .gmap-legend .gl-sw { flex:none; width:.78rem; height:.78rem; background:var(--c); box-shadow:0 0 7px var(--c); transform:rotate(45deg) scale(.86); }

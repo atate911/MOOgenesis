@@ -1033,7 +1033,7 @@
       sfx(bad ? 'alert' : 'confirm', { vol: 0.7 });
       const WA = M.Gfx && M.Gfx.WorldArt, apath = WA && WA.enabled && EVENT_ART[it.kind] && (it.stage === 'destroyed' ? WA.event('planet-destroyed') : WA.event(EVENT_ART[it.kind]));
       const plate = apath ? h('div', { style: { margin: '-.2rem 0 .8rem', borderRadius: '2px', overflow: 'hidden', boxShadow: '0 0 0 1px rgba(0,0,0,.6), 0 6px 18px rgba(0,0,0,.45)', aspectRatio: '460 / 200', background: '#05070f' } },
-        Object.assign(WA.canvas(apath, 920, 400, { fx: 0.5, fy: 0.45 }), { style: 'display:block;width:100%;height:100%' })) : null;
+        WA.image(apath, { fx: 0.5, fy: 0.45 })) : null;
       return UI.modal({ title: (EVENT_TITLE[it.kind] || 'Event') + (p ? ' — ' + planetName(S, p) : ''), cls: 'ld-event', width: apath ? '32rem' : '30rem', buttons,
         body: h('div', plate, h('div', { style: { display: 'flex', gap: '.8rem', alignItems: 'flex-start' } }, h('div', { style: { color: bad ? 'var(--rose)' : 'var(--leaf)', width: '2.6rem', height: '2.6rem', flex: 'none' } }, UI.icon(EVENT_ICON[it.kind] || 'event')), h('p', { style: { lineHeight: 1.45, margin: 0 } }, it.text || ''))) })
         .then(v => { if (v === 'cure' && p) G.order({ t: 'eventCure', planet: p.id }); return v; });

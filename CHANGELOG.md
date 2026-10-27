@@ -35,6 +35,17 @@ Versions follow `MAJOR.MINOR.PATCH`; the live version is the `VERSION` file.
   carry names, and the colonisation glyphs show only on stars a colony ship can reach this turn. Zoom in and every explored star is named
   and marked as before. A colony has one owner ring instead of a ring and a faint echo, the scan ring sits under the range ring in weight
   and its radar sweep is gone, and the map's control column reads as two groups (view, layers).
+- Harmony and art pass. One gold for every tool screen's title (Research, Races and the Report had a more orange one than Fleets,
+  Planets and the Galaxy Map), one orange for every box title (the Planets ledger's Spending costs, Total income and Reserve were mint),
+  and every slider readout on every screen is the same yellow in its slot (the colony panel's; Research, Options, Races and the Planets
+  ledger showed lime-green). The map key's title and the Galaxy Map screen's box titles take the caps of their siblings, and the Fleets
+  ledger's planet thumbnails sit in the same recessed tile as the Planets ledger's. Art: the planet pictures and plates in the side
+  panels and ledgers, on the Races screen, the Report, the New game race card and the event cards were fixed-size bitmaps that the
+  browser then scaled (soft on a 2x screen and at a large interface scale); they are now images the browser fits itself, sharp at any
+  scale and decoded once. The ship pictures in the Fleets ledger and on the pre-battle card were small bitmaps enlarged up to 1.6x (the
+  fuzz): they are drawn at the size of the cell they sit in, and the Small / Medium / Large / Huge hierarchy holds on both axes whatever
+  the cell's shape. The "Build a new colony?" card shows the colony ship coming down (art that was never used) instead of the orbit
+  plate the scout's report already showed.
 - Title screen. The world in the corner turns smoothly and visibly: its axis now tilts away from the viewer so mid-latitudes sweep
   past instead of a polar cap turning in place, one turn takes about a minute, the sun sits low on the galaxy's side so the terminator, the
   night-side city lights and the cloud shadows cross the visible half, and it drifts a little against the galaxy's slow zoom. Clouds on

@@ -34,7 +34,7 @@
     .lp-tbl tfoot td { position:sticky; bottom:0; padding:.4rem .65rem; background:#0d1540; border-top:1px solid rgba(214,179,106,.45); border-bottom:0; font-weight:600; color:var(--ivory); }
     .lp-tbl tfoot td.nm { font-family:var(--font-display); font-size:.95rem; letter-spacing:.07em; color:var(--brass); }
     .lp-nm { display:inline-flex; align-items:center; gap:.5rem; }
-    .lp-orb { flex:none; width:2.75rem; height:1.75rem; display:block; box-shadow:0 0 0 1px rgba(0,0,0,.8), 0 0 6px rgba(0,0,0,.5); background:#06080f; } .lp-orb canvas { display:block; width:100%; height:100%; }
+    .lp-orb { flex:none; width:2.75rem; height:1.75rem; display:block; box-shadow:0 0 0 1px rgba(0,0,0,.8), 0 0 6px rgba(0,0,0,.5); background:#06080f; } .lp-orb :is(canvas, img) { display:block; width:100%; height:100%; }
     .lp-dot { flex:none; width:.95rem; height:.95rem; border-radius:50%; background:radial-gradient(circle at 32% 30%, #fff9, var(--c) 42%, color-mix(in srgb, var(--c) 35%, #000) 100%); box-shadow:0 0 7px color-mix(in srgb, var(--c) 55%, transparent); }
     .lp-cap { width:.95em; height:.95em; color:var(--gold); }
     .lp-pop { position:relative; display:inline-flex; align-items:baseline; gap:.45rem; min-width:6.5rem; padding-bottom:.18rem; }
@@ -72,7 +72,7 @@
     .lp-sheet { padding:.7rem .9rem .8rem; background:linear-gradient(135deg, var(--bz-hi), var(--bz-md) 18%, #6d5645 60%, var(--bz-lo)); box-shadow:inset 1px 1px 0 rgba(255,235,200,.35), inset -1px -1px 0 rgba(0,0,0,.65), 0 0 0 1px #000, 0 10px 40px rgba(0,0,0,.6); }
     .lp-sheet::before, .lp-sheet::after { display:none; }
     .lp-head { border-bottom:0; padding-bottom:.4rem; }
-    .lp-title { color:#ffd36a; text-shadow:0 1px 0 #2f1a0c, 0 2px 0 rgba(0,0,0,.5), 0 0 22px rgba(232,200,80,.2); font:400 1.85rem/1 var(--font-display); letter-spacing:.06em; text-transform:uppercase; }   /* one title style on every tool screen */
+    .lp-title { color:var(--title-hi); text-shadow:var(--title-shadow); font:400 1.85rem/1 var(--font-display); letter-spacing:.06em; text-transform:uppercase; }   /* one title style on every tool screen */
     .lp-sub { color:#f0dcc0; font-size:1.05rem; } .lp-sub b { color:var(--bz-pale); }
     .lp-tablewrap { background:#2f231a; box-shadow:inset 1px 1px 3px rgba(0,0,0,.9), 0 0 0 1px rgba(0,0,0,.7), 0 1px 0 1px rgba(255,235,200,.15); }
     .lp-tablewrap { background:linear-gradient(180deg, #2f231a 0%, rgba(47,35,26,.95) 22%, rgba(47,35,26,.84) 100%), url('assets/art/scene/scene-galaxy.webp') 50% 60% / cover no-repeat #2f231a; }   /* a faint chart under the rows: an early ledger is mostly empty (phones: css/phone.css keeps the plain slot) */
@@ -90,7 +90,7 @@
     .lp-fill { background:linear-gradient(90deg, #4aa84a, var(--bz-lime, #70e060)); box-shadow:none; }
     .lp-box { clip-path:none; padding:.45rem .7rem .55rem; background:linear-gradient(135deg, var(--bz-hi), var(--bz-md) 25%, var(--bz-lo)); box-shadow:inset 1px 1px 0 rgba(255,235,200,.3), inset -1px -1px 0 rgba(0,0,0,.6), 0 0 0 1px #000; }
     .lp-box::before { inset:.2rem; clip-path:none; background:#3a2c21; box-shadow:inset 1px 1px 2px rgba(0,0,0,.9), 0 0 0 1px rgba(255,235,200,.12); }
-    .lp-bt { margin:0 0 .35rem; padding:0 0 .25rem; border-bottom:1px solid rgba(255,235,200,.14); font:600 .95rem var(--font-display); letter-spacing:.1em; color:#6ae6c4; }
+    .lp-bt { margin:0 0 .35rem; padding:0 0 .25rem; border-bottom:1px solid rgba(255,235,200,.14); font:600 .95rem var(--font-display); letter-spacing:.1em; color:var(--head-orange); text-shadow:0 1px 0 #000; }   /* the orange box-title tier of Map Key and Research */
     .lp-line .k { color:#f0b868; font-weight:600; font-size:.9rem; letter-spacing:.06em; text-transform:uppercase; } .lp-line .v { color:var(--bz-pale); }
     .lp-reserve b { color:var(--bz-gold); text-shadow:0 1px 0 #6b4f12; } .lp-reserve span { color:var(--bz-gold); }
     .lp-btns .btn { clip-path:none; background:rgba(0,0,0,.85); box-shadow:none; color:#fff; text-shadow:0 1px 0 #000; font:600 .85rem var(--font-display); letter-spacing:.12em; text-transform:uppercase; }
@@ -146,7 +146,7 @@
   // the orbit plate as a small landscape thumbnail (Gfx.WorldArt), else the coloured type dot
   function orbThumb(r) {
     const WA = M.Gfx && M.Gfx.WorldArt, path = WA && WA.enabled ? WA.orbit({ type: r.type, growth: r.growthClass, special: r.special }, G.S) : null;
-    if (path) return h('span.lp-orb', WA.canvas(path, 88, 56, { fx: 0.5, fy: 0.5 }));
+    if (path) return h('span.lp-orb', WA.image(path, { fx: 0.5, fy: 0.5 }));
     return h('i.lp-dot', { style: { '--c': TYPE_COL[r.growthClass === 'gaia' ? 'gaia' : r.type] || '#889' } });
   }
   const COLS = [

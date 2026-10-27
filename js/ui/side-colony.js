@@ -7,11 +7,11 @@
   UI.css('side-colony', `
     .sc-card { display:flex; gap:.7rem; align-items:center; margin-bottom:.5rem; padding:.45rem; background:rgba(0,0,0,.28); border:1px solid rgba(214,179,106,.28); }
     .sc-card.wide { display:block; padding:0; position:relative; overflow:hidden; aspect-ratio:16 / 7; }
-    .sc-card.wide .sc-pic { width:100%; height:100%; filter:none; } .sc-card.wide .sc-pic canvas { display:block; object-fit:cover; }
+    .sc-card.wide .sc-pic { width:100%; height:100%; filter:none; } .sc-card.wide .sc-pic :is(canvas, img) { display:block; object-fit:cover; }
     .sc-card.wide .sc-info { position:absolute; right:.6rem; bottom:.45rem; text-align:right; text-shadow:0 1px 2px #000, 0 0 10px rgba(0,0,0,.9); }
     .sc-card.wide::after { content:''; position:absolute; inset:0; pointer-events:none; background:linear-gradient(180deg, rgba(0,0,0,0) 45%, rgba(0,0,0,.55) 100%); }
     .sc-card.wide .sc-info { z-index:1; }
-    .sc-pic { flex:none; width:5.6rem; height:5.6rem; display:grid; place-items:center; } .sc-pic canvas { width:100%; height:100%; }
+    .sc-pic { flex:none; width:5.6rem; height:5.6rem; display:grid; place-items:center; } .sc-pic :is(canvas, img) { width:100%; height:100%; }
     .sc-info { flex:1; min-width:0; line-height:1.25; }
     .sc-info .cls { font:400 1.25rem var(--font-display); color:var(--brass-hi); }
     .sc-info .tag { display:inline-block; margin-left:.4rem; padding:0 .4em; font-size:.74rem; color:var(--ember); border:1px solid var(--ember); }
@@ -27,7 +27,7 @@
     .sc-sliders .s-label small { color:var(--mist); margin-left:.25rem; font-size:.72rem; }
     .sc-build { display:grid; grid-template-columns: 1fr auto; gap:.5rem; align-items:stretch; margin-top:.2rem; }
     .sc-bbox { display:flex; align-items:center; gap:.5rem; padding:.35rem .5rem; cursor:var(--hand); background:rgba(0,0,0,.3); border:1px solid var(--brass-lo); min-height:4rem; position:relative; overflow:hidden; }
-    .sc-bbox .yard { position:absolute; inset:0; z-index:0; pointer-events:none; filter:brightness(.45) saturate(.8); } .sc-bbox .yard canvas { display:block; width:100%; height:100%; }
+    .sc-bbox .yard { position:absolute; inset:0; z-index:0; pointer-events:none; filter:brightness(.45) saturate(.8); } .sc-bbox .yard :is(canvas, img) { display:block; width:100%; height:100%; }
     .sc-bbox .yard::after { content:""; position:absolute; inset:0; background:linear-gradient(90deg, rgba(0,0,0,.15), rgba(0,0,0,.6)); }
     .sc-bbox > :not(.yard) { position:relative; z-index:1; }
     .sc-bbox:hover { border-color:var(--brass-hi); background:rgba(214,179,106,.08); }
@@ -59,7 +59,7 @@
        and a note's .4 against its neighbours) so nothing above the postcard moves */
     :root:not([data-phone]) .gx-sidebody:has(> .sc-post) > :is(.sc-stats, .sc-sliders, .sc-build), :root:not([data-phone]) .gx-sidebody:has(> .sc-post) .sc-note { margin-top:0; }
     :root:not([data-phone]) .gx-sidebody:has(> .sc-post) > .sc-post { flex:1 1 0; min-height:0; aspect-ratio:auto; max-height:26rem; }
-    .sc-post > canvas { position:absolute; inset:0; width:100%; height:100%; object-fit:cover; object-position:50% 60%; }
+    .sc-post > :is(canvas, img) { position:absolute; inset:0; width:100%; height:100%; object-fit:cover; object-position:50% 60%; }
     .sc-post::after { content:""; position:absolute; inset:0; pointer-events:none; box-shadow:inset 0 0 0 1px rgba(214,179,106,.3), inset 0 0 2.5rem rgba(0,0,0,.55);
       background:linear-gradient(180deg, rgba(0,0,0,.5), rgba(0,0,0,0) 30%, rgba(0,0,0,0) 55%, rgba(0,0,0,.75)); }
     .sc-pc { position:absolute; left:.65rem; top:.45rem; right:.65rem; z-index:1; line-height:1.25; text-shadow:0 1px 2px #000, 0 0 8px rgba(0,0,0,.9); }
@@ -70,7 +70,7 @@
     .sc-oc:hover { border-color:#f0d048; background:rgba(40,32,12,.9); } .sc-oc canvas { width:3.2rem; height:1.9rem; }
     .sc-oc.foe { border-color:rgba(255,92,106,.65); color:#ffc2b8; cursor:default; } .sc-oc.none { cursor:default; color:#aab3c0; border-color:rgba(255,255,255,.18); font-weight:400; padding-left:.4rem; }
     @container (max-height: 5.5rem) { .sc-pc { display:none; } }
-    @container (max-height: 3.2rem) { .sc-orb, .sc-post > canvas { display:none; } }
+    @container (max-height: 3.2rem) { .sc-orb, .sc-post > :is(canvas, img) { display:none; } }
   `);
 
   const bump = css => css.replace(/(^|[}])([^{}]*)[{]/g, (m, a, sel) => a + sel.replace(/[/][*][^]*?[*][/]/g, '').split(',').map(s => s.trim()).filter(Boolean).map(s => ':root:root ' + s).join(', ') + ' {');   // raise specificity over the theme-v2 .panel/.btn rules
@@ -134,7 +134,7 @@
 
   function planetCanvas(card, size) {
     const WA = M.Gfx && M.Gfx.WorldArt, art = WA && WA.enabled ? WA.orbit(card, M.Game && M.Game.S) : null;   // photoreal orbit card, else the procedural sprite
-    if (art) return WA.canvas(art, size * 2, size * 2, { fit: 'contain' });
+    if (art) return WA.image(art, { fit: 'contain' });
     const c = h('canvas', { width: size * 2, height: size * 2 });
     const look = card.type === 'none' ? 'asteroids' : (card.growth === 'gaia' ? 'gaia' : card.type);
     const P = M.Gfx && M.Gfx.pick('planets');
@@ -153,7 +153,7 @@
   function yardPlate() {
     const WA = M.Gfx && M.Gfx.WorldArt; if (!WA || !WA.enabled) return null;
     const still = WA.still('inst-spaceport'), path = still && WA.get(still) ? still : 'colony/colony-industrial';
-    return h('div.yard', WA.canvas(path, 320, 100, { fx: 0.5, fy: 0.55 }));
+    return h('div.yard', WA.image(path, { fx: 0.5, fy: 0.55 }));
   }
 
   // ------------------------------------------------------------------------------------------------------------------------------------------------
@@ -195,7 +195,7 @@
         st.cardKey = key;
         const WA = M.Gfx && M.Gfx.WorldArt, art = WA && WA.enabled ? WA.orbit(c, G.S) : null;
         st.card.classList.toggle('wide', !!art);                                          // the original's wide landscape planet box, with the photoreal orbit plate
-        st.picHost = h('div.sc-pic', art ? WA.canvas(art, 560, 245, { fx: 0.5, fy: 0.5 }) : planetCanvas(c, 52));   // WA.canvas paints itself when the plate lands
+        st.picHost = h('div.sc-pic', art ? WA.image(art, { fx: 0.5, fy: 0.5 }) : planetCanvas(c, 52));   // an <img>: sharp at any pixel ratio, fills in when the plate lands
       }
       UI.mount(st.card, st.picHost, h('div.sc-info',
         h('div', h('span.cls', c.typeLabel), c.growthLabel ? h('span.tag' + (c.growth === 'hostile' ? '' : '.good'), c.growthLabel) : null, c.specialLabel ? h('span.tag.cy', c.specialLabel) : null),
@@ -241,7 +241,7 @@
     if (UI.Phone && UI.Phone.active()) return;
     const S = G.S, WA = M.Gfx && M.Gfx.WorldArt;
     const path = WA && WA.enabled && WA.colony ? WA.colony(c, { fortified: c.bases >= 8 || c.shield >= 10, polluted: c.waste > 0 && c.readouts.eco.text === 'WASTE', industrial: c.factories >= 120 }) : null;
-    if (st.postKey !== path) { st.postKey = path; st.postArt = path ? WA.canvas(path, 640, 300, { fx: 0.5, fy: 0.6 }) : null; }
+    if (st.postKey !== path) { st.postKey = path; st.postArt = path ? WA.image(path, { fx: 0.5, fy: 0.6 }) : null; }
     if (!st.postArt) { UI.clear(st.post); st.post.style.display = 'none'; return; }
     st.post.style.display = '';
     const capital = E.capital === c.id, pop = U.fmt(c.pop) + ' million ' + (c.pop === 1 ? 'colonist' : 'colonists');
