@@ -49,7 +49,8 @@
 //   hostileGrowth     flag       hostile worlds grow at the normal rate       growthPct  percent  + natural growth
 //   terraformCostDelta  BC       terraforming is this much cheaper per point of max population
 //   seedFertile       flag       new colonies on normal worlds are founded fertile
-//   beaconWarp        warp       fleets and transports moving between two of your colonies fly faster      warpBonus  warp  every fleet
+//   beaconWarp        warp       fleets and transports moving between two of your colonies fly faster      homeWarp  warp  every fleet bound for
+//                                one of your colonies (reinforcements, rallies, coming home; never an attack, which the AI times badly when faster)
 //   snare             warp       hostile fleets bound for your colonies slow down within 4 parsecs (never below warp 1)            sim/fleet.js
 //   evacuate          percent    of the population of a colony you lose escapes to your nearest colony with room                       sim/ground.js
 MOO.def(function (M) {
@@ -195,9 +196,9 @@ MOO.def(function (M) {
     { l: 39, id: 'lifeboat-protocols', n: 'Lifeboat Protocols', ty: 'logistics', fx: { evacuate: 30 }, tags: ['resilience'],
       d: 'Evacuation fleets stand ready at every colony, so some of its people escape when a world falls.',
       say: [['Lost colonies', '30% of the population escapes to your nearest colony with room']] },
-    { l: 44, id: 'slipstream-drives', n: 'Slipstream Drives', ty: 'engine', fx: { warpBonus: 1 }, tags: ['logistics'],
-      d: 'Drives that ride the wake of the engines ahead, pushing every fleet faster than its engines.',
-      say: [['Fleet speed', '+1 warp']] },
+    { l: 44, id: 'slipstream-drives', n: 'Slipstream Drives', ty: 'engine', fx: { homeWarp: 1 }, tags: ['logistics', 'defence'],
+      d: 'Slipstream currents laid along your space: every fleet bound for one of your colonies flies faster.',
+      say: [['Fleets bound for your colonies', '+1 warp']] },
     { l: 47, id: 'hyperlane-transports', n: 'Hyperlane Transports', ty: 'logistics', fx: { transBonus: 3 }, tags: ['logistics', 'offence'],
       d: 'Dedicated hyperlane carriers that rush colonists and troops between the stars.',
       say: [['Transports', '+3 parsecs per turn']] },
@@ -219,7 +220,7 @@ MOO.def(function (M) {
   const KEYS = ['survey', 'xcomp', 'xmdef', 'xabsorb', 'xmisshield', 'xspeed', 'xinit', 'warheadPct', 'mines', 'baseCompX', 'baseHpPct', 'baseCostPct', 'spyOff',
     'spyCostPct', 'reserveInterest', 'posAct', 'councilBonus', 'rpTreaty', 'researchInterest', 'colonyPop', 'colonyFac', 'asteroid', 'workerPct', 'groundDef', 'groundOff',
     'salvage', 'reverseEng', 'escape', 'shipUpkeepPct', 'shipCostPct', 'colonyShipCostPct', 'bombPct', 'bombDefPct', 'gauntletPct', 'gauntletOwnPct', 'siegeFloor',
-    'arcology', 'domes', 'smallWorld', 'hostileGrowth', 'growthPct', 'terraformCostDelta', 'seedFertile', 'beaconWarp', 'warpBonus', 'snare', 'evacuate', 'fuelBonus',
+    'arcology', 'domes', 'smallWorld', 'hostileGrowth', 'growthPct', 'terraformCostDelta', 'seedFertile', 'beaconWarp', 'homeWarp', 'snare', 'evacuate', 'fuelBonus',
     'transBonus'];
 
   function make(f, r) {

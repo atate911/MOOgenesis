@@ -145,7 +145,7 @@ MOO.def(function (M) {
     }
     if (!any) return O.fail('no ships selected');
     if (!F.canReach(S, E, toStar, withTanks)) return O.fail('out of range');
-    if (E.mods && (E.mods.warpBonus || E.mods.beaconWarp) && M.Sim.XTech) speed = M.Sim.XTech.warpFor(S, E, fromStar, toStar, speed);   // expansion: slipstream / beacons
+    if (E.mods && (E.mods.homeWarp || E.mods.beaconWarp) && M.Sim.XTech) speed = M.Sim.XTech.warpFor(S, E, fromStar, toStar, speed);   // expansion: slipstream / beacons
     // the quickest route, through the empire's stargates when that saves turns: the fleet flies its first leg, the rest wait in f.legs
     const plan = F.plan(S, E, fromStar, toStar, speed), first = plan.legs[0], warp = speed;
     speed = first.gate ? STARGATE_SPEED : warp;

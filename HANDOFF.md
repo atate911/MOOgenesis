@@ -7,6 +7,13 @@ Docs: `PROGRESS.md` (plan/status/25-feature acceptance checklist) · `CONVENTION
 Commands: `node tools/check.js` (syntax of every manifest file) · `node tools/rules-test.js [area]` · `node tools/soak.js` (24-thread AI-vs-AI soak/balance; `tools/SOAK.md`) · `node tools/headless.js`.
 Browser-pane tip: animations use requestAnimationFrame, so in the built-in browser pane a tab must be fronted (`tabs_select`) for anything animated (GNN, audiences, scenes, combat) to advance.
 
+## Session 9 (October 2026) — Tech Lab, branch `claude/tech-lab`
+`tools/handoff/techlab-2026-10.md`: an Expanded technology option (New game › Remake options, off by default) that adds 45 new techs to the pool
+research trees are dealt from, without changing tree sizes (`js/data/techs-x.js`, effects in `js/sim/xtech.js` + guarded hooks; classic games
+byte-identical). Sixty candidates went through a measurement lab (`tools/techlab/`: combat calibration, twin trials against every classic tech,
+whole-game leagues and ablations; results in `tools/techlab/REPORT.md`, design in `briefs/tech-lab.md`); 15 cut, 4 moved, Slipstream Drives
+retuned. Pace and economy hold within about 2 %; AI empires fight about 22 % more battles. Open: a human playtest of an expanded game.
+
 ## Session 8 (October 2026) — polish pass, branch `claude/polish-pass`
 `tools/handoff/polish-2026-10.md`: fifteen fixes from a screen-by-screen review on desktop (1080p) and phones (portrait, landscape,
 small). Desktop: hand cursor (`--hand` in base.css, every `cursor:pointer` reads it), colony postcard + ships in orbit (side-colony.js),

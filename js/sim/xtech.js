@@ -156,9 +156,11 @@ MOO.def(function (M) {
 
   // ---- movement --------------------------------------------------------------------------------------------------------------------------------------------
   X.warpFor = function (S, E, from, to, warp) {
-    let w = warp + X.m(E, 'warpBonus');
+    const home = !!(S.planets[to] && S.planets[to].owner === E.id);
+    let w = warp;
+    if (home) w += X.m(E, 'homeWarp');                                                  // Slipstream Drives: only towards your own colonies
     const b = X.m(E, 'beaconWarp');
-    if (b && S.planets[from] && S.planets[to] && S.planets[from].owner === E.id && S.planets[to].owner === E.id) w += b;
+    if (b && home && S.planets[from] && S.planets[from].owner === E.id) w += b;            // Navigation Beacons: colony to colony
     return w;
   };
 });

@@ -5,6 +5,14 @@ Versions follow `MAJOR.MINOR.PATCH`; the live version is the `VERSION` file.
 
 ## Unreleased
 
+- Expanded technology (New game › Remake options, off by default): 45 new technologies join the pool every research tree is dealt
+  from, a quarter of the 180 classic ones. Trees keep their size: after the classic tree is dealt, some of its slots are swapped for new
+  techs of the same field and tier, so the number of choices, tier unlocks and the tech-level formula are unchanged; essential techs and
+  the four single-tech tiers are never swapped. New axes rather than bigger numbers: asteroid mining, arcologies, pressure domes, prefab
+  colony modules, battlefield salvage, minefields, emergency warp, lifeboats, navigation beacons, banking, reverse engineering and more,
+  each with its own art and wording on the tech screen. Sixty candidates were tested in simulated games (tools/techlab: combat
+  calibration, twin trials against every classic tech, whole-game leagues against the classic pool); fifteen were cut, four moved and
+  one retuned. Classic games are unchanged (state hashes match the previous build).
 - Polish pass (PC and phone). Desktop: the original's hand cursor is back, redrawn as a brass gauntlet, on everything that can be clicked
   (phones keep none). The colony panel's empty lower third now holds a colony postcard: the art for that world (domes on a hostile planet,
   mines on a barren one, a fortress, smog, industry or a city) with what the colony is and the ships in orbit (a click sends them).

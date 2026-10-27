@@ -283,7 +283,10 @@ module.exports = function (M, t) {
       const w = M.Sim.Design.stats(S, A, 1).warp;
       own(S, A, 'navigation-beacons'); own(S, A, 'slipstream-drives');
       const r = F.send(S, A, A.capital, q.starId, [0, 1, 0, 0, 0, 0]);
-      t.ok(r.ok); t.eq(r.fleet.speed, w + 2);
+      t.ok(r.ok); t.eq(r.fleet.speed, w + 2, 'colony to colony: beacons and slipstream');
+      // Slipstream speeds only fleets bound for your own colonies: towards a star you do not own a fleet flies at its engines' warp
+      const free = S.planets.find(x => x.owner < 0 && x.starId !== q.starId && F.canReach(S, A, x.starId, false));
+      if (free) { const r2 = F.send(S, A, A.capital, free.starId, [0, 1, 0, 0, 0, 0]); t.ok(r2.ok); t.eq(r2.fleet.speed, w, 'no bonus towards a star you do not own'); }
     }
     // warp damping: a hostile fleet one parsec from B's home world slows down
     own(S, B, 'warp-damping-field');

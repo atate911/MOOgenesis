@@ -2,7 +2,7 @@
 // Tech Lab · league A/B. Whole games, classic pool against expanded pool, on the SAME seeds (the expanded game starts from the same galaxy, races and S.rs stream;
 // only the swapped tree slots differ — data/techs-x.js). Measures what a player would notice: pace (techs, tech level), economy, expansion, fleets, game length,
 // race strength, and for every expansion tech: how often it is dealt, researched, and whether holding it moves an empire's standing (intent-to-treat).
-//   node tools/techlab/league.js [--games 240] [--threads 4] [--turns 200] [--out league.json] [--set path=value,...] [--drop id,id]  (--drop = remove techs from the pool)
+//   node tools/techlab/league.js [--games 240] [--first 0] [--threads 4] [--turns 200] [--out league.json] [--set path=value,...] [--drop id,id]  (--drop = remove techs from the pool)
 const L = require('./lib');
 const { isMainThread } = require('worker_threads');
 const SNAP = [50, 100, 150, 200];
@@ -15,10 +15,17 @@ if (!isMainThread) {
     if (!MOO || key !== k) {
       MOO = L.loadSim(data.set || {}); Sim = MOO.Sim; key = k;
       if (data.drop && data.drop.length) dropTechs(MOO, data.drop);
+      // battle telemetry per empire: battles fought, won, ships lost (the sim's own results, counted as they are applied)
+      const orig = Sim.Combat.applyResults;
+      Sim.Combat.applyResults = function (S, results) {
+        const B = S.labBattles;
+        if (B) for (const r of results || []) for (const sd of r.sides || []) { if (!(sd.empire >= 0) || !B[sd.empire]) continue; const o = B[sd.empire]; o.n++; if (r.winnerEmpire === sd.empire) o.won++; o.lost += (sd.lost || []).reduce((a, b) => a + (b | 0), 0); if (r.attacker === sd.empire) o.att++; }
+        return orig.apply(this, arguments);
+      };
     }
     const T = MOO.Data.Techs;
     const S = Sim.newGame(L.settings({ seed: 'league-' + job.g, size: SIZES[job.g % 3], difficulty: DIFFS[Math.floor(job.g / 3) % 3], opponents: 2 + (job.g % 4), race: L.RACES[job.g % 10], playOn: false }, job.pool));
-    S.xstats = {};
+    S.xstats = {}; S.labBattles = S.empires.map(() => ({ n: 0, won: 0, lost: 0, att: 0 }));
     const out = { g: job.g, pool: job.pool, snaps: [], over: null, xstats: null, trees: null, done: null };
     if (job.pool !== 'classic') out.trees = S.empires.map(E => { const ids = []; E.research.list.forEach((tiers, f) => tiers.forEach(tr => tr.forEach(l => { const t = T.byFL[f][l]; if (t.pool === 'x') ids.push(t.id); }))); return ids; });
     const doneAt = S.empires.map(() => ({}));
@@ -33,7 +40,12 @@ if (!isMainThread) {
       const ov = Sim.isOver(S); if (ov.over) { out.over = { turn: S.turn, reason: ov.reason, winner: ov.winner, race: ov.winner >= 0 ? S.empires[ov.winner].race : null }; break; }
     }
     out.turnEnd = S.turn; out.xstats = S.xstats; out.done = doneAt; out.races = S.empires.map(E => E.race);
-    out.wars = (S.diplo && S.diplo.log) ? S.diplo.log.filter(x => x.k === 'war' || x.k === 'startWar').length : null;
+    const log = (S.diplo && S.diplo.log) || [];
+    out.wars = S.diplo && S.diplo.log ? log.filter(x => x.k === 'war' || x.k === 'startWar').length : null;
+    out.diplo = {}; out.warWhy = {}; for (const x of log) { out.diplo[x.k] = (out.diplo[x.k] || 0) + 1; if (x.k === 'war') out.warWhy[x.x || '?'] = (out.warWhy[x.x || '?'] || 0) + 1; }
+    out.warsBy = S.empires.map(E => log.filter(x => x.k === 'war' && x.a === E.id).length);
+    out.warsOn = S.empires.map(E => log.filter(x => x.k === 'war' && x.b === E.id).length);
+    out.battles = S.labBattles; delete S.labBattles;
     return out;
   });
 }
@@ -50,11 +62,11 @@ function dropTechs(MOO, ids) {
 exports.dropTechs = dropTechs;
 
 if (isMainThread) (async () => {
-  const games = +L.arg('games', 240), threads = +L.arg('threads', 4), turns = +L.arg('turns', 200), file = L.arg('out', 'league.json');
+  const games = +L.arg('games', 240), first = +L.arg('first', 0), threads = +L.arg('threads', 4), turns = +L.arg('turns', 200), file = L.arg('out', 'league.json');
   const set = {}; for (const kv of (L.arg('set') || '').split(',').filter(Boolean)) { const i = kv.indexOf('='); set[kv.slice(0, i)] = JSON.parse(kv.slice(i + 1)); }
   const drop = L.arg('drop') ? L.arg('drop').split(',').filter(Boolean) : [];
   const pools = (L.arg('pools', 'classic,expanded')).split(',');
-  const jobs = []; for (let g = 0; g < games; g++) for (const pool of pools) jobs.push({ g, pool });
+  const jobs = []; for (let g = first; g < first + games; g++) for (const pool of pools) jobs.push({ g, pool });
   const t0 = Date.now();
   const res = await L.runPool(__filename, jobs, { threads, data: { turns, set, drop }, onResult: L.progress('league') });
   const errs = res.filter(r => r && r.error); if (errs.length) console.log('errors', errs.length, errs[0].error.slice(0, 600));

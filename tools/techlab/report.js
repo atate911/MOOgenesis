@@ -21,17 +21,19 @@ function main() {
     out.push(L.table(['effect', 'battles', 'win-rate shift', 'worth (ships ×)', 'weight per affected design', '95 % CI'], Object.keys(combat.summary).map(k => {
       const s = combat.summary[k]; return [k, s.n, pct(s.winShift), Number.isFinite(s.kMean) ? s.kMean.toFixed(2) : '-', Number.isFinite(s.perDesignPct) ? s.perDesignPct.toFixed(1) + ' %' : '-', s.ci.map(v => Number.isFinite(v) ? v.toFixed(1) : '-').join(' … ')];
     })) + '\n');
+    out.push('def1, hp15, repair5 and pshield5 were measured for candidates cut in round 2 (Flux Shields, Structural Integrity Fields, Damage Control Teams, Phase Barrier); the sim no longer applies them.\n');
   }
   if (A) {
     out.push('## 2. Twin trials\n');
     const n0 = A.noise.map(b => b[2].n).reduce((a, b) => a + b, 0);
-    out.push(`Paired copies of the same game, one empire given the tech in one copy only. Effect = treatment − control of that empire, as log ratios (≈ percent). EPI = 0.4 production + 0.25 population + 0.2 fleet + 0.15 tech level. Placebo noise (SD of EPI at +10 / +25 / +50 turns, ${n0} placebo pairs): ` +
+    out.push(`Paired copies of the same game; one empire gets the tech in both, with its effects switched off in the control copy (so both get the same tech-level bump). Effect = treatment − control of that empire, as log ratios (≈ percent). EPI = 0.4 production + 0.25 population + 0.2 fleet + 0.15 tech level. Placebo noise (SD of EPI at +10 / +25 / +50 turns, ${n0} placebo pairs): ` +
       A.noise.map((b, i) => ['turn 40', 'turn 80', 'turn 120'][i] + ' ' + b.map(x => (100 * x.sd).toFixed(1) + ' %').join(' / ')).join('; ') + '.\n');
     const xs = Object.values(A.subjects).filter(s => s.x).sort((a, b) => a.field - b.field || a.level - b.level);
     const dec = rounds && rounds.decisions || {};
-    out.push(L.table(['tech', 'lv', 'trials', 'EPI +25', 'EPI +50', '95 % CI (+50)', 'production', 'population', 'fleet', 'classic ±6 lv: p25 / median / p75', 'rank', 'verdict', 'decision'],
-      xs.map(s => [s.name, s.level, s.h50.n, pct(s.h25.epi), pct(s.h50.epi), s.h50.ci.map(v => pct(v)).join(' … '), pct(s.h50.prod), pct(s.h50.pop), pct(s.h50.fleet),
-        [s.ref.p25, s.ref.median, s.ref.p75].map(v => pct(v)).join(' / '), (100 * s.rank).toFixed(0), s.verdict, dec[s.id] ? dec[s.id].action : ''])) + '\n');
+    out.push('Verdicts place each tech among the classic techs within six levels of it: top quarter = strong, middle half = typical, bottom quarter = low; outside the whole classic range = an outlier. Situational = the tech changed nothing in half the trials or more (mostly combat and defence techs: AI wars are rare in the 50 turns after the grant; their worth in battle is the calibration above).\n');
+    out.push(L.table(['tech', 'lv', 'trials', 'active', 'EPI +25', 'EPI +50', '95 % CI (+50)', 'production', 'population', 'fleet', 'classic ±6 lv: p25 / median / p75', 'rank', 'verdict', 'note'],
+      xs.map(s => [s.name, s.level, s.h50.n, (100 * s.active).toFixed(0) + ' %' + (s.situational ? ' (situational)' : ''), pct(s.h25.epi), pct(s.h50.epi), s.h50.ci.map(v => pct(v)).join(' … '), pct(s.h50.prod), pct(s.h50.pop), pct(s.h50.fleet),
+        [s.ref.p25, s.ref.median, s.ref.p75].map(v => pct(v)).join(' / '), (100 * s.rank).toFixed(0), s.verdict, dec[s.id] ? dec[s.id] : ''])) + '\n');
     const cs = Object.values(A.subjects).filter(s => !s.x).sort((a, b) => b.h50.epi - a.h50.epi);
     out.push('### The classic tree, measured the same way\n');
     out.push('Most valuable: ' + cs.slice(0, 15).map(s => s.name + ' ' + pct(s.h50.epi)).join(', ') + '.\n');
@@ -41,6 +43,7 @@ function main() {
     out.push('## 3. League A/B: classic pool against the expanded pool\n');
     out.push(`${lg.games} paired games (same seeds), small / medium / large galaxies, Easy / Average / Hard, 3-6 empires, ${lg.turns} turns or the end of the game. Dropped from the pool: ${lg.drop.length}.\n`);
     out.push(L.table(['metric', 'games', 'classic mean', 'expanded vs classic', '95 % CI'], Object.keys(lg.paired).map(k => { const o = lg.paired[k]; return [k, o.n, o.classicMean.toFixed(1), pct(o.rel), o.ci.map(v => pct(v)).join(' … ')]; })) + '\n');
+    if (lg.length) out.push('Game length: classic ' + lg.length.classic.toFixed(1) + ' turns, expanded ' + lg.length.expanded.toFixed(1) + ' (paired difference ' + lg.length.diff.toFixed(1) + ', 95 % CI ' + lg.length.ci.map(v => v.toFixed(1)).join(' … ') + ').' + (lg.wars ? ' Wars per game: classic ' + lg.wars.classic.toFixed(2) + ', expanded ' + lg.wars.expanded.toFixed(2) + ' (difference ' + lg.wars.diff.toFixed(2) + ', 95 % CI ' + lg.wars.ci.map(v => v.toFixed(2)).join(' … ') + ').' : '') + '\n');
     out.push('Endings: classic ' + JSON.stringify(lg.endings.classic) + '; expanded ' + JSON.stringify(lg.endings.expanded) + '\n');
     const ts = Object.values(lg.techs).sort((a, b) => a.level - b.level);
     out.push(L.table(['tech', 'lv', 'dealt', 'researched (of dealt)', 'median turn', 'standing with vs without'], ts.map(o => [o.name, o.level, (100 * o.dealtPct).toFixed(0) + ' %', (100 * o.researchedPct).toFixed(0) + ' %', o.medianTurn || '-', (o.itt.diff >= 0 ? '+' : '') + o.itt.diff.toFixed(3)])) + '\n');
