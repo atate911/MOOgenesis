@@ -62,6 +62,7 @@
 :root[data-theme="v2"] ::-webkit-scrollbar-thumb { background: var(--line-2); border: 2px solid transparent; background-clip: padding-box; border-radius: 0; }
 :root[data-theme="v2"] ::-webkit-scrollbar-thumb:hover { background: var(--line-3); background-clip: padding-box; }
 :root[data-theme="v2"] .screen.fade-in { animation: v2-scr-in 180ms var(--ease) both; }
+:root[data-theme="v2"] .screen.fade-out { animation: scr-out 180ms var(--ease) both; }
 @keyframes v2-scr-in { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
 
 /* boot splash */

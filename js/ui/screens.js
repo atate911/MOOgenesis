@@ -28,10 +28,14 @@
         if (d.create) d.create(els[id]);
       }
       if (cur && cur.id !== id) {
-        const od = defs[cur.id];
+        const od = defs[cur.id], oe = els[cur.id];
         if (od.leave) { try { od.leave(); } catch (e) { console.error(e); } }
-        els[cur.id].classList.remove('active');
+        oe.classList.remove('active');
+        // the leaving screen stays visible for a beat and fades under the entering one (.screen.fade-out keeps it displayed)
+        oe.classList.add('fade-out'); clearTimeout(oe._fadeT);
+        oe._fadeT = setTimeout(() => oe.classList.remove('fade-out'), 240);
       }
+      clearTimeout(els[id]._fadeT); els[id].classList.remove('fade-out');
       UI.hideTip();
       const prev = cur;
       cur = { id, params: params || {}, prev: prev && prev.id };

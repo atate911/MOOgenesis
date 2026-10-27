@@ -295,7 +295,7 @@
   UI.Screens.register('saveload', {
     create(el) {
       rootEl = el;
-      bg = C().backdrop('ui');
+      bg = UI.Sky && UI.Sky.el ? null : C().backdrop('ui');           // the one sky shows through; the painted one is the fallback
       holder = h('div.sl-holder');
       titleEl = h('h1.ctl-title', 'Load game');
       const ctl = C(), backBtn = ctl.hotkey(UI.button('Back', goBack, { primary: true, big: true, kbd: 'Esc' }), 'b');
@@ -310,7 +310,7 @@
     enter(params) {
       params = params || {};
       from = params.from || 'menu';
-      bg.paint();
+      if (bg) bg.paint();
       if (unbind) unbind();
       view = buildView({
         mode: params.mode, from,

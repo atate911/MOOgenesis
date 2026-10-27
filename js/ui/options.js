@@ -203,7 +203,7 @@
   UI.Screens.register('options', {
     create(el) {
       const ctl = C();
-      bg = ctl.backdrop('ui');
+      bg = UI.Sky && UI.Sky.el ? null : ctl.backdrop('ui');          // the one sky (js/ui/sky.js) shows through; the painted one is the fallback
       holder = h('div.op-scroll');
       resetBtn = ctl.hotkey(UI.button('Reset to defaults', () => view && resetFlow(view)), 'r');
       const doneBtn = ctl.hotkey(UI.button('Done', goBack, { primary: true, big: true, kbd: 'Space' }), 'd');
@@ -217,7 +217,7 @@
     },
     enter(params) {
       from = (params && params.from) || 'menu';
-      bg.paint();
+      if (bg) bg.paint();
       view = buildOptions();
       UI.mount(holder, view.el);
     },

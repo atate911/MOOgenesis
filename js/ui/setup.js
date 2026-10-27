@@ -1124,7 +1124,7 @@
   function create(el) {
     Object.assign(st, freshState());
     rootEl = el;
-    bgEl = backdrop('ui');
+    bgEl = UI.Sky && UI.Sky.el ? null : backdrop('ui');              // the one sky shows through; the painted one is the fallback
     views = [buildGalaxy(), buildRace(), buildBanner()];
     rail = buildRail();
     stageEl = h('main.su-stage', { tabindex: -1 }, views.map(v => v.el));
@@ -1155,7 +1155,7 @@
   function enter(params) {
     restoreLast();
     busy = false; showLoading(false);
-    bgEl.paint();
+    if (bgEl) bgEl.paint();
     thumbsKey = ''; bannersKey = '';
     views.forEach(v => v.repaint && v.repaint());
     syncAll();
@@ -1169,7 +1169,7 @@
     create,
     enter,
     leave() { clearInterval(phaseTimer); saveNow(); },
-    resize() { if (!built) return; bgEl.paint(); thumbsKey = ''; bannersKey = ''; },
+    resize() { if (!built) return; if (bgEl) bgEl.paint(); thumbsKey = ''; bannersKey = ''; },
     update(dt, t) { if (!built) return; const v = views[st.step]; if (v && v.frame) v.frame(dt, t); },
   });
 
