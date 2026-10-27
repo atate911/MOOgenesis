@@ -24,6 +24,12 @@ Versions follow `MAJOR.MINOR.PATCH`; the live version is the `VERSION` file.
   columns (the wordmark and the last entries were cut off). The star system's fleet heading stays on one line and ship names wrap
   instead of being cut. The star-chart grid is off by default on phones. From the second visit in a browser tab, a card says how to
   add the game to the home screen (with an Install button where the browser offers one), once.
+- Tuning pass. The Fleets, Ship specifications, Planets and Galaxy Map titles take the caps display style the Research, Races and
+  Racial Stats screens already use (the original's screens all had caps titles), so every tool screen opens the same way. At the end of a
+  turn the HUD values and the colony panel's readouts that changed (reserve, income, research, colonies; population, bases, factories,
+  waste, production) light up for a second, alongside the year's roll. The Fleets and Planets ledgers, mostly empty early in a game,
+  sit on a faint star chart instead of flat brown. A fleet column with no design reads as empty. Phones: the research allocation row
+  keeps the capability line whole and gives the project its own line with a full-width bar; the fleet grid's column headers stay on one line.
 - Title screen. The world in the corner turns smoothly and visibly: its axis now tilts away from the viewer so mid-latitudes sweep
   past instead of a polar cap turning in place, one turn takes about a minute, the sun sits low on the galaxy's side so the terminator, the
   night-side city lights and the cloud shadows cross the visible half, and it drifts a little against the galaxy's slow zoom. Clouds on

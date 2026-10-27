@@ -81,9 +81,11 @@
     .lf-sheet { padding:.7rem .9rem .8rem; background:linear-gradient(135deg, var(--bz-hi), var(--bz-md) 18%, #6d5645 60%, var(--bz-lo)); box-shadow:inset 1px 1px 0 rgba(255,235,200,.35), inset -1px -1px 0 rgba(0,0,0,.65), 0 0 0 1px #000, 0 10px 40px rgba(0,0,0,.6); }
     .lf-sheet::before, .lf-sheet::after { display:none; }
     .lf-head { border-bottom:0; padding-bottom:.4rem; }
-    .lf-title { color:#ffd36a; text-shadow:0 1px 0 #2f1a0c, 0 2px 0 rgba(0,0,0,.5), 0 0 22px rgba(232,200,80,.2); }
+    .lf-title { color:#ffd36a; text-shadow:0 1px 0 #2f1a0c, 0 2px 0 rgba(0,0,0,.5), 0 0 22px rgba(232,200,80,.2); font:400 1.85rem/1 var(--font-display); letter-spacing:.06em; text-transform:uppercase; }   /* one title style on every tool screen (Research, Races, Stats) */
+    .lf-h.none .nm { color:var(--bz-pale); opacity:.45; }                                                   /* an empty design slot's column reads as empty, not as a design */
     .lf-sub { color:#ead4b0; } .lf-sub b { color:var(--bz-pale); }
     .lf-body { background:#2f231a; box-shadow:inset 1px 1px 3px rgba(0,0,0,.9), 0 0 0 1px rgba(0,0,0,.7), 0 1px 0 1px rgba(255,235,200,.15); }
+    .lf-body { background:linear-gradient(180deg, #2f231a 0%, rgba(47,35,26,.95) 22%, rgba(47,35,26,.84) 100%), url('assets/art/scene/scene-galaxy.webp') 50% 60% / cover no-repeat #2f231a; }
     .lf-row { border-bottom:1px solid rgba(0,0,0,.55); box-shadow:0 1px 0 rgba(255,235,200,.06); } .lf-row:hover { background:rgba(255,215,140,.07); }
     .lf-row.head, .lf-row.total, .lf-row.head:hover, .lf-row.total:hover { background:#4a3a2c; border-color:rgba(0,0,0,.7); }
     .lf-h { border-left-color:rgba(0,0,0,.5); box-shadow:inset 1px 0 0 rgba(255,235,200,.08); }

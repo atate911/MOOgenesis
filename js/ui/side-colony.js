@@ -47,6 +47,8 @@
     .sc-tpop .k { color:var(--mist); font-size:.78rem; text-transform:uppercase; letter-spacing:.08em; } .sc-tpop .nm { color:var(--ivory); }
     .sc-tpop b { color:var(--leaf); } .sc-tpop b.over { color:var(--amber, #f0b050); }
     .empire-dot { display:inline-block; width:.7em; height:.7em; margin-right:.2em; transform:rotate(45deg); background:var(--c, var(--brass)); box-shadow:0 0 6px var(--c, var(--brass)); }
+    .sc-stats .cell > span:last-child.chg { animation:sc-chg 1.2s ease-out both; }   /* a readout that changed over the turn (galaxy.js lights the HUD the same way) */
+    @keyframes sc-chg { 0%, 25% { background:#7a5a14; color:#fff8dc; box-shadow:inset 0 0 0 1px #f0d048, 0 0 8px rgba(240,208,72,.6); } 100% { } }
     /* the colony postcard under the build box (desktop): the panel's lower third was an empty band. The body becomes a column so the card takes
        whatever height is left; the container query hides it when that is too little to read. Phones: never (the sheet shows the controls). */
     .sc-post { display:none; }
@@ -124,6 +126,12 @@
 
   const LABELS =[['Ship', 'ship', 'var(--c-ship)'], ['Def', 'def', 'var(--c-def)'], ['Ind', 'ind', 'var(--c-ind)'], ['Eco', 'eco', 'var(--c-eco)'], ['Tech', 'tech', 'var(--c-res)']];
 
+  // the readouts as the turn began (taken from the panel on show at turn:processing): the first refresh after turn:end lights the ones that changed
+  let statSnap = null, statFlashUntil = 0, statChg = {};
+  const statVals = host => { const o = {}; host.querySelectorAll('.sc-stats .cell[data-k] > span:last-child').forEach(v => { o[v.parentElement.dataset.k] = v.textContent; }); return o; };
+  M.Bus.on('turn:processing', on => { if (!on) return; const scr = UI.Screens.el && UI.Screens.el('galaxy'), host = scr && scr.querySelector('.gx-side:not(.gx-float) .gx-sidebody'); statSnap = host && host.querySelector('.sc-stats') ? { pid: G.sel.star, v: statVals(host) } : null; });
+  M.Bus.on('turn:end', () => { statFlashUntil = performance.now() + 4000; });
+
   function planetCanvas(card, size) {
     const WA = M.Gfx && M.Gfx.WorldArt, art = WA && WA.enabled ? WA.orbit(card, M.Game && M.Game.S) : null;   // photoreal orbit card, else the procedural sprite
     if (art) return WA.canvas(art, size * 2, size * 2, { fit: 'contain' });
@@ -196,9 +204,12 @@
       // stats
       const grow = c.growthTenths; const popTxt = h('span', U.fmt(c.pop), grow ? h('span' + (grow > 0 ? '.t-leaf' : '.t-rose') + '.small', (grow > 0 ? ' ↑' : ' ↓') + Math.abs(grow / 10).toFixed(1)) : null);
       UI.mount(st.stats,
-        h('div.cell', h('span', 'Pop'), popTxt), h('div.cell', h('span', 'Bases'), h('span', c.bases)),
-        h('div.cell', h('span', 'Factories'), h('span', c.factories + ' / ' + c.maxFactories)), h('div.cell', h('span', 'Waste'), h('span' + (c.waste > 0 ? '.t-ember' : ''), c.waste)),
-        h('div.cell.wide', h('span', 'Production'), h('span', h('b.t-ember', c.production), h('span.dim', ' (' + c.gross + ')'), c.shield ? h('span.t-azure.small', '  shield ' + c.shield) : null, c.stargate ? h('span.sc-gate.small', { tip: 'This colony has a stargate: ships and transports sent to another of your stargates arrive the next turn.' }, '  stargate') : null)));
+        h('div.cell', { dataset: { k: 'pop' } }, h('span', 'Pop'), popTxt), h('div.cell', { dataset: { k: 'bases' } }, h('span', 'Bases'), h('span', c.bases)),
+        h('div.cell', { dataset: { k: 'fact' } }, h('span', 'Factories'), h('span', c.factories + ' / ' + c.maxFactories)), h('div.cell', { dataset: { k: 'waste' } }, h('span', 'Waste'), h('span' + (c.waste > 0 ? '.t-ember' : ''), c.waste)),
+        h('div.cell.wide', { dataset: { k: 'prod' } }, h('span', 'Production'), h('span', h('b.t-ember', c.production), h('span.dim', ' (' + c.gross + ')'), c.shield ? h('span.t-azure.small', '  shield ' + c.shield) : null, c.stargate ? h('span.sc-gate.small', { tip: 'This colony has a stargate: ships and transports sent to another of your stargates arrive the next turn.' }, '  stargate') : null)));
+      const tNow = performance.now();
+      if (statSnap && statSnap.pid === st.pid && tNow < statFlashUntil) { const cur = statVals(st.stats); for (const k in cur) if (statSnap.v[k] !== undefined && statSnap.v[k] !== cur[k]) statChg[st.pid + ':' + k] = tNow + 1400; statSnap = null; }
+      for (const key in statChg) { const [pid, k] = key.split(':'); if (tNow >= statChg[key]) delete statChg[key]; else if (+pid === st.pid) { const v = st.stats.querySelector('.cell[data-k="' + k + '"] > span:last-child'); if (v) v.classList.add('chg'); } }
       UI.mount(st.note, c.rebels || c.unrest ? h('div.sc-note', c.unrest === 2 ? 'Rebellion! Production has stopped.' : 'Unrest: ' + c.rebels + 'M rebels.') : (c.event ? h('div.sc-note', 'Event: ' + c.event.type) : null));
       // sliders
       c.sliders.forEach((v, i) => {

@@ -28,6 +28,8 @@
     .gx-hud .od-in { display:flex; flex-direction:column; animation:gx-od .6s cubic-bezier(.3,.7,.2,1) both; }
     .gx-hud .od-in > span { height:1.2em; }
     @keyframes gx-od { from { transform:translateY(0); } to { transform:translateY(-50%); } }
+    .gx-hud b.chg { animation:gx-chg 1.1s ease-out both; }                       /* a value that changed over the turn */
+    @keyframes gx-chg { 0%, 25% { color:#fff8dc; text-shadow:0 0 10px rgba(255,214,106,.95), 0 0 2px #fff; } 100% { } }
     .gx-hud .k { color:var(--mist); font-size:.82rem; margin-right:.3em; }
     .gx-hud b { font-weight:600; font-variant-numeric:tabular-nums; }
     .gx-att { display:flex; gap:.45rem; cursor:var(--hand); font-weight:600; font-variant-numeric:tabular-nums; } .gx-att span { padding:.05rem .4rem; border:1px solid currentColor; border-radius:.2rem; }
@@ -207,6 +209,10 @@
   // the year is an odometer: it stays in place while the rest of the HUD is rebuilt (on every state change), and the digits that change at the end
   // of a turn roll over (css .od); a new or loaded game sets it without the roll. Reduce motion makes the roll instant (base.css / options.js).
   let yearEl = null, yearNum = null, restEl = null, yearShown = '';
+  // the values of the HUD as the turn began (hudSnap, taken at turn:processing) against which the first HUD after turn:end is compared: the
+  // reserve, income, research and colony count that changed light up (css .chg), so the end of a turn reads as a beat, not a silent swap
+  let hudSnap = null, hudFlashUntil = 0, hudChg = {};
+  const hudVals = () => { const o = {}; if (restEl) restEl.querySelectorAll('b[data-k]').forEach(b => { o[b.dataset.k] = b.textContent; }); return o; };
   function setYear(y) {
     const s = String(y), prev = yearShown; yearShown = s;
     if (!prev || prev === s || prev.length !== s.length) { yearNum.textContent = s; return; }
@@ -222,11 +228,14 @@
     if (!yearEl) { yearNum = h('span.yn'); yearEl = h('span.y', 'Year ', yearNum); restEl = h('span.gx-hudr'); UI.mount(hudEl, yearEl, restEl); }
     setYear(Q.year(S));
     UI.mount(restEl,
-      h('span', h('span.k', 'Reserve'), h('b.t-gold', U.fmt(E.bc)), ' ', h('span.t-gold', 'BC'), f.taxToReserve ? h('span.t-leaf.small', ' +' + f.taxToReserve) : null),
+      h('span', h('span.k', 'Reserve'), h('b.t-gold', { dataset: { k: 'bc' } }, U.fmt(E.bc)), ' ', h('span.t-gold', 'BC'), f.taxToReserve ? h('span.t-leaf.small', ' +' + f.taxToReserve) : null),
       logChip(),                                                                       // phones only: ends the first line of the wrapped HUD
-      h('span', h('span.k', 'Income'), h('b' + ((f.net | 0) < (f.gross | 0) * 0.6 ? '.t-rose' : '.t-leaf'), U.fmt(f.net | 0)), h('span.k', ' of ' + U.fmt(f.gross | 0))),
-      h('span', h('span.k', 'Research'), h('b.t-cyan', U.fmt(rp)), h('span.t-cyan', ' RP')),
-      h('span', h('span.k', 'Colonies'), h('b', colonies)), attentionChips());
+      h('span', h('span.k', 'Income'), h('b' + ((f.net | 0) < (f.gross | 0) * 0.6 ? '.t-rose' : '.t-leaf'), { dataset: { k: 'net' } }, U.fmt(f.net | 0)), h('span.k', ' of ' + U.fmt(f.gross | 0))),
+      h('span', h('span.k', 'Research'), h('b.t-cyan', { dataset: { k: 'rp' } }, U.fmt(rp)), h('span.t-cyan', ' RP')),
+      h('span', h('span.k', 'Colonies'), h('b', { dataset: { k: 'col' } }, colonies)), attentionChips());
+    const now = performance.now();
+    if (hudSnap && now < hudFlashUntil) { restEl.querySelectorAll('b[data-k]').forEach(b => { if (hudSnap[b.dataset.k] !== undefined && hudSnap[b.dataset.k] !== b.textContent) hudChg[b.dataset.k] = now + 1300; }); hudSnap = null; }
+    for (const k in hudChg) { if (now < hudChg[k]) { const b = restEl.querySelector('b[data-k="' + k + '"]'); if (b) b.classList.add('chg'); } else delete hudChg[k]; }
   }
   // phones: the turn log's count in the HUD. In portrait the sidebar is a bottom sheet and the log under it was only seen at full height; the
   // chip opens the whole log (css/phone.css shows it in portrait only — landscape keeps the sidebar column with the log in it)
@@ -363,6 +372,8 @@
       bindKeys();
       M.Bus.on('state', () => { if (UI.Screens.current && UI.Screens.current.id === 'galaxy') { updateHud(); UI.Side.refresh(); } });
       M.Bus.on('turnlog', () => updateHud());
+      M.Bus.on('turn:processing', on => { if (on) hudSnap = hudVals(); });
+      M.Bus.on('turn:end', () => { hudFlashUntil = performance.now() + 4000; });
       M.Bus.on('game:new', () => { yearShown = ''; }); M.Bus.on('game:loaded', () => { yearShown = ''; });   // a jump in years is not a turn: no roll
       M.Bus.on('turn:aborted', () => UI.Side.drop()); M.Bus.on('turn:skipped', () => UI.Side.drop());    // the prompt is moot: let it resolve and go
       let saveWarned = false;                                                                               // a silently failing autosave used to be discovered only at the Save screen

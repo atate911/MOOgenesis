@@ -359,7 +359,8 @@ html:root:root[data-phone] .lp-title, html:root:root[data-phone] .lf-title, html
 html:root:root[data-phone] .tch::after, html:root:root[data-phone] .rx::after, html:root:root[data-phone] .ttp::after { display: none; }   /* the bezel frame */
 
 /* ---- planets ledger: the table scrolls sideways under a pinned planet column; the footer stacks ---- */
-html:root:root[data-phone] .lp-tablewrap { flex: none; min-height: 0; max-height: 52vh; }   /* no empty block under a short table */
+html:root:root[data-phone] .lp-tablewrap { flex: none; min-height: 0; max-height: 52vh; background: #2f231a; }   /* no empty block under a short table (and no chart behind it) */
+html:root:root[data-phone] .lf-body { background: #2f231a; }
 html:root:root[data-phone] .lp-line { padding-top: .22rem; padding-bottom: .22rem; }           /* read-only lines: not tap targets */
 html:root:root[data-phone] .lp-reserve b { font-size: 1.45rem; }
 html:root:root[data-phone] .lp-foot { margin-top: .4rem; }
@@ -374,7 +375,7 @@ html:root:root[data-phone] .lp-btns { flex-direction: row; min-width: 0; } html:
 
 /* ---- fleet ledger: the grid scrolls sideways under a pinned station column; specs rows become cards ---- */
 html:root:root[data-phone] .lf-body { flex: none; min-height: 14rem; max-height: 60vh; }
-html:root:root[data-phone] .lf-grid { --cols: 10.5rem repeat(6, minmax(5.6rem, 1fr)); }
+html:root:root[data-phone] .lf-grid { --cols: 10.5rem repeat(6, minmax(6.6rem, 1fr)); } html:root:root[data-phone] .lf-h .sub { white-space: nowrap; }   /* "Small · 14 BC" on one line */
 html:root:root[data-phone] .lf-row > :first-child { position: sticky; left: 0; z-index: 1; background: #2f231a; box-shadow: 1px 0 0 rgba(0, 0, 0, .6); }
 html:root:root[data-phone] .lf-row.head > :first-child, html:root:root[data-phone] .lf-row.total > :first-child { background: #4a3a2c; }
 html:root:root[data-phone] .lf-st { gap: .5rem; padding: .4rem .45rem; } html:root:root[data-phone] .lf-pic { width: 2.8rem; height: 2.8rem; }
@@ -420,6 +421,8 @@ html:root:root[data-phone] .tch-row .tch-bulb { grid-row: 1; grid-column: 4; }
 html:root:root[data-phone] .tch-row .tch-lvl { grid-row: 1; grid-column: 5; font-size: 1.15rem; }
 html:root:root[data-phone] .tch-row .slider > :is(.s-btn, .s-track, .s-val, .s-lock) { grid-row: 2; }
 html:root:root[data-phone] .tch-r2 { flex-wrap: wrap; gap: .2rem .6rem; }
+html:root:root[data-phone] .tch-r2 .tch-cap { flex: 1 1 100%; }                          /* the capability line whole, the project with its bar on the next line */
+html:root:root[data-phone] .tch-r2 .tch-mini { flex: 1 1 100%; } html:root:root[data-phone] .tch-mini .bar { flex: 1 1 auto; width: auto; }
 html:root:root[data-phone] .tch-proj { min-height: auto; }
 html:root:root[data-phone] .tch-sl .foot { flex-wrap: wrap; }
 

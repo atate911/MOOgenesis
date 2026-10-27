@@ -72,9 +72,10 @@
     .lp-sheet { padding:.7rem .9rem .8rem; background:linear-gradient(135deg, var(--bz-hi), var(--bz-md) 18%, #6d5645 60%, var(--bz-lo)); box-shadow:inset 1px 1px 0 rgba(255,235,200,.35), inset -1px -1px 0 rgba(0,0,0,.65), 0 0 0 1px #000, 0 10px 40px rgba(0,0,0,.6); }
     .lp-sheet::before, .lp-sheet::after { display:none; }
     .lp-head { border-bottom:0; padding-bottom:.4rem; }
-    .lp-title { color:#ffd36a; text-shadow:0 1px 0 #2f1a0c, 0 2px 0 rgba(0,0,0,.5), 0 0 22px rgba(232,200,80,.2); }
+    .lp-title { color:#ffd36a; text-shadow:0 1px 0 #2f1a0c, 0 2px 0 rgba(0,0,0,.5), 0 0 22px rgba(232,200,80,.2); font:400 1.85rem/1 var(--font-display); letter-spacing:.06em; text-transform:uppercase; }   /* one title style on every tool screen */
     .lp-sub { color:#f0dcc0; font-size:1.05rem; } .lp-sub b { color:var(--bz-pale); }
     .lp-tablewrap { background:#2f231a; box-shadow:inset 1px 1px 3px rgba(0,0,0,.9), 0 0 0 1px rgba(0,0,0,.7), 0 1px 0 1px rgba(255,235,200,.15); }
+    .lp-tablewrap { background:linear-gradient(180deg, #2f231a 0%, rgba(47,35,26,.95) 22%, rgba(47,35,26,.84) 100%), url('assets/art/scene/scene-galaxy.webp') 50% 60% / cover no-repeat #2f231a; }   /* a faint chart under the rows: an early ledger is mostly empty (phones: css/phone.css keeps the plain slot) */
     .lp-tbl { border-collapse:separate; border-spacing:0 2px; }
     .lp-tbl th { background:#4a3a2c; color:var(--bz-pale); border-bottom:0; box-shadow:inset 1px 1px 0 rgba(255,235,200,.18), inset -1px -1px 0 rgba(0,0,0,.6); font-family:var(--font-display); }
     .lp-tbl td { color:var(--bz-pale); background:var(--bz-slot); border-bottom:0; box-shadow:inset 0 1px 0 rgba(0,0,0,.6), inset 0 -1px 0 rgba(255,235,200,.07); }
