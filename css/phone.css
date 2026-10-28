@@ -44,6 +44,19 @@ html:root:root[data-phone] .tt-chip { min-height: var(--row); }
 html:root:root[data-phone] .lp-tbl tbody tr { height: var(--row); }
 html:root:root[data-phone] .gx-msg .m:nth-child(n+4) { display: none; }                        /* three messages at most over the map */
 html:root:root[data-phone] .gx.ph-pick .gx-msg { display: none; }                               /* none while a destination is being picked (phone-galaxy.js) */
+/* a destination pick (fleet deployment, Reloc, Trans; phone-galaxy.js sets .ph-pick): the map is the point, so the HUD and the tab bar step aside
+   for the pick (Accept / Cancel are on the panel; they return with the next panel), the sheet keeps clear of the home indicator, and once the
+   panel floats beside the chosen star the collapsed sheet under it goes too: the map had a third of the screen, it has well over half */
+html:root:root[data-phone] .gx.ph-pick :is(.gx-top, .gx-bar) { display: none; }
+html:root:root[data-phone] .gx.ph-pick { padding-bottom: env(safe-area-inset-bottom); background: var(--pk-bar, var(--void)); }
+html:root:root[data-phone] .gx.ph-pick:has(.gx-side.gx-float.on) .gx-side.ph-sheet { display: none; }
+html:root:root[data-phone] .gx.ph-pick .gx-side.gx-float { max-height: 50%; }                      /* the floating card: half the map at most (its body scrolls, Accept stays in reach) */
+html:root:root[data-phone] .gx-side.gx-float h3 { display: none; }                                   /* "Fleet deployment": the card beside the star says it */
+/* the floating card's first lines are what the pick decided: the destination with its ETA (or why the ships cannot go) right under the title,
+   the ship counts after it (they used to sit under the sticky Accept bar until the card was scrolled) */
+html:root:root[data-phone] .gx-side.gx-float .gx-sidebody { display: flex; flex-direction: column; }
+html:root:root[data-phone] .gx-side.gx-float .gx-sidebody > .side-title { order: -2; }
+html:root:root[data-phone] .gx-side.gx-float .gx-sidebody > div:has(> .sm-route) { order: -1; margin-bottom: .35rem; }
 html:root:root[data-phone] :is(.cyc, .sm-sb, .su-step) { min-width: var(--tap); min-height: var(--tap); }
 html:root:root[data-phone] .gx-att span { display: inline-flex; align-items: center; min-height: var(--tap); padding: 0 .6rem; }
 html:root:root[data-phone] .pb-autoall { min-height: var(--tap); } html[data-phone] .pb-autoall input { width: 1.4rem; height: 1.4rem; }
@@ -147,17 +160,17 @@ html[data-phone] .gmap canvas { -webkit-touch-callout: none; -webkit-user-select
    Game, Design and Map live in More (the game menu as a bottom sheet, gamemenu.js). Icon over label. */
 html:root:root[data-phone] .gx-bar.ph-tabs {
   display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)) minmax(0, 1.55fr); gap: .2rem; overflow: hidden;
-  padding: .25rem .25rem calc(.25rem + env(safe-area-inset-bottom)); background: linear-gradient(180deg, #3e4149, #282c32);
+  padding: .15rem .25rem calc(.15rem + env(safe-area-inset-bottom)); background: linear-gradient(180deg, #3e4149, #282c32);
 }
 html:root:root[data-phone] .gx-bar.ph-tabs > :is(.gx-spacer, .gx-wait, .ph-tab-game, .ph-tab-design, .ph-tab-map) { display: none; }
 html:root:root[data-phone] .gx-bar.ph-tabs .ph-tab-planets { order: 1; } html:root:root[data-phone] .gx-bar.ph-tabs .ph-tab-fleet { order: 2; }
 html:root:root[data-phone] .gx-bar.ph-tabs .ph-tab-tech { order: 3; } html:root:root[data-phone] .gx-bar.ph-tabs .ph-tab-races { order: 4; }
 html:root:root[data-phone] .gx-bar.ph-tabs .ph-tab-more { order: 5; } html:root:root[data-phone] .gx-bar.ph-tabs .ph-next { order: 6; }
 html:root:root[data-phone] .gx-bar.ph-tabs .btn {
-  flex-direction: column; justify-content: center; gap: .15rem; min-width: 0; min-height: calc(var(--tap) + .5rem); padding: .3rem .1rem;
+  flex-direction: column; justify-content: center; gap: .1rem; min-width: 0; min-height: var(--tap); padding: .2rem .1rem;
   font: 600 max(12px, .75rem)/1.1 var(--font-ui); letter-spacing: 0; text-transform: none; white-space: nowrap;
 }
-html:root:root[data-phone] .gx-bar.ph-tabs .btn .ico { width: 1.35rem; height: 1.35rem; margin: 0; }
+html:root:root[data-phone] .gx-bar.ph-tabs .btn .ico { width: 1.25rem; height: 1.25rem; margin: 0; }
 html:root:root[data-phone] .gx-bar.ph-tabs .ph-next { font: 700 max(12px, .8rem)/1.1 var(--font-display); letter-spacing: .04em; text-transform: uppercase; }
 /* the pre-battle / result cards inside the sheet */
 /* the minimap and the map key sit above the collapsed sheet (galaxymap.js positions the minimap inline per its corner setting) */
@@ -611,7 +624,7 @@ html[data-phone] #toasts { bottom: calc(var(--ph-strip) + var(--tap) + 1.4rem + 
    sliver of height. phone-galaxy.js still tracks the sheet state; these rules make it inert.
    ========================================================================= */
 @media (orientation: landscape) {
-  html:root:root[data-phone] .gx { grid-template-columns: minmax(0, 1fr) min(24rem, 46vw); padding-right: env(safe-area-inset-right, 0px); }   /* the column (and the bar) clear of the right notch */
+  html:root:root[data-phone] .gx { grid-template-columns: minmax(0, 1fr) min(22rem, 42vw); padding-right: env(safe-area-inset-right, 0px); }   /* the column (and the bar) clear of the right notch; 42vw: the sliders and the five-button stepper still fit, the map gets the rest */
   html:root:root[data-phone] .gx-side:not(.gx-float) { grid-column: 2; grid-row: 1; align-self: stretch; height: auto !important; transition: none; }
   html:root:root[data-phone] .gx-side:not(.gx-float) .ph-grip { display: none; }
   html[data-phone] .gx-side :is(.ph-sum, .ph-thumb) { display: none; }

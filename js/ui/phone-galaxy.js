@@ -53,7 +53,7 @@
     // sheet collapses instead of the game menu opening. A held prompt keeps its own keys, and a dialog on top keeps Escape.
     UI.Phone.backWanted = () => active() && !!sheet && sheet.get() === 'full' && portrait() && !holding && UI.Screens.current && UI.Screens.current.id === 'galaxy';
     window.addEventListener('keydown', e => {
-      if (e.key !== 'Escape' || !active() || !sheet || sheet.get() === 'strip' || !portrait() || holding) return;
+      if (e.key !== 'Escape' || !active() || !sheet || sheet.get() === 'strip' || !portrait() || holding || PICK[UI.Side.current()]) return;   // a pick's own Escape cancels it
       if (!UI.Screens.current || UI.Screens.current.id !== 'galaxy' || (UI.modalOpen && UI.modalOpen())) return;
       e.preventDefault(); e.stopImmediatePropagation();
       sheet.set('strip'); UI.Phone.haptic('snap');
@@ -118,7 +118,7 @@
     const content = Math.ceil(bottom - hr.top + parseFloat(hcs.paddingBottom) + host.scrollTop);
     const gripH = Math.max(0, sheet.grip.offsetHeight + parseFloat(getComputedStyle(sheet.grip).marginBottom || 0));   // the grip overlaps the panel (negative margin): no height of its own
     const need = gripH + pad + content + 1;
-    const cap = PICK[UI.Side.current()] ? 0.45 : 0.7;                                      // a pick needs the map: its panel takes at most 45% (the body scrolls)
+    const cap = PICK[UI.Side.current()] ? 0.42 : 0.7;                                      // a pick needs the map: its panel takes at most 42% (the body scrolls; the HUD and tab bar are away)
     side.style.setProperty('--ph-half', Math.round(Math.min(need, wrap.clientHeight * cap)) + 'px');
   }
   const update = () => { if (!active()) return; updateSummary(); if (sheet && sheet.get() === 'half') fitHalf(); scheduleInset(); };

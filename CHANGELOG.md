@@ -38,6 +38,12 @@ Versions follow `MAJOR.MINOR.PATCH`; the live version is the `VERSION` file.
   screen edge beside the outer booths on a phone, stay inside it. Sideways, the ship design editor (which places itself, without the app
   bar) keeps out of the notch too, and the audience's dialogue text gives up its desktop minimum height so one more option shows before
   the menu scrolls.
+- More map on phones. While a destination is being picked (fleet deployment, Reloc, Trans) the HUD and the tab bar step aside, so the map
+  has well over half the screen instead of a third (on an iPhone 15: 474px instead of 287 under the deployment sheet, 525 instead of 329
+  under Reloc); once the deployment card floats beside the chosen star, the collapsed sheet under it goes too and the card takes at most
+  half the map. Back during a pick cancels the pick (it was collapsing the sheet and leaving the pick open). Outside a pick the tab bar is
+  the height of a system tab bar, the HUD and the collapsed sheet are a little tighter (a 4 % taller map), and sideways the side column
+  takes 42 % of the width instead of 46 %.
 - Research screens fit iPhones. The breakthrough card (a technology researched, stolen, traded or found) was a fixed share of the
   screen with a fixed-height picture, so its text got what was left: 0 to 77 pixels on most iPhones for a block that needs 170 to 200,
   hidden in an inner scroll box iOS shows no scrollbar for. The chips were sliced, the description and effects never showed, and on a

@@ -27,7 +27,10 @@ per-screen env() paddings of `.tch`, `.ttp`, `.tsc`, `.sv-*`, `.op/.sl-frame` we
 `.modal` rule had been overriding phone.css), the title's `.menu-col` / `.menu-foot` inset, council tags clamped (`council.js` tag layout). The
 full `phone-fit.js` survey (34 views × 7 sizes) is clean except, on a phone held sideways, the design editor's body, the audience menu
 and the New game stage (`hidden-in-small-scroll`: 44px touch rows on a 342–393px-tall screen; the landscape layouts of phone follow-up 2
-are the real fix). `.dz.ph-dz` pads the side insets; `.au-text` has no minimum height in landscape. `VERSION` 1.3.0;
+are the real fix). `.dz.ph-dz` pads the side insets; `.au-text` has no minimum height in landscape. More map during picks: `.gx.ph-pick`
+(phone-galaxy.js `markPick`) hides `.gx-top` and `.gx-bar` and pads the home inset on `.gx`; a float card hides the strip sheet and is capped at
+50 %; `fitHalf` caps a pick at 42 % of the (now taller) wrap; the sheet's Escape handler skips picks (their own Escape cancels). Measured with
+`map-share.js` in the session scratchpad (map pixels per state). `VERSION` 1.3.0;
 CHANGELOG's Unreleased became 1.3.0. Known: `tools/qa/playshots.js` stalls on a "Bombard?" card (the bot presses Enter; the card wants
 B or Esc by design) — a bot limit, verified by loading the dumped state and pressing B. Note for the next release: the GitHub tags so far are `v0.2.0`, `v1.1.0` (same commit) and `v.1.1.1` (typo); this one is `v1.3.0`.
 Still open, unchanged: real-hardware GPU / audio passes, the optional art in `ART-NEEDED.md`, the phone follow-ups list.
