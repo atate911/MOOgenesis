@@ -1336,16 +1336,22 @@
     R.hi = max(0, list.findIndex(c => c.level === cur));
     R.items = list.map((c, i) => {
       const t = c.tech || techOf(f, c.level), ti = typeInfo(t ? t.type : 'special');
-      const row = h('div.tsc-item', { onmouseenter: e => { if (!R.finishing) setHi(i); }, onclick: e => { if (e.pointerType === 'mouse' || R.hi === i) pick(i); else setHi(i); } },
-        UI.icon(ti.ico), h('span.nm', t ? t.name : 'Level ' + c.level), h('span.co', fmt(c.cost) + ' RP'));
+      // mouse: hovering previews, a click researches. Touch / pen: a tap only previews (the tap's compatibility mouseenter had highlighted the
+      // row, so the click that followed used to research it at once, with nothing read); the Research button confirms.
+      const row = h('div.tsc-item', { onmouseenter: e => { if (!R.finishing) setHi(i); }, onclick: e => {
+        const pt = R.pt || e.pointerType || '', touch = pt ? pt !== 'mouse' : !!(M.Phone && M.Phone.active());
+        if (touch) { setHi(i); return; }
+        if (e.pointerType === 'mouse' || R.hi === i) pick(i); else setHi(i);
+      } }, UI.icon(ti.ico), h('span.nm', t ? t.name : 'Level ' + c.level), h('span.co', fmt(c.cost) + ' RP'));
       return row;
     });
     R.listEl = h('div.tsc-list', R.items);
+    R.listEl.addEventListener('pointerdown', e => { R.pt = e.pointerType || ''; }, true);   // what the click that follows came from (Safari's click carries no pointerType)
     R.infoEl = h('div.tsc-info');
     R.scrollEls = [R.listEl, R.infoEl]; R.scrollEls.forEach(el => el.addEventListener('scroll', () => moreBelow(el), { passive: true }));
     R.okBtn = UI.button('Research', () => pick(R.hi), { primary: true, kbd: 'Space' }); UI.attention(R.okBtn);
     R.skipBtn = UI.button(R.manual ? 'Cancel' : 'Decide for me', () => act('skip'), { kbd: 'Esc', tip: R.manual ? 'Keep things as they are' : 'Let the scientists take the cheapest technology' });
-    const box = h('div.tsc-box.ch', h('div.tsc-box-h', UI.icon(F.icon), h('span', F.name + ' Technology'), h('small', list.length + (list.length === 1 ? ' choice' : ' choices'))), R.listEl, R.infoEl,
+    const box = h('div.tsc-box.ch', h('div.tsc-box-h', UI.icon(F.icon), h('span', F.name + ' Technology'), h('small', UI.Phone.say(list.length + (list.length === 1 ? ' choice' : ' choices'), list.length + (list.length === 1 ? ' choice' : ' choices') + ' · tap to read'))), R.listEl, R.infoEl,
       h('div.tsc-acts', R.skipBtn, h('span.grow'), R.okBtn));
     SC.panel.appendChild(box);
     SC.hint.innerHTML = UI.Phone.say('<kbd>↑</kbd><kbd>↓</kbd> choose &nbsp;·&nbsp; <kbd>Space</kbd> research &nbsp;·&nbsp; <kbd>Esc</kbd> ' + (R.manual ? 'cancel' : 'let the scientists decide'), '');

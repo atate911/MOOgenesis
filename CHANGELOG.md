@@ -19,7 +19,10 @@ Versions follow `MAJOR.MINOR.PATCH`; the live version is the `VERSION` file.
   the raid mark and the red "!" attention badge first; the phone's key scrolls when it is taller than its box. Landscape: the galaxy's side
   column keeps clear of the right notch. The star system on phones: the fleet tiles were clipped by their own box in portrait and sat
   under the planet data box in landscape; they now stand beside the planet, the star kind joins the environment line (its caption sat
-  off the narrow screen), and the hint clears the home indicator.
+  off the narrow screen), and the hint clears the home indicator. Choosing the next technology on a phone: a single tap on a technology
+  researched it at once, with nothing read (the tap's synthetic mouse-over had highlighted the row and the click that followed took it as
+  a confirmation); a tap now only shows the technology's description and the Research button confirms (the header says "tap to read").
+  A mouse keeps hover-to-preview and click-to-research.
 - Research screens fit iPhones. The breakthrough card (a technology researched, stolen, traded or found) was a fixed share of the
   screen with a fixed-height picture, so its text got what was left: 0 to 77 pixels on most iPhones for a block that needs 170 to 200,
   hidden in an inner scroll box iOS shows no scrollbar for. The chips were sliced, the description and effects never showed, and on a

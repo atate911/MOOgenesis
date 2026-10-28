@@ -17,7 +17,8 @@ only oddity seen was the research-choice caption mid-typewriter), and saves made
 and played on (menu Continue line, save list, re-save). Fixes: title "1 colonies"; from the user's iPhone: the full colony sheet under the
 Dynamic Island (`--ph-full` minus the top inset; Back collapses the sheet, `UI.Phone.backWanted` shows the control at full), the map's ⚠
 explained (colony panel `raidNote` in side-colony.js, key rows in galaxymap.js `glyphRows`, the phone key scrolls), the landscape column
-clear of the notch, the phone star system (css places `.sv-fleets`; system.js `placeCaption` returns early on phones). `VERSION` 1.3.0;
+clear of the notch, the phone star system (css places `.sv-fleets`; system.js `placeCaption` returns early on phones), the tech choice
+taking a single tap as the answer (tech.js `buildChoose`: touch taps only preview, `R.pt` from the list's pointerdown). `VERSION` 1.3.0;
 CHANGELOG's Unreleased became 1.3.0. Known: `tools/qa/playshots.js` stalls on a "Bombard?" card (the bot presses Enter; the card wants
 B or Esc by design) — a bot limit, verified by loading the dumped state and pressing B. Note for the next release: the GitHub tags so far are `v0.2.0`, `v1.1.0` (same commit) and `v.1.1.1` (typo); this one is `v1.3.0`.
 Still open, unchanged: real-hardware GPU / audio passes, the optional art in `ART-NEEDED.md`, the phone follow-ups list.
