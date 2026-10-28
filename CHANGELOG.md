@@ -35,7 +35,9 @@ Versions follow `MAJOR.MINOR.PATCH`; the live version is the `VERSION` file.
   landing and ending screens, the game menu and the title screen put their last line or button under the home indicator. Every screen under
   the app bar now keeps out of the notch and the home indicator (the one sky shows in the bands; the galaxy, the title and the design editor
   place their own), the game menu sheet and the title screen's column and footer too. The council's YOU / NOMINEE tags, which hung off the
-  screen edge beside the outer booths on a phone, stay inside it.
+  screen edge beside the outer booths on a phone, stay inside it. Sideways, the ship design editor (which places itself, without the app
+  bar) keeps out of the notch too, and the audience's dialogue text gives up its desktop minimum height so one more option shows before
+  the menu scrolls.
 - Research screens fit iPhones. The breakthrough card (a technology researched, stolen, traded or found) was a fixed share of the
   screen with a fixed-height picture, so its text got what was left: 0 to 77 pixels on most iPhones for a block that needs 170 to 200,
   hidden in an inner scroll box iOS shows no scrollbar for. The chips were sliced, the description and effects never showed, and on a

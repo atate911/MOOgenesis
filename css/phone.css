@@ -198,7 +198,7 @@ html:root:root[data-phone] .sc-sliders .s-btn, html:root:root[data-phone] .sc-sl
    Ship design (js/ui/phone-design.js): one column — pinned budget header, scrolling parts, pinned Clear / Build.
    design.js's own <style> loads after this file and its 960px media rules fire on phones, so selectors carry .ph-dz for weight.
    ========================================================================= */
-html[data-phone] .dz.ph-dz { display: flex; flex-direction: column; gap: 0; padding: 0; overflow: hidden; }
+html[data-phone] .dz.ph-dz { display: flex; flex-direction: column; gap: 0; padding: 0 env(safe-area-inset-right) 0 env(safe-area-inset-left); overflow: hidden; }   /* the editor hides the app bar and places itself: sideways it keeps out of the notch (its head and foot pad the top and bottom insets) */
 html[data-phone] .dz.ph-dz::after { display: none; }                                  /* the desktop bezel frame */
 html[data-phone] .ph-dz .ph-dz-head {
   flex: none; position: relative; z-index: 5; display: flex; flex-direction: column; gap: .35rem;
@@ -679,6 +679,10 @@ html:root:root[data-phone] .sv-hint { bottom: .7rem; }
   html:root:root[data-phone] .sv-hint { display: none; }                                                  /* the app bar's Back says it; the hint sat on the tiles */
   html:root:root[data-phone] .sv-icons { display: none; }
   html:root:root[data-phone] .sv-info { right: 2.2%; bottom: 3.6%; }
+  /* the audience on its side: the dialogue text keeps its natural height (its desktop minimum left a blank band over the menu) and the
+     menu gets the room, so one more of the seven options shows before it scrolls; the panel keeps under the name plate and the terms bar */
+  html:root:root[data-phone] .au-text { min-height: 0; flex: 0 1 auto; }
+  html:root:root[data-phone] .au-menu { flex: 1 1 auto; }
 }
 
 /* ---- the title screen (no app bar): its footer above the home indicator, its column clear of the notch on its side and never under the footer ---- */

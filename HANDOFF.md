@@ -25,8 +25,9 @@ phones, measured with a scratch script (empty bands per view at the tallest iPho
 beside the switch. Safe areas, generically: `html[data-phone][data-ph-bar] #screens` is inset by the side and bottom insets (phone.css; the
 per-screen env() paddings of `.tch`, `.ttp`, `.tsc`, `.sv-*`, `.op/.sl-frame` were dropped), `.modal.gm-sheet` pads in phone-skin.css (its
 `.modal` rule had been overriding phone.css), the title's `.menu-col` / `.menu-foot` inset, council tags clamped (`council.js` tag layout). The
-full `phone-fit.js` survey (34 views × 7 sizes) is clean except design / audience / setup in landscape Safari (`hidden-in-small-scroll`: the
-342px-tall screen, see phone follow-up 2). `VERSION` 1.3.0;
+full `phone-fit.js` survey (34 views × 7 sizes) is clean except, on a phone held sideways, the design editor's body, the audience menu
+and the New game stage (`hidden-in-small-scroll`: 44px touch rows on a 342–393px-tall screen; the landscape layouts of phone follow-up 2
+are the real fix). `.dz.ph-dz` pads the side insets; `.au-text` has no minimum height in landscape. `VERSION` 1.3.0;
 CHANGELOG's Unreleased became 1.3.0. Known: `tools/qa/playshots.js` stalls on a "Bombard?" card (the bot presses Enter; the card wants
 B or Esc by design) — a bot limit, verified by loading the dumped state and pressing B. Note for the next release: the GitHub tags so far are `v0.2.0`, `v1.1.0` (same commit) and `v.1.1.1` (typo); this one is `v1.3.0`.
 Still open, unchanged: real-hardware GPU / audio passes, the optional art in `ART-NEEDED.md`, the phone follow-ups list.
