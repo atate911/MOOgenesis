@@ -129,6 +129,9 @@ html:root:root[data-phone] .gx-hud .y { grid-area: year; font-size: 1.15rem; }
 html:root:root[data-phone] .gx-hud .gx-chip { grid-area: chip; display: flex; justify-content: flex-end; }
 html:root:root[data-phone] .gx-hud .gx-hudr { grid-area: rest; display: flex; flex-wrap: wrap; gap: .1rem .7rem; }
 html:root:root[data-phone] .gx-hud .gx-gross { display: none; }
+/* a short phone with the sheet half open: the map's control column has nowhere to stand but over the HUD's right end (phone-galaxy.js syncInset
+   marks it tight), so the values keep clear of it and wrap instead */
+html:root:root[data-phone] .gx.ph-ctl-tight .gx-hud .gx-hudr { padding-right: calc(2 * var(--tap) + .4rem); }
 html:root:root[data-phone] .gx-msg { margin-left: 0; max-width: none; }
 html:root:root[data-phone] .gmap-ctrl .btn, html:root:root[data-phone] .gmap-ctrl button { min-width: var(--tap); min-height: var(--tap); }
 /* the map's control column sits just above whatever covers the map's bottom (the sheet, a floating card; phone-galaxy.js sets --ph-inset), so
@@ -429,6 +432,7 @@ html:root:root[data-phone] .tch-r2 { flex-wrap: wrap; gap: .2rem .6rem; }
 html:root:root[data-phone] .tch-r2 .tch-cap { flex: 1 1 100%; }                          /* the capability line whole, the project with its bar on the next line */
 html:root:root[data-phone] .tch-r2 .tch-mini { flex: 1 1 100%; } html:root:root[data-phone] .tch-mini .bar { flex: 1 1 auto; width: auto; }
 html:root:root[data-phone] .tch-proj { min-height: auto; }
+html:root:root[data-phone] .tch-ppic { height: 11rem; margin-top: .6rem; }   /* the project's blueprint under the text (tech.js renderProject, phones only) */
 html:root:root[data-phone] .tch-sl .foot { flex-wrap: wrap; }
 
 /* the three parts (js/ui/phone-research.js): Allocation · Project · Techs */
@@ -545,7 +549,16 @@ html:root:root[data-phone] .au-item .d { white-space: normal; }
 
 /* ---- save / load: the import / export pair stacks ---- */
 @media (orientation: portrait) { html:root:root[data-phone] .sl-tools { flex-wrap: wrap; } html:root:root[data-phone] .sl-tools .btn { flex: 1 1 100%; } }
+/* on its side the screen is 342px tall in Safari: Import / Export go up beside the Save / Load switch, so the slot list keeps the height */
+@media (orientation: landscape) {
+  html:root:root[data-phone] .sl { display: grid; grid-template-columns: minmax(0, 1fr) auto; grid-template-rows: auto auto minmax(0, 1fr); grid-template-areas: "bar tools" "warns warns" "list list"; column-gap: .8rem; }
+  html:root:root[data-phone] .sl-bar { grid-area: bar; } html:root:root[data-phone] .sl-warns { grid-area: warns; } html:root:root[data-phone] .sl-list { grid-area: list; }
+  html:root:root[data-phone] .sl-tools { grid-area: tools; align-self: center; }
+  html:root:root[data-phone] .sl-count { display: none; }
+}
 html:root:root[data-phone] .sl-foot-hint { display: none; }
+/* Options and Save / Load: the desktop frames pad the top by 5% of the viewport (a tall phone gave the first card a 46px empty band under the app bar) */
+html:root:root[data-phone] :is(.op-frame, .sl-frame) { padding: .55rem calc(.6rem + env(safe-area-inset-right)) calc(.5rem + env(safe-area-inset-bottom)) calc(.6rem + env(safe-area-inset-left)); }
 /* ---- spy theft: the six fields in one column ---- */
 html[data-phone] .spy-grid { grid-template-columns: minmax(0, 1fr); }
 html[data-phone] .spy-fld { min-height: 3rem; }

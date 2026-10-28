@@ -163,7 +163,7 @@ html:root:root:root[data-phone] .gx-bar.ph-tabs .btn.ph-next { margin: .25rem .2
 /* ---- galaxy: the HUD as a top bar, grouped map controls, a flat sheet with rounded top corners -------------------------------------- */
 html:root:root[data-phone] .gx-top { left: 0; right: 0; top: 0; gap: 0; }
 html:root:root[data-phone] .gx-hud {
-  padding: calc(.4rem + env(safe-area-inset-top)) calc(var(--tap) + 1.1rem) .4rem .8rem; border: 0; clip-path: none;
+  padding: calc(.4rem + env(safe-area-inset-top)) .8rem .4rem .8rem; border: 0; clip-path: none;   /* no column to clear on the right: the map controls sit bottom-right (portrait) or beside an inset .gx-top (landscape), so the values fit in one row */
   background: rgba(16, 20, 27, .86); backdrop-filter: blur(6px); box-shadow: 0 1px 0 rgba(255, 255, 255, .08);
 }
 html:root:root[data-phone] .gx-msg { padding: .35rem .5rem 0; }

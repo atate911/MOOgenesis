@@ -18,7 +18,11 @@ and played on (menu Continue line, save list, re-save). Fixes: title "1 colonies
 Dynamic Island (`--ph-full` minus the top inset; Back collapses the sheet, `UI.Phone.backWanted` shows the control at full), the map's ⚠
 explained (colony panel `raidNote` in side-colony.js, key rows in galaxymap.js `glyphRows`, the phone key scrolls), the landscape column
 clear of the notch, the phone star system (css places `.sv-fleets`; system.js `placeCaption` returns early on phones), the tech choice
-taking a single tap as the answer (tech.js `buildChoose`: touch taps only preview, `R.pt` from the list's pointerdown). `VERSION` 1.3.0;
+taking a single tap as the answer (tech.js `buildChoose`: touch taps only preview, `R.pt` from the list's pointerdown). Screen use on tall
+phones, measured with a scratch script (empty bands per view at the tallest iPhone): HUD values on one row (phone-skin.css `.gx-hud` padding;
+`.ph-ctl-tight` wraps them when the control column climbs), `fitHalf` measures the children's union and no longer counts the overlapping grip,
+`.op-frame`/`.sl-frame` phone padding, the project's blueprint on the Project tab (`st.ppic` in tech.js, phones only), landscape Save tools
+beside the switch. `VERSION` 1.3.0;
 CHANGELOG's Unreleased became 1.3.0. Known: `tools/qa/playshots.js` stalls on a "Bombard?" card (the bot presses Enter; the card wants
 B or Esc by design) — a bot limit, verified by loading the dumped state and pressing B. Note for the next release: the GitHub tags so far are `v0.2.0`, `v1.1.0` (same commit) and `v.1.1.1` (typo); this one is `v1.3.0`.
 Still open, unchanged: real-hardware GPU / audio passes, the optional art in `ART-NEEDED.md`, the phone follow-ups list.

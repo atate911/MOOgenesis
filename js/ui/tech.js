@@ -912,6 +912,7 @@
       if (rs.invest[f] > 1) st.proj.appendChild(h('div.warn', 'Without a project the ' + fmt(rs.invest[f]) + ' RP already invested here shrink by 10% each turn.'));
       if (!done && rs.slider[f] === 0) st.proj.appendChild(h('div.dim.small', 'This field receives no research share yet.'));
       st.proj.appendChild(xtra());
+      st.ppic = null;
       return;
     }
     const cost = rs.cost[f], inv = rs.invest[f], frac = cost ? clamp(inv / cost, 0, 1) : 0, fc = forecast(E, f, inv, cost), chance = R.breakthroughChance(E, f), rp = rpOf(E, f);
@@ -926,6 +927,10 @@
     st.proj.appendChild(kv);
     if (rs.slider[f] === 0 || (rs.total | 0) === 0) st.proj.appendChild(h('div.warn', (rs.total | 0) === 0 ? 'No research points are produced. Give your colonies a Tech share to start researching.' : 'Unfunded: the ' + fmt(inv) + ' RP invested here shrink by 10% each turn.'));
     st.proj.appendChild(xtra());
+    // phones: the Project tab has no picture pane (that is the Techs tab), and on a tall phone its lower quarter was bare leather: the project's
+    // own blueprint sits under the text (drawn by drawPic with the main picture)
+    st.ppic = null;
+    if (M.Phone && M.Phone.active()) { st.ppic = h('canvas.tch-pic.tch-ppic'); st.ppicTech = proj; st.proj.appendChild(st.ppic); st.picDirty = true; }
     void S;
   }
   // taller windows: what the field gives you, and the cheapest technologies available next (click one to see it in the overview)
@@ -938,10 +943,15 @@
   }
   function drawPic(t) {
     const E = st.E || G.player(); if (!E || !st.pic.isConnected) return;
+    const o = { col: FIELDS[st.field].col, race: E.race, banner: bannerCss(E), hull: 2 };
+    if (st.ppic && st.ppic.isConnected && st.ppicTech) {                                      // the Project tab's blueprint (phones); hidden canvases measure 0 and are skipped
+      const p = UI.fitCanvas(st.ppic, { maxDpr: PQ().dpr });
+      if (p.w >= 20 && p.h >= 20) drawArt(p.ctx, p.w, p.h, t, st.ppicTech, o);
+    }
     const f = UI.fitCanvas(st.pic, { maxDpr: PQ().dpr });
-    if (f.w < 20 || f.h < 20) return;
+    if (f.w < 20 || f.h < 20) { st.picDirty = false; return; }
     const tech = st.sel ? TD().byId[st.sel] : null;
-    drawArt(f.ctx, f.w, f.h, t, tech, { col: FIELDS[st.field].col, race: E.race, banner: bannerCss(E), hull: 2 });
+    drawArt(f.ctx, f.w, f.h, t, tech, o);
     st.picDirty = false;
   }
   function renderOverview(E) {

@@ -58,7 +58,7 @@
       e.preventDefault(); e.stopImmediatePropagation();
       sheet.set('strip'); UI.Phone.haptic('snap');
     }, true);
-    side.addEventListener('transitionend', e => { if (e.propertyName === 'height') syncInset(); });        // the sheet's height has settled: measure now, not on the timer
+    side.addEventListener('transitionend', e => { if (e.propertyName === 'height') { fitHalf(); syncInset(); } });        // the sheet's height has settled: re-fit the half height to its content, measure the inset now, not on the timer
     const wrap = scr.querySelector('.gx-mapwrap'); if (wrap) wrap.addEventListener('pointerdown', () => syncInset(true), true);   // and right before a drag / tap on the map (soft: the view must not move under the finger)
     if (UI.Galaxy.map && UI.Galaxy.map.on) UI.Galaxy.map.on('controls', () => syncInset(true));        // More unfolded or folded the map's toggles: re-check the column fits
     window.addEventListener('resize', () => { requestAnimationFrame(fitHalf); scheduleInset(); });
@@ -110,7 +110,14 @@
     const side = sheet.el, host = side.querySelector('.gx-sidebody'), panel = host && host.parentElement, wrap = side.parentElement && side.parentElement.querySelector('.gx-mapwrap');
     if (!host || !panel || !wrap) return;
     const cs = getComputedStyle(panel), pad = parseFloat(cs.paddingTop) + parseFloat(cs.paddingBottom) + parseFloat(cs.borderTopWidth) + parseFloat(cs.borderBottomWidth);
-    const need = sheet.grip.offsetHeight + pad + host.scrollHeight + 2;
+    // the content's own height: the lowest visible child plus its margin and the body's padding. (scrollHeight is the body's box once the sheet is
+    // taller than the content, and mid-transition it carried a few stale pixels: the sheet sat ~25px below its buttons on a tall phone.)
+    const hcs = getComputedStyle(host), hr = host.getBoundingClientRect();
+    let bottom = hr.top + parseFloat(hcs.paddingTop);
+    for (const k of host.children) { const kr = k.getBoundingClientRect(); if (kr.height > 0) bottom = Math.max(bottom, kr.bottom + parseFloat(getComputedStyle(k).marginBottom)); }
+    const content = Math.ceil(bottom - hr.top + parseFloat(hcs.paddingBottom) + host.scrollTop);
+    const gripH = Math.max(0, sheet.grip.offsetHeight + parseFloat(getComputedStyle(sheet.grip).marginBottom || 0));   // the grip overlaps the panel (negative margin): no height of its own
+    const need = gripH + pad + content + 1;
     const cap = PICK[UI.Side.current()] ? 0.45 : 0.7;                                      // a pick needs the map: its panel takes at most 45% (the body scrolls)
     side.style.setProperty('--ph-half', Math.round(Math.min(need, wrap.clientHeight * cap)) + 'px');
   }

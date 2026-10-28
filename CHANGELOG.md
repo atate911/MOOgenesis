@@ -23,6 +23,14 @@ Versions follow `MAJOR.MINOR.PATCH`; the live version is the `VERSION` file.
   researched it at once, with nothing read (the tap's synthetic mouse-over had highlighted the row and the click that followed took it as
   a confirmation); a tap now only shows the technology's description and the Research button confirms (the header says "tap to read").
   A mouse keeps hover-to-preview and click-to-research.
+- Phones use the whole screen, tall ones included (measured: every phone view at the tallest iPhone, the empty bands and every scroll box
+  with room under it). The galaxy HUD kept a column's width free on its right for map controls that no longer stand there, which pushed
+  "Colonies" onto a third row: the four values now share one row under the year, and the map gains the height (on a short phone with
+  the sheet half open, where the controls do climb beside the HUD, the values wrap as before). The half-open colony sheet counted its
+  grip twice and sat about 25px below its own buttons; it now ends under them. Options and Save / Load padded their top by 5% of the
+  screen height; a tall phone had a 46px empty band under the app bar. The Research › Project tab left the lower quarter of a tall phone
+  bare: the project's blueprint now sits under its figures. On its side, the Save screen's Import / Export sit beside the Save / Load
+  switch, so the slot list keeps the height.
 - Research screens fit iPhones. The breakthrough card (a technology researched, stolen, traded or found) was a fixed share of the
   screen with a fixed-height picture, so its text got what was left: 0 to 77 pixels on most iPhones for a block that needs 170 to 200,
   hidden in an inner scroll box iOS shows no scrollbar for. The chips were sliced, the description and effects never showed, and on a
