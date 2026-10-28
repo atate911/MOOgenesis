@@ -14,8 +14,12 @@ Meklar AI runs zero research until turn 26 while it builds factories — its pol
 `tools/qa/`: smoke, turns (80 on Hard; 80 with `pool=expanded`), saves (server flow), combat, endings, council, spy, help, misc, scenes,
 modes, fuzz, phone (263 checks), a screenshot walkthrough of 40 views at 1920×1080 and 1366×768 (script in the session scratchpad; the
 only oddity seen was the research-choice caption mid-typewriter), and saves made by the v1.1.1 and v1.2.0 trees loaded into this build
-and played on (menu Continue line, save list, re-save). One fix (title "1 colonies"). `VERSION` 1.3.0; CHANGELOG's Unreleased became
-1.3.0. Note for the next release: the GitHub tags so far are `v0.2.0`, `v1.1.0` (same commit) and `v.1.1.1` (typo); this one is `v1.3.0`.
+and played on (menu Continue line, save list, re-save). Fixes: title "1 colonies"; from the user's iPhone: the full colony sheet under the
+Dynamic Island (`--ph-full` minus the top inset; Back collapses the sheet, `UI.Phone.backWanted` shows the control at full), the map's ⚠
+explained (colony panel `raidNote` in side-colony.js, key rows in galaxymap.js `glyphRows`, the phone key scrolls), the landscape column
+clear of the notch, the phone star system (css places `.sv-fleets`; system.js `placeCaption` returns early on phones). `VERSION` 1.3.0;
+CHANGELOG's Unreleased became 1.3.0. Known: `tools/qa/playshots.js` stalls on a "Bombard?" card (the bot presses Enter; the card wants
+B or Esc by design) — a bot limit, verified by loading the dumped state and pressing B. Note for the next release: the GitHub tags so far are `v0.2.0`, `v1.1.0` (same commit) and `v.1.1.1` (typo); this one is `v1.3.0`.
 Still open, unchanged: real-hardware GPU / audio passes, the optional art in `ART-NEEDED.md`, the phone follow-ups list.
 
 ## Session 9 (October 2026) — Tech Lab, branch `claude/tech-lab`

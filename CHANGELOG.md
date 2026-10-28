@@ -11,6 +11,15 @@ Versions follow `MAJOR.MINOR.PATCH`; the live version is the `VERSION` file.
   endings, council, spy, help, scenes, modes and fuzz suites, the phone suite at three sizes and the server-save flow), a screenshot
   walkthrough of every screen, scene and dialog at 1920×1080 and 1366×768, and saves written by v1.1.1 and v1.2.0 loaded into this
   build and played on. One fix: the title screen's "Last played" line said "1 colonies".
+- Phones, from the first reports on a real iPhone. The colony sheet opened to its full height ran under the Dynamic Island, so its grip (the
+  only way to close it) could not be reached and the panel stayed up until the next turn: the full sheet now starts below the top safe
+  area, the Back control shows while the sheet covers the map, and Back (the control or the phone's back gesture) collapses an open sheet
+  instead of opening the game menu (a dialog on top still closes first). The ⚠ beside a colony on the map had no explanation on a touch
+  screen: the colony panel now carries the line ("⚠ Alkari: 3 hostile ships arriving in 2 turns"), on desktop too, and the map key lists
+  the raid mark and the red "!" attention badge first; the phone's key scrolls when it is taller than its box. Landscape: the galaxy's side
+  column keeps clear of the right notch. The star system on phones: the fleet tiles were clipped by their own box in portrait and sat
+  under the planet data box in landscape; they now stand beside the planet, the star kind joins the environment line (its caption sat
+  off the narrow screen), and the hint clears the home indicator.
 - Research screens fit iPhones. The breakthrough card (a technology researched, stolen, traded or found) was a fixed share of the
   screen with a fixed-height picture, so its text got what was left: 0 to 77 pixels on most iPhones for a block that needs 170 to 200,
   hidden in an inner scroll box iOS shows no scrollbar for. The chips were sliced, the description and effects never showed, and on a

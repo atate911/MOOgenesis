@@ -121,7 +121,7 @@
     const cur = UI.Screens && UI.Screens.current, id = cur && cur.id;
     const modal = !!(UI.modalOpen && UI.modalOpen());
     setBar(id);
-    backEl.classList.toggle('on', active() && (modal || barFor(id)));
+    backEl.classList.toggle('on', active() && (modal || barFor(id) || !!(P.backWanted && P.backWanted())));   // backWanted: a screen's own ask (phone-galaxy.js: the sheet at full)
   }
   P.updateBack = updateBack;
   P.back = function () {

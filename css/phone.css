@@ -105,7 +105,7 @@ html:root:root[data-phone] .gx-mapwrap { grid-column: 1; grid-row: 1; }
 html[data-phone] { --ph-strip: calc(var(--tap) + 4.1rem); }                           /* the collapsed sheet: grip, title row, summary line (the minimap, map key and toasts sit above it) */
 html:root:root[data-phone] .gx-side:not(.gx-float) {
   grid-column: 1; grid-row: 1; align-self: end; z-index: 6; padding: 0; background: none;
-  --ph-half: 56%; --ph-full: calc(100% - .4rem); --grip: 1.5rem;        /* --ph-half: phone-galaxy.js measures the controls' height */
+  --ph-half: 56%; --ph-full: calc(100% - .4rem - env(safe-area-inset-top, 0px)); --grip: 1.5rem;   /* full: below the notch / Dynamic Island, so the grip stays reachable */        /* --ph-half: phone-galaxy.js measures the controls' height */
 }
 /* a held prompt (the turn's pending question; phone-galaxy.js sets data-held) stacks above the map's busy overlay (.gx-busy, z-index 20):
    the sheet lies over the map, and under the overlay its buttons could not be tapped — the turn waited forever on a card the player could
@@ -159,7 +159,7 @@ html:root:root[data-phone] .gx-bar.ph-tabs .ph-next { font: 700 max(12px, .8rem)
 /* the pre-battle / result cards inside the sheet */
 /* the minimap and the map key sit above the collapsed sheet (galaxymap.js positions the minimap inline per its corner setting) */
 html:root:root[data-phone] .gmap-mini { left: .5rem !important; right: auto !important; top: auto !important; bottom: calc(var(--ph-strip) + .5rem) !important; }
-html:root:root[data-phone] .gmap .gmap-legend.panel { bottom: calc(var(--ph-strip) + .5rem); width: min(16rem, 70vw); max-height: 55%; }
+html:root:root[data-phone] .gmap .gmap-legend.panel { bottom: calc(var(--ph-strip) + .5rem); width: min(16rem, 70vw); max-height: 55%; overflow-y: auto; -webkit-overflow-scrolling: touch; }   /* taller than its box: it scrolls */
 /* the sheet's title row: a thumbnail (side-colony.js / side-misc.js add it on phones), then the summary line (phone-galaxy.js) */
 html:root:root[data-phone] .gx-side .side-title { min-height: var(--tap); gap: .5rem; margin-bottom: .2rem; padding: .15rem .35rem; }
 html[data-phone] .ph-thumb { flex: none; display: grid; place-items: center; width: 2.4rem; height: 2.4rem; overflow: hidden; }
@@ -525,18 +525,16 @@ html:root:root[data-phone] .ov-modes { flex-direction: row; flex-wrap: wrap; } h
   html:root:root[data-phone] .sv-tl { top: 19%; left: 2%; max-width: 56%; }
   html:root:root[data-phone] .sv.plate .sv-tl { left: 2%; right: auto; align-items: flex-start; text-align: left; }
   html:root:root[data-phone] .sv-lab { font-size: .95rem; padding: .2rem .55rem; } html:root:root[data-phone] .sv-note { font-size: .9rem; }
-  html:root:root[data-phone] .sv-fleets, html:root:root[data-phone] .sv.plate .sv-fleets { top: 30%; right: 2%; max-width: 46%; max-height: 38%; }
+  html:root:root[data-phone] .sv-fleets, html:root:root[data-phone] .sv.plate .sv-fleets { top: 24%; right: 2%; max-width: 46%; max-height: 44%; }   /* under the title block, beside the planet; the data box starts at ~72% */
   /* the group heading on one line ("· in orbit" goes: this screen is the orbit), and design names (up to 12 letters) wrap under a fixed-height
      ship picture instead of being cut to "COLONY SH…" */
   html:root:root[data-phone] .sv-gh { white-space: nowrap; }
   html:root:root[data-phone] .sv-tile { width: 7.4rem; height: auto; display: flex; flex-direction: column; }
   html:root:root[data-phone] .sv-tile canvas { position: relative; inset: auto; flex: none; height: 3.1rem; }
   html:root:root[data-phone] .sv-tile .nm { position: static; white-space: normal; overflow-wrap: anywhere; line-height: 1.15; padding: .1rem .3rem .2rem; }
-  html:root:root[data-phone] .sv-star { top: 23%; left: 84%; }
-  html:root:root[data-phone] .sv-info { left: 2%; right: 2%; min-width: 0; bottom: 2.6rem; }
+  html:root:root[data-phone] .sv-info { left: 2%; right: 2%; min-width: 0; bottom: calc(2.6rem + env(safe-area-inset-bottom, 0px)); }
   html:root:root[data-phone] .sv-icons { display: none; }                          /* the same population / factory counts are in the data panel */
   html:root:root[data-phone] .sv-unex { left: 4%; right: 4%; max-width: none; bottom: 3rem; }
-  html:root:root[data-phone] .sv-hint { bottom: .7rem; }
 }
 
 /* ---- audience: the name plate and the relation bar stack on the left ---- */
@@ -600,7 +598,7 @@ html[data-phone] #toasts { bottom: calc(var(--ph-strip) + var(--tap) + 1.4rem + 
    sliver of height. phone-galaxy.js still tracks the sheet state; these rules make it inert.
    ========================================================================= */
 @media (orientation: landscape) {
-  html:root:root[data-phone] .gx { grid-template-columns: minmax(0, 1fr) min(24rem, 46vw); }
+  html:root:root[data-phone] .gx { grid-template-columns: minmax(0, 1fr) min(24rem, 46vw); padding-right: env(safe-area-inset-right, 0px); }   /* the column (and the bar) clear of the right notch */
   html:root:root[data-phone] .gx-side:not(.gx-float) { grid-column: 2; grid-row: 1; align-self: stretch; height: auto !important; transition: none; }
   html:root:root[data-phone] .gx-side:not(.gx-float) .ph-grip { display: none; }
   html[data-phone] .gx-side :is(.ph-sum, .ph-thumb) { display: none; }
@@ -655,4 +653,18 @@ html:root:root[data-phone] .tsc-hint { display: none; }
   html:root:root[data-phone] .tsc-box > .tsc-list { grid-column: 1; grid-row: 2 / 4; min-height: 0; }
   html:root:root[data-phone] .tsc-box > .tsc-info { grid-column: 2; grid-row: 2; margin-top: 0; overflow-y: auto; }
   html:root:root[data-phone] .tsc-box:has(> .tsc-list) > .tsc-acts { grid-column: 2; grid-row: 3; }
+}
+
+/* ---- star system on phones, both orientations: the star caption is part of the environment line (system.js), the hint clears the home indicator ---- */
+html:root:root[data-phone] .sv-star { display: none; }
+html:root:root[data-phone] .sv-hint { bottom: calc(.7rem + env(safe-area-inset-bottom, 0px)); }
+@media (orientation: landscape) {
+  /* the fleet tiles between the planet (left third) and the data box (right), not under the box; the box clears the right notch */
+  html:root:root[data-phone] .sv-fleets, html:root:root[data-phone] .sv.plate .sv-fleets { left: 40%; right: auto; top: auto; bottom: calc(3.6% + env(safe-area-inset-bottom, 0px)); max-width: 17%; max-height: 62%; align-items: flex-start; }
+  html:root:root[data-phone] .sv-grp { align-items: flex-start; } html:root:root[data-phone] .sv-row { justify-content: flex-start; }
+  html:root:root[data-phone] .sv-gh { max-width: 100%; align-self: flex-start; text-align: left; font-size: .8rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }   /* "Your fleet" within the column, not over the data box */
+  html:root:root[data-phone] .sv-hint { display: none; }                                                  /* the app bar's Back says it; the hint sat on the tiles */
+  html:root:root[data-phone] .sv-icons { display: none; }
+  html:root:root[data-phone] .sv-info { right: calc(2.2% + env(safe-area-inset-right, 0px)); bottom: calc(3.6% + env(safe-area-inset-bottom, 0px)); }
+  html:root:root[data-phone] .sv-tl { left: calc(2% + env(safe-area-inset-left, 0px)); }
 }

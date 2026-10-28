@@ -154,7 +154,7 @@
     // --- top: name, environment, owner
     const own = i.explored ? (i.empire ? h('div.sv-own', h('span.empire-dot', { style: { '--c': 'var(--emp' + i.empire.color + ')' } }), h('b', i.empire.plural + ' colony'), !i.mine && !i.live ? h('span.dim', '(last reported)') : null)
       : (i.type === 'none' ? null : h('div.sv-own', h('span.dim', 'Uninhabited')))) : null;
-    kids.push(h('div.sv-top', h('div.sv-name', i.name), h('div.sv-env', i.explored ? i.typeLabel : STAR_NAME[i.kind] + ' star'), own));
+    kids.push(h('div.sv-top', h('div.sv-name', i.name), h('div.sv-env', i.explored ? i.typeLabel + (M.Phone && M.Phone.active() ? ' · ' + STAR_NAME[i.kind] + ' star' : '') : STAR_NAME[i.kind] + ' star'), own));
     // --- top-left: shield, stargate, notes
     const tl = h('div.sv-tl');
     if (i.explored) {
@@ -367,6 +367,7 @@
     if (!cap || !g) return;
     const fl = el.querySelector('.sv-fleets'), sky = !!(st.plate && st.plate.mode === 'sky');
     cap.style.transform = ''; if (fl) { fl.style.top = ''; fl.style.maxHeight = ''; }
+    if (M.Phone && M.Phone.active()) return;                           // phones: css/phone.css places the fleet tiles (the caption is in the environment line)
     if (st.plate && st.plate.mode === 'plate') { cap.style.left = (g.sx + g.sr * 1.08) + 'px'; cap.style.top = (g.sy + g.sr * 0.3) + 'px'; }   // beside the plate's star (it may be cut by the left edge, and the big planet sits under it)
     else if (sky) {
       // the painted skies carry a large sun low in the corner: the label goes beside it (left), the fleets in orbit start under it

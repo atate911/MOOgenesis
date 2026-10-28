@@ -48,7 +48,16 @@
       sheet.set('half'); UI.Phone.haptic('snap');
       try { const id = G.sel && G.sel.star; if (id >= 0 && UI.Galaxy.map) UI.Galaxy.map.centerOn(id, { animate: true }); } catch (err) { /* optional */ }
     }, true);
-    sheet.on(st => { if (st === 'half') requestAnimationFrame(fitHalf); scheduleInset(); });
+    sheet.on(st => { if (st === 'half') requestAnimationFrame(fitHalf); scheduleInset(); if (UI.Phone.updateBack) UI.Phone.updateBack(); });
+    // Back closes what is open: the control (shown while the sheet covers the map) and the phone's back gesture both arrive as Escape; an open
+    // sheet collapses instead of the game menu opening. A held prompt keeps its own keys, and a dialog on top keeps Escape.
+    UI.Phone.backWanted = () => active() && !!sheet && sheet.get() === 'full' && portrait() && !holding && UI.Screens.current && UI.Screens.current.id === 'galaxy';
+    window.addEventListener('keydown', e => {
+      if (e.key !== 'Escape' || !active() || !sheet || sheet.get() === 'strip' || !portrait() || holding) return;
+      if (!UI.Screens.current || UI.Screens.current.id !== 'galaxy' || (UI.modalOpen && UI.modalOpen())) return;
+      e.preventDefault(); e.stopImmediatePropagation();
+      sheet.set('strip'); UI.Phone.haptic('snap');
+    }, true);
     side.addEventListener('transitionend', e => { if (e.propertyName === 'height') syncInset(); });        // the sheet's height has settled: measure now, not on the timer
     const wrap = scr.querySelector('.gx-mapwrap'); if (wrap) wrap.addEventListener('pointerdown', () => syncInset(true), true);   // and right before a drag / tap on the map (soft: the view must not move under the finger)
     if (UI.Galaxy.map && UI.Galaxy.map.on) UI.Galaxy.map.on('controls', () => syncInset(true));        // More unfolded or folded the map's toggles: re-check the column fits
