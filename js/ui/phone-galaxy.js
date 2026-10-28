@@ -48,8 +48,17 @@
       sheet.set('half'); UI.Phone.haptic('snap');
       try { const id = G.sel && G.sel.star; if (id >= 0 && UI.Galaxy.map) UI.Galaxy.map.centerOn(id, { animate: true }); } catch (err) { /* optional */ }
     }, true);
-    sheet.on(st => { if (st === 'half') requestAnimationFrame(fitHalf); scheduleInset(); });
-    side.addEventListener('transitionend', e => { if (e.propertyName === 'height') syncInset(); });        // the sheet's height has settled: measure now, not on the timer
+    sheet.on(st => { if (st === 'half') requestAnimationFrame(fitHalf); scheduleInset(); if (UI.Phone.updateBack) UI.Phone.updateBack(); });
+    // Back closes what is open: the control (shown while the sheet covers the map) and the phone's back gesture both arrive as Escape; an open
+    // sheet collapses instead of the game menu opening. A held prompt keeps its own keys, and a dialog on top keeps Escape.
+    UI.Phone.backWanted = () => active() && !!sheet && sheet.get() === 'full' && portrait() && !holding && UI.Screens.current && UI.Screens.current.id === 'galaxy';
+    window.addEventListener('keydown', e => {
+      if (e.key !== 'Escape' || !active() || !sheet || sheet.get() === 'strip' || !portrait() || holding || PICK[UI.Side.current()]) return;   // a pick's own Escape cancels it
+      if (!UI.Screens.current || UI.Screens.current.id !== 'galaxy' || (UI.modalOpen && UI.modalOpen())) return;
+      e.preventDefault(); e.stopImmediatePropagation();
+      sheet.set('strip'); UI.Phone.haptic('snap');
+    }, true);
+    side.addEventListener('transitionend', e => { if (e.propertyName === 'height') { fitHalf(); syncInset(); } });        // the sheet's height has settled: re-fit the half height to its content, measure the inset now, not on the timer
     const wrap = scr.querySelector('.gx-mapwrap'); if (wrap) wrap.addEventListener('pointerdown', () => syncInset(true), true);   // and right before a drag / tap on the map (soft: the view must not move under the finger)
     if (UI.Galaxy.map && UI.Galaxy.map.on) UI.Galaxy.map.on('controls', () => syncInset(true));        // More unfolded or folded the map's toggles: re-check the column fits
     window.addEventListener('resize', () => { requestAnimationFrame(fitHalf); scheduleInset(); });
@@ -101,8 +110,15 @@
     const side = sheet.el, host = side.querySelector('.gx-sidebody'), panel = host && host.parentElement, wrap = side.parentElement && side.parentElement.querySelector('.gx-mapwrap');
     if (!host || !panel || !wrap) return;
     const cs = getComputedStyle(panel), pad = parseFloat(cs.paddingTop) + parseFloat(cs.paddingBottom) + parseFloat(cs.borderTopWidth) + parseFloat(cs.borderBottomWidth);
-    const need = sheet.grip.offsetHeight + pad + host.scrollHeight + 2;
-    const cap = PICK[UI.Side.current()] ? 0.45 : 0.7;                                      // a pick needs the map: its panel takes at most 45% (the body scrolls)
+    // the content's own height: the lowest visible child plus its margin and the body's padding. (scrollHeight is the body's box once the sheet is
+    // taller than the content, and mid-transition it carried a few stale pixels: the sheet sat ~25px below its buttons on a tall phone.)
+    const hcs = getComputedStyle(host), hr = host.getBoundingClientRect();
+    let bottom = hr.top + parseFloat(hcs.paddingTop);
+    for (const k of host.children) { const kr = k.getBoundingClientRect(); if (kr.height > 0) bottom = Math.max(bottom, kr.bottom + parseFloat(getComputedStyle(k).marginBottom)); }
+    const content = Math.ceil(bottom - hr.top + parseFloat(hcs.paddingBottom) + host.scrollTop);
+    const gripH = Math.max(0, sheet.grip.offsetHeight + parseFloat(getComputedStyle(sheet.grip).marginBottom || 0));   // the grip overlaps the panel (negative margin): no height of its own
+    const need = gripH + pad + content + 1;
+    const cap = PICK[UI.Side.current()] ? 0.42 : 0.7;                                      // a pick needs the map: its panel takes at most 42% (the body scrolls; the HUD and tab bar are away)
     side.style.setProperty('--ph-half', Math.round(Math.min(need, wrap.clientHeight * cap)) + 'px');
   }
   const update = () => { if (!active()) return; updateSummary(); if (sheet && sheet.get() === 'half') fitHalf(); scheduleInset(); };

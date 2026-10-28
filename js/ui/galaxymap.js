@@ -1881,7 +1881,11 @@
         const cnt = [0, 0, 0, 0, 0]; for (const q of SD) { cnt[q.hab]++; if (q.gate) cnt[4]++; }
         const gr = (k, text, sub2) => { const i = h('i.gl-gl'); i.innerHTML = '<svg viewBox="0 0 16 16" width="16" height="16">' + GSV[k] + '</svg>'; return h('div.gl-row' + (cnt[k] === 0 ? '.dim' : ''), i, h('span.gl-txt', text, h('span.gl-sub', sub2)), h('span.gl-n', String(cnt[k]))); };
         const tg = h('button.gl-tog', { type: 'button', 'aria-pressed': String(habIcons), onclick: e => { e.stopPropagation(); api.setPlanetIcons(!habIcons); root.focus({ preventScroll: true }); } }, 'Planet icons: ' + (habIcons ? 'on' : 'off'));
-        return [h('div.gl-sep'), gr(1, 'Can colonise now', 'colony ship can settle'), gr(2, 'Needs special base', 'toxic · radiated · inferno · dead · tundra · barren'), gr(3, 'No planet', 'asteroids / empty'), gr(4, 'Stargate', 'your ships jump between gates in one turn'), tg];
+        const nRaid = SD.filter(q => q.att && q.att.threat).length, nLook = SD.filter(q => q.att && q.att.issues && q.att.issues.length).length;
+        const mk = (svg, text, sub2, n) => { const i = h('i.gl-gl'); i.innerHTML = '<svg viewBox="0 0 16 16" width="16" height="16">' + svg + '</svg>'; return h('div.gl-row' + (n === 0 ? '.dim' : ''), i, h('span.gl-txt', text, h('span.gl-sub', sub2)), h('span.gl-n', String(n))); };
+        const raidRow = mk('<circle cx="8" cy="8" r="6.2" fill="none" stroke="#ff5050" stroke-width="1.6" stroke-dasharray="3 2.2"/><text x="8" y="11.6" font-size="9.5" font-weight="700" text-anchor="middle" fill="#ff7a6a" font-family="sans-serif">!</text>', 'Raid coming', '⚠ and the turns until a hostile fleet or troops arrive at your colony', nRaid);
+        const lookRow = mk('<circle cx="8" cy="8" r="6" fill="#c82830" stroke="#0a0604" stroke-width="1"/><text x="8" y="11.8" font-size="10.5" font-weight="700" text-anchor="middle" fill="#fff6e0" font-family="sans-serif">!</text>', 'Needs a look', 'unrest, event, shrinking, waste, idle factories (amber: a warning)', nLook);
+        return [h('div.gl-sep'), raidRow, lookRow, h('div.gl-sep'), gr(1, 'Can colonise now', 'colony ship can settle'), gr(2, 'Needs special base', 'toxic · radiated · inferno · dead · tundra · barren'), gr(3, 'No planet', 'asteroids / empty'), gr(4, 'Stargate', 'your ships jump between gates in one turn'), tg];
       };
       const total = SD.length, unknown = SD.filter(s => !s.known).length;
       if (mode === 'colonies') {

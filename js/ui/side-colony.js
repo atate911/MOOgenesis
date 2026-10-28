@@ -34,6 +34,7 @@
     .sc-bbox canvas { width:3.6rem; height:3rem; flex:none; object-fit:contain; } .sc-bbox .bn { font:400 1.05rem var(--font-display); color:var(--brass-hi); } .sc-bbox .bc { font-size:.8rem; color:var(--mist); }
     .sc-btns { display:flex; flex-direction:column; gap:.3rem; } .sc-btns .btn { padding:.25em .9em; font-size:.9rem; }
     .sc-note { margin:.4rem 0; padding:.35rem .6rem; border-left:3px solid var(--ember); background:rgba(255,148,64,.08); font-size:.85rem; }
+    .sc-note.raid { border-left-color:#ff5050; background:rgba(255,80,80,.1); color:#ffb0a6; }
     .sc-pickhint { margin:.6rem 0; padding:.6rem .7rem; background:rgba(98,216,255,.08); border:1px dashed var(--cyan); color:var(--ivory); }
     .sc-rally { grid-column:1 / -1; padding:.15rem .4rem; font-size:.85rem; color:var(--mist); cursor:var(--hand); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
     .sc-rally .k { color:#9fb2d8; text-transform:uppercase; letter-spacing:.08em; font-size:.75rem; } .sc-rally b { color:var(--ivory); font-weight:600; }
@@ -210,7 +211,7 @@
       const tNow = performance.now();
       if (statSnap && statSnap.pid === st.pid && tNow < statFlashUntil) { const cur = statVals(st.stats); for (const k in cur) if (statSnap.v[k] !== undefined && statSnap.v[k] !== cur[k]) statChg[st.pid + ':' + k] = tNow + 1400; statSnap = null; }
       for (const key in statChg) { const [pid, k] = key.split(':'); if (tNow >= statChg[key]) delete statChg[key]; else if (+pid === st.pid) { const v = st.stats.querySelector('.cell[data-k="' + k + '"] > span:last-child'); if (v) v.classList.add('chg'); } }
-      UI.mount(st.note, c.rebels || c.unrest ? h('div.sc-note', c.unrest === 2 ? 'Rebellion! Production has stopped.' : 'Unrest: ' + c.rebels + 'M rebels.') : (c.event ? h('div.sc-note', 'Event: ' + c.event.type) : null));
+      UI.mount(st.note, raidNote(c, E), c.rebels || c.unrest ? h('div.sc-note', c.unrest === 2 ? 'Rebellion! Production has stopped.' : 'Unrest: ' + c.rebels + 'M rebels.') : (c.event ? h('div.sc-note', 'Event: ' + c.event.type) : null));
       // sliders
       c.sliders.forEach((v, i) => {
         const sl = st.sliders[i], ro = c.readouts[LABELS[i][1]];
@@ -290,6 +291,15 @@
 
   // ---- RELOC: choose a rally point on the map (research/06 §5.6: click a colony, see the route and its time, Accept) ----------------------------------
   // "All colonies" is the original's Alt-R: every colony's new ships gather at the chosen planet.
+  // the map's ⚠ mark, explained where the player looks for it: a hostile fleet or troop transports flying to this colony (Sim.Q.attention)
+  function raidNote(c, E) {
+    let tr = null; try { const A = M.Sim.Q.attention(G.S, E.id)[c.star]; tr = A && A.threat; } catch (e) { tr = null; }
+    if (!tr) return null;
+    const who = (tr.owners || []).map(id => (G.S.empires[id] || {}).name || 'Enemy').join(' and ');
+    const what = [tr.ships ? tr.ships + ' hostile ' + U.plural(tr.ships, 'ship') : '', tr.troops ? tr.troops + 'M troops' : ''].filter(Boolean).join(' and ') || 'a hostile fleet';
+    return h('div.sc-note.raid', { tip: 'The ⚠ beside this colony on the map: what is flying here and when it arrives' }, '⚠ ' + who + ': ' + what + ' arriving in ' + tr.eta + ' ' + U.plural(tr.eta, 'turn') + '.');
+  }
+
   UI.Side.register('reloc', {
     render(host, ctx) {
       const S = G.S, E = G.player(), pid = ctx.params.planet, p = S.planets[pid];

@@ -163,7 +163,7 @@ html:root:root:root[data-phone] .gx-bar.ph-tabs .btn.ph-next { margin: .25rem .2
 /* ---- galaxy: the HUD as a top bar, grouped map controls, a flat sheet with rounded top corners -------------------------------------- */
 html:root:root[data-phone] .gx-top { left: 0; right: 0; top: 0; gap: 0; }
 html:root:root[data-phone] .gx-hud {
-  padding: calc(.4rem + env(safe-area-inset-top)) calc(var(--tap) + 1.1rem) .4rem .8rem; border: 0; clip-path: none;
+  padding: calc(.3rem + env(safe-area-inset-top)) .8rem .3rem .8rem; border: 0; clip-path: none;   /* no column to clear on the right: the map controls sit bottom-right (portrait) or beside an inset .gx-top (landscape), so the values fit in one row */
   background: rgba(16, 20, 27, .86); backdrop-filter: blur(6px); box-shadow: 0 1px 0 rgba(255, 255, 255, .08);
 }
 html:root:root[data-phone] .gx-msg { padding: .35rem .5rem 0; }
@@ -172,10 +172,10 @@ html:root:root[data-phone] .gmap-ctrl :is(.gmap-btn, button) { background: rgba(
 html:root:root[data-phone] .gx-side:not(.gx-float) .panel { border-radius: .6rem .6rem 0 0; overflow: hidden; box-shadow: 0 -8px 22px rgba(0, 0, 0, .5); }
 html:root:root[data-phone] .gx-side:not(.gx-float) .panel::before { border-radius: .6rem .6rem 0 0; }
 html:root:root[data-phone] .gx-side:not(.gx-float) { --grip: 1.3rem; }
-html[data-phone] { --ph-strip: calc(var(--tap) + 3.1rem); }                         /* grip over the panel top, title row, summary line */
+html[data-phone] { --ph-strip: calc(var(--tap) + 2.9rem); }                         /* grip over the panel top, title row, summary line */
 html:root:root[data-phone] .gx-side:not(.gx-float) .ph-grip { position: relative; z-index: 2; margin-bottom: calc(-1 * var(--grip)); background: none; box-shadow: none; }
 html:root:root[data-phone] .gx-side:not(.gx-float) .ph-grip::before { width: 2.6rem; height: .28rem; background: rgba(255, 255, 255, .35); }
-html:root:root[data-phone] .gx-side:not(.gx-float) .gx-sidebody { padding-top: 1.05rem; }
+html:root:root[data-phone] .gx-side:not(.gx-float) .gx-sidebody { padding-top: .85rem; }
 html:root:root[data-phone] .gx-side .side-title { background: none; box-shadow: none; }
 html:root:root[data-phone] .gx-side .side-title .nm { font-size: 1.5rem; }
 html:root:root[data-phone] .gx-side.gx-float .panel { box-shadow: 0 10px 30px rgba(0, 0, 0, .6); }
@@ -209,6 +209,7 @@ html:root:root[data-phone] .ov-key { background: var(--pk-well); box-shadow: ins
 /* ---- dialogs (centred, as chosen): a plain title, a flat card, full-width footer buttons -------------------------------------------- */
 html:root:root[data-phone] .modal { min-width: 0; width: auto !important; max-width: 92vw; background: var(--pk-edge); box-shadow: 0 20px 50px rgba(0, 0, 0, .6); padding: .8rem .8rem .7rem; }
 html:root:root[data-phone] .modal::before { inset: 1px; background: var(--pk-card); box-shadow: none; }
+html:root:root[data-phone] .modal.gm-sheet { padding: .8rem calc(.8rem + env(safe-area-inset-right)) calc(.7rem + env(safe-area-inset-bottom)) calc(.8rem + env(safe-area-inset-left)); }   /* the sheet from More stands on the home indicator: its last button keeps above it (the rule above was overriding css/phone.css) */
 html:root:root[data-phone] .modal-h { margin: 0 0 .35rem; padding: .1rem .2rem .3rem; border: 0; background: none; box-shadow: none; text-shadow: none;
   font: 600 1.2rem var(--font-display); letter-spacing: .02em; text-transform: none; color: #f2e6c4; }
 html:root:root[data-phone] .modal-f { justify-content: stretch; border-top: 1px solid var(--pk-sep); }

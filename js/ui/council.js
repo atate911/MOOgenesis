@@ -318,7 +318,13 @@
     for (let i = 0; i < R.meta.length; i++) {
       const s = lay.seats[i], p = s && s.plaque; if (!p) continue;
       const st = R.meta[i].tag.style;
-      st.left = round(p.x - p.w * 0.1) + 'px'; st.width = round(p.w * 1.2) + 'px'; st.top = round(p.y + p.h + 5) + 'px';
+      let left = round(p.x - p.w * 0.1), width = round(p.w * 1.2);
+      st.width = width + 'px';
+      if (M.Phone && M.Phone.active()) {                                                      // a phone's outer booths sit on the screen edge: the tag, as wide as its chips, stays inside it
+        width = Math.max(width, R.meta[i].tag.scrollWidth | 0); st.width = width + 'px';
+        left = Math.max(2, Math.min(left, w - width - 2));
+      }
+      st.left = left + 'px'; st.top = round(p.y + p.h + 5) + 'px';
     }
   }
   // the speaker's bust, projected over the pedestal hologram (tinted portrait + scanlines)

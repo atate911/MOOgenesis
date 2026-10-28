@@ -7,6 +7,35 @@ Docs: `PROGRESS.md` (plan/status/25-feature acceptance checklist) · `CONVENTION
 Commands: `node tools/check.js` (syntax of every manifest file) · `node tools/rules-test.js [area]` · `node tools/soak.js` (24-thread AI-vs-AI soak/balance; `tools/SOAK.md`) · `node tools/headless.js`.
 Browser-pane tip: animations use requestAnimationFrame, so in the built-in browser pane a tab must be fronted (`tabs_select`) for anything animated (GNN, audiences, scenes, combat) to advance.
 
+## Session 10 (October 2026) — release 1.3.0, branch `claude/release-1-3-0`
+Release pass over `main` with everything merged (phone fit, Tech Lab, visual system, polish): `node tools/check.js` (120 files),
+`node tools/rules-test.js` (860), `tools/soak.js` 24 games classic + 24 expanded `--strict` (one WARN: seed 20 darlok/average, the
+Meklar AI runs zero research until turn 26 while it builds factories — its policy, not a fault) + 8 determinism replays (identical),
+`tools/qa/`: smoke, turns (80 on Hard; 80 with `pool=expanded`), saves (server flow), combat, endings, council, spy, help, misc, scenes,
+modes, fuzz, phone (263 checks), a screenshot walkthrough of 40 views at 1920×1080 and 1366×768 (script in the session scratchpad; the
+only oddity seen was the research-choice caption mid-typewriter), and saves made by the v1.1.1 and v1.2.0 trees loaded into this build
+and played on (menu Continue line, save list, re-save). Fixes: title "1 colonies"; from the user's iPhone: the full colony sheet under the
+Dynamic Island (`--ph-full` minus the top inset; Back collapses the sheet, `UI.Phone.backWanted` shows the control at full), the map's ⚠
+explained (colony panel `raidNote` in side-colony.js, key rows in galaxymap.js `glyphRows`, the phone key scrolls), the landscape column
+clear of the notch, the phone star system (css places `.sv-fleets`; system.js `placeCaption` returns early on phones), the tech choice
+taking a single tap as the answer (tech.js `buildChoose`: touch taps only preview, `R.pt` from the list's pointerdown). Screen use on tall
+phones, measured with a scratch script (empty bands per view at the tallest iPhone): HUD values on one row (phone-skin.css `.gx-hud` padding;
+`.ph-ctl-tight` wraps them when the control column climbs), `fitHalf` measures the children's union and no longer counts the overlapping grip,
+`.op-frame`/`.sl-frame` phone padding, the project's blueprint on the Project tab (`st.ppic` in tech.js, phones only), landscape Save tools
+beside the switch. Safe areas, generically: `html[data-phone][data-ph-bar] #screens` is inset by the side and bottom insets (phone.css; the
+per-screen env() paddings of `.tch`, `.ttp`, `.tsc`, `.sv-*`, `.op/.sl-frame` were dropped), `.modal.gm-sheet` pads in phone-skin.css (its
+`.modal` rule had been overriding phone.css), the title's `.menu-col` / `.menu-foot` inset, council tags clamped (`council.js` tag layout). The
+full `phone-fit.js` survey (34 views × 7 sizes) is clean except, on a phone held sideways, the design editor's body, the audience menu
+and the New game stage (`hidden-in-small-scroll`: 44px touch rows on a 342–393px-tall screen; the landscape layouts of phone follow-up 2
+are the real fix). `.dz.ph-dz` pads the side insets; `.au-text` has no minimum height in landscape. More map during picks: `.gx.ph-pick`
+(phone-galaxy.js `markPick`) hides `.gx-top` and `.gx-bar` and pads the home inset on `.gx`; a float card hides the strip sheet and is capped at
+50 %; `fitHalf` caps a pick at 42 % of the (now taller) wrap; the sheet's Escape handler skips picks (their own Escape cancels). Measured with
+`map-share.js` in the session scratchpad (map pixels per state). `tools/qa/phone.js` deploy step: with that much map no reachable star starts under
+the sheet, so the step first pans one under it (and passes with a note when the clamped pan cannot). `VERSION` 1.3.0;
+CHANGELOG's Unreleased became 1.3.0. Known: `tools/qa/playshots.js` stalls on a "Bombard?" card (the bot presses Enter; the card wants
+B or Esc by design) — a bot limit, verified by loading the dumped state and pressing B. Note for the next release: the GitHub tags so far are `v0.2.0`, `v1.1.0` (same commit) and `v.1.1.1` (typo); this one is `v1.3.0`.
+Still open, unchanged: real-hardware GPU / audio passes, the optional art in `ART-NEEDED.md`, the phone follow-ups list.
+
 ## Session 9 (October 2026) — Tech Lab, branch `claude/tech-lab`
 `tools/handoff/techlab-2026-10.md`: an Expanded technology option (New game › Remake options, off by default) that adds 45 new techs to the pool
 research trees are dealt from, without changing tree sizes (`js/data/techs-x.js`, effects in `js/sim/xtech.js` + guarded hooks; classic games

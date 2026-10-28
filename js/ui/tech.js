@@ -912,6 +912,7 @@
       if (rs.invest[f] > 1) st.proj.appendChild(h('div.warn', 'Without a project the ' + fmt(rs.invest[f]) + ' RP already invested here shrink by 10% each turn.'));
       if (!done && rs.slider[f] === 0) st.proj.appendChild(h('div.dim.small', 'This field receives no research share yet.'));
       st.proj.appendChild(xtra());
+      st.ppic = null;
       return;
     }
     const cost = rs.cost[f], inv = rs.invest[f], frac = cost ? clamp(inv / cost, 0, 1) : 0, fc = forecast(E, f, inv, cost), chance = R.breakthroughChance(E, f), rp = rpOf(E, f);
@@ -926,6 +927,10 @@
     st.proj.appendChild(kv);
     if (rs.slider[f] === 0 || (rs.total | 0) === 0) st.proj.appendChild(h('div.warn', (rs.total | 0) === 0 ? 'No research points are produced. Give your colonies a Tech share to start researching.' : 'Unfunded: the ' + fmt(inv) + ' RP invested here shrink by 10% each turn.'));
     st.proj.appendChild(xtra());
+    // phones: the Project tab has no picture pane (that is the Techs tab), and on a tall phone its lower quarter was bare leather: the project's
+    // own blueprint sits under the text (drawn by drawPic with the main picture)
+    st.ppic = null;
+    if (M.Phone && M.Phone.active()) { st.ppic = h('canvas.tch-pic.tch-ppic'); st.ppicTech = proj; st.proj.appendChild(st.ppic); st.picDirty = true; }
     void S;
   }
   // taller windows: what the field gives you, and the cheapest technologies available next (click one to see it in the overview)
@@ -938,10 +943,15 @@
   }
   function drawPic(t) {
     const E = st.E || G.player(); if (!E || !st.pic.isConnected) return;
+    const o = { col: FIELDS[st.field].col, race: E.race, banner: bannerCss(E), hull: 2 };
+    if (st.ppic && st.ppic.isConnected && st.ppicTech) {                                      // the Project tab's blueprint (phones); hidden canvases measure 0 and are skipped
+      const p = UI.fitCanvas(st.ppic, { maxDpr: PQ().dpr });
+      if (p.w >= 20 && p.h >= 20) drawArt(p.ctx, p.w, p.h, t, st.ppicTech, o);
+    }
     const f = UI.fitCanvas(st.pic, { maxDpr: PQ().dpr });
-    if (f.w < 20 || f.h < 20) return;
+    if (f.w < 20 || f.h < 20) { st.picDirty = false; return; }
     const tech = st.sel ? TD().byId[st.sel] : null;
-    drawArt(f.ctx, f.w, f.h, t, tech, { col: FIELDS[st.field].col, race: E.race, banner: bannerCss(E), hull: 2 });
+    drawArt(f.ctx, f.w, f.h, t, tech, o);
     st.picDirty = false;
   }
   function renderOverview(E) {
@@ -1336,16 +1346,22 @@
     R.hi = max(0, list.findIndex(c => c.level === cur));
     R.items = list.map((c, i) => {
       const t = c.tech || techOf(f, c.level), ti = typeInfo(t ? t.type : 'special');
-      const row = h('div.tsc-item', { onmouseenter: e => { if (!R.finishing) setHi(i); }, onclick: e => { if (e.pointerType === 'mouse' || R.hi === i) pick(i); else setHi(i); } },
-        UI.icon(ti.ico), h('span.nm', t ? t.name : 'Level ' + c.level), h('span.co', fmt(c.cost) + ' RP'));
+      // mouse: hovering previews, a click researches. Touch / pen: a tap only previews (the tap's compatibility mouseenter had highlighted the
+      // row, so the click that followed used to research it at once, with nothing read); the Research button confirms.
+      const row = h('div.tsc-item', { onmouseenter: e => { if (!R.finishing) setHi(i); }, onclick: e => {
+        const pt = R.pt || e.pointerType || '', touch = pt ? pt !== 'mouse' : !!(M.Phone && M.Phone.active());
+        if (touch) { setHi(i); return; }
+        if (e.pointerType === 'mouse' || R.hi === i) pick(i); else setHi(i);
+      } }, UI.icon(ti.ico), h('span.nm', t ? t.name : 'Level ' + c.level), h('span.co', fmt(c.cost) + ' RP'));
       return row;
     });
     R.listEl = h('div.tsc-list', R.items);
+    R.listEl.addEventListener('pointerdown', e => { R.pt = e.pointerType || ''; }, true);   // what the click that follows came from (Safari's click carries no pointerType)
     R.infoEl = h('div.tsc-info');
     R.scrollEls = [R.listEl, R.infoEl]; R.scrollEls.forEach(el => el.addEventListener('scroll', () => moreBelow(el), { passive: true }));
     R.okBtn = UI.button('Research', () => pick(R.hi), { primary: true, kbd: 'Space' }); UI.attention(R.okBtn);
     R.skipBtn = UI.button(R.manual ? 'Cancel' : 'Decide for me', () => act('skip'), { kbd: 'Esc', tip: R.manual ? 'Keep things as they are' : 'Let the scientists take the cheapest technology' });
-    const box = h('div.tsc-box.ch', h('div.tsc-box-h', UI.icon(F.icon), h('span', F.name + ' Technology'), h('small', list.length + (list.length === 1 ? ' choice' : ' choices'))), R.listEl, R.infoEl,
+    const box = h('div.tsc-box.ch', h('div.tsc-box-h', UI.icon(F.icon), h('span', F.name + ' Technology'), h('small', UI.Phone.say(list.length + (list.length === 1 ? ' choice' : ' choices'), list.length + (list.length === 1 ? ' choice' : ' choices') + ' · tap to read'))), R.listEl, R.infoEl,
       h('div.tsc-acts', R.skipBtn, h('span.grow'), R.okBtn));
     SC.panel.appendChild(box);
     SC.hint.innerHTML = UI.Phone.say('<kbd>↑</kbd><kbd>↓</kbd> choose &nbsp;·&nbsp; <kbd>Space</kbd> research &nbsp;·&nbsp; <kbd>Esc</kbd> ' + (R.manual ? 'cancel' : 'let the scientists decide'), '');

@@ -3,8 +3,47 @@
 Versions follow `MAJOR.MINOR.PATCH`; the live version is the `VERSION` file.
 `scripts/upgrade.sh` refuses to move to an older `VERSION` unless told to.
 
-## Unreleased
+## 1.3.0 — 2026-10-28
 
+- Release pass. The whole of `main` was run through every check before this version was cut: the syntax check (120 files),
+  the rules tests (860), AI-vs-AI soak games with the classic and the expanded tech pool (24 each, state sanity, save round-trip,
+  determinism replays), the headless click-throughs through the real UI (80-turn games on Hard and with the expanded pool, the combat,
+  endings, council, spy, help, scenes, modes and fuzz suites, the phone suite at three sizes and the server-save flow), a screenshot
+  walkthrough of every screen, scene and dialog at 1920×1080 and 1366×768, and saves written by v1.1.1 and v1.2.0 loaded into this
+  build and played on. One fix: the title screen's "Last played" line said "1 colonies".
+- Phones, from the first reports on a real iPhone. The colony sheet opened to its full height ran under the Dynamic Island, so its grip (the
+  only way to close it) could not be reached and the panel stayed up until the next turn: the full sheet now starts below the top safe
+  area, the Back control shows while the sheet covers the map, and Back (the control or the phone's back gesture) collapses an open sheet
+  instead of opening the game menu (a dialog on top still closes first). The ⚠ beside a colony on the map had no explanation on a touch
+  screen: the colony panel now carries the line ("⚠ Alkari: 3 hostile ships arriving in 2 turns"), on desktop too, and the map key lists
+  the raid mark and the red "!" attention badge first; the phone's key scrolls when it is taller than its box. Landscape: the galaxy's side
+  column keeps clear of the right notch. The star system on phones: the fleet tiles were clipped by their own box in portrait and sat
+  under the planet data box in landscape; they now stand beside the planet, the star kind joins the environment line (its caption sat
+  off the narrow screen), and the hint clears the home indicator. Choosing the next technology on a phone: a single tap on a technology
+  researched it at once, with nothing read (the tap's synthetic mouse-over had highlighted the row and the click that followed took it as
+  a confirmation); a tap now only shows the technology's description and the Research button confirms (the header says "tap to read").
+  A mouse keeps hover-to-preview and click-to-research.
+- Phones use the whole screen, tall ones included (measured: every phone view at the tallest iPhone, the empty bands and every scroll box
+  with room under it). The galaxy HUD kept a column's width free on its right for map controls that no longer stand there, which pushed
+  "Colonies" onto a third row: the four values now share one row under the year, and the map gains the height (on a short phone with
+  the sheet half open, where the controls do climb beside the HUD, the values wrap as before). The half-open colony sheet counted its
+  grip twice and sat about 25px below its own buttons; it now ends under them. Options and Save / Load padded their top by 5% of the
+  screen height; a tall phone had a 46px empty band under the app bar. The Research › Project tab left the lower quarter of a tall phone
+  bare: the project's blueprint now sits under its figures. On its side, the Save screen's Import / Export sit beside the Save / Load
+  switch, so the slot list keeps the height. The other side of the same survey: on a phone held sideways, every screen under the app
+  bar ran its content under the notch on both sides, and on an installed iPhone the Planets, Races, Report, Racial Stats, New game, council,
+  landing and ending screens, the game menu and the title screen put their last line or button under the home indicator. Every screen under
+  the app bar now keeps out of the notch and the home indicator (the one sky shows in the bands; the galaxy, the title and the design editor
+  place their own), the game menu sheet and the title screen's column and footer too. The council's YOU / NOMINEE tags, which hung off the
+  screen edge beside the outer booths on a phone, stay inside it. Sideways, the ship design editor (which places itself, without the app
+  bar) keeps out of the notch too, and the audience's dialogue text gives up its desktop minimum height so one more option shows before
+  the menu scrolls.
+- More map on phones. While a destination is being picked (fleet deployment, Reloc, Trans) the HUD and the tab bar step aside, so the map
+  has well over half the screen instead of a third (on an iPhone 15: 474px instead of 287 under the deployment sheet, 525 instead of 329
+  under Reloc); once the deployment card floats beside the chosen star, the collapsed sheet under it goes too and the card takes at most
+  half the map. Back during a pick cancels the pick (it was collapsing the sheet and leaving the pick open). Outside a pick the tab bar is
+  the height of a system tab bar, the HUD and the collapsed sheet are a little tighter (a 4 % taller map), and sideways the side column
+  takes 42 % of the width instead of 46 %.
 - Research screens fit iPhones. The breakthrough card (a technology researched, stolen, traded or found) was a fixed share of the
   screen with a fixed-height picture, so its text got what was left: 0 to 77 pixels on most iPhones for a block that needs 170 to 200,
   hidden in an inner scroll box iOS shows no scrollbar for. The chips were sliced, the description and effects never showed, and on a
