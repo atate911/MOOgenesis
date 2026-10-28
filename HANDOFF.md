@@ -7,6 +7,17 @@ Docs: `PROGRESS.md` (plan/status/25-feature acceptance checklist) · `CONVENTION
 Commands: `node tools/check.js` (syntax of every manifest file) · `node tools/rules-test.js [area]` · `node tools/soak.js` (24-thread AI-vs-AI soak/balance; `tools/SOAK.md`) · `node tools/headless.js`.
 Browser-pane tip: animations use requestAnimationFrame, so in the built-in browser pane a tab must be fronted (`tabs_select`) for anything animated (GNN, audiences, scenes, combat) to advance.
 
+## Session 10 (October 2026) — release 1.3.0, branch `claude/release-1-3-0`
+Release pass over `main` with everything merged (phone fit, Tech Lab, visual system, polish): `node tools/check.js` (120 files),
+`node tools/rules-test.js` (860), `tools/soak.js` 24 games classic + 24 expanded `--strict` (one WARN: seed 20 darlok/average, the
+Meklar AI runs zero research until turn 26 while it builds factories — its policy, not a fault) + 8 determinism replays (identical),
+`tools/qa/`: smoke, turns (80 on Hard; 80 with `pool=expanded`), saves (server flow), combat, endings, council, spy, help, misc, scenes,
+modes, fuzz, phone (263 checks), a screenshot walkthrough of 40 views at 1920×1080 and 1366×768 (script in the session scratchpad; the
+only oddity seen was the research-choice caption mid-typewriter), and saves made by the v1.1.1 and v1.2.0 trees loaded into this build
+and played on (menu Continue line, save list, re-save). One fix (title "1 colonies"). `VERSION` 1.3.0; CHANGELOG's Unreleased became
+1.3.0. Note for the next release: the GitHub tags so far are `v0.2.0`, `v1.1.0` (same commit) and `v.1.1.1` (typo); this one is `v1.3.0`.
+Still open, unchanged: real-hardware GPU / audio passes, the optional art in `ART-NEEDED.md`, the phone follow-ups list.
+
 ## Session 9 (October 2026) — Tech Lab, branch `claude/tech-lab`
 `tools/handoff/techlab-2026-10.md`: an Expanded technology option (New game › Remake options, off by default) that adds 45 new techs to the pool
 research trees are dealt from, without changing tree sizes (`js/data/techs-x.js`, effects in `js/sim/xtech.js` + guarded hooks; classic games

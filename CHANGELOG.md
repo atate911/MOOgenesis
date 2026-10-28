@@ -3,8 +3,14 @@
 Versions follow `MAJOR.MINOR.PATCH`; the live version is the `VERSION` file.
 `scripts/upgrade.sh` refuses to move to an older `VERSION` unless told to.
 
-## Unreleased
+## 1.3.0 — 2026-10-28
 
+- Release pass. The whole of `main` was run through every check before this version was cut: the syntax check (120 files),
+  the rules tests (860), AI-vs-AI soak games with the classic and the expanded tech pool (24 each, state sanity, save round-trip,
+  determinism replays), the headless click-throughs through the real UI (80-turn games on Hard and with the expanded pool, the combat,
+  endings, council, spy, help, scenes, modes and fuzz suites, the phone suite at three sizes and the server-save flow), a screenshot
+  walkthrough of every screen, scene and dialog at 1920×1080 and 1366×768, and saves written by v1.1.1 and v1.2.0 loaded into this
+  build and played on. One fix: the title screen's "Last played" line said "1 colonies".
 - Research screens fit iPhones. The breakthrough card (a technology researched, stolen, traded or found) was a fixed share of the
   screen with a fixed-height picture, so its text got what was left: 0 to 77 pixels on most iPhones for a block that needs 170 to 200,
   hidden in an inner scroll box iOS shows no scrollbar for. The chips were sliced, the description and effects never showed, and on a
