@@ -341,7 +341,7 @@ html[data-phone] .ph-appbar {
   background: linear-gradient(180deg, #161c36, #0a0e22); box-shadow: 0 1px 0 var(--brass-line-3), 0 4px 12px rgba(0, 0, 0, .5);
 }
 html[data-phone][data-ph-bar] .ph-appbar { display: block; }
-html[data-phone][data-ph-bar] #screens { top: calc(3.1rem + env(safe-area-inset-top)); }
+html[data-phone][data-ph-bar] #screens { top: calc(3.1rem + env(safe-area-inset-top)); left: env(safe-area-inset-left); right: env(safe-area-inset-right); bottom: env(safe-area-inset-bottom); }   /* under the app bar every screen keeps out of the notch and the home indicator (the one sky shows in the bands); the galaxy, the title and the design editor place their own */
 html[data-phone][data-ph-bar] .ph-back { top: calc(.3rem + env(safe-area-inset-top)); }
 html[data-phone] .ph-bar-t {
   position: absolute; left: 7.4rem; right: .8rem; bottom: 0; height: 3.1rem; display: flex; align-items: center; justify-content: flex-end;
@@ -399,7 +399,7 @@ html:root:root[data-phone] .lf-stats { grid-template-columns: repeat(4, minmax(0
 html:root:root[data-phone] .lf-cost { text-align: left; display: flex; align-items: baseline; gap: .6rem; flex-wrap: wrap; } html:root:root[data-phone] .lf-cost b, html:root:root[data-phone] .lf-cost .l, html:root:root[data-phone] .lf-cost .up { display: inline; }
 
 /* ---- research: one column — field sliders first (full width), the project, then the list and the detail ---- */
-html:root:root[data-phone] .tch { padding: .35rem calc(.4rem + env(safe-area-inset-right)) calc(.5rem + env(safe-area-inset-bottom)) calc(.4rem + env(safe-area-inset-left)); gap: .45rem; overflow-x: hidden; overflow-y: auto; overscroll-behavior: contain; }
+html:root:root[data-phone] .tch { padding: .35rem .4rem .5rem; gap: .45rem; overflow-x: hidden; overflow-y: auto; overscroll-behavior: contain; }
 html:root:root[data-phone] .tch-head { flex-wrap: wrap; gap: .25rem .8rem; }
 html:root:root[data-phone] .tch-title { font-size: 1.4rem; } html:root:root[data-phone] .tch-total b { font-size: 1.6rem; }
 html:root:root[data-phone] .tch-tabs { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .25rem; overflow: visible; }   /* all six fields in view */
@@ -444,7 +444,7 @@ html:root:root[data-phone] .tch[data-ph-seg="techs"] .tch-list { max-height: non
 html:root:root[data-phone] .tch-head { justify-content: center; }
 
 /* ---- tech tree (its own screen, or Research › Overview): the tree on top, the detail under it ---- */
-html:root:root[data-phone] .ttp { padding: .35rem calc(.4rem + env(safe-area-inset-right)) calc(.5rem + env(safe-area-inset-bottom)) calc(.4rem + env(safe-area-inset-left)); gap: .45rem; overflow-y: auto; }
+html:root:root[data-phone] .ttp { padding: .35rem .4rem .5rem; gap: .45rem; overflow-y: auto; }
 html:root:root[data-phone] .ttp-head { flex-wrap: wrap; gap: .3rem .8rem; } html:root:root[data-phone] .ttp-head h1 { font-size: 1.4rem; }
 html:root:root[data-phone] .tt { flex: none; grid-template-columns: minmax(0, 1fr); gap: .6rem; }
 /* the screen's body is pinned to the screen's height inline (techtree.js): on a phone it grows with the tree and the detail under it, so the screen
@@ -536,7 +536,7 @@ html:root:root[data-phone] .ov-modes { flex-direction: row; flex-wrap: wrap; } h
   html:root:root[data-phone] .sv-tile { width: 7.4rem; height: auto; display: flex; flex-direction: column; }
   html:root:root[data-phone] .sv-tile canvas { position: relative; inset: auto; flex: none; height: 3.1rem; }
   html:root:root[data-phone] .sv-tile .nm { position: static; white-space: normal; overflow-wrap: anywhere; line-height: 1.15; padding: .1rem .3rem .2rem; }
-  html:root:root[data-phone] .sv-info { left: 2%; right: 2%; min-width: 0; bottom: calc(2.6rem + env(safe-area-inset-bottom, 0px)); }
+  html:root:root[data-phone] .sv-info { left: 2%; right: 2%; min-width: 0; bottom: 2.6rem; }
   html:root:root[data-phone] .sv-icons { display: none; }                          /* the same population / factory counts are in the data panel */
   html:root:root[data-phone] .sv-unex { left: 4%; right: 4%; max-width: none; bottom: 3rem; }
 }
@@ -558,7 +558,7 @@ html:root:root[data-phone] .au-item .d { white-space: normal; }
 }
 html:root:root[data-phone] .sl-foot-hint { display: none; }
 /* Options and Save / Load: the desktop frames pad the top by 5% of the viewport (a tall phone gave the first card a 46px empty band under the app bar) */
-html:root:root[data-phone] :is(.op-frame, .sl-frame) { padding: .55rem calc(.6rem + env(safe-area-inset-right)) calc(.5rem + env(safe-area-inset-bottom)) calc(.6rem + env(safe-area-inset-left)); }
+html:root:root[data-phone] :is(.op-frame, .sl-frame) { padding: .55rem .6rem .5rem; }
 /* ---- spy theft: the six fields in one column ---- */
 html[data-phone] .spy-grid { grid-template-columns: minmax(0, 1fr); }
 html[data-phone] .spy-fld { min-height: 3rem; }
@@ -637,7 +637,7 @@ html[data-phone] #toasts { bottom: calc(var(--ph-strip) + var(--tap) + 1.4rem + 
    strip); only then does the text scroll, and a scroll box with more below its edge fades out there (iOS shows no scrollbar). On its
    side the phone puts the picture beside the text. No keyboard hint on a touch screen. */
 html:root:root[data-phone] .tsc { display: flex; flex-direction: column; justify-content: flex-end; gap: .45rem;
-  padding: .5rem calc(.6rem + env(safe-area-inset-right)) calc(.6rem + env(safe-area-inset-bottom)) calc(.6rem + env(safe-area-inset-left)); }
+  padding: .5rem .6rem .6rem; }
 html:root:root[data-phone] :is(.tsc-cap, .tsc-panel) { position: relative; z-index: 1; left: auto; top: auto; width: auto; height: auto; }
 html:root:root[data-phone] .tsc-cap { flex: none; padding: 0 .15rem; font-size: clamp(1.15rem, 5.6vw, 1.7rem); }
 html:root:root[data-phone] .tsc-panel { flex: 0 1 auto; min-height: 0; }
@@ -670,14 +670,21 @@ html:root:root[data-phone] .tsc-hint { display: none; }
 
 /* ---- star system on phones, both orientations: the star caption is part of the environment line (system.js), the hint clears the home indicator ---- */
 html:root:root[data-phone] .sv-star { display: none; }
-html:root:root[data-phone] .sv-hint { bottom: calc(.7rem + env(safe-area-inset-bottom, 0px)); }
+html:root:root[data-phone] .sv-hint { bottom: .7rem; }
 @media (orientation: landscape) {
   /* the fleet tiles between the planet (left third) and the data box (right), not under the box; the box clears the right notch */
-  html:root:root[data-phone] .sv-fleets, html:root:root[data-phone] .sv.plate .sv-fleets { left: 40%; right: auto; top: auto; bottom: calc(3.6% + env(safe-area-inset-bottom, 0px)); max-width: 17%; max-height: 62%; align-items: flex-start; }
+  html:root:root[data-phone] .sv-fleets, html:root:root[data-phone] .sv.plate .sv-fleets { left: 40%; right: auto; top: auto; bottom: 3.6%; max-width: 17%; max-height: 62%; align-items: flex-start; }
   html:root:root[data-phone] .sv-grp { align-items: flex-start; } html:root:root[data-phone] .sv-row { justify-content: flex-start; }
   html:root:root[data-phone] .sv-gh { max-width: 100%; align-self: flex-start; text-align: left; font-size: .8rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }   /* "Your fleet" within the column, not over the data box */
   html:root:root[data-phone] .sv-hint { display: none; }                                                  /* the app bar's Back says it; the hint sat on the tiles */
   html:root:root[data-phone] .sv-icons { display: none; }
-  html:root:root[data-phone] .sv-info { right: calc(2.2% + env(safe-area-inset-right, 0px)); bottom: calc(3.6% + env(safe-area-inset-bottom, 0px)); }
-  html:root:root[data-phone] .sv-tl { left: calc(2% + env(safe-area-inset-left, 0px)); }
+  html:root:root[data-phone] .sv-info { right: 2.2%; bottom: 3.6%; }
 }
+
+/* ---- the title screen (no app bar): its footer above the home indicator, its column clear of the notch on its side and never under the footer ---- */
+html:root:root[data-phone] .menu-foot { bottom: calc(.35rem + env(safe-area-inset-bottom)); }
+html:root:root[data-phone] .menu-foot { left: env(safe-area-inset-left); right: env(safe-area-inset-right); }
+@media (orientation: landscape) {   /* the column is placed by left / right (menu.js): both move in by the notch */
+  html:root:root[data-phone] .menu-col { left: calc(clamp(1.2rem, 5vw, 4rem) + env(safe-area-inset-left)); right: calc(clamp(1.2rem, 5vw, 4rem) + env(safe-area-inset-right)); }
+}
+html:root:root[data-phone] .menu-col { padding-bottom: calc(2.2rem + env(safe-area-inset-bottom)); box-sizing: border-box; }

@@ -209,6 +209,7 @@ html:root:root[data-phone] .ov-key { background: var(--pk-well); box-shadow: ins
 /* ---- dialogs (centred, as chosen): a plain title, a flat card, full-width footer buttons -------------------------------------------- */
 html:root:root[data-phone] .modal { min-width: 0; width: auto !important; max-width: 92vw; background: var(--pk-edge); box-shadow: 0 20px 50px rgba(0, 0, 0, .6); padding: .8rem .8rem .7rem; }
 html:root:root[data-phone] .modal::before { inset: 1px; background: var(--pk-card); box-shadow: none; }
+html:root:root[data-phone] .modal.gm-sheet { padding: .8rem calc(.8rem + env(safe-area-inset-right)) calc(.7rem + env(safe-area-inset-bottom)) calc(.8rem + env(safe-area-inset-left)); }   /* the sheet from More stands on the home indicator: its last button keeps above it (the rule above was overriding css/phone.css) */
 html:root:root[data-phone] .modal-h { margin: 0 0 .35rem; padding: .1rem .2rem .3rem; border: 0; background: none; box-shadow: none; text-shadow: none;
   font: 600 1.2rem var(--font-display); letter-spacing: .02em; text-transform: none; color: #f2e6c4; }
 html:root:root[data-phone] .modal-f { justify-content: stretch; border-top: 1px solid var(--pk-sep); }

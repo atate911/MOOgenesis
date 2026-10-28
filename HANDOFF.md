@@ -22,7 +22,11 @@ taking a single tap as the answer (tech.js `buildChoose`: touch taps only previe
 phones, measured with a scratch script (empty bands per view at the tallest iPhone): HUD values on one row (phone-skin.css `.gx-hud` padding;
 `.ph-ctl-tight` wraps them when the control column climbs), `fitHalf` measures the children's union and no longer counts the overlapping grip,
 `.op-frame`/`.sl-frame` phone padding, the project's blueprint on the Project tab (`st.ppic` in tech.js, phones only), landscape Save tools
-beside the switch. `VERSION` 1.3.0;
+beside the switch. Safe areas, generically: `html[data-phone][data-ph-bar] #screens` is inset by the side and bottom insets (phone.css; the
+per-screen env() paddings of `.tch`, `.ttp`, `.tsc`, `.sv-*`, `.op/.sl-frame` were dropped), `.modal.gm-sheet` pads in phone-skin.css (its
+`.modal` rule had been overriding phone.css), the title's `.menu-col` / `.menu-foot` inset, council tags clamped (`council.js` tag layout). The
+full `phone-fit.js` survey (34 views × 7 sizes) is clean except design / audience / setup in landscape Safari (`hidden-in-small-scroll`: the
+342px-tall screen, see phone follow-up 2). `VERSION` 1.3.0;
 CHANGELOG's Unreleased became 1.3.0. Known: `tools/qa/playshots.js` stalls on a "Bombard?" card (the bot presses Enter; the card wants
 B or Esc by design) — a bot limit, verified by loading the dumped state and pressing B. Note for the next release: the GitHub tags so far are `v0.2.0`, `v1.1.0` (same commit) and `v.1.1.1` (typo); this one is `v1.3.0`.
 Still open, unchanged: real-hardware GPU / audio passes, the optional art in `ART-NEEDED.md`, the phone follow-ups list.
