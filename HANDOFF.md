@@ -30,7 +30,8 @@ and the New game stage (`hidden-in-small-scroll`: 44px touch rows on a 342–393
 are the real fix). `.dz.ph-dz` pads the side insets; `.au-text` has no minimum height in landscape. More map during picks: `.gx.ph-pick`
 (phone-galaxy.js `markPick`) hides `.gx-top` and `.gx-bar` and pads the home inset on `.gx`; a float card hides the strip sheet and is capped at
 50 %; `fitHalf` caps a pick at 42 % of the (now taller) wrap; the sheet's Escape handler skips picks (their own Escape cancels). Measured with
-`map-share.js` in the session scratchpad (map pixels per state). `VERSION` 1.3.0;
+`map-share.js` in the session scratchpad (map pixels per state). `tools/qa/phone.js` deploy step: with that much map no reachable star starts under
+the sheet, so the step first pans one under it (and passes with a note when the clamped pan cannot). `VERSION` 1.3.0;
 CHANGELOG's Unreleased became 1.3.0. Known: `tools/qa/playshots.js` stalls on a "Bombard?" card (the bot presses Enter; the card wants
 B or Esc by design) — a bot limit, verified by loading the dumped state and pressing B. Note for the next release: the GitHub tags so far are `v0.2.0`, `v1.1.0` (same commit) and `v.1.1.1` (typo); this one is `v1.3.0`.
 Still open, unchanged: real-hardware GPU / audio passes, the optional art in `ART-NEEDED.md`, the phone follow-ups list.

@@ -551,8 +551,12 @@ const sheetState = page => page.evaluate(() => { const s = document.querySelecto
       if (!st.over) { check('landscape: the panel is beside the map (nothing under it)', true); }
       else {
         check('the map knows what the sheet covers (inset)', st.inset > 0 && Math.abs(st.inset - (st.wrap[3] - st.sheetTop)) < 4, 'inset ' + st.inset + ' vs ' + Math.round(st.wrap[3] - st.sheetTop));
-        const tgt = st.stars.filter(s => s.reach && s.inMap && s.y > st.sheetTop + 30).sort((a, b) => a.y - b.y)[0];
-        if (!tgt) check('a reachable star under the sheet to test with', false, 'none found');
+        const under = () => st.stars.filter(s => s.reach && s.inMap && s.y > st.sheetTop + 30).sort((a, b) => a.y - b.y)[0];
+        let tgt = under();
+        // with the HUD and the tab bar away during a pick (css/phone.css .ph-pick) every reachable star may already sit clear of the sheet: put one
+        // under it first (pan the map down from the clear band), then test the way out
+        for (let k = 0; !tgt && k < 3; k++) { const vx = (st.wrap[0] + st.wrap[2]) / 2, y0 = Math.max(st.wrap[1] + 5, st.topBottom + 40), y1 = Math.min(st.sheetTop - 10, y0 + 220); await touchDrag(vx, y0, vx, y1); await sleep(700); st = await state(); tgt = under(); }
+        if (!tgt) check('a reachable star under the sheet to test with', st.stars.some(s => s.reach && s.inMap), 'none under the sheet even after panning down (the pan is clamped): every reachable star stays clear of it');
         else {
           // drag the map so the star lands in the clear band between the HUD / message stack at the top and the sheet (up to three drags: the pan is clamped)
           const vx = (st.wrap[0] + st.wrap[2]) / 2, yc = (st.topBottom + st.sheetTop) / 2; let t = tgt, n = 0;
