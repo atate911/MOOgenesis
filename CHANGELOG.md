@@ -7,15 +7,17 @@ Versions follow `MAJOR.MINOR.PATCH`; the live version is the `VERSION` file.
 
 - The score grows by twelve movements, all written for the sampled orchestra and chorus and held together by the score's themes (the
   leitmotif — a rising fourth and a falling step — the men's chanted phrase, the procession's theme, the chorale), each quoted once in
-  every movement, while each movement has a principal theme and a foundation of its own. Three for variety: *the orrery* (a dry clockwork
-  of pizzicato, celeste and claves in five with a music-box tune; the leitmotif only when the clock stops), *the long night* (a passacaglia:
+  every movement, while each movement has a principal theme and a foundation of its own. Three for variety: *the nebula* (a drift in
+  Jonn Serrie's manner: the analogue and air pads on chords that change every four bars, sub-bass swells, crotales and celeste answered by
+  a long delay, an alto flute in a few long notes; the strings and the horn's hymn rise through it once), *the long night* (a passacaglia:
   a ground that never leaves the basses under a set of variations, each a texture of its own — cellos alone, cor anglais, running harp,
   all-pizzicato with a staccato bassoon, the hymn with the men, trembling strings and tubular bells, the full chorale), *the watch* (a
   nocturne for a very soft solo trumpet over a walking pizzicato bass and off-beat harp chords, chimes at midnight). Nine for the phases
   of a game: the early years — *first light* (one long sunrise from violas alone to brass, both choirs and timpani, then dusk), *the lantern*
   (a chorale prelude in a broad six: the cradle tune in long notes under a running clarinet), *the survey* (a minimalist pulse at 76,
   eighth-note violas and marimba under staccato flute cells); the middle years — *the commonwealth* (a canon for oboe, clarinet and flute
-  over a walking bassoon, no strings), *the seven stars* (a dance in seven at 84 on spiccato strings, tambourine and shaker), *noon* (a
+  over a walking bassoon, no strings), *the lanes* (a sequence in Serrie's manner: a celeste running in sixteenths with a faint synth pluck on the beats under the strings
+  and an oboe tune; the sequence stops for the men, the horn brings the hymn at the crest), *noon* (a
   chorale for brass choir with a strain of its own, the hymn as its answer, the choirs at the full); the late years — *the frontier* (a
   slow march on whispered field drums and a tuba step, a dotted trombone theme, the hymn at half speed at the crest), *the embers* (a
   sarabande with its stressed second beat in the low strings, the leitmotif inverted in the middle), *the vigil* (a sung chorale: the men,

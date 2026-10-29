@@ -9,10 +9,11 @@ Browser-pane tip: animations use requestAnimationFrame, so in the built-in brows
 
 ## Session 11 (October 2026) — the score grows, branch `claude/festive-wozniak-7jy03r`
 Twelve movements added to `js/audio/music.js` (`galaxy11`..`galaxy22`), all for the sampled orchestra and chorus. Each has a principal theme and a
-foundation of its own (a clockwork, a passacaglia's variations, a nocturne's walking bass, one long sunrise, a chorale prelude, a minimalist pulse,
-a canon, a dance in seven, a brass choir, a slow march, a sarabande, a sung chorale) and quotes one of the score's themes once (H1 the leitmotif,
+foundation of its own (a planetarium drift and a sequence in Jonn Serrie's manner — `analog`/`air`/`subSwell`/`glass`/`crystal`, `fx.dly` 2.2-2.8, chords
+every four bars; the user disliked the 5/4 clockwork and the 7/4 dance that stood here first — a passacaglia's variations, a nocturne's walking bass,
+one long sunrise, a chorale prelude, a minimalist pulse, a canon, a brass choir, a slow march, a sarabande, a sung chorale) and quotes one of the score's themes once (H1 the leitmotif,
 CM the men's phrase, the procession's A1/CD, the chorale HY1-4) — the first draft poured all twelve into one mould (strings pad + air + harp + celeste
-+ soft choir, the same nine sections at 50-66 bpm) and sounded like one piece; the user asked for movements. Tempi now 48-84, meters 3 4 5 6 7.
++ soft choir, the same nine sections at 50-66 bpm) and sounded like one piece; the user asked for movements. Tempi now 48-76, meters 3 4 6 (no odd meters: the user hears them as wrong).
 Three for variety (orrery 5/4 Bb, passacaglia B minor with the ground written into the bass pattern — `['1--b', '1--7', '1--2', '1---']` over
 `i bVIM7 bIII V` — the watch Ab with `tptSolo`) and nine for the phases, each with an era window `eraWin: [lo, hi]` (early [0, .55], middle [.15, .9],
 late [.4, 1]). Textural devices worth reusing: `pad: { p: 'pulse' | 'stab', pat }` for rhythmic string beds (the survey's eighths, the sarabande's
