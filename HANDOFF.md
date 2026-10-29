@@ -7,6 +7,23 @@ Docs: `PROGRESS.md` (plan/status/25-feature acceptance checklist) · `CONVENTION
 Commands: `node tools/check.js` (syntax of every manifest file) · `node tools/rules-test.js [area]` · `node tools/soak.js` (24-thread AI-vs-AI soak/balance; `tools/SOAK.md`) · `node tools/headless.js`.
 Browser-pane tip: animations use requestAnimationFrame, so in the built-in browser pane a tab must be fronted (`tabs_select`) for anything animated (GNN, audiences, scenes, combat) to advance.
 
+## Session 11 (October 2026) — the score grows, branch `claude/festive-wozniak-7jy03r`
+Twelve exploration pieces added to `js/audio/music.js` (`galaxy11`..`galaxy22`), all for the sampled orchestra and chorus, each quoting the
+score's themes (H1 the leitmotif, CM the men's phrase, the procession's A1/CD, the chorale HY1-4, the planetarium's FL). Three for variety
+(orrery 5/4 Bb, passacaglia B minor with the ground written into the bass pattern — `['1--b', '1--7', '1--2', '1---']` over `i bVIM7 bIII V` —
+the watch Ab with `tptSolo`) and nine for the phases, each with an era window `eraWin: [lo, hi]` (early [0, .55], middle [.15, .9], late [.4, 1]).
+Engine: `fitsEra` / `eraList` filter a programme's regular pieces by `S.era` when a cycle is composed (`composeOrder`) and when `setMood` picks a
+start (never below three pieces); `makePlaylist()` builds a playlist apart from starting it; `Music.setMood(mood, { soft: true })` →
+`softSwitch()` arms the new programme at `Player.nextSectionBoundary(minAhead, maxAhead)` (a breath — lv ≤ .35 — within reach is preferred,
+else the next section line, else a bar line before `maxAhead`), through an interlude in the new key, old piece decaying under it (`oldFade`
+= fade + 4); `soundscape.js` uses it at turn end. New `INST` presets `violas` (vlaSus), `trombones` (tbnSus), `tuba` (tubaSus), `tpts` (tptSus),
+`tremLo` (vcTrem); interludes `drift6` (the choir) and `drift7` (violas, trumpet far off); arps and bass get ±6 % / ±4 % seeded level variation.
+Pitfall met and fixed: roman numerals are major-scale degrees, so minor-key chords are `bVI`/`bIII`/`bVII` (a plain `VI` in C# minor is Bb major).
+Checked: Node-only lint (every form × alt × take × era compiles, deterministic, zero snaps on all twelve), `tools/audio-report.js` trims (-16.5 LUFS),
+a Playwright seam test (`softSwitch` lands on the running piece's breath, interlude then the queued piece, no silence, era lists correct). Still not
+heard through speakers; the MP3 sample set is LAME VBR q0 (the top MP3 setting) — a lossless or higher-rate rebuild needs the source libraries and
+`tools/samples/build.py`.
+
 ## Session 10 (October 2026) — release 1.3.0, branch `claude/release-1-3-0`
 Release pass over `main` with everything merged (phone fit, Tech Lab, visual system, polish): `node tools/check.js` (120 files),
 `node tools/rules-test.js` (860), `tools/soak.js` 24 games classic + 24 expanded `--strict` (one WARN: seed 20 darlok/average, the

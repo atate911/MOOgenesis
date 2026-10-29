@@ -102,14 +102,15 @@
     if (id === 'galaxy') { war = atWar(); early = earlyYears(); eraStep(); return ['galaxy', galaxyMood()]; }
     return MAP[id] || null;
   }
-  // a declaration of war, a peace treaty or the first contact changes the map's music at the end of the turn, on the bar, never mid-phrase
+  // a declaration of war, a peace treaty or the first contact changes the map's programme at the end of the turn — softly: the piece that is
+  // playing reaches its next breath or section line, an interlude in the new key follows, and only then the new programme's first piece
   function onTurnEnd() {
     UI.sfx('newturn');
     const m = music(); if (!m || !m.setMood || group !== 'galaxy') return;
     const before = galaxyMood();
     war = atWar(); early = earlyYears(); eraStep();
     if (galaxyMood() === before) return;
-    try { m.setMood(galaxyMood(), { fade: 6, quantize: 'bar' }); } catch (e2) { /* audio optional */ }
+    try { m.setMood(galaxyMood(), { fade: 6, quantize: 'bar', soft: true }); } catch (e2) { /* audio optional */ }   // soft: the running piece reaches its next breath or section line first, then the new programme enters through an interlude
   }
 
   function onScreen(id, params) {
