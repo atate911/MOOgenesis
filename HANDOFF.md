@@ -31,7 +31,8 @@ Loop seams (the user heard clicks / a looping flutter on held notes): `sampler.j
 (tail of the loop into the lead-in before loopStart, n = min(loop/4, 300 ms, loopStart - 20 ms), linear, once per buffer+loop, `S.loopXf`,
 `?loopxf=0` to hear the old loops). Audit scripts lived in the scratchpad: decode each zone with ffmpeg, measure |x[ls]-x[le-1]|/RMS and the
 correlation of the 30 ms before loopEnd with the 30 ms before loopStart; before: 67/218 poor seams, oboe/clarinet corr 0.5-0.8 with loops as
-short as 0.13 s; after: corr 1.00 everywhere. The remaining realism limits are in the assets (short oboe/clarinet loops; dynamic-layer
+short as 0.13 s; after: corr 1.00 everywhere. `node tools/audio-hour.js [outDir]` captures a scripted hour of the map from the real-time engine (alone / first contact at 13 min / war at 34 / peace
+at 46, era 0.02 -> 0.92) as raw PCM plus a log of every piece change; the demo page's hour was made from it. The remaining realism limits are in the assets (short oboe/clarinet loops; dynamic-layer
 crossfades beat slightly on swells) and need the source libraries and `build.py`.
 Checked: Node-only lint (every form × alt × take × era compiles, deterministic, zero snaps on all twelve), `tools/audio-report.js` trims (-16.5 LUFS),
 a Playwright seam test (`softSwitch` lands on the running piece's breath, interlude then the queued piece, no silence, era lists correct). Still not

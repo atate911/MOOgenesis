@@ -29,6 +29,8 @@ Versions follow `MAJOR.MINOR.PATCH`; the live version is the `VERSION` file.
   that is playing reaches its next breath or section line, an interlude in the new key follows, and only then the new programme's first
   piece enters, with the long seam fades of the rotation. Two more interludes join the bridges between pieces: the choir alone, and the
   violas with a trumpet far away. Plucked and bass notes no longer land at identical levels.
+- `node tools/audio-hour.js` captures a scripted hour of the map's music from the real-time engine (the early programme alone, first
+  contact, a war, peace, the late years, the era rising throughout) with a log of every change of piece.
 - Loop seams. A sustained note is a short recording looped by the browser, and Web Audio loops with no crossfade, so wherever a
   library loop point did not meet itself in phase (a third of the string-section, chorus and solo-brass zones, and the short oboe and
   clarinet loops worst of all) every wrap was a click, or a flutter at the loop rate: the "clipping" and "looping" heard on held notes.
