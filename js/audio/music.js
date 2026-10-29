@@ -1874,7 +1874,7 @@
   // long sunrise, a chorale prelude, a minimalist pulse, a canon, a dance, a brass choir, a slow march, a sarabande, a sung chorale.
   Track('galaxy11', {
     desc: 'The orrery: a dry clockwork in five — pizzicato strings, the celeste and claves ticking in three-and-two, a triangle on the turn, no sustained strings at all; a clarinet plays a music-box tune of repeated notes over the wheels; the clockwork stops once, and in the stillness a flute gives the leitmotif stretched across the five; then it turns again and runs down',
-    bpm: 60, meter: 5, trim: 3.74, tone: { hi: -1.5 }, root: 'Bb', mode: 'major', loopFrom: 'T1', tens: false, gentle: true, rubato: 0.02, fx: { dly: 1.2, verb: 0.85, stage: 1.2 }, sends: { arp: { verb: 0.1, stage: 0.3 }, drums: { verb: 0.04, stage: 0.2 } },
+    bpm: 60, meter: 5, trim: 6.45, tone: { hi: -1.5 }, root: 'Bb', mode: 'major', loopFrom: 'T1', tens: false, gentle: true, rubato: 0.02, fx: { dly: 1.2, verb: 0.85, stage: 1.2 }, sends: { arp: { verb: 0.1, stage: 0.3 }, drums: { verb: 0.04, stage: 0.2 } },
     forms: [['T1', 'T2', 'W', 'stop', 'T3', 'W2', 'down'], ['T1', 'W', 'stop', 'T2', 'W2', 'down'], ['T1', 'T2', 'stop', 'W', 'T3', 'down'], ['T1', 'W', 'T2', 'stop', 'W2', 'T3', 'down']],
     alts: [{}, { lead: 'oboe', arp2: 'vibes' }, { lead: 'flute', arp: 'marimba' }], eraAlts: { pad2: 'cellos', lead: 'cello', choir: 'choirMen' },
     inst: { pad: 'air', pad2: 'strings', bass: 'pulse', lead: 'clarinet', lead2: 'glass', bell: 'glass', arp: 'pizz', arp2: 'glass', choir: 'choirWomen', choir2: 'choirMen' },
@@ -1887,7 +1887,7 @@
       FL: '4:4 r:1 | 1:4 r:1 | 2:4 r:1 | 7:5', GL: '10:5 | 8:5 | 9:5 | 5:5', CM: '1:5 | 2:5 | 3:3 2:2 | 1:5',
     },
     sec: [
-      { n: 'wind', bars: 4, cres: [0.45, 0.58], prog: 'I:2 IVM7:2', arp: { pat: '0.1.2.1.0.', res: 2, vel: 0.42, reg: [50, 72], gate: 0.6 }, drums: { click: 'x.....x...', vel: 0.4 } },
+      { n: 'wind', bars: 2, cres: [0.52, 0.62], prog: 'I:2', arp: { pat: '0.1.2.1.0.', res: 2, vel: 0.48, reg: [50, 72], gate: 0.6 }, arp2: { pat: '...0...2..', res: 2, vel: 0.36, reg: [67, 86] }, drums: { click: 'x.....x...', vel: 0.42 } },
       { n: 'T1', bars: 8, lv: 0.64, prog: 'Iadd9 V | I IVM7:.6 V:.4 | Iadd9 vi7 | IVM7 I', pad: { p: 'swell', n: 2, reg: [67, 84], vel: 0.3 }, bass: { pat: '1..5.', vel: 0.9 }, arp: { pat: '0.1.2.1.0.', res: 2, vel: 0.46, reg: [50, 72], gate: 0.6 }, arp2: { pat: '...0...2..', res: 2, vel: 0.36, reg: [67, 86] },
         lead: { ph: ['W1 W2', 'W1 r4', 'r4 W2'], vel: 0.6, art: 0.85 }, drums: { click: 'x.....x...', tri: ['x.........', '..........'], vel: 0.42 } },
       { n: 'T2', bars: 8, lv: 0.7, prog: 'Iadd9 V | I IVM7:.6 V:.4 | Iadd9 vi7 | IVM7 I', pad: { p: 'swell', n: 2, reg: [67, 84], vel: 0.3 }, bass: { pat: '1..5.', vel: 0.9 }, arp: { pat: '0.1.2.1.0.', res: 2, vel: 0.46, reg: [50, 72], gate: 0.6 }, arp2: { pat: '...0...2..', res: 2, vel: 0.38, reg: [67, 86] },
@@ -1907,7 +1907,7 @@
 
   Track('galaxy12', {
     desc: 'The long night: a passacaglia — a ground that never stops in the basses, and a set of variations over it, each a texture of its own: the cellos alone, the cor anglais, the harp running, all pizzicato with a staccato bassoon, the hymn in the horn with the men, trembling strings and tubular bells, the full chorale; grave, patient',
-    bpm: 50, trim: 3.93, tone: { hi: -2.5 }, root: 'B', mode: 'minor', loopFrom: 'V1', tens: false, gentle: true, rubato: 0.02, fx: { dly: 1.4, verb: 1.25 },
+    bpm: 50, trim: 6.01, tone: { hi: -2.5 }, root: 'B', mode: 'minor', loopFrom: 'V1', tens: false, gentle: true, rubato: 0.02, fx: { dly: 1.4, verb: 1.25 },
     forms: [['V1', 'V2', 'V3', 'V4', 'V5', 'breath', 'V6', 'V7', 'E'], ['V1', 'V3', 'V2', 'V5', 'breath', 'V4', 'V6', 'E'], ['V1', 'V2', 'V4', 'breath', 'V3', 'V5', 'V6', 'V7', 'E'], ['V1', 'V5', 'V3', 'breath', 'V2', 'V4', 'V6', 'E']],
     alts: [{}, { lead: 'cello', lead2: 'bassoon' }, { lead: 'oboe', bell: 'glass' }], eraAlts: { pad: 'cellos', choir: 'choirMen', lead: 'cello' },
     inst: { pad: 'strings', pad2: 'cellos', bass: 'deep', lead: 'reed', lead2: 'cello', bell: 'chime', arp: 'harp', choir: 'choirWomen', choir2: 'choirMen' },
@@ -1944,7 +1944,7 @@
 
   Track('galaxy13', {
     desc: 'The watch: a nocturne — a walking pizzicato bass under harp chords placed off the beat, an air pad far back, and a lone trumpet, very soft, with a line of its own: a fifth, then the octave, and the slow way down; the horn answers once with the procession’s theme and once with the leitmotif from across the ship, the chimes strike midnight, the strings come in only at the end of the watch',
-    bpm: 56, trim: 3.6, tone: { hi: -2.5 }, root: 'Ab', mode: 'major', oct: -1, loopFrom: 'W1', tens: false, gentle: true, rubato: 0.03, fx: { dly: 2.2, verb: 1.2 },
+    bpm: 56, trim: 5.34, tone: { hi: -2.5 }, root: 'Ab', mode: 'major', oct: -1, loopFrom: 'W1', tens: false, gentle: true, rubato: 0.03, fx: { dly: 2.2, verb: 1.2 },
     forms: [['W1', 'W2', 'H', 'mid', 'breath', 'W3', 'dawn', 'E'], ['W1', 'H', 'mid', 'breath', 'W2', 'dawn', 'E'], ['W1', 'W2', 'mid', 'breath', 'H', 'W3', 'E'], ['W1', 'mid', 'breath', 'W2', 'H', 'E']],
     alts: [{}, { lead: 'flute', lead2: 'cello' }, { lead: 'oboe', lead2: 'horn', arp2: 'glass' }], eraAlts: { pad: 'cellos', lead: 'hornSolo', choir: 'choirMen' },
     inst: { pad: 'air', pad2: 'harp', bass: 'moog', lead: 'tptSolo', lead2: 'hornSolo', bell: 'bell', bell2: 'chime', arp: 'harp', arp2: 'vibes', choir: 'choirWomen', choir2: 'choirMen' },
@@ -1977,7 +1977,7 @@
 
   Track('galaxy14', {
     desc: 'The early years, first light: one long sunrise — the violas alone in the dark, the cellos and an alto flute at the grey with a dawn theme that climbs the chord, the harp and the strings as it glows, the horns and both choirs as it rises, the hymn blazing in brass and voices with timpani at the sunrise itself, then the warmth of the day and the fall to dusk',
-    bpm: 54, trim: 3.96, tone: { hi: -2.5 }, root: 'Db', mode: 'major', loopFrom: 'grey', tens: false, gentle: true, rubato: 0.03, eraWin: [0, 0.55], mix: { choir: 1.1 }, fx: { dly: 1.8, verb: 1.25 },
+    bpm: 54, trim: 7.66, tone: { hi: -2.5 }, root: 'Db', mode: 'major', loopFrom: 'grey', tens: false, gentle: true, rubato: 0.03, eraWin: [0, 0.55], mix: { choir: 1.1 }, fx: { dly: 1.8, verb: 1.25 },
     forms: [['grey', 'glow', 'rise', 'sunrise', 'day', 'dusk'], ['grey', 'glow', 'day', 'rise', 'sunrise', 'dusk'], ['grey', 'day', 'glow', 'rise', 'sunrise', 'dusk']],
     alts: [{}, { lead: 'flute', lead2: 'cello' }, { lead: 'clarinet', arp: 'vibes' }], eraAlts: { pad2: 'cellos', lead: 'cello', choir: 'choirMen' },
     inst: { pad: 'violas', pad2: 'cellos', bass: 'deep', lead: 'altoFlute', lead2: 'horn', bell: 'crystal', arp: 'harp', choir: 'choirWomen', choir2: 'choirMen' },
@@ -2007,7 +2007,7 @@
 
   Track('galaxy15', {
     desc: 'The early years, the lantern: a chorale prelude in a broad six — the cradle tune in long notes as a cantus firmus (the horn, then the men, then both) under a clarinet that never stops running its arpeggio figure, the ship’s soft organ holding the chords, a flute trio in the middle, the glockenspiel in the still; Bach’s manner for a sleeping ship',
-    bpm: 56, meter: 6, trim: 4.18, tone: { hi: -2.5 }, root: 'A', mode: 'major', loopFrom: 'CF1', tens: false, gentle: true, rubato: 0.02, eraWin: [0, 0.55], fx: { dly: 1.0, verb: 1.2 },
+    bpm: 56, meter: 6, trim: 4.59, tone: { hi: -2.5 }, root: 'A', mode: 'major', loopFrom: 'CF1', tens: false, gentle: true, rubato: 0.02, eraWin: [0, 0.55], fx: { dly: 1.0, verb: 1.2 },
     forms: [['CF1', 'trio', 'CF2', 'still', 'CF3', 'E'], ['CF1', 'still', 'CF2', 'trio', 'E'], ['CF1', 'trio', 'still', 'CF3', 'E']],
     alts: [{}, { arp: 'flute', lead: 'cello' }, { arp: 'oboe', arp2: 'harp' }], eraAlts: { pad: 'cellos', lead: 'cello', choir: 'choirMen' },
     inst: { pad: 'organSoft', pad2: 'strings', bass: 'deep', lead: 'horn', lead2: 'choirMen', bell: 'glass', arp: 'clarinet', arp2: 'harp', choir: 'choirWomen', choir2: 'choirMen' },
@@ -2036,7 +2036,7 @@
 
   Track('galaxy16', {
     desc: 'The early years, the survey: a minimalist pulse — the violas in soft even eighths with a marimba on the chord tones, a pizzicato bass, a flute in short cells of the leitmotif that lengthen as the piece goes, the glockenspiel echoing them, the harp running and the women singing one long line over the cells at the full; no sustained strings until the voices come; the scouts going out, star by star',
-    bpm: 76, trim: 6.33, tone: { hi: -2.0 }, root: 'D', mode: 'major', loopFrom: 'cell1', tens: false, gentle: true, rubato: 0.015, eraWin: [0, 0.55], fx: { dly: 1.3, verb: 0.95, stage: 1.15 }, sends: { arp: { verb: 0.1, stage: 0.3 } },
+    bpm: 76, trim: 6.9, tone: { hi: -2.0 }, root: 'D', mode: 'major', loopFrom: 'cell1', tens: false, gentle: true, rubato: 0.015, eraWin: [0, 0.55], fx: { dly: 1.3, verb: 0.95, stage: 1.15 }, sends: { arp: { verb: 0.1, stage: 0.3 } },
     forms: [['cell1', 'cell2', 'add', 'full', 'thin', 'full2', 'out'], ['cell1', 'add', 'thin', 'cell2', 'full', 'out'], ['cell1', 'cell2', 'thin', 'add', 'full2', 'out']],
     alts: [{}, { lead: 'oboe', lead2: 'vibes' }, { lead: 'clarinet', arp: 'pizz' }], eraAlts: { pad2: 'cellos', lead: 'cello', choir: 'choirMen' },
     inst: { pad: 'violas', pad2: 'air', bass: 'pulse', lead: 'flute', lead2: 'bell', bell: 'bell', arp: 'marimba', arp2: 'harp', choir: 'choirWomen', choir2: 'choirMen' },
@@ -2068,7 +2068,7 @@
 
   Track('galaxy17', {
     desc: 'The middle years, the commonwealth: a canon for woodwinds — an oboe states the procession’s theme alone over a walking bassoon and the horns’ soft chord, a clarinet follows it two bars behind, a flute four bars behind, three voices of one tune; a dialogue between the strains, the men for one phrase, a triangle; no strings but the bassoon; the talk between peoples',
-    bpm: 66, trim: 3.42, tone: { hi: -2.0 }, root: 'E', mode: 'major', loopFrom: 'theme', tens: false, gentle: true, rubato: 0.03, eraWin: [0.15, 0.9], fx: { dly: 1.2, verb: 1.1, stage: 1.1 },
+    bpm: 66, trim: 3.86, tone: { hi: -2.0 }, root: 'E', mode: 'major', loopFrom: 'theme', tens: false, gentle: true, rubato: 0.03, eraWin: [0.15, 0.9], fx: { dly: 1.2, verb: 1.1, stage: 1.1 },
     forms: [['theme', 'talk', 'canon2', 'canon3', 'still', 'canon3b', 'E'], ['theme', 'canon2', 'talk', 'still', 'canon3', 'E'], ['theme', 'talk', 'canon3', 'still', 'canon2', 'canon3b', 'E']],
     alts: [{}, { lead: 'flute', lead2: 'oboe', bell2: 'clarinet' }, { lead: 'clarinet', lead2: 'cello', bell2: 'flute' }], eraAlts: { pad2: 'cellos', lead2: 'cello', choir: 'choirMen' },
     inst: { pad: 'horn', pad2: 'cellos', bass: 'bassoon', lead: 'oboe', lead2: 'clarinet', bell: 'glass', bell2: 'flute', arp: 'harp', choir: 'choirWomen', choir2: 'choirMen' },
@@ -2099,7 +2099,7 @@
 
   Track('galaxy18', {
     desc: 'The middle years, the seven stars: a dance in seven — spiccato strings keep the four-and-three with a tambourine and a shaker over a pizzicato bass, a bassoon leads a skipping dance tune with the patient tune of the second piece as its second strain, a marimba joins the wheel; a legato trio for the oboe with the hymn and the strings singing; the men for one phrase; the empire’s harvest festival',
-    bpm: 84, meter: 7, trim: 4.21, tone: { hi: -1.5 }, root: 'G', mode: 'major', oct: -1, loopFrom: 'D1', tens: false, gentle: true, rubato: 0.015, eraWin: [0.15, 0.9], fx: { dly: 0.8, verb: 0.8, stage: 1.25 }, sends: { arp: { verb: 0.08, stage: 0.35 }, drums: { verb: 0.04, stage: 0.25 } },
+    bpm: 84, meter: 7, trim: 7.05, tone: { hi: -1.5 }, root: 'G', mode: 'major', oct: -1, loopFrom: 'D1', tens: false, gentle: true, rubato: 0.015, eraWin: [0.15, 0.9], fx: { dly: 0.8, verb: 0.8, stage: 1.25 }, sends: { arp: { verb: 0.08, stage: 0.35 }, drums: { verb: 0.04, stage: 0.25 } },
     forms: [['D1', 'D2', 'trio', 'D3', 'still', 'D4', 'E'], ['D1', 'trio', 'D2', 'still', 'D3', 'E'], ['D1', 'D2', 'still', 'trio', 'D4', 'E']],
     alts: [{}, { lead: 'clarinet', lead2: 'flute' }, { lead: 'cello', lead2: 'oboe', arp2: 'vibes' }], eraAlts: { pad: 'cellos', lead2: 'cello', choir: 'choirMen' },
     inst: { pad: 'strings', pad2: 'cellos', bass: 'moog', lead: 'bassoon', lead2: 'oboe', bell: 'vibes', arp: 'strOst', arp2: 'marimba', choir: 'choirWomen', choir2: 'choirMen' },
@@ -2112,7 +2112,7 @@
       O7: '5:4 8:3 | 7:4 6:3 | 5:4 3:3 | 4:4 5:3', O7b: '6:4 8:3 | 10:4 9:3 | 8:4 5:3 | 8:7', CM: '1:7 | 2:7 | 3:4 2:3 | 1:7',
     },
     sec: [
-      { n: 'wheel', bars: 4, cres: [0.5, 0.62], prog: 'I:2 IV:2', arp: { pat: '0.1.2.1.0.1.2.', res: 2, vel: 0.5, reg: [55, 74], gate: 0.5 }, drums: { shk: 'x.x.x.x.x.x.x.', vel: 0.4 } },
+      { n: 'wheel', bars: 4, cres: [0.52, 0.64], prog: 'I:2 IV:2', arp: { pat: '0.1.2.1.0.1.2.', res: 2, vel: 0.52, reg: [55, 74], gate: 0.5 }, bass: { pat: '1...5..', vel: 0.9 }, drums: { shk: 'x.x.x.x.x.x.x.', vel: 0.34 } },
       { n: 'D1', bars: 8, lv: 0.66, prog: 'IM7 vi IV V | IV V ii I', arp: { pat: '0.1.2.1.0.1.2.', res: 2, vel: 0.52, reg: [55, 74], gate: 0.5 }, bass: { pat: '1...5..', vel: 0.95 },
         lead: { ph: ['DA1 DA2', 'DA1 r4', 'r4 DA2'], vel: 0.6, art: 0.9 }, drums: { shk: 'x.x.x.x.x.x.x.', clap: '........x.....', vel: 0.42 } },
       { n: 'D2', bars: 8, lv: 0.7, prog: 'IM7 vi IV V | IV V ii I', arp: { pat: '0.1.2.1.0.1.2.', res: 2, vel: 0.54, reg: [55, 74], gate: 0.5 }, arp2: { pat: '0.1.2.1.0.1.2.', res: 2, vel: 0.38, reg: [67, 86], gate: 0.5 }, bass: { pat: '1...5..', vel: 0.95 },
@@ -2132,7 +2132,7 @@
 
   Track('galaxy19', {
     desc: 'The middle years, noon: a chorale for brass choir — horns in four parts, the trumpets soft on a chorale strain of its own, trombones beneath, the low brass as the bass, timpani on the step; the strings answer with the title’s hymn as the second strain, the two choirs join the brass at the full, and a plagal amen closes it; the empire at its height',
-    bpm: 60, trim: 2.8, tone: { hi: -1.5, lo: 0.5 }, root: 'C', mode: 'major', loopFrom: 'ch1', tens: false, gentle: true, rubato: 0.02, eraWin: [0.15, 0.9], mix: { choir: 1.15, lead: 0.9 }, fx: { dly: 0.8, verb: 1.25 },
+    bpm: 60, trim: 4.07, tone: { hi: -1.5, lo: 0.5 }, root: 'C', mode: 'major', loopFrom: 'ch1', tens: false, gentle: true, rubato: 0.02, eraWin: [0.15, 0.9], mix: { choir: 1.15, lead: 0.9 }, fx: { dly: 0.8, verb: 1.25 },
     forms: [['ch1', 'str', 'ch2', 'still', 'ch3', 'amen'], ['ch1', 'still', 'str', 'ch2', 'ch3', 'amen'], ['ch1', 'str', 'still', 'ch3', 'amen']],
     alts: [{}, { lead: 'horn', lead2: 'lowBrass' }, { lead: 'hornSolo', pad2: 'strings', lead2: 'cello' }], eraAlts: { pad2: 'lowBrass', lead: 'trombones', choir: 'choirMen' },
     inst: { pad: 'strings', pad2: 'horn', bass: 'lowBrass', lead: 'tpts', lead2: 'trombones', bell: 'glass', arp: 'harp', choir: 'choirWomen', choir2: 'choirMen' },
@@ -2161,7 +2161,7 @@
 
   Track('galaxy20', {
     desc: 'The late years, the frontier: a slow march — field drums at a whisper, the tuba on the step, the trombones with a dotted march theme of their own, the men chanting beneath, tubular bells; the strings tremble in the trio while the horn plays the hymn, a side-drum roll leads to the crest where the trombones intone the hymn at half speed, the drums fall silent for the phrygian step of the abyss; the border, held',
-    bpm: 48, trim: 3.72, tone: { hi: -2.5, lo: 0.6 }, root: 'F#', mode: 'minor', oct: -1, loopFrom: 'M1', tens: false, gentle: true, rubato: 0.015, eraWin: [0.4, 1], mix: { bass: 0.9, choir: 1.1, drums: 0.9 }, fx: { dly: 0.9, verb: 1.2 }, sends: { drums: { stage: 0.08, verb: 0.05, dly: 0 } },
+    bpm: 48, trim: 6.44, tone: { hi: -2.5, lo: 0.6 }, root: 'F#', mode: 'minor', oct: -1, loopFrom: 'M1', tens: false, gentle: true, rubato: 0.015, eraWin: [0.4, 1], mix: { bass: 0.9, choir: 1.1, drums: 0.9 }, fx: { dly: 0.9, verb: 1.2 }, sends: { drums: { stage: 0.08, verb: 0.05, dly: 0 } },
     forms: [['M1', 'M2', 'trio', 'M3', 'still', 'M4', 'E'], ['M1', 'trio', 'M2', 'still', 'M3', 'E'], ['M1', 'M2', 'still', 'trio', 'M4', 'E']],
     alts: [{}, { lead: 'horn', lead2: 'trombones' }, { lead: 'cello', pad: 'strings', bass: 'deep' }],
     inst: { pad: 'cellos', pad2: 'tremLo', bass: 'tuba', lead: 'trombones', lead2: 'horn', bell: 'chime', bell2: 'chime', arp: 'harp', choir: 'choirMen', choir2: 'aah' },
@@ -2191,7 +2191,7 @@
 
   Track('galaxy21', {
     desc: 'The late years, the embers: a sarabande — the low strings place the dance’s stressed second beat in every bar, the harp answers on the third, a cor anglais carries a sarabande melody with the long second beat, and in the middle turns the leitmotif upside down (the fourth falls, the steps climb back) over the lament’s descending bass from the passacaglia; the cellos tremble and a timpani roll leads to the crest, the women above it; what the wars cost',
-    bpm: 54, meter: 3, trim: 3.66, tone: { hi: -2.5, lo: 0.5 }, root: 'C#', mode: 'minor', loopFrom: 'S1', tens: false, gentle: true, rubato: 0.02, eraWin: [0.4, 1], fx: { dly: 1.2, verb: 1.25 },
+    bpm: 54, meter: 3, trim: 4.84, tone: { hi: -2.5, lo: 0.5 }, root: 'C#', mode: 'minor', loopFrom: 'S1', tens: false, gentle: true, rubato: 0.02, eraWin: [0.4, 1], fx: { dly: 1.2, verb: 1.25 },
     forms: [['S1', 'S2', 'L', 'still', 'breath', 'S3', 'L2', 'E'], ['S1', 'L', 'still', 'breath', 'S2', 'L2', 'E'], ['S1', 'S2', 'still', 'breath', 'L', 'S3', 'E']],
     alts: [{}, { lead: 'altoFlute', lead2: 'horn' }, { lead: 'cello', pad2: 'cellos', arp: 'pizz' }],
     inst: { pad: 'cellos', pad2: 'strings', bass: 'deep', lead: 'reed', lead2: 'cello', bell: 'chime', arp: 'harp', choir: 'choirWomen', choir2: 'choirMen' },
@@ -2222,7 +2222,7 @@
 
   Track('galaxy22', {
     desc: 'The late years, the vigil: a sung chorale — the men alone at first on the chorale of the tenth piece, then the women above them in octaves, the organ beneath as a pedal, tubular bells; the organ takes a verse of its own, the women rise to a descant over the men’s second strain, the brass comes in only at the crest with timpani; the council’s hymn as the last verse; the long night watch of an old empire',
-    bpm: 52, trim: 3.49, tone: { hi: -2.0, lo: 0.6 }, root: 'F', mode: 'minor', loopFrom: 'men', tens: false, gentle: true, rubato: 0.02, eraWin: [0.4, 1], mix: { choir: 1.2, lead: 1.1, pad: 1.0 }, fx: { dly: 0.9, verb: 1.4 },
+    bpm: 52, trim: 4.27, tone: { hi: -2.0, lo: 0.6 }, root: 'F', mode: 'minor', loopFrom: 'men', tens: false, gentle: true, rubato: 0.02, eraWin: [0.4, 1], mix: { choir: 1.2, lead: 1.1, pad: 1.0 }, fx: { dly: 0.9, verb: 1.4 },
     forms: [['men', 'satb', 'organ', 'satb2', 'still', 'crest', 'amen'], ['men', 'satb', 'still', 'organ', 'crest', 'amen'], ['men', 'organ', 'satb', 'still', 'satb2', 'amen']],
     alts: [{}, { lead: 'aah', lead2: 'choirMenAh' }, { pad: 'strings', pad2: 'cellos' }],
     inst: { pad: 'organSoft', pad2: 'trombones', bass: 'deep', lead: 'choirWomen', lead2: 'choirMen', bell: 'chime', bell2: 'chime', arp: 'harp', choir: 'choirWomen', choir2: 'choirMen' },
