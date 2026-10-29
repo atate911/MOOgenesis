@@ -5,28 +5,32 @@ Versions follow `MAJOR.MINOR.PATCH`; the live version is the `VERSION` file.
 
 ## Unreleased
 
-- The score grows by twelve pieces, all written for the sampled orchestra and chorus in the manner of the existing music and each quoting
-  it (the leitmotif — a rising fourth and a falling step — the men's chanted phrase, the procession's theme, the chorale, the four slow
-  notes of the planetarium pieces), so the map's programme runs to twenty pieces and about an hour passes before anything returns. Three
-  for variety: *the orrery* (a clockwork of pizzicato strings and celeste in five, a clarinet singing the leitmotif stretched across the
-  five), *the long night* (a passacaglia on a ground that lives in the bass line, cor anglais over it, the hymn in the horn at the crest),
-  *the watch* (a lone, very soft trumpet playing the procession's theme at rest, the horn answering from far away). Nine for the phases of
-  a game, three each: the early years (*first light* — violas and alto flute; *the lantern* — a broad six on the ship's soft organ with two
-  clarinets; *the survey* — the violas keeping a soft even pulse under a flute), the middle years (*the commonwealth* — an oboe and a
-  clarinet in dialogue; *the seven stars* — a bassoon pastoral in seven; *noon* — the horn section in chorale with the hymn in the major)
-  and the late years (*the frontier* — trombones intoning the hymn at half speed over a tuba pedal and the men's chant; *the embers* — a
-  sarabande over trembling low strings with the leitmotif inverted; *the vigil* — the chorale in the brass over the organ, trumpets at the
-  crest). The men's and women's voices are in every piece. New recorded colours for the palette: the viola section, trombones, tuba, the
-  trumpet section, the cellos' tremolo.
-- The music follows the game's phases without a cut. Each phase piece carries an era window, and every new cycle of the programme is
+- The score grows by twelve movements, all written for the sampled orchestra and chorus and held together by the score's themes (the
+  leitmotif — a rising fourth and a falling step — the men's chanted phrase, the procession's theme, the chorale), each quoted once in
+  every movement, while each movement has a principal theme and a foundation of its own. Three for variety: *the orrery* (a dry clockwork
+  of pizzicato, celeste and claves in five with a music-box tune; the leitmotif only when the clock stops), *the long night* (a passacaglia:
+  a ground that never leaves the basses under a set of variations, each a texture of its own — cellos alone, cor anglais, running harp,
+  all-pizzicato with a staccato bassoon, the hymn with the men, trembling strings and tubular bells, the full chorale), *the watch* (a
+  nocturne for a very soft solo trumpet over a walking pizzicato bass and off-beat harp chords, chimes at midnight). Nine for the phases
+  of a game: the early years — *first light* (one long sunrise from violas alone to brass, both choirs and timpani, then dusk), *the lantern*
+  (a chorale prelude in a broad six: the cradle tune in long notes under a running clarinet), *the survey* (a minimalist pulse at 76,
+  eighth-note violas and marimba under staccato flute cells); the middle years — *the commonwealth* (a canon for oboe, clarinet and flute
+  over a walking bassoon, no strings), *the seven stars* (a dance in seven at 84 on spiccato strings, tambourine and shaker), *noon* (a
+  chorale for brass choir with a strain of its own, the hymn as its answer, the choirs at the full); the late years — *the frontier* (a
+  slow march on whispered field drums and a tuba step, a dotted trombone theme, the hymn at half speed at the crest), *the embers* (a
+  sarabande with its stressed second beat in the low strings, the leitmotif inverted in the middle), *the vigil* (a sung chorale: the men,
+  then the women in octaves and in a descant, an organ verse, brass only at the crest). The men's and women's voices are in every movement.
+  New recorded colours for the palette: the viola section, trombones, tuba, the trumpet section, the cellos' tremolo.
+- The music follows the game's phases without a cut. Each phase movement carries an era window, and every new cycle of the programme is
   composed from the pieces whose window holds the moment, so the early pieces fall silent as the galaxy fills and the late ones arrive, a
   cycle at a time. A change of programme at the end of a turn (first contact, a war, a peace) no longer crossfades mid-phrase: the piece
   that is playing reaches its next breath or section line, an interlude in the new key follows, and only then the new programme's first
   piece enters, with the long seam fades of the rotation. Two more interludes join the bridges between pieces: the choir alone, and the
   violas with a trumpet far away. Plucked and bass notes no longer land at identical levels.
-- Every new piece passes the composition lint (deterministic, every form × instrumentation × take compiles, no melodic snaps) and the
-  headless loudness pass (trims set to the -16.5 LUFS underscore target, no limiter engagement, no clipping); the soft programme change was
-  driven in headless Chromium (the switch lands on a breath of the running piece, the interlude takes over under its decay, never a silence).
+- Every new movement passes the composition lint (deterministic, every form × instrumentation × take compiles, few or no melodic snaps)
+  and the headless loudness pass (trims set to the -16.5 LUFS underscore target, no limiter engagement, no clipping); the soft programme
+  change was driven in headless Chromium (the switch lands on a breath of the running piece, the interlude takes over under its decay,
+  never a silence).
 
 ## 1.3.0 — 2026-10-28
 

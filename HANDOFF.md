@@ -8,10 +8,17 @@ Commands: `node tools/check.js` (syntax of every manifest file) · `node tools/r
 Browser-pane tip: animations use requestAnimationFrame, so in the built-in browser pane a tab must be fronted (`tabs_select`) for anything animated (GNN, audiences, scenes, combat) to advance.
 
 ## Session 11 (October 2026) — the score grows, branch `claude/festive-wozniak-7jy03r`
-Twelve exploration pieces added to `js/audio/music.js` (`galaxy11`..`galaxy22`), all for the sampled orchestra and chorus, each quoting the
-score's themes (H1 the leitmotif, CM the men's phrase, the procession's A1/CD, the chorale HY1-4, the planetarium's FL). Three for variety
-(orrery 5/4 Bb, passacaglia B minor with the ground written into the bass pattern — `['1--b', '1--7', '1--2', '1---']` over `i bVIM7 bIII V` —
-the watch Ab with `tptSolo`) and nine for the phases, each with an era window `eraWin: [lo, hi]` (early [0, .55], middle [.15, .9], late [.4, 1]).
+Twelve movements added to `js/audio/music.js` (`galaxy11`..`galaxy22`), all for the sampled orchestra and chorus. Each has a principal theme and a
+foundation of its own (a clockwork, a passacaglia's variations, a nocturne's walking bass, one long sunrise, a chorale prelude, a minimalist pulse,
+a canon, a dance in seven, a brass choir, a slow march, a sarabande, a sung chorale) and quotes one of the score's themes once (H1 the leitmotif,
+CM the men's phrase, the procession's A1/CD, the chorale HY1-4) — the first draft poured all twelve into one mould (strings pad + air + harp + celeste
++ soft choir, the same nine sections at 50-66 bpm) and sounded like one piece; the user asked for movements. Tempi now 48-84, meters 3 4 5 6 7.
+Three for variety (orrery 5/4 Bb, passacaglia B minor with the ground written into the bass pattern — `['1--b', '1--7', '1--2', '1---']` over
+`i bVIM7 bIII V` — the watch Ab with `tptSolo`) and nine for the phases, each with an era window `eraWin: [lo, hi]` (early [0, .55], middle [.15, .9],
+late [.4, 1]). Textural devices worth reusing: `pad: { p: 'pulse' | 'stab', pat }` for rhythmic string beds (the survey's eighths, the sarabande's
+second beat, the nocturne's off-beat harp chords), `arp` with a wind instrument for a running figuration (the lantern's clarinet), `arp` on `strOst`
+for a spiccato dance ostinato, `bass: { p: 'walk', inst: 'bassoon' }`, `art: 0.5` for staccato lines, `lead`/`lead2`/`bell2` with offsets (`r2`, `r4`)
+for a canon, a line in `choirWomen` / `choirMen` for sung melody, `cres: [hi, lo]` for a diminuendo, pattern arrays that thin out for a run-down.
 Engine: `fitsEra` / `eraList` filter a programme's regular pieces by `S.era` when a cycle is composed (`composeOrder`) and when `setMood` picks a
 start (never below three pieces); `makePlaylist()` builds a playlist apart from starting it; `Music.setMood(mood, { soft: true })` →
 `softSwitch()` arms the new programme at `Player.nextSectionBoundary(minAhead, maxAhead)` (a breath — lv ≤ .35 — within reach is preferred,
