@@ -27,6 +27,12 @@ Versions follow `MAJOR.MINOR.PATCH`; the live version is the `VERSION` file.
   that is playing reaches its next breath or section line, an interlude in the new key follows, and only then the new programme's first
   piece enters, with the long seam fades of the rotation. Two more interludes join the bridges between pieces: the choir alone, and the
   violas with a trumpet far away. Plucked and bass notes no longer land at identical levels.
+- Loop seams. A sustained note is a short recording looped by the browser, and Web Audio loops with no crossfade, so wherever a
+  library loop point did not meet itself in phase (a third of the string-section, chorus and solo-brass zones, and the short oboe and
+  clarinet loops worst of all) every wrap was a click, or a flutter at the loop rate: the "clipping" and "looping" heard on held notes.
+  The sampler now blends the tail of every loop into the audio that leads into its start when the file is decoded (a quarter of the loop,
+  at most 300 ms), so the wrap continues the very waveform the loop start plays; `?loopxf=0` plays the old loops for comparison. Measured
+  on the files: discontinuous seams 67 of 218 before, 11 after, and the phase match at the wrap 1.00 on every instrument.
 - Every new movement passes the composition lint (deterministic, every form × instrumentation × take compiles, few or no melodic snaps)
   and the headless loudness pass (trims set to the -16.5 LUFS underscore target, no limiter engagement, no clipping); the soft programme
   change was driven in headless Chromium (the switch lands on a breath of the running piece, the interlude takes over under its decay,

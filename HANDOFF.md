@@ -26,6 +26,12 @@ else the next section line, else a bar line before `maxAhead`), through an inter
 = fade + 4); `soundscape.js` uses it at turn end. New `INST` presets `violas` (vlaSus), `trombones` (tbnSus), `tuba` (tubaSus), `tpts` (tptSus),
 `tremLo` (vcTrem); interludes `drift6` (the choir) and `drift7` (violas, trumpet far off); arps and bass get ±6 % / ±4 % seeded level variation.
 Pitfall met and fixed: roman numerals are major-scale degrees, so minor-key chords are `bVI`/`bIII`/`bVII` (a plain `VI` in C# minor is Bb major).
+Loop seams (the user heard clicks / a looping flutter on held notes): `sampler.js` `smoothLoop(buf, ls, le)` crossfades each loop at decode time
+(tail of the loop into the lead-in before loopStart, n = min(loop/4, 300 ms, loopStart - 20 ms), linear, once per buffer+loop, `S.loopXf`,
+`?loopxf=0` to hear the old loops). Audit scripts lived in the scratchpad: decode each zone with ffmpeg, measure |x[ls]-x[le-1]|/RMS and the
+correlation of the 30 ms before loopEnd with the 30 ms before loopStart; before: 67/218 poor seams, oboe/clarinet corr 0.5-0.8 with loops as
+short as 0.13 s; after: corr 1.00 everywhere. The remaining realism limits are in the assets (short oboe/clarinet loops; dynamic-layer
+crossfades beat slightly on swells) and need the source libraries and `build.py`.
 Checked: Node-only lint (every form × alt × take × era compiles, deterministic, zero snaps on all twelve), `tools/audio-report.js` trims (-16.5 LUFS),
 a Playwright seam test (`softSwitch` lands on the running piece's breath, interlude then the queued piece, no silence, era lists correct). Still not
 heard through speakers; the MP3 sample set is LAME VBR q0 (the top MP3 setting) — a lossless or higher-rate rebuild needs the source libraries and

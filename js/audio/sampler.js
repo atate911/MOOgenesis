@@ -37,6 +37,27 @@
     return new Promise((res, rej) => { try { const p = ctx.decodeAudioData(ab, res, rej); if (p && p.catch) p.catch(rej); } catch (e) { rej(e); } });
   }
   function fetchBuf(url) { return fetch(url).then(r => { if (!r.ok) throw new Error('HTTP ' + r.status + ' ' + url); return r.arrayBuffer(); }); }
+  // Loop seams. A sustained note is a short recording looped by the browser, and Web Audio loops with no crossfade: where the loop points do
+  // not meet in phase (a third of the string, chorus and solo-brass zones; the short oboe and clarinet loops worst of all) every wrap is a
+  // click or a flutter at the loop rate. So the tail of each loop is blended into the audio that leads into its start: over the last `n`
+  // samples before loopEnd the recording fades out while the `n` samples before loopStart fade in, so the wrap lands on the very sound the
+  // loop start continues. A quarter of the loop, at most 300 ms, never more than the lead-in the file has; linear, since both sides are the
+  // same note. Done once per buffer, in the decoded audio, so every voice and every browser plays the smoothed loop.
+  S.loopXf = true;
+  try { if (/[?&]loopxf=0\b/.test(location.search)) S.loopXf = false; } catch (e) { /* ignore */ }
+  function smoothLoop(buf, ls, le) {
+    if (!S.loopXf || !buf || !(le > ls)) return;
+    const sr = buf.sampleRate, a = Math.round(ls * sr), b = Math.min(Math.round(le * sr), buf.length);
+    const n = Math.floor(Math.min(0.25 * (b - a), 0.3 * sr, a - 0.02 * sr));
+    if (n < 64) return;
+    const key = a + ':' + b; buf._xf = buf._xf || {}; if (buf._xf[key]) return; buf._xf[key] = 1;
+    for (let c = 0; c < buf.numberOfChannels; c++) {
+      const d = buf.getChannelData(c), seg = new Float32Array(n);
+      for (let i = 0; i < n; i++) { const w = (i + 1) / (n + 1); seg[i] = d[b - n + i] * (1 - w) + d[a - n + i] * w; }
+      if (buf.copyToChannel) buf.copyToChannel(seg, c, b - n); else d.set(seg, b - n);
+    }
+  }
+  S._smoothLoop = smoothLoop;
   const bufCache = Object.create(null);                    // file -> Promise<AudioBuffer> (composite instruments share their members' files)
   function loadBuf(file) { return bufCache[file] || (bufCache[file] = fetchBuf(S.base + file).then(decode).then(buf => { S.bytes += buf.length * buf.numberOfChannels * 4; return buf; })); }
 
@@ -56,6 +77,7 @@
       loop: def.kind === 'sustain', vib: num(def.vib, 0), cutK: num(def.cutK, 0), xf: !!def.xf, pan: def.pan !== undefined ? num(def.pan, 0) : undefined, legOff: num(def.legOff, 0.22), zones: [], ready: false, failed: 0 };
     S.inst[name] = inst;
     const jobs = (def.zones || []).map(z => loadBuf(z.file).then(buf => {
+      if (z.loop && inst.loop) smoothLoop(buf, z.loop[0] + S.offset, Math.min(z.loop[1] + S.offset, buf.duration - 0.001));
       inst.zones.push({ buf, root: num(z.root, 60), lo: num(z.lo, 0), hi: num(z.hi, 127), loop: z.loop ? [z.loop[0] + S.offset, z.loop[1] + S.offset] : null, vel: z.vel || [0, 1], rr: z.rr || 0, gain: dbtoa(num(z.gain, 0)), pan: z.pan !== undefined ? num(z.pan, 0) : undefined });
     }).catch(e => { inst.failed++; S.errors++; if (S.errors < 4) console.warn('[samples] ' + z.file + ' failed', e && e.message); }));
     return Promise.all(jobs).then(() => { inst.zones.sort((a, b) => a.root - b.root || a.vel[0] - b.vel[0] || a.rr - b.rr); inst.ready = inst.zones.length > 0; return inst; });
