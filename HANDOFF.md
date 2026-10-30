@@ -44,7 +44,8 @@ the player's `nextBoundary` / `boundaryAfter` / `nextSectionBoundary`, `Music.li
 `C.strong` / `C.spb` per section; genLine parses phrases in the section's meter). Modulation (music.js 'modulation'): `pivotPath(from, to)` → the
 opening chords of an interlude as numerals of the new key (old tonic, a shared pre-dominant pivot | circle-of-fifths walk | Neapolitan, V7);
 `pulseK(from, targetBpm)` ∈ {1,2,3}; `interludeFor(tpl, next, { from })` sets the 'in' section's meter = from.meter / k, bpm = from.bpm / k,
-bpmTo = next.bpm, prog = the path, and the body's bpm / meter to the next piece's (lines silenced when the body is not in four); the seams pass
+bpmTo = next.bpm, prog = the path with a dwell per chord in outgoing bars (the old tonic ≥ 7 s — it spans the old piece's 10 s fade — every other chord ≥ 5 s;
+middle chords shortened first when the opening would pass 26 s), and the body's bpm / meter to the next piece's (lines silenced when the body is not in four); the seams pass
 `from: outgoing(p)` (the piece actually ending — a war variant keeps its base's key — else the director's last piece; an interlude or bridge is never a `from`).
 War / hits variants carry `variantOf`, and the director's history counts them as their piece.
 Colour (music.js 'colour'): `FAMILY` maps each sample set to a family (`familyOf(name)`, synth voices by `v`); `palette(def, 'head'|'tail'|undefined)` weighs the

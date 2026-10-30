@@ -45,6 +45,9 @@ Versions follow `MAJOR.MINOR.PATCH`; the live version is the `VERSION` file.
   middle. Only a colour that can be held is carried (strings, the pads, choir, brass, winds; a harp in a pad slot would only tick). Its
   opening level meets the level the piece ended at (within the breath's range). `tools/audio-seams.js` captures four seams from the
   real-time engine as MP3s, with a log of what each seam built; they are on the demo page.
+- The pivot chords take their time. Each chord of the way into the new key now lasts about five seconds at least, and the first (the old
+  tonic) seven or more, so it spans the fade of the piece ending; a long walk round the circle moves on sooner in its middle. Before, a
+  chord lasted one outgoing bar, which at a halved pulse could be under three seconds.
 - The score has a shared theme library and a story. The themes the pieces quote (the hymn, the men's phrase, the procession, the
   chorale, the planetarium's four notes, the tide's rise, the wonder tune, the cradle, the abyss's step) are written once in
   `js/audio/score/themes.js` and quoted by name; sixty-five copied phrases became references with no note changed, and

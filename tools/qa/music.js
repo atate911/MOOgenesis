@@ -35,7 +35,7 @@ const { serve, open } = require('./lib');
     check('soft switch goes through an interlude in the new key', sw && /^drift/.test(sw.id) && S.playlist && S.playlist.queued === first, sw && sw.id);
     check('the motif rides the interlude', sw && /:m/.test(sw.id) && !D.motif, sw && sw.id);
     const want = M._modulation.pivotPath(M._tracks[before], M._tracks[first]).join(' ');   // from whichever piece was playing: its tonic, a shared pivot, the new V7
-    check('the interlude modulates from the piece ending', sw && sw.id.endsWith(':f' + before) && M._tracks[sw.id].sec.find(x => x.n === 'in').prog === want, sw && M._tracks[sw.id] && M._tracks[sw.id].sec.find(x => x.n === 'in').prog + ' (' + before + ' into ' + first + ')');
+    check('the interlude modulates from the piece ending', sw && sw.id.endsWith(':f' + before) && M._tracks[sw.id].sec.find(x => x.n === 'in').prog.replace(/:\d+/g, '') === want, sw && M._tracks[sw.id] && M._tracks[sw.id].sec.find(x => x.n === 'in').prog + ' (' + before + ' into ' + first + ')');
     await run(10);
     check('interlude became current', trace.some(x => x.cur && /^drift/.test(x.cur)), trace.map(x => x.cur).join(' > '));
     // 3. a tense bridge into a cue that cannot wait, asked twice
@@ -59,9 +59,11 @@ const { serve, open } = require('./lib');
     M._define('qaFrom', { bpm: 156, meter: 6, root: 'F', mode: 'major', hidden: true, tens: false, inst: { pad: 'warm', choir: 'choirWomen' }, sec: [{ n: 'A', bars: 4, lv: 0.6, prog: 'I', pad: { p: 'sus', vel: 0.3 }, choir: { n: 3, reg: [55, 77] } }] });   // ends in the women's voices
     M._define('qaTo', { bpm: 50, root: 'B', mode: 'minor', hidden: true, tens: false, inst: { pad: 'analog' }, sec: [{ n: 'A', bars: 4, lv: 0.6, prog: 'i', pad: 'sus' }] });   // opens on the analogue sky
     const mid = R.interludeFor('drift5', 'qaTo', { from: M._tracks.qaFrom }), md = M._tracks[mid], inS = md.sec.find(x => x.n === 'in'), prog = inS.prog.split(/\s+/), cp = M._compile(mid, 0), lens = cp.bars.slice(0, inS.bars + 1).map((x, i, a) => i ? x - a[i - 1] : 0).slice(1);
-    const firstCh = M._parseChord(prog[0], 11), lastCh = M._parseChord(prog[prog.length - 1], 11);   // B = 11
+    const sym = t => t.split(':')[0], firstCh = M._parseChord(sym(prog[0]), 11), lastCh = M._parseChord(sym(prog[prog.length - 1]), 11);   // B = 11; each chord carries its dwell in bars
     check('interlude opens on the outgoing tonic', firstCh.pc === 5 && firstCh.iv.length === 3, prog.join(' '));
     check('interlude arrives on the new dominant seventh', lastCh.pc === 6 && lastCh.iv.indexOf(10) >= 0, prog[prog.length - 1]);
+    const dwell = prog.map(t => +t.split(':')[1] || 1), bar0 = 6 * 60 / 156;   // the lullaby's bar: each chord has five seconds or so, the first seven
+    check('each pivot chord has time to be heard', dwell[0] * bar0 >= 6.5 && dwell.slice(1).every(d => d * bar0 >= 4.2), prog.join(' ') + ' at ' + bar0.toFixed(2) + ' s a bar');
     check('opening bars keep the outgoing pulse and bar length', inS.meter === 2 && Math.abs(lens[0] - 6 * 60 / 156) < 0.08, 'meter ' + inS.meter + ' first bar ' + lens[0].toFixed(2) + ' s');
     check('tempo glides across the opening bars', lens.every((l, i) => i === 0 || l >= lens[i - 1] - 1e-6) && md.bpm === 50, lens.map(l => l.toFixed(2)).join(' '));
     const outS = md.sec[md.sec.length - 1], CO = M._colour;

@@ -1380,7 +1380,12 @@
       const inS = d.sec.find(x => x.n === 'in'), path = pivotPath(from, N), k = pulseK(from, N.bpm);
       if (inS) {
         inS.meter = (from.meter || 4) / k; inS.bpm = from.bpm / k; inS.bpmTo = N.bpm;     // the outgoing bars and pulse, gliding to the new tempo
-        if (path) { inS.prog = path.join(' '); inS.bars = Math.max(2, path.length); delete inS.barsVar; }
+        if (path) {                                                                         // each pivot chord has time to be heard: the old tonic spans the old piece's fade (it is still
+          const barLen = 60 / inS.bpm * inS.meter, need = secs => Math.max(1, Math.ceil(secs / barLen - 0.15));   // sounding under these bars), every other chord five seconds or so
+          const dw = path.map((c, i) => need(i === 0 ? 7 : 5)), total = () => dw.reduce((x, y) => x + y, 0);
+          while (total() * barLen > 26 && dw.slice(1, -1).some(x => x > 1)) { let j = 1, m = 0; for (let i = 1; i < dw.length - 1; i++) if (dw[i] > m) { m = dw[i]; j = i; } dw[j]--; }   // a long walk moves on sooner in the middle
+          inS.prog = path.map((c, i) => c + ':' + dw[i]).join(' '); inS.bars = total(); delete inS.barsVar;
+        }
       }
       d.bpm = N.bpm; d.meter = N.meter || 4;                                              // the body in the new meter at the new tempo
       if (inS) { const lv = secLevel(from.sec[from.sec.length - 1]); if (inS.cres) inS.cres = [clamp(lv * 0.8, inS.cres[0], 0.55), inS.cres[1]]; }   // open near the level the piece ends at
