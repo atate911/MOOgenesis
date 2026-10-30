@@ -54,14 +54,19 @@ const { serve, open } = require('./lib');
     check('the level tilted up at war, within a decibel', D.gainDb > 0.5 && D.gainDb <= 1.2, D.gainDb.toFixed(2) + ' dB');
     await run(9);
     // 5. the modulating interlude: opens on the outgoing tonic in the outgoing meter and pulse, walks to the new dominant, glides to the new tempo
-    M._define('qaFrom', { bpm: 156, meter: 6, root: 'F', mode: 'major', hidden: true, tens: false, inst: { pad: 'warm' }, sec: [{ n: 'A', bars: 4, lv: 0.6, prog: 'I', pad: 'sus' }] });
-    M._define('qaTo', { bpm: 50, root: 'B', mode: 'minor', hidden: true, tens: false, inst: { pad: 'warm' }, sec: [{ n: 'A', bars: 4, lv: 0.6, prog: 'i', pad: 'sus' }] });
+    M._define('qaFrom', { bpm: 156, meter: 6, root: 'F', mode: 'major', hidden: true, tens: false, inst: { pad: 'warm', choir: 'choirWomen' }, sec: [{ n: 'A', bars: 4, lv: 0.6, prog: 'I', pad: { p: 'sus', vel: 0.3 }, choir: { n: 3, reg: [55, 77] } }] });   // ends in the women's voices
+    M._define('qaTo', { bpm: 50, root: 'B', mode: 'minor', hidden: true, tens: false, inst: { pad: 'analog' }, sec: [{ n: 'A', bars: 4, lv: 0.6, prog: 'i', pad: 'sus' }] });   // opens on the analogue sky
     const mid = R.interludeFor('drift5', 'qaTo', { from: M._tracks.qaFrom }), md = M._tracks[mid], inS = md.sec.find(x => x.n === 'in'), prog = inS.prog.split(/\s+/), cp = M._compile(mid, 0), lens = cp.bars.slice(0, inS.bars + 1).map((x, i, a) => i ? x - a[i - 1] : 0).slice(1);
     const firstCh = M._parseChord(prog[0], 11), lastCh = M._parseChord(prog[prog.length - 1], 11);   // B = 11
     check('interlude opens on the outgoing tonic', firstCh.pc === 5 && firstCh.iv.length === 3, prog.join(' '));
     check('interlude arrives on the new dominant seventh', lastCh.pc === 6 && lastCh.iv.indexOf(10) >= 0, prog[prog.length - 1]);
     check('opening bars keep the outgoing pulse and bar length', inS.meter === 2 && Math.abs(lens[0] - 6 * 60 / 156) < 0.08, 'meter ' + inS.meter + ' first bar ' + lens[0].toFixed(2) + ' s');
     check('tempo glides across the opening bars', lens.every((l, i) => i === 0 || l >= lens[i - 1] - 1e-6) && md.bpm === 50, lens.map(l => l.toFixed(2)).join(' '));
+    const outS = md.sec[md.sec.length - 1], CO = M._colour;
+    check('the voice the piece ends in holds under the opening bars', inS.choir2 && inS.choir2.inst === 'choirWomen' && inS.choir2.soft, JSON.stringify(inS.choir2));
+    check('the voice the next piece opens with is under the last bars', outS.pad2 && outS.pad2.inst === 'analog' && outS.pad2.p === 'swell', JSON.stringify(outS.pad2));
+    check('the alternation is pinned and the template keeps its own voice in the middle', !md.alts && md.inst.arp === 'marimba' && !md.sec[1].choir2, JSON.stringify(md.inst));
+    check('the template that fits the colours is the likelier', CO.colourFit(M._tracks.drift6, M._tracks.qaFrom, M._tracks.qaTo) > CO.colourFit(M._tracks.drift5, M._tracks.qaFrom, M._tracks.qaTo) + 0.1, 'drift6 ' + CO.colourFit(M._tracks.drift6, M._tracks.qaFrom, M._tracks.qaTo).toFixed(2) + ' vs drift5 ' + CO.colourFit(M._tracks.drift5, M._tracks.qaFrom, M._tracks.qaTo).toFixed(2));
     // 6. snapshot and restore keep the programme and the director
     const snapshot = M.snapshot();
     check('snapshot keeps the directed programme', snapshot.playlist && snapshot.playlist.director && snapshot.playlist.ids.length === 4);

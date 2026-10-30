@@ -46,7 +46,13 @@ opening chords of an interlude as numerals of the new key (old tonic, a shared p
 `pulseK(from, targetBpm)` ∈ {1,2,3}; `interludeFor(tpl, next, { from })` sets the 'in' section's meter = from.meter / k, bpm = from.bpm / k,
 bpmTo = next.bpm, prog = the path, and the body's bpm / meter to the next piece's (lines silenced when the body is not in four); the seams pass
 `from: outgoing(p)` (the piece actually ending — a war variant keeps its base's key — else the director's last piece; an interlude or bridge is never a `from`).
-War / hits variants carry `variantOf`, and the director's history counts them as their piece. Checked: the compile hash of all 69 pieces unchanged by the compiler change; 840 pairings compile (score-lint);
+War / hits variants carry `variantOf`, and the director's history counts them as their piece.
+Colour (music.js 'colour'): `FAMILY` maps each sample set to a family (`familyOf(name)`, synth voices by `v`); `palette(def, 'head'|'tail'|undefined)` weighs the
+families across sections (bars × level × vel, edge sections ×3; bass and drums left out; alternations a share each; memoised in a WeakMap); `colourFit(tpl, from, next)`
+= 0.7 × cosine(template palette, blend of from's tail and next's head) + 0.3 × closeness of the template's `tags` {dark, energy} (map.js gives each drift template
+its two) to the pair's mean; `chooseTemplate(pool, from, next)` picks by exp(6 × fit); interludeFor pins the best alternation into `d.inst`, carries `colourOf(from, 'tail')`
+into a free sustain slot of 'in' (pad2 / choir2 / choir; choir colours into a choir slot with `soft`) at vel 0.5 and `colourOf(next, 'head')` into the last section at 0.45,
+skipping a family the section already has, and opens 'in' at 0.8 × the piece's closing level (bounded by the template's own and 0.55). qa/music.js checks the carried voices. Checked: the compile hash of all 69 pieces unchanged by the compiler change; 840 pairings compile (score-lint);
 qa/music.js checks a quick-six → B-minor seam (opens on F in meter 2 at the lullaby's bar length, arrives on F#7, bars lengthen into 50).
 The director (music.js, 'the director'): map pieces carry `tags: { solitude, contact, tension, war, grief, grandeur, energy, dark }` (0..1); `Music.setSituation(q)`
 takes the game's reading on the same axes (soundscape.js `situation()`, from `readState()` — the era's components plus own colonies, fleet peaks and

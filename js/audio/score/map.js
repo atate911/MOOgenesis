@@ -266,7 +266,7 @@
   // into the next piece.
   Track('drift', {
     desc: 'Drift — an interlude: one high pad, a pedal, a few points of light and perhaps the first notes of the hymn, in the key of the piece that follows',
-    bpm: 52, trim: 5.6, tone: { hi: -3 }, root: 'C', mode: 'major', hidden: true, interlude: true, tens: false, gentle: true, rubato: 0.04, mix: { bass: 0.7 }, fx: { dly: 2.4, verb: 1.35 },
+    bpm: 52, trim: 5.6, tone: { hi: -3 }, root: 'C', mode: 'major', hidden: true, interlude: true, tens: false, gentle: true, tags: { dark: 0.25, energy: 0.2 }, rubato: 0.04, mix: { bass: 0.7 }, fx: { dly: 2.4, verb: 1.35 },
     alts: [{}, { bell: 'crystal', lead: 'crystal' }, { lead: 'hornSolo', bell: 'chime' }, { pad: 'strings', lead: 'flute' }],
     inst: { pad: 'air', pad2: 'strings', bass: 'deep', lead: 'glass', bell: 'glass', arp: 'harp', choir: 'ooh' },
     ph: { H: '@hymn.K', T: '8:4 | 5:4 | r:8', U: '3:4 | 5:4 | 4:4 | r:4' },
@@ -280,7 +280,7 @@
 
   Track('drift2', {
     desc: 'Drift, harp — a slow harp figure under one long cello line, strings far back; an interlude in the key of the piece that follows',
-    bpm: 54, trim: 10, tone: { hi: -3 }, root: 'C', mode: 'major', hidden: true, interlude: true, tens: false, gentle: true, rubato: 0.04, mix: { bass: 0.7 }, fx: { dly: 2.2, verb: 1.3 },
+    bpm: 54, trim: 10, tone: { hi: -3 }, root: 'C', mode: 'major', hidden: true, interlude: true, tens: false, gentle: true, tags: { dark: 0.35, energy: 0.3 }, rubato: 0.04, mix: { bass: 0.7 }, fx: { dly: 2.2, verb: 1.3 },
     alts: [{}, { arp: 'vibes', lead: 'altoFlute' }, { lead: 'clarinet' }],
     inst: { pad: 'strings', pad2: 'air', bass: 'deep', lead: 'cello', bell: 'glass', arp: 'harp', choir: 'ooh' },
     ph: { C1: '1:8 | 3:8 | 2:6 1:2 | 5:8', C2: '5:8 | 6:8 | 5:6 4:2 | 3:8' },
@@ -294,7 +294,7 @@
 
   Track('drift3', {
     desc: 'Drift, voices — the women humming over the men, an air pad, one flute note; an interlude in the key of the piece that follows',
-    bpm: 52, trim: 5.4, tone: { hi: -3 }, root: 'C', mode: 'major', hidden: true, interlude: true, tens: false, gentle: true, rubato: 0.04, mix: { bass: 0.7 }, fx: { dly: 2.4, verb: 1.35 },
+    bpm: 52, trim: 5.4, tone: { hi: -3 }, root: 'C', mode: 'major', hidden: true, interlude: true, tens: false, gentle: true, tags: { dark: 0.3, energy: 0.15 }, rubato: 0.04, mix: { bass: 0.7 }, fx: { dly: 2.4, verb: 1.35 },
     alts: [{}, { lead: 'glass' }, { choir: 'aah', lead: 'altoFlute' }],
     inst: { pad: 'air', pad2: 'strings', bass: 'deep', lead: 'flute', bell: 'glass', choir: 'choirWomen', choir2: 'choirMen' },
     ph: { F: '8:4 | 5:4 | r:8', G: '5:4 | 6:4 | 5:8' },
@@ -308,7 +308,7 @@
 
   Track('drift4', {
     desc: 'Drift, horizon — strings and the analogue sky swelling together, a horn calling the hymn from far away, crotales; an interlude in the key of the piece that follows',
-    bpm: 52, trim: 9.1, tone: { hi: -3 }, root: 'C', mode: 'major', hidden: true, interlude: true, tens: false, gentle: true, rubato: 0.04, mix: { bass: 0.75 }, fx: { dly: 2.2, verb: 1.3 },
+    bpm: 52, trim: 9.1, tone: { hi: -3 }, root: 'C', mode: 'major', hidden: true, interlude: true, tens: false, gentle: true, tags: { dark: 0.4, energy: 0.35 }, rubato: 0.04, mix: { bass: 0.75 }, fx: { dly: 2.2, verb: 1.3 },
     alts: [{}, { lead: 'cello' }, { lead: 'oboe', pad2: 'air' }],
     inst: { pad: 'strings', pad2: 'analog', bass: 'deep', lead: 'hornSolo', bell: 'crystal', choir: 'ooh' },
     ph: { H: '@hymn.K', H2: '8:3 10:1 | 9:2 8:2 | 7:4 | 5:4' },
@@ -322,7 +322,7 @@
 
   Track('drift5', {
     desc: 'Drift, pulse — a soft marimba figure keeps time under a warm pad, a celeste phrase above; an interlude in the key of the piece that follows',
-    bpm: 58, trim: 9.8, tone: { hi: -2.5 }, root: 'C', mode: 'major', hidden: true, interlude: true, tens: false, gentle: true, rubato: 0.04, mix: { bass: 0.75 }, fx: { dly: 2.0, verb: 1.2 },
+    bpm: 58, trim: 9.8, tone: { hi: -2.5 }, root: 'C', mode: 'major', hidden: true, interlude: true, tens: false, gentle: true, tags: { dark: 0.15, energy: 0.45 }, rubato: 0.04, mix: { bass: 0.75 }, fx: { dly: 2.0, verb: 1.2 },
     alts: [{}, { arp: 'pizz' }, { arp: 'harp', lead: 'vibes' }],
     inst: { pad: 'warm', bass: 'deep', lead: 'glass', bell: 'vibes', arp: 'marimba', choir: 'ooh' },
     ph: { M: '5:2 8:2 | 7:4 | 6:2 5:2 | r:4' },
@@ -336,7 +336,7 @@
 
   Track('drift6', {
     desc: 'Drift, the choir — the men hold one low phrase and the women hum above them, nothing else but the hall and a chime; an interlude in the key of the piece that follows',
-    bpm: 52, trim: 5.9, tone: { hi: -3 }, root: 'C', mode: 'major', hidden: true, interlude: true, tens: false, gentle: true, rubato: 0.04, mix: { bass: 0.7, choir: 1.15 }, fx: { dly: 1.8, verb: 1.35 },
+    bpm: 52, trim: 5.9, tone: { hi: -3 }, root: 'C', mode: 'major', hidden: true, interlude: true, tens: false, gentle: true, tags: { dark: 0.55, energy: 0.15 }, rubato: 0.04, mix: { bass: 0.7, choir: 1.15 }, fx: { dly: 1.8, verb: 1.35 },
     alts: [{}, { choir: 'aah' }, { choir2: 'choirMenAh', bell: 'glass' }],
     inst: { pad: 'air', bass: 'deep', lead: 'choirMen', bell: 'chime', choir: 'choirWomen', choir2: 'choirMen' },
     ph: { CM: '@men.CM', CM2: '@men.CM2' },
@@ -350,7 +350,7 @@
 
   Track('drift7', {
     desc: 'Drift, the violas — the viola section and the cellos breathing together under a trumpet far away, the harp; an interlude in the key of the piece that follows',
-    bpm: 54, trim: 7.2, tone: { hi: -3 }, root: 'C', mode: 'major', hidden: true, interlude: true, tens: false, gentle: true, rubato: 0.04, mix: { bass: 0.7 }, fx: { dly: 2.2, verb: 1.3 },
+    bpm: 54, trim: 7.2, tone: { hi: -3 }, root: 'C', mode: 'major', hidden: true, interlude: true, tens: false, gentle: true, tags: { dark: 0.5, energy: 0.3 }, rubato: 0.04, mix: { bass: 0.7 }, fx: { dly: 2.2, verb: 1.3 },
     alts: [{}, { lead: 'hornSolo' }, { lead: 'altoFlute', arp: 'glass' }],
     inst: { pad: 'violas', pad2: 'cellos', bass: 'deep', lead: 'tptSolo', bell: 'glass', arp: 'harp', choir: 'ooh' },
     ph: { K: '@hymn.K', P: '1:3 2:1 | 3:2 5:2 | r:8' },

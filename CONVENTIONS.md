@@ -83,7 +83,10 @@ Colour semantics are fixed: gold = BC/money, ember = industry, leaf = food/growt
   belongs to a phase, and quotes at least one shared theme (by reference, or `quotes: ['hymn']` for a hand-adapted reading). New pieces get a
   `trim` from `node tools/audio-report.js --tracks <id> --json r.json` + `node tools/audio-trims.js r.json --apply`.
 - A section may carry its own `meter`, `bpm` and `bpmTo` (a tempo ramp across it); the engine's time map places every note, bar line and beat.
-  Interludes use this to open in the outgoing piece's meter and pulse and glide to the next piece's tempo.
+  Interludes use this to open in the outgoing piece's meter and pulse and glide to the next piece's tempo. They also keep the colour: the seam
+  picks the template by palette fit to the pieces either side (`Music._colour`), and the voice one piece ends in holds under the interlude's
+  opening bars while the voice the next opens with sits under its last. A new instrument preset needs a family in `FAMILY` (by its sample set);
+  a new interlude template needs `tags: { dark, energy }`.
 - Check a change with `node tools/score-lint.js` (schema, instruments, forms, phrases, themes, determinism, the programme's lists; `--strict`
   in a release pass) and `node tools/qa/music.js` (the seams in real time: directed programme, soft change, bridges, motif, snapshot / restore).
 

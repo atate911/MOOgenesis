@@ -1127,7 +1127,7 @@
         if (pl.between && Math.random() < pl.betweenP) {
           const far = pl.director && DIR.lastPiece && farApart(TRACKS[DIR.lastPiece], TRACKS[id]);   // a very different piece next: breathe first
           const quiet = far ? pl.between.filter(t => QUIET[t]) : pl.between, base = quiet.length ? quiet : pl.between;
-          const pool = base.length > 1 ? base.filter(t => t !== pl.lastTpl) : base, tpl = pool[Math.floor(Math.random() * pool.length)];   // never the same bridge twice running
+          const pool = base.length > 1 ? base.filter(t => t !== pl.lastTpl) : base, tpl = chooseTemplate(pool, outgoing(p), TRACKS[id]);   // never the same bridge twice running; the colour that fits
           const d = interludeFor(tpl, id, { long: far, motif: DIR.motif, from: outgoing(p) }); if (d) { pl.lastTpl = tpl; pl.queued = id; id = d; gap = pl.gapIn; pl.far = !!far; DIR.motif = null; }
         }
       }
@@ -1281,6 +1281,69 @@
   function pulseK(def, target) { let best = 1, bd = Infinity; for (const k of [1, 2, 3]) { if ((def.meter || 4) % k || def.bpm / k < 34) continue; const dd = Math.abs(Math.log((def.bpm / k) / target)); if (dd < bd) { bd = dd; best = k; } } return best; }
   Music._modulation = { triads, pivotPath, romanIn, pulseK };
 
+
+  // ---------------------------------------------------------------- colour: what a piece is scored for, and an interlude that keeps it
+  // Every instrument preset belongs to a family (by the recording behind it, or the synth voice when there is none); a piece's palette is
+  // the weight of each family across its sections — bars × level × the part's velocity, the edge sections counted three times when the head
+  // (what an interlude hands into) or the tail (what it takes over from) is asked for. Alternations count a share each.
+  const FAMILY = { strEns: 'strings', strEnsTrem: 'strings', vln1Trem: 'strings', vcSus: 'strings', vcTrem: 'strings', vlaSus: 'strings',
+    cbSus: 'low', subBass: 'low', cbPizz: 'low', tubaSus: 'low',
+    hornSus: 'brass', hornSolo: 'brass', brassEns: 'brass', brassStac: 'brass', tptSus: 'brass', tptSolo: 'brass', lowBrass: 'brass', tbnSus: 'brass',
+    flute: 'winds', altoFlute: 'winds', fluteSus: 'winds', oboe: 'winds', corAnglais: 'winds', clarinet: 'winds', bassoon: 'winds',
+    strEnsPizz: 'pluck', strEnsSpic: 'pluck', harp: 'pluck', marimba: 'pluck', celeste: 'bells', glock: 'bells', crotales: 'bells', chimes: 'bells',
+    chorus: 'choir', chorusMen: 'choir', chorusWomen: 'choir', padGlass: 'synth', padSerrie: 'synth', padAir: 'synth', organ: 'synth', organSoft: 'synth' };
+  const V_FAMILY = { pad: 'synth', bass: 'low', brass: 'brass', flute: 'winds', pluck: 'pluck', bell: 'bells', chime: 'bells', choir: 'choir', drone: 'synth' };
+  const SUSTAIN = { pad: 1, pad2: 1, choir: 1, choir2: 1 };
+  const familyOf = name => { const i = INST[name]; return i ? (i.smp && FAMILY[i.smp]) || V_FAMILY[i.v] || null : null; };
+  const instName = (cfg, key, inst) => { const own = cfg && typeof cfg === 'object' ? (typeof cfg.inst === 'object' && cfg.inst ? cfg.inst.p : cfg.inst) : null; return own || inst[key] || DEF_INST[key]; };
+  const secLevel = sc => sc.cres ? (num(sc.cres[0], 1) + num(sc.cres[1], 1)) / 2 : num(sc.lv, 1);
+  const PAL = typeof WeakMap === 'function' ? new WeakMap() : null;
+  function palette(def, where) {
+    const memo = PAL && PAL.get(def); if (memo && memo[where || 'all']) return memo[where || 'all'];
+    const out = {}, secs = def.sec || [], nS = secs.length, alts = def.alts && def.alts.length ? def.alts : [{}];
+    secs.forEach((sc, i) => {
+      const edge = where === 'head' ? (i < 2 ? 3 : 1) : where === 'tail' ? (i >= nS - 2 ? 3 : 1) : 1, w0 = num(sc.bars, 4) * secLevel(sc) * edge;
+      for (const key in GEN) {
+        const cfg = sc[key]; if (!cfg || key === 'bass' || key === 'drums' || key === 'perc' || key === 'timp') continue;   // the bass and the drums are not a colour: every piece has them
+        const w = w0 * (typeof cfg === 'object' ? num(cfg.vel, 1) * (1 - num(cfg.skip, 0)) : 1) * ((LAYERS[BUS[key]] || {}).lvl || 0.7) / alts.length;
+        for (const alt of alts) { const f = familyOf(instName(cfg, key, Object.assign({}, def.inst || {}, alt))); if (f) out[f] = (out[f] || 0) + w; }
+      }
+    });
+    if (PAL) PAL.set(def, Object.assign(memo || {}, { [where || 'all']: out }));
+    return out;
+  }
+  const cosine = (a, b) => { let d = 0, na = 0, nb = 0; for (const k in a) { na += a[k] * a[k]; if (b[k]) d += a[k] * b[k]; } for (const k in b) nb += b[k] * b[k]; return na && nb ? d / Math.sqrt(na * nb) : 0; };
+  const blend = (a, b) => { const o = {}, add = p => { let n = 0; for (const k in p) n += p[k]; if (n) for (const k in p) o[k] = (o[k] || 0) + p[k] / n; }; if (a) add(a); if (b) add(b); return o; };
+  // the sustained colour a piece ends in (or opens with): the weightiest pad or choir part of its edge sections, with its register and voicing
+  function colourOf(def, where) {
+    const secs = def.sec || [], nS = secs.length, inst = Object.assign({}, def.inst || {}, def.alts && def.alts.length ? def.alts[0] : {}); let best = null;
+    secs.forEach((sc, i) => {
+      const edge = where === 'head' ? (i < 2 ? 3 : 1) : (i >= nS - 2 ? 3 : 1);
+      for (const key in SUSTAIN) {
+        const cfg = sc[key]; if (!cfg) continue;
+        const w = num(sc.bars, 4) * secLevel(sc) * edge * (typeof cfg === 'object' ? num(cfg.vel, 1) * (1 - num(cfg.skip, 0)) : 1), name = instName(cfg, key, inst);
+        if (familyOf(name) && (!best || w > best.w)) best = { w, name, key, fam: familyOf(name), reg: typeof cfg === 'object' ? cfg.reg : null, n: typeof cfg === 'object' ? cfg.n : null };
+      }
+    });
+    return best;
+  }
+  // how well an interlude template (or one of its alternations) sits between two pieces: its palette against theirs (the tail of the one
+  // ending, the head of the one coming), and its character against the mean of their tags
+  function colourFit(d, from, next) {
+    const tgt = blend(from && palette(from, 'tail'), next && palette(next, 'head')), c = cosine(palette(d), tgt);
+    const tg = d.tags || {}, mean = k => { const v = [from, next].filter(Boolean).map(x => num((x.tags || {})[k], k === 'dark' ? 0.3 : 0.4)); return v.length ? v.reduce((a, b) => a + b, 0) / v.length : null; };
+    const dk = mean('dark'), en = mean('energy'), f = dk === null ? 0.7 : 1 - 0.5 * Math.abs(num(tg.dark, 0.3) - dk) - 0.5 * Math.abs(num(tg.energy, 0.3) - en);
+    return 0.7 * c + 0.3 * f;
+  }
+  // the template for the seam between two pieces, by weighted chance — a good fit is several times as likely as a poor one, never certain
+  function chooseTemplate(pool, from, next) {
+    if (!pool.length) return null; if (pool.length === 1 || (!from && !next)) return pool[Math.floor(Math.random() * pool.length)];
+    const ws = pool.map(t => TRACKS[t] ? Math.exp(6 * colourFit(TRACKS[t], from, next)) : 1), tot = ws.reduce((a, b) => a + b, 0);
+    let r = Math.random() * tot; for (let i = 0; i < pool.length; i++) { r -= ws[i]; if (r <= 0) return pool[i]; } return pool[pool.length - 1];
+  }
+  const freeSlot = (sc, choir) => (choir ? ['choir2', 'choir', 'pad2'] : ['pad2', 'choir2', 'choir']).find(k => !sc[k]) || null;
+  Music._colour = { palette, familyOf, colourOf, colourFit, chooseTemplate };
+
   // the interlude for the piece that follows: the template transposed to its key and mode (cached as a hidden track 'drift:<id>'); with
   // o.from (the piece ending) its opening bars keep that piece's meter and pulse, walk the pivot chords from its key while the tempo glides to
   // the new piece's, and the body continues in the new meter at the new tempo
@@ -1301,6 +1364,10 @@
       const bars = parsePhrase(o.motif.ph, d.meter || 4).bars, A = d.sec.find(x => x.n === 'A');
       if (A && bars <= A.bars) { const r = A.bars - bars, lead = A.lead && typeof A.lead === 'object' ? A.lead : {}; A.lead = Object.assign({}, lead, { ph: r >= 4 ? ['r2 M', 'r' + (r - 2) + ' M r2', 'M r' + r] : ['M'], inst: o.motif.inst || lead.inst, vel: num(lead.vel, 0.4) + 0.06, echo: 0.3, skip: 0, rest: 0 }); }
     }
+    if (d.alts && d.alts.length > 1) {                   // the alternation of the template that sits best between the two pieces, pinned
+      let best = null, bw = -1; for (const alt of d.alts) { const w = colourFit(Object.assign({}, d, { alts: [alt] }), from, N); if (w > bw) { bw = w; best = alt; } }
+      d.inst = Object.assign({}, d.inst || {}, best || {}); delete d.alts;
+    }
     d.root = N.root; d.mode = SCALES[N.mode || 'major'].length === 7 ? (N.mode || 'major') : 'major';
     const oldScale = SCALES[T.mode || 'major'], newScale = SCALES[d.mode], prog = DRIFT_PROG[d.mode];
     for (const sct of d.sec) {
@@ -1315,8 +1382,20 @@
         if (path) { inS.prog = path.join(' '); inS.bars = Math.max(2, path.length); delete inS.barsVar; }
       }
       d.bpm = N.bpm; d.meter = N.meter || 4;                                              // the body in the new meter at the new tempo
+      if (inS) { const lv = secLevel(from.sec[from.sec.length - 1]); if (inS.cres) inS.cres = [clamp(lv * 0.8, inS.cres[0], 0.55), inS.cres[1]]; }   // open near the level the piece ends at
       if (d.meter !== 4) for (const sct of d.sec) if (sct.n !== 'in' && sct.lead) sct.lead = Object.assign({}, typeof sct.lead === 'object' ? sct.lead : { ph: sct.lead }, { ph: 'r' + sct.bars });   // the interludes' lines are written in four
     }
+    // the colours either side bleed into the interlude's edges: the sustained voice the old piece ends in holds under the opening bars, the
+    // voice the new piece opens with is already there under the last; the template's own voice keeps the middle (never a slot it uses itself)
+    const inS = d.sec.find(x => x.n === 'in'), outS = d.sec[d.sec.length - 1], carry = (sc, c, vel) => {
+      if (!sc || !c) return; const own = familyOf(instName(sc.pad, 'pad', d.inst || {}));
+      if (c.fam === own || Object.keys(SUSTAIN).some(k => sc[k] && familyOf(instName(sc[k], k, d.inst || {})) === c.fam)) return;
+      const slot = freeSlot(sc, c.fam === 'choir'); if (!slot) return;
+      const reg = c.reg || (c.fam === 'choir' ? [55, 77] : [50, 72]), spec = { inst: c.name, n: Math.min(c.n || 3, 3), reg, vel };
+      sc[slot] = SUSTAIN[slot] && /choir/.test(slot) ? Object.assign(spec, { soft: true }) : Object.assign(spec, { p: 'swell' });
+    };
+    if (from) carry(inS, colourOf(from, 'tail'), 0.5);
+    if (outS && outS !== inS) { carry(outS, colourOf(N, 'head'), 0.45); if (outS.lv !== undefined && !outS.cres) { const lv = secLevel(N.sec[0]); outS.cres = [outS.lv, clamp(lv * 0.8, outS.lv, 0.5)]; delete outS.lv; } }
     d.hidden = true; d.interlude = true; d.desc = (T.desc || template) + ' (in the key of ' + nextId + ')';
     return Track(id, d).id;
   }
@@ -1460,7 +1539,7 @@
     const fade = Math.max(4, num(opts.fade, num(rot.fade, 6)));
     let id = pl.order[0];
     const first = id;
-    if (pl.between && Math.random() < pl.betweenP) { const tpl = pl.between[Math.floor(Math.random() * pl.between.length)], d = interludeFor(tpl, id, { motif: DIR.motif, from: outgoing(p) }); if (d) { pl.lastTpl = tpl; pl.queued = id; id = d; DIR.motif = null; } }
+    if (pl.between && Math.random() < pl.betweenP) { const tpl = chooseTemplate(pl.between, outgoing(p), TRACKS[id]), d = interludeFor(tpl, id, { motif: DIR.motif, from: outgoing(p) }); if (d) { pl.lastTpl = tpl; pl.queued = id; id = d; DIR.motif = null; } }
     const at = p.nextSectionBoundary(Math.max(2, fade * 0.5), num(opts.within, 100));
     pl.advancing = true;
     S.playlist = pl; S.plWait = null;

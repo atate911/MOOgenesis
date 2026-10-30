@@ -36,6 +36,13 @@ Versions follow `MAJOR.MINOR.PATCH`; the live version is the `VERSION` file.
   the tempo glides to the new piece's as a true accelerando or ritardando; the body continues in the new meter at the new tempo. The
   compiler gained a tempo map (a section may carry its own tempo, and a tempo may ramp across it) and a per-section meter; every existing
   piece compiles to the same notes as before.
+- Interludes keep the colour. Every instrument belongs to a family (strings, brass, winds, choir, plucked, bells, the analogue pads), and a
+  piece has a palette: how much of each it is scored for, with its opening and closing sections counted most. The seam chooses its interlude
+  by that palette (and the pieces' character) against the seven templates, so a choir piece is far likelier to be followed by the choir
+  interlude and a strings piece by the violas or the harp — by weighted chance, never the same one twice running. The template's own
+  alternation is pinned to the one that sits best between the two pieces, the sustained voice the old piece ends in holds under the
+  interlude's opening bars, and the voice the new piece opens with is already there under its last bars; the interlude's own voice keeps the
+  middle. Its opening level meets the level the piece ended at (within the breath's range).
 - The score has a shared theme library and a story. The themes the pieces quote (the hymn, the men's phrase, the procession, the
   chorale, the planetarium's four notes, the tide's rise, the wonder tune, the cradle, the abyss's step) are written once in
   `js/audio/score/themes.js` and quoted by name; sixty-five copied phrases became references with no note changed, and
