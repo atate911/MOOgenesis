@@ -248,8 +248,8 @@
     moog: smp('cbPizz', 0.55, {}, 'moog'), pulse: smp('cbPizz', 0.5, {}, 'pulse'),
     subSwell: smp('subBass', 0.36, { att: 1.6, rel: 1.6, sub: 0.3, eq: [[80, 2, 'ls'], [300, -2.5, 1]] }, 'sub'),   // the deep swell of the rare pieces
     // brass and winds (the horns crossfade between their mp and ff recordings with the written dynamic)
-    horn: smp('hornSus', 0.34, { vib: 0, att: 0.09, hp: 90, eq: [[300, -2, 1], [4000, 2, 'hs']] }, 'horn'),
-    hornSolo: smp('hornSolo', 0.31, { hp: 70, vib: 5, cutK: 9000, eq: [[2500, 1.5, 1.0], [4000, 2, 'hs']] }, 'horn'),   // vib: a delayed vibrato on the long notes; cutK: darker when soft, open when loud
+    horn: smp('hornSus', 0.38, { vib: 0, att: 0.09, hp: 90, eq: [[300, -2, 1], [2800, 2.5, 0.9], [4000, 2.5, 'hs']] }, 'horn'),
+    hornSolo: smp('hornSolo', 0.34, { hp: 70, vib: 5, cutK: 14000, eq: [[2800, 3, 0.9], [4000, 2.5, 'hs']] }, 'horn'),   // vib: a delayed vibrato on the long notes; cutK: darker when soft, open when loud
     brass: smp('brassEns', 0.33, { att: 0.08, hp: 60, eq: [[4000, 2, 'hs']] }, 'brass'),
     synth: smp('brassEns', 0.33, { att: 0.06 }, 'synth'),
     tpt: smp('tptSus', 0.3, {}, 'brass'), tptSolo: smp('tptSolo', 0.28, {}, 'brass'),
@@ -650,6 +650,7 @@
     const vel0 = num(spec.vel, key === 'lead' ? 0.9 : 0.7), art = num(spec.art, inst.v === 'pluck' || inst.v === 'bell' || inst.v === 'chime' ? 1 : 0.97);
     const harm = spec.harm || 0, oct = spec.oct || 0, rng = C.vrng, brassy = inst.v === 'brass' || inst.v === 'flute', blown = brassy || (inst.v === 'sample' && /^(horn|brass|flute|winds|oboe|clarinet|bassoon)/.test(inst.fb || ''));   // blown: no octave echo on a horn or a flute, synthesized or recorded
     const graceP = num(spec.grace, brassy ? 0.18 : 0), echoP = num(spec.echo, blown ? 0 : 0.07);
+    const swellK = clamp(num(spec.swell, 0), 0, 0.8);   // swell: each note of two beats or more starts softer and opens to its dynamic through the recorded layers (the brass rising)
     const shape = clamp(num(spec.shape, 0), 0, 0.8);   // shape: each phrase played as a hairpin — soft at its ends, full in its middle and at its top, the long notes blooming (a singer's or a horn's phrasing)
     const ref = key === 'lead' ? s.R.L.lead2 : s.R.L.lead;                       // '@': double the other line (lead2 follows lead, lead follows lead2)
     let phs = spec.ph === '@' ? (ref && (ref.ph || ref)) : spec.ph;
@@ -684,7 +685,8 @@
         m = foldRange(inst, m);
         const dt = (rng() - 0.5) * 0.012;
         if (graceP && nt.dur >= 1.5 && rng() < graceP) emit(C, ly, inst, s.start + off - 0.09, foldRange(inst, stepMidi(C, step - 1, 0)), 0.09, vel * 0.55, { art: 1, dt: 0 });
-        emit(C, ly, inst, s.start + off, m, nt.dur, vel, { art: art, dt: dt, pan: spec.pan });
+        const sw = swellK && nt.dur >= 2 ? { dyn: clamp(vel * C.lvAt(s.start + off) * (1 - swellK), 0.12, 1), swell: clamp(vel * C.lvAt(s.start + off + nt.dur), 0, 1) } : null;
+        emit(C, ly, inst, s.start + off, m, nt.dur, vel, Object.assign({ art: art, dt: dt, pan: spec.pan }, sw || {}));
         if (echoP && (!strong || spec.echo) && rng() < echoP) emit(C, ly, inst, s.start + off + 0.04, foldRange(inst, m + 12), Math.min(nt.dur, 1) * 0.8, vel * 0.3, { art: art, pan: (rng() - 0.5) * 0.8 });
         if (harm) {
           let hm = stepMidi(C, step + harm, 0);

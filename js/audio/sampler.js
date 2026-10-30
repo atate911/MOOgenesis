@@ -61,11 +61,11 @@
   // Loop breathing. Beyond the seam, a loop of a second or so carries one cycle of the player's vibrato and breath — a swell of four to
   // six decibels in the winds (measured: the alto flute 4.2 to 6.5 dB across its loops, the flute up to 13) — and a held note repeats it at
   // the loop rate: the "looping" heard on a long solo note. So the level across the loop is evened when the file is decoded: the RMS
-  // envelope over the loop (a window of a few cycles of the note) is measured and the audio scaled towards its mean, within ±6 dB, from a
+  // envelope over the loop (a window of a few cycles of the note) is measured and the audio scaled towards its mean, within ±12 dB, from a
   // tenth of a second before the crossfade's lead-in (ramped in over that tenth, so the attack keeps its shape) to the loop's end. The
-  // timbre and the pitch still move as the player's did; the pulse does not. A long loop (the string sections and the choirs run to four
-  // seconds and swell ten decibels or more) is evened by half only, since its slow swell is a breath rather than a pulse and the section's
-  // voices mask one another. `?loopflat=0` plays the loops as recorded.
+  // timbre and the pitch still move as the player's did; the pulse does not. The sections and the choirs (loops of two to four seconds that
+  // swell ten to seventeen decibels) are evened whole as well: held through the bus their swell came back every cycle as a pulse of four to
+  // ten decibels, and the swells the music wants come from the engine's own envelopes. `?loopflat=0` plays the loops as recorded.
   S.loopFlat = true;
   try { if (/[?&]loopflat=0\b/.test(location.search)) S.loopFlat = false; } catch (e) { /* ignore */ }
   function flattenLoop(buf, ls, le, root) {
@@ -74,14 +74,14 @@
     if (b - a < 0.2 * sr) return;                                                      // a short loop is a few cycles of the note: nothing to even
     const key = 'f' + a + ':' + b; buf._xf = buf._xf || {}; if (buf._xf[key]) return; buf._xf[key] = 1;
     const f = 440 * Math.pow(2, ((root || 60) - 69) / 12), win = Math.max(Math.round(0.03 * sr), Math.round(6 * sr / f)), hop = Math.max(1, win >> 1);
-    const strength = 1 - 0.5 * Math.min(1, Math.max(0, ((b - a) / sr - 1.5) / 2.5));     // whole up to a second and a half of loop, half from four seconds
+    const strength = 1;
     const n = Math.floor(Math.min(0.25 * (b - a), 0.3 * sr, a - 0.02 * sr)), pre = Math.max(0, a - Math.max(n, 0) - Math.round(0.1 * sr)), ramp = Math.max(1, a - Math.max(n, 0) - pre);
     for (let c = 0; c < buf.numberOfChannels; c++) {
       const d = buf.getChannelData(c), seg = d.slice(pre, b), pts = [];
       for (let i = pre; i < b; i += hop) { let q = 0, m = 0; for (let k = i; k < Math.min(i + win, b); k++) { q += d[k] * d[k]; m++; } pts.push(Math.sqrt(q / (m || 1))); }
       let mean = 0, cnt = 0; for (let i = a; i < b; i += hop) { mean += pts[Math.floor((i - pre) / hop)]; cnt++; }
       mean = cnt ? mean / cnt : 0; if (!(mean > 1e-5)) continue;
-      const gAt = i => { const x = (i - pre - win / 2) / hop, j = Math.max(0, Math.floor(x)), t = Math.min(1, Math.max(0, x - j)), p0 = pts[Math.min(j, pts.length - 1)], p1 = pts[Math.min(j + 1, pts.length - 1)], e = p0 + (p1 - p0) * t; return Math.min(2, Math.max(0.5, mean / (e > 1e-6 ? e : mean))); };
+      const gAt = i => { const x = (i - pre - win / 2) / hop, j = Math.max(0, Math.floor(x)), t = Math.min(1, Math.max(0, x - j)), p0 = pts[Math.min(j, pts.length - 1)], p1 = pts[Math.min(j + 1, pts.length - 1)], e = p0 + (p1 - p0) * t; return Math.min(4, Math.max(0.25, mean / (e > 1e-6 ? e : mean))); };
       for (let i = pre; i < b; i++) { let g = 1 + (gAt(i) - 1) * strength; if (i < pre + ramp) g = 1 + (g - 1) * ((i - pre) / ramp); seg[i - pre] *= g; }
       if (buf.copyToChannel) buf.copyToChannel(seg, c, pre); else d.set(seg, pre);
     }
@@ -198,6 +198,29 @@
     return [Math.max(s0, 0.03), Math.min(e0, buf.duration - 0.002)];
   }
   S._relocateLoop = relocateLoop;
+  // The zone's true pitch. The manifest's roots are good to about a cent, and a cent between two recordings of one note (a sustain's soft
+  // and loud layers, blended) is a beat every one to three seconds — held through the bus a horn-section note at the blend swung by nine
+  // decibels while either layer alone was flat. So each looped zone's fundamental is measured when its file is decoded (the period by
+  // autocorrelation around the nominal, refined between samples, the median over the loop) and the zone is played from that root, to a
+  // fraction of a cent. `?looptune=0` keeps the manifest's roots as well as its loop ends.
+  function refineRoot(buf, ls, le, root) {
+    if (!S.loopTune || !buf || !(le > ls)) return root;
+    const sr = buf.sampleRate, d = buf.getChannelData(0), a = Math.round(ls * sr), b = Math.min(Math.round(le * sr), buf.length);
+    const f = 440 * Math.pow(2, (root - 69) / 12), P0 = sr / f; if (P0 < 8 || P0 > sr / 25) return root;
+    const L = Math.round(Math.max(6 * P0, 0.02 * sr)), lo = Math.floor(P0 * 0.97), hi = Math.ceil(P0 * 1.03), hop = Math.round(0.025 * sr), ps = [];
+    for (let at = a; at + L + hi < b; at += hop) {
+      let best = -2, bk = Math.round(P0); const cs = {};
+      const c = k => { let s = 0, e1 = 0, e2 = 0; for (let i = 0; i < L; i++) { s += d[at + i] * d[at + k + i]; e1 += d[at + i] * d[at + i]; e2 += d[at + k + i] * d[at + k + i]; } return s / Math.sqrt(e1 * e2 + 1e-12); };
+      for (let k = lo; k <= hi; k++) { cs[k] = c(k); if (cs[k] > best) { best = cs[k]; bk = k; } }
+      if (best < 0.6) continue;
+      const c0 = cs[bk - 1] !== undefined ? cs[bk - 1] : c(bk - 1), c2 = cs[bk + 1] !== undefined ? cs[bk + 1] : c(bk + 1), den = c0 - 2 * best + c2;
+      ps.push(bk + (den < 0 ? 0.5 * (c0 - c2) / den : 0));
+    }
+    if (ps.length < 4) return root;
+    ps.sort((p, q) => p - q); const P = ps[ps.length >> 1], r = 69 + 12 * Math.log2(sr / P / 440);
+    return Math.abs(r - root) <= 0.5 ? r : root;                                      // within a quarter tone of the manifest's root, else leave it
+  }
+  S._refineRoot = refineRoot;
   const bufCache = Object.create(null);                    // file -> Promise<AudioBuffer> (composite instruments share their members' files)
   function loadBuf(file) { return bufCache[file] || (bufCache[file] = fetchBuf(S.base + file).then(decode).then(buf => { S.bytes += buf.length * buf.numberOfChannels * 4; return buf; })); }
 
@@ -217,9 +240,9 @@
       loop: def.kind === 'sustain', vib: num(def.vib, 0), cutK: num(def.cutK, 0), xf: !!def.xf, pan: def.pan !== undefined ? num(def.pan, 0) : undefined, legOff: num(def.legOff, 0.22), zones: [], ready: false, failed: 0 };
     S.inst[name] = inst;
     const jobs = (def.zones || []).map(z => loadBuf(z.file).then(buf => {
-      let loop = z.loop ? [z.loop[0] + S.offset, z.loop[1] + S.offset] : null;
-      if (loop && inst.loop) { const rl = relocateLoop(buf, loop[0], Math.min(loop[1], buf.duration - 0.001)), ls = rl[0], le = tuneLoop(buf, ls, rl[1], num(z.root, 60)); loop = [ls, le]; if (EVEN[name]) evenLoop(buf, ls, le, num(z.root, 60)); flattenLoop(buf, ls, le, num(z.root, 60)); smoothLoop(buf, ls, le); }   // the loop a whole number of periods, its bands and its level even, its seam blended
-      inst.zones.push({ buf, root: num(z.root, 60), lo: num(z.lo, 0), hi: num(z.hi, 127), loop, vel: z.vel || [0, 1], rr: z.rr || 0, gain: dbtoa(num(z.gain, 0)), pan: z.pan !== undefined ? num(z.pan, 0) : undefined });
+      let loop = z.loop ? [z.loop[0] + S.offset, z.loop[1] + S.offset] : null, root = num(z.root, 60);
+      if (loop && inst.loop) { const rl = relocateLoop(buf, loop[0], Math.min(loop[1], buf.duration - 0.001)), ls = rl[0]; root = inst.pitched ? refineRoot(buf, ls, rl[1], root) : root; const le = tuneLoop(buf, ls, rl[1], root); loop = [ls, le]; if (EVEN[name]) evenLoop(buf, ls, le, root); flattenLoop(buf, ls, le, root); smoothLoop(buf, ls, le); }   // the zone's true pitch; the loop a whole number of periods, its bands and its level even, its seam blended
+      inst.zones.push({ buf, root, lo: num(z.lo, 0), hi: num(z.hi, 127), loop, vel: z.vel || [0, 1], rr: z.rr || 0, gain: dbtoa(num(z.gain, 0)), pan: z.pan !== undefined ? num(z.pan, 0) : undefined });
     }).catch(e => { inst.failed++; S.errors++; if (S.errors < 4) console.warn('[samples] ' + z.file + ' failed', e && e.message); }));
     return Promise.all(jobs).then(() => { inst.zones.sort((a, b) => a.root - b.root || a.vel[0] - b.vel[0] || a.rr - b.rr); inst.ready = inst.zones.length > 0; return inst; });
   }
@@ -282,15 +305,20 @@
       const l0 = at(dyn0), l1 = at(dyn1);
       if (l0 === l1 || !inst.xf) return [{ z: rrPick(inst, l0.list), g0: 1, g1: 1 }];
     }
-    const w = d => {                                   // weights per layer at dynamic d (equal-power between the two nearest centres)
-      const out = new Array(L.length).fill(0);
-      if (d <= L[0].c) { out[0] = 1; return out; }
-      if (d >= L[L.length - 1].c) { out[L.length - 1] = 1; return out; }
-      for (let i = 0; i + 1 < L.length; i++) if (d >= L[i].c && d <= L[i + 1].c) { const x = (d - L[i].c) / Math.max(1e-6, L[i + 1].c - L[i].c); out[i] = Math.cos(x * Math.PI / 2); out[i + 1] = Math.sin(x * Math.PI / 2); return out; }
-      return out;
-    };
-    const w0 = w(dyn0), w1 = w(dyn1), out = [];
-    for (let i = 0; i < L.length; i++) if (w0[i] > 0.001 || w1[i] > 0.001) out.push({ z: rrPick(inst, L[i].list), g0: w0[i], g1: w1[i] });
+    // Two recordings of one note never sound together for long: their pitches drift against each other (a few cents inside each loop, each
+    // its own way) and the sum beats by eight to sixteen decibels, however exactly the zones are tuned. So a swell that crosses from one
+    // layer to the next plays the first layer alone, then hands over to the next in a quarter of a second at the moment the written
+    // dynamic crosses the midpoint between the two, and so on up through the layers; a note that stays within one layer plays that
+    // layer alone. (It was an equal-power blend across the whole span, both layers sounding for most of a swell.)
+    const at = d => { let best = L[0], bd = 1e9; for (const l of L) { const dd = Math.abs(l.c - d); if (dd < bd) { bd = dd; best = l; } } return best; };
+    const i0 = L.indexOf(at(dyn0)), i1 = L.indexOf(at(dyn1));
+    if (i0 === i1) return [{ z: rrPick(inst, L[i0].list), g0: 1, g1: 1 }];
+    const step = i1 > i0 ? 1 : -1, out = [], span = dyn1 - dyn0 || 1e-6;
+    for (let i = i0; i !== i1 + step; i += step) {
+      const mIn = i === i0 ? null : (L[i].c + L[i - step].c) / 2, mOut = i === i1 ? null : (L[i].c + L[i + step].c) / 2;   // the dynamics at which this layer takes over and hands on
+      const fIn = mIn === null ? 0 : Math.min(0.97, Math.max(0.03, (mIn - dyn0) / span)), fOut = mOut === null ? 1 : Math.min(0.97, Math.max(0.03, (mOut - dyn0) / span));
+      out.push({ z: rrPick(inst, L[i].list), g0: mIn === null ? 1 : 0, g1: mOut === null ? 1 : 0, fIn: mIn === null ? null : fIn, fOut: mOut === null ? null : fOut });   // fractions of the note at which it fades in / out
+    }
     return out;
   }
 
@@ -351,14 +379,18 @@
     node.connect(env); env.connect(v.out);
     const vib = o.vib !== undefined ? o.vib : inst.vib;
     const detHum = hum > 0 ? (eng.rand() * 2 - 1) * 3 * hum : 0;
-    const makeSrc = (z, det, delay, g0, g1) => {
+    const makeSrc = (z, det, delay, g0, g1, fx) => {
       const src = v.add(ctx.createBufferSource());
       const rate = Math.pow(2, (midi - z.root) / 12);
       src.buffer = z.buf; src.playbackRate.value = rate;
       if (z.loop && !oneShot) { src.loop = true; src.loopStart = z.loop[0]; src.loopEnd = Math.min(z.loop[1], z.buf.duration - 0.001); }
       if (det) src.detune.value = det;
       const sg = v.gain(g0); src.connect(sg); sg.connect(mix);
-      if (g1 !== g0) { sg.gain.setValueAtTime(g0, t + delay); sg.gain.linearRampToValueAtTime(g1, t + delay + dur); }
+      if (fx) {                                        // a layer of a swell: in and out in a quarter of a second at the handover points
+        const XF = Math.min(0.25, dur * 0.3), t0 = t + delay; sg.gain.setValueAtTime(g0, t0);
+        if (fx.fIn !== null) { const a = t0 + fx.fIn * dur - XF / 2; sg.gain.setValueAtTime(0, Math.max(t0, a)); sg.gain.linearRampToValueAtTime(1, Math.max(t0, a) + XF); }
+        if (fx.fOut !== null) { const a = t0 + fx.fOut * dur - XF / 2; sg.gain.setValueAtTime(1, Math.max(t0, a)); sg.gain.linearRampToValueAtTime(0, Math.max(t0, a) + XF); }
+      } else if (g1 !== g0) { sg.gain.setValueAtTime(g0, t + delay); sg.gain.linearRampToValueAtTime(g1, t + delay + dur); }
       const t0 = t + delay;
       // legato: skip the bow / breath attack already heard on the previous note (but stay well before the loop)
       const off = leg ? Math.min(num(inst.legOff, 0.22), z.loop ? Math.max(0, z.loop[0] - 0.4) : 0.2) : 0;
@@ -369,8 +401,9 @@
     };
     const ens = oneShot ? 0 : num(o.ens, 0);
     for (const p of picks) {
-      if (ens > 0) { makeSrc(p.z, -4 - ens * 6 + detHum, 0, 0.75 * p.g0, 0.75 * p.g1); makeSrc(p.z, 4 + ens * 6 + detHum, 0.012 + eng.rand() * 0.01, (0.75 * ens + 0.25 * (1 - ens)) * p.g0, (0.75 * ens + 0.25 * (1 - ens)) * p.g1); }
-      else makeSrc(p.z, detHum, 0, p.g0, p.g1);
+      const fx = p.fIn !== undefined ? { fIn: p.fIn, fOut: p.fOut } : null;
+      if (ens > 0) { makeSrc(p.z, -4 - ens * 6 + detHum, 0, 0.75 * p.g0, 0.75 * p.g1, fx); makeSrc(p.z, 4 + ens * 6 + detHum, 0.012 + eng.rand() * 0.01, (0.75 * ens + 0.25 * (1 - ens)) * p.g0, (0.75 * ens + 0.25 * (1 - ens)) * p.g1, fx); }
+      else makeSrc(p.z, detHum, 0, p.g0, p.g1, fx);
     }
     const lvl0 = d => oneShot ? 1 : 0.5 + 0.5 * d;
     // sub layer (o.sub = gain): a sine an octave below the note (at the note itself when it is already deep) through the same envelope,

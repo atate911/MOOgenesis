@@ -272,7 +272,11 @@ top, where a solo horn shouts); the trumpets alone take the written octave at th
 hairpins within each, a delayed vibrato on its long notes, a tone that darkens as it plays softer and opens as it swells, a presence lift, and
 a place of its own — near the centre, at the front of the stage with the bed behind it in the hall, and a window in the texture: while it plays
 the organ and the men sit below D4, the women's hum and the analogue halo above A4, and the men's answer is an octave under it rather than in
-unison with it. The dynamic range is wider: the introduction opens at 0.4, the crest reaches 1.12, the end dies to 0.48, and the rubato is up a
+unison with it. Measured on the first strain, the solo horn alone against its bed alone (the pads, the chorus and the bass), the horn sits
+2.2 dB above the bed where it was 6.4 dB under it; it has a presence lift at 2.8 kHz, it no longer darkens much when soft, and every long note
+swells from softer to its written dynamic. At the build and the crest the horns rise above everything in the Roll Tide manner: the section in
+the written octave, F4 to A5, high above the men who sing the hymn an octave under them, the trombones an octave under the horns, the trumpets
+on the answer, and every long brass note swelling through the recorded layers. The dynamic range is wider: the introduction opens at 0.4, the crest reaches 1.12, the end dies to 0.48, and the rubato is up a
 little. Every sung and blown line carries the engine's new `shape`: each phrase a hairpin, soft at its ends, full at its middle and its top,
 the long notes blooming — a singer's phrasing rather than a sequencer's. The chorus hums (uuh, ooh) until the crest, where it opens to ah.
 
@@ -288,6 +292,11 @@ The "looping" heard in its opening alto flute solo had three causes, all fixed i
   and its high band through nothing, so the bands recombined through a comb with a notch every 167 Hz; at the pitches near a notch a held
   note's own vibrato became a level ripple (1.8 dB at the alto flute's A-flat, nothing a fourth away). The high band is delayed the same six
   milliseconds now; the ripple is 0.3 dB.
+- The sections pulsed for another reason. A sustain with two recorded dynamics (the horn section, the cellos, the bassoon, the trumpets)
+  blended both layers across most of a swell, and two recordings of one note beat against each other (their pitches drift inside their loops,
+  each its own way): a held horn-section note at the blend swung by nine decibels while either layer alone was flat. The sampler now plays
+  one layer at a time and hands over to the next in a quarter of a second at the moment the written dynamic crosses between them; the zones'
+  roots are also measured to a fraction of a cent when their files are decoded.
 - A new check holds one note per recorded zone of every sustain instrument through the bus (`node tools/qa/loops.js`) and flags a pulse or a
   click. The alto flute's slow swing is 0.2 to 0.4 dB on every zone (it was 3.5 at the pitch First Light opens on).
 

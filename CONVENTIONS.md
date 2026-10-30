@@ -90,6 +90,9 @@ Colour semantics are fixed: gold = BC/money, ember = industry, leaf = food/growt
 - A line (lead, lead2, bell2) may carry `shape` (0..0.8): each phrase played as a hairpin, soft at its ends, full in its middle and at
   its top, the long notes blooming — a singer's or a horn player's phrasing. The title's lines all carry it; use it on anything sung or blown
   that is heard alone.
+- A line may carry `swell` (0..0.8): each note of two beats or more starts that much softer and opens to its written dynamic through the
+  recorded layers (the brass rising). The sampler plays one dynamic layer at a time and hands over to the next in a quarter of a second
+  where a swell crosses between them; it never blends two recordings of one note for long (they beat).
 - A phrase token may carry a dynamic mark: `'H1*0.74 H2*0.84 H3*1 H4*0.88'` plays each phrase at that fraction of the line's velocity (a
   hairpin across the phrases, the answer on top). A line may carry `pan` (a soloist near the centre) and a piece may give one layer its own
   send levels with `sends: { lead: { verb, stage, dly } }` (a soloist at the front of the stage, the bed behind it). A soloist also needs

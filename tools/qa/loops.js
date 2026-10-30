@@ -34,7 +34,7 @@ const LIMIT = +opt.limit || 1.2;
         const id = 'loopqa:' + smp + ':' + midi;
         M._define(id, { bpm: 60, root: 'C C# D Eb E F F# G Ab A Bb B'.split(' ')[midi % 12], tonic: midi, mode: 'major', hidden: true, tens: false, trim: 1, rubato: 0, loopFrom: 'A', inst: { lead: eng }, ph: { N: 'r:1 1:15' }, sec: [{ n: 'A', bars: 4, lv: 0.8, prog: 'I:4', lead: { ph: 'N', vel: 0.6 } }] });   // the note at the zone's own root, no transposition; a beat's rest first so the note's jitter never puts it before the render starts
         let buf; try { buf = await M.renderOffline(id, 16.5, { from: 0, intensity: 0, sampleRate: 44100, loop: false }); } catch (e) { out.push({ smp, eng, midi, error: String(e && e.message || e) }); continue; }
-        out.push(Object.assign({ smp, eng, midi, loop: +(z.loop[1] - z.loop[0]).toFixed(2) }, metric(buf.getChannelData(0), buf.sampleRate)));
+        out.push(Object.assign({ smp, eng, midi, layer: z.vel ? z.vel[0] : 0, loop: +(z.loop[1] - z.loop[0]).toFixed(2) }, metric(buf.getChannelData(0), buf.sampleRate)));
       }
     }
     return out;
@@ -44,7 +44,7 @@ const LIMIT = +opt.limit || 1.2;
   ok.sort((a, b) => (b.slow - a.slow) || (b.steps - a.steps));
   const nm = n => 'C C# D Eb E F F# G Ab A Bb B'.split(' ')[n % 12] + (Math.floor(n / 12) - 1);
   console.log('zone                       note  loop s  level swing  slow swing  periodicity     steps  rms dB');
-  for (const r of ok.slice(0, +opt.show || 40)) console.log((r.smp + ' (' + r.eng + ')').padEnd(26), nm(r.midi).padEnd(5), String(r.loop).padStart(6), String(r.swing).padStart(12), String(r.slow).padStart(11), (r.ac + ' @ ' + r.lag + ' s').padStart(15), String(r.steps).padStart(6), String(r.rmsDb).padStart(7), r.slow > LIMIT || r.steps ? '  <-- flagged' : '');
+  for (const r of ok.slice(0, +opt.show || 40)) console.log((r.smp + ' (' + r.eng + ')').padEnd(26), (nm(r.midi) + (r.layer ? ' f' : ' p')).padEnd(5), String(r.loop).padStart(6), String(r.swing).padStart(12), String(r.slow).padStart(11), (r.ac + ' @ ' + r.lag + ' s').padStart(15), String(r.steps).padStart(6), String(r.rmsDb).padStart(7), r.slow > LIMIT || r.steps ? '  <-- flagged' : '');
   for (const r of rows.filter(r => r.error)) console.log('ERROR', r.smp, r.midi, r.error);
   const byInst = {}; for (const r of ok) { const k = r.smp; byInst[k] = byInst[k] || { n: 0, slow: 0, worst: 0 }; byInst[k].n++; byInst[k].slow += r.slow; byInst[k].worst = Math.max(byInst[k].worst, r.slow); }
   console.log('\nper instrument (mean slow swing dB / worst zone):', Object.entries(byInst).sort((a, b) => b[1].worst - a[1].worst).map(([k, v]) => k + ' ' + (v.slow / v.n).toFixed(1) + '/' + v.worst.toFixed(1)).join(', '));
