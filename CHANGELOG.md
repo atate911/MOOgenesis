@@ -29,6 +29,21 @@ Versions follow `MAJOR.MINOR.PATCH`; the live version is the `VERSION` file.
   that is playing reaches its next breath or section line, an interlude in the new key follows, and only then the new programme's first
   piece enters, with the long seam fades of the rotation. Two more interludes join the bridges between pieces: the choir alone, and the
   violas with a trumpet far away. Plucked and bass notes no longer land at identical levels.
+- A music director chooses the map's pieces. Every map piece now carries tags on eight axes of the game's situation (solitude,
+  contact, tension, war, grief, grandeur, energy, dark), and at the end of each turn the soundscape reads the galaxy on the same axes:
+  who has been met, how cold relations are, how crowded the player's space is, the fleets around it, whether there is a war (remembered
+  for some turns after a peace), colonies and ships recently lost, the empire's size. When a programme needs its next piece the director
+  scores each candidate by how close its tags sit to the situation, tilts the weight by the key (near on the circle of fifths after the
+  piece just heard), by how recently it was heard (almost never within twenty-five minutes) and by its rarity, and draws one at random
+  from those weights: still a shuffle, leaning the way the game leans. The music's level tilts a little with the situation, never more
+  than about a decibel: up at war or for a grand empire, down when the player is alone and nothing presses.
+- Seams breathe. When the next piece is far from the last in energy, darkness or key, the director chooses one of the quiet interludes
+  (the pad, the voices, the choir alone), lengthens it by half and widens the fade; never silence, but a restrained quiet before a piece
+  of a very different kind.
+- Bridges for cues that cannot wait. A fight, a landing, the council chamber and the return to the map after a battle are no longer cut
+  to: a two-bar bridge in the new cue's key starts on the next beat (a string tremolo swelling under a timpani roll for a fight, one
+  swell of strings and soft organ with a chime for the chamber and the map), the old piece fades under it, and the cue enters as the
+  bridge crests. A switch already armed is no longer lost when the sampled instruments finish loading.
 - `node tools/audio-hour.js` captures a scripted hour of the map's music from the real-time engine (the early programme alone, first
   contact, a war, peace, the late years, the era rising throughout) with a log of every change of piece.
 - Loop seams. A sustained note is a short recording looped by the browser, and Web Audio loops with no crossfade, so wherever a

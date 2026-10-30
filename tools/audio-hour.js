@@ -39,12 +39,16 @@ const SECS = 3600, SR = 44100;
     const t0 = ctx.currentTime; const mins = () => (ctx.currentTime - t0) / 60;
     const eraAt = m => m < 13 ? 0.02 + m / 13 * 0.28 : m < 34 ? 0.3 + (m - 13) / 21 * 0.2 : m < 46 ? 0.5 + (m - 34) / 12 * 0.35 : 0.85 + (m - 46) / 14 * 0.07;
     const say = s => window.__log(((ctx.currentTime - t0)).toFixed(1) + ' ' + s);
-    M.setEra(eraAt(0)); on = true;
+    const sitAt = m => m < 13 ? { solitude: 1 - m / 26, contact: m / 40, tension: 0.05 + m / 100, war: 0, grief: 0, grandeur: 0.1 + m / 60, energy: 0.5, dark: 0.1 }
+      : m < 34 ? { solitude: 0.3 - (m - 13) / 100, contact: 0.5 + (m - 13) / 60, tension: 0.2 + (m - 13) / 70, war: 0, grief: 0.05, grandeur: 0.35 + (m - 13) / 60, energy: 0.5, dark: 0.2 }
+      : m < 46 ? { solitude: 0.1, contact: 0.3, tension: 0.85, war: 1, grief: 0.2 + (m - 34) / 30, grandeur: 0.6, energy: 0.5, dark: 0.75 }
+      : { solitude: 0.1, contact: 0.4, tension: 0.5, war: Math.max(0, 1 - (m - 46) / 8), grief: Math.max(0.2, 0.6 - (m - 46) / 20), grandeur: 0.85, energy: 0.5, dark: 0.5 };
+    M.setEra(eraAt(0)); M.setSituation(sitAt(0)); on = true;
     M.setMood('galaxyEarly', { fade: 2 }); say('phase alone: the early programme');
     let last = null, phase = 0;
     while (ctx.currentTime - t0 < secs) {
       await new Promise(r => setTimeout(r, 250));
-      const m = mins(); M.setEra(eraAt(m));
+      const m = mins(); M.setEra(eraAt(m)); M.setSituation(sitAt(m));
       const st = M.state(), cur = st.cur;
       if (cur !== last) { say('piece ' + cur + ' era ' + eraAt(m).toFixed(2)); last = cur; }
       if (phase === 0 && m >= 13) { phase = 1; M.setMood('galaxy', { fade: 6, quantize: 'bar', soft: true }); say('phase first contact: the full programme'); }

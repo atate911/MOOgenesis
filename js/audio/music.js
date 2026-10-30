@@ -8,7 +8,8 @@
 //   play(id,{fade,loop}) stop({fade}) current() has(id) list() setIntensity(0..1)
 //   playlist(ids,{shuffle, gap: s | [lo,hi], fade, start, between: templateId | [ids], betweenP, gapIn}) (a programme: pieces crossfade into
 //     interludes re-rooted to the next piece's key and those into the next piece; reshuffles never repeat the last piece or put same-key pieces together)
-//   setMood(name,{fade}) snapshot() / restore(snap,{fade}) (hand the music back after a scene: track OR running playlist)
+//   setMood(name,{fade, soft, bridge}) snapshot() / restore(snap,{fade}) (hand the music back after a scene: track OR running playlist)
+//   setSituation({solitude, contact, tension, war, grief, grandeur, energy, dark}) — the director's reading of the game (see 'the director' below)
 //   renderOffline(id,seconds,opts) analyze(id) (composition lint, used by tools/test-audio.html and tools/audio-report.js)
 // Intensity: layers x1..x3 are tension overlays that fade in above 0.12 / 0.38 / 0.62; a track may also *gate* its own layers
 // (def.gate = {drums: 0.2, lead: 0.4, ...}) so a battle starts sparse and fills in as the fight escalates (combat1/combat2).
@@ -910,7 +911,7 @@
       }
       const gate = def.gate || {};
       for (const name in gate) { const L = this.layers[name]; if (L && L.i0 === undefined && gate[name] > 0) { L.i0 = gate[name]; L.in.gain.value = 0; } }
-      this.trim = num(def.trim, DEFAULT_TRIM) * MIX_TRIM;
+      this.trimBase = num(def.trim, DEFAULT_TRIM) * MIX_TRIM; this.trim = this.trimBase * (eng.offline ? 1 : dirMul()); this.offline = !!eng.offline; this.fadeEnd = 0;
       this.applyIntensity(this.intensity, true);
       this.pass = null; this.passNo = -1; this.idx = 0; this.t0 = 0; this.skipBefore = -1e9; this.shift = 0;
       const rnd = () => (eng.offline ? eng.rand() : Math.random());
@@ -961,7 +962,7 @@
       }
     }
     fadeIn(sec) {
-      const t = this.eng.ctx.currentTime;
+      const t = this.eng.ctx.currentTime; this.fadeEnd = t + sec + 0.5;
       K.fadeParam(this.bus.gain, 0, this.trim, t, sec, 'in');
       K.fadeParam(this.verb.gain, 0, 1 - 0.33 * this.intensity, t, sec, 'in'); K.fadeParam(this.stage.gain, 0, 1, t, sec, 'in');
     }
@@ -1061,7 +1062,7 @@
       for (let i = S.old.length - 1; i >= 0; i--) { const p = S.old[i]; p.tick(now, look); if (p.finished) { p.dispose(); S.old.splice(i, 1); } }
       if (S.ticks % 40 === 0) eng.sweep(now);
       if (S.plWait && now >= S.plWait.at) { const w = S.plWait; S.plWait = null; startTrack(w.id, { fade: w.fade, loop: false, keepPlaylist: true, quantize: false }); }
-      if (S.switchAt && now >= S.switchAt.at - 0.03) { const w = S.switchAt; S.switchAt = null; startTrack(w.id, w.opts); }
+      if (S.switchAt && now >= S.switchAt.at - 0.03) { const w = S.switchAt; S.switchAt = null; startTrack(w.id, w.opts); if (w.then) S.switchAt = w.then; }   // a bridge carries the cue behind it
       if (!S.cur && !S.old.length && !S.plWait && !S.switchAt) { clearInterval(S.timer); S.timer = null; }
     } catch (e) { console.warn('[music] tick failed', e); }
   }
@@ -1079,12 +1080,14 @@
       let id, gap = pl.gap;
       if (pl.queued) { id = pl.queued; pl.queued = null; gap = pl.gapIn; }      // the piece the interlude was leading into
       else {
-        pl.i = (pl.i + 1) % pl.order.length;
-        if (pl.i === 0 && pl.shuffle) pl.order = composeOrder(pl, pl.order[pl.order.length - 1]);
-        id = pl.order[pl.i];
+        if (pl.director) id = pickNext(pl, DIR.lastPiece || p.id);     // the director: the piece that fits the moment, by weighted chance
+        else { pl.i = (pl.i + 1) % pl.order.length; if (pl.i === 0 && pl.shuffle) pl.order = composeOrder(pl, pl.order[pl.order.length - 1]); id = pl.order[pl.i]; }
+        pl.far = false;
         if (pl.between && Math.random() < pl.betweenP) {
-          const pool = pl.between.length > 1 ? pl.between.filter(t => t !== pl.lastTpl) : pl.between, tpl = pool[Math.floor(Math.random() * pool.length)];   // never the same bridge twice running
-          const d = interludeFor(tpl, id); if (d) { pl.lastTpl = tpl; pl.queued = id; id = d; gap = pl.gapIn; }
+          const far = pl.director && DIR.lastPiece && farApart(TRACKS[DIR.lastPiece], TRACKS[id]);   // a very different piece next: breathe first
+          const quiet = far ? pl.between.filter(t => QUIET[t]) : pl.between, base = quiet.length ? quiet : pl.between;
+          const pool = base.length > 1 ? base.filter(t => t !== pl.lastTpl) : base, tpl = pool[Math.floor(Math.random() * pool.length)];   // never the same bridge twice running
+          const d = interludeFor(tpl, id, { long: far }); if (d) { pl.lastTpl = tpl; pl.queued = id; id = d; gap = pl.gapIn; pl.far = !!far; }
         }
       }
       const g = pickGap(gap);
@@ -1094,7 +1097,7 @@
         // the old piece is not cut — it plays its last bar and its final chord decays under the newcomer (a long fade that mostly happens
         // after its last note), so the cadence is heard and the hall carries one piece into the next
         const at = Math.min(p.endAt, p.boundaryAfter(Math.max(now + 0.1, p.endAt - pl.fade)));
-        const inFade = clamp(p.endAt - at + 1.5, 2.5, pl.fade), oldFade = (p.endAt - at) + 6;
+        const inFade = clamp(p.endAt - at + 1.5, 2.5, pl.fade + (pl.far ? 2 : 0)), oldFade = (p.endAt - at) + (pl.far ? 8 : 6);
         S.switchAt = { id, opts: { fade: pl.fade, inFade, oldFade, loop: false, keepPlaylist: true, quantize: false }, at };
         ensureTimer();
       }
@@ -1115,6 +1118,60 @@
     return a;
   }
   const rootOf = id => (TRACKS[id] ? TRACKS[id].root : null);
+  // ================================================================== the director
+  // Every map piece carries tags (0..1) on a few axes of the game's situation — solitude, contact, tension, war, grief, grandeur, energy,
+  // dark — and the soundscape sends the situation on the same axes (Music.setSituation) at the end of every turn. When a programme needs
+  // its next piece the director scores each candidate by how close its tags sit to the situation, tilts the weight by the key (near on the
+  // circle of fifths after the piece just heard), by how recently it was heard and by its rarity, and draws one at random from those
+  // weights: still a shuffle, leaning the way the game leans. It also tilts the music's level a little (never more than about a decibel):
+  // up when the galaxy is at war or the empire is grand, down when the player is alone and nothing presses.
+  const AXES = { solitude: 1, contact: 0.8, tension: 1, war: 1.2, grief: 1, grandeur: 0.7, energy: 0.3, dark: 0.5 };
+  const DIR = { q: null, hist: Object.create(null), lastPiece: null, gainDb: 0 };
+  function affinity(def) {                            // 0..1: how well a piece's tags fit the situation (0.5 when nothing is known)
+    const q = DIR.q, t = def && def.tags; if (!q || !t) return 0.5;
+    let sum = 0, w = 0; for (const a in AXES) { if (q[a] === undefined || t[a] === undefined) continue; sum += AXES[a] * (1 - Math.abs(t[a] - q[a])); w += AXES[a]; }
+    return w ? sum / w : 0.5;
+  }
+  const FIFTHS = (() => { const o = {}; let pc = 0; for (let i = 0; i < 12; i++) { o[pc] = i; pc = (pc + 7) % 12; } return o; })();
+  const PARENT = { major: 0, lydian: 7, mixolydian: 5, dorian: 10, phrygian: 8, minor: 3, harmonic: 3, melodic: 3 };   // offset from a mode's root to its parent major
+  const centre = def => mod12(PCS[def.root] + num(PARENT[def.mode || 'major'], 0));
+  const fifthsDist = (a, b) => { const d = Math.abs(FIFTHS[centre(a)] - FIFTHS[centre(b)]); return Math.min(d, 12 - d); };   // 0..6 steps round the circle
+  // two pieces far apart in feel or key: the seam between them gets a quiet, longer interlude and a wider fade (the breath)
+  const farApart = (a, b) => { const ta = (a && a.tags) || {}, tb = (b && b.tags) || {}; return Math.abs(num(ta.energy, 0.5) - num(tb.energy, 0.5)) >= 0.45 || Math.abs(num(ta.dark, 0.3) - num(tb.dark, 0.3)) >= 0.5 || (a && b && fifthsDist(a, b) >= 4); };
+  const QUIET = { drift: 1, drift3: 1, drift6: 1 };   // the interludes that breathe: a pad and a few points of light, the voices, the choir alone
+  function pickNext(pl, last) {
+    const now = A.engine ? A.engine.ctx.currentTime : 0, lastDef = DIR.lastPiece ? TRACKS[DIR.lastPiece] : null;
+    const lastRare = !!(pl.rare && DIR.lastPiece && pl.rare.ids.indexOf(DIR.lastPiece) >= 0);
+    const cands = eraList(pl.ids).filter(id => id !== last).concat(pl.rare && !lastRare ? pl.rare.ids.filter(id => id !== last) : []);
+    if (!cands.length) return pl.ids[0];
+    let tot = 0;
+    const ws = cands.map(id => {
+      const def = TRACKS[id]; let w = Math.exp(4 * affinity(def));
+      const h = DIR.hist[id]; if (h !== undefined) { const age = now - h; w *= age < 1500 ? 0.08 : age < 4200 ? 0.08 + 0.92 * (age - 1500) / 2700 : 1; }   // heard in the last 25 minutes: almost never again; an hour on: as new
+      if (lastDef) { const d = fifthsDist(lastDef, def); w *= d === 0 ? (lastDef.root === def.root ? 0.35 : 1.25) : d === 1 ? 1.15 : d === 2 ? 1 : d === 3 ? 0.85 : 0.7; }   // the circle of fifths: a near key is an easy seam
+      if (pl.rare && pl.rare.ids.indexOf(id) >= 0) w *= (typeof pl.rare.p === 'object' ? num(pl.rare.p[id], 0.35) : num(pl.rare.p, 0.35)) * (0.4 + 1.2 * S.era);
+      tot += w; return w;
+    });
+    let r = Math.random() * tot; for (let i = 0; i < cands.length; i++) { r -= ws[i]; if (r <= 0) return cands[i]; }
+    return cands[cands.length - 1];
+  }
+  const dirMul = () => Math.pow(10, DIR.gainDb / 20);
+  // the situation: {solitude, contact, tension, war, grief, grandeur, energy, dark} on 0..1 (any subset); null forgets it
+  Music.setSituation = function (q) {
+    DIR.q = q && typeof q === 'object' ? Object.assign({}, q) : null;
+    const g = q ? clamp(0.8 * (num(q.war, 0) + 0.5 * num(q.grandeur, 0)) - 0.8 * num(q.solitude, 0) * (1 - num(q.tension, 0)), -1.2, 1.2) : 0;
+    if (Math.abs(g - DIR.gainDb) < 0.05) return;
+    DIR.gainDb = g;
+    const eng = A.engine; if (!eng) return;
+    const t = eng.ctx.currentTime;
+    for (const p of [S.cur].concat(S.old)) {           // running players follow over a few seconds, once their own fade-in is done
+      if (!p || p.stopped || p.offline || !(t > p.fadeEnd)) continue;
+      p.trim = p.trimBase * dirMul();
+      try { p.bus.gain.setTargetAtTime(p.trim, t, 3); } catch (e) { /* ignore */ }
+    }
+  };
+  Music.getSituation = () => (DIR.q ? Object.assign({}, DIR.q) : null);
+  Music._director = { pickNext, affinity, fifthsDist, farApart, centre, DIR, AXES };
   // a piece written for a phase of the game carries an era window (def.eraWin = [lo, hi]); the programme is composed from the pieces whose
   // window holds the current era, so the early pieces fall silent as the galaxy fills and the late ones arrive — a cycle at a time, never a cut
   const fitsEra = id => { const w = TRACKS[id] && TRACKS[id].eraWin; return !w || (S.era >= w[0] - 1e-9 && S.era <= w[1] + 1e-9); };
@@ -1138,12 +1195,16 @@
     minor: 'i:2 bVI:2 bVII:2 i:2', phrygian: 'i:2 bII:2 bVI:2 i:2', harmonic: 'i:2 iv:2 bVI:2 V:2', melodic: 'i:2 IV:2 bVI:2 V:2',
   };
   // the interlude for the piece that follows: the template transposed to its key and mode (cached as a hidden track 'drift:<id>')
-  function interludeFor(template, nextId) {
-    const T = TRACKS[template], N = TRACKS[nextId];
+  function interludeFor(template, nextId, o) {
+    const T = TRACKS[template], N = TRACKS[nextId], long = !!(o && o.long);
     if (!T || !N || N.interlude) return null;
-    const id = template + ':' + nextId;
+    const id = template + ':' + nextId + (long ? ':long' : '');
     if (TRACKS[id]) return id;
     const d = JSON.parse(JSON.stringify(T)); delete d._p; delete d.id;
+    if (long) for (const sct of d.sec) {               // the breath: half as long again and a shade quieter, before a piece of a very different kind
+      if (sct.n === 'A') { sct.bars = Math.round(sct.bars * 1.5); if (sct.cres) sct.cres = sct.cres.map(x => x * 0.85); else sct.lv = num(sct.lv, 1) * 0.85; }
+      if (sct.n === 'out') { sct.bars = 3; sct.barsVar = [2, 3]; }
+    }
     d.root = N.root; d.mode = SCALES[N.mode || 'major'].length === 7 ? (N.mode || 'major') : 'major';
     const oldScale = SCALES[T.mode || 'major'], newScale = SCALES[d.mode], prog = DRIFT_PROG[d.mode];
     for (const sct of d.sec) {
@@ -1159,6 +1220,18 @@
   // change of scene reads as a phrase ending rather than a jump cut.
   function startTrack(id, opts) {
     const def = TRACKS[id], eng = A.engine, fade = num(opts.fade, 3.5);
+    if (opts.bridge && S.cur && !S.cur.stopped && S.cur.id !== id && !S.cur.def.bridge && TRACKS['bridge:' + opts.bridge]) {
+      // a cue that cannot wait still gets a way in: a two-bar bridge in its key starts on the next beat, the old piece fades under it, and the
+      // cue enters as the bridge crests
+      const b = interludeFor('bridge:' + opts.bridge, id);
+      if (b) {
+        const P = prepare(TRACKS[b]), len = P.secs.reduce((a, x) => a + x.bars, 0) * P.meter * P.spb, at = S.cur.nextBoundary('beat');
+        const then = { id, opts: Object.assign({}, opts, { bridge: undefined, quantize: false, fade: num(opts.fade, 1.5), inFade: Math.min(1.6, num(opts.fade, 1.5)), oldFade: 1.2 }), at: at + len - 0.7 };
+        S.switchAt = { id: b, opts: { fade: 0.5, inFade: 0.5, oldFade: Math.max(1.5, len * 0.8), loop: false, keepPlaylist: !!opts.keepPlaylist, quantize: false }, at, then };
+        if (!opts.keepPlaylist) { S.playlist = null; S.plWait = null; }
+        ensureTimer(); return true;
+      }
+    }
     if (opts.quantize !== false && S.cur && !S.cur.stopped && S.cur.id !== id) {
       const at = S.cur.nextBoundary(opts.quantize || 'bar');
       if (at - eng.ctx.currentTime > 0.1) { S.switchAt = { id, opts: Object.assign({}, opts, { quantize: false }), at }; if (!opts.keepPlaylist) { S.playlist = null; S.plWait = null; } ensureTimer(); return true; }
@@ -1166,6 +1239,7 @@
     S.switchAt = null;
     if (!opts.keepPlaylist) { S.playlist = null; S.plWait = null; }
     const p = new Player(eng, def, { loop: opts.loop !== false, intensity: S.intensity });
+    if (!def.hidden) { DIR.hist[id] = eng.ctx.currentTime; DIR.lastPiece = id; }
     if (S.cur) { S.cur.fadeOut(num(opts.oldFade, fade)); S.old.push(S.cur); }    // oldFade: let a piece that is ending ring out under the next one
     S.cur = p;
     p.fadeIn(num(opts.inFade, fade));
@@ -1185,6 +1259,7 @@
         return 'pending';
       }
       if (S.cur && S.cur.id === id && !S.cur.stopped && !opts.restart) { S.switchAt = null; return true; }
+      if (S.switchAt && !opts.restart && (S.switchAt.id === id || (S.switchAt.then && S.switchAt.then.id === id))) return true;   // already on its way (behind a bridge, or armed on the bar)
       return startTrack(id, opts);
     } catch (e) { console.warn('[music] play failed', e); return false; }
   };
@@ -1208,11 +1283,12 @@
       if (!ids.length) return null;
       const pl = {
         ids, shuffle: !!opts.shuffle, gap: Array.isArray(opts.gap) ? opts.gap.slice() : num(opts.gap, 1.5), fade: num(opts.fade, 3), order: opts.shuffle ? shuffled(ids) : ids.slice(), i: 0, advancing: false,
-        between: opts.between ? [].concat(opts.between).filter(t => TRACKS[t]) : null, betweenP: num(opts.betweenP, 0.5), gapIn: Array.isArray(opts.gapIn) ? opts.gapIn.slice() : num(opts.gapIn, 0), queued: null, lastTpl: null,
+        between: opts.between ? [].concat(opts.between).filter(t => TRACKS[t]) : null, betweenP: num(opts.betweenP, 0.5), gapIn: Array.isArray(opts.gapIn) ? opts.gapIn.slice() : num(opts.gapIn, 0), queued: null, lastTpl: null, director: !!opts.director,
       };
       if (pl.between && !pl.between.length) pl.between = null;
       if (opts.rare) { const ids = [].concat(opts.rare.ids || opts.rare).filter(id => TRACKS[id] && pl.ids.indexOf(id) < 0); pl.rare = ids.length ? { ids, p: typeof opts.rare.p === 'object' ? Object.assign({}, opts.rare.p) : num(opts.rare.p, 0.35) } : null; }
       if (pl.shuffle) pl.order = composeOrder(pl, opts.last);
+      if (pl.director && !opts.start) pl.order = [pickNext(pl, opts.last || DIR.lastPiece)].concat(pl.order.filter(id => id !== pl.order[0]));   // the director opens the programme too
       if (opts.start && TRACKS[opts.start] && pl.order.indexOf(opts.start) < 0 && (pl.ids.indexOf(opts.start) >= 0 || (pl.rare && pl.rare.ids.indexOf(opts.start) >= 0))) pl.order.unshift(opts.start);   // restored mid-piece (a rare one, or one the era has set aside): come back to it
       if (opts.start && pl.order.indexOf(opts.start) >= 0) {           // begin with a given track (the rest keeps its order / shuffle)
         const k = pl.order.indexOf(opts.start);
@@ -1228,7 +1304,7 @@
       const first = pl.order[0];
       if (!A.isReady()) { S.pending = { id: first, opts: { loop: false } }; S.playlist = pl; A.onReady(() => { const p = S.pending; if (p) { S.pending = null; startTrack(p.id, { fade: 1, loop: false, keepPlaylist: true }); } }); return 'pending'; }
       S.playlist = pl;
-      return startTrack(first, { fade: num(opts.firstFade, 1.5), loop: false, keepPlaylist: true });
+      return startTrack(first, { fade: num(opts.firstFade, 1.5), loop: false, keepPlaylist: true, bridge: opts.bridge });
     } catch (e) { console.warn('[music] playlist failed', e); return false; }
   };
   Music.setIntensity = function (x) {
@@ -1243,23 +1319,23 @@
   Music.getEra = () => S.era;
   Music.has = id => !!TRACKS[id];
   Music.onSamplesReady = function () {
-    const p = S.cur; if (!p || p.stopped || !A.engine) return;
+    const p = S.cur; if (!p || p.stopped || !A.engine || p.def.bridge) return;   // a bridge is five seconds long: not worth restarting
     const elapsed = A.engine.ctx.currentTime - p.t0;
-    if (elapsed >= 0 && elapsed < 14) startTrack(p.id, { fade: 2.5, loop: p.loop, keepPlaylist: true, quantize: false });
+    if (elapsed >= 0 && elapsed < 14) { const keep = S.switchAt; startTrack(p.id, { fade: 2.5, loop: p.loop, keepPlaylist: true, quantize: false }); if (keep) S.switchAt = keep; }   // a switch already armed (a bar line, a bridge's cue) stays armed
   };
 
   // A scene that borrows the music (GNN, lab, spy panels) takes a snapshot first and restores it afterwards: a running playlist
   // (the galaxy rotation) comes back as a playlist, a single looping track as that track, silence as silence.
   Music.snapshot = function () {
     const pl = S.playlist;
-    return { id: Music.current(), playlist: pl ? { ids: pl.ids.slice(), shuffle: pl.shuffle, gap: pl.gap, gapIn: pl.gapIn, fade: pl.fade, between: pl.between, betweenP: pl.betweenP, rare: pl.rare, start: pl.queued || (S.plWait && S.plWait.id) || pl.order[pl.i] } : null };
+    return { id: Music.current(), playlist: pl ? { ids: pl.ids.slice(), shuffle: pl.shuffle, gap: pl.gap, gapIn: pl.gapIn, fade: pl.fade, between: pl.between, betweenP: pl.betweenP, rare: pl.rare, director: pl.director, start: pl.queued || (S.plWait && S.plWait.id) || pl.order[pl.i] } : null };
   };
   Music.restore = function (snap, opts) {
     try {
       opts = opts || {};
       const fade = num(opts.fade, 1.5);
       if (!snap) return Music.stop({ fade });
-      if (snap.playlist) { const pl = snap.playlist; return Music.playlist(pl.ids, { shuffle: pl.shuffle, gap: pl.gap, gapIn: pl.gapIn, fade: pl.fade, between: pl.between, betweenP: pl.betweenP, rare: pl.rare, start: pl.start, firstFade: fade }); }
+      if (snap.playlist) { const pl = snap.playlist; return Music.playlist(pl.ids, { shuffle: pl.shuffle, gap: pl.gap, gapIn: pl.gapIn, fade: pl.fade, between: pl.between, betweenP: pl.betweenP, rare: pl.rare, director: pl.director, start: pl.start, firstFade: fade }); }
       if (snap.id) return Music.play(snap.id, { fade });
       return Music.stop({ fade });
     } catch (e) { console.warn('[music] restore failed', e); return false; }
@@ -1284,16 +1360,16 @@
   // the music never stops on the map: every piece crossfades into an interlude in the next piece's key, and that into the next piece
   const INTERLUDES = ['drift', 'drift2', 'drift3', 'drift4', 'drift5', 'drift6', 'drift7'];
   // the rare pieces (the tide, the chorale) are slipped into a cycle about a third of the time each; at war their readings with the synthetic hits, more often
-  const CALM_ROT = { gap: 0, gapIn: 0, fade: 6, between: INTERLUDES, betweenP: 1, rare: { ids: ['galaxy9', 'galaxy10', 'procession'], p: { galaxy9: 0.35, galaxy10: 0.35, procession: 0.25 } } };   // the procession rarer still: an occasion
-  const EARLY_ROT = { gap: 0, gapIn: 0, fade: 7, between: ['drift', 'drift2', 'drift4', 'drift5', 'drift7'], betweenP: 1 };
-  const MOOD_ROTATE = { explore: CALM_ROT, galaxy: CALM_ROT, map: CALM_ROT, calm: CALM_ROT, galaxyEarly: EARLY_ROT, galaxyWar: { gap: 0, gapIn: 0, fade: 5, between: INTERLUDES, betweenP: 0.6, rare: { ids: ['galaxy9:war', 'galaxy10:war'], p: 0.6 } } };
+  const CALM_ROT = { director: true, gap: 0, gapIn: 0, fade: 6, between: INTERLUDES, betweenP: 1, rare: { ids: ['galaxy9', 'galaxy10', 'procession'], p: { galaxy9: 0.35, galaxy10: 0.35, procession: 0.25 } } };   // the procession rarer still: an occasion
+  const EARLY_ROT = { director: true, gap: 0, gapIn: 0, fade: 7, between: ['drift', 'drift2', 'drift4', 'drift5', 'drift7'], betweenP: 1 };
+  const MOOD_ROTATE = { explore: CALM_ROT, galaxy: CALM_ROT, map: CALM_ROT, calm: CALM_ROT, galaxyEarly: EARLY_ROT, galaxyWar: { director: true, gap: 0, gapIn: 0, fade: 5, between: INTERLUDES, betweenP: 0.8, rare: { ids: ['galaxy9:war', 'galaxy10:war'], p: 0.6 } } };
   // A running programme gives way to another without a cut: the new programme's first piece enters where the current piece would naturally
   // let it in — its next breath or section line, within a minute or two — through an interlude in the new piece's key, with the long seam
   // fades of the rotation; the old piece finishes its phrase and decays under the newcomer. Nothing is heard but the music moving on.
   function softSwitch(ids, rot, opts) {
     const p = S.cur;
     if (!S.playlist || !p || p.stopped || S.plWait || !A.isReady()) return false;
-    const pl = makePlaylist(ids, Object.assign({}, rot, { shuffle: true, last: p.id }));
+    const pl = makePlaylist(ids, Object.assign({}, rot, { shuffle: true, last: DIR.lastPiece || p.id }));
     if (!pl) return false;
     const fade = Math.max(4, num(opts.fade, num(rot.fade, 6)));
     let id = pl.order[0];
@@ -1320,7 +1396,7 @@
         const cur = list.indexOf(Music.current()), next = list[cur >= 0 ? (cur + 1) % list.length : (moodTick++) % list.length];
         if (rot) {
           if (opts.soft) { const r = softSwitch(pick, rot, opts); if (r) return r; }
-          const r = Music.playlist(pick, Object.assign({}, rot, { shuffle: true, start: next, firstFade: num(opts.fade, 2) })); return r === false ? false : next;
+          const r = Music.playlist(pick, Object.assign({}, rot, { shuffle: true, start: rot.director ? undefined : next, firstFade: num(opts.fade, 2), bridge: opts.bridge })); return r === false ? false : (rot.director ? (S.playlist && S.playlist.order[0]) || next : next);
         }
         pick = next;
       }
@@ -1429,6 +1505,7 @@
 
   Track('galaxy4', {
     desc: 'Deep field — slow analogue pads under a high air pad, distant women’s voices, high strings that swell and fade, a celeste and harp as single points of light, a lone flute: the planetarium, in the Serrie manner',
+    tags: { solitude: 1, contact: 0.2, tension: 0.1, war: 0, grief: 0.1, grandeur: 0.2, energy: 0.1, dark: 0.3 },
     bpm: 50, trim: 4.48, tone: { hi: -2.5 }, root: 'A', mode: 'lydian', loopFrom: 'A1', tens: false, gentle: true, rubato: 0.03, mix: { bass: 0.7 }, fx: { dly: 2.4, verb: 1.25 },
     forms: [['A1', 'breath1', 'B', 'breath2', 'C', 'breath3', 'E'], ['A1', 'breath1', 'C', 'breath2', 'B', 'breath3', 'E'], ['A1', 'breath2', 'B', 'breath1', 'E', 'breath3', 'C'], ['A1', 'C', 'breath1', 'B', 'E']],
     alts: [{}, { lead: 'cello', lead2: 'flute', choir: 'choirMen' }, { lead: 'clarinet', lead2: 'cello', choir: 'cellos' }], eraAlts: { pad2: 'cellos', choir: 'choirMen', lead: 'cello' },
@@ -1483,6 +1560,7 @@
 
   Track('galaxy1', {
     desc: 'Calm exploration, wonder: airy flute, glassy bells and a floating lydian pad',
+    tags: { solitude: 0.9, contact: 0.3, tension: 0, war: 0, grief: 0, grandeur: 0.1, energy: 0.3, dark: 0 },
     bpm: 56, trim: 2.25, tone: { hi: -2.5 }, root: 'G', mode: 'lydian', loopFrom: 'A1', tens: false, gentle: true, rubato: 0.03, fx: { dly: 2.2, verb: 1.25 },
     forms: [['A1', 'A2', 'breath1', 'B', 'C', 'breath2', 'A3', 'B2', 'breath3', 'E'], ['A1', 'B', 'breath1', 'C', 'breath2', 'A2', 'B2', 'E'], ['A1', 'A2', 'C', 'breath2', 'B', 'breath1', 'A3', 'E'], ['A1', 'breath1', 'B', 'A2', 'breath2', 'C', 'breath3', 'B2', 'E']],
     alts: [{}, { lead: 'cello', lead2: 'flute', choir: 'choirMen' }, { lead: 'oboe', lead2: 'cello', arp: 'harp' }], eraAlts: { pad2: 'cellos', choir: 'choirMen', lead2: 'cello' },
@@ -1514,6 +1592,7 @@
 
   Track('galaxy2', {
     desc: 'Calm exploration, patience: marimba ostinato, plucked reed melody, warm dorian pad',
+    tags: { solitude: 0.5, contact: 0.6, tension: 0.2, war: 0.3, grief: 0.1, grandeur: 0.2, energy: 0.5, dark: 0.2 },
     bpm: 60, trim: 1.97, tone: { hi: -2.5 }, root: 'D', mode: 'dorian', loopFrom: 'A1', tens: false, gentle: true, rubato: 0.03, fx: { dly: 2.0, verb: 1.2 },
     forms: [['A1', 'A2', 'B', 'C', 'breath', 'A3', 'B2'], ['A1', 'B', 'C', 'breath', 'A2', 'B2'], ['A1', 'A2', 'C', 'breath', 'B', 'A3'], ['A1', 'C', 'breath', 'A2', 'B2', 'A3']],
     alts: [{}, { lead: 'cello', lead2: 'glass' }, { lead: 'clarinet', lead2: 'cello' }], eraAlts: { pad: 'cellos', lead: 'cello' },
@@ -1541,6 +1620,7 @@
 
   Track('galaxy3', {
     desc: 'Calm exploration, determination: steady pulse, strings and a resolute horn theme',
+    tags: { solitude: 0.3, contact: 0.5, tension: 0.5, war: 0.6, grief: 0.1, grandeur: 0.4, energy: 0.6, dark: 0.3 },
     bpm: 72, trim: 1.64, tone: { hi: -2.5 }, root: 'A', mode: 'minor', oct: 1, loopFrom: 'A1', tens: false, gentle: true, rubato: 0.03, fx: { dly: 1.6, verb: 1.2 },
     forms: [['A1', 'A2', 'B', 'C', 'breath', 'A3', 'B2', 'E'], ['A1', 'B', 'C', 'breath', 'A2', 'B2', 'E'], ['A1', 'A2', 'C', 'breath', 'B', 'A3', 'E'], ['A1', 'C', 'breath', 'A2', 'B', 'B2', 'E']],
     alts: [{}, { lead: 'cello', lead2: 'flute' }], eraAlts: { pad2: 'cellos', choir: 'choirMen', lead2: 'cello' },
@@ -1569,6 +1649,7 @@
 
   Track('galaxy5', {
     desc: 'Calm exploration, the veil: a slow waltz of the spheres — harp arpeggios, an oboe singing over the strings, women far back, celeste points of light; in three',
+    tags: { solitude: 0.7, contact: 0.5, tension: 0, war: 0, grief: 0.1, grandeur: 0.2, energy: 0.4, dark: 0.1 },
     bpm: 54, meter: 3, trim: 3.12, tone: { hi: -2.5 }, root: 'Eb', mode: 'major', loopFrom: 'A1', tens: false, gentle: true, rubato: 0.03, fx: { dly: 2.0, verb: 1.25 },
     forms: [['A1', 'A2', 'B', 'C', 'breath', 'A3', 'E'], ['A1', 'B', 'C', 'breath', 'A2', 'B2', 'E'], ['A1', 'C', 'breath', 'A3', 'B2', 'A2', 'E'], ['A1', 'B', 'A2', 'breath', 'C', 'E']],
     alts: [{}, { lead: 'flute', lead2: 'cello' }, { lead: 'clarinet', arp: 'vibes', choir: 'aah' }], eraAlts: { pad2: 'cellos', lead: 'cello', choir: 'choirMen' },
@@ -1603,6 +1684,7 @@
 
   Track('galaxy6', {
     desc: 'Calm exploration, the abyss: the dark between the stars — cellos on a sunken pedal, a bassoon far below, an alto flute far above, the men chanting the phrygian step; sparse, uneasy, patient',
+    tags: { solitude: 0.6, contact: 0.2, tension: 0.7, war: 0.4, grief: 0.4, grandeur: 0.2, energy: 0.1, dark: 1 },
     bpm: 46, trim: 3.85, tone: { hi: -3 }, root: 'E', mode: 'phrygian', loopFrom: 'A1', tens: false, gentle: true, rubato: 0.03, mix: { bass: 0.8 }, fx: { dly: 2.4, verb: 1.3 },
     forms: [['A1', 'breath1', 'B', 'C', 'breath2', 'A2', 'E'], ['A1', 'C', 'breath1', 'B', 'breath2', 'E'], ['A1', 'B', 'breath2', 'C', 'A2', 'breath1', 'E'], ['A1', 'breath1', 'C', 'A2', 'E']],
     alts: [{}, { lead: 'altoFlute', lead2: 'cello' }, { lead: 'cello', lead2: 'bassoon', pad: 'organSoft' }], eraAlts: { pad2: 'strings', lead2: 'cello' },
@@ -1636,6 +1718,7 @@
 
   Track('galaxy7', {
     desc: 'Calm exploration, the cradle: a lullaby in six — a rocking harp, a clarinet humming the tune, glockenspiel points, the women humming, the men beneath; the ship asleep between the stars',
+    tags: { solitude: 0.9, contact: 0.2, tension: 0, war: 0, grief: 0.1, grandeur: 0, energy: 0.3, dark: 0 },
     bpm: 156, meter: 6, trim: 3.2, tone: { hi: -2.5 }, root: 'F', mode: 'major', loopFrom: 'A1', tens: false, gentle: true, rubato: 0.03, fx: { dly: 1.6, verb: 1.2 },
     forms: [['A1', 'A2', 'B', 'C', 'breath', 'A3', 'E'], ['A1', 'B', 'C', 'breath', 'A2', 'B2', 'E'], ['A1', 'C', 'breath', 'A2', 'B2', 'E'], ['A1', 'B', 'breath', 'A3', 'C', 'E']],
     alts: [{}, { lead: 'flute', lead2: 'vibes' }, { lead: 'cello', arp: 'vibes', bell: 'glass' }], eraAlts: { pad2: 'cellos', lead: 'cello', choir: 'choirMen' },
@@ -1670,6 +1753,7 @@
 
   Track('galaxy8', {
     desc: 'Calm exploration, the beacon: a glass synth and strings on a sunken pedal, slow pizzicato, a horn calling the leitmotif from very far away, crotales and tubular bells answered by the delay; a signal from the edge',
+    tags: { solitude: 0.8, contact: 0.3, tension: 0.3, war: 0, grief: 0.1, grandeur: 0.3, energy: 0.2, dark: 0.4 },
     bpm: 52, trim: 3.79, tone: { hi: -2.5 }, root: 'C', mode: 'mixolydian', loopFrom: 'A1', tens: false, gentle: true, rubato: 0.03, mix: { bass: 0.85 }, fx: { dly: 2.6, verb: 1.3 },
     forms: [['A1', 'B', 'C', 'breath', 'A2', 'E'], ['A1', 'C', 'breath', 'B', 'A2', 'E'], ['A1', 'breath', 'A2', 'C', 'E'], ['A1', 'B', 'breath', 'C', 'E']],
     alts: [{}, { lead: 'flute', lead2: 'glass' }, { lead: 'cello', pad: 'strings', pad2: 'analog' }], eraAlts: { pad2: 'cellos', choir: 'choirMen', lead: 'cello' },
@@ -1802,9 +1886,25 @@
     ],
   });
 
+  // The bridges: two bars in the key of a cue that cannot wait (a battle, a landing, the council chamber, the map after a fight), so the
+  // cue is led into instead of cut to; startTrack builds one with interludeFor when asked for `bridge: 'tense' | 'calm'`.
+  Track('bridge:tense', {
+    desc: 'A bridge into a cue that cannot wait: the strings tremble and swell with a timpani roll over two bars, in the key of the piece that follows',
+    bpm: 92, trim: 2.6, root: 'C', mode: 'minor', hidden: true, interlude: true, bridge: true, tens: false, rubato: 0,
+    inst: { pad: 'strTrem', pad2: 'lowBrass', bass: 'deep' },
+    sec: [{ n: 'B', bars: 2, cres: [0.45, 0.95], prog: 'i:2', pad: { p: 'swell', n: 4, reg: [50, 76], vel: 0.85 }, pad2: { p: 'swell', n: 2, reg: [40, 57], vel: 0.6 }, bass: { pat: 'c---', pedal: true, inst: { p: 'deep', att: 0.6, sub: 0.6 } }, timp: { kick: '................', roll: 2, vel: 0.9 } }],
+  });
+  Track('bridge:calm', {
+    desc: 'A bridge into a cue that cannot wait: one swell of the strings and the soft organ with a chime, over two bars, in the key of the piece that follows',
+    bpm: 60, trim: 3.0, root: 'C', mode: 'major', hidden: true, interlude: true, bridge: true, tens: false, rubato: 0,
+    inst: { pad: 'strings', pad2: 'organSoft', bass: 'deep', bell: 'chime' },
+    sec: [{ n: 'B', bars: 2, cres: [0.45, 0.8], prog: 'I:2', pad: { p: 'swell', n: 4, reg: [50, 76], vel: 0.7 }, pad2: { p: 'swell', n: 3, reg: [45, 69], vel: 0.5 }, bass: { pat: '1---', pedal: true, inst: { p: 'deep', att: 1.0, rel: 2.0, sub: 0.5 } }, bell: { dens: 0.3, res: 1, reg: [72, 96], vel: 0.5 } }],
+  });
+
   // ---------------------------------------------------------------- the rare pieces (the Crimson Tide manner): once a cycle or so, with impact
   Track('galaxy9', {
     desc: 'The tide — deep bass swells rising out of the dark, the analogue sky and cellos over them, low brass and the men entering, the hymn in the horns at the crest; rare on the map, and felt when it comes',
+    tags: { solitude: 0.3, contact: 0.3, tension: 0.7, war: 0.6, grief: 0.3, grandeur: 0.9, energy: 0.6, dark: 0.6 },
     bpm: 60, trim: 3.1, tone: { lo: 1.0 }, root: 'D', mode: 'minor', loopFrom: 'A1', tens: false, rubato: 0.02, mix: { bass: 1.25, choir: 1.2, pad: 1.05 }, fx: { dly: 1.2, verb: 1.15 },
     forms: [['A1', 'B', 'C', 'A2', 'E'], ['A1', 'C', 'A2', 'B', 'E'], ['A1', 'B', 'A2', 'E']],
     alts: [{}, { lead: 'cello', pad2: 'strings' }, { pad: 'dark', lead2: 'brass' }],
@@ -1830,6 +1930,7 @@
 
   Track('galaxy10', {
     desc: 'The chorale — the men’s choir carries everything: a hymn sung low over the organ and the analogue bed, a horn counter-line, the women joining at the crest, timpani underneath; rare on the map',
+    tags: { solitude: 0.3, contact: 0.4, tension: 0.3, war: 0.3, grief: 0.4, grandeur: 0.9, energy: 0.4, dark: 0.5 },
     bpm: 56, trim: 2.15, tone: { lo: 0.8 }, root: 'G', mode: 'minor', loopFrom: 'A1', tens: false, rubato: 0.02, mix: { choir: 1.4, bass: 1.1 }, fx: { dly: 1.0, verb: 1.2 },
     forms: [['A1', 'B', 'C', 'A2', 'E'], ['A1', 'C', 'A2', 'B', 'E'], ['A1', 'B', 'A2', 'C', 'E']],
     alts: [{}, { pad: 'organSoft', lead: 'cello' }, { pad2: 'cellos', choir2: 'choirWomen' }],
@@ -1874,6 +1975,7 @@
   // one long sunrise, a chorale prelude, a minimalist pulse, a canon, a sequence, a brass choir, a slow march, a sarabande, a sung chorale.
   Track('galaxy11', {
     desc: 'The nebula: a drift in the Serrie manner — the analogue pad and the air pad on chords that change every four bars, sub-bass swelling out of the dark, crotales and a celeste answered by the long delay, an alto flute in a few long notes, the four slow notes in the celeste, the women far back; the strings and the horn’s hymn rise through it once, then it drifts on',
+    tags: { solitude: 1, contact: 0.1, tension: 0.1, war: 0, grief: 0, grandeur: 0.3, energy: 0.1, dark: 0.3 },
     bpm: 50, trim: 8.54, tone: { hi: -2.5 }, root: 'Bb', mode: 'major', loopFrom: 'drift1', tens: false, gentle: true, rubato: 0.03, mix: { bass: 0.75, bell: 1.2 }, fx: { dly: 2.8, verb: 1.3 },
     forms: [['drift1', 'lights', 'drift2', 'rise', 'breath', 'drift3', 'out'], ['drift1', 'drift2', 'lights', 'rise', 'breath', 'out'], ['drift1', 'lights', 'rise', 'breath', 'drift2', 'out'], ['drift1', 'drift3', 'lights', 'rise', 'breath', 'out']],
     alts: [{}, { lead: 'flute', bell: 'glass' }, { pad: 'padGlass', lead: 'cello', lead2: 'horn' }], eraAlts: { pad2: 'cellos', lead: 'cello', choir: 'choirMen' },
@@ -1903,6 +2005,7 @@
 
   Track('galaxy12', {
     desc: 'The long night: a passacaglia — a ground that never stops in the basses, and a set of variations over it, each a texture of its own: the cellos alone, the cor anglais, the harp running, all pizzicato with a staccato bassoon, the hymn in the horn with the men, trembling strings and tubular bells, the full chorale; grave, patient',
+    tags: { solitude: 0.4, contact: 0.3, tension: 0.6, war: 0.5, grief: 0.7, grandeur: 0.4, energy: 0.3, dark: 0.8 },
     bpm: 50, trim: 6.01, tone: { hi: -2.5 }, root: 'B', mode: 'minor', loopFrom: 'V1', tens: false, gentle: true, rubato: 0.02, fx: { dly: 1.4, verb: 1.25 },
     forms: [['V1', 'V2', 'V3', 'V4', 'V5', 'breath', 'V6', 'V7', 'E'], ['V1', 'V3', 'V2', 'V5', 'breath', 'V4', 'V6', 'E'], ['V1', 'V2', 'V4', 'breath', 'V3', 'V5', 'V6', 'V7', 'E'], ['V1', 'V5', 'V3', 'breath', 'V2', 'V4', 'V6', 'E']],
     alts: [{}, { lead: 'cello', lead2: 'bassoon' }, { lead: 'oboe', bell: 'glass' }], eraAlts: { pad: 'cellos', choir: 'choirMen', lead: 'cello' },
@@ -1940,6 +2043,7 @@
 
   Track('galaxy13', {
     desc: 'The watch: a nocturne — a walking pizzicato bass under harp chords placed off the beat, an air pad far back, and a lone trumpet, very soft, with a line of its own: a fifth, then the octave, and the slow way down; the horn answers once with the procession’s theme and once with the leitmotif from across the ship, the chimes strike midnight, the strings come in only at the end of the watch',
+    tags: { solitude: 0.8, contact: 0.3, tension: 0.2, war: 0, grief: 0.2, grandeur: 0.2, energy: 0.2, dark: 0.4 },
     bpm: 56, trim: 5.34, tone: { hi: -2.5 }, root: 'Ab', mode: 'major', oct: -1, loopFrom: 'W1', tens: false, gentle: true, rubato: 0.03, fx: { dly: 2.2, verb: 1.2 },
     forms: [['W1', 'W2', 'H', 'mid', 'breath', 'W3', 'dawn', 'E'], ['W1', 'H', 'mid', 'breath', 'W2', 'dawn', 'E'], ['W1', 'W2', 'mid', 'breath', 'H', 'W3', 'E'], ['W1', 'mid', 'breath', 'W2', 'H', 'E']],
     alts: [{}, { lead: 'flute', lead2: 'cello' }, { lead: 'oboe', lead2: 'horn', arp2: 'glass' }], eraAlts: { pad: 'cellos', lead: 'hornSolo', choir: 'choirMen' },
@@ -1973,6 +2077,7 @@
 
   Track('galaxy14', {
     desc: 'The early years, first light: one long sunrise — the violas alone in the dark, the cellos and an alto flute at the grey with a dawn theme that climbs the chord, the harp and the strings as it glows, the horns and both choirs as it rises, the hymn blazing in brass and voices with timpani at the sunrise itself, then the warmth of the day and the fall to dusk',
+    tags: { solitude: 0.9, contact: 0.2, tension: 0, war: 0, grief: 0, grandeur: 0.5, energy: 0.5, dark: 0.1 },
     bpm: 54, trim: 7.66, tone: { hi: -2.5 }, root: 'Db', mode: 'major', loopFrom: 'grey', tens: false, gentle: true, rubato: 0.03, eraWin: [0, 0.55], mix: { choir: 1.1 }, fx: { dly: 1.8, verb: 1.25 },
     forms: [['grey', 'glow', 'rise', 'sunrise', 'day', 'dusk'], ['grey', 'glow', 'day', 'rise', 'sunrise', 'dusk'], ['grey', 'day', 'glow', 'rise', 'sunrise', 'dusk']],
     alts: [{}, { lead: 'flute', lead2: 'cello' }, { lead: 'clarinet', arp: 'vibes' }], eraAlts: { pad2: 'cellos', lead: 'cello', choir: 'choirMen' },
@@ -2003,6 +2108,7 @@
 
   Track('galaxy15', {
     desc: 'The early years, the lantern: a chorale prelude in a broad six — the cradle tune in long notes as a cantus firmus (the horn, then the men, then both) under a clarinet that never stops running its arpeggio figure, the ship’s soft organ holding the chords, a flute trio in the middle, the glockenspiel in the still; Bach’s manner for a sleeping ship',
+    tags: { solitude: 0.9, contact: 0.2, tension: 0, war: 0, grief: 0, grandeur: 0.1, energy: 0.4, dark: 0.1 },
     bpm: 56, meter: 6, trim: 4.59, tone: { hi: -2.5 }, root: 'A', mode: 'major', loopFrom: 'CF1', tens: false, gentle: true, rubato: 0.02, eraWin: [0, 0.55], fx: { dly: 1.0, verb: 1.2 },
     forms: [['CF1', 'trio', 'CF2', 'still', 'CF3', 'E'], ['CF1', 'still', 'CF2', 'trio', 'E'], ['CF1', 'trio', 'still', 'CF3', 'E']],
     alts: [{}, { arp: 'flute', lead: 'cello' }, { arp: 'oboe', arp2: 'harp' }], eraAlts: { pad: 'cellos', lead: 'cello', choir: 'choirMen' },
@@ -2032,6 +2138,7 @@
 
   Track('galaxy16', {
     desc: 'The early years, the survey: a minimalist pulse — the violas in soft even eighths with a marimba on the chord tones, a pizzicato bass, a flute in short cells of the leitmotif that lengthen as the piece goes, the glockenspiel echoing them, the harp running and the women singing one long line over the cells at the full; no sustained strings until the voices come; the scouts going out, star by star',
+    tags: { solitude: 0.7, contact: 0.3, tension: 0.1, war: 0, grief: 0, grandeur: 0.1, energy: 0.7, dark: 0 },
     bpm: 76, trim: 6.9, tone: { hi: -2.0 }, root: 'D', mode: 'major', loopFrom: 'cell1', tens: false, gentle: true, rubato: 0.015, eraWin: [0, 0.55], fx: { dly: 1.3, verb: 0.95, stage: 1.15 }, sends: { arp: { verb: 0.1, stage: 0.3 } },
     forms: [['cell1', 'cell2', 'add', 'full', 'thin', 'full2', 'out'], ['cell1', 'add', 'thin', 'cell2', 'full', 'out'], ['cell1', 'cell2', 'thin', 'add', 'full2', 'out']],
     alts: [{}, { lead: 'oboe', lead2: 'vibes' }, { lead: 'clarinet', arp: 'pizz' }], eraAlts: { pad2: 'cellos', lead: 'cello', choir: 'choirMen' },
@@ -2064,6 +2171,7 @@
 
   Track('galaxy17', {
     desc: 'The middle years, the commonwealth: a canon for woodwinds — an oboe states the procession’s theme alone over a walking bassoon and the horns’ soft chord, a clarinet follows it two bars behind, a flute four bars behind, three voices of one tune; a dialogue between the strains, the men for one phrase, a triangle; no strings but the bassoon; the talk between peoples',
+    tags: { solitude: 0.1, contact: 1, tension: 0.1, war: 0, grief: 0, grandeur: 0.4, energy: 0.6, dark: 0 },
     bpm: 66, trim: 3.86, tone: { hi: -2.0 }, root: 'E', mode: 'major', loopFrom: 'theme', tens: false, gentle: true, rubato: 0.03, eraWin: [0.15, 0.9], fx: { dly: 1.2, verb: 1.1, stage: 1.1 },
     forms: [['theme', 'talk', 'canon2', 'canon3', 'still', 'canon3b', 'E'], ['theme', 'canon2', 'talk', 'still', 'canon3', 'E'], ['theme', 'talk', 'canon3', 'still', 'canon2', 'canon3b', 'E']],
     alts: [{}, { lead: 'flute', lead2: 'oboe', bell2: 'clarinet' }, { lead: 'clarinet', lead2: 'cello', bell2: 'flute' }], eraAlts: { pad2: 'cellos', lead2: 'cello', choir: 'choirMen' },
@@ -2095,6 +2203,7 @@
 
   Track('galaxy18', {
     desc: 'The middle years, the lanes: a sequence in the Serrie manner — a celeste running in sixteenths with a faint synth pluck on the beats, the analogue pad beneath, the strings over it and an oboe with a tune of its own; the sequence stops for the men in the still, and the horn brings the hymn at the crest with both choirs; the trade lanes between the stars',
+    tags: { solitude: 0.3, contact: 0.8, tension: 0.1, war: 0, grief: 0, grandeur: 0.4, energy: 0.6, dark: 0.1 },
     bpm: 66, trim: 4.27, tone: { hi: -2.0 }, root: 'G', mode: 'major', loopFrom: 'A1', tens: false, gentle: true, rubato: 0.02, eraWin: [0.15, 0.9], fx: { dly: 2.2, verb: 1.2 }, sends: { arp: { verb: 0.14, stage: 0.2 } },
     forms: [['A1', 'A2', 'B', 'still', 'breath', 'A3', 'crest', 'E'], ['A1', 'B', 'still', 'breath', 'A2', 'crest', 'E'], ['A1', 'A2', 'still', 'breath', 'B', 'crest', 'E'], ['A1', 'B', 'A2', 'breath', 'still', 'crest', 'E']],
     alts: [{}, { lead: 'flute', arp: 'vibes' }, { lead: 'clarinet', arp2: 'arp', pad2: 'padGlass' }], eraAlts: { pad2: 'cellos', lead: 'cello', choir: 'choirMen' },
@@ -2126,6 +2235,7 @@
 
   Track('galaxy19', {
     desc: 'The middle years, noon: a chorale for brass choir — horns in four parts, the trumpets soft on a chorale strain of its own, trombones beneath, the low brass as the bass, timpani on the step; the strings answer with the title’s hymn as the second strain, the two choirs join the brass at the full, and a plagal amen closes it; the empire at its height',
+    tags: { solitude: 0.1, contact: 0.6, tension: 0.1, war: 0.1, grief: 0, grandeur: 1, energy: 0.6, dark: 0 },
     bpm: 60, trim: 4.07, tone: { hi: -1.5, lo: 0.5 }, root: 'C', mode: 'major', loopFrom: 'ch1', tens: false, gentle: true, rubato: 0.02, eraWin: [0.15, 0.9], mix: { choir: 1.15, lead: 0.9 }, fx: { dly: 0.8, verb: 1.25 },
     forms: [['ch1', 'str', 'ch2', 'still', 'ch3', 'amen'], ['ch1', 'still', 'str', 'ch2', 'ch3', 'amen'], ['ch1', 'str', 'still', 'ch3', 'amen']],
     alts: [{}, { lead: 'horn', lead2: 'lowBrass' }, { lead: 'hornSolo', pad2: 'strings', lead2: 'cello' }], eraAlts: { pad2: 'lowBrass', lead: 'trombones', choir: 'choirMen' },
@@ -2155,6 +2265,7 @@
 
   Track('galaxy20', {
     desc: 'The late years, the frontier: a slow march — field drums at a whisper, the tuba on the step, the trombones with a dotted march theme of their own, the men chanting beneath, tubular bells; the strings tremble in the trio while the horn plays the hymn, a side-drum roll leads to the crest where the trombones intone the hymn at half speed, the drums fall silent for the phrygian step of the abyss; the border, held',
+    tags: { solitude: 0.2, contact: 0.3, tension: 0.8, war: 0.8, grief: 0.3, grandeur: 0.7, energy: 0.4, dark: 0.7 },
     bpm: 48, trim: 6.44, tone: { hi: -2.5, lo: 0.6 }, root: 'F#', mode: 'minor', oct: -1, loopFrom: 'M1', tens: false, gentle: true, rubato: 0.015, eraWin: [0.4, 1], mix: { bass: 0.9, choir: 1.1, drums: 0.9 }, fx: { dly: 0.9, verb: 1.2 }, sends: { drums: { stage: 0.08, verb: 0.05, dly: 0 } },
     forms: [['M1', 'M2', 'trio', 'M3', 'still', 'M4', 'E'], ['M1', 'trio', 'M2', 'still', 'M3', 'E'], ['M1', 'M2', 'still', 'trio', 'M4', 'E']],
     alts: [{}, { lead: 'horn', lead2: 'trombones' }, { lead: 'cello', pad: 'strings', bass: 'deep' }],
@@ -2185,6 +2296,7 @@
 
   Track('galaxy21', {
     desc: 'The late years, the embers: a sarabande — the low strings place the dance’s stressed second beat in every bar, the harp answers on the third, a cor anglais carries a sarabande melody with the long second beat, and in the middle turns the leitmotif upside down (the fourth falls, the steps climb back) over the lament’s descending bass from the passacaglia; the cellos tremble and a timpani roll leads to the crest, the women above it; what the wars cost',
+    tags: { solitude: 0.3, contact: 0.2, tension: 0.5, war: 0.4, grief: 1, grandeur: 0.3, energy: 0.3, dark: 0.8 },
     bpm: 54, meter: 3, trim: 4.84, tone: { hi: -2.5, lo: 0.5 }, root: 'C#', mode: 'minor', loopFrom: 'S1', tens: false, gentle: true, rubato: 0.02, eraWin: [0.4, 1], fx: { dly: 1.2, verb: 1.25 },
     forms: [['S1', 'S2', 'L', 'still', 'breath', 'S3', 'L2', 'E'], ['S1', 'L', 'still', 'breath', 'S2', 'L2', 'E'], ['S1', 'S2', 'still', 'breath', 'L', 'S3', 'E']],
     alts: [{}, { lead: 'altoFlute', lead2: 'horn' }, { lead: 'cello', pad2: 'cellos', arp: 'pizz' }],
@@ -2216,6 +2328,7 @@
 
   Track('galaxy22', {
     desc: 'The late years, the vigil: a sung chorale — the men alone at first on the chorale of the tenth piece, then the women above them in octaves, the organ beneath as a pedal, tubular bells; the organ takes a verse of its own, the women rise to a descant over the men’s second strain, the brass comes in only at the crest with timpani; the council’s hymn as the last verse; the long night watch of an old empire',
+    tags: { solitude: 0.3, contact: 0.3, tension: 0.5, war: 0.4, grief: 0.6, grandeur: 0.8, energy: 0.3, dark: 0.7 },
     bpm: 52, trim: 4.27, tone: { hi: -2.0, lo: 0.6 }, root: 'F', mode: 'minor', loopFrom: 'men', tens: false, gentle: true, rubato: 0.02, eraWin: [0.4, 1], mix: { choir: 1.2, lead: 1.1, pad: 1.0 }, fx: { dly: 0.9, verb: 1.4 },
     forms: [['men', 'satb', 'organ', 'satb2', 'still', 'crest', 'amen'], ['men', 'satb', 'still', 'organ', 'crest', 'amen'], ['men', 'organ', 'satb', 'still', 'satb2', 'amen']],
     alts: [{}, { lead: 'aah', lead2: 'choirMenAh' }, { pad: 'strings', pad2: 'cellos' }],
@@ -2336,6 +2449,7 @@
 
   Track('ground', {
     desc: 'Tense ground assault: low toms, a menacing plucked ostinato and brass swells in phrygian',
+    tags: { solitude: 0, contact: 0.2, tension: 0.9, war: 1, grief: 0.3, grandeur: 0.3, energy: 0.6, dark: 0.8 },
     bpm: 100, trim: 2.99, root: 'A', mode: 'phrygian', loopFrom: 'A1', tens: { x1: false },
     forms: [['A1', 'B1', 'A2', 'C', 'B2', 'D', 'E', 'A1', 'C', 'B1', 'A2', 'D', 'B2', 'E', 'A1', 'E'], ['A1', 'C', 'B1', 'A2', 'D', 'B2', 'E', 'A1', 'B1', 'C', 'A2', 'B2', 'D', 'E', 'A1', 'E']],
     inst: { pad: 'dark', bass: 'moog', lead: 'horn', lead2: 'brass', arp: 'seq', bell: 'chime' },
@@ -2401,6 +2515,7 @@
   });
   Track('procession', {
     desc: 'The procession: a processional march in the nobilmente manner — a solo horn carries a long-breathed theme over tuba and trombones on the step, the snare alone keeps the march with a firm bass drum on the one, strings and the organ of the chamber behind, the choir entering as the theme returns; the flat-sixth lift for the big phrase, a lyrical trio, the drums fall away for a hymn and the full chamber answers it; rare on the map once the empire stands among others, regular at war',
+    tags: { solitude: 0.1, contact: 0.6, tension: 0.4, war: 0.6, grief: 0.1, grandeur: 1, energy: 0.7, dark: 0.2 },
     bpm: 84, trim: 2.6, tone: { lo: 0.8, hi: -2.5 }, root: 'F', mode: 'major', loopFrom: 'A1', tens: false, rubato: 0.01, mix: { drums: 1.0, lead: 1.15, bass: 1.1, choir: 1.1 },
     fx: { stage: 0.7, verb: 1.2 }, sends: { drums: { stage: 0.06, verb: 0.03, dly: 0 } },
     forms: [['A1', 'A2', 'B', 'T', 'D', 'R', 'E'], ['A1', 'B', 'T', 'A2', 'D', 'R', 'E'], ['A1', 'A2', 'T', 'B', 'D', 'R', 'E'], ['A1', 'T', 'A2', 'B', 'D', 'R', 'E']],
@@ -2728,6 +2843,7 @@
   // ================================================================== espionage (spy panels borrow the music, see js/ui/spyscenes.js)
   Track('spy', {
     desc: 'Espionage: noir intrigue — walking sub-bass, clock ticks and rim clicks, muted horn phrases, hushed pads in harmonic minor',
+    tags: { solitude: 0.2, contact: 0.5, tension: 0.8, war: 0.6, grief: 0.2, grandeur: 0.2, energy: 0.6, dark: 0.7 },
     bpm: 94, trim: 1.87, root: 'C', mode: 'harmonic', loopFrom: 'A1', tens: false,
     forms: [['A1', 'A2', 'B', 'C', 'A3', 'E', 'C', 'A1', 'B', 'A2', 'E', 'A3', 'C', 'E', 'A1'], ['A1', 'B', 'A2', 'C', 'E', 'A3', 'A1', 'C', 'B', 'A2', 'E', 'A3', 'C', 'A1', 'E']],
     inst: { pad: 'dark', bass: 'deep', lead: 'horn', lead2: 'vibes', arp: 'pizz', bell: 'vibes', choir: 'uuh' },
@@ -2821,6 +2937,6 @@
   };
   for (const r in WAR) warVariant('race:' + r, WAR[r]);
   Music._warVariant = warVariant; Music._respell = respell;
-  Music._rotation = { shuffled, composeOrder, interludeFor, pickGap, fitsEra, eraList, softSwitch, GALAXY, GALAXY_EARLY, INTERLUDES, S };  // test hooks
+  Music._rotation = { shuffled, composeOrder, interludeFor, pickGap, fitsEra, eraList, softSwitch, pickNext, GALAXY, GALAXY_EARLY, INTERLUDES, S };  // test hooks
 
 })(window.MOO);

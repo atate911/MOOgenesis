@@ -31,7 +31,18 @@ Loop seams (the user heard clicks / a looping flutter on held notes): `sampler.j
 (tail of the loop into the lead-in before loopStart, n = min(loop/4, 300 ms, loopStart - 20 ms), linear, once per buffer+loop, `S.loopXf`,
 `?loopxf=0` to hear the old loops). Audit scripts lived in the scratchpad: decode each zone with ffmpeg, measure |x[ls]-x[le-1]|/RMS and the
 correlation of the 30 ms before loopEnd with the 30 ms before loopStart; before: 67/218 poor seams, oboe/clarinet corr 0.5-0.8 with loops as
-short as 0.13 s; after: corr 1.00 everywhere. `node tools/audio-hour.js [outDir]` captures a scripted hour of the map from the real-time engine (alone / first contact at 13 min / war at 34 / peace
+short as 0.13 s; after: corr 1.00 everywhere. The director (music.js, 'the director'): map pieces carry `tags: { solitude, contact, tension, war, grief, grandeur, energy, dark }` (0..1); `Music.setSituation(q)`
+takes the game's reading on the same axes (soundscape.js `situation()`, from `readState()` — the era's components plus own colonies, fleet peaks and
+a remembered war / loss: `warMem` decays 0.88 a turn, `griefMem` 0.9), `pickNext(pl, last)` weights candidates by `exp(4 * affinity)` × recency
+(0.08 inside 25 min, 1 after 70) × circle-of-fifths distance from the last piece (relative major/minor 1.25, a fifth 1.15 … four steps 0.7; the same
+root 0.35) × rarity, and draws one; `director: true` on a rotation turns it on (all three map rotations). `farApart(a, b)` (energy ≥ .45 apart, dark ≥ .5,
+or ≥ 4 fifths) → a QUIET interlude (`drift`, `drift3`, `drift6`) in its `:long` reading (A × 1.5, lv × .85, out 3 bars) and a wider seam fade. Bridges:
+`startTrack(id, { bridge: 'tense' | 'calm' })` arms `bridge:<kind>:<id>` (interludeFor of a hidden 2-bar template) on the next beat with `switchAt.then`
+= the cue at the bridge's crest; `tickAll` re-arms `then` after a switch; `Music.play` returns true for a cue already behind a bridge; soundscape
+uses tense bridges into combat / ground and calm ones into the council and back onto the map after a fight. `Music.setSituation` also tilts the
+level (`DIR.gainDb`, ±1.2 dB; `Player.trimBase` × `dirMul()`, running players ramp over 3 s once faded in). Tag table and a picker test: the
+session's scratch `director` test (alone → planetarium pieces, war → frontier / vigil / long night, grief → embers; recency 0.6 % at 10 min).
+`node tools/audio-hour.js [outDir]` captures a scripted hour of the map from the real-time engine (alone / first contact at 13 min / war at 34 / peace
 at 46, era 0.02 -> 0.92) as raw PCM plus a log of every piece change; the demo page's hour was made from it. The remaining realism limits are in the assets (short oboe/clarinet loops; dynamic-layer
 crossfades beat slightly on swells) and need the source libraries and `build.py`.
 Checked: Node-only lint (every form × alt × take × era compiles, deterministic, zero snaps on all twelve), `tools/audio-report.js` trims (-16.5 LUFS),
