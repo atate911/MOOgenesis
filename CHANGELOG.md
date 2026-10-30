@@ -15,6 +15,9 @@ Versions follow `MAJOR.MINOR.PATCH`; the live version is the `VERSION` file.
 - The main theme rebuilt around the horn: the chorus hums and the solo horn states the call, then sings the whole hymn over the chorus; the
   horn section joins the men; the crest has the horns in full with the trumpets crowning the answer and the chamber open on ah, with the
   timpani; the solo horn closes it. A wider dynamic range, and every line phrased with the engine's new `shape` (a hairpin over each phrase).
+- The title's solo horn in its middle register and played as a soloist: a dynamic plan across its phrases (a dynamic mark on a phrase
+  token, `H3*1`), deeper hairpins, a delayed vibrato, a tone that darkens when soft, a presence lift, a place near the centre at the front
+  of the stage (a layer's own sends), and a window in the texture with the bed below it and a halo above.
 - The commonwealth's oboe tune (the procession's first strain) declared the score's second leitmotif and glanced at, once a pass, in a
   four-bar aside by a solo voice in the title, Patience, Determination, the Veil, the Survey, the Lanes, Noon and the Embers, and stated by
   the horns at the victory.

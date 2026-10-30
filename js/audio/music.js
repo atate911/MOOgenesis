@@ -163,11 +163,11 @@
     phraseCache.set(key, r);
     return r;
   }
-  const PH_TOK = /^([A-Za-z][A-Za-z0-9]*)((?:[+-]\d+|~|\^|_)*)$/;
+  const PH_TOK = /^([A-Za-z][A-Za-z0-9]*)((?:[+-]\d+|~|\^|_|\*\d*\.?\d+)*)$/;   // name, then modifiers: +n/-n shift, ~ invert, ^ _ octave, *x a dynamic mark (velocity times x)
   function parseMods(s) {
-    const r = { shift: 0, inv: false, oct: 0 };
-    const re = /([+-]\d+)|~|\^|_/g; let m;
-    while ((m = re.exec(s))) { if (m[1]) r.shift += parseInt(m[1], 10); else if (m[0] === '~') r.inv = !r.inv; else if (m[0] === '^') r.oct++; else r.oct--; }
+    const r = { shift: 0, inv: false, oct: 0, vel: 1 };
+    const re = /([+-]\d+)|\*(\d*\.?\d+)|~|\^|_/g; let m;
+    while ((m = re.exec(s))) { if (m[1]) r.shift += parseInt(m[1], 10); else if (m[2]) r.vel *= parseFloat(m[2]); else if (m[0] === '~') r.inv = !r.inv; else if (m[0] === '^') r.oct++; else r.oct--; }
     return r;
   }
   // bass/arp/drum pattern: one string == one bar, step size = meter / length
@@ -249,7 +249,7 @@
     subSwell: smp('subBass', 0.36, { att: 1.6, rel: 1.6, sub: 0.3, eq: [[80, 2, 'ls'], [300, -2.5, 1]] }, 'sub'),   // the deep swell of the rare pieces
     // brass and winds (the horns crossfade between their mp and ff recordings with the written dynamic)
     horn: smp('hornSus', 0.34, { vib: 0, att: 0.09, hp: 90, eq: [[300, -2, 1], [4000, 2, 'hs']] }, 'horn'),
-    hornSolo: smp('hornSolo', 0.31, { hp: 70, eq: [[4000, 2, 'hs']] }, 'horn'),
+    hornSolo: smp('hornSolo', 0.31, { hp: 70, vib: 5, cutK: 9000, eq: [[2500, 1.5, 1.0], [4000, 2, 'hs']] }, 'horn'),   // vib: a delayed vibrato on the long notes; cutK: darker when soft, open when loud
     brass: smp('brassEns', 0.33, { att: 0.08, hp: 60, eq: [[4000, 2, 'hs']] }, 'brass'),
     synth: smp('brassEns', 0.33, { att: 0.06 }, 'synth'),
     tpt: smp('tptSus', 0.3, {}, 'brass'), tptSolo: smp('tptSolo', 0.28, {}, 'brass'),
@@ -648,7 +648,8 @@
     const spec = typeof cfg === 'string' ? { ph: cfg } : cfg;
     const ly = BUS[key], inst = resolveInst(spec.inst, C.inst[key] || DEF_INST[key]);
     const vel0 = num(spec.vel, key === 'lead' ? 0.9 : 0.7), art = num(spec.art, inst.v === 'pluck' || inst.v === 'bell' || inst.v === 'chime' ? 1 : 0.97);
-    const harm = spec.harm || 0, oct = spec.oct || 0, rng = C.vrng, brassy = inst.v === 'brass' || inst.v === 'flute', graceP = num(spec.grace, brassy ? 0.18 : 0), echoP = num(spec.echo, brassy ? 0 : 0.07);
+    const harm = spec.harm || 0, oct = spec.oct || 0, rng = C.vrng, brassy = inst.v === 'brass' || inst.v === 'flute', blown = brassy || (inst.v === 'sample' && /^(horn|brass|flute|winds|oboe|clarinet|bassoon)/.test(inst.fb || ''));   // blown: no octave echo on a horn or a flute, synthesized or recorded
+    const graceP = num(spec.grace, brassy ? 0.18 : 0), echoP = num(spec.echo, blown ? 0 : 0.07);
     const shape = clamp(num(spec.shape, 0), 0, 0.8);   // shape: each phrase played as a hairpin — soft at its ends, full in its middle and at its top, the long notes blooming (a singer's or a horn's phrasing)
     const ref = key === 'lead' ? s.R.L.lead2 : s.R.L.lead;                       // '@': double the other line (lead2 follows lead, lead follows lead2)
     let phs = spec.ph === '@' ? (ref && (ref.ph || ref)) : spec.ph;
@@ -672,7 +673,7 @@
       const span = shape ? ph.notes.reduce((x, n) => Math.max(x, n.off + n.dur), 0) || 1 : 1, dLo = shape ? Math.min(...ph.notes.map(n => n.d)) : 0, dHi = shape ? Math.max(...ph.notes.map(n => n.d)) : 0;
       for (const nt of ph.notes) {
         const off = cur + nt.off;
-        const vel = shape ? vel0 * (1 - shape * (1 - Math.min(1, 0.65 * Math.pow(Math.sin(Math.PI * Math.min(1, (nt.off + nt.dur / 2) / span)), 0.6) + 0.35 * (nt.d - dLo) / Math.max(1, dHi - dLo) + (nt.dur >= 2 ? 0.1 : 0)))) : vel0;
+        const vel = (shape ? vel0 * (1 - shape * (1 - Math.min(1, 0.65 * Math.pow(Math.sin(Math.PI * Math.min(1, (nt.off + nt.dur / 2) / span)), 0.6) + 0.35 * (nt.d - dLo) / Math.max(1, dHi - dLo) + (nt.dur >= 2 ? 0.1 : 0)))) : vel0) * md.vel;   // the phrase's dynamic mark
         if (off >= s.beats - 1e-6) break;
         let step = nt.d - 1;
         if (md.inv) step = 2 * first - step;

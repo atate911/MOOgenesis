@@ -90,6 +90,11 @@ Colour semantics are fixed: gold = BC/money, ember = industry, leaf = food/growt
 - A line (lead, lead2, bell2) may carry `shape` (0..0.8): each phrase played as a hairpin, soft at its ends, full in its middle and at
   its top, the long notes blooming — a singer's or a horn player's phrasing. The title's lines all carry it; use it on anything sung or blown
   that is heard alone.
+- A phrase token may carry a dynamic mark: `'H1*0.74 H2*0.84 H3*1 H4*0.88'` plays each phrase at that fraction of the line's velocity (a
+  hairpin across the phrases, the answer on top). A line may carry `pan` (a soloist near the centre) and a piece may give one layer its own
+  send levels with `sends: { lead: { verb, stage, dly } }` (a soloist at the front of the stage, the bed behind it). A soloist also needs
+  a window in the texture: the title keeps the organ and the men below D4 and the women's hum and the analogue halo above A4 while the
+  solo horn plays, and the men's answer an octave under it.
 - The second leitmotif is the procession's first strain as the commonwealth's oboe states it (`@procession.A1`). A piece that glances at it
   does so in a four-bar `echo` section of its own (its own key, mode and metre; a minor reading keeps the second degree with `!`, a piece in
   three writes the tune in three) placed after its still in every form, by one solo voice over the piece's own pad. The title, seven map

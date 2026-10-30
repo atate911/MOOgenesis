@@ -340,7 +340,7 @@
     const env = v.gain(0.0001), mix = v.gain(1);
     // velocity-tracked lowpass: soft notes are darker (the sample layers do most of the work; this is the glue between them)
     let node = mix;
-    const cut = o.cut !== undefined ? o.cut : (inst.cutK ? inst.cutK * (0.35 + 0.65 * dyn) : 0);
+    const cutK = num(o.cutK, inst.cutK), cut = o.cut !== undefined ? o.cut : (cutK ? cutK * (0.35 + 0.65 * dyn) : 0);   // the voice may bring its own cutK (a solo horn darker when soft)
     if (cut > 0 && cut < 16000) { const lp = v.filter('lowpass', cut, 0.5); mix.connect(lp); node = lp; }
     if (num(o.hp, 0) > 20) { const hpf = v.filter('highpass', num(o.hp, 0), 0.7); node.connect(hpf); node = hpf; }
     // per-instrument EQ (o.eq = [[Hz, dB, Q | 'hs' | 'ls'], ...]): the mixer's channel EQ on this voice

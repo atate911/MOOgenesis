@@ -268,7 +268,11 @@ horn sings the whole hymn alone over the chorus and the organ while the men take
 hymn over the cellos' counter-line (B); the flute breathes and the commonwealth's oboe glances in (C, the echo); then the crest: the horns
 in full, the trumpets crowning the answer from its ninth bar, the whole chamber open on ah, the timpani (A2); and the solo horn closes it
 alone (E). The horns play the hymn an octave below its written octave, F3 to A4, the horn's own middle register (they were at F4 to A5, its
-top, where a solo horn shouts); the trumpets alone take the written octave at the crest. The dynamic range is wider: the introduction opens at 0.4, the crest reaches 1.12, the end dies to 0.48, and the rubato is up a
+top, where a solo horn shouts); the trumpets alone take the written octave at the crest. The solo horn is played as a soloist plays: a dynamic plan across the four phrases (the statement at three quarters, the answer on top), deeper
+hairpins within each, a delayed vibrato on its long notes, a tone that darkens as it plays softer and opens as it swells, a presence lift, and
+a place of its own — near the centre, at the front of the stage with the bed behind it in the hall, and a window in the texture: while it plays
+the organ and the men sit below D4, the women's hum and the analogue halo above A4, and the men's answer is an octave under it rather than in
+unison with it. The dynamic range is wider: the introduction opens at 0.4, the crest reaches 1.12, the end dies to 0.48, and the rubato is up a
 little. Every sung and blown line carries the engine's new `shape`: each phrase a hairpin, soft at its ends, full at its middle and its top,
 the long notes blooming — a singer's phrasing rather than a sequencer's. The chorus hums (uuh, ooh) until the crest, where it opens to ah.
 
