@@ -37,9 +37,10 @@ const { serve, open } = require('./lib');
     await run(10);
     check('interlude became current', trace.some(x => x.cur && /^drift/.test(x.cur)), trace.map(x => x.cur).join(' > '));
     // 3. a tense bridge into a cue that cannot wait, asked twice
+    const beat = S.cur.P.spb * S.cur.stretch;   // the bridge starts on the next beat of whatever is playing (an interlude's beat is over a second)
     M.play('qaFight', { fade: 1.5, quantize: 'beat', bridge: 'tense' });
     const b1 = S.switchAt; const again = M.play('qaFight', { fade: 1.5, quantize: 'beat', bridge: 'tense' });
-    check('bridge armed on the next beat with the cue behind it', b1 && /^bridge:tense/.test(b1.id) && b1.then && b1.then.id === 'qaFight' && b1.at - A.ctx.currentTime < 0.6, b1 && b1.id);
+    check('bridge armed on the next beat with the cue behind it', b1 && /^bridge:tense/.test(b1.id) && b1.then && b1.then.id === 'qaFight' && b1.at - A.ctx.currentTime < beat + 0.15, b1 && b1.id + ' in ' + (b1 ? (b1.at - A.ctx.currentTime).toFixed(2) : '?') + ' s');
     check('a second request does not restart the chain', again === true && S.switchAt === b1);
     await run(8);
     check('the cue arrived after the bridge', trace.some(x => x.cur === 'qaFight') && trace.findIndex(x => x.cur === 'qaFight') > trace.findIndex(x => /^bridge:tense/.test(x.cur || '')), trace.map(x => x.cur).join(' > '));
