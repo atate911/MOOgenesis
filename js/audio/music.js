@@ -609,7 +609,7 @@
     const sampled = inst.v === 'sample';
     const scaleHas = m => C.scale.indexOf(mod12(m - C.tonic)) >= 0;
     const voices = [];                                   // per part: { m, ev } of the note currently sounding
-    const base = { v1: cfg.v1 || inst.v1, v2: cfg.v2 || inst.v2, att: cfg.att, rel: cfg.rel };
+    const base = { v1: cfg.v1 || inst.v1, v2: cfg.v2 || inst.v2, att: cfg.att, rel: cfg.rel, width: cfg.width };
     const sing = (j, m, beat, L, k, first) => {           // one phrase of one voice: staggered entry, a small swell, breath-length
       const dyn0 = (soft ? 0.3 : 0.55) + (soft ? 0.12 : 0.2) * (k % 2), dt = first ? j * 0.16 + rng() * 0.08 : j * 0.04 + rng() * 0.05;
       return emit(C, 'choir', inst, s.start + beat, m, Math.max(0.5, L), vel * (0.9 + 0.1 * (k % 2)), Object.assign({}, base, { pan: (j - (n - 1) / 2) * 0.35, dt, dyn: dyn0, swell: dyn0 + (soft ? 0.22 : 0.18) }));
@@ -686,7 +686,7 @@
         const dt = (rng() - 0.5) * 0.012;
         if (graceP && nt.dur >= 1.5 && rng() < graceP) emit(C, ly, inst, s.start + off - 0.09, foldRange(inst, stepMidi(C, step - 1, 0)), 0.09, vel * 0.55, { art: 1, dt: 0 });
         const sw = swellK && nt.dur >= 2 ? { dyn: clamp(vel * C.lvAt(s.start + off) * (1 - swellK), 0.12, 1), swell: clamp(vel * C.lvAt(s.start + off + nt.dur), 0, 1) } : null;
-        emit(C, ly, inst, s.start + off, m, nt.dur, vel, Object.assign({ art: art, dt: dt, pan: spec.pan }, sw || {}));
+        emit(C, ly, inst, s.start + off, m, nt.dur, vel, Object.assign({ art: art, dt: dt, pan: spec.pan, width: spec.width }, sw || {}));
         if (echoP && (!strong || spec.echo) && rng() < echoP) emit(C, ly, inst, s.start + off + 0.04, foldRange(inst, m + 12), Math.min(nt.dur, 1) * 0.8, vel * 0.3, { art: art, pan: (rng() - 0.5) * 0.8 });
         if (harm) {
           let hm = stepMidi(C, step + harm, 0);

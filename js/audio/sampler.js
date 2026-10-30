@@ -416,6 +416,15 @@
       const f = v.filter(e[2] === 'hs' ? 'highshelf' : e[2] === 'ls' ? 'lowshelf' : 'peaking', e[0], typeof e[2] === 'number' ? e[2] : undefined);
       f.gain.value = e[1]; node.connect(f); node = f;
     }
+    // the voice's width (o.width, 0..1; 1 as recorded): a wide stereo recording (the choirs, the sections) narrowed toward one place by
+    // scaling its side against its mid, so a sung line can stand at the centre as one voice while the recording's room stays around it
+    const width = o.width !== undefined ? clamp(num(o.width, 1), 0, 1) : 1;
+    if (width < 1) {
+      const sp = v.add(ctx.createChannelSplitter(2)), mg = v.add(ctx.createChannelMerger(2)), a = (1 + width) / 2, b = (1 - width) / 2;
+      const ll = v.gain(a), lr = v.gain(b), rl = v.gain(b), rr = v.gain(a);
+      node.connect(sp); sp.connect(ll, 0); sp.connect(lr, 0); sp.connect(rl, 1); sp.connect(rr, 1);
+      ll.connect(mg, 0, 0); rl.connect(mg, 0, 0); lr.connect(mg, 0, 1); rr.connect(mg, 0, 1); node = mg;
+    }
     node.connect(env); env.connect(v.out);
     const vib = o.vib !== undefined ? o.vib : inst.vib;
     const detHum = hum > 0 ? (eng.rand() * 2 - 1) * 3 * hum : 0;
