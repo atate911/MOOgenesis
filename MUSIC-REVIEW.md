@@ -263,8 +263,12 @@ Twenty-two pieces compile to different notes after these steps; the QA (27 check
 
 ## After the plan: the main theme, First Light, the loops, a second leitmotif
 
-**The main theme** is rebuilt around the horn, as asked. The chorus hums on the tonic and the solo horn states the call over it; the solo
-horn sings the whole hymn alone over the chorus and the organ while the men take up the answer (A1); the horn section joins the men on the
+**The main theme** is rebuilt around the horn, as asked. It opens with the men alone, open and present, singing the commonwealth's climb
+(the second leitmotif's head, 1 2 3 5) on the hymn's own harmony, one chime at the very start and the deep pedal rising under them, a faint
+shimmer high above: solemn and vast. The horn's call answers in its heroic register as the strings, a chime and the timpani's pulse join. An
+earlier opening hummed on the tonic for fourteen seconds at a third of the level before anything happened, over the organ's low mids, and
+read as muddy and idle; measured on the first forty seconds the men alone now sit at -19 LUFS, the call at -15 and the strain at -17. Then
+the solo horn sings the whole hymn alone over the chorus and the strings while the men take up the answer an octave under it (A1); the horn section joins the men on the
 hymn over the cellos' counter-line (B); the flute breathes and the commonwealth's oboe glances in (C, the echo); then the crest: the horns
 in full, the trumpets crowning the answer from its ninth bar, the whole chamber open on ah, the timpani (A2); and the solo horn closes it
 alone (E). The horns play the hymn an octave below its written octave, F3 to A4, the horn's own middle register (they were at F4 to A5, its

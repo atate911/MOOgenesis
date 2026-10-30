@@ -15,6 +15,9 @@ Versions follow `MAJOR.MINOR.PATCH`; the live version is the `VERSION` file.
 - The main theme rebuilt around the horn: the chorus hums and the solo horn states the call, then sings the whole hymn over the chorus; the
   horn section joins the men; the crest has the horns in full with the trumpets crowning the answer and the chamber open on ah, with the
   timpani; the solo horn closes it. A wider dynamic range, and every line phrased with the engine's new `shape` (a hairpin over each phrase).
+- The title opens with the men alone, singing the commonwealth's climb on the hymn's harmony, a chime and a deep pedal rising under them,
+  and the horn's call answers them as the strings join; the strings rather than the organ under the solo; a little less hall and a touch
+  more presence on the whole piece.
 - The title's horns forward and rising above: the solo horn 2 dB above its bed (it was 6 dB under), brighter, every long note swelling;
   at the build and the crest the horn section high above the men in the written octave, the trombones under it and the trumpets on the
   answer, in the Roll Tide manner. A line's `swell`. The sampler's dynamic layers hand over briefly instead of blending (two recordings
