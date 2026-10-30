@@ -36,6 +36,12 @@ false instrument:
 Fifty-one pieces compile to slightly different notes after the guard: in every case a note or a register that no player could give.
 The eighteen others are untouched. All 840 seam pairings compile, the QA passes, and the lint reports no problems.
 
+- **The main theme** changed chord every two beats through its A sections under the organ, and the hymn in the horn sat on a reduced
+  lead bus under the choir, blurred by a parallel third at the climax. It is re-harmonised one chord to a bar, each chord chosen for the
+  tune's own notes (so no note of the leitmotif is snapped onto a chord, where twelve percent were), the organ changes are regular and
+  hymn-like, and the leitmotif is in front: the horn alone, then the men over the cellos' counter-line, then the full chamber with the
+  trumpets doubling at the crest.
+
 ## What remains (judgment, not errors)
 
 - **Low thirds.** Four pieces spend most of their length with a third (or a second) sounding below C3: The Chorale (the organ, the
@@ -82,7 +88,7 @@ The total is out of a hundred. Readings (a piece transformed by the engine) are 
 |---|---|---|---|---|---|---|---|---|---|---|---|---|
 | 1 | First Light (early) | map | 9 | 8.5 | 8 | 9 | 9 | 9.5 | -1.4 | +2.5 | **89.6** | The clearest arc on the map (0.3 to 1.05 and back to 0.4), a dawn theme that grows by climbing the chord, the hymn at the sunrise with both choirs; every strong beat sits on the chord. it reads as the first years, and it seams well. Not a 10 only because its harmony is simple (four chords). Sounds most like Noon (brass chorale) and Wonder (calm exploration). |
 | 2 | The Long Night (passacaglia) | map | 9 | 9.5 | 9 | 8 | 9 | 8.5 | -2.2 | +2.0 | **88.3** | A real form (a ground and seven variations, each a texture of its own), no melodic snaps at all, grave and patient. the strongest late-game and war piece. Held back only by the thick low register in its full variations. Sounds most like The Abyss (phrygian) and Defeat. |
-| 3 | Main theme: the hymn | cue | 8.5 | 7.5 | 8 | 8.5 | 9.5 | 10 | -1.3 | +0.2 | **86.0** | The hymn is the score's best tune and the piece builds to a true climax (level 1.08) and settles; the organ-and-men scoring is distinctive. it is the leitmotif every other piece quotes, and the title screen's job is exactly this. Sounds most like The Chorale (rare) and The Chorale, at war. |
+| 3 | Main theme: the hymn | cue | 9 | 7.5 | 8 | 9 | 9.5 | 10 | -1.3 | +0.2 | **87.7** | The hymn is the score's best tune, and the piece now harmonises it the way a hymn is harmonised, one chord to a bar chosen for the tune's own notes, so not one note of the leitmotif is bent onto a chord; the horn states it alone, the men take it up over the cellos' counter-line, the full chamber sings it at the crest with the trumpets, and the organ and the deep pedal carry it to a true climax. it is the leitmotif every other piece quotes, and the title screen's job is exactly this. Sounds most like The Chorale (rare) and The Chorale, at war. |
 | 4 | The Watch (nocturne) | map | 8.5 | 8.5 | 9 | 8.5 | 8 | 7.5 | 0 | +2.5 | **85.8** | The richest harmony on the map (ten chord types, add9 and sus4), a walking pizzicato bass, a soft solo trumpet whose line is its own; every strong beat on a chord tone. a nocturne for the quiet turns; its tubular bells were an octave high; corrected. |
 | 5 | The Vigil (sung chorale) | map | 8.5 | 8 | 8 | 8.5 | 9 | 9 | -1.9 | +2.3 | **85.7** | A sung chorale with a real plan (men alone, SATB, an organ verse, a descant, brass only at the crest) on a theme shared with the rare tenth piece. the late empire's night watch, and the choir interlude leads into it naturally. Its tubular bells were an octave high; corrected. Sounds most like The Chorale (rare) and The Chorale, at war. |
 | 6 | The Procession | cue | 8.5 | 8 | 8 | 8.5 | 9 | 9 | -2.1 | +2.0 | **85.2** | The best-built cue (theme, big phrase over the flat-sixth lift, trio, hymn, return), a long-breathed horn line over low brass on the step. it carries the council and the war programme and is rare on the map, so it stays an occasion. A few of its lead notes (13%) are snapped onto the chords. Sounds most like Council in state and Council fanfare (the older cue). |
