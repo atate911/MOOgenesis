@@ -156,6 +156,54 @@ The total is out of a hundred. Readings (a piece transformed by the engine) are 
 | 68 | Klackon theme, hostile | reading | 5 | 4.5 | 6.5 | 4.5 | 7 | 4.5 | -3.0 | 0 | **51.0** | A reading: buzzing saw swarms; the base theme is already electronic, so the transform adds little. Sounds most like Meklar theme, hostile and Battle, driving. |
 | 69 | Meklar theme, hostile | reading | 5 | 4 | 5 | 4.5 | 7 | 4.5 | -3.0 | 0 | **48.0** | A reading: a harsh clock; the base theme is already a machine, so the transform adds little. Sounds most like Battle, driving and Klackon theme, hostile. |
 
+## The plan: the map, its interludes and its bridges
+
+Ten steps, in the order they should be done, each aimed at the issues above that a player would actually hear on the map and at the
+seams into and out of the cut scenes. The cues themselves (battles, council, endings) are out of scope here except where the map
+meets them.
+
+1. **Clear the low register across the map.** A rule in the chord voicer: a second or a third between two voices below C3 costs,
+   so the voicer prefers the open fifth or an octave down there (the low-interval limit every orchestration book teaches). Then the
+   four worst pieces by hand, as the main theme was done: the men's choir above the bass pedal's third, the analogue pad and the
+   organ from middle C's octave. The Chorale (85% of its length in close low intervals), The Frontier (85%), The Abyss (81%), The Tide
+   (65%), The Vigil (57%) and The Lanes (45%) are the targets; the proof is the review tool's mud column falling under 15%.
+2. **Harmonise the tunes to their notes, not the notes to the chords.** Where the engine snaps a written melody note onto the chord,
+   the heard tune is not the written one. Re-harmonise The Abyss (45% of lead notes snapped), The Tide (22%), The Chorale (19%),
+   The Cradle (13%) and Wonder (9%) the way the title was: one chord to a bar chosen for the tune's own notes, cadences at the phrase
+   ends, and the modal notes (the phrygian step, the lydian fourth) marked to keep where the colour is the point. Proof: snaps at zero
+   in the review tool, the written phrase audible.
+3. **Break the "still" formula.** Fifteen pieces put the men's one sung phrase over a swell in their quiet middle; it is the single
+   biggest reason the map pieces sound alike. Keep it in five (Deep Field, The Abyss, The Watch, The Frontier, The Vigil) and give the
+   others a still of their own: a solo instrument alone, the harp, a pedal with the bells, the women alone, nothing but the hall.
+4. **Thin the sparkle.** The celeste-or-glockenspiel sparkle layer runs through twenty of the twenty-two map pieces. Leave it to the
+   planetarium pieces and the nocturne; take it out of the brass chorale, the march, the sarabande, the canon and the passacaglia, which
+   have their own points of light.
+5. **Separate the pairs that sound the same.** Measured likeness above 0.9 between Deep Field and The Beacon, The Nebula and The
+   Beacon, The Vigil and The Chorale, The Long Night and The Abyss, First Light and Noon. For each pair, one piece changes its bed
+   (the air pad for the strings, the cellos for the violas, the organ for the analogue), its lead voice or its bell, so the two are
+   kin and not twins. Proof: likeness under 0.88 for every map pair.
+6. **The interludes: fewer twins, no marimba.** The harp and the violas interludes are the same bed (likeness 0.98); give the harp
+   interlude the air pad and the soft organ instead of the strings. Retire the marimba pulse or rewrite it as the one interlude with a
+   held low string note and nothing else; the seams already avoid it after a choir or brass piece.
+7. **Bridges that start where the music is.** The two bridges are entirely in the cue's key, so a map piece in D♭ cut into a battle in
+   D minor jumps a tritone in five seconds. Give the bridges the modulating opening the interludes have: their first bar on the outgoing
+   tonic, their second on the cue's dominant, at the outgoing pulse. Then add two more: a dark bridge (low strings, a tam-tam, a sunk
+   pedal) for Orion and the Antarans, and a bright one (one brass swell, the harp) for victory and the council, and route the news bed
+   and the spy panels through the calm bridge both ways.
+8. **The breath for every change, not only the director's.** The long quiet interlude plays only when the director chooses the next
+   piece; a programme change (war declared, peace made, a screen returning to the map) takes the plain seam. Let the soft change take
+   the breath too when the two pieces are far apart, and let the return from a battle land on the quiet half of the next piece, not its
+   first bar.
+9. **Levels across the seams.** Render every map piece and interlude whole and bring their integrated loudness within two decibels of
+   one another, the interludes three to four below the pieces, so no seam is a step up or down; then listen through one hour with the
+   director and the new seams and fix anything that still jumps. The headless render was cut short in this session; run it again.
+10. **Form and length where they hurt.** The Lantern loses its second trio and comes down from six minutes to four. The eight
+    planetarium pieces share one form (A1, A2, B, C, breath, A3, B2, E) and one climax device (the melody doubled a third below);
+    give each of the eight its own order of sections and its own crest, so the oldest pieces stop sounding like one piece in eight keys.
+
+Steps 1, 2 and 7 are the ones a player hears first; 3 to 6 are what makes the map feel like twenty-two pieces rather than one;
+8 to 10 are polish. Each step ends with the lint, the QA, the review tool and the compile-hash listing of exactly which pieces changed.
+
 ## By group
 
 **Map.** The strongest map pieces are the ones with real forms and ideas of their own: the sunrise, the passacaglia, the nocturne, the sung chorale, the sarabande and the survey's growing cells. The nocturne,
