@@ -31,7 +31,14 @@ Loop seams (the user heard clicks / a looping flutter on held notes): `sampler.j
 (tail of the loop into the lead-in before loopStart, n = min(loop/4, 300 ms, loopStart - 20 ms), linear, once per buffer+loop, `S.loopXf`,
 `?loopxf=0` to hear the old loops). Audit scripts lived in the scratchpad: decode each zone with ffmpeg, measure |x[ls]-x[le-1]|/RMS and the
 correlation of the 30 ms before loopEnd with the 30 ms before loopStart; before: 67/218 poor seams, oboe/clarinet corr 0.5-0.8 with loops as
-short as 0.13 s; after: corr 1.00 everywhere. The director (music.js, 'the director'): map pieces carry `tags: { solitude, contact, tension, war, grief, grandeur, energy, dark }` (0..1); `Music.setSituation(q)`
+short as 0.13 s; after: corr 1.00 everywhere. Layout since this session: `js/audio/music.js` = engine; `js/audio/score/{themes,cues,map,races,programme}.js` = the score (manifest order; the
+test page tools/test-audio.html lists them too). Themes: `Music.defineThemes({group: {NAME: phrase}})`, quoted as `'@group.NAME'` (` x2` / ` /2` scale
+the values) and resolved in `prepare()`, which records `P.themes`; `quotes: [...]` declares a hand-adapted quotation; `Music.themeIndex()`. Motifs:
+`Music.setMotif(id | {ph, inst})` (races carry `motif` / `motifInst`, the procession `motif: '@hymn.K'`), spent by the next `interludeFor(..., {motif})`
+(the interlude's A section plays it once); soundscape.js sets it on a newly met race and when `readState().council >= 0.5` (Council.colonised >=
+threshold, next sitting within 6 years; `q.council` also lifts pieces tagged `ceremony`). Checks: `node tools/score-lint.js [--strict]`, `node
+tools/qa/music.js`. The compile hash of all 69 tracks was identical before and after the split and the theme conversion.
+The director (music.js, 'the director'): map pieces carry `tags: { solitude, contact, tension, war, grief, grandeur, energy, dark }` (0..1); `Music.setSituation(q)`
 takes the game's reading on the same axes (soundscape.js `situation()`, from `readState()` — the era's components plus own colonies, fleet peaks and
 a remembered war / loss: `warMem` decays 0.88 a turn, `griefMem` 0.9), `pickNext(pl, last)` weights candidates by `exp(4 * affinity)` × recency
 (0.08 inside 25 min, 1 after 70) × circle-of-fifths distance from the last piece (relative major/minor 1.25, a fifth 1.15 … four steps 0.7; the same

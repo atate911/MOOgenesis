@@ -98,6 +98,7 @@ window.MOO_MANIFEST = {
     'js/audio/audio.js',
     'js/audio/sampler.js',
     'js/audio/music.js',
+    'js/audio/score/themes.js', 'js/audio/score/cues.js', 'js/audio/score/map.js', 'js/audio/score/races.js', 'js/audio/score/programme.js',   // the score: loaded after the engine, in this order
     'js/audio/sfx.js',
 
     // ---- ui foundation ----

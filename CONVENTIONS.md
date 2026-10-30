@@ -73,5 +73,17 @@ Colour semantics are fixed: gold = BC/money, ember = industry, leaf = food/growt
   `read_console_messages`, and **close your tab when finished**. Prefer fixing what you see over describing it.
 - Final reply: **≤150 words** — files written, public API (one line each), known gaps. No code dumps.
 
+## The music (engine and score)
+- `js/audio/music.js` is the engine only: notation, generators, the player, the scheduler, the director. The score lives in `js/audio/score/`
+  and loads after it, in manifest order: `themes.js` (the shared themes, quoted as `'@hymn.H1'`), `cues.js` (title, battle, council, procession,
+  news, endings, espionage), `map.js` (the exploration pieces, interludes, bridges), `races.js` (the race themes; hostile readings derived),
+  `programme.js` (which pieces play when: programmes, moods, rotations). A piece is `Track(id, def)`; the engine's notation is documented in
+  the header of music.js.
+- Every map piece carries `tags` for the director (solitude, contact, tension, war, grief, grandeur, energy, dark, 0..1), an `eraWin` if it
+  belongs to a phase, and quotes at least one shared theme (by reference, or `quotes: ['hymn']` for a hand-adapted reading). New pieces get a
+  `trim` from `node tools/audio-report.js --tracks <id> --json r.json` + `node tools/audio-trims.js r.json --apply`.
+- Check a change with `node tools/score-lint.js` (schema, instruments, forms, phrases, themes, determinism, the programme's lists; `--strict`
+  in a release pass) and `node tools/qa/music.js` (the seams in real time: directed programme, soft change, bridges, motif, snapshot / restore).
+
 ## Namespaces & key contracts (filled in as modules land)
 `MOO.Gfx.{Icons,Space,Planets,Ships,Portraits,Fx,Scenes}` · `MOO.Audio.{init,Music,SFX}` · `MOO.UI.*` · `MOO.Data.*` · `MOO.Sim.*` · `MOO.AI.*` · `MOO.Game`

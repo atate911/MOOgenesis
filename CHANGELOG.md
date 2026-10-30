@@ -29,6 +29,17 @@ Versions follow `MAJOR.MINOR.PATCH`; the live version is the `VERSION` file.
   that is playing reaches its next breath or section line, an interlude in the new key follows, and only then the new programme's first
   piece enters, with the long seam fades of the rotation. Two more interludes join the bridges between pieces: the choir alone, and the
   violas with a trumpet far away. Plucked and bass notes no longer land at identical levels.
+- The score has a shared theme library and a story. The themes the pieces quote (the hymn, the men's phrase, the procession, the
+  chorale, the planetarium's four notes, the tide's rise, the wonder tune, the cradle, the abyss's step) are written once in
+  `js/audio/score/themes.js` and quoted by name; sixty-five copied phrases became references with no note changed, and
+  `Music.themeIndex()` lists which piece carries which theme. The story reaches the music: when a race is first met, the next interlude
+  carries the first bars of that race's theme in the interlude's own voice and key; as the Galactic Council approaches, the procession's
+  call rides the next interlude and the procession itself grows likelier in the programme.
+- The music is split into an engine and a score. `js/audio/music.js` keeps the engine (notation, generators, player, scheduler, director);
+  the pieces live in `js/audio/score/` (themes, cues, map, races, programme), loaded after it. `node tools/score-lint.js` checks the whole
+  score against its schema and the engine's analysis (instruments, forms, phrases, themes, tags, era windows, determinism, the programme's
+  lists), and `node tools/qa/music.js` drives the seams in real time (a directed programme, a soft change on a section line through an
+  interlude, bridges into a fight and back, a motif on an interlude, snapshot and restore, never a silence).
 - A music director chooses the map's pieces. Every map piece now carries tags on eight axes of the game's situation (solitude,
   contact, tension, war, grief, grandeur, energy, dark), and at the end of each turn the soundscape reads the galaxy on the same axes:
   who has been met, how cold relations are, how crowded the player's space is, the fleets around it, whether there is a war (remembered

@@ -83,14 +83,27 @@
       const arms = Math.min(1, 0.6 * theirFleet / (theirFleet + myFleet + 20) + 0.4 * Math.min(1, theirFleet / (60 * n)));
       const t = 0.2 * metK + 0.28 * crowd + 0.2 * arms + 0.12 * (met ? cold / met : 0) + 0.4 * Math.min(1, wars / 2);
       let own = 0; if (S.planets) for (const p of S.planets) if (p.owner === me.id) own++;
-      return { t: Math.max(0, Math.min(1, t)), metK, met, n, crowd, arms, coldK: met ? cold / met : 0, wars, own, stars: S.stars ? S.stars.length : 1, myFleet, theirFleet, turn: S.turn || 0 };
+      const metIds = others.filter(e => { const r = me.relations[e.id]; return r && (r.met || r.contact); }).map(e => e.id + ':' + e.race);
+      // the council: how near the next sitting is (0 far or not yet possible, 0.5 within six years, 1 within three or due)
+      let council = 0; try { const C = M.Sim && M.Sim.Council, c = S.council; if (C && C.colonised && C.threshold && C.colonised(S) >= C.threshold(S) && !(c && (c.over || c.finalWar))) { const every = (M.Data && M.Data.Config && M.Data.Config.COUNCIL_EVERY) || 25, left = c && c.held ? (every - (S.year % every)) % every : 0; council = left <= 3 ? 1 : left <= 6 ? 0.5 : 0; } } catch (e) { council = 0; }
+      return { t: Math.max(0, Math.min(1, t)), metK, met, n, crowd, arms, coldK: met ? cold / met : 0, wars, own, stars: S.stars ? S.stars.length : 1, myFleet, theirFleet, turn: S.turn || 0, metIds, council };
     } catch (e) { return null; }
   }
   // The director's situation: what the galaxy is like for the player right now, on the axes the pieces are tagged with. War and loss are
   // remembered for a while after they pass (a peace is not instantly calm; a lost colony is mourned for some turns).
-  let warMem = 0, griefMem = 0, peakOwn = 0, peakFleet = 0;
+  let warMem = 0, griefMem = 0, peakOwn = 0, peakFleet = 0, metSeen = null;
+  // the story's motifs: a race just met puts the first bars of its theme into the next interlude; the council approaching, the procession's call
+  function motifs(r) {
+    const m = music(); if (!m || !m.setMotif) return;
+    try {
+      if (metSeen) { const fresh = r.metIds.filter(x => metSeen.indexOf(x) < 0); if (fresh.length) m.setMotif('race:' + fresh[fresh.length - 1].split(':')[1]); }
+      else if (r.council >= 0.5 && !m.getMotif()) m.setMotif('procession');
+    } catch (e) { /* audio optional */ }
+    metSeen = r.metIds.slice();
+  }
   function situation() {
     const r = reading || readState(); if (!r) return null;
+    motifs(r);
     const warNow = r.wars > 0 ? 1 : 0; warMem = Math.max(warNow, warMem * 0.88);
     peakOwn = Math.max(peakOwn, r.own); peakFleet = Math.max(peakFleet, r.myFleet);
     const lost = peakOwn > 0 ? (peakOwn - r.own) / peakOwn : 0, fleetLost = peakFleet > 0 ? (peakFleet - r.myFleet) / peakFleet : 0;
@@ -99,7 +112,7 @@
     const metShare = r.n ? r.met / r.n : 0, tension = Math.min(1, 0.45 * r.coldK + 0.3 * r.crowd + 0.35 * r.arms + 0.15 * warMem);
     const solitude = Math.min(1, (1 - metShare) * (r.turn < 70 ? 1 : 0.85) + (metShare === 0 ? 0.15 : 0));
     const grandeur = Math.min(1, 0.55 * Math.min(1, r.own / Math.max(6, r.stars * 0.25)) + 0.45 * era);
-    return { solitude, contact: metShare * (1 - 0.7 * warMem), tension, war: warMem, grief: griefMem, grandeur, energy: 0.5, dark: Math.min(1, 0.8 * Math.max(tension, griefMem, warMem)) };
+    return { solitude, contact: metShare * (1 - 0.7 * warMem), tension, war: warMem, grief: griefMem, grandeur, energy: 0.5, dark: Math.min(1, 0.8 * Math.max(tension, griefMem, warMem)), council: r.council };
   }
   function eraStep() {
     const t = eraTarget();
@@ -151,9 +164,9 @@
     if (!M.Bus) return;
     M.Bus.on('screen', onScreen);
     M.Bus.on('turn:end', onTurnEnd);
-    M.Bus.on('game:new', () => { group = ''; eraSeeded = false; warMem = griefMem = peakOwn = peakFleet = 0; calm(); UI.sfx('confirm'); });
-    M.Bus.on('game:loaded', () => { eraSeeded = false; warMem = griefMem = peakOwn = peakFleet = 0; });
-    M.Bus.on('game:quit', () => { group = ''; eraSeeded = false; warMem = griefMem = peakOwn = peakFleet = 0; calm(); const m = music(); if (m && m.setSituation) { try { m.setSituation(null); } catch (e) { /* ignore */ } } });
+    M.Bus.on('game:new', () => { group = ''; eraSeeded = false; warMem = griefMem = peakOwn = peakFleet = 0; metSeen = null; calm(); UI.sfx('confirm'); });
+    M.Bus.on('game:loaded', () => { eraSeeded = false; warMem = griefMem = peakOwn = peakFleet = 0; metSeen = null; });
+    M.Bus.on('game:quit', () => { group = ''; eraSeeded = false; warMem = griefMem = peakOwn = peakFleet = 0; metSeen = null; calm(); const m = music(); if (m && m.setSituation) { try { m.setSituation(null); } catch (e) { /* ignore */ } } });
   }
   UI.Soundscape = { install, onScreen, moodFor, eraTarget, situation, era: () => era };
   install();
