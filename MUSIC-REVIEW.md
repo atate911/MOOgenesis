@@ -306,11 +306,16 @@ and the bus's side is lifted from 1.15 to 1.3. On a minute each of the Commonwea
 1.1 dB and the stereo correlation falls by 0.03 to 0.10 with the loudness unchanged; `?soundstage=0` plays the old staging, and the player page
 has the Commonwealth's first minute both ways.
 
-**The second leitmotif.** The commonwealth's oboe tune is the procession's first strain; it is now declared the score's second leitmotif and
-glanced at, once a pass, by a solo voice in a four-bar aside of its own (the `echo` section, in the piece's own key, mode and metre) in the
-title (an oboe in the breath), Patience and the Lanes (the oboe), Determination (the solo horn), the Veil (the oboe, in three), the Survey
-(the flute), Noon (a solo trumpet), the Embers (the cello, in three, in the minor), and in full by the horns at the victory, the trumpets
-answering. Fifteen pieces quote it now, with the title's hymn in fifteen.
+**The second leitmotif.** The commonwealth's oboe tune is the procession's first strain; it is now declared the score's second leitmotif.
+A first pass put it in a four-bar aside of its own in eight pieces, which was a cut-in rather than an echo, so it is woven in instead. The
+climb's head (1 2 3 5) fits any tonic bar, so in six map pieces the piece's own tune is drawn toward it in one of its variation readings, in
+the piece's own rhythm and over its own chords: Patience's dotted phrase opens with the climb; Determination's horn theme steps up 1 2 3 5
+in its first bar; the Lanes' oboe tune may open with the whole strain and close on the tonic; Noon's first strain climbs the commonwealth's
+way bent to its own vi; the Survey grows a cell from the climb beside the cells it grows from the hymn's head, and its women's chart may
+sing it; the Veil's oboe plays the strain in three in its ending, where its chords run I V IV I. In the title the breath is a call and an
+answer: the flute's phrase, then an oboe with the commonwealth's tune in the minor over a cadence that leads into the crest. The victory's
+horns state it in full. The Embers are left alone. Fourteen pieces quote it, the title's hymn fifteen; none of the readings bends a note
+except the title's, which holds the third over the dominant as an appoggiatura on purpose.
 
 ## By group
 

@@ -22,9 +22,9 @@ Versions follow `MAJOR.MINOR.PATCH`; the live version is the `VERSION` file.
 - The title's solo horn in its middle register and played as a soloist: a dynamic plan across its phrases (a dynamic mark on a phrase
   token, `H3*1`), deeper hairpins, a delayed vibrato, a tone that darkens when soft, a presence lift, a place near the centre at the front
   of the stage (a layer's own sends), and a window in the texture with the bed below it and a halo above.
-- The commonwealth's oboe tune (the procession's first strain) declared the score's second leitmotif and glanced at, once a pass, in a
-  four-bar aside by a solo voice in the title, Patience, Determination, the Veil, the Survey, the Lanes, Noon and the Embers, and stated by
-  the horns at the victory.
+- The commonwealth's oboe tune (the procession's first strain) declared the score's second leitmotif and woven into six map pieces as a
+  variation reading of each piece's own tune drawn toward its climb, into the title's breath as the oboe's answer to the flute, and stated
+  in full by the horns at the victory.
 - A subtle, wide, live soundstage under every piece: the pads and the chorus sent lightly into the same early-reflection room the lines
   stand in, and the bus's side lifted a little (side/mid up a decibel, correlation down a tenth, loudness unchanged; `?soundstage=0` plays
   the old staging).
