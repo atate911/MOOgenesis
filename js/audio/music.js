@@ -277,6 +277,17 @@
     seqSyn: SYN.seq, arpSawSyn: SYN.arpSaw, moogSyn: SYN.moog, pulseSyn: SYN.pulse, synthSyn: SYN.synth,
   });
   Music._SYN = SYN;
+  // the sounding range of each recording (MIDI, C4 = 60): what the section or the player can give. A pad, choir, arpeggio or sparkle
+  // keeps its register inside it; a written line folds a stray note by an octave, as a player would. The basses have the C extension.
+  const SET_RANGE = { strEns: [28, 100], strEnsTrem: [28, 100], vln1Trem: [55, 100], vlaSus: [48, 88], vcSus: [36, 84], vcTrem: [36, 84], cbSus: [24, 60], cbPizz: [24, 60], subBass: [24, 60],
+    strEnsPizz: [28, 96], strEnsSpic: [28, 96], harp: [24, 103], marimba: [36, 96], celeste: [60, 108], glock: [79, 108], crotales: [84, 108], chimes: [60, 79],
+    hornSus: [41, 81], hornSolo: [41, 81], brassEns: [40, 86], brassStac: [40, 86], tptSus: [52, 86], tptSolo: [52, 86], lowBrass: [28, 65], tbnSus: [40, 72], tubaSus: [26, 65],
+    flute: [60, 96], fluteSus: [60, 96], altoFlute: [55, 91], oboe: [58, 91], corAnglais: [52, 81], clarinet: [50, 91], bassoon: [34, 77],
+    chorus: [40, 81], chorusMen: [38, 69], chorusWomen: [53, 81] };
+  for (const k in INST) if (INST[k].smp && SET_RANGE[INST[k].smp]) INST[k].range = SET_RANGE[INST[k].smp];
+  const inRange = (inst, reg) => { const r = inst.range; if (!r || !reg) return reg; const lo = Math.max(reg[0], r[0]), hi = Math.min(reg[1], r[1]); return hi - lo >= 7 ? [lo, hi] : reg; };
+  const foldRange = (inst, m) => { const r = inst.range; if (!r) return m; while (m > r[1]) m -= 12; while (m < r[0]) m += 12; return m; };
+  Music._range = { SET_RANGE, inRange, foldRange };
   const LAYERS = {
     // (the Sonatina recordings carry their own hall, so the sends are moderate; the bus chorus is off the recorded sections and kept
     //  for the synthesized pads only, where it belongs)
@@ -449,7 +460,7 @@
   function genPad(C, s, cfg, key) {
     key = key || 'pad';
     const inst = resolveInst(cfg.inst, C.inst[key] || DEF_INST[key]);
-    const style = cfg.style || cfg.p || 'sus', reg = cfg.reg || [50, 72], n = (cfg.n || 4) + (C.era > 0.55 ? 1 : 0), vel = num(cfg.vel, 1), rng = C.vrng;
+    const style = cfg.style || cfg.p || 'sus', reg = inRange(inst, cfg.reg || [50, 72]), n = (cfg.n || 4) + (C.era > 0.55 ? 1 : 0), vel = num(cfg.vel, 1), rng = C.vrng;
     let prev = C.prevPad[key];
     const segs = s.R.segs.slice();
     for (let i = 0; i < segs.length; i++) {
@@ -504,7 +515,7 @@
   }
 
   function genArp(C, s, cfg, key) {
-    const P = norm(cfg, ARPS, 'arp'), inst = resolveInst(cfg.inst, C.inst[key] || DEF_INST[key]), reg = P.reg || [55, 84];
+    const P = norm(cfg, ARPS, 'arp'), inst = resolveInst(cfg.inst, C.inst[key] || DEF_INST[key]), reg = inRange(inst, P.reg || [55, 84]);
     const pats = [].concat(P.pat || P.seq), vel = num(P.vel, 0.6), gate = num(P.gate, 0.7), jump = num(P.jump, 0), rng = C.vrng, cache = {};
     for (let bar = 0; bar < s.bars; bar++) {
       const raw = cleanPat(pats[bar % pats.length]);
@@ -589,7 +600,7 @@
   // and slow (the supportive role). The melody, when a piece gives the choir one, is a separate line layer (lead2 / bell2) in the choir's voice.
   function genChoir(C, s, cfg, key) {
     key = key || 'choir';
-    const inst = resolveInst(cfg.inst, C.inst[key] || DEF_INST[key]), reg = cfg.reg || [55, 77], n = cfg.n || 3, vel = num(cfg.vel, 1);
+    const inst = resolveInst(cfg.inst, C.inst[key] || DEF_INST[key]), reg = inRange(inst, cfg.reg || [55, 77]), n = cfg.n || 3, vel = num(cfg.vel, 1);
     let prev = C.prevChoir[key];
     const segs = s.R.segs, soft = !!cfg.soft, rng = C.vrng, spb = C.spb;
     const breathBeats = Math.max(2, Math.round((soft ? 8.0 : 5.2) / spb));
@@ -664,13 +675,15 @@
         const sg = segAt(s.R.segs, off), strong = isStrong(C, off);
         let m = stepMidi(C, step, nt.acc);
         if (!nt.keep && (strong || nt.dur >= 2) && !isChordTone(m, sg.ch) && clashes(m, sg.ch)) { m = snapToChord(m, sg.ch); C.snaps++; }
+        m = foldRange(inst, m);
         const dt = (rng() - 0.5) * 0.012;
-        if (graceP && nt.dur >= 1.5 && rng() < graceP) emit(C, ly, inst, s.start + off - 0.09, stepMidi(C, step - 1, 0), 0.09, vel * 0.55, { art: 1, dt: 0 });
+        if (graceP && nt.dur >= 1.5 && rng() < graceP) emit(C, ly, inst, s.start + off - 0.09, foldRange(inst, stepMidi(C, step - 1, 0)), 0.09, vel * 0.55, { art: 1, dt: 0 });
         emit(C, ly, inst, s.start + off, m, nt.dur, vel, { art: art, dt: dt, pan: spec.pan });
-        if (echoP && (!strong || spec.echo) && rng() < echoP) emit(C, ly, inst, s.start + off + 0.04, m + 12, Math.min(nt.dur, 1) * 0.8, vel * 0.3, { art: art, pan: (rng() - 0.5) * 0.8 });
+        if (echoP && (!strong || spec.echo) && rng() < echoP) emit(C, ly, inst, s.start + off + 0.04, foldRange(inst, m + 12), Math.min(nt.dur, 1) * 0.8, vel * 0.3, { art: art, pan: (rng() - 0.5) * 0.8 });
         if (harm) {
           let hm = stepMidi(C, step + harm, 0);
           if (!isChordTone(hm, sg.ch) && clashes(hm, sg.ch)) hm = snapToChord(hm, sg.ch);
+          hm = foldRange(inst, hm);
           C.key = key + '_h';
           emit(C, ly, inst, s.start + off, hm, nt.dur, vel * num(spec.hvel, 0.7), { art: art, dt: dt, pan: num(spec.pan, 0) * 0.5 - 0.25 });
           C.key = key;
@@ -683,7 +696,7 @@
   // generative bell sparkle (seeded by the composition RNG: identical every loop, a few notes dropped per pass)
   function genSparkle(C, s, cfg, key) {
     const ly = BUS[key], inst = resolveInst(cfg.inst, C.inst[key] || DEF_INST[key]);
-    const reg = cfg.reg || [72, 91], res = cfg.res || 2, dens = num(cfg.dens, 0.5) * 0.5, vel = num(cfg.vel, 0.55) * 0.7, rng = C.crng, vr = C.vrng;
+    const reg = inRange(inst, cfg.reg || [72, 91]), res = cfg.res || 2, dens = num(cfg.dens, 0.5) * 0.5, vel = num(cfg.vel, 0.55) * 0.7, rng = C.crng, vr = C.vrng;
     const pent = cfg.pent !== false, scaleIdx = pent ? [0, 1, 2, 4, 5] : [0, 1, 2, 3, 4, 5, 6];
     const pool = [];
     for (let o = -1; o <= 3; o++) for (const i of scaleIdx) { if (i >= C.scale.length) continue; const m = C.tonic + C.scale[i] + 12 * o; if (m >= reg[0] && m <= reg[1]) pool.push(m); }
@@ -1765,7 +1778,9 @@
       if (!sct.timp) sct.timp = 'two';
       if (typeof sct.lead === 'string') sct.lead = { ph: sct.lead, harm: -2 };
       else if (sct.lead && typeof sct.lead === 'object') { if (SOFT_LEADS[sct.lead.inst]) delete sct.lead.inst; if (sct.lead.harm === undefined) sct.lead.harm = -2; }
-      if (sct.lead2 && typeof sct.lead2 === 'object' && sct.lead2.inst) sct.lead2.inst = 'brassStab';
+      if (sct.lead2 && typeof sct.lead2 === 'object' && sct.lead2.inst) { sct.lead2.inst = 'brassStab'; if (sct.lead2.oct > 0) sct.lead2.oct = 0; }   // the brass has no bells' octave
+      if (sct.lead && typeof sct.lead === 'object' && !sct.lead.inst && sct.lead.oct > 0) sct.lead.oct = 0;
+      if (sct.choir && typeof sct.choir === 'object' && !sct.choir.reg) sct.choir.reg = [41, 62];   // the men sing in their own register
       if (sct.pad && typeof sct.pad === 'object' && sct.pad.inst) sct.pad.inst = 'dark';
     }
     d.variantOf = baseId;

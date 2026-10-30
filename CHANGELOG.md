@@ -45,6 +45,16 @@ Versions follow `MAJOR.MINOR.PATCH`; the live version is the `VERSION` file.
   middle. Only a colour that can be held is carried (strings, the pads, choir, brass, winds; a harp in a pad slot would only tick). Its
   opening level meets the level the piece ended at (within the breath's range). `tools/audio-seams.js` captures four seams from the
   real-time engine as MP3s, with a log of what each seam built; they are on the demo page.
+- Every recorded instrument knows its range. The engine carries the sounding range of each recording (the horn to F5, the tubular bells
+  to F5, the glockenspiel from G5, the crotales from C6, the men's choir to A4, the basses with the C extension); a pad, choir,
+  arpeggio or sparkle keeps its register inside it, and a written line folds a stray note by an octave, as a player would. The review
+  (tools/score-review.js) found the lines written out of reach and they are corrected in the score: the council's horn was an octave
+  above the instrument (the piece's octave shift removed), the sunrise's trumpets an octave too high, the tubular bells in four of the
+  movements and in Orion an octave above their range, the glockenspiel lines in the lantern, the survey, the defeat cue and the Meklar
+  theme an octave below theirs (the defeat cue's lone bell is now the celeste), the crotales used as a lead two octaves below their range
+  in the research cue and the Psilon theme (now the celeste), the Alkari wind chimes and the Silicoid chimes rewritten in range, the
+  determination piece's horn given its middle register for the second strain. The war readings no longer carry a bell line's octave into
+  the brass, and their men's choir sings in its own register.
 - The pivot chords take their time. Each chord of the way into the new key now lasts about five seconds at least, and the first (the old
   tonic) seven or more, so it spans the fade of the piece ending; a long walk round the circle moves on sooner in its middle. Before, a
   chord lasted one outgoing bar, which at a halved pulse could be under three seconds.
