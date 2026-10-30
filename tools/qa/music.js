@@ -40,10 +40,13 @@ const { serve, open } = require('./lib');
     check('interlude became current', trace.some(x => x.cur && /^drift/.test(x.cur)), trace.map(x => x.cur).join(' > '));
     // 3. a tense bridge into a cue that cannot wait, asked twice
     const beat = S.cur.P.spb * S.cur.stretch;   // the bridge starts on the next beat of whatever is playing (an interlude's beat is over a second)
+    const leaving = S.cur.def;   // the interlude: already in the queued piece's key
     M.play('qaFight', { fade: 1.5, quantize: 'beat', bridge: 'tense' });
     const b1 = S.switchAt; const again = M.play('qaFight', { fade: 1.5, quantize: 'beat', bridge: 'tense' });
     check('bridge armed on the next beat with the cue behind it', b1 && /^bridge:tense/.test(b1.id) && b1.then && b1.then.id === 'qaFight' && b1.at - A.ctx.currentTime < beat + 0.15, b1 && b1.id + ' in ' + (b1 ? (b1.at - A.ctx.currentTime).toFixed(2) : '?') + ' s');
     check('a second request does not restart the chain', again === true && S.switchAt === b1);
+    const bp = M._modulation.pivotPath(leaving, M._tracks.qaFight), bprog = b1 && M._tracks[b1.id].sec[0].prog;
+    check('the bridge opens on the tonic it leaves and lands on the cue\'s dominant', bp && bprog === bp[0] + ' ' + bp[bp.length - 1], bprog + ' (from ' + leaving.root + ' ' + leaving.mode + ')');
     await run(8);
     check('the cue arrived after the bridge', trace.some(x => x.cur === 'qaFight') && trace.findIndex(x => x.cur === 'qaFight') > trace.findIndex(x => /^bridge:tense/.test(x.cur || '')), trace.map(x => x.cur).join(' > '));
     // 4. a calm bridge back onto a directed programme, now war-coloured: the director should take the war-tagged piece
@@ -55,10 +58,10 @@ const { serve, open } = require('./lib');
     check('the director leans to the war-tagged piece', b2 && b2.then && /^qa[ABCD]$/.test(b2.then.id) && (draws.qaC || 0) >= 260, 'opened with ' + (b2 && b2.then && b2.then.id) + '; qaC ' + Math.round((draws.qaC || 0) / 4) + '% of 400 draws');
     check('the level tilted up at war, within a decibel', D.gainDb > 0.5 && D.gainDb <= 1.2, D.gainDb.toFixed(2) + ' dB');
     await run(9);
-    // 5. the modulating interlude: opens on the outgoing tonic in the outgoing meter and pulse, walks to the new dominant, glides to the new tempo
+    // 5. the modulating interlude (the violas: a strings bed, so both carried colours have a free slot): opens on the outgoing tonic in the outgoing meter and pulse, walks to the new dominant, glides to the new tempo
     M._define('qaFrom', { bpm: 156, meter: 6, root: 'F', mode: 'major', hidden: true, tens: false, inst: { pad: 'warm', choir: 'choirWomen' }, sec: [{ n: 'A', bars: 4, lv: 0.6, prog: 'I', pad: { p: 'sus', vel: 0.3 }, choir: { n: 3, reg: [55, 77] } }] });   // ends in the women's voices
     M._define('qaTo', { bpm: 50, root: 'B', mode: 'minor', hidden: true, tens: false, inst: { pad: 'analog' }, sec: [{ n: 'A', bars: 4, lv: 0.6, prog: 'i', pad: 'sus' }] });   // opens on the analogue sky
-    const mid = R.interludeFor('drift5', 'qaTo', { from: M._tracks.qaFrom }), md = M._tracks[mid], inS = md.sec.find(x => x.n === 'in'), prog = inS.prog.split(/\s+/), cp = M._compile(mid, 0), lens = cp.bars.slice(0, inS.bars + 1).map((x, i, a) => i ? x - a[i - 1] : 0).slice(1);
+    const mid = R.interludeFor('drift7', 'qaTo', { from: M._tracks.qaFrom }), md = M._tracks[mid], inS = md.sec.find(x => x.n === 'in'), prog = inS.prog.split(/\s+/), cp = M._compile(mid, 0), lens = cp.bars.slice(0, inS.bars + 1).map((x, i, a) => i ? x - a[i - 1] : 0).slice(1);
     const sym = t => t.split(':')[0], firstCh = M._parseChord(sym(prog[0]), 11), lastCh = M._parseChord(sym(prog[prog.length - 1]), 11);   // B = 11; each chord carries its dwell in bars
     check('interlude opens on the outgoing tonic', firstCh.pc === 5 && firstCh.iv.length === 3, prog.join(' '));
     check('interlude arrives on the new dominant seventh', lastCh.pc === 6 && lastCh.iv.indexOf(10) >= 0, prog[prog.length - 1]);
@@ -68,8 +71,11 @@ const { serve, open } = require('./lib');
     check('tempo glides across the opening bars', lens.every((l, i) => i === 0 || l >= lens[i - 1] - 1e-6) && md.bpm === 50, lens.map(l => l.toFixed(2)).join(' '));
     const outS = md.sec[md.sec.length - 1], CO = M._colour;
     check('the voice the piece ends in holds under the opening bars', inS.choir2 && inS.choir2.inst === 'choirWomen' && inS.choir2.soft, JSON.stringify(inS.choir2));
-    check('the voice the next piece opens with is under the last bars', outS.pad2 && outS.pad2.inst === 'analog' && outS.pad2.p === 'swell', JSON.stringify(outS.pad2));
-    check('the alternation is pinned and the template keeps its own voice in the middle', !md.alts && md.inst.arp === 'marimba' && !md.sec[1].choir2, JSON.stringify(md.inst));
+    const carried = ['pad2', 'choir', 'choir2'].find(k => outS[k] && outS[k].inst === 'analog' && outS[k].p === 'swell');   // in whichever sustaining slot the template leaves free
+    check('the voice the next piece opens with is under the last bars', !!carried, carried ? carried + ' ' + JSON.stringify(outS[carried]) : JSON.stringify(outS));
+    check('the alternation is pinned and the template keeps its own voice in the middle', !md.alts && md.inst.pad === 'violas' && !md.sec[1].choir2, JSON.stringify(md.inst));
+    const qs = M._quietStart(M._tracks.qaA);   // the quiet half of a test piece: its E, at half level, after intro, A, breath and B at 240
+    check('a piece knows where its quiet half begins', Math.abs(qs - 20) < 0.5, qs.toFixed(2) + ' s');
     check('the template that fits the colours is the likelier', CO.colourFit(M._tracks.drift6, M._tracks.qaFrom, M._tracks.qaTo) > CO.colourFit(M._tracks.drift5, M._tracks.qaFrom, M._tracks.qaTo) + 0.1, 'drift6 ' + CO.colourFit(M._tracks.drift6, M._tracks.qaFrom, M._tracks.qaTo).toFixed(2) + ' vs drift5 ' + CO.colourFit(M._tracks.drift5, M._tracks.qaFrom, M._tracks.qaTo).toFixed(2));
     // 6. snapshot and restore keep the programme and the director
     const snapshot = M.snapshot();

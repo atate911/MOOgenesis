@@ -8,6 +8,15 @@ Commands: `node tools/check.js` (syntax of every manifest file) · `node tools/r
 Browser-pane tip: animations use requestAnimationFrame, so in the built-in browser pane a tab must be fronted (`tabs_select`) for anything animated (GNN, audiences, scenes, combat) to advance.
 
 ## Session 11 (October 2026) — the score grows, branch `claude/festive-wozniak-7jy03r`
+
+**Latest (the map's plan, steps 6 to 10, and after).** `MUSIC-REVIEW.md` has the plan, what each of its ten steps did, and the work after
+it: the main theme rebuilt around the solo horn and the horn section with a wider dynamic range and phrase shaping (`shape` on a line), the
+commonwealth's oboe tune as the second leitmotif (an `echo` section in nine pieces), the sampler's loop treatment (`js/audio/sampler.js`:
+relocate, tune, even by band, even the level, blend the seam; `?loop...=0` flags to compare) and the music bus's band alignment
+(`js/audio/audio.js`, the multiband stage). Check with `node tools/qa/music.js` (27 checks), `node tools/qa/loops.js` (every looped zone held
+through the bus), `node tools/score-lint.js`, `node tools/score-review.js`. Levels: map pieces at -17 LUFS integrated, interludes at -20.5,
+bridges near -18 (`CONVENTIONS.md`, the music section). The player page (the artifact) carries the live engine and the renders of the main
+theme, First Light and the Commonwealth.
 Twelve movements added to `js/audio/music.js` (`galaxy11`..`galaxy22`), all for the sampled orchestra and chorus. Each has a principal theme and a
 foundation of its own (a planetarium drift and a sequence in Jonn Serrie's manner — `analog`/`air`/`subSwell`/`glass`/`crystal`, `fx.dly` 2.2-2.8, chords
 every four bars; the user disliked the 5/4 clockwork and the 7/4 dance that stood here first — a passacaglia's variations, a nocturne's walking bass,

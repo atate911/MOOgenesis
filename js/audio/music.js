@@ -645,8 +645,9 @@
   function genLine(C, s, cfg, key) {
     const spec = typeof cfg === 'string' ? { ph: cfg } : cfg;
     const ly = BUS[key], inst = resolveInst(spec.inst, C.inst[key] || DEF_INST[key]);
-    const vel = num(spec.vel, key === 'lead' ? 0.9 : 0.7), art = num(spec.art, inst.v === 'pluck' || inst.v === 'bell' || inst.v === 'chime' ? 1 : 0.97);
+    const vel0 = num(spec.vel, key === 'lead' ? 0.9 : 0.7), art = num(spec.art, inst.v === 'pluck' || inst.v === 'bell' || inst.v === 'chime' ? 1 : 0.97);
     const harm = spec.harm || 0, oct = spec.oct || 0, rng = C.vrng, brassy = inst.v === 'brass' || inst.v === 'flute', graceP = num(spec.grace, brassy ? 0.18 : 0), echoP = num(spec.echo, brassy ? 0 : 0.07);
+    const shape = clamp(num(spec.shape, 0), 0, 0.8);   // shape: each phrase played as a hairpin — soft at its ends, full in its middle and at its top, the long notes blooming (a singer's or a horn's phrasing)
     const ref = key === 'lead' ? s.R.L.lead2 : s.R.L.lead;                       // '@': double the other line (lead2 follows lead, lead follows lead2)
     let phs = spec.ph === '@' ? (ref && (ref.ph || ref)) : spec.ph;
     if (Array.isArray(phs)) {                                                   // several written readings of the line: one per performance
@@ -666,8 +667,10 @@
       const ph = parsePhrase(C.P.src[pm[1]], C.meter), md = parseMods(pm[2]);   // read in the section's meter (an interlude's opening bars may differ)
       if (restP && rng() < restP) { cur += ph.bars * C.meter; continue; }        // the player leaves this phrase out: a breath in the line
       const first = ph.notes.length ? ph.notes[0].d - 1 : 0;
+      const span = shape ? ph.notes.reduce((x, n) => Math.max(x, n.off + n.dur), 0) || 1 : 1, dLo = shape ? Math.min(...ph.notes.map(n => n.d)) : 0, dHi = shape ? Math.max(...ph.notes.map(n => n.d)) : 0;
       for (const nt of ph.notes) {
         const off = cur + nt.off;
+        const vel = shape ? vel0 * (1 - shape * (1 - Math.min(1, 0.65 * Math.pow(Math.sin(Math.PI * Math.min(1, (nt.off + nt.dur / 2) / span)), 0.6) + 0.35 * (nt.d - dLo) / Math.max(1, dHi - dLo) + (nt.dur >= 2 ? 0.1 : 0)))) : vel0;
         if (off >= s.beats - 1e-6) break;
         let step = nt.d - 1;
         if (md.inv) step = 2 * first - step;
@@ -1192,7 +1195,7 @@
   const fifthsDist = (a, b) => { const d = Math.abs(FIFTHS[centre(a)] - FIFTHS[centre(b)]); return Math.min(d, 12 - d); };   // 0..6 steps round the circle
   // two pieces far apart in feel or key: the seam between them gets a quiet, longer interlude and a wider fade (the breath)
   const farApart = (a, b) => { const ta = (a && a.tags) || {}, tb = (b && b.tags) || {}; return Math.abs(num(ta.energy, 0.5) - num(tb.energy, 0.5)) >= 0.45 || Math.abs(num(ta.dark, 0.3) - num(tb.dark, 0.3)) >= 0.5 || (a && b && fifthsDist(a, b) >= 4); };
-  const QUIET = { drift: 1, drift3: 1, drift6: 1 };   // the interludes that breathe: a pad and a few points of light, the voices, the choir alone
+  const QUIET = { drift: 1, drift3: 1, drift5: 1, drift6: 1 };   // the interludes that breathe: a pad and a few points of light, the voices, one held note, the choir alone
   function pickNext(pl, last) {
     const now = A.engine ? A.engine.ctx.currentTime : 0, lastDef = DIR.lastPiece ? TRACKS[DIR.lastPiece] : null;
     const lastRare = !!(pl.rare && DIR.lastPiece && pl.rare.ids.indexOf(DIR.lastPiece) >= 0);
@@ -1319,7 +1322,7 @@
       const edge = where === 'head' ? (i < 2 ? 3 : 1) : where === 'tail' ? (i >= nS - 2 ? 3 : 1) : 1, w0 = num(sc.bars, 4) * secLevel(sc) * edge;
       for (const key in GEN) {
         const cfg = sc[key]; if (!cfg || key === 'bass' || key === 'drums' || key === 'perc' || key === 'timp') continue;   // the bass and the drums are not a colour: every piece has them
-        const w = w0 * (typeof cfg === 'object' ? num(cfg.vel, 1) * (1 - num(cfg.skip, 0)) : 1) * ((LAYERS[BUS[key]] || {}).lvl || 0.7) / alts.length;
+        const w = w0 * (typeof cfg === 'object' ? num(cfg.vel, 1) * (1 - num(cfg.skip, 0)) * (SUSTAIN[key] && cfg.n ? Math.min(cfg.n, 4) / 3 : 1) : 1) * ((LAYERS[BUS[key]] || {}).lvl || 0.7) / alts.length;   // a one-voice bed is a third of the colour
         for (const alt of alts) { const f = familyOf(instName(cfg, key, Object.assign({}, def.inst || {}, alt))); if (f) out[f] = (out[f] || 0) + w; }
       }
     });
@@ -1361,7 +1364,12 @@
   // the interlude for the piece that follows: the template transposed to its key and mode (cached as a hidden track 'drift:<id>'); with
   // o.from (the piece ending) its opening bars keep that piece's meter and pulse, walk the pivot chords from its key while the tempo glides to
   // the new piece's, and the body continues in the new meter at the new tempo
-  const outgoing = p => p && !p.stopped && !p.def.interlude ? p.def : DIR.lastPiece ? TRACKS[DIR.lastPiece] : null;   // the piece an interlude leaves
+  const outgoing = p => p && !p.stopped ? (p.def.interlude ? Object.assign({}, p.def, { interlude: false, bridge: false }) : p.def) : DIR.lastPiece ? TRACKS[DIR.lastPiece] : null;   // the piece (or the interlude, already in the next key) the seam leaves
+  // where a piece's quiet half begins: its first section at or under half level and four bars or more, after the loop point (seconds into the first pass); 0 when it has none
+  function quietStart(def) {
+    try { const P = prepare(def), r = compilePass(def, 0); for (let i = (P.loopIdx || 0) + 1; i < r.wraps.length; i++) { const w = r.wraps[i]; if (w.bars >= 4 && Math.max(w.R.lv0, w.R.lv1) <= 0.5 && w.R.tens !== false) return w.t0; } for (let i = (P.loopIdx || 0) + 1; i < r.wraps.length; i++) { const w = r.wraps[i]; if (w.bars >= 4 && Math.max(w.R.lv0, w.R.lv1) <= 0.52) return w.t0; } } catch (e) { /* a piece without a still */ }
+    return 0;
+  }
   function interludeFor(template, nextId, o) {
     const T = TRACKS[template], N = TRACKS[nextId], long = !!(o && o.long);
     if (!T || !N || N.interlude) return null;
@@ -1389,7 +1397,10 @@
       sct.prog = toks.length > 1 && prog ? prog : toks.map(t => respell(t, oldScale, newScale)).join(' ');   // the consonant walk of each mode; a lone chord is simply re-spelled
     }
     if (N.tonic !== undefined) d.tonic = N.tonic; else if (N.oct) d.oct = N.oct;
-    if (from) {
+    if (from && T.bridge) {                               // a bridge: its first bar on the outgoing tonic, its second on the cue's dominant seventh, at its own pace
+      const path = pivotPath(from, N), B = d.sec[0];
+      if (path && B) B.prog = path[0] + ' ' + path[path.length - 1];
+    } else if (from) {
       const inS = d.sec.find(x => x.n === 'in'), path = pivotPath(from, N), k = pulseK(from, N.bpm);
       if (inS) {
         inS.meter = (from.meter || 4) / k; inS.bpm = from.bpm / k; inS.bpmTo = N.bpm;     // the outgoing bars and pulse, gliding to the new tempo
@@ -1413,8 +1424,8 @@
       const reg = c.reg || (c.fam === 'choir' ? [55, 77] : [50, 72]), spec = { inst: c.name, n: Math.min(c.n || 3, 3), reg, vel };
       sc[slot] = SUSTAIN[slot] && /choir/.test(slot) ? Object.assign(spec, { soft: true }) : Object.assign(spec, { p: 'swell' });
     };
-    if (from) carry(inS, colourOf(from, 'tail'), 0.5);
-    if (outS && outS !== inS) { carry(outS, colourOf(N, 'head'), 0.45); if (outS.lv !== undefined && !outS.cres) { const lv = secLevel(N.sec[0]); outS.cres = [outS.lv, clamp(lv * 0.8, outS.lv, 0.5)]; delete outS.lv; } }
+    if (from && !T.bridge) carry(inS, colourOf(from, 'tail'), 0.5);
+    if (outS && outS !== inS && !T.bridge) { carry(outS, colourOf(N, 'head'), 0.45); if (outS.lv !== undefined && !outS.cres) { const lv = secLevel(N.sec[0]); outS.cres = [outS.lv, clamp(lv * 0.8, outS.lv, 0.5)]; delete outS.lv; } }
     d.hidden = true; d.interlude = true; d.desc = (T.desc || template) + ' (in the key of ' + nextId + ')';
     return Track(id, d).id;
   }
@@ -1426,7 +1437,7 @@
     if (opts.bridge && S.cur && !S.cur.stopped && S.cur.id !== id && !S.cur.def.bridge && TRACKS['bridge:' + opts.bridge]) {
       // a cue that cannot wait still gets a way in: a two-bar bridge in its key starts on the next beat, the old piece fades under it, and the
       // cue enters as the bridge crests
-      const b = interludeFor('bridge:' + opts.bridge, id);
+      const b = interludeFor('bridge:' + opts.bridge, id, { from: outgoing(S.cur) });
       if (b) {
         const len = compilePass(TRACKS[b], 0).len, at = S.cur.nextBoundary('beat');
         const then = { id, opts: Object.assign({}, opts, { bridge: undefined, quantize: false, fade: num(opts.fade, 1.5), inFade: Math.min(1.6, num(opts.fade, 1.5)), oldFade: 1.2 }), at: at + len - 0.7 };
@@ -1443,6 +1454,7 @@
     if (!opts.keepPlaylist) { S.playlist = null; S.plWait = null; }
     const p = new Player(eng, def, { loop: opts.loop !== false, intensity: S.intensity });
     if (opts.from > 0) { p.shift = num(opts.from, 0); p.skipBefore = 0; }   // start part-way through the first pass (a demo, a test)
+    else if (opts.quiet) { const q = quietStart(def); if (q > 0) { p.shift = q; p.skipBefore = 0; } }   // land on the piece's quiet half (back from a fight)
     if (!def.hidden || def.variantOf) { const pid = def.variantOf || id; DIR.hist[pid] = eng.ctx.currentTime; DIR.lastPiece = pid; }   // a war-time reading counts as its piece
     if (S.cur) { S.cur.fadeOut(num(opts.oldFade, fade)); S.old.push(S.cur); }    // oldFade: let a piece that is ending ring out under the next one
     S.cur = p;
@@ -1508,7 +1520,7 @@
       const first = pl.order[0];
       if (!A.isReady()) { S.pending = { id: first, opts: { loop: false } }; S.playlist = pl; A.onReady(() => { const p = S.pending; if (p) { S.pending = null; startTrack(p.id, { fade: 1, loop: false, keepPlaylist: true }); } }); return 'pending'; }
       S.playlist = pl;
-      return startTrack(first, { fade: num(opts.firstFade, 1.5), loop: false, keepPlaylist: true, bridge: opts.bridge, from: opts.from });
+      return startTrack(first, { fade: num(opts.firstFade, 1.5), loop: false, keepPlaylist: true, bridge: opts.bridge, from: opts.from, quiet: opts.quiet });
     } catch (e) { console.warn('[music] playlist failed', e); return false; }
   };
   Music.setIntensity = function (x) {
@@ -1539,8 +1551,8 @@
       opts = opts || {};
       const fade = num(opts.fade, 1.5);
       if (!snap) return Music.stop({ fade });
-      if (snap.playlist) { const pl = snap.playlist; return Music.playlist(pl.ids, { shuffle: pl.shuffle, gap: pl.gap, gapIn: pl.gapIn, fade: pl.fade, between: pl.between, betweenP: pl.betweenP, rare: pl.rare, director: pl.director, start: pl.start, firstFade: fade }); }
-      if (snap.id) return Music.play(snap.id, { fade });
+      if (snap.playlist) { const pl = snap.playlist; return Music.playlist(pl.ids, { shuffle: pl.shuffle, gap: pl.gap, gapIn: pl.gapIn, fade: pl.fade, between: pl.between, betweenP: pl.betweenP, rare: pl.rare, director: pl.director, start: pl.start, firstFade: fade, bridge: opts.bridge, quiet: opts.quiet }); }
+      if (snap.id) return Music.play(snap.id, { fade, bridge: opts.bridge });
       return Music.stop({ fade });
     } catch (e) { console.warn('[music] restore failed', e); return false; }
   };
@@ -1559,11 +1571,17 @@
     const fade = Math.max(4, num(opts.fade, num(rot.fade, 6)));
     let id = pl.order[0];
     const first = id;
-    if (pl.between && Math.random() < pl.betweenP) { const tpl = chooseTemplate(pl.between, outgoing(p), TRACKS[id]), d = interludeFor(tpl, id, { motif: DIR.motif, from: outgoing(p) }); if (d) { pl.lastTpl = tpl; pl.queued = id; id = d; DIR.motif = null; } }
+    let far = false;
+    if (pl.between && Math.random() < pl.betweenP) {
+      far = farApart(outgoing(p), TRACKS[id]);                                          // a very different piece next: the breath, as the director's seam has it
+      const quiet = far ? pl.between.filter(t => QUIET[t]) : pl.between, pool = quiet.length ? quiet : pl.between;
+      const tpl = chooseTemplate(pool, outgoing(p), TRACKS[id]), d = interludeFor(tpl, id, { long: far, motif: DIR.motif, from: outgoing(p) });
+      if (d) { pl.lastTpl = tpl; pl.queued = id; id = d; pl.far = !!far; DIR.motif = null; }
+    }
     const at = p.nextSectionBoundary(Math.max(2, fade * 0.5), num(opts.within, 100));
     pl.advancing = true;
     S.playlist = pl; S.plWait = null;
-    S.switchAt = { id, opts: { fade, inFade: fade, oldFade: fade + 4, loop: false, keepPlaylist: true, quantize: false }, at };
+    S.switchAt = { id, opts: { fade: fade + (far ? 2 : 0), inFade: fade + (far ? 2 : 0), oldFade: fade + 4 + (far ? 2 : 0), loop: false, keepPlaylist: true, quantize: false }, at };
     ensureTimer();
     return first;
   }
@@ -1581,7 +1599,7 @@
         const cur = list.indexOf(Music.current()), next = list[cur >= 0 ? (cur + 1) % list.length : (moodTick++) % list.length];
         if (rot) {
           if (opts.soft) { const r = softSwitch(pick, rot, opts); if (r) return r; }
-          const r = Music.playlist(pick, Object.assign({}, rot, { shuffle: true, start: rot.director ? undefined : next, firstFade: num(opts.fade, 2), bridge: opts.bridge })); return r === false ? false : (rot.director ? (S.playlist && S.playlist.order[0]) || next : next);
+          const r = Music.playlist(pick, Object.assign({}, rot, { shuffle: true, start: rot.director ? undefined : next, firstFade: num(opts.fade, 2), bridge: opts.bridge, quiet: opts.quiet })); return r === false ? false : (rot.director ? (S.playlist && S.playlist.order[0]) || next : next);
         }
         pick = next;
       }
@@ -1652,6 +1670,7 @@
   };
   Music._compile = (id, pass, form0, alt0, take, era) => compilePass(TRACKS[id], pass || 0, form0, alt0, take, era);
   Music._define = Track;                          // test hook: register a (hidden) track at run time
+  Music._quietStart = def => quietStart(def);      // test hook: where a piece's quiet half begins
   Music._tracks = TRACKS; Music._INST = INST; Music._parseChord = parseChord;
 
   // The score itself — every Track(id, def) — lives in js/audio/score/*.js (themes, cues, map, races, programme), loaded after this file.

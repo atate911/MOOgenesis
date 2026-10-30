@@ -43,12 +43,12 @@
   // samples before loopEnd the recording fades out while the `n` samples before loopStart fade in, so the wrap lands on the very sound the
   // loop start continues. A quarter of the loop, at most 300 ms, never more than the lead-in the file has; linear, since both sides are the
   // same note. Done once per buffer, in the decoded audio, so every voice and every browser plays the smoothed loop.
-  S.loopXf = true;
+  S.loopXf = true; S.loopXfFrac = 0.25; S.loopXfMax = 0.3;   // the blend: a quarter of the loop, at most 300 ms (a listening test may set these before preload)
   try { if (/[?&]loopxf=0\b/.test(location.search)) S.loopXf = false; } catch (e) { /* ignore */ }
   function smoothLoop(buf, ls, le) {
     if (!S.loopXf || !buf || !(le > ls)) return;
     const sr = buf.sampleRate, a = Math.round(ls * sr), b = Math.min(Math.round(le * sr), buf.length);
-    const n = Math.floor(Math.min(0.25 * (b - a), 0.3 * sr, a - 0.02 * sr));
+    const n = Math.floor(Math.min(S.loopXfFrac * (b - a), S.loopXfMax * sr, a - 0.02 * sr));
     if (n < 64) return;
     const key = a + ':' + b; buf._xf = buf._xf || {}; if (buf._xf[key]) return; buf._xf[key] = 1;
     for (let c = 0; c < buf.numberOfChannels; c++) {
@@ -58,6 +58,146 @@
     }
   }
   S._smoothLoop = smoothLoop;
+  // Loop breathing. Beyond the seam, a loop of a second or so carries one cycle of the player's vibrato and breath — a swell of four to
+  // six decibels in the winds (measured: the alto flute 4.2 to 6.5 dB across its loops, the flute up to 13) — and a held note repeats it at
+  // the loop rate: the "looping" heard on a long solo note. So the level across the loop is evened when the file is decoded: the RMS
+  // envelope over the loop (a window of a few cycles of the note) is measured and the audio scaled towards its mean, within ±6 dB, from a
+  // tenth of a second before the crossfade's lead-in (ramped in over that tenth, so the attack keeps its shape) to the loop's end. The
+  // timbre and the pitch still move as the player's did; the pulse does not. A long loop (the string sections and the choirs run to four
+  // seconds and swell ten decibels or more) is evened by half only, since its slow swell is a breath rather than a pulse and the section's
+  // voices mask one another. `?loopflat=0` plays the loops as recorded.
+  S.loopFlat = true;
+  try { if (/[?&]loopflat=0\b/.test(location.search)) S.loopFlat = false; } catch (e) { /* ignore */ }
+  function flattenLoop(buf, ls, le, root) {
+    if (!S.loopFlat || !buf || !(le > ls)) return;
+    const sr = buf.sampleRate, a = Math.round(ls * sr), b = Math.min(Math.round(le * sr), buf.length);
+    if (b - a < 0.2 * sr) return;                                                      // a short loop is a few cycles of the note: nothing to even
+    const key = 'f' + a + ':' + b; buf._xf = buf._xf || {}; if (buf._xf[key]) return; buf._xf[key] = 1;
+    const f = 440 * Math.pow(2, ((root || 60) - 69) / 12), win = Math.max(Math.round(0.03 * sr), Math.round(6 * sr / f)), hop = Math.max(1, win >> 1);
+    const strength = 1 - 0.5 * Math.min(1, Math.max(0, ((b - a) / sr - 1.5) / 2.5));     // whole up to a second and a half of loop, half from four seconds
+    const n = Math.floor(Math.min(0.25 * (b - a), 0.3 * sr, a - 0.02 * sr)), pre = Math.max(0, a - Math.max(n, 0) - Math.round(0.1 * sr)), ramp = Math.max(1, a - Math.max(n, 0) - pre);
+    for (let c = 0; c < buf.numberOfChannels; c++) {
+      const d = buf.getChannelData(c), seg = d.slice(pre, b), pts = [];
+      for (let i = pre; i < b; i += hop) { let q = 0, m = 0; for (let k = i; k < Math.min(i + win, b); k++) { q += d[k] * d[k]; m++; } pts.push(Math.sqrt(q / (m || 1))); }
+      let mean = 0, cnt = 0; for (let i = a; i < b; i += hop) { mean += pts[Math.floor((i - pre) / hop)]; cnt++; }
+      mean = cnt ? mean / cnt : 0; if (!(mean > 1e-5)) continue;
+      const gAt = i => { const x = (i - pre - win / 2) / hop, j = Math.max(0, Math.floor(x)), t = Math.min(1, Math.max(0, x - j)), p0 = pts[Math.min(j, pts.length - 1)], p1 = pts[Math.min(j + 1, pts.length - 1)], e = p0 + (p1 - p0) * t; return Math.min(2, Math.max(0.5, mean / (e > 1e-6 ? e : mean))); };
+      for (let i = pre; i < b; i++) { let g = 1 + (gAt(i) - 1) * strength; if (i < pre + ramp) g = 1 + (g - 1) * ((i - pre) / ramp); seg[i - pre] *= g; }
+      if (buf.copyToChannel) buf.copyToChannel(seg, c, pre); else d.set(seg, pre);
+    }
+  }
+  S._flattenLoop = flattenLoop;
+  // Loop breathing, by band. The level evening above holds the loop's overall level; what a solo wind or brass loop still carries is a slow
+  // cycle in its timbre (the breath: the harmonics rising and falling against the fundamental, the overall level held), and the hall's
+  // early reflections turn that into a pulse of two or three decibels at the pitches whose fundamental they thin — heard as "looping" on a
+  // long solo note. So for the solo instruments each band is evened on its own: a short-time spectrum of the loop (46 ms frames, 75%
+  // overlap), each bin's magnitude divided by its own slow trend (a 300 ms average) towards its mean over the loop, within ±12 dB, the
+  // quiet bins between the partials left alone, then overlap-added back. Vibrato at five hertz is faster than the trend and stays; the
+  // breath cycle does not. The sections and the choirs mask one another and keep their slow swell. `?loopeven=0` turns it off.
+  S.loopEven = true;
+  try { if (/[?&]loopeven=0\b/.test(location.search)) S.loopEven = false; } catch (e) { /* ignore */ }
+  const EVEN = { altoFlute: 1, flute: 1, oboe: 1, corAnglais: 1, clarinet: 1, bassoon: 1, hornSolo: 1, tptSolo: 1 };   // the instruments heard alone on long notes
+  const hannWin = n => { const w = new Float32Array(n); for (let i = 0; i < n; i++) w[i] = 0.5 - 0.5 * Math.cos(2 * Math.PI * i / n); return w; };
+  function fft(re, im) {                                                  // in place, radix 2, n a power of two
+    const n = re.length;
+    for (let i = 1, j = 0; i < n; i++) { let bit = n >> 1; for (; j & bit; bit >>= 1) j ^= bit; j ^= bit; if (i < j) { let t = re[i]; re[i] = re[j]; re[j] = t; t = im[i]; im[i] = im[j]; im[j] = t; } }
+    for (let len = 2; len <= n; len <<= 1) {
+      const ang = -2 * Math.PI / len, wr = Math.cos(ang), wi = Math.sin(ang);
+      for (let i = 0; i < n; i += len) {
+        let cr = 1, ci = 0;
+        for (let k = 0; k < len / 2; k++) {
+          const ur = re[i + k], ui = im[i + k], vr = re[i + k + len / 2] * cr - im[i + k + len / 2] * ci, vi = re[i + k + len / 2] * ci + im[i + k + len / 2] * cr;
+          re[i + k] = ur + vr; im[i + k] = ui + vi; re[i + k + len / 2] = ur - vr; im[i + k + len / 2] = ui - vi;
+          const nr = cr * wr - ci * wi; ci = cr * wi + ci * wr; cr = nr;
+        }
+      }
+    }
+  }
+  function evenLoop(buf, ls, le, root) {
+    if (!S.loopEven || !buf || !(le > ls)) return;
+    const sr = buf.sampleRate, a = Math.round(ls * sr), b = Math.min(Math.round(le * sr), buf.length);
+    if (b - a < 0.3 * sr) return;
+    const key = 'e' + a + ':' + b; buf._xf = buf._xf || {}; if (buf._xf[key]) return; buf._xf[key] = 1;
+    const N = 2048, H = N / 4, win = hannWin(N), R = Math.max(1, Math.round(0.15 * sr / H));
+    const n = Math.floor(Math.min(S.loopXfFrac * (b - a), S.loopXfMax * sr, a - 0.02 * sr)), p0 = Math.max(0, a - Math.max(n, 0) - Math.round(0.1 * sr)), ramp = Math.max(1, Math.round(0.1 * sr));
+    const strength = 1 - 0.5 * Math.min(1, Math.max(0, ((b - a) / sr - 1.5) / 2.5));
+    const f0 = Math.floor((p0 - N) / H) + 1, f1 = Math.floor((b - 1) / H), F = f1 - f0 + 1;   // every frame that touches [p0, b)
+    for (let c = 0; c < buf.numberOfChannels; c++) {
+      const d = buf.getChannelData(c), RE = [], IM = [], MAG = [];
+      for (let f = 0; f < F; f++) {
+        const st = (f0 + f) * H, re = new Float64Array(N), im = new Float64Array(N);
+        for (let i = 0; i < N; i++) { const k = st + i; re[i] = (k >= 0 && k < d.length ? d[k] : 0) * win[i]; }
+        fft(re, im); RE.push(re); IM.push(im);
+        const m = new Float32Array(N / 2 + 1); for (let k = 0; k <= N / 2; k++) m[k] = Math.sqrt(re[k] * re[k] + im[k] * im[k]); MAG.push(m);
+      }
+      // each bin: its slow trend (a running mean over ±R frames) and its mean over the loop proper
+      const inLoop = f => { const ctr = (f0 + f) * H + N / 2; return ctr >= a && ctr < b; };
+      let gmax = 0; const mu = new Float32Array(N / 2 + 1);
+      for (let k = 0; k <= N / 2; k++) { let q = 0, cnt = 0; for (let f = 0; f < F; f++) if (inLoop(f)) { q += MAG[f][k]; cnt++; } mu[k] = cnt ? q / cnt : 0; if (mu[k] > gmax) gmax = mu[k]; }
+      if (!(gmax > 1e-6)) continue;
+      const out = new Float64Array(b - p0 + N), wsum = new Float64Array(b - p0 + N);
+      for (let f = 0; f < F; f++) {
+        const re = RE[f], im = IM[f], st = (f0 + f) * H, lo = Math.max(0, f - R), hi = Math.min(F - 1, f + R);
+        const ctr = st + N / 2, rampW = Math.min(1, Math.max(0, (ctr - p0) / ramp));
+        for (let k = 0; k <= N / 2; k++) {
+          let tr = 0; for (let g = lo; g <= hi; g++) tr += MAG[g][k]; tr /= (hi - lo + 1);
+          const w = Math.min(1, mu[k] / (0.005 * gmax)) * strength * rampW;   // every partial above the noise, the bins between them left alone
+          let gn = tr > 1e-9 ? Math.min(4, Math.max(0.25, mu[k] / tr)) : 1; gn = 1 + (gn - 1) * w;   // within ±12 dB: the clarinet's even harmonics swing that far
+          re[k] *= gn; im[k] *= gn; if (k > 0 && k < N / 2) { re[N - k] = re[k]; im[N - k] = -im[k]; }
+        }
+        // inverse: conjugate trick
+        for (let i = 0; i < N; i++) im[i] = -im[i];
+        fft(re, im);
+        for (let i = 0; i < N; i++) { const k = st + i - p0; if (k >= 0 && k < out.length) { out[k] += (re[i] / N) * win[i]; wsum[k] += win[i] * win[i]; } }
+      }
+      const seg = d.slice(p0, b);
+      for (let k = 0; k < b - p0; k++) if (wsum[k] > 1e-3) seg[k] = out[k] / wsum[k];
+      if (buf.copyToChannel) buf.copyToChannel(seg, c, p0); else d.set(seg, p0);
+    }
+  }
+  S._evenLoop = evenLoop;
+  // Loop length. A loop whose length is not a whole number of periods of the note wraps with a phase step, and the seam blend above then
+  // slides the phase through that step once a cycle: alone that is a small dip, but against the hall's early reflections and the delay (a
+  // copy of the same note a few milliseconds behind) the slide swings the level by several decibels once per loop — the pulse heard on a
+  // long solo note at some pitches and not others. So the loop end is moved, within one period, to where the waveform best matches the
+  // loop start (normalised correlation over a few periods, refined between samples), and the loop runs in phase. `?looptune=0` keeps the
+  // file's own loop points.
+  S.loopTune = true;
+  try { if (/[?&]looptune=0\b/.test(location.search)) S.loopTune = false; } catch (e) { /* ignore */ }
+  function tuneLoop(buf, ls, le, root) {
+    if (!S.loopTune || !buf || !(le > ls)) return le;
+    const sr = buf.sampleRate, d = buf.getChannelData(0), a = Math.round(ls * sr), b = Math.round(le * sr);
+    const f = 440 * Math.pow(2, ((root || 60) - 69) / 12), P = sr / f, L = Math.round(Math.max(4 * P, 0.02 * sr)), R = Math.ceil(P);
+    if (a + L >= b - R - 1 || b + R + L > buf.length) return le;
+    let ea = 0; for (let i = 0; i < L; i++) ea += d[a + i] * d[a + i]; if (!(ea > 1e-9)) return le;
+    const corr = k => { let c = 0, e = 0; for (let i = 0; i < L; i++) { c += d[a + i] * d[k + i]; e += d[k + i] * d[k + i]; } return e > 1e-9 ? c / Math.sqrt(ea * e) : 0; };
+    let best = -2, bk = b; for (let k = b - R; k <= b + R; k++) { const c = corr(k); if (c > best) { best = c; bk = k; } }
+    if (best < 0.5) return le;                                                        // not a periodic wave at this window: leave it
+    const c0 = corr(bk - 1), c1 = best, c2 = corr(bk + 1), den = c0 - 2 * c1 + c2, frac = den < 0 ? Math.max(-0.5, Math.min(0.5, 0.5 * (c0 - c2) / den)) : 0;   // parabolic refinement between samples
+    return (bk + frac) / sr;
+  }
+  S._tuneLoop = tuneLoop;
+  // Loop length, again: a loop of a fifth of a second (the oboe's run from 0.18 to 0.37 s, half the clarinet's) repeats three to five times
+  // a second, which is heard as a flutter whatever is done at its seam. Where the recording holds a longer steady stretch, the loop is
+  // moved there when the file is decoded: the RMS envelope (20 ms) is taken, the sustain level is the median over the middle half of the
+  // file, and the longest run within -6 / +3 dB of it, trimmed by 50 ms at its start and 30 ms at its end, becomes the loop when it is
+  // longer than 0.45 s and longer than the loop the file had; the end is then tuned to whole periods as above. `?looplong=0` keeps the
+  // file's own loop points.
+  S.loopLong = true;
+  try { if (/[?&]looplong=0\b/.test(location.search)) S.loopLong = false; } catch (e) { /* ignore */ }
+  function relocateLoop(buf, ls, le) {
+    if (!S.loopLong || !buf || !(le > ls) || le - ls >= 0.5) return [ls, le];
+    const sr = buf.sampleRate, d = buf.getChannelData(0), W = Math.round(0.02 * sr), n = Math.floor(d.length / W), env = new Float32Array(n);
+    for (let i = 0; i < n; i++) { let q = 0; for (let k = i * W; k < (i + 1) * W; k++) q += d[k] * d[k]; env[i] = Math.sqrt(q / W); }
+    const mid = Array.from(env.slice(Math.floor(n * 0.25), Math.floor(n * 0.75))).sort((p, q) => p - q), lvl = mid[Math.floor(mid.length / 2)];
+    if (!(lvl > 1e-5)) return [ls, le];
+    let best = [0, 0], run = 0;
+    for (let i = 0; i < n; i++) { const db = 20 * Math.log10(env[i] / lvl); if (db > -6 && db < 3) { run++; if (run > best[1] - best[0]) best = [i - run + 1, i + 1]; } else run = 0; }
+    const s0 = best[0] * W / sr + 0.05, e0 = best[1] * W / sr - 0.03;
+    if (e0 - s0 < 0.45 || e0 - s0 <= le - ls) return [ls, le];
+    return [Math.max(s0, 0.03), Math.min(e0, buf.duration - 0.002)];
+  }
+  S._relocateLoop = relocateLoop;
   const bufCache = Object.create(null);                    // file -> Promise<AudioBuffer> (composite instruments share their members' files)
   function loadBuf(file) { return bufCache[file] || (bufCache[file] = fetchBuf(S.base + file).then(decode).then(buf => { S.bytes += buf.length * buf.numberOfChannels * 4; return buf; })); }
 
@@ -77,8 +217,9 @@
       loop: def.kind === 'sustain', vib: num(def.vib, 0), cutK: num(def.cutK, 0), xf: !!def.xf, pan: def.pan !== undefined ? num(def.pan, 0) : undefined, legOff: num(def.legOff, 0.22), zones: [], ready: false, failed: 0 };
     S.inst[name] = inst;
     const jobs = (def.zones || []).map(z => loadBuf(z.file).then(buf => {
-      if (z.loop && inst.loop) smoothLoop(buf, z.loop[0] + S.offset, Math.min(z.loop[1] + S.offset, buf.duration - 0.001));
-      inst.zones.push({ buf, root: num(z.root, 60), lo: num(z.lo, 0), hi: num(z.hi, 127), loop: z.loop ? [z.loop[0] + S.offset, z.loop[1] + S.offset] : null, vel: z.vel || [0, 1], rr: z.rr || 0, gain: dbtoa(num(z.gain, 0)), pan: z.pan !== undefined ? num(z.pan, 0) : undefined });
+      let loop = z.loop ? [z.loop[0] + S.offset, z.loop[1] + S.offset] : null;
+      if (loop && inst.loop) { const rl = relocateLoop(buf, loop[0], Math.min(loop[1], buf.duration - 0.001)), ls = rl[0], le = tuneLoop(buf, ls, rl[1], num(z.root, 60)); loop = [ls, le]; if (EVEN[name]) evenLoop(buf, ls, le, num(z.root, 60)); flattenLoop(buf, ls, le, num(z.root, 60)); smoothLoop(buf, ls, le); }   // the loop a whole number of periods, its bands and its level even, its seam blended
+      inst.zones.push({ buf, root: num(z.root, 60), lo: num(z.lo, 0), hi: num(z.hi, 127), loop, vel: z.vel || [0, 1], rr: z.rr || 0, gain: dbtoa(num(z.gain, 0)), pan: z.pan !== undefined ? num(z.pan, 0) : undefined });
     }).catch(e => { inst.failed++; S.errors++; if (S.errors < 4) console.warn('[samples] ' + z.file + ' failed', e && e.message); }));
     return Promise.all(jobs).then(() => { inst.zones.sort((a, b) => a.root - b.root || a.vel[0] - b.vel[0] || a.rr - b.rr); inst.ready = inst.zones.length > 0; return inst; });
   }

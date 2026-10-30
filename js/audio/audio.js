@@ -309,7 +309,11 @@
       const lr = (type, f) => { const a = mk(ctx.createBiquadFilter()), b = mk(ctx.createBiquadFilter()); for (const n of [a, b]) { n.type = type; n.frequency.value = f; n.Q.value = Math.SQRT1_2; } a.connect(b); return { in: a, out: b }; };
       const lo = lr('lowpass', 160), hiA = lr('highpass', 160), mid = lr('lowpass', 450), hi = lr('highpass', 450);
       inG.connect(lo.in); lo.out.connect(out);
-      inG.connect(hiA.in); hiA.out.connect(mid.in); hiA.out.connect(hi.in); hi.out.connect(out);
+      // the band compressors look ahead six milliseconds (measured: 264 samples at 44.1k, 288 at 48k); the high band, which has none,
+      // is delayed the same, else the bands recombine through a comb (notches every 167 Hz) that turns a held note's vibrato into a level
+      // ripple at some pitches and not others — the "looping" heard on long solo notes
+      const hiDelay = mk(ctx.createDelay(0.05)); hiDelay.delayTime.value = 0.006;
+      inG.connect(hiA.in); hiA.out.connect(mid.in); hiA.out.connect(hi.in); hi.out.connect(hiDelay); hiDelay.connect(out);
       const cp = mk(ctx.createDynamicsCompressor()); cp.threshold.value = -30; cp.ratio.value = 3; cp.attack.value = 0.025; cp.release.value = 0.25; cp.knee.value = 6;
       const cg = mk(ctx.createGain()); cg.gain.value = dbtoa(-makeupDb(-30, 3) - 1.5);   // makeup taken back: the band only ever ducks
       mid.out.connect(cp); cp.connect(cg); cg.connect(out);
@@ -320,7 +324,7 @@
       return { in: inG, out };
     })();
     eng.musicBus.connect(eqL); eqL.connect(eqM); eqM.connect(mb.in); mb.out.connect(eqH); eqH.connect(eqS); eqS.connect(eqA); eqA.connect(width.in); width.out.connect(glue); glue.connect(glueMake); glueMake.connect(sat); sat.connect(duck); duck.connect(master);
-    eng.glue = glue;
+    eng.glue = glue; eng._stages = { eqL, eqM, mbIn: mb.in, mbOut: mb.out, eqH, widthIn: width.in, widthOut: width.out, glue, sat, duck };   // the bus's stages, for a listening test to tap
     eng.duck = duck; eng.duckUntil = 0; eng.duckLevel = 1;
     // dip the music by `depthDb` for `hold` seconds (15 ms in, ~250 ms release). While an earlier duck is still holding, the depth
     // never decreases (the deeper one is kept, the hold is extended); a shorter + shallower request inside a running duck is ignored.

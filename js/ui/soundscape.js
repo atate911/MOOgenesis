@@ -1,6 +1,6 @@
 // Soundscape glue: chooses the music mood for the active screen and plays a few game-level cues. Everything is optional — if the audio engine is missing or locked, nothing happens.
 //   Bus 'screen' (id, params) → Music.setMood(...) only when the mood GROUP changes (so galaxy → ledger → galaxy keeps the same track);
-//   fights, landings and the chamber are led into by a bridge in their key; the map's programmes are directed (Music.setSituation each turn end)
+//   fights, landings, the chamber and the endings are led into by a bridge from the key that is playing into theirs; the map's programmes are directed (Music.setSituation each turn end)
 //   Bus 'turn:end' → SFX 'newturn' · 'game:new' → SFX 'confirm' · 'game:quit' → title music
 // Screens that run their own music (the GNN broadcast snapshots + restores it, menu starts 'title') are left alone; the lab and spy
 // panels no longer borrow a cue of their own (their stingers play over the underscore, as a film would).
@@ -151,11 +151,13 @@
     const pick = moodFor(id, params); if (!pick) return;
     if (pick[0] === group) return;
     const from = group; group = pick[0];
-    // a cue that cannot wait is led into by a two-bar bridge in its key (a tense one into a fight, a calm one into the chamber and back onto the map)
-    const bridge = group === 'combat' || group === 'ground' ? 'tense' : group === 'council' || (group === 'galaxy' && (from === 'combat' || from === 'ground')) ? 'calm' : undefined;
+    // a cue that cannot wait is led into by a two-bar bridge that starts in the key of what is playing and lands on the cue's dominant: a tense
+    // one into a fight, a bright one into the chamber and the victory, a dark one into the defeat, a calm one back onto the map from any cue
+    const bridge = group === 'combat' || group === 'ground' ? 'tense' : group === 'council' || group === 'victory' ? 'bright' : group === 'defeat' ? 'dark' : group === 'galaxy' && from && from !== 'menu' ? 'calm' : undefined;
+    const quiet = group === 'galaxy' && (from === 'combat' || from === 'ground');   // back from a fight the map lands on the quiet half of its piece, not its first bar
     try {
       if (group !== 'combat' && m.setIntensity) m.setIntensity(0);           // before the new track is built: its players copy the current level
-      m.setMood(pick[1], group === 'combat' ? { fade: 1.5, quantize: 'beat', bridge } : { fade: 4.5, quantize: 'bar', bridge });
+      m.setMood(pick[1], group === 'combat' ? { fade: 1.5, quantize: 'beat', bridge } : { fade: 4.5, quantize: 'bar', bridge, quiet });
     } catch (e) { /* audio optional */ }
   }
   function calm() { const m = music(); if (m && m.setIntensity) { try { m.setIntensity(0); } catch (e) { /* audio optional */ } } }

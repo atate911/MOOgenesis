@@ -5,6 +5,24 @@ Versions follow `MAJOR.MINOR.PATCH`; the live version is the `VERSION` file.
 
 ## Unreleased
 
+- The map's plan, steps six to ten: the harp interlude on the air and the soft organ, the violas' with an alto flute, the marimba pulse
+  replaced by the held note (one low cello note, the air, the harp); the bridges open on the tonic of the piece that is playing and land on
+  the cue's dominant, with a dark bridge (Orion, the Antarans, the defeat) and a bright one (the chamber, the victory) beside the tense and
+  the calm, and the calm bridge into and out of the news bed; a soft programme change between far-apart pieces takes the long breath; the
+  map back from a fight lands on its piece's quiet half; every map piece's trim set from a whole-piece loudness render (-17 LUFS within a
+  decibel, the interludes three and a half below); the Lantern at four minutes; the eight planetarium pieces each with an order and a crest
+  of their own.
+- The main theme rebuilt around the horn: the chorus hums and the solo horn states the call, then sings the whole hymn over the chorus; the
+  horn section joins the men; the crest has the horns in full with the trumpets crowning the answer and the chamber open on ah, with the
+  timpani; the solo horn closes it. A wider dynamic range, and every line phrased with the engine's new `shape` (a hairpin over each phrase).
+- The commonwealth's oboe tune (the procession's first strain) declared the score's second leitmotif and glanced at, once a pass, in a
+  four-bar aside by a solo voice in the title, Patience, Determination, the Veil, the Survey, the Lanes, Noon and the Embers, and stated by
+  the horns at the victory.
+- The "looping" on long solo notes, fixed in the engine: the sampler evens every loop's level when a file is decoded and, for the solo winds
+  and brass, each partial's slow cycle; loop ends are tuned to whole periods; loops under half a second (the oboe's) are moved onto the
+  file's steady stretch. The music bus's high band is delayed to match the band compressors' six-millisecond lookahead, which had put a comb
+  across the bus. `node tools/qa/loops.js` holds one note per recorded zone of every sustain instrument through the bus and flags a pulse or a
+  click. First Light's chorus sits a little lower against the orchestra.
 - The score grows by twelve movements, all written for the sampled orchestra and chorus and held together by the score's themes (the
   leitmotif — a rising fourth and a falling step — the men's chanted phrase, the procession's theme, the chorale), each quoted once in
   every movement, while each movement has a principal theme and a foundation of its own. Three for variety: *the nebula* (a drift in

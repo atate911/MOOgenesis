@@ -87,6 +87,25 @@ Colour semantics are fixed: gold = BC/money, ember = industry, leaf = food/growt
   picks the template by palette fit to the pieces either side (`Music._colour`), and the voice one piece ends in holds under the interlude's
   opening bars while the voice the next opens with sits under its last. A new instrument preset needs a family in `FAMILY` (by its sample set);
   a new interlude template needs `tags: { dark, energy }`.
+- A line (lead, lead2, bell2) may carry `shape` (0..0.8): each phrase played as a hairpin, soft at its ends, full in its middle and at
+  its top, the long notes blooming — a singer's or a horn player's phrasing. The title's lines all carry it; use it on anything sung or blown
+  that is heard alone.
+- The second leitmotif is the procession's first strain as the commonwealth's oboe states it (`@procession.A1`). A piece that glances at it
+  does so in a four-bar `echo` section of its own (its own key, mode and metre; a minor reading keeps the second degree with `!`, a piece in
+  three writes the tune in three) placed after its still in every form, by one solo voice over the piece's own pad. The title, seven map
+  pieces and the victory carry one; keep it to one glance a pass.
+- Bridges are `bridge:tense` (fights), `bridge:bright` (the chamber, the victory), `bridge:dark` (Orion, the Antarans, the defeat) and
+  `bridge:calm` (back onto the map from any cue, the news bed both ways); each opens on the tonic of the piece that is playing and lands on
+  the cue's dominant (`interludeFor` with `from`). `setMood(..., { quiet: true })` lands a piece on its quiet half (the map back from a
+  fight); a soft programme change between far-apart pieces takes the long breath like the director's seam.
+- Levels: map pieces sit at -17 LUFS integrated (whole-piece render), within a decibel; interludes three and a half below; bridges near -18.
+  Re-measure after a change with `node tools/audio-report.js --full --tracks <ids> --no-sfx --json r.json` (interludes and bridges are hidden:
+  render them with `Music.renderOffline` as `tools/qa` scripts do).
+- The sampler treats every looped sustain when its file is decoded (`js/audio/sampler.js`): a loop shorter than half a second is moved onto
+  the file's longest steady stretch (`?looplong=0` keeps the file's), its end is tuned to a whole number of periods (`?looptune=0`), the solo
+  winds and brass have each partial's slow breath evened across the loop (`?loopeven=0`), every loop's level is evened (`?loopflat=0`) and
+  its seam blended (`?loopxf=0`). `node tools/qa/loops.js` holds one note per zone of every sustain instrument through the bus and flags a
+  pulse or a click.
 - Check a change with `node tools/score-lint.js` (schema, instruments, forms, phrases, themes, determinism, the programme's lists; `--strict`
   in a release pass) and `node tools/qa/music.js` (the seams in real time: directed programme, soft change, bridges, motif, snapshot / restore).
 

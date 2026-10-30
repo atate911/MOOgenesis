@@ -13,7 +13,9 @@
       CT: '1:2 3:2 | 2:2 1:2 | 4:2 3:2 | 2:3 r:1',                   // the low counter-line beneath it
     },
     men: { CM: '1:8 | 2:8 | 3:6 2:2 | 1:8', CM2: '1:8 | 3:8 | 2:6 1:2 | 1:8' },   // the men's chanted phrase: tonic, a step, the third, home
-    procession: {                                                    // the march (the council, the war programme): a slow climb from the tonic
+    procession: {                                                    // the march (the council, the war programme): a slow climb from the tonic — and the
+                                                                     // score's second leitmotif, as the commonwealth's oboe states it (A1 A2): the title's breath, seven map
+                                                                     // pieces and the victory glance at its first strain in an aside of their own (their 'echo' section)
       A1: '1:3 2:1 | 3:2 5:2 | 6:3 5:1 | 3:2 2:2', A2: '1:3 2:1 | 3:2 5:2 | 8:3 7:1 | 5:4', CD: '4:2 3:1 2:1 | 5:3 4:1 | 3:2 2:2 | 1:4',
       HY: '5:4 | 6:4 | 5:2 4:2 | 3:4', HY2: '3:4 | 4:4 | 5:2 6:2 | 5:4',   // the hymn while the votes are cast
     },

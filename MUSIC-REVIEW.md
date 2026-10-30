@@ -140,7 +140,7 @@ The total is out of a hundred. Readings (a piece transformed by the engine) are 
 | 52 | GNN news bed | cue | 6 | 6 | 7.5 | 6.5 | 7.5 | 5.5 | -0.8 | 0 | **64.5** | A confident broadcast bed with brass stabs; deliberately un-symphonic. fit for the news and for nothing else, which is its job. Sounds most like Human theme and Victory. |
 | 53 | Ground assault | cue | 6.5 | 6 | 6.5 | 6 | 8 | 6.5 | -2.2 | 0 | **64.3** | Low toms, a menacing plucked ostinato, brass swells; tense and functional, closer to its electronic origins than the rest. the ground-assault screen needs exactly this tension. Sounds most like Espionage and Alkari theme, hostile. |
 | 54 | Human theme, hostile | reading | 7 | 5 | 5.5 | 6.5 | 8 | 7.5 | -2.7 | 0 | **64.1** | A reading: the march in minor with snare and brass, the most convincing of the hostile readings because the march was martial already. Sounds most like Sakkra theme, hostile and Mrrshan theme, hostile. |
-| 55 | Drift, pulse | interlude | 5.5 | 5.5 | 6.5 | 7.5 | 7.5 | 7 | -1.8 | 0 | **63.9** | A marimba figure keeping time under a warm pad. the least like a breath; the seams now rarely choose it after a choir or brass piece. Sounds most like Drift, the violas and Drift, harp. |
+| 55 | Drift, the held note (was: the pulse) | interlude | 6.5 | 6.5 | 6.5 | 7.5 | 8.5 | 7 | -2.4 | 0 | **68.9** | One low cello note held through the whole minute under the air, the harp touching the chord once a bar, nothing else. Rewritten in step 6; ranked at the review's date, its total revised here: the barest breath in the set, near the horizon by the colour measure and far from it by ear. |
 | 56 | Darlok theme, hostile | reading | 6.5 | 5 | 6.5 | 6 | 8 | 7 | -2.1 | 0 | **63.7** | A reading: a heartbeat pulse under the horn; the choir now sings in the men's register instead of above it. Sounds most like Bulrathi theme and Bulrathi theme, hostile. |
 | 57 | Bulrathi theme, hostile | reading | 6.5 | 5 | 6 | 6 | 8 | 7 | -1.9 | 0 | **63.1** | A reading: pounding, two semitones lower still; the theme survives the transform well. Sounds most like Espionage and Darlok theme, hostile. |
 | 58 | Silicoid theme, hostile | reading | 6 | 5 | 7 | 5.5 | 8 | 6.5 | -1.3 | 0 | **62.7** | A reading: grinding pulses with the horn in place of the chimes; its lead no longer carries the chimes' octave. Sounds most like Darlok theme, hostile and Bulrathi theme. |
@@ -230,6 +230,68 @@ Steps 1, 2 and 7 are the ones a player hears first; 3 to 6 are what makes the ma
 Thirty-seven pieces compile to different notes after these steps (the voicer touches every piece with a chord below C3); the QA, the lint
 and all 840 seam pairings pass. The marks of the changed pieces are revised above.
 
+## Steps 6 to 10: done
+
+6. **The interludes.** The harp interlude has the air and the ship's soft organ for its bed (it was the violas' twin at 0.98 by the colour
+   measure; it is nearest the voices now, at 0.89); the violas have an alto flute far away instead of the trumpet; the marimba pulse is gone,
+   and in its place is the held note: one low cello note through the whole minute under the air, the harp touching the chord once a bar,
+   nothing else — the one interlude that is only a breath, and the seams count it among the quiet ones for the long breath. The hymn's head
+   in the three interludes that quote it keeps its falling step over the pedal (the engine was bending the seventh onto the chord; it does not
+   now). By the colour measure, which weighs families of sound and not how many voices carry them, the held note sits next to the horizon
+   (0.97: both are a string voice over a synth pad); by ear they are the two ends of the set, one cello against a section swelling with a
+   horn. The measure now weighs a one-voice bed as a third of a three-voice one, which is as far as a family count can go.
+7. **The bridges start where the music is.** Every bridge now opens on the tonic of the piece that is playing and lands on the cue's dominant
+   seventh (its two bars are the ends of the pivot walk the interludes take), so a map piece in D-flat cut into a battle in D minor no longer
+   jumps a tritone. Two new ones: the dark bridge (the low strings trembling on a sunk pedal under the drone, the tam-tam, a timpani roll) for
+   Orion, the Antarans and the defeat; the bright one (the brass and the strings in one swell, the harp running up, two timpani strokes) for
+   the chamber and the victory. The calm bridge leads back onto the map from any cue and into and out of the news bed; the tense one into
+   fights as before. The QA proves the bridge's two chords against the pivot walk.
+8. **The breath for every change.** A soft programme change between two far-apart pieces (energy, darkness or key) now takes the long quiet
+   interlude and the longer fades the director's seam takes; the map back from a fight lands on the quiet half of its piece (its first section
+   at or under half level after the loop point), not on its first bar.
+9. **Levels.** Every map piece rendered whole: integrated loudness ran from -13.4 (First Light) to -19.3 LUFS (Determination), a six-decibel
+   step at the worst seam. Trims are now set for -17 within a decibel (no single change beyond three decibels: Wonder, Patience,
+   Determination, the Abyss and the Watch up by one to two and a half, the Beacon, the Tide, the Chorale and First Light down by one and a half
+   to two and a half); the interludes at -20.5, three and a half below; the bridges near -18 (the calm one was five decibels under).
+10. **Form and length.** The Lantern's three cantus sections are eight bars each with one phrase apiece (the loop is 257 s where it was 360).
+    The eight planetarium pieces each have an order of their own and a crest of their own in place of the one device (the tune a third below):
+    Wonder's harp runs up through its crest, Patience has its whole bed and the marimba in sixteenths, Determination's horn theme comes back in
+    the full brass with the timpani, the Veil's oboe and flute sing in unison, the Abyss has the women above the men, the Cradle's lullaby is in
+    two octaves with the flute, the Beacon's horn is answered by a trumpet a phrase behind.
+
+Twenty-two pieces compile to different notes after these steps; the QA (27 checks), the lint and the review tool pass.
+
+## After the plan: the main theme, First Light, the loops, a second leitmotif
+
+**The main theme** is rebuilt around the horn, as asked. The chorus hums on the tonic and the solo horn states the call over it; the solo
+horn sings the whole hymn alone over the chorus and the organ while the men take up the answer (A1); the horn section joins the men on the
+hymn over the cellos' counter-line (B); the flute breathes and the commonwealth's oboe glances in (C, the echo); then the crest: the horns
+in full, the trumpets crowning the answer from its ninth bar, the whole chamber open on ah, the timpani (A2); and the solo horn closes it
+alone (E). The dynamic range is wider: the introduction opens at 0.4, the crest reaches 1.12, the end dies to 0.48, and the rubato is up a
+little. Every sung and blown line carries the engine's new `shape`: each phrase a hairpin, soft at its ends, full at its middle and its top,
+the long notes blooming — a singer's phrasing rather than a sequencer's. The chorus hums (uuh, ooh) until the crest, where it opens to ah.
+
+**First Light.** The chorus sits lower against the orchestra (the choir bus down 2.2 dB, the rise and the sunrise voices down a seventh).
+The "looping" heard in its opening alto flute solo had three causes, all fixed in the engine rather than the score:
+
+- The sample loops breathe. A loop of a second carries one cycle of the player's breath, a swell of four to six decibels in the winds, and a
+  held note repeats it at the loop rate. The sampler now evens every loop's level when the file is decoded, and for the solo winds and brass
+  evens each partial's slow cycle on its own (a short-time spectrum of the loop, each bin divided by its 300 ms trend); vibrato stays, the
+  breath cycle does not. Loop ends are tuned to a whole number of periods; loops shorter than half a second (the oboe's run from 0.18 to
+  0.37 s, a flutter) are moved onto the file's longest steady stretch (the oboe's are 0.7 to 1.4 s now).
+- The bus had a comb in it. The music bus's multiband stage runs its middle band through a compressor, which looks ahead six milliseconds,
+  and its high band through nothing, so the bands recombined through a comb with a notch every 167 Hz; at the pitches near a notch a held
+  note's own vibrato became a level ripple (1.8 dB at the alto flute's A-flat, nothing a fourth away). The high band is delayed the same six
+  milliseconds now; the ripple is 0.3 dB.
+- A new check holds one note per recorded zone of every sustain instrument through the bus (`node tools/qa/loops.js`) and flags a pulse or a
+  click. The alto flute's slow swing is 0.2 to 0.4 dB on every zone (it was 3.5 at the pitch First Light opens on).
+
+**The second leitmotif.** The commonwealth's oboe tune is the procession's first strain; it is now declared the score's second leitmotif and
+glanced at, once a pass, by a solo voice in a four-bar aside of its own (the `echo` section, in the piece's own key, mode and metre) in the
+title (an oboe in the breath), Patience and the Lanes (the oboe), Determination (the solo horn), the Veil (the oboe, in three), the Survey
+(the flute), Noon (a solo trumpet), the Embers (the cello, in three, in the minor), and in full by the horns at the victory, the trumpets
+answering. Fifteen pieces quote it now, with the title's hymn in fifteen.
+
 ## By group
 
 **Map.** The strongest map pieces are the ones with real forms and ideas of their own: the sunrise, the passacaglia, the nocturne, the sung chorale, the sarabande and the survey's growing cells. The nocturne,
@@ -246,5 +308,5 @@ Victory and Defeat are plain and do their work.
 electronic by design.
 
 **Interludes and bridges.** The violas and the choir are the two interludes that most sound like the orchestra pausing, and the seams
-now favour them for strings and choir pieces; the marimba pulse is the least like a breath and is rarely chosen after a choir or brass
-piece. The two bridges do what they must in five seconds.
+now favour them for strings and choir pieces; the held note is the barest of the set and the one the long breath reaches for. The four
+bridges open where the music is and land on the cue's dominant.
