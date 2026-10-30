@@ -1492,7 +1492,7 @@
       if (pl.between && !pl.between.length) pl.between = null;
       if (opts.rare) { const ids = [].concat(opts.rare.ids || opts.rare).filter(id => TRACKS[id] && pl.ids.indexOf(id) < 0); pl.rare = ids.length ? { ids, p: typeof opts.rare.p === 'object' ? Object.assign({}, opts.rare.p) : num(opts.rare.p, 0.35) } : null; }
       if (pl.shuffle) pl.order = composeOrder(pl, opts.last);
-      if (pl.director && !opts.start) pl.order = [pickNext(pl, opts.last || DIR.lastPiece)].concat(pl.order.filter(id => id !== pl.order[0]));   // the director opens the programme too
+      if (pl.director && !opts.start) { const pick = pickNext(pl, opts.last || DIR.lastPiece); pl.order = [pick].concat(pl.order.filter(id => id !== pick)); }   // the director opens the programme too
       if (opts.start && TRACKS[opts.start] && pl.order.indexOf(opts.start) < 0 && (pl.ids.indexOf(opts.start) >= 0 || (pl.rare && pl.rare.ids.indexOf(opts.start) >= 0))) pl.order.unshift(opts.start);   // restored mid-piece (a rare one, or one the era has set aside): come back to it
       if (opts.start && pl.order.indexOf(opts.start) >= 0) {           // begin with a given track (the rest keeps its order / shuffle)
         const k = pl.order.indexOf(opts.start);

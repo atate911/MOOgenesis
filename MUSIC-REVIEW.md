@@ -1,7 +1,7 @@
 # The score, reviewed
 
 A review of every piece of music in Master of Orion: Reborn, written at the end of session 11 so the score could be judged whole
-before it is called finished: the twenty-two map pieces, the seventeen cues, the ten race themes, the seven interludes and two bridges,
+before it is called finished: the twenty-two map pieces, the sixteen cues, the ten race themes, the seven interludes and two bridges,
 and the twelve derived readings (the rare pieces and the race themes at war). Each was read in its definition (js/audio/score) and
 measured through the engine with `node tools/score-review.js`, which compiles every piece and reports its dynamic arc, harmonic
 vocabulary and rhythm, how well the written melody sits on the chords (the share of lead notes the engine has to snap onto a chord

@@ -48,6 +48,11 @@ bpmTo = next.bpm, prog = the path with a dwell per chord in outgoing bars (the o
 middle chords shortened first when the opening would pass 26 s), and the body's bpm / meter to the next piece's (lines silenced when the body is not in four); the seams pass
 `from: outgoing(p)` (the piece actually ending — a war variant keeps its base's key — else the director's last piece; an interlude or bridge is never a `from`).
 War / hits variants carry `variantOf`, and the director's history counts them as their piece.
+The demo page (artifact UyNUm64ht9AvpKaRhaLwdM; source in the session scratchpad, player/score-player.html) runs the engine live in its second and third tabs: the engine
+files under engine/js, instruments.json under engine/assets/audio, and the 841 sample MP3s concatenated into engine/samples/pack0-3.mp3 with an index.json of byte
+offsets; the page wraps window.fetch so the sampler's requests for engine/assets/audio/<file> are answered from the packs (the host serves only media types and at most
+511 files). `Music.play` / `Music.playlist` take `opts.from` (seconds into the first pass) for the 'let the piece reach its close' demo. MUSIC-REVIEW.md holds the
+review and the ranking; tools/score-review.js the measurements behind it.
 Colour (music.js 'colour'): `FAMILY` maps each sample set to a family (`familyOf(name)`, synth voices by `v`); `palette(def, 'head'|'tail'|undefined)` weighs the
 families across sections (bars × level × vel, edge sections ×3; bass and drums left out; alternations a share each; memoised in a WeakMap); `colourFit(tpl, from, next)`
 = 0.7 × cosine(template palette, blend of from's tail and next's head) + 0.3 × closeness of the template's `tags` {dark, energy} (map.js gives each drift template
