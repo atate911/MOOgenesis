@@ -45,8 +45,9 @@ Versions follow `MAJOR.MINOR.PATCH`; the live version is the `VERSION` file.
   middle. Only a colour that can be held is carried (strings, the pads, choir, brass, winds; a harp in a pad slot would only tick). Its
   opening level meets the level the piece ended at (within the breath's range). `tools/audio-seams.js` captures four seams from the
   real-time engine as MP3s, with a log of what each seam built; they are on the demo page.
-- The score reviewed and ranked (MUSIC-REVIEW.md): every piece read and measured, the errors corrected, the rest marked and ranked
-  by musical quality and by how well it does its job in the game. The demo page has three tabs: the movements and the seams, every
+- The score reviewed and ranked (MUSIC-REVIEW.md): every piece read and measured, the errors corrected, the rest marked on six
+  criteria (craft, creativity, uniqueness, pleasure, fit, identity) with a measured penalty for sounding like other pieces and a capped
+  bonus for carrying the shared themes, and ranked out of a hundred. The demo page has three tabs: the movements and the seams, every
   piece ranked with a live play button, and any two pieces with the seam the engine would make between them (the game's engine and
   the sampled orchestra run in the page; the samples travel packed in four files and are served to the sampler from memory). A
   directed programme that opened on a piece other than its first used to list that piece twice and drop the first; fixed.
