@@ -5,6 +5,11 @@ Versions follow `MAJOR.MINOR.PATCH`; the live version is the `VERSION` file.
 
 ## Unreleased
 
+- The main theme around the commonwealth’s tune rather than the hymn (the hymn with the men in the minor was the Crimson Tide sound; the
+  tune is the score’s own): the men sing it first as a song in unison over two low humming voices, one chord to a bar; the solo horn takes it
+  up in its own register as the violins join; the double bass enters under the second strain and the timpani strikes only at the cadences;
+  the whole tune in the relative major; the hymn kept as the second idea with the horn section and the men; the crest on the tune in full;
+  the close home on the major.
 - The full pass over every piece against the compass (Williams for the themes, Shore for the weight, Zimmer for the manner, Serrie under the
   map): every sung or blown line on the map, in the cues and in the race themes phrased (`shape`, `swell`); the low register cleared in every
   piece that piled thirds below C3 (the passacaglia, the chorale, the nocturne, the lanes, the vigil, the council, the procession and its

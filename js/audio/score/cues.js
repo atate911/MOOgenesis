@@ -6,60 +6,60 @@
   const Music = M.Audio.Music, Track = Music._define;
 
   Track('title', {
-    desc: 'Main theme — the hymn: the men first, open, singing the commonwealth’s climb on the hymn’s harmony over the planetarium’s analogue bed, the air and points of light; the solo horn’s call over them as the strings, the deep pedal, a chime and the timpani’s pulse join; the horn sings the whole hymn alone over the chorus and the organ, the men taking up the answer; the horn section rises above the men on the hymn over the cellos’ counter-line; a flute breathes and an oboe answers it with the commonwealth’s tune, which leads into the crest — the horns high above everything, the trombones under them, the trumpets crowning the answer, the whole chamber open on ah, the timpani — and the solo horn closes it; one chord to a bar, harmonised to the tune the way a hymn is; every line shaped phrase by phrase and every long brass note swelling, from a hum to the full chamber',
-    quotes: ['procession'],
-    bpm: 70, root: 'D', mode: 'minor', loopFrom: 'A1', trim: 2.34, tens: false, rubato: 0.025, tone: { lo: 1.2, hi: 1.0 }, fx: { verb: 0.8, stage: 0.9, dly: 1.1 }, mix: { choir: 1.35, pad: 0.95, lead: 1.9, bass: 1.15 },
+    desc: 'Main theme — the commonwealth’s tune: the men alone first, singing it as a song in the minor over a low hum, the planetarium’s analogue bed, the air and one chime; the solo horn takes the tune up in its own register as the strings join, the deep double bass under it from the second strain and the timpani at the cadences; the horn sings the whole tune in the relative major over the humming men, the women’s halo above; the horn section rises on the hymn (the game’s leitmotif, kept as the second idea) with the men; a flute breathes and the oboe answers it with the tune; the crest has the horn section on the tune in full, the trombones under, the trumpets on the answer, the chamber open on ah and the timpani; the solo horn closes with the cadence, home on the major',
+    quotes: ['procession', 'hymn'],
+    bpm: 68, root: 'D', mode: 'minor', loopFrom: 'A1', trim: 2.34, tens: false, rubato: 0.025, tone: { lo: 1.2, hi: 1.0 }, fx: { verb: 0.8, stage: 0.9, dly: 1.1 }, mix: { choir: 1.35, pad: 0.95, lead: 1.9, bass: 1.2 },
     sends: { lead: { verb: 0.1, stage: 0.34, dly: 0.05 }, choir: { verb: 0.3, stage: 0.12 } },   // the solo stands at the front of the stage, the bed behind it in the hall; the chorus close enough to be clear
     forms: [['A1', 'B', 'C', 'A2', 'E', 'C', 'A1', 'E'], ['A1', 'C', 'B', 'A2', 'C', 'E', 'A1', 'B', 'E']],
     alts: [{}, { choir2: 'choirWomen' }],
     inst: { pad: 'organ', pad2: 'analog', bass: 'deep', lead: 'horn', lead2: 'strings', bell: 'glass', bell2: 'tpts', choir: 'choirMen', choir2: 'ooh', arp: 'strOst' },
     ph: {
-      PAh: '1:3 2:1 | 3:2 5:2 | r:8',                                    // the commonwealth's climb, its head, sung by the men as the first gesture of the game
-      PAm: '1:3 2:1 | 3:2 5:2 | 6:3 5:1 | 3:2! 2:2',                          // the second leitmotif (the commonwealth's oboe) in the minor, the oboe's answer to the flute in the breath; its third held over the dominant as an appoggiatura, resolving to the fifth
-      H1: '@hymn.H1',             // the hymn: rising fourth, falling step (the game's leitmotif), noble descent, half cadence
+      PA: '@procession.A1', PB: '@procession.A2', CD: '@procession.CD',   // the commonwealth's tune (the score's second leitmotif, here the first): the climb, its answer to the octave, the cadence
+      PAm: '1:3 2:1 | 3:2 5:2 | 6:3 5:1 | 3:2! 2:2',                          // the oboe's reading in the breath: its third held over the dominant as an appoggiatura, resolving to the fifth
+      H1: '@hymn.H1',             // the hymn: rising fourth, falling step (the game's leitmotif), the second idea
       H2: '@hymn.H2',
-      H3: '@hymn.H3',             // the answer, a fifth higher
-      H4: '@hymn.H4',
       K: '@hymn.K',               // the call: the head of the hymn alone
-      ST: '1:4 | r:4 | 5:4 | r:4', ST2: '1:4 | r:12', // the chime: one strike at the very start; under the call, one on the downbeat and one on the dominant
+      ST: '1:4 | r:4 | 5:4 | r:4', ST2: '1:4 | r:12', // the chime: one strike at the very start
       CT: '@hymn.CT',             // the cellos' counter-line beneath the men
-      F1: '5:1 8:1 7:1 5:1 | 6:1 5:1 3:1 5:1 | 4:2 5:2 | 8:4', // flute, the interlude, on the hymn's own harmony
+      F1: '5:1 8:1 7:1 5:1 | 6:1 5:1 3:1 5:1 | 4:2 5:2 | 8:4', // flute, the breath, on the hymn's own harmony
     },
-    // The harmony is the hymn's own: one chord to a bar, each bar's chord holding the tune's notes (i, the flat sixth, the fourth, the
-    // flat-third seventh, the dominant seventh), a half close at the end of the first strain and a full close at the end of the answer.
-    // The build: the solo horn over the humming chorus (intro, A1); the horn section with the men on the hymn (B); the breath (C); the
-    // horns in full with the trumpets on the answer and the chamber open on ah (A2); the solo horn alone again (E). Every line carries
-    // shape: a hairpin over each phrase, as a singer or a horn player phrases it. The opening: the men alone for four bars, open and present,
-    // on the hymn's own harmony; then the horn's call in its heroic register (A4 to D5) over them as the strings, the deep pedal, a chime and
-    // the timpani's pulse join. Soft and slow, but clear, and nothing idles. The horns play the hymn an octave below its written
-    // octave (F3 to A4, the horn's own middle register) where it is a solo; at the build (B) and the crest (A2) the horn section rises above
-    // the men in the written octave, the trombones an octave under it and the trumpets on the answer, every long note swelling (swell): the
-    // horns above everything, in the Roll Tide manner. The solo horn's phrases carry a
-    // dynamic plan ('H3*1': the answer, the top of the arc; 'H1*0.74': the statement, under it), deeper hairpins, a delayed vibrato and a
-    // tone that darkens as it plays softer. Where the solo horn plays it has a window of its own: the organ and the men below D4, the women's
-    // hum and the analogue halo above A4, the men's answer an octave under it, the solo near the centre and closer than the bed (sends.lead).
+    // The piece is the commonwealth's tune (1 2 3 5 6 5 3 2, the answer to the octave, the cadence), not the hymn: the hymn with the men's
+    // choir in the minor is the Crimson Tide sound, and the tune is the score's own. The opening is a song: the men sing the tune in unison
+    // as a line (not as block chords), D3 to D4, over two low voices humming one chord to a bar, voice-led; the harmony under the tune in
+    // the minor is i i bVI iv | i i bIII V, the cadence iv V iv i. Then the solo horn takes it up in its own register (D4 to D5, the men
+    // humming under), the deep double bass enters under the second strain to fill the floor and give it weight, and the timpani strikes
+    // only where it means something (the bass's entry, the cadence, the close). The full statement (A1, A2) is in the relative major
+    // (the tune shifted two degrees onto F: 'PA+2' over the procession's own progression spelled from D minor, bIII bVI bVII ...), the
+    // optimism after the solemn opening; the horns in the F3-F4 middle register as a solo and in the written octave as a section at the
+    // crest, the trombones an octave under and the trumpets on the answer, every long note swelling. The hymn stays as the second idea
+    // (B), stated by the horn section with the men on the minor; the breath (C) has the flute and the oboe's answer; the close is the
+    // solo horn on the cadence, home on the major. Where the solo horn plays it has a window: the men below D3, the women's hum and the
+    // violins above A4, the men's answer an octave under it, the solo near the centre and closer than the bed (sends.lead).
     sec: [
-      { n: 'men', bars: 4, cres: [0.6, 0.68], prog: 'i:2 | bVI V7', choir: { inst: 'choirMenAh', n: 3, reg: [43, 60], vel: 0.72 }, lead2: { ph: 'PAh', inst: 'choirMenAh', oct: -1, vel: 0.74, shape: 0.35 }, pad: { p: 'swell', inst: 'analog', n: 2, reg: [48, 64], vel: 0.32 }, pad2: { p: 'swell', inst: 'air', n: 2, reg: [72, 88], vel: 0.28 }, arp: { inst: 'glass', pat: '0.......2.......', res: 2, vel: 0.3, reg: [72, 96] }, bass: { pat: '1---', pedal: true, inst: { p: 'deep', sub: 0.6, att: 2.5, rel: 3.0 }, vel: 0.6 }, bell2: { ph: 'ST2', inst: 'chime', vel: 0.42 } },   // the men alone, open, on the hymn's harmony: the first sound of the game, their first phrase the commonwealth's climb — over the planetarium: a slow analogue bed beneath them, the air above, points of light echoing in the delay, one chime at the start, the deep pedal rising: solemn, vast
-      { n: 'call', bars: 4, cres: [0.68, 0.76], prog: 'i bVI V7 i', pad: { p: 'sus', inst: 'strings', n: 4, reg: [48, 72], vel: 0.66 }, pad2: { p: 'swell', inst: 'analog', n: 3, reg: [60, 81], vel: 0.42 }, arp: { inst: 'glass', pat: '0.......2.......', res: 2, vel: 0.28, reg: [72, 96], skip: 0.3 }, bass: { pat: ['1---', '1---', '1---', 'c---'], inst: { p: 'deep', sub: 0.8, att: 0.3, rel: 2.0 } },
-        choir: { inst: 'choirMenAh', n: 3, reg: [43, 60], vel: 0.68 }, choir2: { inst: 'ooh', n: 3, reg: [64, 79], vel: 0.4, soft: true },
-        lead: { ph: 'K', inst: 'hornSolo', vel: 1.0, shape: 0.3, swell: 0.25, pan: -0.05 }, bell2: { ph: 'ST', inst: 'chime', vel: 0.5 }, timp: { kick: 'X...............', vel: 0.55 }, bell: { dens: 0.08, res: 1, reg: [72, 96], vel: 0.4 } },   // the horn's call over the men as the strings, the deep pedal, a chime and the timpani's pulse join
-      { n: 'A1', bars: 16, cres: [0.62, 0.8], prog: 'i bVI i V7 | i iv bVI V | bVI i bIIIM7 bVII | iv bIIIM7 V i',
-        pad: { p: 'sus', inst: 'strings', n: 3, reg: [45, 64], vel: 0.52 }, pad2: { p: 'swell', inst: 'analog', n: 2, reg: [69, 84], vel: 0.38 }, arp: { inst: 'glass', pat: '0.......', res: 2, vel: 0.24, reg: [72, 96], skip: 0.4 }, bass: { pat: ['1---', '1---', 'c---', 'c---'], inst: { p: 'deep', sub: 0.75, att: 0.3, rel: 1.6 } },
-        lead: { ph: 'H1*0.78 H2*0.86 H3*1 H4*0.9', inst: 'hornSolo', oct: -1, vel: 1.0, shape: 0.4, swell: 0.4, pan: -0.05 }, lead2: { ph: 'r8 H3 H4', inst: 'choirMen', oct: -2, vel: 0.5, shape: 0.4 },
-        choir: { inst: 'choirMen', n: 3, reg: [43, 60], vel: 0.5, soft: true }, choir2: { inst: 'ooh', n: 3, reg: [64, 79], vel: 0.4, soft: true }, bell: { dens: 0.05, res: 1, reg: [72, 96], vel: 0.34 } },
+      { n: 'men', bars: 8, cres: [0.58, 0.66], prog: 'i i bVI iv | i i bIII V', lead2: { ph: 'PA PB', inst: 'choirMenAh', oct: -1, vel: 0.86, shape: 0.4 }, choir: { inst: 'choirMen', n: 2, reg: [45, 52], vel: 0.5, soft: true },
+        pad: { p: 'swell', inst: 'analog', n: 2, reg: [48, 64], vel: 0.3 }, pad2: { p: 'swell', inst: 'air', n: 2, reg: [72, 88], vel: 0.26 }, arp: { inst: 'glass', pat: '0.......', res: 2, vel: 0.26, reg: [72, 96], skip: 0.4 }, bell2: { ph: 'ST2', inst: 'chime', vel: 0.42 }, bell: { dens: 0.05, res: 1, reg: [76, 100], vel: 0.32 }, bass: false, timp: false, drums: false },   // the men alone, singing the tune as a song over a low hum, the planetarium's bed, one chime
+      { n: 'horn', bars: 12, cres: [0.66, 0.78], prog: 'i i bVI iv | i i bIII V | iv V iv i', lead: { ph: 'PA PB r4', inst: 'hornSolo', vel: 1.0, shape: 0.4, swell: 0.35, pan: -0.05 }, lead2: { ph: 'r8 CD', inst: 'choirMenAh', oct: -1, vel: 0.8, shape: 0.4 },
+        choir: { inst: 'choirMen', n: 2, reg: [45, 52], vel: 0.5, soft: true }, pad: { p: 'sus', inst: 'strings', n: 3, reg: [69, 86], vel: 0.42 }, pad2: { p: 'swell', inst: 'analog', n: 2, reg: [48, 60], vel: 0.34 }, arp: { inst: 'glass', pat: '0.......', res: 2, vel: 0.24, reg: [72, 96], skip: 0.4 },
+        bass: { pat: ['....', '....', '....', '....', '1---', '1---', '1---', 'c---', '1---', '1---', '1---', 'c---'], inst: { p: 'deep', sub: 0.85, att: 0.4, rel: 2.0 } },
+        timp: { kick: ['................', '................', '................', '................', 'X...............', '................', '................', '................', 'X...............', '................', '................', 'X...............'], vel: 0.55 }, bell: { dens: 0.06, res: 1, reg: [76, 100], vel: 0.34 } },   // the solo horn takes the tune up as the violins join; the double bass under the second strain; the timpani where it means something; the men sing the cadence
+      { n: 'A1', bars: 16, cres: [0.7, 0.84], prog: 'bIII bIII bVI bVII | bIII i iv bVII | bIII bVIM7 bIII bVII | bVIM7 bVI bVII bIII',
+        pad: { p: 'sus', inst: 'strings', n: 3, reg: [69, 86], vel: 0.46 }, pad2: { p: 'swell', inst: 'analog', n: 2, reg: [67, 81], vel: 0.36 }, arp: { inst: 'glass', pat: '0.......', res: 2, vel: 0.24, reg: [72, 96], skip: 0.4 }, bass: { pat: ['1---', '1---', 'c---', 'c---'], inst: { p: 'deep', sub: 0.8, att: 0.3, rel: 1.6 } },
+        lead: { ph: 'PA+2*0.88 PB+2*0.94 r4 CD+2*0.96', inst: 'hornSolo', oct: -1, vel: 1.0, shape: 0.4, swell: 0.4, pan: -0.05 }, lead2: { ph: 'r8 PA+2 r4', inst: 'choirMenAh', oct: -1, vel: 0.62, shape: 0.4 },
+        choir: { inst: 'choirMen', n: 2, reg: [45, 52], vel: 0.5, soft: true }, choir2: { inst: 'ooh', n: 2, reg: [69, 81], vel: 0.32, soft: true },
+        timp: { kick: ['X...............', '................', '................', '................', '................', '................', '................', 'X...............', '................', '................', '................', '................', 'X...............', '................', '................', 'X...............'], vel: 0.5 }, bell: { dens: 0.05, res: 1, reg: [76, 100], vel: 0.34 } },   // the whole tune in the relative major, the solo horn in its middle register over the humming men, the women's halo above, the men answering with the climb in the horn's register while it rests, the horn back for the cadence
       { n: 'B', bars: 8, lv: 0.86, prog: 'i bVII i V7 | i iv bVI V', cr: true, pad: { p: 'sus', inst: 'organ', n: 4, reg: [50, 76], vel: 0.7 }, pad2: { p: 'sus', inst: 'analog', n: 3, reg: [48, 69], vel: 0.75 }, bass: { pat: ['1---', 'c---'], inst: { p: 'deep', sub: 0.75, att: 0.3, rel: 1.4 } },
         arp: { pat: '0.......2.......', res: 2, vel: 0.4, reg: [55, 79], gate: 0.9 },
         lead: { ph: 'CT CT', inst: 'cello', oct: -1, vel: 0.6, art: 0.95, shape: 0.25 }, lead2: { ph: 'H1 H2', inst: 'choirMenAh', oct: -1, vel: 0.8, shape: 0.4 }, bell2: { ph: 'H1*0.85 H2*1', inst: 'horn', vel: 0.85, shape: 0.35, swell: 0.5 },
-        choir: { inst: 'choirMen', n: 3, reg: [43, 60], vel: 0.75 }, choir2: { inst: 'aah', n: 3, reg: [57, 74], vel: 0.5 } },
+        choir: { inst: 'choirMen', n: 3, reg: [43, 60], vel: 0.75 }, choir2: { inst: 'aah', n: 3, reg: [57, 74], vel: 0.5 }, timp: { kick: 'X.......x.......', vel: 0.42 } },   // the hymn, the game's leitmotif, as the second idea: the horn section with the men over the cellos' counter-line
       { n: 'C', bars: 8, lv: 0.4, prog: 'i bVI V7 i | i i iv V7', pad: { p: 'swell', inst: 'organSoft', n: 4, reg: [55, 79], vel: 0.6 }, pad2: { p: 'sus', inst: 'analog', n: 3, reg: [48, 69], vel: 0.6 }, bass: { pat: ['c---', '1---'], inst: { p: 'deep', sub: 0.8, att: 1.2, rel: 2.4 } },
         lead: { ph: 'F1 r4', inst: 'flute', vel: 0.55, shape: 0.3 }, lead2: { ph: ['r4 PAm', 'r4 PAm', 'r8'], inst: 'oboe', vel: 0.6, shape: 0.35 }, arp: { inst: 'harp', p: 'up8', vel: 0.5, reg: [55, 84] }, choir: { inst: 'choirMen', n: 3, reg: [43, 60], vel: 0.45, soft: true }, choir2: { inst: 'ooh', n: 3, reg: [57, 74], vel: 0.3, soft: true }, bell: { dens: 0.12, res: 1, reg: [72, 96], vel: 0.4 }, drums: false, timp: false, rise: 2 },
-      { n: 'A2', bars: 16, cres: [0.92, 1.12], prog: 'i bVI i V7 | i iv bVI V | bVI i bIIIM7 bVII | iv bIIIM7 V i', cr: true,
+      { n: 'A2', bars: 16, cres: [0.92, 1.12], prog: 'bIII bIII bVI bVII | bIII i iv bVII | bIII bVIM7 bIII bVII | bVIM7 bVI bVII bIII', cr: true,
         pad: { p: 'sus', inst: 'organ', n: 4, reg: [45, 72], vel: 0.5 }, pad2: { p: 'sus', inst: 'analog', n: 3, reg: [48, 69], vel: 0.85 }, bass: { pat: ['c---', 'c---', '1---', 'c---'], inst: { p: 'deep', sub: 0.85, att: 0.3, rel: 1.4 } }, arp: { pat: '0.......2.......', res: 2, vel: 0.4, reg: [55, 79], gate: 0.9 },
-        lead: { ph: 'H1*0.9 H2*0.95 H3*1 H4*0.96', inst: 'horn', vel: 1.0, shape: 0.35, swell: 0.5 }, lead2: { ph: 'H1*0.9 H2*0.95 H3*1 H4*0.96', inst: 'trombones', oct: -1, vel: 0.8, shape: 0.35, swell: 0.5 }, bell2: { ph: 'r8 H3 H4', inst: 'tpts', vel: 0.85, shape: 0.3, swell: 0.4 },
+        lead: { ph: 'PA+2*0.9 PB+2*0.95 PA+2*1 CD+2*0.96', inst: 'horn', vel: 1.0, shape: 0.35, swell: 0.5 }, lead2: { ph: 'PA+2*0.9 PB+2*0.95 PA+2*1 CD+2*0.96', inst: 'trombones', oct: -1, vel: 0.8, shape: 0.35, swell: 0.5 }, bell2: { ph: 'r8 PA+2 CD+2', inst: 'tpts', vel: 0.85, shape: 0.3, swell: 0.4 },
         choir: { inst: 'choirMenAh', n: 3, reg: [43, 60], vel: 0.95 }, choir2: { inst: 'aah', n: 3, reg: [57, 74], vel: 0.8 }, timp: { p: 'hits', vel: 0.6 },
-        bell: { dens: 0.15, res: 1, reg: [76, 100], vel: 0.5 } },
-      { n: 'E', bars: 8, cres: [0.72, 0.48], prog: 'iv bIIIM7 V i | iv bIIIM7 V i', pad: { p: 'sus', n: 3, reg: [43, 62] }, pad2: { p: 'sus', inst: 'warm', n: 2, reg: [69, 84], vel: 0.4 }, bass: { pat: ['1---', 'c---'], inst: { p: 'deep', sub: 0.7, att: 0.6, rel: 2.0 } },
-        lead: { ph: 'H4*0.9 H4*0.65', inst: 'hornSolo', oct: -1, vel: 0.85, shape: 0.4, pan: -0.05 }, choir: { inst: 'choirMen', n: 3, reg: [43, 60], vel: 0.6, soft: true }, choir2: { inst: 'ooh', n: 3, reg: [64, 79], vel: 0.33, soft: true }, bell: { dens: 0.06, res: 1, reg: [72, 96], vel: 0.34 } },
+        bell: { dens: 0.15, res: 1, reg: [76, 100], vel: 0.5 } },   // the crest: the horn section on the tune in the written octave, the trombones under, the trumpets on the answer, the chamber open on ah
+      { n: 'E', bars: 8, cres: [0.72, 0.46], prog: 'iv V iv i | iv V iv I', pad: { p: 'sus', n: 3, reg: [43, 62] }, pad2: { p: 'sus', inst: 'warm', n: 2, reg: [69, 84], vel: 0.4 }, bass: { pat: ['1---', 'c---'], inst: { p: 'deep', sub: 0.7, att: 0.6, rel: 2.0 } },
+        lead: { ph: 'CD*0.9 CD*0.65', inst: 'hornSolo', vel: 0.85, shape: 0.4, pan: -0.05 }, choir: { inst: 'choirMen', n: 3, reg: [43, 60], vel: 0.6, soft: true }, choir2: { inst: 'ooh', n: 3, reg: [64, 79], vel: 0.33, soft: true }, bell: { dens: 0.06, res: 1, reg: [72, 96], vel: 0.34 } },   // the solo horn closes with the cadence, home on the major
     ],
   });
 
