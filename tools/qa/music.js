@@ -34,6 +34,7 @@ const { serve, open } = require('./lib');
     check('soft switch armed on a section line', sw && lines.some(x => Math.abs(x - sw.at) < 0.06), sw ? 'at ' + (sw.at - t0).toFixed(2) : 'not armed');
     check('soft switch goes through an interlude in the new key', sw && /^drift/.test(sw.id) && S.playlist && S.playlist.queued === first, sw && sw.id);
     check('the motif rides the interlude', sw && /:m/.test(sw.id) && !D.motif, sw && sw.id);
+    check('the interlude modulates from the piece ending', sw && /:fqaA$/.test(sw.id) && /bVII ii V7/.test(M._tracks[sw.id].sec.find(x => x.n === 'in').prog), sw && M._tracks[sw.id] && M._tracks[sw.id].sec.find(x => x.n === 'in').prog);   // C major into D: the old tonic, the shared ii, the new V7
     await run(10);
     check('interlude became current', trace.some(x => x.cur && /^drift/.test(x.cur)), trace.map(x => x.cur).join(' > '));
     // 3. a tense bridge into a cue that cannot wait, asked twice
@@ -52,7 +53,16 @@ const { serve, open } = require('./lib');
     check('the director chose the war-tagged piece', b2 && b2.then && b2.then.id === 'qaC', b2 && b2.then && b2.then.id);
     check('the level tilted up at war, within a decibel', D.gainDb > 0.5 && D.gainDb <= 1.2, D.gainDb.toFixed(2) + ' dB');
     await run(9);
-    // 5. snapshot and restore keep the programme and the director
+    // 5. the modulating interlude: opens on the outgoing tonic in the outgoing meter and pulse, walks to the new dominant, glides to the new tempo
+    M._define('qaFrom', { bpm: 156, meter: 6, root: 'F', mode: 'major', hidden: true, tens: false, inst: { pad: 'warm' }, sec: [{ n: 'A', bars: 4, lv: 0.6, prog: 'I', pad: 'sus' }] });
+    M._define('qaTo', { bpm: 50, root: 'B', mode: 'minor', hidden: true, tens: false, inst: { pad: 'warm' }, sec: [{ n: 'A', bars: 4, lv: 0.6, prog: 'i', pad: 'sus' }] });
+    const mid = R.interludeFor('drift5', 'qaTo', { from: M._tracks.qaFrom }), md = M._tracks[mid], inS = md.sec.find(x => x.n === 'in'), prog = inS.prog.split(/\s+/), cp = M._compile(mid, 0), lens = cp.bars.slice(0, inS.bars + 1).map((x, i, a) => i ? x - a[i - 1] : 0).slice(1);
+    const firstCh = M._parseChord(prog[0], 11), lastCh = M._parseChord(prog[prog.length - 1], 11);   // B = 11
+    check('interlude opens on the outgoing tonic', firstCh.pc === 5 && firstCh.iv.length === 3, prog.join(' '));
+    check('interlude arrives on the new dominant seventh', lastCh.pc === 6 && lastCh.iv.indexOf(10) >= 0, prog[prog.length - 1]);
+    check('opening bars keep the outgoing pulse and bar length', inS.meter === 2 && Math.abs(lens[0] - 6 * 60 / 156) < 0.08, 'meter ' + inS.meter + ' first bar ' + lens[0].toFixed(2) + ' s');
+    check('tempo glides across the opening bars', lens.every((l, i) => i === 0 || l >= lens[i - 1] - 1e-6) && md.bpm === 50, lens.map(l => l.toFixed(2)).join(' '));
+    // 6. snapshot and restore keep the programme and the director
     const snapshot = M.snapshot();
     check('snapshot keeps the directed programme', snapshot.playlist && snapshot.playlist.director && snapshot.playlist.ids.length === 4);
     M.play('qaFight', { fade: 0.5, quantize: false }); await run(2);

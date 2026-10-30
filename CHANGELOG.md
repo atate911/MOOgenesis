@@ -29,6 +29,13 @@ Versions follow `MAJOR.MINOR.PATCH`; the live version is the `VERSION` file.
   that is playing reaches its next breath or section line, an interlude in the new key follows, and only then the new programme's first
   piece enters, with the long seam fades of the rotation. Two more interludes join the bridges between pieces: the choir alone, and the
   violas with a trumpet far away. Plucked and bass notes no longer land at identical levels.
+- Interludes modulate. The interlude between two pieces now opens on the outgoing piece's tonic, in the outgoing piece's meter and felt
+  pulse (a quick six hands over at its dotted beat, a march at its half bar), so the piece ending decays into its own chord and bar; its
+  opening bars then walk the way into the new key — a pivot chord the two keys share with a pre-dominant role in the new one, or a walk
+  round the circle of fifths when they share nothing, or the Neapolitan when they are far — and arrive on the new dominant seventh, while
+  the tempo glides to the new piece's as a true accelerando or ritardando; the body continues in the new meter at the new tempo. The
+  compiler gained a tempo map (a section may carry its own tempo, and a tempo may ramp across it) and a per-section meter; every existing
+  piece compiles to the same notes as before.
 - The score has a shared theme library and a story. The themes the pieces quote (the hymn, the men's phrase, the procession, the
   chorale, the planetarium's four notes, the tide's rise, the wonder tune, the cradle, the abyss's step) are written once in
   `js/audio/score/themes.js` and quoted by name; sixty-five copied phrases became references with no note changed, and

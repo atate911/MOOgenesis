@@ -82,6 +82,8 @@ Colour semantics are fixed: gold = BC/money, ember = industry, leaf = food/growt
 - Every map piece carries `tags` for the director (solitude, contact, tension, war, grief, grandeur, energy, dark, 0..1), an `eraWin` if it
   belongs to a phase, and quotes at least one shared theme (by reference, or `quotes: ['hymn']` for a hand-adapted reading). New pieces get a
   `trim` from `node tools/audio-report.js --tracks <id> --json r.json` + `node tools/audio-trims.js r.json --apply`.
+- A section may carry its own `meter`, `bpm` and `bpmTo` (a tempo ramp across it); the engine's time map places every note, bar line and beat.
+  Interludes use this to open in the outgoing piece's meter and pulse and glide to the next piece's tempo.
 - Check a change with `node tools/score-lint.js` (schema, instruments, forms, phrases, themes, determinism, the programme's lists; `--strict`
   in a release pass) and `node tools/qa/music.js` (the seams in real time: directed programme, soft change, bridges, motif, snapshot / restore).
 

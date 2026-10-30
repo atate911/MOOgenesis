@@ -17,7 +17,7 @@ for (const f of files) vm.runInContext(fs.readFileSync(path.join(ROOT, f), 'utf8
 const Music = ctx.MOO.Audio.Music, T = Music._tracks, INST = Music._INST, R = Music._rotation;
 const problems = [], warns = [];
 const bad = (id, msg) => problems.push(id + ': ' + msg), warn = (id, msg) => warns.push(id + ': ' + msg);
-const TOP = new Set(['id', 'desc', 'bpm', 'meter', 'root', 'mode', 'tonic', 'oct', 'bassC', 'trim', 'tone', 'mix', 'fx', 'sends', 'tens', 'gate', 'gentle', 'eraSens', 'rubato', 'loopFrom', 'forms', 'alts', 'eraAlts', 'inst', 'ph', 'base', 'sec', 'strong', 'lintMin', 'hidden', 'interlude', 'bridge', 'tags', 'eraWin', 'motif', 'motifInst', 'quotes', 'tomTune', '_p']);
+const TOP = new Set(['id', 'desc', 'bpm', 'meter', 'root', 'mode', 'tonic', 'oct', 'bassC', 'trim', 'tone', 'mix', 'fx', 'sends', 'tens', 'gate', 'gentle', 'eraSens', 'rubato', 'loopFrom', 'forms', 'alts', 'eraAlts', 'inst', 'ph', 'base', 'variantOf', 'sec', 'strong', 'lintMin', 'hidden', 'interlude', 'bridge', 'tags', 'eraWin', 'motif', 'motifInst', 'quotes', 'tomTune', '_p']);
 const LAYERS = ['pad', 'pad2', 'bass', 'arp', 'arp2', 'drums', 'perc', 'timp', 'lead', 'lead2', 'bell', 'bell2', 'choir', 'choir2'];
 const SEC = new Set(['n', 'bars', 'barsVar', 'lv', 'cres', 'prog', 'fill', 'cr', 'rise', 'hit', 'tens'].concat(LAYERS));
 const AXES = ['solitude', 'contact', 'tension', 'war', 'grief', 'grandeur', 'energy', 'dark', 'ceremony'];
@@ -54,6 +54,10 @@ if (!only.length) {
   const moods = R.MOODS; for (const m in moods) for (const id of [].concat(moods[m])) if (!known(id)) bad('programme', 'mood "' + m + '" names unknown piece "' + id + '"');
   for (const id of R.GALAXY) if (!T[id].tags) bad('programme', 'map piece "' + id + '" has no tags for the director');
   const ix = Music.themeIndex(), quoted = Object.values(ix).flat(); for (const id of R.GALAXY) if (quoted.indexOf(id) < 0) warn(id, 'quotes no shared theme');
+  // the seams: an interlude from every map piece into every other compiles (its opening bars in the outgoing meter and pulse, the pivot chords, the new tempo)
+  let pairs = 0; const seamIds = R.GALAXY.concat(['procession']);
+  for (const a of seamIds) for (const b of seamIds) { if (a === b) continue; for (const tpl of ['drift', 'drift5']) { try { Music._compile(R.interludeFor(tpl, b, { from: T[a] }), 0); pairs++; } catch (e) { bad('programme', 'interlude ' + tpl + ' from ' + a + ' into ' + b + ' fails: ' + e.message); } } }
+  console.log('  seams: ' + pairs + ' interludes between map pieces compile');
 }
 for (const w of warns) console.log('  warn  ' + w);
 for (const p of problems) console.log('  FAIL  ' + p);

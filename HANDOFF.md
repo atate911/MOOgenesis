@@ -38,6 +38,16 @@ the values) and resolved in `prepare()`, which records `P.themes`; `quotes: [...
 (the interlude's A section plays it once); soundscape.js sets it on a newly met race and when `readState().council >= 0.5` (Council.colonised >=
 threshold, next sitting within 6 years; `q.council` also lifts pieces tagged `ceremony`). Checks: `node tools/score-lint.js [--strict]`, `node
 tools/qa/music.js`. The compile hash of all 69 tracks was identical before and after the split and the theme conversion.
+Tempo map and meter per section: a section may set `meter`, `strong`, `bpm`, `bpmTo` (prepare → R.meter/R.strong/R.bpm/R.bpmTo); compilePass builds
+`C.tAt(beat)` (closed-form integral of a linear tempo ramp per section) and the pass carries `bars` / `beatsT` (line times) and `w.t0`; every emit,
+the player's `nextBoundary` / `boundaryAfter` / `nextSectionBoundary`, `Music.list()` and `analyze` read them (generators keep `C.meter` /
+`C.strong` / `C.spb` per section; genLine parses phrases in the section's meter). Modulation (music.js 'modulation'): `pivotPath(from, to)` → the
+opening chords of an interlude as numerals of the new key (old tonic, a shared pre-dominant pivot | circle-of-fifths walk | Neapolitan, V7);
+`pulseK(from, targetBpm)` ∈ {1,2,3}; `interludeFor(tpl, next, { from })` sets the 'in' section's meter = from.meter / k, bpm = from.bpm / k,
+bpmTo = next.bpm, prog = the path, and the body's bpm / meter to the next piece's (lines silenced when the body is not in four); the seams pass
+`from: outgoing(p)` (the piece actually ending — a war variant keeps its base's key — else the director's last piece; an interlude or bridge is never a `from`).
+War / hits variants carry `variantOf`, and the director's history counts them as their piece. Checked: the compile hash of all 69 pieces unchanged by the compiler change; 840 pairings compile (score-lint);
+qa/music.js checks a quick-six → B-minor seam (opens on F in meter 2 at the lullaby's bar length, arrives on F#7, bars lengthen into 50).
 The director (music.js, 'the director'): map pieces carry `tags: { solitude, contact, tension, war, grief, grandeur, energy, dark }` (0..1); `Music.setSituation(q)`
 takes the game's reading on the same axes (soundscape.js `situation()`, from `readState()` — the era's components plus own colonies, fleet peaks and
 a remembered war / loss: `warMem` decays 0.88 a turn, `griefMem` 0.9), `pickNext(pl, last)` weights candidates by `exp(4 * affinity)` × recency

@@ -383,6 +383,7 @@
     return {};
   }
 
+  const STRONG = { 2: [0], 3: [0], 4: [0, 2], 5: [0, 3], 6: [0, 3], 7: [0, 4] };
   function prepare(def) {
     if (def._p) return def._p;
     const meter = def.meter || 4, tpc = PCS[def.root];
@@ -390,15 +391,17 @@
     const scale = SCALES[def.mode || 'major'];
     if (!scale) throw new Error(def.id + ': bad mode');
     const P = {
-      meter, spb: 60 / def.bpm, tpc, scale, warn: [], strong: def.strong || ({ 2: [0], 3: [0], 4: [0, 2], 5: [0, 3], 6: [0, 3], 7: [0, 4] }[meter] || [0]),
+      meter, spb: 60 / def.bpm, tpc, scale, warn: [], strong: def.strong || (STRONG[meter] || [0]), src: {},
       tonic: def.tonic !== undefined ? def.tonic : 57 + mod12(tpc - 57) + 12 * (def.oct || 0), phr: {}, secs: [], loopIdx: 0, themes: {},
     };
     for (const t of def.quotes || []) P.themes[t] = true;   // a theme quoted in a hand-adapted reading (another meter, an inversion) is declared
-    for (const k in (def.ph || {})) { const src = def.ph[k], str = typeof src === 'string' && src[0] === '@' ? resolveTheme(src, P.themes) : src; P.phr[k] = parsePhrase(str, meter); if (Math.abs(P.phr[k].beats / meter - Math.round(P.phr[k].beats / meter)) > 1e-6) P.warn.push('phrase ' + k + ' is ' + P.phr[k].beats + ' beats (not bar-aligned)'); }
+    for (const k in (def.ph || {})) { const src = def.ph[k], str = typeof src === 'string' && src[0] === '@' ? resolveTheme(src, P.themes) : src; P.src[k] = str; P.phr[k] = parsePhrase(str, meter); if (Math.abs(P.phr[k].beats / meter - Math.round(P.phr[k].beats / meter)) > 1e-6) P.warn.push('phrase ' + k + ' is ' + P.phr[k].beats + ' beats (not bar-aligned)'); }
     const base = def.base || {};
     def.sec.forEach(function (s, idx) {
       const R = { n: s.n || 'S' + idx, bars: s.bars, lv: num(s.lv, 1), lv1: s.cres ? s.cres[1] : num(s.lv, 1), lv0: s.cres ? s.cres[0] : num(s.lv, 1), L: {}, raw: s };
-      R.segs = expandProg(s.prog, s.bars, meter, tpc);
+      // a section's own meter and tempo (an interlude's opening bars keep the outgoing piece's; a tempo may ramp across a section)
+      R.meter = num(s.meter, meter); R.strong = s.strong || def.strong || (STRONG[R.meter] || [0]); R.bpm = num(s.bpm, def.bpm); R.bpmTo = num(s.bpmTo, R.bpm);
+      R.segs = expandProg(s.prog, s.bars, R.meter, tpc);
       for (const key of ['pad', 'pad2', 'bass', 'arp', 'arp2', 'drums', 'perc', 'timp', 'lead', 'lead2', 'bell', 'bell2', 'choir', 'choir2']) {
         let v = s[key] !== undefined ? s[key] : base[key];
         if (v === true) v = base[key];
@@ -417,20 +420,20 @@
   function emit(C, ly, inst, beat, midi, beats, vel, ex) {
     if (beat < 0 || beat >= C.totalBeats) return null;
     const o = Object.assign({}, inst);
-    o.f = mtof(midi); o.dur = Math.max(0.03, beats * C.spb * (ex && ex.art !== undefined ? ex.art : 1)); o.vel = vel * (inst.lvl === undefined ? 1 : inst.lvl) * C.lvAt(beat); o.dyn = clamp(vel * C.lvAt(beat), 0, 1);
+    o.f = mtof(midi); o.dur = Math.max(0.03, (C.tAt(beat + beats) - C.tAt(beat)) * (ex && ex.art !== undefined ? ex.art : 1)); o.vel = vel * (inst.lvl === undefined ? 1 : inst.lvl) * C.lvAt(beat); o.dyn = clamp(vel * C.lvAt(beat), 0, 1);
     if (inst.v === 'sample' && beats >= 1.5) { const d1 = clamp(vel * C.lvAt(beat + beats), 0, 1); if (Math.abs(d1 - o.dyn) > 0.04) o.swell = d1; }   // long notes swell with the section's crescendo
     // struck/ringing voices (bells, chimes) keep their own ring time; it only stretches a little with the written length
     if ((inst.v === 'bell' || inst.v === 'chime') && inst.dur) o.dur = inst.dur * clamp(0.7 + 0.15 * beats, 0.7, 1.4);
     if (ex) for (const k in ex) if (k !== 'art' && k !== 'dt' && ex[k] !== undefined) o[k] = ex[k];
     delete o.p;
-    const ev = { t: beat * C.spb + (ex && ex.dt || 0), v: inst.v, ly, o, m: midi, b: beat, bt: beats, k: C.key };
+    const ev = { t: C.tAt(beat) + (ex && ex.dt || 0), v: inst.v, ly, o, m: midi, b: beat, bt: beats, k: C.key };
     C.ev.push(ev);
     return ev;
   }
   function emitDrum(C, ly, dv, beat, vel, ex) {
     if (beat < 0 || beat >= C.totalBeats) return;
     const o = Object.assign({}, dv); o.vel = vel * C.lvAt(beat) * (dv.lvl === undefined ? 1 : dv.lvl); if (dv.dyn === undefined) o.dyn = clamp(vel * C.lvAt(beat), 0, 1); if (ex) Object.assign(o, ex);
-    C.ev.push({ t: beat * C.spb, v: dv.v, ly, o, m: 0, b: beat, bt: 0, k: C.key });
+    C.ev.push({ t: C.tAt(beat), v: dv.v, ly, o, m: 0, b: beat, bt: 0, k: C.key });
   }
   function stepMidi(C, step, acc) {
     const L = C.scale.length, o = Math.floor(step / L), i = step - o * L;
@@ -438,7 +441,7 @@
   }
   function isStrong(C, beatInSec) {
     const b = beatInSec % C.meter;
-    for (const s of C.P.strong) if (Math.abs(b - s) < 1e-6) return true;
+    for (const s of C.strong) if (Math.abs(b - s) < 1e-6) return true;
     return false;
   }
 
@@ -562,7 +565,7 @@
         const sg0 = segAt(s.R.segs, bar * C.meter), m0 = nearestPc(sg0.ch.bassPc, num(P.center, 40)), k = bar - (s.bars - rollBars);
         const d0 = 0.25 + 0.55 * k / rollBars, d1 = 0.25 + 0.55 * (k + 1) / rollBars;
         // a real roll (looped) rising through the bar; the synth timpani keeps the old 16th-note roll when the samples are not in
-        emitDrum(C, 'drums', { v: 'sample', smp: 'timpRoll', fb: 'timp', fbo: { f: mtof(m0), dur: 1.8 }, f: mtof(m0), dur: C.meter * C.spb, dyn: d0, swell: d1, hum: 0, lvl: 0.9 }, s.start + bar * C.meter, vel0 * d1);
+        emitDrum(C, 'drums', { v: 'sample', smp: 'timpRoll', fb: 'timp', fbo: { f: mtof(m0), dur: 1.8 }, f: mtof(m0), dur: C.tAt(s.start + (bar + 1) * C.meter) - C.tAt(s.start + bar * C.meter), dyn: d0, swell: d1, hum: 0, lvl: 0.9 }, s.start + bar * C.meter, vel0 * d1);
         pat = bar === s.bars - 1 ? '...............x' : '................'; ramp = null;
       }
       const stepB = C.meter / pat.length, hits = pat.split('').filter(c => c !== '.' && c !== '-').length;
@@ -648,8 +651,8 @@
       const rm = /^r(\d*\.?\d+)$/.exec(tk);
       if (rm) { cur += parseFloat(rm[1]) * C.meter; continue; }
       const pm = PH_TOK.exec(tk);
-      if (!pm || !C.P.phr[pm[1]]) { C.warn('unknown phrase "' + tk + '" in ' + s.R.n); continue; }
-      const ph = C.P.phr[pm[1]], md = parseMods(pm[2]);
+      if (!pm || C.P.src[pm[1]] === undefined) { C.warn('unknown phrase "' + tk + '" in ' + s.R.n); continue; }
+      const ph = parsePhrase(C.P.src[pm[1]], C.meter), md = parseMods(pm[2]);   // read in the section's meter (an interlude's opening bars may differ)
       if (restP && rng() < restP) { cur += ph.bars * C.meter; continue; }        // the player leaves this phrase out: a breath in the line
       const first = ph.notes.length ? ph.notes[0].d - 1 : 0;
       for (const nt of ph.notes) {
@@ -775,6 +778,7 @@
     for (let i = 0; i < wraps.length; i++) {
       const cur = wraps[i], prev = i > 0 ? wraps[i - 1] : (C.pass > 0 ? wraps[wraps.length - 1] : null);
       C.curW = cur;
+      C.meter = cur.R.meter;
       if (cur.R.hit) { emitDrum(C, 'fx', { v: 'boom' }, cur.start, 0.3); emitDrum(C, 'fx', { v: 'sample', smp: 'bassDrum', fb: 'kick', fbo: { f: 40, f0: 110, dur: 0.5 } }, cur.start, 0.95); if (cur.R.hit === 'tam') emitDrum(C, 'fx', { v: 'sample', smp: 'gong', fb: 'crash', fbo: { dur: 3 } }, cur.start, 0.8); }
       if (!prev || C.def.gentle) continue;
       const up = cur.R.lv0 - prev.R.lv1;
@@ -783,7 +787,7 @@
       if (rise) {
         // the riser sits in the last bar(s) of the previous section; across the loop seam it lives at the end of this pass
         const st = i > 0 ? cur.start - rise * C.meter : C.totalBeats - rise * C.meter;
-        if (st >= 0) { C.curW = i > 0 ? prev : cur; const dur = rise * C.meter * C.spb; emitDrum(C, 'fx', { v: 'swell', dur }, st, 0.15); emitDrum(C, 'fx', { v: 'sample', smp: 'cymSwell', fb: 'swell', fbo: { dur }, alignEnd: true, dur, dyn: dur > 5 ? 0.9 : dur > 3 ? 0.5 : 0.15 }, st, 0.55); }
+        if (st >= 0) { C.curW = i > 0 ? prev : cur; const dur = C.tAt(st + rise * C.meter) - C.tAt(st); emitDrum(C, 'fx', { v: 'swell', dur }, st, 0.15); emitDrum(C, 'fx', { v: 'sample', smp: 'cymSwell', fb: 'swell', fbo: { dur }, alignEnd: true, dur, dyn: dur > 5 ? 0.9 : dur > 3 ? 0.5 : 0.15 }, st, 0.55); }
       }
     }
   }
@@ -807,7 +811,7 @@
   function compilePass(def, pass, form0, alt0, take, era) {
     const P = prepare(def), secs = passSections(def, P, pass, form0), E = eraOf(def, era);
     const C = {
-      def, P, pass, take: take || 0, era: E, widthK: 1 - 0.3 * E, meter: P.meter, spb: P.spb, scale: P.scale, tonic: P.tonic, ev: [], bassC: def.bassC || 38, prevPad: {}, prevChoir: {},
+      def, P, pass, take: take || 0, era: E, widthK: 1 - 0.3 * E, meter: P.meter, spb: P.spb, strong: P.strong, scale: P.scale, tonic: P.tonic, ev: [], bassC: def.bassC || 38, prevPad: {}, prevChoir: {},
       inst: Object.assign({}, def.inst || {}, def.alts && def.alts.length ? def.alts[((alt0 || 0) + pass) % def.alts.length] : {}),   // per-pass instrument alternation, from a random start
       snaps: 0, crng: makeRng(def.id + ':c'), vrng: makeRng(def.id + ':v' + ((pass + (take || 0)) % 8)), warn: m => { if (P.warn.indexOf(m) < 0) P.warn.push(m); }, lvAt: null, totalBeats: 0,
     };
@@ -819,19 +823,33 @@
       let R = R0;
       if (R0.barsVar) {                                   // a breath is not always the same length: the next phrase waits a little longer, or less
         const bars = Math.max(1, R0.barsVar[0] + C.vrng.int(0, R0.barsVar[1] - R0.barsVar[0]));
-        if (bars !== R0.bars) R = Object.assign(Object.create(R0), { bars, segs: expandProg(R0.raw.prog, bars, P.meter, P.tpc) });
+        if (bars !== R0.bars) R = Object.assign(Object.create(R0), { bars, segs: expandProg(R0.raw.prog, bars, R0.meter, P.tpc) });
       }
       if (tenseP > 0) {                                   // the era colours some of the chords (the same ones every time at a given era, per take)
         const segs = R.segs.map((sg, i, arr) => { const r = erng(); if (r >= tenseP || i === arr.length - 1) return sg; const sym = tenseChord(sg.ch.sym, E, erng()); return sym === sg.ch.sym ? sg : { ch: parseChord(sym, P.tpc), b0: sg.b0, b1: sg.b1 }; });   // never the cadence
         R = Object.assign(Object.create(R), { segs });
       }
-      wraps.push({ R, start: beat, beats: R.bars * P.meter, bars: R.bars }); beat += R.bars * P.meter;
+      wraps.push({ R, start: beat, beats: R.bars * R.meter, bars: R.bars }); beat += R.bars * R.meter;
     }
     C.totalBeats = beat;
+    // the time map: each section runs at its tempo (and may ramp to bpmTo across its bars); t(beat) integrates it, so a ramp is a true
+    // accelerando or ritardando and every event, bar line and beat sits where the music puts it
+    const tOf = (w, b) => { const d = w.b1 - w.b0; return d ? 60 * w.beats / d * Math.log((w.b0 + d * b / w.beats) / w.b0) : 60 * b / w.b0; };
+    let tAcc = 0;
+    for (const w of wraps) { w.b0 = w.R.bpm; w.b1 = w.R.bpmTo; w.t0 = tAcc; w.len = tOf(w, w.beats); tAcc += w.len; }
+    C.tAt = function (b) {
+      let w = wraps[0]; for (const x of wraps) { if (b >= x.start - 1e-9) w = x; else break; }
+      if (b < w.start) return w.t0 + (b - w.start) * 60 / w.b0;
+      if (b > w.start + w.beats) return w.t0 + w.len + (b - w.start - w.beats) * 60 / w.b1;
+      return w.t0 + tOf(w, b - w.start);
+    };
+    const bars = [], beatsT = [];
+    for (const w of wraps) { for (let k = 0; k < w.bars; k++) bars.push(C.tAt(w.start + k * w.R.meter)); for (let k = 0; k < w.beats; k++) beatsT.push(C.tAt(w.start + k)); }
+    bars.push(tAcc); beatsT.push(tAcc);
     C.curW = null;
     C.lvAt = function (b) { const w = C.curW; if (!w || w.R.lv0 === w.R.lv1) return w ? w.R.lv0 : 1; return w.R.lv0 + (w.R.lv1 - w.R.lv0) * clamp((b - w.start) / w.beats, 0, 1); };
     for (const w of wraps) {
-      C.curW = w;
+      C.curW = w; C.meter = w.R.meter; C.strong = w.R.strong; C.spb = 60 / w.b0;   // the section's meter and (opening) tempo
       const s = { R: w.R, start: w.start, bars: w.bars, beats: w.beats };
       for (const key in w.R.L) {
         const cfg = w.R.L[key];
@@ -852,7 +870,7 @@
     genTransitions(C, wraps);
     C.ev.sort((a, b) => a.t - b.t);
     markLegato(C.ev);
-    return { events: C.ev, beats: C.totalBeats, len: C.totalBeats * P.spb, wraps, pass, snaps: C.snaps };
+    return { events: C.ev, beats: C.totalBeats, len: tAcc, wraps, pass, snaps: C.snaps, bars, beatsT };
   }
   // phrasing: in a melodic line, a note that follows straight on from the previous one is played legato (the sampler then starts past the
   // bow / breath attack and the previous note is held a little into it, like a player who does not re-attack every note)
@@ -946,17 +964,19 @@
     now() { return this.eng.now(); }
     // the next bar (or beat) boundary of this performance, capped so a switch never waits more than a few seconds
     nextBoundary(kind) {
-      const now = this.eng.ctx.currentTime, unit = (kind === 'beat' ? this.P.spb : this.P.meter * this.P.spb) * this.stretch;
+      const now = this.eng.ctx.currentTime;
       if (!this.pass || this.stopped) return now;
-      const base = this.pass.start - this.shift, k = Math.ceil((now - base + 0.06) / unit);
-      return Math.min(base + k * unit, now + (kind === 'beat' ? 1.5 : 4.5));
+      const base = this.pass.start - this.shift, arr = kind === 'beat' ? this.pass.beatsT : this.pass.bars, st = this.stretch;
+      let at = base + this.pass.len;                                         // past the last line: the end of the performance
+      for (let i = 0; i < arr.length; i++) if (base + arr[i] * st > now + 0.06) { at = base + arr[i] * st; break; }
+      return Math.min(at, now + (kind === 'beat' ? 1.5 : 4.5));
     }
     // the first bar line at or after `time` in this performance (never past its end): where the next piece enters
     boundaryAfter(time) {
       if (!this.pass) return time;
-      const unit = this.P.meter * this.P.spb * this.stretch, base = this.pass.start - this.shift, end = this.pass.start + this.pass.len - this.shift;
-      const k = Math.ceil((time - base - 0.02) / unit);
-      return Math.min(end, Math.max(time, base + k * unit));
+      const base = this.pass.start - this.shift, end = this.pass.start + this.pass.len - this.shift, st = this.stretch;
+      for (const b of this.pass.bars) { const at = base + b * st; if (at >= time - 0.02) return Math.min(end, Math.max(time, at)); }
+      return end;
     }
     // the next place this performance would naturally let another piece in: the start of its next section at least `minAhead` seconds away
     // (a breath — a section written at lv <= 0.35 — inside `maxAhead` is preferred, since the piece is all but silent there), else the first
@@ -964,12 +984,12 @@
     nextSectionBoundary(minAhead, maxAhead) {
       const now = this.eng.ctx.currentTime;
       if (!this.pass || this.stopped) return now;
-      const spb = this.P.spb * this.stretch, base = this.pass.start - this.shift, end = base + this.pass.len;
-      const lines = this.pass.wraps.map(w => ({ at: base + w.start * spb, lv: w.R.lv0 })).concat([{ at: end, lv: 0 }]).filter(x => x.at >= now + minAhead && x.at <= now + maxAhead);
+      const st = this.stretch, base = this.pass.start - this.shift, end = base + this.pass.len;
+      const lines = this.pass.wraps.map(w => ({ at: base + w.t0 * st, lv: w.R.lv0 })).concat([{ at: end, lv: 0 }]).filter(x => x.at >= now + minAhead && x.at <= now + maxAhead);
       const breath = lines.find(x => x.lv <= 0.35);
       if (breath) return breath.at;
       if (lines.length) return lines[0].at;
-      return this.boundaryAfter(Math.max(now + minAhead, now + maxAhead - this.P.meter * spb));
+      return this.boundaryAfter(Math.max(now + minAhead, now + maxAhead - this.P.meter * this.P.spb * st));
     }
     applyIntensity(x, immediate) {
       this.intensity = x;
@@ -1108,7 +1128,7 @@
           const far = pl.director && DIR.lastPiece && farApart(TRACKS[DIR.lastPiece], TRACKS[id]);   // a very different piece next: breathe first
           const quiet = far ? pl.between.filter(t => QUIET[t]) : pl.between, base = quiet.length ? quiet : pl.between;
           const pool = base.length > 1 ? base.filter(t => t !== pl.lastTpl) : base, tpl = pool[Math.floor(Math.random() * pool.length)];   // never the same bridge twice running
-          const d = interludeFor(tpl, id, { long: far, motif: DIR.motif }); if (d) { pl.lastTpl = tpl; pl.queued = id; id = d; gap = pl.gapIn; pl.far = !!far; DIR.motif = null; }
+          const d = interludeFor(tpl, id, { long: far, motif: DIR.motif, from: outgoing(p) }); if (d) { pl.lastTpl = tpl; pl.queued = id; id = d; gap = pl.gapIn; pl.far = !!far; DIR.motif = null; }
         }
       }
       const g = pickGap(gap);
@@ -1228,18 +1248,55 @@
     major: 'I:2 IV:2 vi:2 V:2', lydian: 'IM7:2 II:2 vi:2 IM7:2', mixolydian: 'I:2 bVII:2 v:2 IV:2', dorian: 'i:2 IV:2 bVII:2 i:2',
     minor: 'i:2 bVI:2 bVII:2 i:2', phrygian: 'i:2 bII:2 bVI:2 i:2', harmonic: 'i:2 iv:2 bVI:2 V:2', melodic: 'i:2 IV:2 bVI:2 V:2',
   };
-  // the interlude for the piece that follows: the template transposed to its key and mode (cached as a hidden track 'drift:<id>')
+  // ---------------------------------------------------------------- modulation: the way from one key into the next
+  // The diatonic triads of a key (root, quality, degree), the pitch classes of a chord, and a chord spelled as a numeral of a key
+  function triads(def) {
+    const sc = SCALES[def.mode || 'major'], tpc = PCS[def.root]; if (!sc || sc.length !== 7 || tpc === undefined) return [];
+    return sc.map((d, i) => { const th = mod12(sc[(i + 2) % 7] - d), fi = mod12(sc[(i + 4) % 7] - d); const q = th === 4 && fi === 7 ? '' : th === 3 && fi === 7 ? 'm' : th === 3 && fi === 6 ? 'o' : th === 4 && fi === 8 ? '+' : null; return q === null ? null : { root: mod12(tpc + d), q, deg: i }; }).filter(Boolean);
+  }
+  const pcsOf = ch => (QUAL[ch.q] || QUAL['']).map(x => mod12(ch.root + x)).sort((a, b) => a - b).join(',');
+  function romanIn(ch, tpc) { const name = DEG_NAME[mod12(ch.root - tpc)], lower = ch.q === 'm' || ch.q === 'o'; return (lower ? name.toLowerCase() : name) + (ch.q === 'o' ? 'o' : ch.q === '+' ? '+' : '') + (ch.seventh ? '7' : ''); }
+  // The chords of an interlude's opening bars, in the numerals of the key arrived at: the old tonic first (the old piece's last chord decays
+  // into its twin), then a pivot the two keys share — one with a pre-dominant role in the new key when there is one — or, when they share
+  // nothing, a walk round the circle of fifths the short way (a major chord on each step, each the dominant of the next flatwards) or the
+  // Neapolitan when they are far apart, then the new dominant seventh. Null when the keys are the same.
+  function pivotPath(from, to) {
+    const tFrom = triads(from), tTo = triads(to), tpc = PCS[to.root];
+    const oldI = tFrom.find(c => c.deg === 0); if (!oldI || !tTo.length) return null;
+    if (from.root === to.root && (from.mode || 'major') === (to.mode || 'major')) return null;
+    const path = [oldI], d = fifthsDist(from, to);
+    const shared = tTo.filter(c => c.q !== 'o' && pcsOf(c) !== pcsOf(oldI) && tFrom.some(x => pcsOf(x) === pcsOf(c)));
+    const pre = shared.filter(c => c.deg === 1 || c.deg === 3 || c.deg === 5);
+    if (pre.length || shared.length) path.push((pre.length ? pre : shared)[0]);
+    else if (d >= 5) path.push({ root: mod12(tpc + 1), q: '' });
+    else {
+      const pf = FIFTHS[centre(from)], pt = FIFTHS[centre(to)], step = ((pt - pf + 12) % 12) <= 6 ? 1 : -1; let pos = pf;
+      for (let i = 0; i < d - 1 && path.length < 4; i++) { pos = (pos + step + 12) % 12; for (const pc in FIFTHS) if (FIFTHS[pc] === pos) path.push({ root: +pc, q: '' }); }
+    }
+    path.push({ root: mod12(tpc + 7), q: '', seventh: true });
+    return path.map(c => romanIn(c, tpc));
+  }
+  // the pulse an outgoing piece is felt in, against the tempo arrived at: whole beats, halves or thirds of the bar (a quick six is felt in
+  // dotted beats, a battle's four in halves), whichever lands nearest the new tempo
+  function pulseK(def, target) { let best = 1, bd = Infinity; for (const k of [1, 2, 3]) { if ((def.meter || 4) % k || def.bpm / k < 34) continue; const dd = Math.abs(Math.log((def.bpm / k) / target)); if (dd < bd) { bd = dd; best = k; } } return best; }
+  Music._modulation = { triads, pivotPath, romanIn, pulseK };
+
+  // the interlude for the piece that follows: the template transposed to its key and mode (cached as a hidden track 'drift:<id>'); with
+  // o.from (the piece ending) its opening bars keep that piece's meter and pulse, walk the pivot chords from its key while the tempo glides to
+  // the new piece's, and the body continues in the new meter at the new tempo
+  const outgoing = p => p && !p.stopped && !p.def.interlude ? p.def : DIR.lastPiece ? TRACKS[DIR.lastPiece] : null;   // the piece an interlude leaves
   function interludeFor(template, nextId, o) {
     const T = TRACKS[template], N = TRACKS[nextId], long = !!(o && o.long);
     if (!T || !N || N.interlude) return null;
-    const id = template + ':' + nextId + (long ? ':long' : '') + (o && o.motif && o.motif.ph ? ':m' + (o.motif.from || String(o.motif.ph).length) : '');
+    const from = o && o.from && o.from.id !== nextId && !o.from.interlude && o.from.bpm && PCS[o.from.root] !== undefined ? o.from : null;
+    const id = template + ':' + nextId + (long ? ':long' : '') + (o && o.motif && o.motif.ph ? ':m' + (o.motif.from || String(o.motif.ph).length) : '') + (from ? ':f' + from.id : '');
     if (TRACKS[id]) return id;
     const d = JSON.parse(JSON.stringify(T)); delete d._p; delete d.id;
     if (long) for (const sct of d.sec) {               // the breath: half as long again and a shade quieter, before a piece of a very different kind
       if (sct.n === 'A') { sct.bars = Math.round(sct.bars * 1.5); if (sct.cres) sct.cres = sct.cres.map(x => x * 0.85); else sct.lv = num(sct.lv, 1) * 0.85; }
       if (sct.n === 'out') { sct.bars = 3; sct.barsVar = [2, 3]; }
     }
-    if (o && o.motif && o.motif.ph) {                  // the motif, once, in the interlude's own voice: a race just met, the council's call
+    if (o && o.motif && o.motif.ph && (d.meter || 4) === 4) {   // the motif, once, in the interlude's own voice: a race just met, the council's call
       d.ph = Object.assign({}, d.ph || {}, { M: o.motif.ph });
       const bars = parsePhrase(o.motif.ph, d.meter || 4).bars, A = d.sec.find(x => x.n === 'A');
       if (A && bars <= A.bars) { const r = A.bars - bars, lead = A.lead && typeof A.lead === 'object' ? A.lead : {}; A.lead = Object.assign({}, lead, { ph: r >= 4 ? ['r2 M', 'r' + (r - 2) + ' M r2', 'M r' + r] : ['M'], inst: o.motif.inst || lead.inst, vel: num(lead.vel, 0.4) + 0.06, echo: 0.3, skip: 0, rest: 0 }); }
@@ -1251,6 +1308,15 @@
       sct.prog = toks.length > 1 && prog ? prog : toks.map(t => respell(t, oldScale, newScale)).join(' ');   // the consonant walk of each mode; a lone chord is simply re-spelled
     }
     if (N.tonic !== undefined) d.tonic = N.tonic; else if (N.oct) d.oct = N.oct;
+    if (from) {
+      const inS = d.sec.find(x => x.n === 'in'), path = pivotPath(from, N), k = pulseK(from, N.bpm);
+      if (inS) {
+        inS.meter = (from.meter || 4) / k; inS.bpm = from.bpm / k; inS.bpmTo = N.bpm;     // the outgoing bars and pulse, gliding to the new tempo
+        if (path) { inS.prog = path.join(' '); inS.bars = Math.max(2, path.length); delete inS.barsVar; }
+      }
+      d.bpm = N.bpm; d.meter = N.meter || 4;                                              // the body in the new meter at the new tempo
+      if (d.meter !== 4) for (const sct of d.sec) if (sct.n !== 'in' && sct.lead) sct.lead = Object.assign({}, typeof sct.lead === 'object' ? sct.lead : { ph: sct.lead }, { ph: 'r' + sct.bars });   // the interludes' lines are written in four
+    }
     d.hidden = true; d.interlude = true; d.desc = (T.desc || template) + ' (in the key of ' + nextId + ')';
     return Track(id, d).id;
   }
@@ -1264,7 +1330,7 @@
       // cue enters as the bridge crests
       const b = interludeFor('bridge:' + opts.bridge, id);
       if (b) {
-        const P = prepare(TRACKS[b]), len = P.secs.reduce((a, x) => a + x.bars, 0) * P.meter * P.spb, at = S.cur.nextBoundary('beat');
+        const len = compilePass(TRACKS[b], 0).len, at = S.cur.nextBoundary('beat');
         const then = { id, opts: Object.assign({}, opts, { bridge: undefined, quantize: false, fade: num(opts.fade, 1.5), inFade: Math.min(1.6, num(opts.fade, 1.5)), oldFade: 1.2 }), at: at + len - 0.7 };
         S.switchAt = { id: b, opts: { fade: 0.5, inFade: 0.5, oldFade: Math.max(1.5, len * 0.8), loop: false, keepPlaylist: !!opts.keepPlaylist, quantize: false }, at, then };
         if (!opts.keepPlaylist) { S.playlist = null; S.plWait = null; }
@@ -1278,7 +1344,7 @@
     S.switchAt = null;
     if (!opts.keepPlaylist) { S.playlist = null; S.plWait = null; }
     const p = new Player(eng, def, { loop: opts.loop !== false, intensity: S.intensity });
-    if (!def.hidden) { DIR.hist[id] = eng.ctx.currentTime; DIR.lastPiece = id; }
+    if (!def.hidden || def.variantOf) { const pid = def.variantOf || id; DIR.hist[pid] = eng.ctx.currentTime; DIR.lastPiece = pid; }   // a war-time reading counts as its piece
     if (S.cur) { S.cur.fadeOut(num(opts.oldFade, fade)); S.old.push(S.cur); }    // oldFade: let a piece that is ending ring out under the next one
     S.cur = p;
     p.fadeIn(num(opts.inFade, fade));
@@ -1313,8 +1379,8 @@
   Music.current = () => (S.switchAt ? S.switchAt.id : S.cur && !S.cur.stopped ? S.cur.id : (S.pending ? S.pending.id : null));
   Music.list = function () {
     return Object.keys(TRACKS).filter(id => !TRACKS[id].hidden).map(id => {
-      const d = TRACKS[id], P = prepare(d), bars = loopBars(d, P), intro = P.secs.slice(0, P.loopIdx).reduce((a, s) => a + s.bars, 0);
-      return { id, desc: d.desc, bpm: d.bpm, seconds: Math.round(bars * P.meter * P.spb), introSeconds: Math.round(intro * P.meter * P.spb) };
+      const d = TRACKS[id], P = prepare(d), r0 = compilePass(d, 0), r1 = compilePass(d, 1), introW = r0.wraps[P.loopIdx];
+      return { id, desc: d.desc, bpm: d.bpm, seconds: Math.round(r1.len), introSeconds: Math.round(introW ? introW.t0 : 0) };
     });
   };
   function makePlaylist(ids, opts) {
@@ -1394,7 +1460,7 @@
     const fade = Math.max(4, num(opts.fade, num(rot.fade, 6)));
     let id = pl.order[0];
     const first = id;
-    if (pl.between && Math.random() < pl.betweenP) { const tpl = pl.between[Math.floor(Math.random() * pl.between.length)], d = interludeFor(tpl, id, { motif: DIR.motif }); if (d) { pl.lastTpl = tpl; pl.queued = id; id = d; DIR.motif = null; } }
+    if (pl.between && Math.random() < pl.betweenP) { const tpl = pl.between[Math.floor(Math.random() * pl.between.length)], d = interludeFor(tpl, id, { motif: DIR.motif, from: outgoing(p) }); if (d) { pl.lastTpl = tpl; pl.queued = id; id = d; DIR.motif = null; } }
     const at = p.nextSectionBoundary(Math.max(2, fade * 0.5), num(opts.within, 100));
     pl.advancing = true;
     S.playlist = pl; S.plWait = null;
@@ -1451,8 +1517,8 @@
     const P = prepare(def), r0 = compilePass(def, 0), r1 = compilePass(def, 1);
     const out = { id, bpm: def.bpm, meter: P.meter, key: def.root + ' ' + def.mode, warnings: P.warn.slice() };
     out.secs = []; let acc = 0;
-    for (const w of r0.wraps) { out.secs.push({ n: w.R.n, bars: w.bars, at: Math.round(acc * 10) / 10 }); acc += w.bars * P.meter * P.spb; }
-    out.introSec = Math.round(P.secs.slice(0, P.loopIdx).reduce((a, s) => a + s.bars, 0) * P.meter * P.spb * 10) / 10;
+    for (const w of r0.wraps) { out.secs.push({ n: w.R.n, bars: w.bars, at: Math.round(w.t0 * 10) / 10 }); acc += w.len; }
+    out.introSec = Math.round((r0.wraps[P.loopIdx] ? r0.wraps[P.loopIdx].t0 : 0) * 10) / 10;
     out.loopSec = Math.round(r1.len * 10) / 10; out.firstSec = Math.round(r0.len * 10) / 10;
     const by = {};
     for (const ev of r0.events) { const b = by[ev.ly] || (by[ev.ly] = { n: 0, lo: 999, hi: 0 }); b.n++; if (ev.m) { if (ev.m < b.lo) b.lo = ev.m; if (ev.m > b.hi) b.hi = ev.m; } }
@@ -1465,7 +1531,7 @@
       const w = wr.filter(x => e.b >= x.start - 1e-9).pop();
       if (!w) continue;
       const sg = segAt(w.R.segs, e.b - w.start);
-      const bis = (e.b - w.start) % P.meter, st = P.strong.some(x => Math.abs(bis - x) < 1e-6);
+      const bis = (e.b - w.start) % w.R.meter, st = w.R.strong.some(x => Math.abs(bis - x) < 1e-6);
       if (st) { strong++; if (isChordTone(e.m, sg.ch)) { strongCT++; strongOK++; } else if (!clashes(e.m, sg.ch)) strongOK++; }
       if (prev !== null) { const d = Math.abs(e.m - prev); if (d > maxLeap) maxLeap = d; if (d > 9) leaps++; }
       prev = e.m;
@@ -1517,7 +1583,7 @@
   function hitsVariant(baseId) {
     const base = TRACKS[baseId]; if (!base) return null;
     const d = JSON.parse(JSON.stringify(base)); delete d._p; delete d.id;
-    d.hidden = true; d.desc = String(base.desc).split(' — ')[0] + ', at war: the same piece with synthetic drum hits in its big sections';
+    d.hidden = true; d.variantOf = baseId; d.desc = String(base.desc).split(' — ')[0] + ', at war: the same piece with synthetic drum hits in its big sections';
     d.mix = Object.assign({}, d.mix || {}, { drums: 1.15 }); d.trim = num(base.trim, DEFAULT_TRIM);
     for (const sct of d.sec) {
       const top = sct.cres ? sct.cres[1] : num(sct.lv, 1);
@@ -1617,6 +1683,7 @@
       if (sct.lead2 && typeof sct.lead2 === 'object' && sct.lead2.inst) sct.lead2.inst = 'brassStab';
       if (sct.pad && typeof sct.pad === 'object' && sct.pad.inst) sct.pad.inst = 'dark';
     }
+    d.variantOf = baseId;
     return Track(baseId + ':war', d);
   }
   Music._warVariant = warVariant; Music._respell = respell;
