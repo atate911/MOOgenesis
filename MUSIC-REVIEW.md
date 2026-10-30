@@ -263,9 +263,10 @@ Twenty-two pieces compile to different notes after these steps; the QA (27 check
 
 ## After the plan: the main theme, First Light, the loops, a second leitmotif
 
-**The main theme** is rebuilt around the horn, as asked. It opens with the men alone, open and present, singing the commonwealth's climb
-(the second leitmotif's head, 1 2 3 5) on the hymn's own harmony, one chime at the very start and the deep pedal rising under them, a faint
-shimmer high above: solemn and vast. The horn's call answers in its heroic register as the strings, a chime and the timpani's pulse join. An
+**The main theme** is rebuilt around the horn, as asked, with Mutiny's opening and Roll Tide's horns as the models and the planetarium under
+it. It opens with the men right away, open and present, singing the commonwealth's climb (the second leitmotif's head, 1 2 3 5) on the hymn's
+own harmony over a slow analogue bed, the air above them and points of light echoing in the long delay, one chime at the very start and the
+deep pedal rising: solemn and vast. The horn's call answers in its heroic register as the strings, a chime and the timpani's pulse join. An
 earlier opening hummed on the tonic for fourteen seconds at a third of the level before anything happened, over the organ's low mids, and
 read as muddy and idle; measured on the first forty seconds the men alone now sit at -19 LUFS, the call at -15 and the strain at -17. Then
 the solo horn sings the whole hymn alone over the chorus and the strings while the men take up the answer an octave under it (A1); the horn section joins the men on the

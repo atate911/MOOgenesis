@@ -74,6 +74,11 @@ Colour semantics are fixed: gold = BC/money, ember = industry, leaf = food/growt
 - Final reply: **≤150 words** — files written, public API (one line each), known gaps. No code dumps.
 
 ## The music (engine and score)
+- The compass: John Williams for the themes (a tune that can be sung, stated by the orchestra and answered), Howard Shore for the weight
+  and the modes (the choir, the low strings, the chorale), and above all Hans Zimmer for the manner (the pulse, the swell through every
+  long brass note, the horns rising above the men's choir as in Roll Tide, the slow dark bed under a choir as Mutiny opens), with Jonn
+  Serrie's planetarium underneath the map (the analogue sky, the air, points of light in a long delay). The title must carry all of it from
+  its first bar: it opens with the men alone over the planetarium's bed, the horn's call answers, and the crest is Zimmer's.
 - `js/audio/music.js` is the engine only: notation, generators, the player, the scheduler, the director. The score lives in `js/audio/score/`
   and loads after it, in manifest order: `themes.js` (the shared themes, quoted as `'@hymn.H1'`), `cues.js` (title, battle, council, procession,
   news, endings, espionage), `map.js` (the exploration pieces, interludes, bridges), `races.js` (the race themes; hostile readings derived),

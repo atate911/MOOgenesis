@@ -160,17 +160,19 @@
   // slides the phase through that step once a cycle: alone that is a small dip, but against the hall's early reflections and the delay (a
   // copy of the same note a few milliseconds behind) the slide swings the level by several decibels once per loop — the pulse heard on a
   // long solo note at some pitches and not others. So the loop end is moved, within one period, to where the waveform best matches the
-  // loop start (normalised correlation over a few periods, refined between samples), and the loop runs in phase. `?looptune=0` keeps the
-  // file's own loop points.
+  // loop start (normalised correlation over a few periods, refined between samples, summed over both channels of a stereo recording so
+  // that neither channel wraps with a phase step of its own: a held cello showed left and right swinging two decibels in antiphase once a
+  // loop when only the left was matched), and the loop runs in phase. `?looptune=0` keeps the file's own loop points.
   S.loopTune = true;
   try { if (/[?&]looptune=0\b/.test(location.search)) S.loopTune = false; } catch (e) { /* ignore */ }
   function tuneLoop(buf, ls, le, root) {
     if (!S.loopTune || !buf || !(le > ls)) return le;
-    const sr = buf.sampleRate, d = buf.getChannelData(0), a = Math.round(ls * sr), b = Math.round(le * sr);
+    const sr = buf.sampleRate, chans = []; for (let c = 0; c < buf.numberOfChannels; c++) chans.push(buf.getChannelData(c));
+    const a = Math.round(ls * sr), b = Math.round(le * sr);
     const f = 440 * Math.pow(2, ((root || 60) - 69) / 12), P = sr / f, L = Math.round(Math.max(4 * P, 0.02 * sr)), R = Math.ceil(P);
     if (a + L >= b - R - 1 || b + R + L > buf.length) return le;
-    let ea = 0; for (let i = 0; i < L; i++) ea += d[a + i] * d[a + i]; if (!(ea > 1e-9)) return le;
-    const corr = k => { let c = 0, e = 0; for (let i = 0; i < L; i++) { c += d[a + i] * d[k + i]; e += d[k + i] * d[k + i]; } return e > 1e-9 ? c / Math.sqrt(ea * e) : 0; };
+    const eas = chans.map(d => { let ea = 0; for (let i = 0; i < L; i++) ea += d[a + i] * d[a + i]; return ea; }); if (!(eas[0] > 1e-9)) return le;
+    const corr = k => { let sum = 0; for (let c = 0; c < chans.length; c++) { const d = chans[c]; let cc = 0, e = 0; for (let i = 0; i < L; i++) { cc += d[a + i] * d[k + i]; e += d[k + i] * d[k + i]; } sum += e > 1e-9 && eas[c] > 1e-9 ? cc / Math.sqrt(eas[c] * e) : 0; } return sum / chans.length; };
     let best = -2, bk = b; for (let k = b - R; k <= b + R; k++) { const c = corr(k); if (c > best) { best = c; bk = k; } }
     if (best < 0.5) return le;                                                        // not a periodic wave at this window: leave it
     const c0 = corr(bk - 1), c1 = best, c2 = corr(bk + 1), den = c0 - 2 * c1 + c2, frac = den < 0 ? Math.max(-0.5, Math.min(0.5, 0.5 * (c0 - c2) / den)) : 0;   // parabolic refinement between samples
