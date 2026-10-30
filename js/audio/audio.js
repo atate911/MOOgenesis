@@ -163,6 +163,11 @@
     }
     return true;
   };
+  // The soundstage: a subtle, wide, live stage under every piece — the pads and the chorus sent into the same early-reflection room the
+  // lines stand in (they had the hall only, far back, and so sat in a different space from the melody), and the side of the image lifted a
+  // little more. `?soundstage=0` plays the old staging for comparison.
+  A.soundstage = 1;
+  try { if (/[?&]soundstage=0\b/.test(location.search)) A.soundstage = 0; } catch (e) { /* ignore */ }
   function makeIR(ctx, o) { const b = new IRBuilder(ctx, o); b.run(Infinity); return b.buf; }
   const IR_STAGE = { seconds: 0.9, rt60: 0.55, pre: 0.008, diff: 0.03, hiStart: 0.9, hiEnd: 0.45, damp: 0.6, er: 12, seed: 23 };   // a stage: short, bright, early reflections
   const IR_HALL = { seconds: 3.8, rt60: 3.3, pre: 0.036, diff: 0.05, hiStart: 0.7, hiEnd: 0.22, damp: 1.2, er: 8, seed: 11 };   // a large, open hall: long dark tail, a little more pre-delay
@@ -291,7 +296,7 @@
     (function () { const n = 2048, c = new Float32Array(n), d = 1.6; for (let i = 0; i < n; i++) { const x = (i / (n - 1)) * 2 - 1; c[i] = Math.tanh(d * x) / d; } sat.curve = c; try { sat.oversample = '2x'; } catch (e) { /* ignore */ } })();
     const duck = mk(ctx.createGain());
     const width = (function () {                   // M = (L+R)/2, S = (L-R)/2 ; S -> hp 120 -> +1.5 dB @ 6k -> x w ; L' = M + S', R' = M - S'
-      const w = 1.15, inG = mk(ctx.createGain()), split = mk(ctx.createChannelSplitter(2)), merge = mk(ctx.createChannelMerger(2));
+      const w = 1.15 + 0.15 * A.soundstage, inG = mk(ctx.createGain()), split = mk(ctx.createChannelSplitter(2)), merge = mk(ctx.createChannelMerger(2));   // the soundstage lifts the side a little more
       const mid = mk(ctx.createGain()), side = mk(ctx.createGain()), lToM = mk(ctx.createGain()), rToM = mk(ctx.createGain()), lToS = mk(ctx.createGain()), rToS = mk(ctx.createGain());
       lToM.gain.value = 0.5; rToM.gain.value = 0.5; lToS.gain.value = 0.5; rToS.gain.value = -0.5;
       inG.connect(split); split.connect(lToM, 0); split.connect(rToM, 1); split.connect(lToS, 0); split.connect(rToS, 1);

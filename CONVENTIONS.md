@@ -98,6 +98,10 @@ Colour semantics are fixed: gold = BC/money, ember = industry, leaf = food/growt
   `bridge:calm` (back onto the map from any cue, the news bed both ways); each opens on the tonic of the piece that is playing and lands on
   the cue's dominant (`interludeFor` with `from`). `setMood(..., { quiet: true })` lands a piece on its quiet half (the map back from a
   fight); a soft programme change between far-apart pieces takes the long breath like the director's seam.
+- The soundstage (`A.soundstage`, `?soundstage=0` for the old staging): the pads and the chorus are sent lightly into the stage's early
+  reflections (0.16 and 0.18; the lines have 0.22 to 0.26), so the whole ensemble stands in one room, and the bus's side is lifted to 1.3.
+  Measured on a minute of three pieces: side/mid up 1.1 dB, stereo correlation down 0.03 to 0.10, loudness unchanged. Subtle by design;
+  anything wider starts to pull the chorus out of the hall.
 - Levels: map pieces sit at -17 LUFS integrated (whole-piece render), within a decibel; interludes three and a half below; bridges near -18.
   Re-measure after a change with `node tools/audio-report.js --full --tracks <ids> --no-sfx --json r.json` (interludes and bridges are hidden:
   render them with `Music.renderOffline` as `tools/qa` scripts do).

@@ -286,6 +286,12 @@ The "looping" heard in its opening alto flute solo had three causes, all fixed i
 - A new check holds one note per recorded zone of every sustain instrument through the bus (`node tools/qa/loops.js`) and flags a pulse or a
   click. The alto flute's slow swing is 0.2 to 0.4 dB on every zone (it was 3.5 at the pitch First Light opens on).
 
+**The soundstage.** Every piece now stands on a subtly wider, more live stage: the pads and the chorus, which had the hall only and so sat
+in a different space from the melody, are sent lightly into the stage's early reflections too (0.16 and 0.18 against the lines' 0.22 to 0.26),
+and the bus's side is lifted from 1.15 to 1.3. On a minute each of the Commonwealth, First Light and the title the side-to-mid ratio rises by
+1.1 dB and the stereo correlation falls by 0.03 to 0.10 with the loudness unchanged; `?soundstage=0` plays the old staging, and the player page
+has the Commonwealth's first minute both ways.
+
 **The second leitmotif.** The commonwealth's oboe tune is the procession's first strain; it is now declared the score's second leitmotif and
 glanced at, once a pass, by a solo voice in a four-bar aside of its own (the `echo` section, in the piece's own key, mode and metre) in the
 title (an oboe in the breath), Patience and the Lanes (the oboe), Determination (the solo horn), the Veil (the oboe, in three), the Survey

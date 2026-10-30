@@ -293,8 +293,10 @@
     //  for the synthesized pads only, where it belongs)
     // verb = the hall (far plane), stage = the short bright stage (close plane): pads and choir live far back, the melody, plucks,
     // bells and drums stand at the front of the stage with the hall only behind them
-    pad: { lvl: 0.82, verb: 0.36, stage: 0.0, dly: 0, chorus: 0.12 }, bass: { lvl: 0.8, verb: 0.06, stage: 0.08, dly: 0 }, arp: { lvl: 0.5, verb: 0.18, stage: 0.22, dly: 0.12 },
-    lead: { lvl: 1.0, verb: 0.16, stage: 0.26, dly: 0.08 }, bell: { lvl: 0.45, verb: 0.3, stage: 0.24, dly: 0.1 }, choir: { lvl: 0.72, verb: 0.42, stage: 0.0, dly: 0, chorus: 0 },
+    // the soundstage (A.soundstage, `?soundstage=0` to hear the old staging): the pads and the chorus go into the stage's early reflections
+    // too, lightly, so the whole ensemble stands in one room and the image is a little wider
+    pad: { lvl: 0.82, verb: 0.36, stage: 0.16 * A.soundstage, dly: 0, chorus: 0.12 }, bass: { lvl: 0.8, verb: 0.06, stage: 0.08 + 0.02 * A.soundstage, dly: 0 }, arp: { lvl: 0.5, verb: 0.18, stage: 0.22, dly: 0.12 },
+    lead: { lvl: 1.0, verb: 0.16, stage: 0.26, dly: 0.08 }, bell: { lvl: 0.45, verb: 0.3, stage: 0.24, dly: 0.1 }, choir: { lvl: 0.72, verb: 0.42, stage: 0.18 * A.soundstage, dly: 0, chorus: 0 },
     drums: { lvl: 0.68, verb: 0.08, stage: 0.32, dly: 0 }, fx: { lvl: 0.6, verb: 0.5, stage: 0.2, dly: 0 },
     x1: { lvl: 0.8, verb: 0.12, dly: 0, i0: 0.12 }, x2: { lvl: 0.7, verb: 0.2, dly: 0.3, i0: 0.38 }, x3: { lvl: 0.9, verb: 0.3, dly: 0, i0: 0.62 },
   };
