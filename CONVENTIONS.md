@@ -123,7 +123,8 @@ Colour semantics are fixed: gold = BC/money, ember = industry, leaf = food/growt
   the file's longest steady stretch (`?looplong=0` keeps the file's), its end is tuned to a whole number of periods (`?looptune=0`), the solo
   winds and brass have each partial's slow breath evened across the loop (`?loopeven=0`), every loop's level is evened (`?loopflat=0`) and
   its seam blended (`?loopxf=0`). `node tools/qa/loops.js` holds one note per zone of every sustain instrument through the bus and flags a
-  pulse or a click.
+  pulse or a click (on the mono sum; the stereo image's sway is reported apart). Two recorded dynamics of one note never blend for long:
+  the sampler plays one layer and hands over in a quarter of a second where a swell crosses between them.
 - Check a change with `node tools/score-lint.js` (schema, instruments, forms, phrases, themes, determinism, the programme's lists; `--strict`
   in a release pass) and `node tools/qa/music.js` (the seams in real time: directed programme, soft change, bridges, motif, snapshot / restore).
 

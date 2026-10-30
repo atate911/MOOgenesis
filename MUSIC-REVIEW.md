@@ -303,7 +303,14 @@ The "looping" heard in its opening alto flute solo had three causes, all fixed i
   one layer at a time and hands over to the next in a quarter of a second at the moment the written dynamic crosses between them; the zones'
   roots are also measured to a fraction of a cent when their files are decoded.
 - A new check holds one note per recorded zone of every sustain instrument through the bus (`node tools/qa/loops.js`) and flags a pulse or a
-  click. The alto flute's slow swing is 0.2 to 0.4 dB on every zone (it was 3.5 at the pitch First Light opens on).
+  click, measuring the mono sum and reporting the stereo image's sway apart. The alto flute's slow swing is 0.2 to 0.4 dB on every zone (it
+  was 3.5 at the pitch First Light opens on); the oboe 0.7, the flute 0.9, the clarinet 1.1, the trumpets 1.6, the horn section 1.4 (its
+  worst zone 3.1, from 11.3), the bassoon 0.5 (from 4.2). What remains is in the sections and the choirs: the cellos 2.3 on average, the
+  string ensemble 1.6, the men 1.6, the women 2.0, with the worst zones near 5, and a stereo sway of 4 to 12 dB between left and right on
+  the cellos' upper zones. Both come from the same thing: the pitch inside a loop drifts a few cents as the players' did, and through the
+  delay and the hall's early reflections that drift returns as a level ripple once a loop, while the two channels of a stereo recording
+  drift against each other. Evening the level cannot touch it; only resampling each loop to a constant pitch would, which is a next step
+  if the sections are heard to breathe. In a texture of several voices they mask one another.
 
 **The soundstage.** Every piece now stands on a subtly wider, more live stage: the pads and the chorus, which had the hall only and so sat
 in a different space from the melody, are sent lightly into the stage's early reflections too (0.16 and 0.18 against the lines' 0.22 to 0.26),
