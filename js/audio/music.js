@@ -1442,6 +1442,7 @@
     S.switchAt = null;
     if (!opts.keepPlaylist) { S.playlist = null; S.plWait = null; }
     const p = new Player(eng, def, { loop: opts.loop !== false, intensity: S.intensity });
+    if (opts.from > 0) { p.shift = num(opts.from, 0); p.skipBefore = 0; }   // start part-way through the first pass (a demo, a test)
     if (!def.hidden || def.variantOf) { const pid = def.variantOf || id; DIR.hist[pid] = eng.ctx.currentTime; DIR.lastPiece = pid; }   // a war-time reading counts as its piece
     if (S.cur) { S.cur.fadeOut(num(opts.oldFade, fade)); S.old.push(S.cur); }    // oldFade: let a piece that is ending ring out under the next one
     S.cur = p;
@@ -1507,7 +1508,7 @@
       const first = pl.order[0];
       if (!A.isReady()) { S.pending = { id: first, opts: { loop: false } }; S.playlist = pl; A.onReady(() => { const p = S.pending; if (p) { S.pending = null; startTrack(p.id, { fade: 1, loop: false, keepPlaylist: true }); } }); return 'pending'; }
       S.playlist = pl;
-      return startTrack(first, { fade: num(opts.firstFade, 1.5), loop: false, keepPlaylist: true, bridge: opts.bridge });
+      return startTrack(first, { fade: num(opts.firstFade, 1.5), loop: false, keepPlaylist: true, bridge: opts.bridge, from: opts.from });
     } catch (e) { console.warn('[music] playlist failed', e); return false; }
   };
   Music.setIntensity = function (x) {
