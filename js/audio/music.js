@@ -134,7 +134,7 @@
         cost += 0.15 * Math.abs(mean - center);
         const span = pick[n - 1] - pick[0];
         if (span > 17) cost += (span - 17) * 1.5;
-        if (!cluster) for (let j = 1; j < n; j++) { const g = pick[j] - pick[j - 1]; if (g < 3) cost += (3 - g) * 2.5; }
+        if (!cluster) for (let j = 1; j < n; j++) { const g = pick[j] - pick[j - 1]; if (g < 3) cost += (3 - g) * 2.5; if (pick[j - 1] < 48 && g <= 4) cost += 3; else if (pick[j - 1] < 43 && g <= 7) cost += 1.5; }   // the low-interval limit: no second or third below C3, open spacing below G2
         if (mod12(pick[0]) !== ch.pc) cost += 1.2;
         if (cost < bestCost) { bestCost = cost; best = pick.slice(); }
         return;

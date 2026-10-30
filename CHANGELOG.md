@@ -45,6 +45,13 @@ Versions follow `MAJOR.MINOR.PATCH`; the live version is the `VERSION` file.
   middle. Only a colour that can be held is carried (strings, the pads, choir, brass, winds; a harp in a pad slot would only tick). Its
   opening level meets the level the piece ended at (within the breath's range). `tools/audio-seams.js` captures four seams from the
   real-time engine as MP3s, with a log of what each seam built; they are on the demo page.
+- The map's plan, steps one to five (MUSIC-REVIEW.md, "Steps 1 to 5: done"). The chord voicer keeps the low-interval limit (no
+  second or third below C3, open spacing below G2) and the map's men's choir and low beds sit above the bass pedal's third: close low
+  intervals fell from 28% of a piece's length to under 2%. The Abyss, the Tide, the Chorale, the Cradle, Wonder and the Beacon are
+  re-harmonised bar by bar from their tunes, so the engine snaps none of their notes onto a chord. The men's one sung phrase stays in
+  four stills; eleven pieces have a still of their own. The bell sparkle is left to the planetarium pieces, the Nebula, the Watch and
+  First Light. The pieces that sounded like each other are told apart by bed and tempo: no two map pieces measure above 0.89 in
+  likeness.
 - The score reviewed and ranked (MUSIC-REVIEW.md): every piece read and measured, the errors corrected, the rest marked on six
   criteria (craft, creativity, uniqueness, pleasure, fit, identity) with a measured penalty for sounding like other pieces and a capped
   bonus for carrying the shared themes, and ranked out of a hundred. The demo page has three tabs: the movements and the seams, every
