@@ -42,7 +42,9 @@ Versions follow `MAJOR.MINOR.PATCH`; the live version is the `VERSION` file.
   interlude and a strings piece by the violas or the harp — by weighted chance, never the same one twice running. The template's own
   alternation is pinned to the one that sits best between the two pieces, the sustained voice the old piece ends in holds under the
   interlude's opening bars, and the voice the new piece opens with is already there under its last bars; the interlude's own voice keeps the
-  middle. Its opening level meets the level the piece ended at (within the breath's range).
+  middle. Only a colour that can be held is carried (strings, the pads, choir, brass, winds; a harp in a pad slot would only tick). Its
+  opening level meets the level the piece ended at (within the breath's range). `tools/audio-seams.js` captures four seams from the
+  real-time engine as MP3s, with a log of what each seam built; they are on the demo page.
 - The score has a shared theme library and a story. The themes the pieces quote (the hymn, the men's phrase, the procession, the
   chorale, the planetarium's four notes, the tide's rise, the wonder tune, the cradle, the abyss's step) are written once in
   `js/audio/score/themes.js` and quoted by name; sixty-five copied phrases became references with no note changed, and

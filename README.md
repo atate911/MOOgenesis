@@ -46,6 +46,7 @@ node tools/audio-report.js     # renders every music track + sound effect headle
 node tools/score-lint.js       # the score against its schema and the engine's own analysis (js/audio/score/*.js); --strict for a release
 node tools/qa/music.js         # the music engine's seams in real time: directed programme, soft changes, bridges, motifs, snapshot / restore
 node tools/audio-hour.js       # captures a scripted hour of the map's music (alone, first contact, a war, peace, the late years) as raw PCM
+node tools/audio-seams.js      # captures four seam examples (one piece changing softly into another through the interlude built for them) as MP3
 http://localhost:8765/tools/index.html   # test pages for every module
 http://localhost:8765/index.html?dev=1&screen=galaxy&race=psilon&size=large&opp=4&turns=25&seed=abc
 ```

@@ -1294,6 +1294,7 @@
     chorus: 'choir', chorusMen: 'choir', chorusWomen: 'choir', padGlass: 'synth', padSerrie: 'synth', padAir: 'synth', organ: 'synth', organSoft: 'synth' };
   const V_FAMILY = { pad: 'synth', bass: 'low', brass: 'brass', flute: 'winds', pluck: 'pluck', bell: 'bells', chime: 'bells', choir: 'choir', drone: 'synth' };
   const SUSTAIN = { pad: 1, pad2: 1, choir: 1, choir2: 1 };
+  const SUSTAINS = { strings: 1, synth: 1, choir: 1, brass: 1, winds: 1 };   // the families that can hold a chord (a harp or a celeste in a pad slot would only tick)
   const familyOf = name => { const i = INST[name]; return i ? (i.smp && FAMILY[i.smp]) || V_FAMILY[i.v] || null : null; };
   const instName = (cfg, key, inst) => { const own = cfg && typeof cfg === 'object' ? (typeof cfg.inst === 'object' && cfg.inst ? cfg.inst.p : cfg.inst) : null; return own || inst[key] || DEF_INST[key]; };
   const secLevel = sc => sc.cres ? (num(sc.cres[0], 1) + num(sc.cres[1], 1)) / 2 : num(sc.lv, 1);
@@ -1322,7 +1323,7 @@
       for (const key in SUSTAIN) {
         const cfg = sc[key]; if (!cfg) continue;
         const w = num(sc.bars, 4) * secLevel(sc) * edge * (typeof cfg === 'object' ? num(cfg.vel, 1) * (1 - num(cfg.skip, 0)) : 1), name = instName(cfg, key, inst);
-        if (familyOf(name) && (!best || w > best.w)) best = { w, name, key, fam: familyOf(name), reg: typeof cfg === 'object' ? cfg.reg : null, n: typeof cfg === 'object' ? cfg.n : null };
+        const fam = familyOf(name); if (fam && SUSTAINS[fam] && (!best || w > best.w)) best = { w, name, key, fam, reg: typeof cfg === 'object' ? cfg.reg : null, n: typeof cfg === 'object' ? cfg.n : null };   // a colour that can be held
       }
     });
     return best;

@@ -29,12 +29,13 @@ const { serve, open } = require('./lib');
     // 2. a soft change lands on a section line (a breath when near) and goes through an interlude
     const p = S.cur, base = p.pass.start - p.shift, spb = p.P.spb * p.stretch, lines = p.pass.wraps.map(w => +(base + w.start * spb).toFixed(2)).concat([+(base + p.pass.len).toFixed(2)]);
     M.setMotif({ ph: '5:2 8:2 | 7:2 6:2', inst: 'flute' });
-    const first = R.softSwitch(['qaB', 'qaD'], ROT, { fade: 3, within: 60 });
+    const before = S.cur.id, first = R.softSwitch(['qaB', 'qaD'], ROT, { fade: 3, within: 60 });
     const sw = S.switchAt;
     check('soft switch armed on a section line', sw && lines.some(x => Math.abs(x - sw.at) < 0.06), sw ? 'at ' + (sw.at - t0).toFixed(2) : 'not armed');
     check('soft switch goes through an interlude in the new key', sw && /^drift/.test(sw.id) && S.playlist && S.playlist.queued === first, sw && sw.id);
     check('the motif rides the interlude', sw && /:m/.test(sw.id) && !D.motif, sw && sw.id);
-    check('the interlude modulates from the piece ending', sw && /:fqaA$/.test(sw.id) && /bVII ii V7/.test(M._tracks[sw.id].sec.find(x => x.n === 'in').prog), sw && M._tracks[sw.id] && M._tracks[sw.id].sec.find(x => x.n === 'in').prog);   // C major into D: the old tonic, the shared ii, the new V7
+    const want = M._modulation.pivotPath(M._tracks[before], M._tracks[first]).join(' ');   // from whichever piece was playing: its tonic, a shared pivot, the new V7
+    check('the interlude modulates from the piece ending', sw && sw.id.endsWith(':f' + before) && M._tracks[sw.id].sec.find(x => x.n === 'in').prog === want, sw && M._tracks[sw.id] && M._tracks[sw.id].sec.find(x => x.n === 'in').prog + ' (' + before + ' into ' + first + ')');
     await run(10);
     check('interlude became current', trace.some(x => x.cur && /^drift/.test(x.cur)), trace.map(x => x.cur).join(' > '));
     // 3. a tense bridge into a cue that cannot wait, asked twice
@@ -50,7 +51,8 @@ const { serve, open } = require('./lib');
     M.playlist(['qaA', 'qaB', 'qaC', 'qaD'], Object.assign({ firstFade: 3, bridge: 'calm' }, ROT));
     const b2 = S.switchAt;
     check('calm bridge armed back onto the map', b2 && /^bridge:calm/.test(b2.id) && b2.then, b2 && b2.id + '>' + (b2.then && b2.then.id));
-    check('the director chose the war-tagged piece', b2 && b2.then && b2.then.id === 'qaC', b2 && b2.then && b2.then.id);
+    const draws = {}; for (let i = 0; i < 400; i++) { const id = M._director.pickNext(S.playlist, null); draws[id] = (draws[id] || 0) + 1; }   // the choice is weighted chance: measure it
+    check('the director leans to the war-tagged piece', b2 && b2.then && /^qa[ABCD]$/.test(b2.then.id) && (draws.qaC || 0) >= 260, 'opened with ' + (b2 && b2.then && b2.then.id) + '; qaC ' + Math.round((draws.qaC || 0) / 4) + '% of 400 draws');
     check('the level tilted up at war, within a decibel', D.gainDb > 0.5 && D.gainDb <= 1.2, D.gainDb.toFixed(2) + ' dB');
     await run(9);
     // 5. the modulating interlude: opens on the outgoing tonic in the outgoing meter and pulse, walks to the new dominant, glides to the new tempo
