@@ -9,7 +9,15 @@ Browser-pane tip: animations use requestAnimationFrame, so in the built-in brows
 
 ## Session 11 (October 2026) — the score grows, branch `claude/festive-wozniak-7jy03r`
 
-**Latest (the map's plan, steps 6 to 10, and after).** `MUSIC-REVIEW.md` has the plan, what each of its ten steps did, and the work after
+**Latest (the full pass).** Every piece revisited against the compass and re-ranked; `MUSIC-REVIEW.md` ("The full pass") has what changed
+and the new table. Engine: the sampler aligns the recorded dynamic layers of every pitched sustain at decode time (`alignLayers` in
+`js/audio/sampler.js`, K-weighted, 4 dB per half range, `?layeralign=0` to compare; `A.Samples.align` holds what it did per instrument), the
+alto flute / flute / solo trumpet presets lifted, war readings keep an augmented chord where the scale allows and never put the stabs an
+octave down, `WAR[race].mode` picks the hostile mode. Score: phrasing everywhere, mud and snap fixes per `CONVENTIONS.md` (the music
+section, the two new bullets). Measure a solo against its bed with the scratch scripts' method (render `only: ['lead']` and the bed layers
+apart, compare integrated loudness). Then:
+
+**Earlier (the map's plan, steps 6 to 10, and after).** `MUSIC-REVIEW.md` has the plan, what each of its ten steps did, and the work after
 it: the main theme rebuilt around the solo horn and the horn section with a wider dynamic range and phrase shaping (`shape` on a line), the
 commonwealth's oboe tune as the second leitmotif (an `echo` section in nine pieces), the sampler's loop treatment (`js/audio/sampler.js`:
 relocate, tune, even by band, even the level, blend the seam; `?loop...=0` flags to compare) and the music bus's band alignment

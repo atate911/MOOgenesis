@@ -252,12 +252,12 @@
     hornSolo: smp('hornSolo', 0.34, { hp: 70, vib: 5, cutK: 14000, eq: [[2800, 3, 0.9], [4000, 2.5, 'hs']] }, 'horn'),   // vib: a delayed vibrato on the long notes; cutK: darker when soft, open when loud
     brass: smp('brassEns', 0.33, { att: 0.08, hp: 60, eq: [[4000, 2, 'hs']] }, 'brass'),
     synth: smp('brassEns', 0.33, { att: 0.06 }, 'synth'),
-    tpt: smp('tptSus', 0.3, {}, 'brass'), tptSolo: smp('tptSolo', 0.28, {}, 'brass'),
+    tpt: smp('tptSus', 0.3, {}, 'brass'), tptSolo: smp('tptSolo', 0.56, {}, 'brass'),   // the solo trumpet's recordings sit 9 dB under the solo horn's: lifted
     lowBrass: smp('lowBrass', 0.36, { att: 0.08, eq: [[3500, 2.5, 'hs']] }, 'horn'),
     trombones: smp('tbnSus', 0.32, { att: 0.1, hp: 60, eq: [[300, -1.5, 1], [3500, 2, 'hs']] }, 'horn'), tuba: smp('tubaSus', 0.32, { att: 0.12, sub: 0.25, eq: [[200, -2, 1], [600, -1.5, 1]] }, 'deep'),   // the trombone section as a chorale voice, the tuba as a bass
     tpts: smp('tptSus', 0.26, { att: 0.08, hp: 150, eq: [[4000, 1.5, 'hs']] }, 'brass'),   // the trumpet section, soft: a chorale voice above the horns
     brassStab: smp('brassStac', 1.5, { ring: true }, 'brassStab'),
-    flute: smp('flute', 0.42, { att: 0.07, hp: 200, eq: [[6000, 1.5, 'hs']] }, 'flute'), altoFlute: smp('altoFlute', 0.42, { att: 0.08 }, 'flute'),
+    flute: smp('flute', 0.75, { att: 0.07, hp: 200, eq: [[6000, 1.5, 'hs']] }, 'flute'), altoFlute: smp('altoFlute', 1.35, { att: 0.08 }, 'flute'),   // the flute's recordings sit 10 dB under the oboe's, the alto flute's 24 dB under: lifted to the family's level (measured alone through the bus)
     oboe: smp('oboe', 0.4, { att: 0.06, hp: 180, eq: [[6000, 1.5, 'hs']] }, 'flute'), reed: smp('corAnglais', 0.4, { att: 0.07, hp: 150, eq: [[6000, 1.5, 'hs']] }, 'reed'),
     clarinet: smp('clarinet', 0.42, { att: 0.07, hp: 120, eq: [[6000, 1.5, 'hs']] }, 'flute'), bassoon: smp('bassoon', 0.42, { att: 0.07, hp: 60, eq: [[5000, 1.5, 'hs']] }, 'horn'),
     // plucked and struck: pizzicato sections, marimba, harp (no synth plucks in the symphonic palette)
@@ -1770,7 +1770,7 @@
     const di = oldScale.indexOf(root);
     if (di >= 0 && di < newScale.length) root = newScale[di];
     const third = has(root + 3) ? 3 : has(root + 4) ? 4 : has(root + 2) ? 2 : 5;
-    const fifth = has(root + 7) ? 7 : has(root + 6) ? 6 : has(root + 8) ? 8 : 7;
+    const fifth = has(root + 7) ? 7 : (/\+/.test(m[3]) && has(root + 8)) ? 8 : has(root + 6) ? 6 : has(root + 8) ? 8 : 7;   // an augmented chord stays augmented where the new scale allows (the whole-tone pieces)
     let q = third === 2 ? 'sus2' : third === 5 ? 'sus4' : third === 3 ? (fifth === 6 ? 'o' : 'm') : (fifth === 8 ? '+' : '');
     let suf = '';
     if (/7|9|ø/.test(m[3]) && (q === 'm' || q === '' || q === 'o')) {
@@ -1803,7 +1803,7 @@
       if (!sct.timp) sct.timp = 'two';
       if (typeof sct.lead === 'string') sct.lead = { ph: sct.lead, harm: -2 };
       else if (sct.lead && typeof sct.lead === 'object') { if (SOFT_LEADS[sct.lead.inst]) delete sct.lead.inst; if (sct.lead.harm === undefined) sct.lead.harm = -2; }
-      if (sct.lead2 && typeof sct.lead2 === 'object' && sct.lead2.inst) { sct.lead2.inst = 'brassStab'; if (sct.lead2.oct > 0) sct.lead2.oct = 0; }   // the brass has no bells' octave
+      if (sct.lead2 && typeof sct.lead2 === 'object' && sct.lead2.inst) { sct.lead2.inst = 'brassStab'; if (sct.lead2.oct) sct.lead2.oct = 0; }   // the brass has no bells' octave, and no octave below (the stabs would sit on the bass)
       if (sct.lead && typeof sct.lead === 'object' && !sct.lead.inst && sct.lead.oct > 0) sct.lead.oct = 0;
       if (sct.choir && typeof sct.choir === 'object' && !sct.choir.reg) sct.choir.reg = [41, 62];   // the men sing in their own register
       if (sct.pad && typeof sct.pad === 'object' && sct.pad.inst) sct.pad.inst = 'dark';

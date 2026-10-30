@@ -246,7 +246,45 @@
       if (loop && inst.loop) { const rl = relocateLoop(buf, loop[0], Math.min(loop[1], buf.duration - 0.001)), ls = rl[0]; root = inst.pitched ? refineRoot(buf, ls, rl[1], root) : root; const le = tuneLoop(buf, ls, rl[1], root); loop = [ls, le]; if (EVEN[name]) evenLoop(buf, ls, le, root); flattenLoop(buf, ls, le, root); smoothLoop(buf, ls, le); }   // the zone's true pitch; the loop a whole number of periods, its bands and its level even, its seam blended
       inst.zones.push({ buf, root, lo: num(z.lo, 0), hi: num(z.hi, 127), loop, vel: z.vel || [0, 1], rr: z.rr || 0, gain: dbtoa(num(z.gain, 0)), pan: z.pan !== undefined ? num(z.pan, 0) : undefined });
     }).catch(e => { inst.failed++; S.errors++; if (S.errors < 4) console.warn('[samples] ' + z.file + ' failed', e && e.message); }));
-    return Promise.all(jobs).then(() => { inst.zones.sort((a, b) => a.root - b.root || a.vel[0] - b.vel[0] || a.rr - b.rr); inst.ready = inst.zones.length > 0; return inst; });
+    return Promise.all(jobs).then(() => { inst.zones.sort((a, b) => a.root - b.root || a.vel[0] - b.vel[0] || a.rr - b.rr); alignLayers(inst); inst.ready = inst.zones.length > 0; return inst; });
+  }
+
+  // The dynamic layers of a sampled section are recorded at their own levels: the soft layer of the strings, the trumpets, the trombones,
+  // the low brass and the cellos sits eighteen to twenty decibels under the loud one, so a written crescendo lurched by that much at the
+  // hand-over, a pad at a soft dynamic all but vanished against a single-layer voice (the choirs, the solo winds), and a solo line written
+  // soft sat under its bed. The level of a note is the engine's business (its velocity law and the section's level), the layer's job is
+  // the timbre: so at decode time each layer of a pitched sustain is measured (the RMS of its loops, the median over the layer's zones)
+  // and set against the loudest layer at four decibels per half of the dynamic range (a soft layer under a loud one: -4 dB; a full-range
+  // layer beside both: -2 dB); the engine's velocity law adds its own three decibels across the hand-over, so a written crescendo now
+  // steps seven to ten decibels where it stepped twenty. Percussion keeps its recorded dynamics. `?layeralign=0` plays the layers as recorded.
+  S.layerAlign = true; S.align = {};
+  try { if (/[?&]layeralign=0\b/.test(location.search)) S.layerAlign = false; } catch (e) { /* ignore */ }
+  // the loudness of a zone's steady part (its loop, else its middle half): K-weighted as BS.1770 hears it (the shelf above 1.5 kHz and
+  // the high-pass at 38 Hz, with the 48 kHz coefficients, near enough at any rate), because a soft layer is darker than a loud one and
+  // plain RMS understates how much quieter it sounds
+  function zoneDb(z) {
+    const sr = z.buf.sampleRate, n = z.buf.length, a = z.loop ? Math.floor(z.loop[0] * sr) : Math.floor(n * 0.25), b = z.loop ? Math.min(n, Math.ceil(z.loop[1] * sr)) : Math.floor(n * 0.75);
+    if (b - a < 64) return null; let acc = 0;
+    for (let c = 0; c < z.buf.numberOfChannels; c++) {
+      const d = z.buf.getChannelData(c); let x1 = 0, x2 = 0, y1 = 0, y2 = 0, u1 = 0, u2 = 0, w1 = 0, w2 = 0;
+      for (let i = a; i < b; i++) {
+        const x = d[i], y = 1.53512485958697 * x - 2.69169618940638 * x1 + 1.19839281085285 * x2 + 1.69065929318241 * y1 - 0.73248077421585 * y2; x2 = x1; x1 = x;
+        const w = y - 2 * u1 + u2 + 1.99004745483398 * w1 - 0.99007225036621 * w2; u2 = u1; u1 = y; y2 = y1; y1 = y; w2 = w1; w1 = w;
+        acc += w * w;
+      }
+    }
+    const rms = Math.sqrt(acc / ((b - a) * z.buf.numberOfChannels)); return rms > 1e-6 ? 20 * Math.log10(rms) : null;
+  }
+  function alignLayers(inst) {
+    if (!S.layerAlign || inst.kind !== 'sustain' || !inst.pitched) return;
+    const byLayer = new Map();
+    for (const z of inst.zones) { const k = z.vel[0] + '-' + z.vel[1]; if (!byLayer.has(k)) byLayer.set(k, { c: (z.vel[0] + z.vel[1]) / 2, dbs: [], zones: [] }); const L = byLayer.get(k); L.zones.push(z); const db = zoneDb(z); if (db !== null) L.dbs.push(db); }
+    if (byLayer.size < 2) return;
+    const med = a => { const s = a.slice().sort((x, y) => x - y); return s.length ? s[Math.floor(s.length / 2)] : null; };
+    const layers = [...byLayer.values()].map(L => Object.assign(L, { db: med(L.dbs) })).filter(L => L.db !== null); if (layers.length < 2) return;
+    const loud = layers.reduce((a, b) => b.c > a.c ? b : a), log = {};
+    for (const L of layers) { const target = loud.db - 8 * (loud.c - L.c), g = target - L.db; for (const z of L.zones) z.gain *= dbtoa(g); log[L.zones[0].vel.join('-')] = { db: Math.round(L.db * 10) / 10, gainDb: Math.round(g * 10) / 10, zones: L.zones.length }; }
+    S.align[inst.name] = log;
   }
 
   // load everything (idempotent). Resolves when every instrument has been tried; partial sets are fine.

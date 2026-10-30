@@ -125,6 +125,22 @@ Colour semantics are fixed: gold = BC/money, ember = industry, leaf = food/growt
   its seam blended (`?loopxf=0`). `node tools/qa/loops.js` holds one note per zone of every sustain instrument through the bus and flags a
   pulse or a click (on the mono sum; the stereo image's sway is reported apart). Two recorded dynamics of one note never blend for long:
   the sampler plays one layer and hands over in a quarter of a second where a swell crosses between them.
+- The sampler aligns the recorded dynamic layers of every pitched sustain when its files are decoded (`alignLayers`, `?layeralign=0` plays
+  them as recorded): each layer's steady loudness (K-weighted, the median over its zones) is set against the loudest layer at four decibels
+  per half of the dynamic range, so the soft layer of a section sits 4 dB under its loud one and the engine's velocity law carries the rest.
+  The library had the soft strings, trumpets, trombones, low brass and cellos eighteen to twenty decibels under their loud layers: a pad at
+  a soft dynamic all but vanished against the chorus, a crescendo lurched at the hand-over, and a solo written soft sat under its bed (the
+  trombones' theme twenty decibels under the Frontier's). The single-layer solo winds are lifted to their family in `INST` instead (the
+  alto flute 10 dB, the flute 5, the solo trumpet 6). Measure a voice alone with a one-line test track through `Music.renderOffline`
+  (`only: ['lead']`); a solo should sit within about three decibels of its bed, above it where it is meant to lead.
+- A line is written on its chords. The engine snaps a note a semitone from a chord tone on a strong beat (or two beats long) onto the chord,
+  which patches a clash but flattens a line: when a phrase is reused over another progression, write the reading for that progression
+  (the battle's crest lines, the procession's big phrase over the flat-sixth lift) or move the chord to the tune (the spy's dominant where
+  the line cadences, a major seventh under the commonwealth's cadence); a dissonance meant to be heard is marked `!` (the Antarans' tritone
+  leaps and half-step grinds, the Mrrshan reed's flat second, a battle line's passing ninth). `node tools/score-review.js` shows each
+  piece's snap rate (under ten percent) and its low-register mud (close thirds below C3: keep the pads, the men and the stabs above the
+  bass's octave; under five percent). A race's hostile reading takes the `mode` its theme's intervals survive (`WAR` in `races.js`:
+  mixolydian for the Alkari, dorian for the Sakkra, the whole tone and the phrygian dominant kept) rather than the darkest one.
 - Check a change with `node tools/score-lint.js` (schema, instruments, forms, phrases, themes, determinism, the programme's lists; `--strict`
   in a release pass) and `node tools/qa/music.js` (the seams in real time: directed programme, soft change, bridges, motif, snapshot / restore).
 

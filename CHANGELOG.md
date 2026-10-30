@@ -5,6 +5,17 @@ Versions follow `MAJOR.MINOR.PATCH`; the live version is the `VERSION` file.
 
 ## Unreleased
 
+- The full pass over every piece against the compass (Williams for the themes, Shore for the weight, Zimmer for the manner, Serrie under the
+  map): every sung or blown line on the map, in the cues and in the race themes phrased (`shape`, `swell`); the low register cleared in every
+  piece that piled thirds below C3 (the passacaglia, the chorale, the nocturne, the lanes, the vigil, the council, the procession and its
+  state reading, Orion, the Antarans, the ground assault, the Silicoid, the Meklar); the lines that were bent onto their chords rewritten on
+  them (the battle's crest lines with the strings' counter-line, the procession's big phrase over the flat-sixth lift, the Antarans' lines
+  on their own chords with the tritone leaps kept, the spy's progression under its line, the Darlok's second section) and the race themes'
+  hostile readings in modes their intervals survive; the sampler aligns the recorded dynamic layers of every pitched sustain when its files
+  are decoded (the soft strings, trumpets, trombones, low brass and cellos sat eighteen to twenty decibels under their loud layers; `?layeralign=0`)
+  and the quiet solo winds are lifted to their family (the alto flute, the flute, the solo trumpet), so every solo on the map sits with or
+  above its bed; the crest women's voices under the horns in Noon and First Light. Every piece re-judged and re-ranked (`MUSIC-REVIEW.md`),
+  the player page updated with the ranking and new renders.
 - The map's plan, steps six to ten: the harp interlude on the air and the soft organ, the violas' with an alto flute, the marimba pulse
   replaced by the held note (one low cello note, the air, the harp); the bridges open on the tonic of the piece that is playing and land on
   the cue's dominant, with a dark bridge (Orion, the Antarans, the defeat) and a bright one (the chamber, the victory) beside the tense and
