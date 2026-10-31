@@ -5,9 +5,10 @@ Versions follow `MAJOR.MINOR.PATCH`; the live version is the `VERSION` file.
 
 ## Unreleased
 
-- Two more readings of the title, ready though the game may not play them: `title:organ` (the pipe organ’s big wide chords as the bed, a
-  cathedral’s room) and `title:pipes` (the library has no bagpipes, so they are built as pipes are: the oboe as a chanter with the pipers’
-  grace notes over held bassoon drones two octaves below, one drone chord under the whole piece, the field snare keeping a slow march).
+- Two more readings of the title, ready though the game may not play them: `title:organ` (the pipe organ as the instrument: one vast open
+  chord across five octaves first, the full stop on the tune with the octave coupler, the organ in three octaves at once, the full organ at
+  the crest, the organ’s own pedal with a 32’ under it, a great hall’s room) and `title:pipes` (the library has no bagpipes, so they are built as pipes are: the oboe as a chanter with the pipers’
+  grace notes and doublings (a line’s `flutter`) over held bassoon drones two octaves below, one drone chord under the whole piece, the field snare keeping a slow march).
 - The title in the major, on the commonwealth’s tune and nothing else: the same tune in the minor over the men’s choir was heard as
   Crimson Tide, and the hymn’s rising fourth is gone from the title; the brooding is in the bed (the deep open chords, the bass line and
   its sub, the flat seventh and the sixth degree), not the mode. One melody at a time (the solo horn first, the men low with the horn

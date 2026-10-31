@@ -79,23 +79,31 @@
   // Two more readings, ready though the game may never play them. The organ: the pipe organ's big wide chords are the bed (five voices
   // across G2-C6 on the full organ, a soft upper manual above, the basses and the sub as the pedal), a cathedral's room, the men humming
   // under it, the horn and the men and the full horns as in the title. The pipes: the library has no bagpipes, so they are built as pipes
-  // are: a double-reed chanter (the oboe, D4 to D5, with the pipers' grace notes before its long notes) over held reed drones two octaves
+  // are: a double-reed chanter (the oboe, D4 to D5, with the pipers' grace notes and doublings, `grace` and `flutter`, before its long notes) over held reed drones two octaves
   // below (the bassoon on the tonic and the fifth, the deep bass and its sub under), everything over one drone chord, the field snare
   // keeping a slow march with its rolls, a drier room; the men low, the horn answering as before.
   (function () {
     const d = JSON.parse(JSON.stringify(Music._tracks.title)); delete d._p; delete d.id;
-    d.desc = 'Main theme, the organ reading — the pipe organ’s big wide chords as the bed, a cathedral’s room: the organ alone first with the pedal, the men humming under it, the solo horn’s first part the commonwealth’s tune whole and slow, the men taking it low, the bassoon and the horn, the oboe in the breath, the full organ and the horns at the crest, the solo horn alone at the close';
+    d.desc = 'Main theme, the organ reading — the pipe organ is the instrument, in a great hall: one vast open chord first across five octaves with the pedal under it, the men humming low; the full stop plays the commonwealth’s tune whole and slow with the octave coupler above it over the soft foundation; the men take the tune and the organ answers; the organ in three octaves at once on the tune; the soft stop alone in the breath; the full organ at the crest with the chamber open on ah and the timpani; the soft stop alone at the close over the pedal';
     d.hidden = true; d.variantOf = 'title';
-    d.inst = Object.assign({}, d.inst, { pad: 'organ', pad2: 'organSoft' });
-    d.mix = Object.assign({}, d.mix, { pad: 1.1, lead: 2.3, choir: 1.0 }); d.fx = { verb: 1.35, stage: 0.7, dly: 1.0 }; d.tone = { lo: 1.2, hi: 0.8 };
-    for (const s of d.sec) {
-      const crest = s.n === 'A2', breath = s.n === 'C' || s.n === 'drone';
-      s.pad = { p: breath ? 'swell' : 'sus', inst: 'organ', n: 5, reg: [43, 84], vel: crest ? 0.72 : breath ? 0.46 : 0.6 };      // the full organ, five voices spread wide
-      s.pad2 = { p: 'sus', inst: 'organSoft', n: 3, reg: [67, 91], vel: crest ? 0.5 : 0.32 };                                   // the upper manual's halo
-      if (s.choir && s.choir.n === 2) s.choir.vel = Math.round(s.choir.vel * 0.8 * 100) / 100;                                 // the hum under the organ
-      if (s.bell) s.bell = false;
-      if (s.arp && s.arp.inst === 'harp') s.arp = false;
-    }
+    d.inst = Object.assign({}, d.inst, { pad: 'organSoft', pad2: 'organ', lead: 'organ', lead2: 'organ', bell2: 'organ' });
+    d.mix = Object.assign({}, d.mix, { pad: 1.05, lead: 2.1, choir: 1.0, bass: 1.2 }); d.fx = { verb: 1.7, stage: 0.5, dly: 0.6 }; d.tone = { lo: 1.3, hi: 0.9 }; d.duck = 0.66;
+    d.sends = { lead: { verb: 0.3, stage: 0.25, dly: 0.04 }, choir: { verb: 0.4, stage: 0.1 }, bell: { verb: 0.45, stage: 0.15 } };
+    const PED = pat => ({ pat, inst: { p: 'organ', sub: 0.55, att: 0.08, rel: 1.2 } });                       // the pedal: the organ's own 16' with a 32' under it
+    const LOW = (vel, p) => ({ p: p || 'sus', inst: 'organ', n: 2, reg: [24, 43], vel, open: true });          // the great's foundation: roots and fifths from C1
+    const FND = (vel, p) => ({ p: p || 'sus', inst: 'organSoft', n: 3, reg: [43, 60], vel });                   // the soft foundation under the melody's octave
+    const HUM = vel => ({ n: 2, reg: [43, 52], vel, soft: true, width: 0.85 });
+    const SOLO = (ph, vel) => ({ ph, inst: 'organ', oct: 0, vel, shape: 0.3, swell: 0.3 });                      // the full stop, D4 to D5
+    const S = {};
+    S.drone = { pad: { p: 'swell', inst: 'organ', n: 4, reg: [43, 79], vel: 0.6 }, pad2: LOW(0.6, 'swell'), bass: Object.assign(PED('c---'), { pedal: true }), choir: false, bell2: { ph: 'ST2', inst: 'chime', vel: 0.36 }, bell: false, arp: false, timp: false, drums: false, cres: [0.6, 0.7] };
+    S.men = { pad: FND(0.5), pad2: LOW(0.55), bass: PED(['1---', '1--5']), choir: HUM(0.5), bell: false, arp: false, timp: false, drums: false, cres: [0.66, 0.72] };
+    S.horn = { pad: FND(0.48), pad2: LOW(0.55), bass: PED(['1--5', '1---']), lead: SOLO('PA*0.9 PB*1 L2^*0.95 L3^*0.9', 0.86), lead2: { ph: 'PA*0.9 PB*1 L2^*0.95 L3^*0.9', inst: 'organ', oct: 1, vel: 0.34, shape: 0.3 }, choir: HUM(0.5), bell: false, arp: false, drums: false, timp: false, cres: [0.7, 0.78] };
+    S.A1 = { pad: FND(0.5), pad2: LOW(0.56), bass: PED(['1--5', '1---']), lead: { ph: 'PA PB r8', inst: 'choirMenAh', oct: -1, vel: 0.84, shape: 0.4, width: 0.5 }, lead2: { ph: ['r8 L3^ PI', 'r8 L3^ r4'], inst: 'organ', oct: 0, vel: 0.84, shape: 0.3, swell: 0.3 }, bell2: false, choir: HUM(0.5), bell: false, arp: false, drums: false, timp: false, cres: [0.72, 0.8] };
+    S.B = { pad: { p: 'sus', inst: 'organ', n: 4, reg: [43, 79], vel: 0.6 }, pad2: LOW(0.6), bass: PED(['1--5', '1---']), lead: SOLO('PA L3', 0.9), lead2: { ph: 'PA L3', inst: 'organ', oct: -1, vel: 0.62, shape: 0.3 }, bell2: { ph: 'PA L3', inst: 'organ', oct: 1, vel: 0.4, shape: 0.3 }, choir: HUM(0.5), bell: false, arp: false, drums: false, timp: false, cres: [0.76, 0.86] };
+    S.C = { pad: { p: 'swell', inst: 'organSoft', n: 3, reg: [43, 62], vel: 0.42 }, pad2: LOW(0.4, 'swell'), bass: Object.assign(PED('c---'), { pedal: true }), lead: false, lead2: { ph: ['r4 PA', 'PA r4'], inst: 'organSoft', oct: 0, vel: 0.62, shape: 0.3 }, bell2: false, choir: HUM(0.4), choir2: false, bell: false, arp: false, drums: false, timp: false, lv: 0.46, rise: 2 };
+    S.A2 = { pad: { p: 'sus', inst: 'organ', n: 5, reg: [43, 84], vel: 0.72 }, pad2: LOW(0.66), bass: PED(['1--5', '1---']), lead: SOLO('PA PB L3', 0.98), lead2: { ph: 'PA PB L3', inst: 'organ', oct: -1, vel: 0.78, shape: 0.3, swell: 0.4 }, bell2: { ph: 'PA PB L3', inst: 'organ', oct: 1, vel: 0.5, shape: 0.3 }, choir: { inst: 'choirMenAh', n: 3, reg: [43, 60], vel: 0.88 }, choir2: { inst: 'aah', n: 3, reg: [57, 74], vel: 0.68 }, bell: false, arp: false, drums: false, cres: [0.86, 1.06] };
+    S.E = { pad: FND(0.46), pad2: LOW(0.5), bass: Object.assign(PED('c---'), { pedal: true }), lead: { ph: 'PA L3', inst: 'organSoft', oct: 0, vel: 0.7, shape: 0.3 }, lead2: false, bell2: false, choir: HUM(0.46), choir2: false, bell: false, arp: false, drums: false, timp: false, cres: [0.72, 0.44] };
+    for (const sec of d.sec) { const o = S[sec.n]; if (!o) continue; for (const k in o) sec[k] = o[k]; }
     Track('title:organ', d);
   })();
   (function () {
@@ -110,11 +118,11 @@
       s.pad = { p: 'sus', inst: 'bassoon', n: 2, reg: [38, 50], vel: s.n === 'C' ? 0.4 : 0.52, open: true };                   // the drones: the tonic and the fifth, two octaves under the chanter
       s.pad2 = s.n === 'A2' ? { p: 'sus', inst: 'reed', n: 2, reg: [57, 69], vel: 0.4, open: true } : false;                   // a tenor drone at the crest only
       if (s.lead && typeof s.lead === 'object' && !s.lead.inst) {                                                             // the chanter: the oboe, D4 to D5, grace notes before its long notes
-        s.lead.oct = 0; s.lead.grace = 0.5; s.lead.vel = Math.min(1, (s.lead.vel || 0.9) * 0.96);
+        s.lead.oct = 0; s.lead.grace = 0.4; s.lead.flutter = 0.55; s.lead.vel = Math.min(1, (s.lead.vel || 0.9) * 0.96);
         s.lead.ph = [].concat(s.lead.ph).map(p => p.replace(/L2\^/g, 'L2').replace(/L3\^/g, 'L3')); if (s.lead.ph.length === 1) s.lead.ph = s.lead.ph[0];
       }
       if (s.lead2 && s.lead2.inst === 'hornSolo') { s.lead2.grace = 0.3; s.lead2.ph = [].concat(s.lead2.ph).map(p => p.replace(/PI/g, 'L2^')); }   // over the drone the horn answers with the reach, not the inversion (its fourth and seventh rub the drone)
-      if (s.lead2 && s.lead2.inst === 'oboe') { s.lead2.grace = 0.5; }
+      if (s.lead2 && s.lead2.inst === 'oboe') { s.lead2.grace = 0.4; s.lead2.flutter = 0.55; }
       s.drums = SN[s.n] === undefined ? false : SN[s.n];
       if (s.bell) s.bell = false;
       if (s.arp && s.arp.inst === 'harp') s.arp = false;

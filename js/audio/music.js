@@ -651,7 +651,7 @@
     const ly = BUS[key], inst = resolveInst(spec.inst, C.inst[key] || DEF_INST[key]);
     const vel0 = num(spec.vel, key === 'lead' ? 0.9 : 0.7), art = num(spec.art, inst.v === 'pluck' || inst.v === 'bell' || inst.v === 'chime' ? 1 : 0.97);
     const harm = spec.harm || 0, oct = spec.oct || 0, rng = C.vrng, brassy = inst.v === 'brass' || inst.v === 'flute', blown = brassy || (inst.v === 'sample' && /^(horn|brass|flute|winds|oboe|clarinet|bassoon)/.test(inst.fb || ''));   // blown: no octave echo on a horn or a flute, synthesized or recorded
-    const graceP = num(spec.grace, brassy ? 0.18 : 0), echoP = num(spec.echo, blown ? 0 : 0.07);
+    const graceP = num(spec.grace, brassy ? 0.18 : 0), flutterP = num(spec.flutter, 0), echoP = num(spec.echo, blown ? 0 : 0.07);   // flutter: the pipers' doubling before a long note
     const swellK = clamp(num(spec.swell, 0), 0, 0.8);   // swell: each note of two beats or more starts softer and opens to its dynamic through the recorded layers (the brass rising)
     const shape = clamp(num(spec.shape, 0), 0, 0.8);   // shape: each phrase played as a hairpin — soft at its ends, full in its middle and at its top, the long notes blooming (a singer's or a horn's phrasing)
     const ref = key === 'lead' ? s.R.L.lead2 : s.R.L.lead;                       // '@': double the other line (lead2 follows lead, lead follows lead2)
@@ -686,7 +686,8 @@
         if (!nt.keep && (strong || nt.dur >= 2) && !isChordTone(m, sg.ch) && clashes(m, sg.ch)) { m = snapToChord(m, sg.ch); C.snaps++; }
         m = foldRange(inst, m);
         const dt = (rng() - 0.5) * 0.012;
-        if (graceP && nt.dur >= 1.5 && rng() < graceP) emit(C, ly, inst, s.start + off - 0.09, foldRange(inst, stepMidi(C, step - 1, 0)), 0.09, vel * 0.55, { art: 1, dt: 0 });
+        if (flutterP && nt.dur >= 1.5 && rng() < flutterP) { for (let k = 0; k < 3; k++) emit(C, ly, inst, s.start + off - 0.17 + k * 0.055, foldRange(inst, stepMidi(C, step + (k % 2 === 0 ? 1 : 0), 0)), 0.055, vel * 0.6, { art: 1, dt: 0 }); }
+        else if (graceP && nt.dur >= 1.5 && rng() < graceP) emit(C, ly, inst, s.start + off - 0.09, foldRange(inst, stepMidi(C, step - 1, 0)), 0.09, vel * 0.55, { art: 1, dt: 0 });
         const sw = swellK && nt.dur >= 2 ? { dyn: clamp(vel * C.lvAt(s.start + off) * (1 - swellK), 0.12, 1), swell: clamp(vel * C.lvAt(s.start + off + nt.dur), 0, 1) } : null;
         emit(C, ly, inst, s.start + off, m, nt.dur, vel, Object.assign({ art: art, dt: dt, pan: spec.pan, width: spec.width }, sw || {}));
         if (echoP && (!strong || spec.echo) && rng() < echoP) emit(C, ly, inst, s.start + off + 0.04, foldRange(inst, m + 12), Math.min(nt.dur, 1) * 0.8, vel * 0.3, { art: art, pan: (rng() - 0.5) * 0.8 });

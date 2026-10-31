@@ -22,7 +22,9 @@ Commonwealth plays it (the minor reading and any hymn fragment on the title read
 the chorus and the low instruments carrying the melody, high accents (a soft trumpet) few. Later it should be
 heard on other instruments for effect — a trombone, a baritone horn, a baritone saxophone, a bass clarinet, a bassoon, other unusual
 colours — for a creepy organic-against-artificial feel made with real, unusual instrument sounds rather than synths. On hand: the trombone
-section (`trombones`), the tuba, the bassoon, the cor anglais, the alto flute, the contrabasses. Not in the library: bass clarinet,
+section (`trombones`), the tuba, the bassoon, the cor anglais, the alto flute, the contrabasses. Not in the library: bagpipes (the user wants real Great Highland pipes with the
+traditional flutter; the only free multisample found is FreePats’ CC0 bagpipe in G, a smaller pipe, at freepats.zenvoid.org, which this
+session’s network could not reach; no free Great Highland multisample turned up on GitHub, archive.org or Pianobook), bass clarinet,
 baritone saxophone, baritone horn / euphonium, contrabassoon, bass flute; they would come from a CC source through `tools/samples/build.py`
 (a solo trombone would help too; `tbnSus` is the section).
 
