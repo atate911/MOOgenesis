@@ -281,6 +281,10 @@
     // the recorded chorus: men + women; every vowel preset maps onto it (the recording is one sustained vowel)
     ooh: smp('chorus', 0.17, { att: 0.12, rel: 1.2, hp: 150, hum: 1.5, alt: true, eq: [[5000, 2.5, 'hs']] }, 'ooh'), aah: smp('chorus', 0.17, { att: 0.12, rel: 1.2, hp: 150, hum: 1.5, alt: true, eq: [[5000, 2.5, 'hs']] }, 'aah'),
     uuh: smp('chorus', 0.16, { att: 0.12, rel: 1.2, hp: 150, hum: 1.5, alt: true, eq: [[5000, 2.5, 'hs']] }, 'uuh'), eeh: smp('chorus', 0.16, { att: 0.12, rel: 1.2, hp: 150, hum: 1.5, alt: true, eq: [[5000, 2.5, 'hs']] }, 'eeh'),
+    // the real choir (St. Helen's Cantores: a school choir in a stereo pair; Pianobook): a hum and an ooh, 12-second takes with the choir's
+    // own breathing; and one cantor (Micah's Choir: four layers, the vowel opening with the dynamic) for a sung line. Gains from the level test.
+    choirHum: smp('choirHum', 0.222, { att: 0.35, rel: 1.4, hp: 90, eq: [[5000, 1.5, 'hs']] }, 'uuh'), choirOoh: smp('choirOoh', 0.164, { att: 0.3, rel: 1.4, hp: 120, eq: [[6000, 1.5, 'hs']] }, 'ooh'),
+    cantor: smp('cantor', 0.546, { att: 0.12, rel: 0.8, hp: 70, leg: true, eq: [[3000, 1, 0.8]] }, 'uuh'),
     choirMen: smp('chorusMen', 0.23, { att: 0.12, rel: 1.3, hp: 100, hum: 1.5, alt: true, eq: [[5000, 2.5, 'hs']] }, 'uuh'), choirMenAh: smp('chorusMen', 0.19, { att: 0.12, rel: 1.3, hp: 100, hum: 1.5, alt: true, eq: [[5000, 2.5, 'hs']] }, 'aah'), choirWomen: smp('chorusWomen', 0.16, { att: 0.15, rel: 1.4, hp: 220, hum: 1.5, alt: true, eq: [[5000, 2, 'hs']] }, 'aah'),
     // the two machine races keep a little of their electronic character
     seqSyn: SYN.seq, arpSawSyn: SYN.arpSaw, moogSyn: SYN.moog, pulseSyn: SYN.pulse, synthSyn: SYN.synth,
@@ -288,7 +292,7 @@
   Music._SYN = SYN;
   // the sounding range of each recording (MIDI, C4 = 60): what the section or the player can give. A pad, choir, arpeggio or sparkle
   // keeps its register inside it; a written line folds a stray note by an octave, as a player would. The basses have the C extension.
-  const SET_RANGE = { strEns: [28, 100], strEnsTrem: [28, 100], vln1Trem: [55, 100], vlaSus: [48, 88], vcSus: [36, 84], vcTrem: [36, 84], cbSus: [24, 60], cbPizz: [24, 60], subBass: [24, 60],
+  const SET_RANGE = { choirHum: [52, 79], choirOoh: [52, 78], cantor: [43, 76], strEns: [28, 100], strEnsTrem: [28, 100], vln1Trem: [55, 100], vlaSus: [48, 88], vcSus: [36, 84], vcTrem: [36, 84], cbSus: [24, 60], cbPizz: [24, 60], subBass: [24, 60],
     strEnsPizz: [28, 96], strEnsSpic: [28, 96], harp: [24, 103], marimba: [36, 96], celeste: [60, 108], glock: [79, 108], crotales: [84, 108], chimes: [60, 79],
     hornSus: [41, 81], hornSolo: [41, 81], brassEns: [40, 86], brassStac: [40, 86], tptSus: [52, 86], tptSolo: [52, 86], lowBrass: [28, 65], tbnSus: [40, 72], tubaSus: [26, 65],
     flute: [60, 96], fluteSus: [60, 96], altoFlute: [55, 91], oboe: [58, 91], corAnglais: [52, 81], clarinet: [50, 91], bassoon: [34, 77],
@@ -392,6 +396,13 @@
   // ---------------------------------------------------------------- prepare (parse + validate once per track)
   // the vibrato in time with the music: a whole number of cycles to a beat, as near five a second as the tempo allows (58 bpm: five to a beat,
   // 4.8 Hz; 120 bpm: three, 6 Hz), so the players' vibrato and the pulse agree instead of drifting against each other note by note
+  // The orchestral profile (a piece's `orch: true`): an orchestra and a choir, held and acoustic, by default rather than by a flag per
+  // problem. Beds and the bass are held through chord changes and section lines (a note two chords share keeps sounding; moving voices
+  // enter legato), the choir breathes in turn, the low end is mono below 450 Hz (the choir), 250 Hz (the bass) and 300 Hz (the beds), and nothing synthetic
+  // is added to a recording: no detuned doubling (ens), no sine sub, no bus chorus. The beds dip less under the solo (duck 0.8). A piece
+  // may still set any of these itself; tools/qa/orchestral.js checks the result.
+  const ORCH_LOWMONO = { choir: 450, bass: 250, pad: 300 };   // the choir up to 450 Hz: the Sonatina choir's two microphones are opposed in phase through 150-500 Hz (a hollow hum)
+  function orchOf(def) { return !!(def && def.orch); }
   function vibRateFor(bpm) { const bps = clamp(num(bpm, 90), 30, 220) / 60, n = Math.max(1, Math.round(5.1 / bps)); return n * bps; }
   Music._vibRateFor = vibRateFor;
   function resolveInst(spec, fallback) {
@@ -452,6 +463,7 @@
     // struck/ringing voices (bells, chimes) keep their own ring time; it only stretches a little with the written length
     if ((inst.v === 'bell' || inst.v === 'chime') && inst.dur) o.dur = inst.dur * clamp(0.7 + 0.15 * beats, 0.7, 1.4);
     if (ex) for (const k in ex) if (k !== 'art' && k !== 'dt' && ex[k] !== undefined) o[k] = ex[k];
+    if (C.def && C.def.orch && inst.v === 'sample') { o.ens = 0; o.sub = 0; }      // the orchestral profile: the recording as it is
     delete o.p;
     const ev = { t: C.tAt(beat) + (ex && ex.dt || 0), v: inst.v, ly, o, m: midi, b: beat, bt: beats, k: C.key };
     C.ev.push(ev);
@@ -485,7 +497,7 @@
     // sounding through the change instead of being bowed again; a note the next chord drops lets go at the change; a note it adds comes
     // in legato, past its bow's attack. Only the first chord of the section enters with the bed's attack (or its swell): with a swell
     // per chord, or a fresh bow on every note of every chord, the strings struck a beat at each bar line.
-    const tie = cfg.tie !== undefined ? !!cfg.tie : !!(C.def && C.def.padTie);
+    const tie = cfg.tie !== undefined ? !!cfg.tie : !!(C.def && (C.def.padTie || C.def.orch));
     if (tie && (style === 'sus' || style === 'swell')) {
       // the held notes carry on into the next section when it follows at once on the same instrument (a section line is no reason to
       // bow again); otherwise they end where their section ended. Every held note is written once, when its length is known.
@@ -552,7 +564,7 @@
     // tie (the bass's `tie`, or the piece's `bassTie`): an undercurrent rather than a pulse. A note that the next step repeats is held
     // through it (one note across the bars of a chord, not a new attack each bar), a change of note is played legato (the next note past
     // its attack, the last one let go quickly as it arrives), so a slow bass never swells in again at every bar line.
-    const tie = P.tie !== undefined ? !!P.tie : !!(C.def && C.def.bassTie), notes = [];
+    const tie = P.tie !== undefined ? !!P.tie : !!(C.def && (C.def.bassTie || C.def.orch)), notes = [];
     for (let bar = 0; bar < s.bars; bar++) {
       const pt = parseSteps(pats[bar % pats.length]), stepB = C.meter / pt.n;
       for (const st of pt.steps) {
@@ -673,16 +685,16 @@
     const inst = resolveInst(cfg.inst, C.inst[key] || DEF_INST[key]), reg = inRange(inst, cfg.reg || [55, 77]), n = cfg.n || 3, vel = num(cfg.vel, 1);
     let prev = C.prevChoir[key];
     const segs = s.R.segs, soft = !!cfg.soft, rng = C.vrng, spb = C.spb;
-    const breathBeats = Math.max(2, Math.round((soft ? (C.def && C.def.padTie ? 16.0 : 8.0) : 5.2) / spb));   // a held piece's soft hum: a choir breathes in turn, the sound does not stop
+    const breathBeats = Math.max(2, Math.round((soft ? (C.def && (C.def.padTie || C.def.orch) ? 16.0 : 8.0) : 5.2) / spb));   // a held piece's soft hum: a choir breathes in turn, the sound does not stop
     const sampled = inst.v === 'sample';
     const scaleHas = m => C.scale.indexOf(mod12(m - C.tonic)) >= 0;
     C.choirCarry = C.choirCarry || {}; const cc = C.choirCarry[key];
-    const voices = cc && C.def && C.def.padTie && Math.abs(cc.endAbs - s.start) < 1e-6 && sameVoice(cc.inst, inst) ? cc.voices : [];   // per part: { m, ev } of the note currently sounding (carried from the section before when it follows at once)
+    const voices = cc && C.def && (C.def.padTie || C.def.orch) && Math.abs(cc.endAbs - s.start) < 1e-6 && sameVoice(cc.inst, inst) ? cc.voices : [];   // per part: { m, ev } of the note currently sounding (carried from the section before when it follows at once)
     const base = { v1: cfg.v1 || inst.v1, v2: cfg.v2 || inst.v2, att: cfg.att, rel: cfg.rel, width: cfg.width };
     const sing = (j, m, beat, L, k, first) => {           // one phrase of one voice: staggered entry, a small swell, breath-length
       const dyn0 = (soft ? 0.3 : 0.55) + (soft ? 0.12 : 0.2) * (k % 2), dt = first ? j * 0.16 + rng() * 0.08 : j * 0.04 + rng() * 0.05;
       const ex = Object.assign({}, base, { pan: (j - (n - 1) / 2) * 0.35, dt, dyn: dyn0, swell: dyn0 + (soft ? 0.22 : 0.18) });
-      if (!first && soft && C.def && C.def.padTie) ex.att = 1.0;          // a held piece's hum: a voice back from its breath fades in, unheard
+      if (!first && soft && C.def && (C.def.padTie || C.def.orch)) ex.att = 1.0;          // a held piece's hum: a voice back from its breath fades in, unheard
       return emit(C, 'choir', inst, s.start + beat, m, Math.max(0.5, L), vel * (0.9 + 0.1 * (k % 2)), ex);
     };
     for (let i = 0; i < segs.length; i++) {
@@ -1037,7 +1049,7 @@
         // lowMono (the piece's { layer: Hz }): below that frequency the layer's two channels are made one (its side signal high-passed),
         // as a film mix keeps its low end: a wide recording of a low choir or a bass section had its left and right unrelated or opposed
         // down there (the title's hum: a correlation near zero below 500 Hz), hollow on speakers and phasey in a sum. Above it, the stereo stays.
-        const lmHz = def.lowMono && num(def.lowMono[name], 0);
+        const lmHz = num((def.lowMono || (orchOf(def) ? ORCH_LOWMONO : {}))[name], 0);
         let post = post0;
         if (lmHz > 0) {
           const sp = mk(ctx.createChannelSplitter(2)), mg = mk(ctx.createChannelMerger(2)), m = mk(ctx.createGain()), sd0 = mk(ctx.createGain()), inv = mk(ctx.createGain()), sOut = mk(ctx.createGain()), sNeg = mk(ctx.createGain());
@@ -1050,7 +1062,7 @@
           mg.connect(out); post = out;
         }
         post.connect(this.bus); post.connect(sv); sv.connect(this.verb); post.connect(sd); sd.connect(this.delay.in); post.connect(ss); ss.connect(this.stage);
-        const chAmt = num(L.chorus, 0) * num(fx.chorus, 1);
+        const chAmt = num(L.chorus, 0) * num(fx.chorus, orchOf(def) ? 0 : 1);
         if (chAmt > 0 && eng.makeChorus) {              // ensemble chorus: wet copy beside the dry signal (also feeds the hall a little)
           const ch = eng.makeChorus(Music.chorusSync !== false && def.bpm ? { bps: clamp(num(def.bpm, 90), 30, 220) / 60 } : {}), cg = mk(ctx.createGain()); cg.gain.value = chAmt;
           post.connect(ch.in); ch.out.connect(cg); cg.connect(this.bus); cg.connect(sv);
@@ -1149,7 +1161,7 @@
     // end instead of scheduling one inside itself (overlapping legato notes used to bring the beds up mid-note, and every gap between two
     // notes swelled them back, a pump of the whole duck depth against the solo). The restore is slower (0.6 s) so a real rest breathes.
     duckBeds(T, dur) {
-      const dk = this.def && this.def.duck !== undefined ? clamp(num(this.def.duck, 0.79), 0.3, 1) : 0.79;   // a piece may ask for a deeper dip under its soloist (the title: 0.7, 3.1 dB)
+      const dk = this.def && this.def.duck !== undefined ? clamp(num(this.def.duck, 0.79), 0.3, 1) : (orchOf(this.def) ? 0.8 : 0.79);   // a piece may ask for a deeper dip under its soloist (the title: 0.7, 3.1 dB)
       const merge = Music.duckMerge !== false, end = T + dur, cont = merge && this._duckEnd !== undefined && T <= this._duckEnd + 0.6;
       for (const name of ['pad', 'pad2', 'choir', 'choir2', 'arp', 'arp2']) {
         const L = this.layers[name]; if (!L || L.i0 !== undefined) continue;
@@ -1415,7 +1427,7 @@
     flute: 'winds', altoFlute: 'winds', fluteSus: 'winds', oboe: 'winds', corAnglais: 'winds', clarinet: 'winds', bassoon: 'winds',
     vlnSolo: 'strings', vlaSolo: 'strings', vcSolo: 'strings', cbSolo: 'strings', hornIowa: 'brass', tbnSolo: 'brass', bassTbn: 'brass', tubaIowa: 'brass', tptIowa: 'brass', bassClar: 'winds', clarIowa: 'winds', altoFluteIowa: 'winds', fluteIowa: 'winds', oboeIowa: 'winds', bassoonIowa: 'winds', pipes: 'winds', pipesDrone: 'winds',
     strEnsPizz: 'pluck', strEnsSpic: 'pluck', harp: 'pluck', marimba: 'pluck', celeste: 'bells', glock: 'bells', crotales: 'bells', chimes: 'bells',
-    chorus: 'choir', chorusMen: 'choir', chorusWomen: 'choir', padGlass: 'synth', padSerrie: 'synth', padAir: 'synth', organ: 'synth', organSoft: 'synth' };
+    chorus: 'choir', chorusMen: 'choir', chorusWomen: 'choir', choirHum: 'choir', choirOoh: 'choir', cantor: 'choir', padGlass: 'synth', padSerrie: 'synth', padAir: 'synth', organ: 'synth', organSoft: 'synth' };
   const V_FAMILY = { pad: 'synth', bass: 'low', brass: 'brass', flute: 'winds', pluck: 'pluck', bell: 'bells', chime: 'bells', choir: 'choir', drone: 'synth' };
   const SUSTAIN = { pad: 1, pad2: 1, choir: 1, choir2: 1 };
   const SUSTAINS = { strings: 1, synth: 1, choir: 1, brass: 1, winds: 1 };   // the families that can hold a chord (a harp or a celeste in a pad slot would only tick)

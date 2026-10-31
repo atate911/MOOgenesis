@@ -340,6 +340,13 @@ SPECS.update({
     'bassoonIowa': dict(IOWA_WIND, src='Bassoon', pan=0.25),
     'tptIowa':   dict(IOWA_WIND, src='Trumpet', pan=0.3),
     # FreePats bagpipe (a pipe in G): the chanter's notes (file names A4_31.wav: the note and its cents sharp, measured again at decode) and the drones
+    # St. Helen's Cantores (Pianobook, Ash Verjee: a school choir, a stereo pair): 18-second takes, about 12 s of singing each, the
+    # choir's own breathing (±3 dB) kept: a long loop from 3.5 s, so most held notes never reach it, each note levelled and tuned alone
+    'choirHum':  dict(src='HelensMms', re=R_IOWA, octave=0, dyn=[1], rr=1, step=2, kind='sustain', norm='zone', attack=0.35, release=1.2, ls=3.5, lmin=5.0, lmax=8.0, xf_sec=1.0, stereo=True),
+    'choirOoh':  dict(src='HelensOohs', re=R_IOWA, octave=0, dyn=[1], rr=1, step=2, kind='sustain', norm='zone', attack=0.3, release=1.2, ls=3.5, lmin=5.0, lmax=8.0, xf_sec=1.0, stereo=True),
+    # Micah's Choir (Pianobook, Cordaro Rodriguez): one cantor, mono, four layers whose vowels open with the dynamic (oo, oh, uh, ah);
+    # the preset's roots name the notes (its file names are an octave high)
+    'cantor':    dict(IOWA_SOLO, src='Cantor', dyn=[1, 2, 3, 4], stereo=False, pan=-0.05, attack=0.12, release=0.7),
     'pipes':      dict(src='Pipes', re=r'^(?P<note>[A-G]#?\d)_\d+\.wav$', octave=0, norm='zone', dyn=['*'], rr=1, step=1, kind='sustain', attack=0.05, release=0.25, ls=0.6, lmin=0.8, lmax=2.4, stereo=False, pan=0.1),
     'pipesDrone': dict(src='Pipes', re=r'^drone_(?P<note>[A-G]#?\d)_\d+\.wav$', octave=0, norm='zone', dyn=['*'], rr=1, step=1, kind='sustain', attack=0.3, release=0.8, ls=0.8, lmin=1.2, lmax=4.0, stereo=False, pan=-0.1),
 })
@@ -808,7 +815,7 @@ def main():
     a = ap.parse_args()
     os.makedirs(a.out, exist_ok=True)
     only = set(a.only.split(',')) if a.only else None
-    manifest = dict(version=3, license='Orchestra and percussion: VSCO 2 Community Edition (CC0 1.0). Chorus, celeste, crotales, chimes, bell tree, small percussion, timpani, soft organ: Sonatina Symphonic Orchestra 2.0 (CC Sampling Plus 1.0). Pads, sub: synthesized for this game (tools/samples/synth.py). Solo strings, winds and brass with the Iowa suffix or the Solo names (vlnSolo, vlaSolo, vcSolo, cbSolo, tbnSolo, bassTbn, bassClar): University of Iowa Electronic Music Studios Musical Instrument Samples (free for any use, no restrictions), cut from the long takes by tools/samples/iowa.py. Pipes and drones: FreePats Great Highland Bagpipe (CC0 1.0).',
+    manifest = dict(version=3, license='Orchestra and percussion: VSCO 2 Community Edition (CC0 1.0). Chorus, celeste, crotales, chimes, bell tree, small percussion, timpani, soft organ: Sonatina Symphonic Orchestra 2.0 (CC Sampling Plus 1.0). Pads, sub: synthesized for this game (tools/samples/synth.py). Solo strings, winds and brass with the Iowa suffix or the Solo names (vlnSolo, vlaSolo, vcSolo, cbSolo, tbnSolo, bassTbn, bassClar): University of Iowa Electronic Music Studios Musical Instrument Samples (free for any use, no restrictions), cut from the long takes by tools/samples/iowa.py. Pipes and drones: FreePats Great Highland Bagpipe (CC0 1.0). Choir hum and ooh (choirHum, choirOoh): St. Helen\'s Cantores by Ash Verjee, Pianobook. Cantor: Micah\'s Choir by Cordaro Rodriguez, Pianobook (both free from pianobook.co.uk for use in music; not to be redistributed as a sample library).',
                     calib=dict(file='calib.mp3', at=0.1), instruments={})
     mpath = os.path.join(a.out, 'instruments.json')
     if os.path.exists(mpath) and only:
