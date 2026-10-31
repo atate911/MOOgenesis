@@ -17,6 +17,13 @@ octave down, `WAR[race].mode` picks the hostile mode. Score: phrasing everywhere
 section, the two new bullets). Measure a solo against its bed with the scratch scripts' method (render `only: ['lead']` and the bed layers
 apart, compare integrated loudness). Then:
 
+**Next (the user's direction).** The commonwealth's tune is the game's theme, set by the title's first horn part; later it should be
+heard on other instruments for effect — a trombone, a baritone horn, a baritone saxophone, a bass clarinet, a bassoon, other unusual
+colours — for a creepy organic-against-artificial feel made with real, unusual instrument sounds rather than synths. On hand: the trombone
+section (`trombones`), the tuba, the bassoon, the cor anglais, the alto flute, the contrabasses. Not in the library: bass clarinet,
+baritone saxophone, baritone horn / euphonium, contrabassoon, bass flute; they would come from a CC source through `tools/samples/build.py`
+(a solo trombone would help too; `tbnSus` is the section).
+
 **Earlier (the map's plan, steps 6 to 10, and after).** `MUSIC-REVIEW.md` has the plan, what each of its ten steps did, and the work after
 it: the main theme rebuilt around the solo horn and the horn section with a wider dynamic range and phrase shaping (`shape` on a line), the
 commonwealth's oboe tune as the second leitmotif (an `echo` section in nine pieces), the sampler's loop treatment (`js/audio/sampler.js`:
