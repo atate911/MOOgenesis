@@ -17,7 +17,8 @@ octave down, `WAR[race].mode` picks the hostile mode. Score: phrasing everywhere
 section, the two new bullets). Measure a solo against its bed with the scratch scripts' method (render `only: ['lead']` and the bed layers
 apart, compare integrated loudness). Then:
 
-**Next (the user's direction).** The commonwealth's tune is the game's theme, set by the title's first horn part (`title`; `title:reed` is the
+**Next (the user's direction).** The commonwealth's tune is the game's theme, set by the title's first horn part, in the major as the
+Commonwealth plays it (the minor reading and any hymn fragment on the title read as Crimson Tide); one melody at a time, the soloist forward (`title`; `title:reed` is the
 same piece with the cor anglais first, for the player page). The title wants bass meat: deep open chords, the double bass on a line with its sub,
 the chorus and the low instruments carrying the melody, high accents (a soft trumpet) few. Later it should be
 heard on other instruments for effect — a trombone, a baritone horn, a baritone saxophone, a bass clarinet, a bassoon, other unusual

@@ -5,6 +5,11 @@ Versions follow `MAJOR.MINOR.PATCH`; the live version is the `VERSION` file.
 
 ## Unreleased
 
+- The title in the major, on the commonwealth’s tune and nothing else: the same tune in the minor over the men’s choir was heard as
+  Crimson Tide, and the hymn’s rising fourth is gone from the title; the brooding is in the bed (the deep open chords, the bass line and
+  its sub, the flat seventh and the sixth degree), not the mode. One melody at a time (the solo horn first, the men low with the horn
+  answering when they stop, the bassoon low with the horn answering, the oboe in the breath, the full horns at the crest), the soloist
+  forward (its fader up, the beds ducking 4.4 dB under it, nothing else in its octave), fewer layers everywhere.
 - The title deeper and its soloist clearer: deep open chords in the low strings (a pad voiced `open`, roots and fifths), the double bass on
   a slow line with its sub nearly sub-bass, the men taking the tune low after the horn's statement with the horn answering above them, the
   bassoon low against the fall and a soft solo trumpet high above as an accent; a window around the soloist (nothing else in its octave,
