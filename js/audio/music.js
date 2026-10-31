@@ -481,6 +481,28 @@
     const style = cfg.style || cfg.p || 'sus', reg = inRange(inst, cfg.reg || [50, 72]), n = (cfg.n || 4) + (C.era > 0.55 ? 1 : 0), vel = num(cfg.vel, 1), rng = C.vrng;
     let prev = C.prevPad[key];
     const segs = s.R.segs.slice();
+    // tie (the pad's `tie`, or the piece's `padTie`): a held bed, as an orchestra's strings hold one. A note the next chord shares keeps
+    // sounding through the change instead of being bowed again; a note the next chord drops lets go at the change; a note it adds comes
+    // in legato, past its bow's attack. Only the first chord of the section enters with the bed's attack (or its swell): with a swell
+    // per chord, or a fresh bow on every note of every chord, the strings struck a beat at each bar line.
+    const tie = cfg.tie !== undefined ? !!cfg.tie : !!(C.def && C.def.padTie);
+    if (tie && (style === 'sus' || style === 'swell')) {
+      // the held notes carry on into the next section when it follows at once on the same instrument (a section line is no reason to
+      // bow again); otherwise they end where their section ended. Every held note is written once, when its length is known.
+      C.padCarry = C.padCarry || {}; const carry = C.padCarry[key]; C.padCarry[key] = null;
+      const open = new Map(); let any = false;
+      if (carry) { if (Math.abs(carry.endAbs - s.start) < 1e-6 && sameVoice(carry.inst, inst)) { for (const [m, o] of carry.open) open.set(m, o); any = open.size > 0; } else padFlushAll(C, carry); }
+      for (let i = 0; i < segs.length; i++) {
+        const sg = segs[i]; let b1 = sg.b1;
+        if (cfg.merge !== false) while (i + 1 < segs.length && segs[i + 1].ch.sym === sg.ch.sym) { i++; b1 = segs[i].b1; }
+        const notes = voiceChord(cfg.open ? openChord(sg.ch) : sg.ch, prev, reg[0], reg[1], n, (reg[0] + reg[1]) / 2); prev = notes;
+        for (const m of Array.from(open.keys())) if (notes.indexOf(m) < 0) { padFlush(C, open.get(m), m, s.start + sg.b0, true); open.delete(m); }
+        notes.forEach(function (m, j) { if (!open.has(m)) open.set(m, { b0: s.start + sg.b0, j, first: !any, inst, vel, n, width: num(cfg.width, 1), rel: cfg.rel, style, rng }); });
+        any = true;
+      }
+      C.padCarry[key] = { open, endAbs: s.start + (segs.length ? segs[segs.length - 1].b1 : 0), inst };
+      C.prevPad[key] = prev; return;
+    }
     for (let i = 0; i < segs.length; i++) {
       const sg = segs[i], notes = voiceChord(cfg.open ? openChord(sg.ch) : sg.ch, prev, reg[0], reg[1], n, (reg[0] + reg[1]) / 2);   // open: roots and fifths only (deep chords that must not smear)
       prev = notes;
@@ -505,6 +527,13 @@
     C.prevPad[key] = prev;
   }
 
+  function padFlush(C, o, m, endAbs, cont) {
+    const L = endAbs - o.b0; if (L <= 0) return;
+    const ex = { pan: (o.j / Math.max(1, o.n - 1) - 0.5) * 0.8 * o.width * C.widthK, dt: (o.rng() - 0.5) * 0.02, rel: o.rel };
+    if (o.first) { if (o.style === 'swell') ex.att = Math.min(L * C.spb * 0.6, 3.5); } else { ex.leg = true; ex.legAtt = 0.35; }
+    emit(C, 'pad', o.inst, o.b0, m, L + (cont ? 0.12 : 0), o.vel * (o.j === 0 ? 1 : 0.9), ex);
+  }
+  function padFlushAll(C, carry) { for (const [m, o] of carry.open) padFlush(C, o, m, carry.endAbs, false); carry.open.clear(); }
   function bassPitch(C, ch, tok, pedal) {
     const rootPc = pedal ? C.P.tpc : ch.bassPc;
     let root = nearestPc(rootPc, C.bassC), m;
@@ -536,11 +565,24 @@
         if (p && p.m === m && Math.abs(p.beat + p.len - beat) < 1e-6) p.len += st.len * stepB; else notes.push({ beat, m, len: st.len * stepB, v });
       }
     }
+    if (!tie) return;
+    // the held note carries on into the next section when it follows at once on the same note and instrument (no new attack at the
+    // section line); the last note of a section waits to be written until the next section, or the end of the pass, says how long it is
+    C.bassCarry = C.bassCarry || null; const cr = C.bassCarry; C.bassCarry = null;
+    for (const n of notes) n.beat += s.start;
+    if (cr) {
+      const f = notes[0];
+      if (f && Math.abs(cr.beat + cr.len - f.beat) < 1e-6 && cr.m === f.m && sameVoice(cr.inst, inst)) { f.beat = cr.beat; f.len += cr.len; f.v = cr.v; f.from = cr.from; f.inst0 = cr.inst0 || cr.inst; }
+      else { if (f && Math.abs(cr.beat + cr.len - f.beat) < 1e-6 && sameVoice(cr.inst, inst)) { cr.into = true; f.from = true; } bassWrite(C, cr); }
+    }
     for (let i = 0; i < notes.length; i++) {
-      const n = notes[i], nx = notes[i + 1], pv = notes[i - 1], into = nx && Math.abs(n.beat + n.len - nx.beat) < 1e-6, from = pv && Math.abs(pv.beat + pv.len - n.beat) < 1e-6;
-      emit(C, 'bass', inst, s.start + n.beat, n.m, into ? n.len + 0.08 : n.len * 0.97, n.v, Object.assign(from ? { leg: true, legAtt: 0.12 } : {}, into ? { rel: 0.3 } : {}));
+      const n = notes[i], nx = notes[i + 1], pv = notes[i - 1];
+      n.inst = inst; n.into = !!(nx && Math.abs(n.beat + n.len - nx.beat) < 1e-6); n.from = n.from || !!(pv && Math.abs(pv.beat + pv.len - n.beat) < 1e-6);
+      if (i === notes.length - 1) C.bassCarry = n; else bassWrite(C, n);
     }
   }
+  function sameVoice(a, b) { return a === b || (!!a && !!b && a.v === b.v && (a.smp || '') === (b.smp || '')); }   // one instrument, whatever its envelope settings
+  function bassWrite(C, n) { emit(C, 'bass', n.inst0 || n.inst, n.beat, n.m, n.into ? n.len + 0.08 : n.len * 0.97, n.v, Object.assign(n.from ? { leg: true, legAtt: 0.12 } : {}, n.into ? { rel: 0.3 } : {})); }
 
   function genArp(C, s, cfg, key) {
     const P = norm(cfg, ARPS, 'arp'), inst = resolveInst(cfg.inst, C.inst[key] || DEF_INST[key]), reg = inRange(inst, P.reg || [55, 84]);
@@ -631,14 +673,17 @@
     const inst = resolveInst(cfg.inst, C.inst[key] || DEF_INST[key]), reg = inRange(inst, cfg.reg || [55, 77]), n = cfg.n || 3, vel = num(cfg.vel, 1);
     let prev = C.prevChoir[key];
     const segs = s.R.segs, soft = !!cfg.soft, rng = C.vrng, spb = C.spb;
-    const breathBeats = Math.max(2, Math.round((soft ? 8.0 : 5.2) / spb));
+    const breathBeats = Math.max(2, Math.round((soft ? (C.def && C.def.padTie ? 16.0 : 8.0) : 5.2) / spb));   // a held piece's soft hum: a choir breathes in turn, the sound does not stop
     const sampled = inst.v === 'sample';
     const scaleHas = m => C.scale.indexOf(mod12(m - C.tonic)) >= 0;
-    const voices = [];                                   // per part: { m, ev } of the note currently sounding
+    C.choirCarry = C.choirCarry || {}; const cc = C.choirCarry[key];
+    const voices = cc && C.def && C.def.padTie && Math.abs(cc.endAbs - s.start) < 1e-6 && sameVoice(cc.inst, inst) ? cc.voices : [];   // per part: { m, ev } of the note currently sounding (carried from the section before when it follows at once)
     const base = { v1: cfg.v1 || inst.v1, v2: cfg.v2 || inst.v2, att: cfg.att, rel: cfg.rel, width: cfg.width };
     const sing = (j, m, beat, L, k, first) => {           // one phrase of one voice: staggered entry, a small swell, breath-length
       const dyn0 = (soft ? 0.3 : 0.55) + (soft ? 0.12 : 0.2) * (k % 2), dt = first ? j * 0.16 + rng() * 0.08 : j * 0.04 + rng() * 0.05;
-      return emit(C, 'choir', inst, s.start + beat, m, Math.max(0.5, L), vel * (0.9 + 0.1 * (k % 2)), Object.assign({}, base, { pan: (j - (n - 1) / 2) * 0.35, dt, dyn: dyn0, swell: dyn0 + (soft ? 0.22 : 0.18) }));
+      const ex = Object.assign({}, base, { pan: (j - (n - 1) / 2) * 0.35, dt, dyn: dyn0, swell: dyn0 + (soft ? 0.22 : 0.18) });
+      if (!first && soft && C.def && C.def.padTie) ex.att = 1.0;          // a held piece's hum: a voice back from its breath fades in, unheard
+      return emit(C, 'choir', inst, s.start + beat, m, Math.max(0.5, L), vel * (0.9 + 0.1 * (k % 2)), ex);
     };
     for (let i = 0; i < segs.length; i++) {
       const sg = segs[i], notes = voiceChord(sg.ch, prev, reg[0], reg[1], n, (reg[0] + reg[1]) / 2);
@@ -666,6 +711,7 @@
         }
       });
     }
+    C.choirCarry[key] = { voices, endAbs: s.start + (segs.length ? segs[segs.length - 1].b1 : 0), inst };
     C.prevChoir[key] = prev;
   }
 
@@ -916,6 +962,8 @@
     }
     C.key = 'trans';
     genTransitions(C, wraps);
+    if (C.padCarry) for (const k in C.padCarry) if (C.padCarry[k]) { padFlushAll(C, C.padCarry[k]); C.padCarry[k] = null; }   // the held beds end with the pass
+    if (C.bassCarry) { bassWrite(C, C.bassCarry); C.bassCarry = null; }
     C.ev.sort((a, b) => a.t - b.t);
     markLegato(C.ev);
     return { events: C.ev, beats: C.totalBeats, len: tAcc, wraps, pass, snaps: C.snaps, bars, beatsT };

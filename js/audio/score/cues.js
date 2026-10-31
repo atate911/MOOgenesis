@@ -8,7 +8,7 @@
   Track('title', {
     desc: 'Main theme — the undercurrent: a deep bed first (deep open chords in the low strings, the double bass on a slow line with its sub nearly sub-bass, the planetarium’s analogue glow, one chime), the men entering humming low; the solo horn’s first part the commonwealth’s tune itself, as the Commonwealth plays it, in the major, whole and slow over them, twice; then its variations with the men echoing its head between them, the bassoon low and the horn in variation, a soft trumpet high above once; the oboe’s lyrical variation in the breath over the cellos laying the head; the tune back whole for the crescendo in two steps, a high horn and a low brass voice in canon, then the full brass on the motif strongly with the snare, the timpani, the strings and the mallets and the chamber open on ah; the wind-down over the strings with the men’s last echo; the fade on variations, the solo horn alone, down into the drone',
     quotes: ['procession'],
-    bpm: 58, root: 'D', mode: 'major', loopFrom: 'A1', trim: 2.5, bassTie: true, tens: false, rubato: 0.025, tone: { lo: 1.4, hi: 0.6 }, fx: { verb: 1.0, stage: 0.8, dly: 1.6 }, mix: { choir: 1.45, pad: 0.95, lead: 2.2, bass: 0.96 }, duck: 0.7,
+    bpm: 58, root: 'D', mode: 'major', loopFrom: 'A1', trim: 2.5, bassTie: true, padTie: true, tens: false, rubato: 0.025, tone: { lo: 1.4, hi: 0.6 }, fx: { verb: 1.0, stage: 0.8, dly: 1.6 }, mix: { choir: 1.45, pad: 0.95, lead: 2.2, bass: 0.96 }, duck: 0.7,
     sends: { lead: { verb: 0.08, stage: 0.36, dly: 0.06 }, choir: { verb: 0.32, stage: 0.12 }, bell: { verb: 0.5, stage: 0.2 } },   // the solo at the front of the stage and dry, the bed behind it in the hall; the high trumpet and the points far back
     forms: [['A1', 'B', 'C', 'A2', 'A3', 'D', 'E'], ['A1', 'C', 'B', 'A2', 'A3', 'D', 'E']],
     alts: [{}, { choir2: 'choirWomen' }],
@@ -49,7 +49,7 @@
     // one soft trumpet high above, the timpani only at the crest. 'title:reed' (below) is the same piece with the cor anglais as the first
     // soloist an octave above the horn, its window moved up with it.
     sec: [
-      { n: 'drone', bars: 2, cres: [0.56, 0.62], prog: 'I:2', pad: { p: 'swell', n: 2, reg: [36, 47], vel: 0.29, open: true }, pad2: { p: 'swell', n: 2, reg: [60, 76], vel: 0.28 }, bass: { pat: 'c---', pedal: true, inst: { p: 'deep', sub: 0.7, cut: 85, att: 1.6, rel: 2.8 } }, bell2: { ph: 'ST2', inst: 'chime', vel: 0.4 }, choir: false, timp: false, drums: false },   // the bed alone: deep open chords, the pedal, the glow, one chime
+      { n: 'drone', bars: 4, cres: [0.3, 0.62], prog: 'I:4', pad: { p: 'swell', n: 2, reg: [36, 47], vel: 0.25, open: true }, pad2: { p: 'swell', n: 2, reg: [60, 76], vel: 0.28 }, bass: { pat: 'c---', pedal: true, inst: { p: 'deep', sub: 0.7, cut: 85, att: 6, rel: 2.8 } }, bell2: { ph: 'r2 ST2', inst: 'chime', vel: 0.36 }, choir: { n: 2, reg: [45, 55], vel: 0.56, soft: true, width: 0.85, att: 6 }, timp: false, drums: false },   // the bed alone: deep open chords, the pedal, the glow, one chime
       { n: 'men', bars: 8, cres: [0.62, 0.7], prog: 'I I IV I | I vi IV I', pad: { p: 'sus', n: 2, reg: [36, 47], vel: 0.22, open: true }, pad2: { p: 'swell', n: 2, reg: [60, 76], vel: 0.28 }, bass: { pat: 'c---', pedal: true, inst: { p: 'deep', sub: 0.7, cut: 85, att: 1.0, rel: 2.4 } },
         choir: { n: 2, reg: [45, 55], vel: 0.62, soft: true, width: 0.85 }, bell: { dens: 0.04, res: 1, reg: [76, 100], vel: 0.28 }, timp: false, drums: false },   // the men enter humming low, one chord to a bar
       { n: 'horn', bars: 16, cres: [0.68, 0.78], prog: 'I I IV I | I I IV V | I I IV I | I I IV V', pad: { p: 'sus', n: 2, reg: [36, 47], vel: 0.26, open: true }, pad2: { p: 'swell', n: 2, reg: [72, 88], vel: 0.3 }, bass: { pat: 'c---', pedal: true, inst: { p: 'deep', sub: 0.7, cut: 85, att: 0.6, rel: 2.0 } },
@@ -147,7 +147,7 @@
     d.mix = Object.assign({}, d.mix, { lead: 2.0, pad: 1.0, bass: 1.15, choir: 1.0 }); d.fx = { verb: 1.1, stage: 0.9, dly: 0.8 }; d.tone = { lo: 1.2, hi: 1.0 }; d.duck = 0.66;
     apply(d, {
       drone: { pad: STR(0.5, 'swell'), pad2: LOWS(0.55, 'swell'), bass: PED, cres: [0.56, 0.62] },
-      men: { pad: STR(0.5, 'sus', 4, [50, 72]), pad2: LOWS(0.55), bass: BASS('1---', 0.8, true), lead2: { ph: 'r4 L2', inst: 'clarinet', oct: 0, vel: 0.5, shape: 0.3 }, arp: { inst: 'harp', pat: '0.......', res: 2, vel: 0.3, reg: [55, 81], skip: 0.3 }, bell: { dens: 0.04, res: 1, reg: [76, 100], vel: 0.28 }, cres: [0.62, 0.7] },
+      men: { pad: STR(0.5, 'sus', 4, [50, 72]), pad2: LOWS(0.55), bass: BASS('1---', 0.8, true), lead2: { ph: 'r4 L2', inst: 'clarinet', oct: 0, vel: 0.5, shape: 0.3 }, arp: false, bell: { dens: 0.04, res: 1, reg: [76, 100], vel: 0.28 }, cres: [0.62, 0.7] },
       horn: { pad: VLA(0.4), pad2: LOWS(0.55), bass: BASS('1---', 0.8, true), lead: VLN('PA*0.88 PB*0.94 PA*1 PB*1', 0.92), lead2: VC('PA*0.88 PB*0.94 PA*1 PB*1', 0.55), bell: { dens: 0.04, res: 1, reg: [76, 100], vel: 0.28 }, drums: false, cres: [0.68, 0.78] },
       A1: { pad: VLA(0.42), pad2: LOWS(0.56), bass: BASS('1---'), lead: { ph: 'V1 r4 V2 r4', inst: 'flute', oct: 0, vel: 0.82, shape: 0.4, swell: 0.2 }, lead2: { ph: 'r4 PAh r4 PAh', inst: 'bassClar', oct: -1, vel: 0.7, shape: 0.4 }, drums: false, cres: [0.7, 0.8] },
       B: { pad: STR(0.5), pad2: LOWS(0.52), lead: { ph: 'r4 V1', inst: 'oboe', oct: 0, vel: 0.8, shape: 0.4, swell: 0.2 } },
@@ -167,11 +167,11 @@
     apply(d, {
       drone: { pad: VLA(0.4, 'swell'), pad2: LOWS(0.55, 'swell'), bass: PED, bell2: false, cres: [0.56, 0.62] },
       men: { pad: VLA(0.45), pad2: LOWS(0.55), bass: BASS('1---', 0.7, true), lead2: SVC('r4 L2', 0.6), cres: [0.62, 0.7] },
-      horn: { pad: VLA(0.42), pad2: LOWS(0.55), bass: BASS('1---', 0.7, true), lead: VLN('PA*0.88 PB*0.94 PA*1 PB*1', 0.92), lead2: VC('PA*0.88 PB*0.94 PA*1 PB*1', 0.52), arp: PZ, cres: [0.68, 0.78] },
-      A1: { pad: VLA(0.42), pad2: LOWS(0.56), bass: BASS('1---', 0.7), lead: VLN('V1 r4 V2 r4', 0.9), lead2: SVC('r4 PAh r4 PAh', 0.7), arp: { inst: 'pizz', pat: '0...2...1...3...', res: 1, vel: 0.3, reg: [43, 67] }, cres: [0.7, 0.8] },
-      B: { pad: VLA(0.38), pad2: LOWS(0.44), bass: BASS('1-------', 0.7), lead2: SVC('V2 r4', 0.9), lead: VLN('r4 V1', 1), bell2: false, arp: PZ },
-      C: { pad: STR(0.4, 'swell'), pad2: LOWS(0.4, 'swell'), lead2: SVLA(['r4 V5', 'V5 r4'], 0.7), arp: { inst: 'pizz', p: 'up8', vel: 0.3, reg: [43, 67], skip: 0.3 } },
-      A2: { pad: VLA(0.45), pad2: LOWS(0.56), lead: VLN('PA PB', 0.9), lead2: VC('r2 PA PB', 0.72), arp: PZ, timp: false },
+      horn: { pad: VLA(0.42), pad2: LOWS(0.55), bass: BASS('1---', 0.7, true), lead: VLN('PA*0.88 PB*0.94 PA*1 PB*1', 0.92), lead2: VC('PA*0.88 PB*0.94 PA*1 PB*1', 0.52), arp: false, cres: [0.68, 0.78] },
+      A1: { pad: VLA(0.42), pad2: LOWS(0.56), bass: BASS('1---', 0.7), lead: VLN('V1 r4 V2 r4', 0.9), lead2: SVC('r4 PAh r4 PAh', 0.7), arp: false, cres: [0.7, 0.8] },
+      B: { pad: VLA(0.38), pad2: LOWS(0.44), bass: BASS('1-------', 0.7), lead2: SVC('V2 r4', 0.9), lead: VLN('r4 V1', 1), bell2: false, arp: false },
+      C: { pad: STR(0.4, 'swell'), pad2: LOWS(0.4, 'swell'), lead2: SVLA(['r4 V5', 'V5 r4'], 0.7), arp: { inst: 'pizz', p: 'up8', vel: 0.22, reg: [43, 67], skip: 0.4 } },
+      A2: { pad: VLA(0.45), pad2: LOWS(0.56), lead: VLN('PA PB', 0.9), lead2: VC('r2 PA PB', 0.72), arp: false, timp: false },
       A3: { pad: { p: 'sus', inst: 'strTrem', n: 3, reg: [55, 76], vel: 0.55 }, pad2: LOWS(0.62, 'sus', 3), bass: BASS('1---', 0.75), lead: VLN('PA PB', 0.92, 1), lead2: VC('PA PB', 0.8), bell2: { ph: 'PA PB', inst: 'violas', oct: 0, vel: 0.6, shape: 0.2 }, arp: { inst: 'strOst', pat: '0.1.0.2.0.1.0.3.', res: 4, vel: 0.6, reg: [50, 69], gate: 0.9 }, timp: false, cr: false },
       D: { pad: STR(0.45), pad2: LOWS(0.5), lead: SVC('L3 r4', 0.86), lead2: SVLA('r4 PAh', 0.6), timp: false, arp: false },
       E: { pad: VLA(0.34), pad2: LOWS(0.4), lead: VLN('V3 V2', 0.92, 1), arp: false },
