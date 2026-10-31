@@ -459,6 +459,8 @@
   }
 
   // ---------------------------------------------------------------- generators
+  // a chord reduced to its root and fifth (the third and the colour tones left to the voices above): deep open chords in the low strings
+  function openChord(ch) { const fifth = ch.pcs.find(p => mod12(p - ch.pc) === 7); const pcs = fifth !== undefined ? [ch.pc, fifth] : [ch.pc]; return Object.assign({}, ch, { pcs, iv: pcs.length > 1 ? [7] : [] }); }
   function genPad(C, s, cfg, key) {
     key = key || 'pad';
     const inst = resolveInst(cfg.inst, C.inst[key] || DEF_INST[key]);
@@ -466,7 +468,7 @@
     let prev = C.prevPad[key];
     const segs = s.R.segs.slice();
     for (let i = 0; i < segs.length; i++) {
-      const sg = segs[i], notes = voiceChord(sg.ch, prev, reg[0], reg[1], n, (reg[0] + reg[1]) / 2);
+      const sg = segs[i], notes = voiceChord(cfg.open ? openChord(sg.ch) : sg.ch, prev, reg[0], reg[1], n, (reg[0] + reg[1]) / 2);   // open: roots and fifths only (deep chords that must not smear)
       prev = notes;
       const b0 = s.start + sg.b0, len = sg.b1 - sg.b0;
       if (style === 'sus' || style === 'swell') {
@@ -1057,7 +1059,8 @@
     duckBeds(T, dur) {
       for (const name of ['pad', 'pad2', 'choir', 'choir2', 'arp', 'arp2']) {
         const L = this.layers[name]; if (!L || L.i0 !== undefined) continue;
-        const g = L.in.gain, lv = L.level, k = name.indexOf('arp') === 0 ? 0.84 : 0.79;
+        const dk = this.def && this.def.duck !== undefined ? clamp(num(this.def.duck, 0.79), 0.3, 1) : 0.79;   // a piece may ask for a deeper dip under its soloist (the title: 0.68, 3.3 dB)
+        const g = L.in.gain, lv = L.level, k = name.indexOf('arp') === 0 ? 0.84 : dk;
         try { g.setTargetAtTime(lv * k, T, 0.06); g.setTargetAtTime(lv, T + dur, 0.3); } catch (e) { /* ignore */ }
       }
     }

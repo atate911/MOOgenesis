@@ -5,6 +5,12 @@ Versions follow `MAJOR.MINOR.PATCH`; the live version is the `VERSION` file.
 
 ## Unreleased
 
+- The title deeper and its soloist clearer: deep open chords in the low strings (a pad voiced `open`, roots and fifths), the double bass on
+  a slow line with its sub nearly sub-bass, the men taking the tune low after the horn's statement with the horn answering above them, the
+  bassoon low against the fall and a soft solo trumpet high above as an accent; a window around the soloist (nothing else in its octave,
+  the hum to the sides, the beds ducking 3.3 dB under it with the piece's `duck`, its sends dry), so the solo rises without being louder.
+  A second reading, `title:reed`, with the cor anglais as the first soloist an octave above the horn, hidden from the menu and on the
+  player page beside the horn reading.
 - The main theme as an undercurrent, deeper and brooding: a deep bed (the cellos as two tenor voices, the deep pedal with its sub, the
   planetarium’s glow, points of light), the men humming low one chord to a bar, the solo horn’s first part the commonwealth’s tune itself, whole, slow and low
   over them (the strain and its answer: the game’s theme set at once), every later horn phrase drawn from it (its head in whole notes an

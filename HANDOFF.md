@@ -17,7 +17,9 @@ octave down, `WAR[race].mode` picks the hostile mode. Score: phrasing everywhere
 section, the two new bullets). Measure a solo against its bed with the scratch scripts' method (render `only: ['lead']` and the bed layers
 apart, compare integrated loudness). Then:
 
-**Next (the user's direction).** The commonwealth's tune is the game's theme, set by the title's first horn part; later it should be
+**Next (the user's direction).** The commonwealth's tune is the game's theme, set by the title's first horn part (`title`; `title:reed` is the
+same piece with the cor anglais first, for the player page). The title wants bass meat: deep open chords, the double bass on a line with its sub,
+the chorus and the low instruments carrying the melody, high accents (a soft trumpet) few. Later it should be
 heard on other instruments for effect — a trombone, a baritone horn, a baritone saxophone, a bass clarinet, a bassoon, other unusual
 colours — for a creepy organic-against-artificial feel made with real, unusual instrument sounds rather than synths. On hand: the trombone
 section (`trombones`), the tuba, the bassoon, the cor anglais, the alto flute, the contrabasses. Not in the library: bass clarinet,

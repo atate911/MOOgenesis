@@ -102,7 +102,13 @@ Colour semantics are fixed: gold = BC/money, ember = industry, leaf = food/growt
   hairpin across the phrases, the answer on top). A line may carry `pan` (a soloist near the centre) and a piece may give one layer its own
   send levels with `sends: { lead: { verb, stage, dly } }` (a soloist at the front of the stage, the bed behind it). A line or a choir may
   carry `width` (0..1): the recording's side scaled against its mid in the voice, so a wide choir recording sung as one line stands at the
-  centre (the title's men, 0.35; its hum 0.6) — alone, a choir line has no centre at all (correlation near zero reads as phasey). A soloist also needs
+  centre (the title's men, 0.35; its hum 0.6) — alone, a choir line has no centre at all (correlation near zero reads as phasey). A piece
+  may set `duck` (the gain its beds fall to under every lead note; 0.79, 2 dB, by default; the title 0.68) and a pad may be voiced `open`
+  (roots and fifths only: deep chords below C3 in the low strings that must not smear, the thirds left to the voices above). A soloist's
+  window is registers first: nothing else in the soloist's octave (the title's horn has D3-D4 to itself: the low strings below it, the
+  glow, the violas and the women above A4, the hum spread to the sides), then the duck, then its own dry sends; the solo then rises without
+  being louder. A derived reading of a piece (`title:reed`, the cor anglais an octave above the horn) is registered hidden from the
+  title's definition at the end of `cues.js`, its window moved with its soloist. A soloist also needs
   a window in the texture: the title keeps the organ and the men below D4 and the women's hum and the analogue halo above A4 while the
   solo horn plays, and the men's answer an octave under it.
 - The second leitmotif is the procession's first strain as the commonwealth's oboe states it (`@procession.A1`). It is woven in, never

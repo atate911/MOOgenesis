@@ -44,7 +44,8 @@ function table(head, rows) {
   };
 
   // ---- composition lint (no rendering) ---------------------------------------------------------------------------------
-  const lint = await page.evaluate(() => { const out = {}; for (const t of MOO.Audio.Music.list()) { try { out[t.id] = MOO.Audio.Music.analyze(t.id); } catch (e) { out[t.id] = { error: e.message }; } } return out; });
+  const lint = await page.evaluate(asked => { const M = MOO.Audio.Music, out = {}; const ids = M.list().map(t => t.id); for (const id of asked || []) if (ids.indexOf(id) < 0 && M._tracks[id]) ids.push(id);   // a hidden reading asked for by name is linted and rendered too
+    for (const id of ids) { try { out[id] = M.analyze(id); } catch (e) { out[id] = { error: e.message }; } } return out; }, list(opt.tracks) || []);
   report.lint = lint;
   const trackIds = list(opt.tracks) || Object.keys(lint);
   if (!opt['no-lint']) {
