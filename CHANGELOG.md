@@ -5,6 +5,11 @@ Versions follow `MAJOR.MINOR.PATCH`; the live version is the `VERSION` file.
 
 ## Unreleased
 
+- The title’s crest brass holds one recorded dynamic layer per line (a hand-over mid-note sounded like a different horn); the bass
+  echoes the hook (root, second, third, fifth on each chord) under the variations and the cellos lay the head in whole notes under the
+  breath, so the piece leans toward the hook’s return. A fourth reading, `title:williams`: a concert fanfare on the tune in John
+  Williams’s manner (the dotted fanfare on its head, the tune in the horns over pulsing strings doubled an octave up, a soaring variation
+  in wide leaps, the lydian lift, a quiet middle for the oboe, the return in the trumpets with the horns in canon, a cadence coda).
 - The title’s tune stated where it counts and varied between: the solo horn states it whole and the men once more; between them and after
   the crescendo everything is variation drawn from it by classical means (the strain as a real sequence a step up to a half close, the
   fall as a chain of descending thirds to the cadence, the head answered in the relative minor in augmentation through a major seventh,
