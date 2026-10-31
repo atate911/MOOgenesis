@@ -5,6 +5,9 @@ Versions follow `MAJOR.MINOR.PATCH`; the live version is the `VERSION` file.
 
 ## Unreleased
 
+- The sampler keeps at most 16 sample fetches in flight (`S.fetchMax`) and retries a failed one once: with the library at some 1,800
+  files, a browser asked for all of them at once refused the overflow (Chromium: `net::ERR_INSUFFICIENT_RESOURCES`) and whole instruments
+  came up silent. The player page ships only the instruments a piece uses (80 of 92, 67 MB).
 - Real soloists in the library: the University of Iowa recordings (free for any use) cut from their long takes by the new
   `tools/samples/iowa.py` (silence and pitch segmentation, pp/mf/ff layers, the string sets per string) and built by `tools/samples/build.py`
   as `vlnSolo`, `vlaSolo`, `vcSolo`, `cbSolo`, `hornIowa`, `tbnSolo`, `bassTbn`, `tubaIowa`, `tptIowa`, `bassClar`, `clarIowa`, `oboeIowa`,
