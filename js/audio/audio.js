@@ -465,10 +465,12 @@
     eng.makeChorus = function (o) {
       o = o || {};
       const nodes = [], N = n => { nodes.push(n); eng.nodeCount++; return n; };
-      const inp = N(ctx.createGain()), out = N(ctx.createGain()), taps = [[0.0135, -0.75, 0.29], [0.0185, 0, 0.37], [0.0235, 0.75, 0.43]];
+      // o.bps (the piece's beats a second): each sweep lasts a whole number of beats (5, 4 and 3: about the free rates at 60 bpm), so the
+      // ensemble's slow pitch and level movement keeps time with the music instead of drifting across it; without it the free rates
+      const inp = N(ctx.createGain()), out = N(ctx.createGain()), taps = [[0.0135, -0.75, 0.29, 5], [0.0185, 0, 0.37, 4], [0.0235, 0.75, 0.43, 3]];
       for (const tp of taps) {
         const d = N(ctx.createDelay(0.1)), lfo = N(ctx.createOscillator()), lg = N(ctx.createGain()), pn = N(ctx.createStereoPanner()), g = N(ctx.createGain());
-        d.delayTime.value = tp[0]; lfo.type = 'sine'; lfo.frequency.value = tp[2] * num(o.rate, 1); lg.gain.value = num(o.depth, 0.0026); pn.pan.value = tp[1]; g.gain.value = 0.55;
+        d.delayTime.value = tp[0]; lfo.type = 'sine'; lfo.frequency.value = o.bps > 0 ? o.bps / tp[3] : tp[2] * num(o.rate, 1); lg.gain.value = num(o.depth, 0.0026); pn.pan.value = tp[1]; g.gain.value = 0.55;
         lfo.connect(lg); lg.connect(d.delayTime); lfo.start();
         inp.connect(d); d.connect(g); g.connect(pn); pn.connect(out);
       }

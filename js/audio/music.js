@@ -977,7 +977,7 @@
         post.connect(this.bus); post.connect(sv); sv.connect(this.verb); post.connect(sd); sd.connect(this.delay.in); post.connect(ss); ss.connect(this.stage);
         const chAmt = num(L.chorus, 0) * num(fx.chorus, 1);
         if (chAmt > 0 && eng.makeChorus) {              // ensemble chorus: wet copy beside the dry signal (also feeds the hall a little)
-          const ch = eng.makeChorus(), cg = mk(ctx.createGain()); cg.gain.value = chAmt;
+          const ch = eng.makeChorus(Music.chorusSync !== false && def.bpm ? { bps: clamp(num(def.bpm, 90), 30, 220) / 60 } : {}), cg = mk(ctx.createGain()); cg.gain.value = chAmt;
           post.connect(ch.in); ch.out.connect(cg); cg.connect(this.bus); cg.connect(sv);
           this.choruses.push(ch);
         }

@@ -16,7 +16,11 @@ Versions follow `MAJOR.MINOR.PATCH`; the live version is the `VERSION` file.
   4.4). Measured on the title’s choir bus, its swing within a section fell from 5.5 to 3.4 dB under the horn’s first statement, from 6.6 to
   4.1 in the oboe’s breath, from 9.4 to 7.2 at the crest. `Music.duckMerge = false` restores the old behaviour.
 - Vibrato in time: a sampled line’s vibrato runs at a whole number of cycles to the piece’s beat, as near five a second as the tempo allows
-  (58 bpm: five to a beat, 4.8 Hz), where it was a random 4.6 to 5.7 Hz per note, drifting against the pulse.
+  (58 bpm: five to a beat, 4.8 Hz), where it was a random 4.6 to 5.7 Hz per note, drifting against the pulse. The pad bus’s ensemble
+  chorus (three delayed copies swept at a free 0.29, 0.37 and 0.43 Hz: about ±10 cents and a slow swell of level, on the recorded cellos
+  and violas as well as the synthesized pads) sweeps over 5, 4 and 3 beats instead, so its slow movement keeps time with the music
+  (`Music.chorusSync = false` for the free rates). The Iowa cello and viola carry little vibrato of their own (±1 and ±6 to ±11 cents):
+  their wobble against the beat was the loop wraps, now steadier.
 - The title’s balance: the men’s sung echoes of the head 1.5 dB softer (they stood level with the solo horn they answer), the hum in the
   bassoon’s section softer (it sat 3 dB under that quiet solo while elsewhere it sits 6 to 11 under).
 - `Samples.loadSome(names)` loads only the instruments named, and `Samples.autoLoad = false` keeps the unlock from loading everything;
