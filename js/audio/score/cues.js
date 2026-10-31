@@ -6,7 +6,7 @@
   const Music = M.Audio.Music, Track = Music._define;
 
   Track('title', {
-    desc: 'Main theme — the undercurrent: a deep bed first (deep open chords in the low strings, the double bass on a slow line with its sub nearly sub-bass, the planetarium’s analogue glow, one chime), the men entering humming low; the solo horn’s first part the commonwealth’s tune itself, as the Commonwealth plays it, in the major, whole and slow over them, then its head reaching up an octave and its fall home; the men take the tune low, the horn answers with the fall and the inversion; the bassoon low with the tune and the horn answering, a soft trumpet high above once; the oboe’s own reading in the breath; the crest in two steps, a high horn and a low brass voice in canon on the tune, then the full brass with the timpani, the strings and the mallets for the build and the chamber open on ah; the solo horn alone again, down into the drone',
+    desc: 'Main theme — the undercurrent: a deep bed first (deep open chords in the low strings, the double bass on a slow line with its sub nearly sub-bass, the planetarium’s analogue glow, one chime), the men entering humming low; the solo horn’s first part the commonwealth’s tune itself, as the Commonwealth plays it, in the major, whole and slow over them, then its sequence a step up and its fall in descending thirds; the men state the tune low once more and the horn answers in the relative minor; the bassoon low and the horn in variation, a soft trumpet high above once; the oboe’s lyrical variation in the breath; the tune back whole for the crescendo in two steps, a high horn and a low brass voice in canon, then the full brass with the timpani, the strings and the mallets for the build and the chamber open on ah; the fade on variations, the solo horn alone, down into the drone',
     quotes: ['procession'],
     bpm: 58, root: 'D', mode: 'major', loopFrom: 'A1', trim: 2.5, tens: false, rubato: 0.025, tone: { lo: 1.4, hi: 0.6 }, fx: { verb: 1.0, stage: 0.8, dly: 1.6 }, mix: { choir: 1.15, pad: 0.95, lead: 2.2, bass: 1.25 }, duck: 0.6,
     sends: { lead: { verb: 0.08, stage: 0.36, dly: 0.06 }, choir: { verb: 0.32, stage: 0.12 }, bell: { verb: 0.5, stage: 0.2 } },   // the solo at the front of the stage and dry, the bed behind it in the hall; the high trumpet and the points far back
@@ -15,9 +15,12 @@
     inst: { pad: 'cellos', pad2: 'analog', bass: 'deep', lead: 'hornSolo', lead2: 'cello', bell: 'crystal', bell2: 'tpts', choir: 'choirMen', choir2: 'ooh', arp: 'glass' },
     ph: {
       PA: '@procession.A1', PB: '@procession.A2',      // the commonwealth's tune, the game's theme, as the Commonwealth plays it: the strain (1 2 3 5 | 6 5 3 2) and its answer to the octave
-      L2: '1:4 | 2:4 | 3:4 | 5:4',                      // its head in whole notes: the reach upward
-      L3: '6:3 5:1 | 3:2 2:2 | 1:4 | r:4',              // its second half slowed: the fall home from the sixth
-      PI: '1:3 7:1 | 6:2 4:2 | 3:3 4:1 | 6:2 7:2',      // the strain inverted: falling from the tonic, rising back
+      L3: '6:3 5:1 | 3:2 2:2 | 1:4 | r:4',              // its second half slowed: the fall home from the sixth (the climax's last phrase)
+      V1: '2:3 3:1 | 4:2 6:2 | 7:3 6:1 | 4:2 3:2',      // the variations, each a classical device on the tune: the strain as a real sequence a step up, to a half close (over ii IV V V)
+      V2: '6:2 4:2 | 5:2 3:2 | 4:2 2:2 | 1:4',          // the fall as a chain of descending thirds to the cadence (over IV I V I)
+      V3: '6:4 | 7:2 8:2 | 10:4 | 11:2 10:2',           // the head answered in the relative minor, in augmentation, through the major seventh to the dominant (over vi IM7 iii V)
+      V4: '8:2 7:1 6:1 | 5:2 3:2 | 4:3 2:1 | 2:4',      // the answer's octave falling to hang on the dominant (over IM7 I ii V)
+      V5: '3:3 5:1 | 6:2 5:2 | 3:2 2:1 1:1 | 2:4',      // the lyrical one, the oboe's, from the third (over I I vi V)
       TH: '5:4 | 5:4 | r:4 | r:4',                      // the high trumpet holding the fifth, once
       ST2: '1:4 | r:12',                                // one chime at the very start
     },
@@ -26,8 +29,11 @@
     // Tide, and so was the hymn's rising fourth, which is gone from here). The brooding is in the bed, not the mode: deep open chords in
     // the low strings (C2-E3, roots and fifths), the double bass on a slow line with its sub nearly sub-bass, the men humming low two
     // voices to a chord, the flat seventh and the sixth degree in the harmony, 58 to the beat, one chord to a bar; never busy. One melody
-    // at a time: the solo horn's first part is the tune whole, slow and low (D3-D4); after it the men sing the tune low and the horn
-    // answers when they stop; the bassoon takes it low and the horn answers; the oboe in the breath; then the crest in two steps: a high horn and a low brass voice in a two-bar canon on the tune (the duet), then the full brass on the
+    // at a time, and the tune itself only where it counts: the solo horn's first part states it whole (D3-D4) and the men state it low
+    // once more; everything between is variation drawn from it by the classical means (V1-V5: the strain as a real sequence a step up,
+    // the fall as a chain of descending thirds, the head answered in the relative minor in augmentation through a major seventh, the
+    // answer's octave hanging on the dominant, the oboe's lyrical one from the third); the tune returns whole for the crescendo, and the
+    // fade is variation again. Then the crest in two steps: a high horn and a low brass voice in a two-bar canon on the tune (the duet), then the full brass on the
     // answer and the fall with the timpani on the beat, the strings and the mallets' sparkle (the build), and the quiet section after it. The
     // solo has a window: nothing else in its octave (the low strings below it, the glow and the violas above A4), the hum spread to the
     // sides (width 0.85), the beds ducking 4.4 dB under every solo note (duck), its sends dry, its fader high (mix.lead). Accents are few:
@@ -37,17 +43,17 @@
       { n: 'drone', bars: 2, cres: [0.56, 0.62], prog: 'I:2', pad: { p: 'swell', n: 2, reg: [36, 52], vel: 0.55, open: true }, pad2: { p: 'swell', n: 2, reg: [60, 76], vel: 0.28 }, bass: { pat: 'c---', pedal: true, inst: { p: 'deep', sub: 0.95, att: 1.6, rel: 2.8 } }, bell2: { ph: 'ST2', inst: 'chime', vel: 0.4 }, choir: false, timp: false, drums: false },   // the bed alone: deep open chords, the pedal, the glow, one chime
       { n: 'men', bars: 8, cres: [0.62, 0.7], prog: 'I I IV I | I vi IV I', pad: { p: 'sus', n: 2, reg: [36, 52], vel: 0.52, open: true }, pad2: { p: 'swell', n: 2, reg: [60, 76], vel: 0.28 }, bass: { pat: ['1---', '1--5'], inst: { p: 'deep', sub: 0.95, att: 1.0, rel: 2.4 } },
         choir: { n: 2, reg: [43, 52], vel: 0.55, soft: true, width: 0.85 }, bell: { dens: 0.04, res: 1, reg: [76, 100], vel: 0.28 }, timp: false, drums: false },   // the men enter humming low, one chord to a bar
-      { n: 'horn', bars: 16, cres: [0.68, 0.76], prog: 'I I IV I | I I IV V | I bVII vi I | IV vi I I', pad: { p: 'sus', n: 2, reg: [36, 52], vel: 0.5, open: true }, pad2: { p: 'swell', n: 2, reg: [72, 88], vel: 0.3 }, bass: { pat: ['1--5', '1---'], inst: { p: 'deep', sub: 0.95, att: 0.8, rel: 2.2 } },
-        lead: { ph: 'PA*0.9 PB*1 L2^*0.95 L3^*0.9', oct: -1, vel: 0.95, shape: 0.45, swell: 0.4, pan: -0.05 }, choir: { n: 2, reg: [43, 52], vel: 0.55, soft: true, width: 0.85 }, bell: { dens: 0.04, res: 1, reg: [76, 100], vel: 0.28 },
-        drums: { bdSoft: ['................', 'x...............'], vel: 0.2 }, timp: false },   // the horn's first part: the tune whole, slow and low over the men, then its head reaching up an octave and its fall; the undercurrent begins under it
-      { n: 'A1', bars: 16, cres: [0.68, 0.78], prog: 'I I IV I | I I IV V | IV vi I I | I IV I V', pad: { p: 'sus', n: 2, reg: [36, 52], vel: 0.52, open: true }, pad2: { p: 'sus', inst: 'violas', n: 2, reg: [74, 86], vel: 0.34 }, bass: { pat: ['1--5', '1---'], inst: { p: 'deep', sub: 0.95, att: 0.8, rel: 2.2 } },
-        lead: { ph: 'PA PB r8', inst: 'choirMenAh', oct: -1, vel: 0.84, shape: 0.4, width: 0.5 }, lead2: { ph: ['r8 L3^ PI', 'r8 L3^ r4'], inst: 'hornSolo', oct: -1, vel: 0.92, shape: 0.45, swell: 0.4, pan: -0.05 },
-        choir: { n: 2, reg: [43, 52], vel: 0.55, soft: true, width: 0.85 }, bell: { dens: 0.05, res: 1, reg: [76, 100], vel: 0.3 }, drums: { bdSoft: 'x...............', vel: 0.22 }, timp: false },   // the men take the tune, low, over the deep chords and the bass line; the horn answers with the fall and the inversion when they stop; the violas' pedal far above
-      { n: 'B', bars: 8, cres: [0.68, 0.78], prog: 'I I IV I | I I IV I', pad: { p: 'sus', n: 2, reg: [36, 52], vel: 0.52, open: true }, pad2: { p: 'swell', n: 2, reg: [72, 88], vel: 0.3 }, bass: { pat: ['1--5', '1---'], inst: { p: 'deep', sub: 0.95, att: 0.8, rel: 2.0 } },
-        lead2: { ph: 'PA r4', inst: 'bassoon', oct: -2, vel: 0.62, shape: 0.35, swell: 0.2 }, lead: { ph: 'r4 PA', oct: -1, vel: 0.92, shape: 0.45, swell: 0.4, pan: -0.05 }, bell2: { ph: 'r4 TH', inst: 'tptSolo', oct: 1, vel: 0.26, shape: 0.4, swell: 0.35 }, choir: { n: 2, reg: [43, 52], vel: 0.55, soft: true, width: 0.85 },
-        bell: { dens: 0.05, res: 1, reg: [76, 100], vel: 0.3 }, drums: { bdSoft: 'x...............', vel: 0.22 }, timp: false },   // the bassoon low with the tune, the horn answering with it; the soft trumpet high above once
-      { n: 'C', bars: 8, lv: 0.44, prog: 'I I IV vi | I I IV I', pad: { p: 'swell', inst: 'organSoft', n: 3, reg: [50, 72], vel: 0.48 }, pad2: { p: 'sus', n: 2, reg: [60, 76], vel: 0.28 }, bass: { pat: 'c---', pedal: true, inst: { p: 'deep', sub: 0.85, att: 1.4, rel: 2.6 } },
-        lead2: { ph: ['r4 PA', 'PA r4'], inst: 'oboe', vel: 0.6, shape: 0.35, swell: 0.2 }, arp: { inst: 'harp', pat: '0...2...1...3...', res: 1, vel: 0.34, reg: [55, 81], skip: 0.3 }, choir: { n: 2, reg: [43, 52], vel: 0.45, soft: true, width: 0.85 }, choir2: { n: 2, reg: [69, 81], vel: 0.24, soft: true }, bell: { dens: 0.08, res: 1, reg: [76, 100], vel: 0.32 }, drums: false, timp: false, rise: 2 },   // the breath: the oboe's own reading of the tune over the harp, the hum, the women
+      { n: 'horn', bars: 16, cres: [0.68, 0.76], prog: 'I I IV I | I I IV V | ii IV V V | IV I V I', pad: { p: 'sus', n: 2, reg: [36, 52], vel: 0.5, open: true }, pad2: { p: 'swell', n: 2, reg: [72, 88], vel: 0.3 }, bass: { pat: ['1--5', '1---'], inst: { p: 'deep', sub: 0.95, att: 0.8, rel: 2.2 } },
+        lead: { ph: 'PA*0.9 PB*1 V1*0.95 V2*0.9', oct: -1, vel: 0.95, shape: 0.45, swell: 0.4, pan: -0.05 }, choir: { n: 2, reg: [43, 52], vel: 0.55, soft: true, width: 0.85 }, bell: { dens: 0.04, res: 1, reg: [76, 100], vel: 0.28 },
+        drums: { bdSoft: ['................', 'x...............'], vel: 0.2 }, timp: false },   // the horn's first part: the tune whole, slow and low over the men, then its sequence a step up and the fall in thirds; the undercurrent begins under it
+      { n: 'A1', bars: 16, cres: [0.68, 0.78], prog: 'I I IV I | I I IV V | vi IM7 iii V | IM7 I ii V', pad: { p: 'sus', n: 2, reg: [36, 52], vel: 0.52, open: true }, pad2: { p: 'sus', inst: 'violas', n: 2, reg: [74, 86], vel: 0.34 }, bass: { pat: ['1--5', '1---'], inst: { p: 'deep', sub: 0.95, att: 0.8, rel: 2.2 } },
+        lead: { ph: 'PA PB r8', inst: 'choirMenAh', oct: -1, vel: 0.84, shape: 0.4, width: 0.5 }, lead2: { ph: ['r8 V3 V4', 'r8 V3 r4'], inst: 'hornSolo', oct: -1, vel: 0.92, shape: 0.45, swell: 0.4, pan: -0.05 },
+        choir: { n: 2, reg: [43, 52], vel: 0.55, soft: true, width: 0.85 }, bell: { dens: 0.05, res: 1, reg: [76, 100], vel: 0.3 }, drums: { bdSoft: 'x...............', vel: 0.22 }, timp: false },   // the men take the tune, low, over the deep chords and the bass line; the horn answers in the relative minor and with the answer's octave when they stop; the violas' pedal far above
+      { n: 'B', bars: 8, cres: [0.68, 0.78], prog: 'IV I V I | ii IV V V', pad: { p: 'sus', n: 2, reg: [36, 52], vel: 0.52, open: true }, pad2: { p: 'swell', n: 2, reg: [72, 88], vel: 0.3 }, bass: { pat: ['1--5', '1---'], inst: { p: 'deep', sub: 0.95, att: 0.8, rel: 2.0 } },
+        lead2: { ph: 'V2 r4', inst: 'bassoon', oct: -2, vel: 0.62, shape: 0.35, swell: 0.2 }, lead: { ph: 'r4 V1', oct: -1, vel: 0.92, shape: 0.45, swell: 0.4, pan: -0.05 }, bell2: { ph: 'r4 TH', inst: 'tptSolo', oct: 1, vel: 0.26, shape: 0.4, swell: 0.35 }, choir: { n: 2, reg: [43, 52], vel: 0.55, soft: true, width: 0.85 },
+        bell: { dens: 0.05, res: 1, reg: [76, 100], vel: 0.3 }, drums: { bdSoft: 'x...............', vel: 0.22 }, timp: false },   // the bassoon low with the fall in thirds, the horn answering with the sequence; the soft trumpet high above once
+      { n: 'C', bars: 8, lv: 0.44, prog: 'I I vi V | I I vi V', pad: { p: 'swell', inst: 'organSoft', n: 3, reg: [50, 72], vel: 0.48 }, pad2: { p: 'sus', n: 2, reg: [60, 76], vel: 0.28 }, bass: { pat: 'c---', pedal: true, inst: { p: 'deep', sub: 0.85, att: 1.4, rel: 2.6 } },
+        lead2: { ph: ['r4 V5', 'V5 r4'], inst: 'oboe', vel: 0.6, shape: 0.35, swell: 0.2 }, arp: { inst: 'harp', pat: '0...2...1...3...', res: 1, vel: 0.34, reg: [55, 81], skip: 0.3 }, choir: { n: 2, reg: [43, 52], vel: 0.45, soft: true, width: 0.85 }, choir2: { n: 2, reg: [69, 81], vel: 0.24, soft: true }, bell: { dens: 0.08, res: 1, reg: [76, 100], vel: 0.32 }, drums: false, timp: false, rise: 2 },   // the breath: the oboe's own lyrical variation over the harp, the hum, the women
       { n: 'A2', bars: 8, cres: [0.78, 0.9], prog: 'I I IV I | I I IV V', pad: { p: 'sus', n: 2, reg: [36, 52], vel: 0.52, open: true }, pad2: { p: 'sus', inst: 'violas', n: 2, reg: [62, 74], vel: 0.36 }, bass: { pat: ['1--5', '1---'], inst: { p: 'deep', sub: 0.95, att: 0.6, rel: 1.8 } },
         lead: { ph: 'PA PB', inst: 'hornSolo', oct: 0, vel: 0.9, shape: 0.4, swell: 0.3, pan: -0.08 }, lead2: { ph: 'r2 PA PB', inst: 'trombones', oct: -1, vel: 0.62, shape: 0.35, swell: 0.3, pan: 0.12 },
         choir: { n: 2, reg: [43, 52], vel: 0.55, soft: true, width: 0.85 }, timp: { kick: ['X...............', '................', '................', '................', 'X...............', '................', '................', '................'], vel: 0.5 }, bell: false, drums: { bdSoft: 'x...............', vel: 0.22 } },   // the duet: a high horn on the tune, a low brass voice two bars behind it in canon; the violas arrive
@@ -55,8 +61,8 @@
         lead: { ph: 'PB L3', inst: 'horn', vel: 0.85, shape: 0.35, swell: 0.3 }, lead2: { ph: 'PB L3', inst: 'trombones', oct: -1, vel: 0.72, shape: 0.35, swell: 0.3 }, bell2: { ph: 'r4 L3', inst: 'tpts', vel: 0.58, shape: 0.3, swell: 0.3 },
         arp: { inst: 'marimba', pat: '0.2.1.3.0.2.3.1.', res: 4, vel: 0.46, reg: [72, 96] }, choir: { inst: 'choirMenAh', n: 3, reg: [43, 60], vel: 0.85 }, choir2: { inst: 'aah', n: 3, reg: [57, 74], vel: 0.66 }, timp: { p: 'beats', vel: 0.6 },
         bell: { dens: 0.1, res: 1, reg: [76, 100], vel: 0.36 }, drums: { bdSoft: 'x...............', vel: 0.26 } },   // the build: the full brass on the answer and the fall, the timpani on the beat, the strings and the mallets' sparkle, the chamber open on ah; the quiet section follows
-      { n: 'E', bars: 8, cres: [0.7, 0.42], prog: 'I I IV I | IV vi I I', pad: { p: 'sus', n: 2, reg: [36, 52], vel: 0.5, open: true }, pad2: { p: 'swell', n: 2, reg: [72, 88], vel: 0.28 }, bass: { pat: 'c---', pedal: true, inst: { p: 'deep', sub: 0.95, att: 1.2, rel: 2.6 } },
-        lead: { ph: 'PA L3', oct: -1, vel: 0.88, shape: 0.45, swell: 0.3, pan: -0.05 }, choir: { n: 2, reg: [43, 52], vel: 0.5, soft: true, width: 0.85 }, bell: { dens: 0.04, res: 1, reg: [76, 100], vel: 0.28 }, drums: false, timp: false },   // the solo horn alone again with the tune, down into the drone
+      { n: 'E', bars: 8, cres: [0.7, 0.4], prog: 'vi IM7 iii V | IV I V I', pad: { p: 'sus', n: 2, reg: [36, 52], vel: 0.5, open: true }, pad2: { p: 'swell', n: 2, reg: [72, 88], vel: 0.28 }, bass: { pat: 'c---', pedal: true, inst: { p: 'deep', sub: 0.95, att: 1.2, rel: 2.6 } },
+        lead: { ph: 'V3 V2', oct: -1, vel: 0.88, shape: 0.45, swell: 0.3, pan: -0.05 }, choir: { n: 2, reg: [43, 52], vel: 0.5, soft: true, width: 0.85 }, bell: { dens: 0.04, res: 1, reg: [76, 100], vel: 0.28 }, drums: false, timp: false },   // the fade: the solo horn alone, the head in the relative minor and the fall in thirds, down into the drone
     ],
   });
 
@@ -65,7 +71,7 @@
   // the horn section; the breath keeps the oboe. Hidden: the menu plays the title; this reading is for the player page and for later.
   (function () {
     const d = JSON.parse(JSON.stringify(Music._tracks.title)); delete d._p; delete d.id;
-    d.desc = 'Main theme, the reed reading — the same undercurrent with the cor anglais as the first soloist, an octave above the horn: the commonwealth’s tune whole and slow over the humming men, as the Commonwealth plays it, then its head reaching up, its fall; the men and the bassoon take it low later with the horn answering; the crest in two steps, the horns in canon, then the full brass';
+    d.desc = 'Main theme, the reed reading — the same undercurrent with the cor anglais as the first soloist, an octave above the horn: the commonwealth’s tune whole and slow over the humming men, as the Commonwealth plays it, then its variations; the men state it low once more, the bassoon and the horn in variation; the tune back whole for the crescendo, the horns in canon, then the full brass; the fade on variations';
     d.hidden = true; d.variantOf = 'title';
     for (const s of d.sec) {
       if (s.lead && typeof s.lead === 'object' && !s.lead.inst) {        // the solo sections (horn, A1, B, E): the track's hornSolo
@@ -80,15 +86,11 @@
     Track('title:reed', d);
   })();
 
-  // Two more readings, ready though the game may never play them. The organ: the pipe organ's big wide chords are the bed (five voices
-  // across G2-C6 on the full organ, a soft upper manual above, the basses and the sub as the pedal), a cathedral's room, the men humming
-  // under it, the horn and the men and the full horns as in the title. The pipes: the library has no bagpipes, so they are built as pipes
-  // are: a double-reed chanter (the oboe, D4 to D5, with the pipers' grace notes and doublings, `grace` and `flutter`, before its long notes) over held reed drones two octaves
-  // below (the bassoon on the tonic and the fifth, the deep bass and its sub under), everything over one drone chord, the field snare
-  // keeping a slow march with its rolls, a drier room; the men low, the horn answering as before.
+  // The organ reading, ready though the game may never play it: the pipe organ is the instrument, in a great hall (a pipes-and-snare
+  // reading was built from the oboe and the bassoon and dropped: without real bagpipe samples it did not sound like pipes).
   (function () {
     const d = JSON.parse(JSON.stringify(Music._tracks.title)); delete d._p; delete d.id;
-    d.desc = 'Main theme, the organ reading — the pipe organ is the instrument, in a great hall: one vast open chord first across five octaves with the pedal under it, the men humming low; the full stop plays the commonwealth’s tune whole and slow with the octave coupler above it over the soft foundation; the men take the tune and the organ answers; the organ in three octaves at once on the tune; the soft stop alone in the breath; the full organ at the crest with the chamber open on ah and the timpani; the soft stop alone at the close over the pedal';
+    d.desc = 'Main theme, the organ reading — the pipe organ is the instrument, in a great hall: one vast open chord first across five octaves with the pedal under it, the men humming low; the full stop plays the commonwealth’s tune whole and slow with the octave coupler above it over the soft foundation, then its variations; the men state the tune low once more and the organ answers in the relative minor; the organ in three octaves at once on the variations; the soft stop’s lyrical one in the breath; the tune back whole for the crescendo, the full stop and the 16’ in canon, then the full organ with the chamber open on ah and the timpani; the fade on variations, the soft stop alone over the pedal';
     d.hidden = true; d.variantOf = 'title';
     d.inst = Object.assign({}, d.inst, { pad: 'organSoft', pad2: 'organ', lead: 'organ', lead2: 'organ', bell2: 'organ' });
     d.mix = Object.assign({}, d.mix, { pad: 1.05, lead: 2.1, choir: 1.0, bass: 1.2 }); d.fx = { verb: 1.7, stage: 0.5, dly: 0.6 }; d.tone = { lo: 1.3, hi: 0.9 }; d.duck = 0.66;
@@ -101,39 +103,15 @@
     const S = {};
     S.drone = { pad: { p: 'swell', inst: 'organ', n: 4, reg: [43, 79], vel: 0.6 }, pad2: LOW(0.6, 'swell'), bass: Object.assign(PED('c---'), { pedal: true }), choir: false, bell2: { ph: 'ST2', inst: 'chime', vel: 0.36 }, bell: false, arp: false, timp: false, drums: false, cres: [0.6, 0.7] };
     S.men = { pad: FND(0.5), pad2: LOW(0.55), bass: PED(['1---', '1--5']), choir: HUM(0.5), bell: false, arp: false, timp: false, drums: false, cres: [0.66, 0.72] };
-    S.horn = { pad: FND(0.48), pad2: LOW(0.55), bass: PED(['1--5', '1---']), lead: SOLO('PA*0.9 PB*1 L2^*0.95 L3^*0.9', 0.86), lead2: { ph: 'PA*0.9 PB*1 L2^*0.95 L3^*0.9', inst: 'organ', oct: 1, vel: 0.34, shape: 0.3 }, choir: HUM(0.5), bell: false, arp: false, drums: false, timp: false, cres: [0.7, 0.78] };
-    S.A1 = { pad: FND(0.5), pad2: LOW(0.56), bass: PED(['1--5', '1---']), lead: { ph: 'PA PB r8', inst: 'choirMenAh', oct: -1, vel: 0.84, shape: 0.4, width: 0.5 }, lead2: { ph: ['r8 L3^ PI', 'r8 L3^ r4'], inst: 'organ', oct: 0, vel: 0.84, shape: 0.3, swell: 0.3 }, bell2: false, choir: HUM(0.5), bell: false, arp: false, drums: false, timp: false, cres: [0.72, 0.8] };
-    S.B = { pad: { p: 'sus', inst: 'organ', n: 4, reg: [43, 79], vel: 0.6 }, pad2: LOW(0.6), bass: PED(['1--5', '1---']), lead: SOLO('PA L3', 0.9), lead2: { ph: 'PA L3', inst: 'organ', oct: -1, vel: 0.62, shape: 0.3 }, bell2: { ph: 'PA L3', inst: 'organ', oct: 1, vel: 0.4, shape: 0.3 }, choir: HUM(0.5), bell: false, arp: false, drums: false, timp: false, cres: [0.76, 0.86] };
-    S.C = { pad: { p: 'swell', inst: 'organSoft', n: 3, reg: [43, 62], vel: 0.42 }, pad2: LOW(0.4, 'swell'), bass: Object.assign(PED('c---'), { pedal: true }), lead: false, lead2: { ph: ['r4 PA', 'PA r4'], inst: 'organSoft', oct: 0, vel: 0.62, shape: 0.3 }, bell2: false, choir: HUM(0.4), choir2: false, bell: false, arp: false, drums: false, timp: false, lv: 0.46, rise: 2 };
+    S.horn = { pad: FND(0.48), pad2: LOW(0.55), bass: PED(['1--5', '1---']), lead: SOLO('PA*0.9 PB*1 V1*0.95 V2*0.9', 0.86), lead2: { ph: 'PA*0.9 PB*1 V1*0.95 V2*0.9', inst: 'organ', oct: 1, vel: 0.34, shape: 0.3 }, choir: HUM(0.5), bell: false, arp: false, drums: false, timp: false, cres: [0.7, 0.78] };
+    S.A1 = { pad: FND(0.5), pad2: LOW(0.56), bass: PED(['1--5', '1---']), lead: { ph: 'PA PB r8', inst: 'choirMenAh', oct: -1, vel: 0.84, shape: 0.4, width: 0.5 }, lead2: { ph: ['r8 V3 V4', 'r8 V3 r4'], inst: 'organ', oct: 0, vel: 0.84, shape: 0.3, swell: 0.3 }, bell2: false, choir: HUM(0.5), bell: false, arp: false, drums: false, timp: false, cres: [0.72, 0.8] };
+    S.B = { pad: { p: 'sus', inst: 'organ', n: 4, reg: [43, 79], vel: 0.6 }, pad2: LOW(0.6), bass: PED(['1--5', '1---']), lead: SOLO('V2 V1', 0.9), lead2: { ph: 'V2 V1', inst: 'organ', oct: -1, vel: 0.62, shape: 0.3 }, bell2: { ph: 'V2 V1', inst: 'organ', oct: 1, vel: 0.4, shape: 0.3 }, choir: HUM(0.5), bell: false, arp: false, drums: false, timp: false, cres: [0.76, 0.86] };
+    S.C = { pad: { p: 'swell', inst: 'organSoft', n: 3, reg: [43, 62], vel: 0.42 }, pad2: LOW(0.4, 'swell'), bass: Object.assign(PED('c---'), { pedal: true }), lead: false, lead2: { ph: ['r4 V5', 'V5 r4'], inst: 'organSoft', oct: 0, vel: 0.62, shape: 0.3 }, bell2: false, choir: HUM(0.4), choir2: false, bell: false, arp: false, drums: false, timp: false, lv: 0.46, rise: 2 };
     S.A2 = { pad: { p: 'sus', inst: 'organ', n: 4, reg: [43, 79], vel: 0.62 }, pad2: LOW(0.6), bass: PED(['1--5', '1---']), lead: SOLO('PA PB', 0.9), lead2: { ph: 'r2 PA PB', inst: 'organ', oct: -1, vel: 0.66, shape: 0.3 }, bell2: false, choir: HUM(0.5), choir2: false, bell: false, arp: false, drums: false, timp: { kick: ['X...............', '................', '................', '................', 'X...............', '................', '................', '................'], vel: 0.5 }, cres: [0.8, 0.92] };
     S.A3 = { pad: { p: 'sus', inst: 'organ', n: 5, reg: [43, 84], vel: 0.74 }, pad2: LOW(0.68), bass: PED(['1--5', '1---']), lead: SOLO('PB L3', 0.98), lead2: { ph: 'PB L3', inst: 'organ', oct: -1, vel: 0.8, shape: 0.3, swell: 0.4 }, bell2: { ph: 'PB L3', inst: 'organ', oct: 1, vel: 0.5, shape: 0.3 }, choir: { inst: 'choirMenAh', n: 3, reg: [43, 60], vel: 0.88 }, choir2: { inst: 'aah', n: 3, reg: [57, 74], vel: 0.68 }, bell: false, arp: false, drums: false, timp: { p: 'beats', vel: 0.6 }, cres: [0.92, 1.08] };
-    S.E = { pad: FND(0.46), pad2: LOW(0.5), bass: Object.assign(PED('c---'), { pedal: true }), lead: { ph: 'PA L3', inst: 'organSoft', oct: 0, vel: 0.7, shape: 0.3 }, lead2: false, bell2: false, choir: HUM(0.46), choir2: false, bell: false, arp: false, drums: false, timp: false, cres: [0.72, 0.44] };
+    S.E = { pad: FND(0.46), pad2: LOW(0.5), bass: Object.assign(PED('c---'), { pedal: true }), lead: { ph: 'V3 V2', inst: 'organSoft', oct: 0, vel: 0.7, shape: 0.3 }, lead2: false, bell2: false, choir: HUM(0.46), choir2: false, bell: false, arp: false, drums: false, timp: false, cres: [0.72, 0.44] };
     for (const sec of d.sec) { const o = S[sec.n]; if (!o) continue; for (const k in o) sec[k] = o[k]; }
     Track('title:organ', d);
-  })();
-  (function () {
-    const d = JSON.parse(JSON.stringify(Music._tracks.title)); delete d._p; delete d.id;
-    d.desc = 'Main theme, the pipes reading — the pipes as the library can build them: a double-reed chanter with the pipers’ grace notes over held reed drones two octaves below, one drone chord under the whole piece, the deep bass and its sub, the field snare keeping a slow march with its rolls, the men humming low, the horn answering, the full horns at the crest';
-    d.hidden = true; d.variantOf = 'title';
-    d.inst = Object.assign({}, d.inst, { lead: 'oboe', pad: 'bassoon', pad2: 'reed' });
-    d.mix = Object.assign({}, d.mix, { lead: 2.0, drums: 0.9, pad: 1.05 }); d.fx = { verb: 0.75, stage: 0.95, dly: 0.5 }; d.tone = { lo: 1.0, hi: 1.0 }; d.sends = Object.assign({}, d.sends, { drums: { stage: 0.1, verb: 0.05, dly: 0 } });
-    const SN = { drone: false, men: { sn: 'o.o.o.o.o.o.o.o.', vel: 0.22 }, horn: { sn: ['x.......x.......', 'x...o.o.x...o.o.'], vel: 0.38 }, A1: { sn: ['x...o.o.x...o.o.', 'x...o.o.x..xxxxx'], bd: 'x...............', vel: 0.44 }, B: { sn: ['x...o.o.x...o.o.', 'x...o.o.x..xxxxx'], bd: 'x...............', vel: 0.44 }, C: { sn: 'o.o.o.o.o.o.o.o.', vel: 0.2 }, A2: { sn: ['x...o.o.x...o.o.', 'x...o.o.x..xxxxx'], bd: 'x...............', vel: 0.5 }, A3: { p: 'field', vel: 0.8 }, E: { sn: 'o.o.o.o.o.o.o.o.', vel: 0.22 } };
-    for (const s of d.sec) {
-      s.prog = 'I:' + s.bars;                                                                                                   // one drone chord under everything
-      s.pad = { p: 'sus', inst: 'bassoon', n: 2, reg: [38, 50], vel: s.n === 'C' ? 0.4 : 0.52, open: true };                   // the drones: the tonic and the fifth, two octaves under the chanter
-      s.pad2 = s.n === 'A2' ? { p: 'sus', inst: 'reed', n: 2, reg: [57, 69], vel: 0.4, open: true } : false;                   // a tenor drone at the crest only
-      if (s.lead && typeof s.lead === 'object' && !s.lead.inst) {                                                             // the chanter: the oboe, D4 to D5, grace notes before its long notes
-        s.lead.oct = 0; s.lead.grace = 0.4; s.lead.flutter = 0.55; s.lead.vel = Math.min(1, (s.lead.vel || 0.9) * 0.96);
-        s.lead.ph = [].concat(s.lead.ph).map(p => p.replace(/L2\^/g, 'L2').replace(/L3\^/g, 'L3')); if (s.lead.ph.length === 1) s.lead.ph = s.lead.ph[0];
-      }
-      if (s.lead2 && s.lead2.inst === 'hornSolo') { s.lead2.grace = 0.3; s.lead2.ph = [].concat(s.lead2.ph).map(p => p.replace(/PI/g, 'L2^')); }   // over the drone the horn answers with the reach, not the inversion (its fourth and seventh rub the drone)
-      if (s.lead2 && s.lead2.inst === 'oboe') { s.lead2.grace = 0.4; s.lead2.flutter = 0.55; }
-      s.drums = SN[s.n] === undefined ? false : SN[s.n];
-      if (s.bell) s.bell = false;
-      if (s.arp && s.arp.inst === 'harp') s.arp = false;
-      if (s.choir2) s.choir2 = false;
-    }
-    Track('title:pipes', d);
   })();
 
   Track('combat3', {

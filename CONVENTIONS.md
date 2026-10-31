@@ -107,9 +107,12 @@ Colour semantics are fixed: gold = BC/money, ember = industry, leaf = food/growt
   (roots and fifths only: deep chords below C3 in the low strings that must not smear, the thirds left to the voices above). A soloist's
   window is registers first: nothing else in the soloist's octave (the title's horn has D3-D4 to itself: the low strings below it, the
   glow, the violas and the women above A4, the hum spread to the sides), then the duck, then its own dry sends; the solo then rises without
-  being louder. A derived reading of a piece (`title:reed`, the cor anglais an octave above the horn; `title:organ`, `title:pipes`) is registered hidden
-  from the title's definition at the end of `cues.js`, its window moved with its soloist. Bagpipes are built, not sampled: a double-reed
-  chanter with `grace` over held reed drones two octaves below and one drone chord (`'I:' + bars`). A soloist also needs
+  being louder. A derived reading of a piece (`title:reed`, the cor anglais an octave above the horn; `title:organ`) is registered hidden from the
+  title's definition at the end of `cues.js`, its window moved with its soloist. A line may carry `grace` (one grace note below a long
+  note) or `flutter` (the pipers' doubling: three quick notes before it). A theme is stated where it counts and varied between: the title
+  states its tune twice at the start, returns it whole for the crescendo, and fills the rest with variations drawn from it by the
+  classical means (sequence, a chain of thirds, the relative minor in augmentation, the answer's octave to the dominant), each over
+  chords of its own. A soloist also needs
   a window in the texture: the title keeps the organ and the men below D4 and the women's hum and the analogue halo above A4 while the
   solo horn plays, and the men's answer an octave under it.
 - The second leitmotif is the procession's first strain as the commonwealth's oboe states it (`@procession.A1`). It is woven in, never

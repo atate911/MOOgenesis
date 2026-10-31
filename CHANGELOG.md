@@ -5,6 +5,12 @@ Versions follow `MAJOR.MINOR.PATCH`; the live version is the `VERSION` file.
 
 ## Unreleased
 
+- The title’s tune stated where it counts and varied between: the solo horn states it whole and the men once more; between them and after
+  the crescendo everything is variation drawn from it by classical means (the strain as a real sequence a step up to a half close, the
+  fall as a chain of descending thirds to the cadence, the head answered in the relative minor in augmentation through a major seventh,
+  the answer’s octave hanging on the dominant, the oboe’s lyrical one from the third); the tune returns whole for the crescendo and the
+  fade is variation. The pipes reading dropped: without real bagpipe samples it did not sound like pipes (the pipers’ `flutter` stays as
+  a line option).
 - The title’s crest in two steps instead of one: a high horn on the tune with a low brass voice two bars behind it in canon (the duet),
   then the full brass on the answer and the fall with the timpani on the beat, the strings and the mallets’ sparkle (the build), and the
   quiet section after it (the horn section, the trombones and the trumpets had all entered at once on the tune and blared). In all four
