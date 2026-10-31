@@ -540,15 +540,16 @@
     C.prevPad[key] = prev;
   }
 
-  function clearWindow(C, notes, a, b, lo, hi) {
+  function clearWindow(C, notes, a, b, lo, hi, slack) {   // slack: how far past its range a moved note may go (the beds 5 semitones, the choir none)
     if (!C.solo || !C.solo.length || !orchOf(C.def)) return notes;
     const near = m => C.solo.some(([s0, s1, sm]) => s0 < b - 0.01 && s1 > a + 0.01 && Math.abs(sm - m) <= 3);
     const out = [];
     for (const m of notes) {
       if (!near(m)) { out.push(m); continue; }
       const dn = m - 12, up = m + 12;
-      if (dn >= lo - 5 && !near(dn) && out.indexOf(dn) < 0 && notes.indexOf(dn) < 0) out.push(dn);
-      else if (up <= hi + 5 && !near(up) && out.indexOf(up) < 0 && notes.indexOf(up) < 0) out.push(up);
+      const sl = slack === undefined ? 5 : slack;
+      if (dn >= lo - sl && !near(dn) && out.indexOf(dn) < 0 && notes.indexOf(dn) < 0) out.push(dn);
+      else if (up <= hi + sl && !near(up) && out.indexOf(up) < 0 && notes.indexOf(up) < 0) out.push(up);
     }
     return out.length ? out : notes.filter(m => !near(m)).length ? notes.filter(m => !near(m)) : out;
   }
@@ -715,7 +716,7 @@
       prev = voiced;
       let L = sg.b1 - sg.b0;
       while (i + 1 < segs.length && segs[i + 1].ch.sym === sg.ch.sym) { i++; L = segs[i].b1 - sg.b0; }
-      const notes = clearWindow(C, voiced, s.start + sg.b0, s.start + sg.b0 + L, reg[0], reg[1]);   // the soloist's window (orchestral pieces)
+      const notes = clearWindow(C, voiced, s.start + sg.b0, s.start + sg.b0 + L, Math.max(reg[0], (inRange(inst, [0, 127]) || [0])[0]), reg[1], 0);   // the soloist's window (orchestral pieces); a voice stays in its range
       notes.forEach(function (m, j) {
         const cur = voices[j];
         if (!sampled) { emit(C, 'choir', inst, s.start + sg.b0, m, L, vel, Object.assign({}, base, { pan: (j - (n - 1) / 2) * 0.35 })); return; }
