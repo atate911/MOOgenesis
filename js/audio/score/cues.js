@@ -53,8 +53,8 @@
       { n: 'A1', bars: 16, cres: [0.7, 0.8], prog: 'ii IV V V | I I IV I | IV I V I | I I vi V', pad: { p: 'sus', n: 2, reg: [36, 52], vel: 0.52, open: true }, pad2: { p: 'sus', inst: 'violas', n: 2, reg: [74, 86], vel: 0.34 }, bass: { pat: ['1--5', '1---', '1--5', '1---', '1--5', '1---', '1--5', '1---', '1---2---3---5---', '1-------', '1---2---3---5---', '1-------', '1---2---3---5---', '1-------', '1---2---3---5---', '1-------'], inst: { p: 'deep', sub: 0.95, att: 0.6, rel: 2.0 } },
         lead: { ph: 'V1 r4 V2 r4', oct: -1, vel: 0.94, shape: 0.45, swell: 0.4, pan: -0.05 }, lead2: { ph: 'r4 PAh r4 PAh', inst: 'choirMenAh', oct: -1, vel: 0.74, shape: 0.4, width: 0.5 },
         choir: { n: 2, reg: [43, 52], vel: 0.55, soft: true, width: 0.85 }, bell: { dens: 0.05, res: 1, reg: [76, 100], vel: 0.3 }, drums: { bdSoft: 'x...............', vel: 0.22 }, timp: false },   // the first variations (the sequence a step up, the fall in thirds), the men echoing the theme's head after each; the violas' pedal far above
-      { n: 'B', bars: 8, cres: [0.68, 0.78], prog: 'IV I V I | ii IV V V', pad: { p: 'sus', n: 2, reg: [36, 52], vel: 0.52, open: true }, pad2: { p: 'swell', n: 2, reg: [72, 88], vel: 0.3 }, bass: { pat: ['1---2---3---5---', '1-------'], inst: { p: 'deep', sub: 0.95, att: 0.6, rel: 2.0 } },
-        lead2: { ph: 'V2 r4', inst: 'bassoonIowa', oct: -2, vel: 0.62, shape: 0.35, swell: 0.2 }, lead: { ph: 'r4 V1', oct: -1, vel: 0.92, shape: 0.45, swell: 0.4, pan: -0.05 }, bell2: { ph: 'r4 TH', inst: 'tptSolo', oct: 1, vel: 0.26, shape: 0.4, swell: 0.35 }, choir: { n: 2, reg: [43, 52], vel: 0.45, soft: true, width: 0.85 },
+      { n: 'B', bars: 8, cres: [0.68, 0.78], prog: 'IV I V I | ii IV V V', pad: { p: 'sus', n: 2, reg: [36, 52], vel: 0.45, open: true }, pad2: { p: 'swell', n: 2, reg: [72, 88], vel: 0.3 }, bass: { pat: '1-------', inst: { p: 'deep', sub: 0.95, att: 0.6, rel: 2.0 } },
+        lead2: { ph: 'V2 r4', inst: 'bassoonIowa', oct: -2, vel: 0.78, shape: 0.35, swell: 0.2 }, lead: { ph: 'r4 V1', oct: -1, vel: 0.92, shape: 0.45, swell: 0.4, pan: -0.05 }, bell2: { ph: 'r4 TH', inst: 'tptSolo', oct: 1, vel: 0.26, shape: 0.4, swell: 0.35 }, choir: { n: 2, reg: [43, 52], vel: 0.45, soft: true, width: 0.85 },
         bell: { dens: 0.05, res: 1, reg: [76, 100], vel: 0.3 }, drums: { bdSoft: 'x...............', vel: 0.22 }, timp: false },   // the bassoon low with the fall in thirds, the horn answering with the sequence; the soft trumpet high above once
       { n: 'C', bars: 8, lv: 0.44, prog: 'I I vi V | I I vi V', pad: { p: 'swell', inst: 'organSoft', n: 3, reg: [50, 72], vel: 0.48 }, pad2: { p: 'sus', n: 2, reg: [60, 76], vel: 0.28 }, bass: { pat: 'c---', pedal: true, inst: { p: 'deep', sub: 0.85, att: 1.4, rel: 2.6 } },
         lead: { ph: 'L2 L2', inst: 'cello', oct: -1, vel: 0.5, shape: 0.3 }, lead2: { ph: ['r4 V5', 'V5 r4'], inst: 'oboe', vel: 0.6, shape: 0.35, swell: 0.2 }, arp: { inst: 'harp', pat: '0...2...1...3...', res: 1, vel: 0.34, reg: [55, 81], skip: 0.3 }, choir: { n: 2, reg: [43, 52], vel: 0.45, soft: true, width: 0.85 }, choir2: { n: 2, reg: [69, 81], vel: 0.24, soft: true }, bell: { dens: 0.08, res: 1, reg: [76, 100], vel: 0.32 }, drums: false, timp: false, rise: 2 },   // the breath: the oboe's own lyrical variation over the harp, the hum, the women; under it the cellos lay the head in whole notes, the foundation for the return
@@ -161,15 +161,15 @@
     const PZ = { inst: 'pizz', pat: '0.......2.......', res: 2, vel: 0.32, reg: [43, 67] };
     apply(d, {
       drone: { pad: VLA(0.4, 'swell'), pad2: LOWS(0.55, 'swell'), bass: PED, bell2: false, cres: [0.56, 0.62] },
-      men: { pad: VLA(0.45), pad2: LOWS(0.55), bass: BASS(['1---', '1--5'], 0.7), lead2: SVC('r4 L2', 0.5), cres: [0.62, 0.7] },
+      men: { pad: VLA(0.45), pad2: LOWS(0.55), bass: BASS(['1---', '1--5'], 0.7), lead2: SVC('r4 L2', 0.6), cres: [0.62, 0.7] },
       horn: { pad: VLA(0.42), pad2: LOWS(0.55), bass: BASS(['1--5', '1---'], 0.7), lead: VLN('PA*0.88 PB*0.94 PA*1 PB*1', 0.92), lead2: VC('PA*0.88 PB*0.94 PA*1 PB*1', 0.52), arp: PZ, cres: [0.68, 0.78] },
       A1: { pad: VLA(0.42), pad2: LOWS(0.56), bass: BASS(['1--5', '1---', '1--5', '1---', '1--5', '1---', '1--5', '1---', ECHO, '1-------', ECHO, '1-------', ECHO, '1-------', ECHO, '1-------'], 0.7), lead: VLN('V1 r4 V2 r4', 0.9), lead2: SVC('r4 PAh r4 PAh', 0.7), arp: { inst: 'pizz', pat: '0...2...1...3...', res: 1, vel: 0.3, reg: [43, 67] }, cres: [0.7, 0.8] },
-      B: { pad: VLA(0.45), pad2: LOWS(0.52), bass: BASS([ECHO, '1-------'], 0.7), lead2: SVC('V2 r4', 0.72), lead: VLN('r4 V1', 0.9), bell2: false, arp: PZ },
+      B: { pad: VLA(0.38), pad2: LOWS(0.44), bass: BASS('1-------', 0.7), lead2: SVC('V2 r4', 0.9), lead: VLN('r4 V1', 1), bell2: false, arp: PZ },
       C: { pad: STR(0.4, 'swell'), pad2: LOWS(0.4, 'swell'), lead2: SVLA(['r4 V5', 'V5 r4'], 0.7), arp: { inst: 'pizz', p: 'up8', vel: 0.3, reg: [43, 67], skip: 0.3 } },
       A2: { pad: VLA(0.45), pad2: LOWS(0.56), lead: VLN('PA PB', 0.9), lead2: VC('r2 PA PB', 0.72), arp: PZ, timp: false },
       A3: { pad: { p: 'sus', inst: 'strTrem', n: 3, reg: [55, 76], vel: 0.55 }, pad2: LOWS(0.62, 'sus', 3), bass: BASS('1---5---1---5---', 0.75), lead: VLN('PA PB', 0.92, 1), lead2: VC('PA PB', 0.8), bell2: { ph: 'PA PB', inst: 'violas', oct: 0, vel: 0.6, shape: 0.2 }, arp: { inst: 'strOst', pat: '0.1.0.2.0.1.0.3.', res: 4, vel: 0.6, reg: [50, 69], gate: 0.9 }, timp: false, cr: false },
       D: { pad: STR(0.45), pad2: LOWS(0.5), lead: SVC('L3 r4', 0.86), lead2: SVLA('r4 PAh', 0.6), timp: false, arp: false },
-      E: { pad: VLA(0.4), pad2: LOWS(0.46), lead: VLN('V3 V2', 0.72, 1), arp: false },
+      E: { pad: VLA(0.34), pad2: LOWS(0.4), lead: VLN('V3 V2', 0.92, 1), arp: false },
     }, { choir: false, choir2: false, drums: false, bell: false });
     Track('title:chamber', d);
   })();

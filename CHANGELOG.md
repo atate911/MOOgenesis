@@ -23,7 +23,9 @@ Versions follow `MAJOR.MINOR.PATCH`; the live version is the `VERSION` file.
   seconds under the next). The octave echo the line generator adds to one weak-beat note in fourteen is off on recorded lines (on a solo
   cello it was a stray note an octave up). The cello reading’s soloist sings an octave higher, in the reed reading’s window: in the
   horn’s register it sat in unison with the cello section’s chords and the men’s hum. The title’s chorus 2 dB up, the men’s echoes
-  1 dB up again.
+  1 dB up again. In the title’s section B the bass holds whole notes instead of walking up through the bassoon’s falling line in the
+  same octave (two low melodies crossing inside the low strings), the bassoon 2 dB up; the chamber reading’s soft sections (B, the fade)
+  have their strings’ melody up and the bed down 1.5 dB, where the melody had sat level with the bed or under it.
 - The Iowa soloists’ loops placed inside each note’s steady stretch (`loop='steady'` in `tools/samples/build.py`: the longest run of the
   note’s 250 ms level within 2.5 dB of its body, the loop as long as the run allows) rather than at a fixed point, a note that swells more
   than 4 dB inside its loop dropped for its neighbours to cover, and a file the splitter had cut with two takes in it (a held note that
