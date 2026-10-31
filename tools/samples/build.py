@@ -604,16 +604,18 @@ def build_recorded(vsco, name, spec, out, log):
         # mis-cut note does not make a step), the softer layers at the same root are scaled with it (their recorded ratio kept;
         # the sampler's layer alignment seats them). A click does not set the level: the clamp reads the 99.9th-percentile
         # peak, and finish() soft-limits what is left above 0.98.
-        byroot = {}
-        for i, z in enumerate(zones): byroot.setdefault(z['root'], []).append(i)
-        rs = sorted(byroot); raw = {}
-        for r in rs:
-            li = [i for i in byroot[r] if zones[i]['li'] == nL - 1] or byroot[r]
-            raw[r] = np.mean([rms(buffers[i], int(zones[i]['loop'][0] * SR), int(zones[i]['loop'][1] * SR)) for i in li])
-        for k, r in enumerate(rs):
-            nb = [raw[rs[j]] for j in range(max(0, k - 1), min(len(rs), k + 2))]
-            g = 10 ** (TARGET_RMS_DB / 20) / max(float(np.median(nb)), 1e-9)
-            for i in byroot[r]:
+        # The layer spacing is baked per note as well: 8 dB per unit of layer-centre distance under the loud layer (what the
+        # sampler's alignLayers aims for, so it then has nothing left to do), because a player's pp is 20 dB under the ff on one
+        # note and 7 dB on the next, and a solo line hears every such step. The timbres of the layers stay; their levels agree.
+        byrl = {}
+        for i, z in enumerate(zones): byrl.setdefault((z['root'], z['li']), []).append(i)
+        raw = {k: np.mean([rms(buffers[i], int(zones[i]['loop'][0] * SR), int(zones[i]['loop'][1] * SR)) for i in v]) for k, v in byrl.items()}
+        for (r, li), idx in byrl.items():
+            rs = sorted(rr for (rr, l) in byrl if l == li); k = rs.index(r)
+            nb = [raw[(rs[j], li)] for j in range(max(0, k - 1), min(len(rs), k + 2))]
+            want = TARGET_RMS_DB - 8 * ((nL - 0.5) / nL - (li + 0.5) / nL)
+            g = 10 ** (want / 20) / max(float(np.median(nb)), 1e-9)
+            for i in idx:
                 a = np.abs(buffers[i] if buffers[i].ndim == 1 else buffers[i].max(axis=1))
                 pk = float(np.percentile(a, 99.9)) * g
                 buffers[i] = buffers[i] * (g * (0.98 / pk if pk > 0.98 else 1.0))

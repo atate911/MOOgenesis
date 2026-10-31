@@ -158,8 +158,9 @@ Colour semantics are fixed: gold = BC/money, ember = industry, leaf = food/growt
 
 - **Recorded soloists (the Iowa sets, `*Solo`, `*Iowa`, `bassClar`, `bassTbn`).** One player, three dynamic layers, a note every
   whole tone, mono except the strings. Use them where a line is one voice's (a duet partner, an echo, a solo reading); the VSCO sections
-  stay the beds and the tutti. They were recorded note by note, so `tools/samples/build.py` levels them per recorded note (`norm='zone'`),
-  not per instrument; new recordings of that kind get the same flag. The raw takes are cut by `tools/samples/iowa.py` into
+  stay the beds and the tutti. They were recorded note by note, so `tools/samples/build.py` levels them per recorded note (`norm='zone'`:
+  the loud layer to the target, the softer layers a fixed 8 dB per unit of layer distance under it), not per instrument; new recordings
+  of that kind get the same flag. The raw takes are cut by `tools/samples/iowa.py` into
   `STAGING/<Inst>/<Inst>_<Note>_v<dyn>.wav` first. Their `smp` gains were set from the level test (each solo alone at vel 0.5, integrated
   LUFS, within 3 dB of `hornSolo`); a new preset gets measured the same way before it is used in a piece.
 

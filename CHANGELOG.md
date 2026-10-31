@@ -11,8 +11,9 @@ Versions follow `MAJOR.MINOR.PATCH`; the live version is the `VERSION` file.
   `bassoonIowa`, `fluteIowa`, `altoFluteIowa`; FreePats’ CC0 bagpipe as `pipes` (the chanter) and `pipesDrone`. Build fixes they needed:
   a mono recording asked for its right channel decoded as silence (every right-panned mono instrument was empty), note-by-note recordings
   are now levelled per recorded note (`norm='zone'`: the loud layer’s loop to the target, a median over neighbouring notes, a
-  99.9th-percentile peak clamp and a soft limiter in place of the one click that used to drag a whole instrument 15 dB down), and a short
-  recording gets a shorter loop rather than no zone. The readings use them: the title’s duet is a solo trombone behind the high horn and
+  99.9th-percentile peak clamp and a soft limiter in place of the one click that used to drag a whole instrument 15 dB down; the layer
+  spacing baked per note too, 8 dB per unit of layer distance, because a player’s pp sits 20 dB under the ff on one note and 7 dB on the
+  next and a solo line hears every such step), and a short recording gets a shorter loop rather than no zone. The readings use them: the title’s duet is a solo trombone behind the high horn and
   its low fall is the Iowa bassoon; the cello reading is one cello; the chamber reading’s echoes, fall and breath are one cello and one
   viola; the symphony’s head echo is the bass clarinet low. Player: the five readings re-rendered on them; the hour mix dropped from the
   page to make room for the larger sample packs.
