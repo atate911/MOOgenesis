@@ -6,8 +6,9 @@ Versions follow `MAJOR.MINOR.PATCH`; the live version is the `VERSION` file.
 ## Unreleased
 
 - The main theme as an undercurrent, deeper and brooding: a deep bed (the cellos as two tenor voices, the deep pedal with its sub, the
-  planetarium’s glow, points of light), the men humming low one chord to a bar, the solo horn playing a lament over them in its low register
-  (a suspension kept against the tonic) and reaching up once each strain through the commonwealth’s climb in whole notes; modal harmony,
+  planetarium’s glow, points of light), the men humming low one chord to a bar, the solo horn’s first part the commonwealth’s tune itself, whole, slow and low
+  over them (the strain and its answer: the game’s theme set at once), every later horn phrase drawn from it (its head in whole notes an
+  octave up, its fall home, its inversion); modal harmony,
   never the dominant seventh; a soft bass drum once a bar under the loop; the hymn’s head sung low as the second idea; a crest that stays a
   swell with the timpani only there; the solo horn alone again at the close. A voice’s `width` in the sampler (the choir recordings are
   wide; a line sung alone had no centre).
