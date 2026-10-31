@@ -257,6 +257,13 @@
     trombones: smp('tbnSus', 0.32, { att: 0.1, hp: 60, eq: [[300, -1.5, 1], [3500, 2, 'hs']] }, 'horn'), tuba: smp('tubaSus', 0.32, { att: 0.12, sub: 0.25, eq: [[200, -2, 1], [600, -1.5, 1]] }, 'deep'),   // the trombone section as a chorale voice, the tuba as a bass
     tpts: smp('tptSus', 0.26, { att: 0.08, hp: 150, eq: [[4000, 1.5, 'hs']] }, 'brass'),   // the trumpet section, soft: a chorale voice above the horns
     brassStab: smp('brassStac', 1.5, { ring: true }, 'brassStab'),
+    // the University of Iowa soloists (tools/samples/iowa.py): real solo strings at three dynamics with the player's vibrato, the solo winds and brass dry and close
+    vlnSolo: smp('vlnSolo', 0.3, { att: 0.1, rel: 0.9, hp: 150, leg: true, eq: [[300, -1.5, 1], [3000, 1.5, 0.8], [8000, 1.5, 'hs']] }, 'strings'), vlaSolo: smp('vlaSolo', 0.3, { att: 0.1, rel: 0.9, hp: 110, leg: true, eq: [[250, -1.5, 1], [2500, 1.5, 0.8], [7000, 1, 'hs']] }, 'strings'),
+    vcSolo: smp('vcSolo', 0.32, { att: 0.12, rel: 1.0, hp: 55, leg: true, eq: [[200, -1.5, 1], [2500, 1.5, 0.8], [6000, 1, 'hs']] }, 'strings'), cbSolo: smp('cbSolo', 0.32, { att: 0.15, rel: 1.1, hp: 35, leg: true, eq: [[120, 1, 'ls'], [2000, 1, 0.8]] }, 'deep'),
+    hornIowa: smp('hornIowa', 0.34, { hp: 70, cutK: 14000, eq: [[2800, 2, 0.9], [4000, 2, 'hs']] }, 'horn'), tbnSolo: smp('tbnSolo', 0.34, { att: 0.08, hp: 60, eq: [[300, -1.5, 1], [3500, 2, 'hs']] }, 'horn'), bassTbn: smp('bassTbn', 0.34, { att: 0.1, hp: 45, eq: [[300, -1.5, 1], [3000, 1.5, 'hs']] }, 'horn'), tubaIowa: smp('tubaIowa', 0.32, { att: 0.12, sub: 0.2, eq: [[200, -2, 1]] }, 'deep'), tptIowa: smp('tptIowa', 0.3, { att: 0.05, hp: 150, eq: [[4000, 1.5, 'hs']] }, 'brass'),
+    bassClar: smp('bassClar', 0.42, { att: 0.07, hp: 50, eq: [[4000, 1.5, 'hs']] }, 'reed'), clarIowa: smp('clarIowa', 0.42, { att: 0.07, hp: 120, eq: [[6000, 1.5, 'hs']] }, 'flute'), altoFluteIowa: smp('altoFluteIowa', 0.6, { att: 0.08, hp: 150 }, 'flute'), fluteIowa: smp('fluteIowa', 0.5, { att: 0.07, hp: 200, eq: [[6000, 1.5, 'hs']] }, 'flute'), oboeIowa: smp('oboeIowa', 0.4, { att: 0.06, hp: 180, eq: [[6000, 1.5, 'hs']] }, 'flute'), bassoonIowa: smp('bassoonIowa', 0.42, { att: 0.07, hp: 60, eq: [[5000, 1.5, 'hs']] }, 'horn'),
+    // the FreePats bagpipe (CC0, a pipe in G): the chanter and its drones
+    pipes: smp('pipes', 0.4, { att: 0.04, rel: 0.2, hp: 200, eq: [[2500, 2, 0.8], [6000, 2, 'hs']] }, 'reed'), pipesDrone: smp('pipesDrone', 0.35, { att: 0.4, rel: 1.0, hp: 60 }, 'organ'),
     flute: smp('flute', 0.75, { att: 0.07, hp: 200, eq: [[6000, 1.5, 'hs']] }, 'flute'), altoFlute: smp('altoFlute', 1.35, { att: 0.08 }, 'flute'),   // the flute's recordings sit 10 dB under the oboe's, the alto flute's 24 dB under: lifted to the family's level (measured alone through the bus)
     oboe: smp('oboe', 0.4, { att: 0.06, hp: 180, eq: [[6000, 1.5, 'hs']] }, 'flute'), reed: smp('corAnglais', 0.4, { att: 0.07, hp: 150, eq: [[6000, 1.5, 'hs']] }, 'reed'),
     clarinet: smp('clarinet', 0.42, { att: 0.07, hp: 120, eq: [[6000, 1.5, 'hs']] }, 'flute'), bassoon: smp('bassoon', 0.42, { att: 0.07, hp: 60, eq: [[5000, 1.5, 'hs']] }, 'horn'),
@@ -283,6 +290,7 @@
     strEnsPizz: [28, 96], strEnsSpic: [28, 96], harp: [24, 103], marimba: [36, 96], celeste: [60, 108], glock: [79, 108], crotales: [84, 108], chimes: [60, 79],
     hornSus: [41, 81], hornSolo: [41, 81], brassEns: [40, 86], brassStac: [40, 86], tptSus: [52, 86], tptSolo: [52, 86], lowBrass: [28, 65], tbnSus: [40, 72], tubaSus: [26, 65],
     flute: [60, 96], fluteSus: [60, 96], altoFlute: [55, 91], oboe: [58, 91], corAnglais: [52, 81], clarinet: [50, 91], bassoon: [34, 77],
+    vlnSolo: [55, 100], vlaSolo: [48, 88], vcSolo: [36, 81], cbSolo: [28, 62], hornIowa: [34, 77], tbnSolo: [40, 72], bassTbn: [28, 62], tubaIowa: [24, 60], tptIowa: [52, 86], bassClar: [38, 79], clarIowa: [50, 91], altoFluteIowa: [55, 91], fluteIowa: [60, 96], oboeIowa: [58, 91], bassoonIowa: [34, 77], pipes: [65, 91], pipesDrone: [40, 60],
     chorus: [40, 81], chorusMen: [38, 69], chorusWomen: [53, 81] };
   for (const k in INST) if (INST[k].smp && SET_RANGE[INST[k].smp]) INST[k].range = SET_RANGE[INST[k].smp];
   const inRange = (inst, reg) => { const r = inst.range; if (!r || !reg) return reg; const lo = Math.max(reg[0], r[0]), hi = Math.min(reg[1], r[1]); return hi - lo >= 7 ? [lo, hi] : reg; };
@@ -1315,6 +1323,7 @@
     cbSus: 'low', subBass: 'low', cbPizz: 'low', tubaSus: 'low',
     hornSus: 'brass', hornSolo: 'brass', brassEns: 'brass', brassStac: 'brass', tptSus: 'brass', tptSolo: 'brass', lowBrass: 'brass', tbnSus: 'brass',
     flute: 'winds', altoFlute: 'winds', fluteSus: 'winds', oboe: 'winds', corAnglais: 'winds', clarinet: 'winds', bassoon: 'winds',
+    vlnSolo: 'strings', vlaSolo: 'strings', vcSolo: 'strings', cbSolo: 'strings', hornIowa: 'brass', tbnSolo: 'brass', bassTbn: 'brass', tubaIowa: 'brass', tptIowa: 'brass', bassClar: 'winds', clarIowa: 'winds', altoFluteIowa: 'winds', fluteIowa: 'winds', oboeIowa: 'winds', bassoonIowa: 'winds', pipes: 'winds', pipesDrone: 'winds',
     strEnsPizz: 'pluck', strEnsSpic: 'pluck', harp: 'pluck', marimba: 'pluck', celeste: 'bells', glock: 'bells', crotales: 'bells', chimes: 'bells',
     chorus: 'choir', chorusMen: 'choir', chorusWomen: 'choir', padGlass: 'synth', padSerrie: 'synth', padAir: 'synth', organ: 'synth', organSoft: 'synth' };
   const V_FAMILY = { pad: 'synth', bass: 'low', brass: 'brass', flute: 'winds', pluck: 'pluck', bell: 'bells', chime: 'bells', choir: 'choir', drone: 'synth' };

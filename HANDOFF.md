@@ -9,6 +9,17 @@ Browser-pane tip: animations use requestAnimationFrame, so in the built-in brows
 
 ## Session 11 (October 2026) — the score grows, branch `claude/festive-wozniak-7jy03r`
 
+**Latest (the Iowa soloists).** The library now holds real solo strings, winds and brass from the University of Iowa recordings
+(`scratchpad/iowa/raw` → `tools/samples/iowa.py` → staging → `tools/samples/build.py --vsco STAGING --only …`; the raw takes are not in
+the repo, the built mp3s and `instruments.json` are) and FreePats’ small bagpipe (`pipes`, `pipesDrone`, a pipe in G: a pipes reading
+would have to sit in G). Three build fixes went with them (see CHANGELOG: the mono right channel, per-note levelling `norm='zone'`, the
+short-loop fallback); the `smp` gains of the new presets in `js/audio/music.js` were set from the scratch level test (`inst-level.js`:
+each solo at vel 0.5 alone, integrated LUFS, aimed at the horn’s −32 to −35). The readings use them where a line is one voice’s (the
+title’s duet trombone and bassoon, the cello reading, the chamber’s echoes and breath, the symphony’s bass clarinet); the sections and
+the solo horn stay VSCO, which the user has approved by ear many times. Still untried: `hornIowa` for the title’s solo (noisier, 27 dB
+SNR at ff, but three layers and 69 notes), the Iowa oboe (its loops are weak, median 0.67: the VSCO oboe stays), the Philharmonia zips in
+`scratchpad/iowa/phil` (short notes mostly; brass worth a look).
+
 **Latest (the full pass, and the title as an undercurrent).** The main theme is now a brooding undercurrent (the solo horn’s lament over the men humming low, the commonwealth’s climb as a reach upward, the hymn’s head as the second idea, a crest that stays a swell); the user did not want a sung tune or a march on the title, nor the Crimson Tide manner. A voice may carry `width` (the choir recordings are wide; a line alone needs a centre). Every piece revisited against the compass and re-ranked; `MUSIC-REVIEW.md` ("The full pass") has what changed
 and the new table. Engine: the sampler aligns the recorded dynamic layers of every pitched sustain at decode time (`alignLayers` in
 `js/audio/sampler.js`, K-weighted, 4 dB per half range, `?layeralign=0` to compare; `A.Samples.align` holds what it did per instrument), the
@@ -22,11 +33,7 @@ Commonwealth plays it (the minor reading and any hymn fragment on the title read
 the chorus and the low instruments carrying the melody, high accents (a soft trumpet) few. Later it should be
 heard on other instruments for effect — a trombone, a baritone horn, a baritone saxophone, a bass clarinet, a bassoon, other unusual
 colours — for a creepy organic-against-artificial feel made with real, unusual instrument sounds rather than synths. On hand: the trombone
-section (`trombones`), the tuba, the bassoon, the cor anglais, the alto flute, the contrabasses. Not in the library: bagpipes (the user wants real Great Highland pipes with the
-traditional flutter; the only free multisample found is FreePats’ CC0 bagpipe in G, a smaller pipe, at freepats.zenvoid.org, which this
-session’s network could not reach; no free Great Highland multisample turned up on GitHub, archive.org or Pianobook), bass clarinet,
-baritone saxophone, baritone horn / euphonium, contrabassoon, bass flute; they would come from a CC source through `tools/samples/build.py`
-(a solo trombone would help too; `tbnSus` is the section).
+section (`trombones`), the tuba, the bassoon, the cor anglais, the alto flute, the contrabasses. Now in the library (Iowa, see Latest): a solo trombone (`tbnSolo`), the bass trombone, a bass clarinet (`bassClar`), solo strings; and FreePats’ CC0 bagpipe in G (`pipes`, `pipesDrone`: a smaller pipe than the Great Highland pipes, chanter F4–G6, drones G2/G3). Still missing: a baritone saxophone, a baritone horn / euphonium, a contrabassoon, a bass flute; they would come from a CC source through `tools/samples/build.py`.
 
 **Earlier (the map's plan, steps 6 to 10, and after).** `MUSIC-REVIEW.md` has the plan, what each of its ten steps did, and the work after
 it: the main theme rebuilt around the solo horn and the horn section with a wider dynamic range and phrase shaping (`shape` on a line), the

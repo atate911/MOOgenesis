@@ -37,10 +37,19 @@ def decode(path, stereo=False, chan=None):
     never the average: these recordings are wide and largely uncorrelated (the horns partly anti-phase), and summing them comb-filters
     the tone with 4-8 dB notches across the midrange -- the hollow, phasey colour that reads as "digital".  One microphone is a
     natural mono signal; the section is then seated on the stage by its pan."""
+    # a mono recording has no second channel: asking the pan filter for c1 there yields silence, so take c0 whatever the pan
+    if not stereo and chan == 'R' and channels_of(path) < 2: chan = 'L'
     af = [] if stereo else ['-af', 'pan=mono|c0=c1' if chan == 'R' else 'pan=mono|c0=c0']
     out = subprocess.run(['ffmpeg', '-v', 'error', '-i', path] + af + ['-f', 'f32le', '-ac', '2' if stereo else '1', '-ar', str(SR), '-'], capture_output=True, check=True).stdout
     y = np.frombuffer(out, dtype='<f4').astype(np.float64)
     return y.reshape(-1, 2) if stereo else y
+
+def channels_of(path):
+    """channel count of a recording (ffprobe), 2 when it cannot be read"""
+    try:
+        out = subprocess.run(['ffprobe', '-v', 'error', '-select_streams', 'a:0', '-show_entries', 'stream=channels', '-of', 'csv=p=0', path], capture_output=True, text=True).stdout.strip()
+        return int(out.split(',')[0]) if out else 2
+    except Exception: return 2
 
 def read_wav_stereo(path):
     import wave
@@ -212,6 +221,33 @@ SPECS = {
     'tenorLo':  dict(src='VSCO 1 Percussion/drums/tenor/tenor_lower', re=r'tenor_(?P<dyn>p{1,3}|mp|mf|f{1,3})_(?P<rr>\d)', dyn=['f', 'fff'], rr=2, step=0, kind='short', attack=0.001, release=0.3, pitched=False, keep=1.5, stereo=False, pan=0.2),
     'organ':    dict(src='Keys/Organ/Loud', re=r'Rode_Man3Open_(?P<key>\d\d)', dyn=['*'], rr=1, step=6, kind='sustain', attack=0.03, release=0.25, ls=1.0, lmin=1.4, lmax=2.6, pitch='detect', range=(30.0, 2500.0), stereo=False, pan=0, xf_sec=0.4),
 }
+# ---- the University of Iowa solo instruments (tools/samples/iowa.py lays them out one note per file: <Inst>_<Note>_v<dyn>.wav, pp mf ff
+# as v1 v2 v3; the 2012 strings stereo, the older winds and brass mono) and the FreePats bagpipe (CC0; its chanter and drones): built with
+# --vsco pointed at the staging folder, e.g. --vsco STAGING --only vlnSolo,vlaSolo,vcSolo,cbSolo,bassClar,hornIowa,tbnSolo,altoFluteIowa,pipes,pipesDrone
+R_IOWA = r'_(?P<note>[A-G]#?\d)_v(?P<dyn>\d)\.wav$'
+IOWA_SOLO = dict(re=R_IOWA, octave=0, dyn=[1, 2, 3], rr=1, step=2, kind='sustain', norm='zone', attack=0.08, release=0.5, ls=0.9, lmin=1.4, lmax=3.2, xf=True, xf_sec=0.6)
+IOWA_WIND = dict(re=R_IOWA, octave=0, dyn=[1, 2, 3], rr=1, step=2, kind='sustain', norm='zone', attack=0.06, release=0.35, ls=0.8, lmin=1.1, lmax=2.4, xf=True, xf_sec=0.5, stereo=False)
+SPECS.update({
+    'vlnSolo':   dict(IOWA_SOLO, src='Violin', stereo=True, pan=-0.12),
+    'vlaSolo':   dict(IOWA_SOLO, src='Viola', stereo=True, pan=0.08),
+    'vcSolo':    dict(IOWA_SOLO, src='Cello', stereo=True, pan=0.12, release=0.6),
+    'cbSolo':    dict(IOWA_SOLO, src='Bass', stereo=True, pan=0.2, release=0.7),
+    'hornIowa':  dict(IOWA_WIND, src='Horn', pan=-0.15),
+    'tbnSolo':   dict(IOWA_WIND, src='Trombone', pan=0.25),
+    'bassTbn':   dict(IOWA_WIND, src='Basstrombone', pan=0.3),
+    'tubaIowa':  dict(IOWA_WIND, src='Tuba', pan=0.2),
+    'bassClar':  dict(IOWA_WIND, src='Bassclarinet', pan=0.1),
+    'clarIowa':  dict(IOWA_WIND, src='Clarinet', pan=0.05),
+    'altoFluteIowa': dict(IOWA_WIND, src='Altoflute', pan=-0.1),
+    'fluteIowa': dict(IOWA_WIND, src='Flute', pan=-0.15),
+    'oboeIowa':  dict(IOWA_WIND, src='Oboe', pan=0.05),
+    'bassoonIowa': dict(IOWA_WIND, src='Bassoon', pan=0.25),
+    'tptIowa':   dict(IOWA_WIND, src='Trumpet', pan=0.3),
+    # FreePats bagpipe (a pipe in G): the chanter's notes (file names A4_31.wav: the note and its cents sharp, measured again at decode) and the drones
+    'pipes':      dict(src='Pipes', re=r'^(?P<note>[A-G]#?\d)_\d+\.wav$', octave=0, norm='zone', dyn=['*'], rr=1, step=1, kind='sustain', attack=0.05, release=0.25, ls=0.6, lmin=0.8, lmax=2.4, stereo=False, pan=0.1),
+    'pipesDrone': dict(src='Pipes', re=r'^drone_(?P<note>[A-G]#?\d)_\d+\.wav$', octave=0, norm='zone', dyn=['*'], rr=1, step=1, kind='sustain', attack=0.3, release=0.8, ls=0.8, lmin=1.2, lmax=4.0, stereo=False, pan=-0.1),
+})
+
 SYNTH = {   # name -> (kind, attack, release); zones come from synth.py (stereo)
     'padSerrie': dict(kind='sustain', attack=0.3, release=0.9, cutK=0, ls=0.9, lmin=1.2, lmax=1.8, stereo=True),
     'padGlass': dict(kind='sustain', attack=0.3, release=0.9, cutK=0, ls=0.9, lmin=1.2, lmax=1.8, stereo=True),
@@ -549,6 +585,10 @@ def build_recorded(vsco, name, spec, out, log):
                 keep = spec.get('keep')
                 if spec['kind'] == 'sustain':
                     lp = find_loop(x, spec['ls'], spec['lmin'], spec['lmax'])
+                    if not lp and spec.get('short_ok', True):     # a short recording: a shorter loop later in the note rather than no zone
+                        for ls2, lmin2, lmax2 in ((0.45, 0.55, 1.5), (0.3, 0.35, 1.0)):
+                            lp = find_loop(x, ls2, lmin2, min(lmax2, spec['lmax']))
+                            if lp: log(f'  .. {name} {midi_name(root)}: short loop {lp[1] / SR - lp[0] / SR:.2f} s (ncc {lp[2]:.2f})'); break
                     if not lp: log(f'  !! {name} {midi_name(root)}: no loop found'); continue
                     ls, le, q = lp; x = bake_loop(x, ls, le, xf_sec=spec.get('xf_sec', 0.25)); loop = [ls / SR, le / SR]
                 else:
@@ -558,6 +598,26 @@ def build_recorded(vsco, name, spec, out, log):
                 zones.append(dict(root=root, dyn=f['dyn'], li=li, rr=ri, loop=loop, vel=vel, q=(lp[2] if spec['kind'] == 'sustain' else None)))
                 buffers.append(x)
     if not zones: return None
+    if spec['kind'] == 'sustain' and spec.get('norm') == 'zone':
+        # recordings made note by note at varying distances and gains (the Iowa sets): one gain per recorded note rather than per
+        # instrument. The loud layer's loop RMS at each root goes to the target (a median over the neighbouring roots, so one
+        # mis-cut note does not make a step), the softer layers at the same root are scaled with it (their recorded ratio kept;
+        # the sampler's layer alignment seats them). A click does not set the level: the clamp reads the 99.9th-percentile
+        # peak, and finish() soft-limits what is left above 0.98.
+        byroot = {}
+        for i, z in enumerate(zones): byroot.setdefault(z['root'], []).append(i)
+        rs = sorted(byroot); raw = {}
+        for r in rs:
+            li = [i for i in byroot[r] if zones[i]['li'] == nL - 1] or byroot[r]
+            raw[r] = np.mean([rms(buffers[i], int(zones[i]['loop'][0] * SR), int(zones[i]['loop'][1] * SR)) for i in li])
+        for k, r in enumerate(rs):
+            nb = [raw[rs[j]] for j in range(max(0, k - 1), min(len(rs), k + 2))]
+            g = 10 ** (TARGET_RMS_DB / 20) / max(float(np.median(nb)), 1e-9)
+            for i in byroot[r]:
+                a = np.abs(buffers[i] if buffers[i].ndim == 1 else buffers[i].max(axis=1))
+                pk = float(np.percentile(a, 99.9)) * g
+                buffers[i] = buffers[i] * (g * (0.98 / pk if pk > 0.98 else 1.0))
+        return finish(name, spec, zones, buffers, 1.0, out, log, stereo=spec.get('stereo', False))
     # level: one gain per instrument from the loudest layer (sustain: loop RMS; short: peak)
     loud = [i for i, z in enumerate(zones) if z['li'] == nL - 1]
     if spec['kind'] == 'sustain':
@@ -568,6 +628,15 @@ def build_recorded(vsco, name, spec, out, log):
     pk = max(np.abs(b).max() for b in buffers) * gain
     if pk > 0.98: gain *= 0.98 / pk
     return finish(name, spec, zones, buffers, gain, out, log, stereo=spec.get('stereo', False))
+
+def soft_limit(y, knee=0.9):
+    """peaks above the knee bend towards 1.0 (tanh), the rest untouched: a click in a recording cannot clip the file"""
+    a = np.abs(y)
+    if a.max() <= knee: return y
+    over = a > knee
+    out = y.copy()
+    out[over] = np.sign(y[over]) * (knee + (1 - knee) * np.tanh((a[over] - knee) / (1 - knee)))
+    return out
 
 def finish(name, spec, zones, buffers, gain, out, log, stereo):
     roots = sorted({z['root'] for z in zones}); step = spec.get('step', 5) or 4
@@ -581,7 +650,7 @@ def finish(name, spec, zones, buffers, gain, out, log, stereo):
     if spec.get('pan'): inst['pan'] = spec['pan']
     total = 0
     for z, b in zip(zones, buffers):
-        y = b * gain
+        y = soft_limit(b * gain)
         tag = midi_name(z['root']) if spec.get('pitched', True) else 'x'
         f = f"{name}-{tag}-l{z['li']}-r{z['rr']}.mp3"
         encode_mp3(y, os.path.join(out, f), stereo)
@@ -627,7 +696,7 @@ def main():
     a = ap.parse_args()
     os.makedirs(a.out, exist_ok=True)
     only = set(a.only.split(',')) if a.only else None
-    manifest = dict(version=3, license='Orchestra and percussion: VSCO 2 Community Edition (CC0 1.0). Chorus, celeste, crotales, chimes, bell tree, small percussion, timpani, soft organ: Sonatina Symphonic Orchestra 2.0 (CC Sampling Plus 1.0). Pads, sub: synthesized for this game (tools/samples/synth.py).',
+    manifest = dict(version=3, license='Orchestra and percussion: VSCO 2 Community Edition (CC0 1.0). Chorus, celeste, crotales, chimes, bell tree, small percussion, timpani, soft organ: Sonatina Symphonic Orchestra 2.0 (CC Sampling Plus 1.0). Pads, sub: synthesized for this game (tools/samples/synth.py). Solo strings, winds and brass with the Iowa suffix or the Solo names (vlnSolo, vlaSolo, vcSolo, cbSolo, tbnSolo, bassTbn, bassClar): University of Iowa Electronic Music Studios Musical Instrument Samples (free for any use, no restrictions), cut from the long takes by tools/samples/iowa.py. Pipes and drones: FreePats Great Highland Bagpipe (CC0 1.0).',
                     calib=dict(file='calib.mp3', at=0.1), instruments={})
     mpath = os.path.join(a.out, 'instruments.json')
     if os.path.exists(mpath) and only:

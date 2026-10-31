@@ -5,6 +5,17 @@ Versions follow `MAJOR.MINOR.PATCH`; the live version is the `VERSION` file.
 
 ## Unreleased
 
+- Real soloists in the library: the University of Iowa recordings (free for any use) cut from their long takes by the new
+  `tools/samples/iowa.py` (silence and pitch segmentation, pp/mf/ff layers, the string sets per string) and built by `tools/samples/build.py`
+  as `vlnSolo`, `vlaSolo`, `vcSolo`, `cbSolo`, `hornIowa`, `tbnSolo`, `bassTbn`, `tubaIowa`, `tptIowa`, `bassClar`, `clarIowa`, `oboeIowa`,
+  `bassoonIowa`, `fluteIowa`, `altoFluteIowa`; FreePats’ CC0 bagpipe as `pipes` (the chanter) and `pipesDrone`. Build fixes they needed:
+  a mono recording asked for its right channel decoded as silence (every right-panned mono instrument was empty), note-by-note recordings
+  are now levelled per recorded note (`norm='zone'`: the loud layer’s loop to the target, a median over neighbouring notes, a
+  99.9th-percentile peak clamp and a soft limiter in place of the one click that used to drag a whole instrument 15 dB down), and a short
+  recording gets a shorter loop rather than no zone. The readings use them: the title’s duet is a solo trombone behind the high horn and
+  its low fall is the Iowa bassoon; the cello reading is one cello; the chamber reading’s echoes, fall and breath are one cello and one
+  viola; the symphony’s head echo is the bass clarinet low. Player: the five readings re-rendered on them; the hour mix dropped from the
+  page to make room for the larger sample packs.
 - Two more readings of the title on its settled shape: `title:symphony` (the full orchestra and no choir: the violins state the tune
   twice with the cellos an octave below, the winds carry the variations with the clarinet echoing the head, the full brass on the motif
   over pulsing strings and woodwind runs, the flute’s fade) and `title:chamber` (strings alone: the violins over the violas and the open
