@@ -5,6 +5,16 @@ Versions follow `MAJOR.MINOR.PATCH`; the live version is the `VERSION` file.
 
 ## Unreleased
 
+- An orchestral system in place of the fixes one at a time. `orch: true` (the title and its five readings) sets the orchestral
+  defaults in one place, adds the soloist's window (the solo generated first; beds and choir moved out of three semitones around it: the
+  readings had a bed or choir note there for 40 to 54% of the solo's time, now 1 to 4%) and drops the synthesized transitions. Two gates:
+  `tools/qa/library.js` (the intake standard, per zone) and `tools/qa/orchestral.js` (the acceptance test, per piece); all five readings
+  pass it. The sampler meets the intake standard at decode for every instrument: opposed stereo narrowed until the channels agree (the
+  double basses, the cello and string sections, the Sonatina chorus), short loops kept clear of the file's faded tail, louder layers
+  louder at every note (two trombone-section notes were 15 dB under the layer below).
+- A real choir: St. Helen's Cantores (a school choir, Pianobook) for the hum and the ooh, and one cantor (Micah's Choir, Pianobook) for
+  the men's sung echoes of the theme; the hum above the horn in the main reading (a halo, the low strings and the bass under the solo),
+  below the soloist in the reed and cello readings. Section C's soft organ is strings.
 - Held beds and a held bass, as an orchestra holds them (the piece’s `padTie` and `bassTie`; the title and its readings). The string
   beds struck a beat at every bar line: each chord change bowed every note again, the shared ones too, and a `swell` bed faded every
   chord in from silence (the symphony: 132 notes of its string ensemble started on a bar line, 35 of them pitches already sounding).

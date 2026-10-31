@@ -507,7 +507,8 @@
       for (let i = 0; i < segs.length; i++) {
         const sg = segs[i]; let b1 = sg.b1;
         if (cfg.merge !== false) while (i + 1 < segs.length && segs[i + 1].ch.sym === sg.ch.sym) { i++; b1 = segs[i].b1; }
-        const notes = voiceChord(cfg.open ? openChord(sg.ch) : sg.ch, prev, reg[0], reg[1], n, (reg[0] + reg[1]) / 2); prev = notes;
+        const voiced = voiceChord(cfg.open ? openChord(sg.ch) : sg.ch, prev, reg[0], reg[1], n, (reg[0] + reg[1]) / 2); prev = voiced;
+        const notes = clearWindow(C, voiced, s.start + sg.b0, s.start + b1, reg[0], reg[1]);
         for (const m of Array.from(open.keys())) if (notes.indexOf(m) < 0) { padFlush(C, open.get(m), m, s.start + sg.b0, true); open.delete(m); }
         notes.forEach(function (m, j) { if (!open.has(m)) open.set(m, { b0: s.start + sg.b0, j, first: !any, inst, vel, n, width: num(cfg.width, 1), rel: cfg.rel, style, rng }); });
         any = true;
@@ -539,6 +540,18 @@
     C.prevPad[key] = prev;
   }
 
+  function clearWindow(C, notes, a, b, lo, hi) {
+    if (!C.solo || !C.solo.length || !orchOf(C.def)) return notes;
+    const near = m => C.solo.some(([s0, s1, sm]) => s0 < b - 0.01 && s1 > a + 0.01 && Math.abs(sm - m) <= 3);
+    const out = [];
+    for (const m of notes) {
+      if (!near(m)) { out.push(m); continue; }
+      const dn = m - 12, up = m + 12;
+      if (dn >= lo - 5 && !near(dn) && out.indexOf(dn) < 0 && notes.indexOf(dn) < 0) out.push(dn);
+      else if (up <= hi + 5 && !near(up) && out.indexOf(up) < 0 && notes.indexOf(up) < 0) out.push(up);
+    }
+    return out.length ? out : notes.filter(m => !near(m)).length ? notes.filter(m => !near(m)) : out;
+  }
   function padFlush(C, o, m, endAbs, cont) {
     const L = endAbs - o.b0; if (L <= 0) return;
     const ex = { pan: (o.j / Math.max(1, o.n - 1) - 0.5) * 0.8 * o.width * C.widthK, dt: (o.rng() - 0.5) * 0.02, rel: o.rel };
@@ -698,10 +711,11 @@
       return emit(C, 'choir', inst, s.start + beat, m, Math.max(0.5, L), vel * (0.9 + 0.1 * (k % 2)), ex);
     };
     for (let i = 0; i < segs.length; i++) {
-      const sg = segs[i], notes = voiceChord(sg.ch, prev, reg[0], reg[1], n, (reg[0] + reg[1]) / 2);
-      prev = notes;
+      const sg = segs[i], voiced = voiceChord(sg.ch, prev, reg[0], reg[1], n, (reg[0] + reg[1]) / 2);
+      prev = voiced;
       let L = sg.b1 - sg.b0;
       while (i + 1 < segs.length && segs[i + 1].ch.sym === sg.ch.sym) { i++; L = segs[i].b1 - sg.b0; }
+      const notes = clearWindow(C, voiced, s.start + sg.b0, s.start + sg.b0 + L, reg[0], reg[1]);   // the soloist's window (orchestral pieces)
       notes.forEach(function (m, j) {
         const cur = voices[j];
         if (!sampled) { emit(C, 'choir', inst, s.start + sg.b0, m, L, vel, Object.assign({}, base, { pan: (j - (n - 1) / 2) * 0.35 })); return; }
@@ -957,7 +971,10 @@
     for (const w of wraps) {
       C.curW = w; C.meter = w.R.meter; C.strong = w.R.strong; C.spb = 60 / w.b0;   // the section's meter and (opening) tempo
       const s = { R: w.R, start: w.start, bars: w.bars, beats: w.beats };
-      for (const key in w.R.L) {
+      const keys = Object.keys(w.R.L);
+      if (orchOf(C.def) && keys.indexOf('lead') > 0) { keys.splice(keys.indexOf('lead'), 1); keys.unshift('lead'); }   // the solo first: the beds keep its window
+      C.solo = [];
+      for (const key of keys) {
         const cfg = w.R.L[key];
         C.key = key;
         if (cfg && typeof cfg === 'object' && cfg.skip && C.vrng() < cfg.skip) continue;   // a part that does not play in every performance
@@ -965,7 +982,9 @@
           const spec = typeof cfg === 'string' ? { ph: cfg } : cfg;
           if (spec.ph) genLine(C, s, spec, key); else genSparkle(C, s, spec, key);
         } else if (GEN[key]) {
+          const n0 = C.ev.length;
           if (typeof cfg === 'string' || typeof cfg === 'object') GEN[key](C, s, typeof cfg === 'object' && !(LINES[key]) ? cfg : (LINES[key] ? cfg : { p: cfg }), key);
+          if (key === 'lead' && orchOf(C.def)) for (let i = n0; i < C.ev.length; i++) { const e = C.ev[i]; if (e.m && e.bt) C.solo.push([e.b, e.b + e.bt, e.m]); }
         }
       }
       C.key = 'tens';
@@ -973,7 +992,7 @@
       if (E > 0.65 && w.bars >= 4) { C.key = 'eerie'; genEerie(C, s, erng); }
     }
     C.key = 'trans';
-    genTransitions(C, wraps);
+    if (!orchOf(C.def)) genTransitions(C, wraps);   // the risers and swells between sections are synthesized: an orchestral piece makes its own
     if (C.padCarry) for (const k in C.padCarry) if (C.padCarry[k]) { padFlushAll(C, C.padCarry[k]); C.padCarry[k] = null; }   // the held beds end with the pass
     if (C.bassCarry) { bassWrite(C, C.bassCarry); C.bassCarry = null; }
     C.ev.sort((a, b) => a.t - b.t);

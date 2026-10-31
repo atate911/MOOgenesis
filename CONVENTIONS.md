@@ -156,6 +156,18 @@ Colour semantics are fixed: gold = BC/money, ember = industry, leaf = food/growt
 - Check a change with `node tools/score-lint.js` (schema, instruments, forms, phrases, themes, determinism, the programme's lists; `--strict`
   in a release pass) and `node tools/qa/music.js` (the seams in real time: directed programme, soft change, bridges, motif, snapshot / restore).
 
+- **The orchestral system (`orch: true`).** An orchestral piece sets one switch, not a flag per problem. It gives: beds and the bass
+  held through chord changes and section lines (shared notes keep sounding, moving voices enter legato at the steady part of the note);
+  the choir breathing in turn; the solo generated first in each section and every bed and choir note kept out of a three-semitone window
+  around it (moved an octave, or dropped); the low end mono (choir below 450 Hz, bass 250, beds 300); no synthesized voice, transition,
+  doubling (`ens`), sine sub or bus chorus. Then two gates, both automatic:
+  - **Intake** (`node tools/qa/library.js NAMES`): every looped zone as the sampler plays it is in tune by its whole-note median pitch
+    (12 cents, 15 for an ensemble), its loop clear of the file's faded tail, its stereo agreeing in the low mids, its layers in order. The
+    sampler enforces the last three at decode for every instrument (`clearTail`, `agreeStereo`, the per-note layer order in
+    `alignLayers`); tuning is the build's (`measure_root`). Run it on any new instrument; run `tools/qa/loops.js` too for a solo one.
+  - **Acceptance** (`node tools/qa/orchestral.js IDS`): on the piece itself, nothing synthetic, held notes held, the solo's window clear,
+    the low end in phase, the choir carried (not covered) in its lowest octave. Every orchestral reading passes it before it is published.
+  A new problem heard by ear becomes a check in one of these two before it is fixed, so it stays fixed.
 - **Loops of note-by-note recordings** sit inside the note's steady stretch and run as long as it allows (`loop='steady'`); a note that
   swells more than `swing_max` dB inside its loop is dropped, and a file holding two takes is cut to the longer. Check a new set with
   `node tools/qa/loops.js --insts NAME` (one instrument a run: the whole library takes too long) before a piece uses it.

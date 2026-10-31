@@ -70,7 +70,8 @@
     const rhoAt = bb => { let xy = 0, xx = 0, yy = 0; for (let i = 0; i < N; i++) { const t = d[bb - N + i], l = d[a - N + i]; xy += t * l; xx += t * t; yy += l * l; } return xy / (Math.sqrt(xx * yy) + 1e-12); };
     const r0 = rhoAt(b); if (r0 >= 0.6) return b;
     let best = b, rb = r0;
-    for (let s = -P; s <= P; s++) { const bb = b + s; if (bb - N <= a + N) continue; const r = rhoAt(bb); if (r > rb) { rb = r; best = bb; } }
+    const lim = buf.length - Math.round(0.065 * sr);   // never into the file's faded tail
+    for (let s = -P; s <= P; s++) { const bb = b + s; if (bb - N <= a + N || bb > lim) continue; const r = rhoAt(bb); if (r > rb) { rb = r; best = bb; } }
     return rb > r0 + 0.05 ? best : b;
   }
   function smoothLoop(buf, ls, le, root) {
@@ -245,7 +246,7 @@
     for (let i = 0; i < n; i++) { const db = 20 * Math.log10(env[i] / lvl); if (db > -6 && db < 3) { run++; if (run > best[1] - best[0]) best = [i - run + 1, i + 1]; } else run = 0; }
     const s0 = best[0] * W / sr + 0.05, e0 = best[1] * W / sr - 0.03;
     if (e0 - s0 < 0.45 || e0 - s0 <= le - ls) return [ls, le];
-    return [Math.max(s0, 0.03), Math.min(e0, buf.duration - 0.002)];
+    return [Math.max(s0, 0.03), Math.min(e0, buf.duration - 0.065)];   // clear of the file's faded tail
   }
   S._relocateLoop = relocateLoop;
   // The zone's true pitch. The manifest's roots are good to about a cent, and a cent between two recordings of one note (a sustain's soft
@@ -291,7 +292,8 @@
     S.inst[name] = inst;
     const jobs = (def.zones || []).map(z => loadBuf(z.file).then(buf => {
       let loop = z.loop ? [z.loop[0] + S.offset, z.loop[1] + S.offset] : null, root = num(z.root, 60);
-      if (loop && inst.loop) { const rl = relocateLoop(buf, loop[0], Math.min(loop[1], loop[1] - loop[0] > 0.5 ? buf.duration - 0.065 : buf.duration - 0.001)), ls = rl[0]; root = inst.pitched ? refineRoot(buf, ls, rl[1], root) : root; const le = tuneLoop(buf, ls, rl[1], root); loop = [ls, le]; if (EVEN[name]) evenLoop(buf, ls, le, root); flattenLoop(buf, ls, le, root); { const le2 = smoothLoop(buf, ls, le, inst.pitched ? root : 0); if (le2 > ls) loop = [ls, le2]; }; }   // the zone's true pitch; the loop a whole number of periods, its bands and its level even, its seam blended
+      if (loop && inst.loop) { loop = clearTail(buf, loop); const rl = relocateLoop(buf, loop[0], Math.min(loop[1], buf.duration - 0.065)), ls = rl[0]; root = inst.pitched ? refineRoot(buf, ls, rl[1], root) : root; const le = tuneLoop(buf, ls, rl[1], root); loop = [ls, le]; if (EVEN[name]) evenLoop(buf, ls, le, root); flattenLoop(buf, ls, le, root); { const le2 = smoothLoop(buf, ls, le, inst.pitched ? root : 0); if (le2 > ls) loop = [ls, le2]; }; }   // the zone's true pitch; the loop a whole number of periods, its bands and its level even, its seam blended
+      if (loop) agreeStereo(buf, loop, inst);
       inst.zones.push({ buf, root, lo: num(z.lo, 0), hi: num(z.hi, 127), loop, vel: z.vel || [0, 1], rr: z.rr || 0, gain: dbtoa(num(z.gain, 0)), pan: z.pan !== undefined ? num(z.pan, 0) : undefined });
     }).catch(e => { inst.failed++; S.errors++; if (S.errors < 4) console.warn('[samples] ' + z.file + ' failed', e && e.message); }));
     return Promise.all(jobs).then(() => { inst.zones.sort((a, b) => a.root - b.root || a.vel[0] - b.vel[0] || a.rr - b.rr); alignLayers(inst); inst.ready = inst.zones.length > 0; return inst; });
@@ -323,6 +325,39 @@
     }
     const rms = Math.sqrt(acc / ((b - a) * z.buf.numberOfChannels)); return rms > 1e-6 ? 20 * Math.log10(rms) : null;
   }
+  // The intake standard, met when a file is decoded (tools/qa/library.js checks it): every instrument, however it was recorded.
+  //  clearTail: a loop ends at least 65 ms before its file does (the build fades the last 30 ms); a short loop is moved earlier whole.
+  //  agreeStereo: a stereo zone's two channels agree in the low mids (150-500 Hz over the loop, correlation 0.3 or more): where a section's
+  //   or a choir's two microphones were opposed there (the double basses down to -0.69, the cello section's B4 -0.54) the zone is narrowed,
+  //   no more than it takes, so it no longer sounds hollow and phasey. `?stereoagree=0` plays the recordings as they are.
+  //  layer order (in alignLayers): at each note the louder layers are louder, by 1.5 dB at least.
+  S.stereoAgree = true;
+  try { if (/[?&]stereoagree=0\b/.test(location.search)) S.stereoAgree = false; } catch (e) { /* ignore */ }
+  function clearTail(buf, loop) {
+    const lim = buf.duration - 0.065; if (!(loop[1] > lim)) return loop;
+    const d = loop[1] - lim; if (loop[0] - d >= 0.05) return [loop[0] - d, loop[1] - d];
+    return [loop[0], Math.max(loop[0] + 0.1, lim)];
+  }
+  function bandCov(buf, a, b) {          // the two channels' covariances in 150-500 Hz (two RBJ biquads each way, run per channel)
+    const sr = buf.sampleRate, co = (type, f) => { const w = 2 * Math.PI * f / sr, al = Math.sin(w) / (2 * 0.7071), c = Math.cos(w), a0 = 1 + al;
+      return type === 'hp' ? [(1 + c) / 2 / a0, -(1 + c) / a0, (1 + c) / 2 / a0, -2 * c / a0, (1 - al) / a0] : [(1 - c) / 2 / a0, (1 - c) / a0, (1 - c) / 2 / a0, -2 * c / a0, (1 - al) / a0]; };
+    const F = [co('hp', 150), co('hp', 150), co('lp', 500), co('lp', 500)], run = d => { let x = d.slice(a, b); for (const [b0, b1, b2, a1, a2] of F) { const y = new Float32Array(x.length); let x1 = 0, x2 = 0, y1 = 0, y2 = 0; for (let i = 0; i < x.length; i++) { const v = b0 * x[i] + b1 * x1 + b2 * x2 - a1 * y1 - a2 * y2; x2 = x1; x1 = x[i]; y2 = y1; y1 = v; y[i] = v; } x = y; } return x; };
+    const L = run(buf.getChannelData(0)), R = run(buf.getChannelData(1)); let ll = 0, rr = 0, lr = 0; const k0 = Math.min(L.length, Math.round(0.05 * sr));
+    for (let i = k0; i < L.length; i++) { ll += L[i] * L[i]; rr += R[i] * R[i]; lr += L[i] * R[i]; } return { ll, rr, lr };
+  }
+  function agreeStereo(buf, loop, inst) {
+    if (!S.stereoAgree || buf.numberOfChannels < 2) return;
+    const sr = buf.sampleRate, a = Math.round(loop[0] * sr), b = Math.min(buf.length, Math.round(loop[1] * sr)); if (b - a < 0.2 * sr) return;
+    const { ll, rr, lr } = bandCov(buf, a, b); if (!(ll > 0 && rr > 0)) return;
+    const corrAt = w => { const p = (1 + w) / 2, q = (1 - w) / 2, LL = p * p * ll + 2 * p * q * lr + q * q * rr, RR = q * q * ll + 2 * p * q * lr + p * p * rr, LR = p * q * (ll + rr) + (p * p + q * q) * lr; return LR / Math.sqrt(LL * RR + 1e-20); };
+    if (corrAt(1) >= 0.3) return;
+    let w = 1; while (w > 0 && corrAt(w) < 0.3) w = Math.round((w - 0.05) * 100) / 100;
+    const p = (1 + w) / 2, q = (1 - w) / 2, L = buf.getChannelData(0), R = buf.getChannelData(1), nL = new Float32Array(L.length), nR = new Float32Array(L.length);
+    for (let i = 0; i < L.length; i++) { nL[i] = p * L[i] + q * R[i]; nR[i] = q * L[i] + p * R[i]; }
+    if (buf.copyToChannel) { buf.copyToChannel(nL, 0); buf.copyToChannel(nR, 1); } else { L.set(nL); R.set(nR); }
+    (S.narrowed[inst.name] = S.narrowed[inst.name] || []).push(w);
+  }
+  S.narrowed = {};
   function alignLayers(inst) {
     if (!S.layerAlign || inst.kind !== 'sustain' || !inst.pitched) return;
     const byLayer = new Map();
@@ -333,6 +368,11 @@
     const loud = layers.reduce((a, b) => b.c > a.c ? b : a), log = {};
     for (const L of layers) { const target = loud.db - 8 * (loud.c - L.c), g = target - L.db; for (const z of L.zones) z.gain *= dbtoa(g); log[L.zones[0].vel.join('-')] = { db: Math.round(L.db * 10) / 10, gainDb: Math.round(g * 10) / 10, zones: L.zones.length }; }
     S.align[inst.name] = log;
+    // at each note, the louder layer louder: a zone recorded quieter than the layer below it (a trombone-section note 15 dB down) is
+    // brought up to 1.5 dB over it, so a crescendo through the layers never dips
+    const byRoot = new Map(); for (const z of inst.zones) { const k = Math.round(z.root); if (!byRoot.has(k)) byRoot.set(k, []); byRoot.get(k).push(z); }
+    for (const zs of byRoot.values()) { zs.sort((p, q) => p.vel[0] - q.vel[0]); let prev = null;
+      for (const z of zs) { const db = zoneDb(z); if (db === null) continue; const lv = db + 20 * Math.log10(z.gain || 1); if (prev !== null && lv < prev + 1.5) { z.gain *= dbtoa(prev + 1.5 - lv); prev = prev + 1.5; } else prev = lv; } }
   }
 
   // (a loop stays 65 ms clear of the file's end: the build fades a file's last 30 ms, and a loop run into that fade sank at every wrap)

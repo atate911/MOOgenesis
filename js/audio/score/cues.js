@@ -66,7 +66,7 @@
       { n: 'B', bars: 8, cres: [0.68, 0.78], prog: 'IV I V I | ii IV V V', pad: { p: 'sus', n: 2, reg: [36, 47], vel: 0.23, open: true }, pad2: { p: 'swell', n: 2, reg: [72, 88], vel: 0.3 }, bass: { pat: 'c-------', vel: 0.8, inst: { p: 'deep', sub: 0, cut: 65, att: 0.6, rel: 2.0 } },
         lead2: { ph: 'V2 r4', inst: 'bassoonIowa', oct: -2, vel: 0.78, shape: 0.35, swell: 0.2 }, lead: { ph: 'r4 V1', oct: -1, vel: 0.92, shape: 0.45, swell: 0.4, pan: -0.05 }, bell2: { ph: 'r4 TH', inst: 'tptSolo', oct: 1, vel: 0.26, shape: 0.4, swell: 0.35 }, choir: { n: 2, reg: [62, 71], vel: 0.45, soft: true, width: 0.85 },
         bell: { dens: 0.05, res: 1, reg: [76, 100], vel: 0.3 }, drums: false, timp: false },   // the bassoon low with the fall in thirds, the horn answering with the sequence; the soft trumpet high above once
-      { n: 'C', bars: 8, lv: 0.44, prog: 'I I vi V | I I vi V', pad: { p: 'swell', inst: 'organSoft', n: 3, reg: [50, 72], vel: 0.48 }, pad2: { p: 'sus', n: 2, reg: [60, 76], vel: 0.28 }, bass: { pat: 'c---', pedal: true, inst: { p: 'deep', sub: 0, cut: 85, att: 1.4, rel: 2.6 } },
+      { n: 'C', bars: 8, lv: 0.44, prog: 'I I vi V | I I vi V', pad: { p: 'swell', inst: 'strings', n: 3, reg: [50, 72], vel: 0.4 }, pad2: { p: 'sus', n: 2, reg: [60, 76], vel: 0.28 }, bass: { pat: 'c---', pedal: true, inst: { p: 'deep', sub: 0, cut: 85, att: 1.4, rel: 2.6 } },
         lead: { ph: 'L2 L2', inst: 'cello', oct: -1, vel: 0.5, shape: 0.3 }, lead2: { ph: ['r4 V5', 'V5 r4'], inst: 'oboe', vel: 0.6, shape: 0.35, swell: 0.2 }, arp: { inst: 'harp', pat: '0...2...1...3...', res: 1, vel: 0.34, reg: [55, 81], skip: 0.3 }, choir: { n: 2, reg: [62, 71], vel: 0.45, soft: true, width: 0.85 }, choir2: { n: 2, reg: [66, 78], vel: 0.24, soft: true }, bell: { dens: 0.08, res: 1, reg: [76, 100], vel: 0.32 }, drums: false, timp: false, rise: 2 },   // the breath: the oboe's own lyrical variation over the harp, the hum, the women; under it the cellos lay the head in whole notes, the foundation for the return
       { n: 'A2', bars: 8, cres: [0.78, 0.9], prog: 'I I IV I | I I IV V', pad: { p: 'sus', n: 2, reg: [36, 47], vel: 0.27, open: true }, pad2: { p: 'sus', inst: 'violas', n: 2, reg: [62, 74], vel: 0.36 }, bass: { pat: 'c---', pedal: true, inst: { p: 'deep', sub: 0, cut: 85, att: 0.6, rel: 1.8 } },
         lead: { ph: 'PA PB', inst: 'hornSolo', oct: 0, vel: 0.9, shape: 0.4, swell: 0.3, pan: -0.08 }, lead2: { ph: 'r2 PA PB', inst: 'tbnSolo', oct: -1, vel: 0.78, shape: 0.3, swell: 0.2, pan: 0.12 },
@@ -96,7 +96,7 @@
         s.lead.ph = [].concat(s.lead.ph).map(p => p.replace(/L2\^/g, 'L2').replace(/L3\^/g, 'L3')); if (s.lead.ph.length === 1) s.lead.ph = s.lead.ph[0];
         if (s.pad2 && s.pad2.reg && s.pad2.reg[0] === 72) s.pad2.reg = [76, 91];               // the glow higher still
         if (s.pad2 && s.pad2.inst === 'violas') s.pad2.reg = [77, 89];
-        if (s.pad && s.pad.inst === 'organSoft') s.pad.reg = [74, 86];
+        if (s.pad && s.pad.inst === 'strings' && s.n === 'C') s.pad.reg = [74, 86];
         if (s.choir2 && s.choir2.reg) s.choir2.reg = [70, 78];
       }
     }
@@ -119,7 +119,7 @@
         s.lead.ph = [].concat(s.lead.ph).map(p => p.replace(/L2\^/g, 'L2').replace(/L3\^/g, 'L3')); if (s.lead.ph.length === 1) s.lead.ph = s.lead.ph[0];
         if (s.pad2 && s.pad2.reg && s.pad2.reg[0] === 72) s.pad2.reg = [76, 91];
         if (s.pad2 && s.pad2.inst === 'violas') s.pad2.reg = [77, 89];
-        if (s.pad && s.pad.inst === 'organSoft') s.pad.reg = [74, 86];
+        if (s.pad && s.pad.inst === 'strings' && s.n === 'C') s.pad.reg = [74, 86];
         if (s.choir2 && s.choir2.reg) s.choir2.reg = [70, 78];
       }
     }
