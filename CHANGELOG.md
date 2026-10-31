@@ -8,7 +8,9 @@ Versions follow `MAJOR.MINOR.PATCH`; the live version is the `VERSION` file.
 - The Iowa soloists’ loops placed inside each note’s steady stretch (`loop='steady'` in `tools/samples/build.py`: the longest run of the
   note’s 250 ms level within 2.5 dB of its body, the loop as long as the run allows) rather than at a fixed point, a note that swells more
   than 4 dB inside its loop dropped for its neighbours to cover, and a file the splitter had cut with two takes in it (a held note that
-  went silent and came back: 22 of them across the viola, cello, trombone and bass clarinet) cut down to its longer take. Through the
+  went silent and came back: 22 of them across the viola, cello, trombone and bass clarinet) or with seconds of room noise before its note
+  (27 viola notes: the G-sharp 4 sounded only after 14 s, so a viola G or A was silent) cut down to the take that sounds. Through the
+  engine the viola now swings 0.6 dB inside a loop (it was 7.2, the worst note 61). Through the
   engine the solo cello now swings 1.0 dB inside a loop where the cello section the readings used before swung 2.3.
 - The beds’ dip under the solo holds through a phrase: a note that starts before the dip has come back (or within 0.6 s of it) moves the
   restore to its own end. Overlapping legato notes used to bring the pads and the choir back up mid-note, and every gap between two notes

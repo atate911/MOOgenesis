@@ -146,7 +146,8 @@ def loop_swing(x, ls, le):
     return float(np.percentile(es, 95) - np.percentile(es, 5))
 
 def longest_voiced(x, below_db=24, bridge=0.15):
-    """a recording cut from a long take can hold two notes with a silence between them: keep the longest stretch that sounds (frames
+    """a recording cut from a long take can hold two notes with a silence between them, or seconds of room noise before its one note: keep
+    the longest stretch that sounds (frames
     within below_db of the take's level, gaps shorter than `bridge` s bridged), from just before it starts to just after it ends"""
     m = x if x.ndim == 1 else x[:, 0]; W = int(0.03 * SR); n = len(m) // W
     if n < 8: return x, False
@@ -161,8 +162,9 @@ def longest_voiced(x, below_db=24, bridge=0.15):
             off += 1
             if off > gap: runs.append((st, i - off + 1)); st, off = None, 0
     if st is not None: runs.append((st, n - off))
-    if len(runs) < 2: return x, False
+    if not runs: return x, False
     a, b = max(runs, key=lambda r: r[1] - r[0])
+    if len(runs) < 2 and a * W < 0.3 * SR and (n - b) * W < 0.6 * SR: return x, False      # one take filling the file: nothing to cut
     y = x[max(0, a * W - int(0.01 * SR)):min(len(m), b * W + int(0.12 * SR))].copy()
     f = int(0.02 * SR)
     if y.ndim == 1: y[-f:] *= np.linspace(1, 0, f)
@@ -654,7 +656,7 @@ def build_recorded(vsco, name, spec, out, log):
                 x = trim_head(x)
                 if spec.get('norm') == 'zone':
                     x, cut = longest_voiced(x)
-                    if cut: log(f'  .. {name} {midi_name(root)} l{li}: two takes in one file, the longer kept ({len(x) / SR:.2f} s)'); x = trim_head(x)
+                    if cut: log(f'  .. {name} {midi_name(root)} l{li}: cut to the take that sounds ({len(x) / SR:.2f} s)'); x = trim_head(x)
                 if spec.get('bright', 0) and pitched: x = brighten(x)
                 keep = spec.get('keep')
                 if spec['kind'] == 'sustain':
