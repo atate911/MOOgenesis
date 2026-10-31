@@ -9,7 +9,7 @@ Browser-pane tip: animations use requestAnimationFrame, so in the built-in brows
 
 ## Session 11 (October 2026) — the score grows, branch `claude/festive-wozniak-7jy03r`
 
-**Latest (the full pass).** Every piece revisited against the compass and re-ranked; `MUSIC-REVIEW.md` ("The full pass") has what changed
+**Latest (the full pass, and the title as an undercurrent).** The main theme is now a brooding undercurrent (the solo horn’s lament over the men humming low, the commonwealth’s climb as a reach upward, the hymn’s head as the second idea, a crest that stays a swell); the user did not want a sung tune or a march on the title, nor the Crimson Tide manner. A voice may carry `width` (the choir recordings are wide; a line alone needs a centre). Every piece revisited against the compass and re-ranked; `MUSIC-REVIEW.md` ("The full pass") has what changed
 and the new table. Engine: the sampler aligns the recorded dynamic layers of every pitched sustain at decode time (`alignLayers` in
 `js/audio/sampler.js`, K-weighted, 4 dB per half range, `?layeralign=0` to compare; `A.Samples.align` holds what it did per instrument), the
 alto flute / flute / solo trumpet presets lifted, war readings keep an augmented chord where the scale allows and never put the stabs an
