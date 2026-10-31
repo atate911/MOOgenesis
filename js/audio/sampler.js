@@ -498,7 +498,9 @@
       } else if (g1 !== g0) { sg.gain.setValueAtTime(g0, t + delay); sg.gain.linearRampToValueAtTime(g1, t + delay + dur); }
       const t0 = t + delay;
       // legato: skip the bow / breath attack already heard on the previous note (but stay well before the loop)
-      const off = leg ? Math.min(num(inst.legOff, 0.22), z.loop ? Math.max(0, z.loop[0] - 0.4) : 0.2) : 0;
+      // (o.legOff 'loop': a held bed's or bass's moving voice comes in at the steady part of its note, just before the loop, past every
+      //  trace of the bow's bite)
+      const off = leg ? (o.legOff === 'loop' && z.loop ? Math.max(0, z.loop[0] - 0.05) : Math.min(num(inst.legOff, 0.22), z.loop ? Math.max(0, z.loop[0] - 0.4) : 0.2)) : 0;
       src.start(t0, off); src.stop(end); v.srcs.push(src);
       if (end > v.t1) v.t1 = end;
       if (vib > 0 && !oneShot) { const vr = o.vibRate > 0 ? o.vibRate * (0.99 + eng.rand() * 0.02) : 4.6 + eng.rand() * 1.1, lf = v.osc('sine', vr, t0, end), lg = v.gain(0.0001); lg.gain.setValueAtTime(0.0001, t0 + 0.1); lg.gain.linearRampToValueAtTime(vib, t0 + 0.6); lf.connect(lg); lg.connect(src.detune); }

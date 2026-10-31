@@ -8,8 +8,8 @@ Versions follow `MAJOR.MINOR.PATCH`; the live version is the `VERSION` file.
 - Held beds and a held bass, as an orchestra holds them (the piece’s `padTie` and `bassTie`; the title and its readings). The string
   beds struck a beat at every bar line: each chord change bowed every note again, the shared ones too, and a `swell` bed faded every
   chord in from silence (the symphony: 132 notes of its string ensemble started on a bar line, 35 of them pitches already sounding).
-  Now a note the next chord shares keeps sounding, one it drops lets go at the change, one it adds comes in legato past its bow’s
-  attack; only a phrase’s first chord swells in; and held notes carry on across a section line on the same instrument (beds, bass and
+  Now a note the next chord shares keeps sounding, one it drops lets go at the change, one it adds comes in legato at the steady part of its
+  note, just before the loop, past every trace of the bow’s bite (`legOff: 'loop'`, the bass’s moving notes too); only a phrase’s first chord swells in; and held notes carry on across a section line on the same instrument (beds, bass and
   the choir alike). The bass holds one low D from the first second to the first variations, then moves only when the chord’s root does.
   The soft hum breathes in turn (16 s phrases, each voice’s return fading in over a second). The per-bar plucks are out of the calm
   sections (the symphony’s harp under the men, the chamber’s pizzicato under the statements, the variations and the duet).

@@ -530,7 +530,7 @@
   function padFlush(C, o, m, endAbs, cont) {
     const L = endAbs - o.b0; if (L <= 0) return;
     const ex = { pan: (o.j / Math.max(1, o.n - 1) - 0.5) * 0.8 * o.width * C.widthK, dt: (o.rng() - 0.5) * 0.02, rel: o.rel };
-    if (o.first) { if (o.style === 'swell') ex.att = Math.min(L * C.spb * 0.6, 3.5); } else { ex.leg = true; ex.legAtt = 0.35; }
+    if (o.first) { if (o.style === 'swell') ex.att = Math.min(L * C.spb * 0.6, 3.5); } else { ex.leg = true; ex.legAtt = 0.4; ex.legOff = 'loop'; }
     emit(C, 'pad', o.inst, o.b0, m, L + (cont ? 0.12 : 0), o.vel * (o.j === 0 ? 1 : 0.9), ex);
   }
   function padFlushAll(C, carry) { for (const [m, o] of carry.open) padFlush(C, o, m, carry.endAbs, false); carry.open.clear(); }
@@ -582,7 +582,7 @@
     }
   }
   function sameVoice(a, b) { return a === b || (!!a && !!b && a.v === b.v && (a.smp || '') === (b.smp || '')); }   // one instrument, whatever its envelope settings
-  function bassWrite(C, n) { emit(C, 'bass', n.inst0 || n.inst, n.beat, n.m, n.into ? n.len + 0.08 : n.len * 0.97, n.v, Object.assign(n.from ? { leg: true, legAtt: 0.12 } : {}, n.into ? { rel: 0.3 } : {})); }
+  function bassWrite(C, n) { emit(C, 'bass', n.inst0 || n.inst, n.beat, n.m, n.into ? n.len + 0.08 : n.len * 0.97, n.v, Object.assign(n.from ? { leg: true, legAtt: 0.2, legOff: 'loop' } : {}, n.into ? { rel: 0.3 } : {})); }
 
   function genArp(C, s, cfg, key) {
     const P = norm(cfg, ARPS, 'arp'), inst = resolveInst(cfg.inst, C.inst[key] || DEF_INST[key]), reg = inRange(inst, P.reg || [55, 84]);
