@@ -5,6 +5,11 @@ Versions follow `MAJOR.MINOR.PATCH`; the live version is the `VERSION` file.
 
 ## Unreleased
 
+- The title’s shape settled: the solo states the commonwealth’s tune twice at the start, the second time fuller; the variations follow
+  with the men echoing the theme’s head between them, the bassoon and the oboe; the horns in canon; the full brass on the motif strongly
+  with the snare, the bass drum and the timpani; a wind-down over the strings with the men’s last echo; the fade on variations. A cello
+  reading (`title:cello`, the cello section as a singing line, no solo cello in the library) beside the horn, reed and organ readings. The
+  Williams reading dropped: it did not work for this piece.
 - The title’s crest brass holds one recorded dynamic layer per line (a hand-over mid-note sounded like a different horn); the bass
   echoes the hook (root, second, third, fifth on each chord) under the variations and the cellos lay the head in whole notes under the
   breath, so the piece leans toward the hook’s return. A fourth reading, `title:williams`: a concert fanfare on the tune in John
