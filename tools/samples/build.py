@@ -145,6 +145,29 @@ def loop_swing(x, ls, le):
     e = 20 * np.log10(np.sqrt(np.mean(seg[:n * W].reshape(n, W) ** 2, axis=1)) + 1e-9); es = np.convolve(e, np.ones(4) / 4, 'valid')
     return float(np.percentile(es, 95) - np.percentile(es, 5))
 
+def measure_root(x, midi, a=None, b=None, span=1.6):
+    """the note's real pitch, as a fractional MIDI number: normalised autocorrelation over lags within `span` semitones of the written
+    note (so neither an octave nor a fifth can be taken for it), the median over windows across the steady part. None when the windows
+    disagree or the correlation is weak (a breathy or noisy note): the written root is then kept."""
+    m = x if x.ndim == 1 else x.mean(axis=1)
+    a = int(a if a is not None else 0.4 * SR); b = int(b if b is not None else len(m) - 0.1 * SR)
+    f0 = 440 * 2 ** ((midi - 69) / 12); lo = int(SR / (f0 * 2 ** (span / 12))); hi = int(SR / (f0 * 2 ** (-span / 12))) + 2
+    W = int(max(4 * hi, 0.05 * SR)); out = []
+    for s in range(a, max(a + 1, b - W - hi), int(0.08 * SR)):
+        seg = m[s:s + W + hi]
+        if len(seg) < W + hi: break
+        A = seg[:W]; ea = float(np.dot(A, A)) + 1e-12; cs = []
+        for P in range(lo, hi + 1):
+            B = seg[P:P + W]; cs.append(float(np.dot(A, B)) / np.sqrt(ea * (float(np.dot(B, B)) + 1e-12)))
+        k = int(np.argmax(cs))
+        if cs[k] < 0.8 or k == 0 or k == len(cs) - 1: continue
+        d = cs[k - 1] - 2 * cs[k] + cs[k + 1]; off = 0.5 * (cs[k - 1] - cs[k + 1]) / d if d < 0 else 0.0
+        out.append(69 + 12 * np.log2(SR / (lo + k + off) / 440))
+    if len(out) < 3: return None
+    out = np.array(out); med = float(np.median(out))
+    if np.mean(np.abs(out - med) < 0.15) < 0.6: return None
+    return med
+
 def longest_voiced(x, below_db=24, bridge=0.15):
     """a recording cut from a long take can hold two notes with a silence between them, or seconds of room noise before its one note: keep
     the longest stretch that sounds (frames
@@ -673,12 +696,16 @@ def build_recorded(vsco, name, spec, out, log):
                         log(f'  -- {name} {midi_name(root)} l{li}: dropped, the note swells {loop_swing(x, ls, le):.1f} dB inside its loop'); continue
                     if spec.get('swing_max') and loop_gap(x, ls, le) > 12 and len(roots) > 2:
                         log(f'  -- {name} {midi_name(root)} l{li}: dropped, a gap {loop_gap(x, ls, le):.1f} dB deep inside its loop'); continue
+                    tune = 0.0
+                    if spec.get('norm') == 'zone' and pitched:                     # a note played sharp or flat, or cut under the wrong name
+                        mr = measure_root(x, root, ls, le)
+                        if mr is not None and abs(mr - root) > 0.12: tune = mr - root; log(f'  ~~ {name} {midi_name(root)} l{li}: sounds {tune * 100:+.0f} cents from its name, played from where it is')
                     x = bake_loop(x, ls, le, xf_sec=spec.get('xf_sec', 0.25)); loop = [ls / SR, le / SR]
                 else:
                     x = trim_tail(x); loop = None
                     if keep and len(x) > keep * SR: x = x[:int(keep * SR)]; x[-int(0.05 * SR):] *= np.linspace(1, 0, int(0.05 * SR))
                 vel = [li / nL, (li + 1) / nL] if nL > 1 else [0, 1]
-                zones.append(dict(root=root, dyn=f['dyn'], li=li, rr=ri, loop=loop, vel=vel, q=(lp[2] if spec['kind'] == 'sustain' else None)))
+                zones.append(dict(root=root, dyn=f['dyn'], li=li, rr=ri, loop=loop, vel=vel, q=(lp[2] if spec['kind'] == 'sustain' else None), tune=(tune if spec['kind'] == 'sustain' else 0.0)))
                 buffers.append(x)
     if not zones: return None
     if spec['kind'] == 'sustain' and spec.get('norm') == 'zone':
@@ -740,7 +767,7 @@ def finish(name, spec, zones, buffers, gain, out, log, stereo):
         f = f"{name}-{tag}-l{z['li']}-r{z['rr']}.mp3"
         encode_mp3(y, os.path.join(out, f), stereo)
         total += os.path.getsize(os.path.join(out, f))
-        zz = dict(file=f, root=z['root'], lo=lohi[z['root']][0], hi=lohi[z['root']][1], vel=[round(z['vel'][0], 3), round(z['vel'][1], 3)], rr=z['rr'])
+        zz = dict(file=f, root=round(z['root'] + z.get('tune', 0.0), 3), lo=lohi[z['root']][0], hi=lohi[z['root']][1], vel=[round(z['vel'][0], 3), round(z['vel'][1], 3)], rr=z['rr'])
         if z['loop']: zz['loop'] = [round(z['loop'][0], 4), round(z['loop'][1], 4)]
         inst['zones'].append(zz)
     qs = sorted(z['q'] for z in zones if z.get('q') is not None)

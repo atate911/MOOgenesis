@@ -8,7 +8,7 @@
   Track('title', {
     desc: 'Main theme — the undercurrent: a deep bed first (deep open chords in the low strings, the double bass on a slow line with its sub nearly sub-bass, the planetarium’s analogue glow, one chime), the men entering humming low; the solo horn’s first part the commonwealth’s tune itself, as the Commonwealth plays it, in the major, whole and slow over them, twice; then its variations with the men echoing its head between them, the bassoon low and the horn in variation, a soft trumpet high above once; the oboe’s lyrical variation in the breath over the cellos laying the head; the tune back whole for the crescendo in two steps, a high horn and a low brass voice in canon, then the full brass on the motif strongly with the snare, the timpani, the strings and the mallets and the chamber open on ah; the wind-down over the strings with the men’s last echo; the fade on variations, the solo horn alone, down into the drone',
     quotes: ['procession'],
-    bpm: 58, root: 'D', mode: 'major', loopFrom: 'A1', trim: 2.5, tens: false, rubato: 0.025, tone: { lo: 1.4, hi: 0.6 }, fx: { verb: 1.0, stage: 0.8, dly: 1.6 }, mix: { choir: 1.15, pad: 0.95, lead: 2.2, bass: 1.25 }, duck: 0.7,
+    bpm: 58, root: 'D', mode: 'major', loopFrom: 'A1', trim: 2.5, bassTie: true, tens: false, rubato: 0.025, tone: { lo: 1.4, hi: 0.6 }, fx: { verb: 1.0, stage: 0.8, dly: 1.6 }, mix: { choir: 1.45, pad: 0.95, lead: 2.2, bass: 1.25 }, duck: 0.7,
     sends: { lead: { verb: 0.08, stage: 0.36, dly: 0.06 }, choir: { verb: 0.32, stage: 0.12 }, bell: { verb: 0.5, stage: 0.2 } },   // the solo at the front of the stage and dry, the bed behind it in the hall; the high trumpet and the points far back
     forms: [['A1', 'B', 'C', 'A2', 'A3', 'D', 'E'], ['A1', 'C', 'B', 'A2', 'A3', 'D', 'E']],
     alts: [{}, { choir2: 'choirWomen' }],
@@ -51,7 +51,7 @@
         lead: { ph: 'PA*0.88 PB*0.94 PA*1 PB*1', oct: -1, vel: 0.95, shape: 0.45, swell: 0.4, pan: -0.05 }, choir: { n: 2, reg: [43, 52], vel: 0.55, soft: true, width: 0.85 }, bell: { dens: 0.04, res: 1, reg: [76, 100], vel: 0.28 },
         drums: { bdSoft: ['................', 'x...............'], vel: 0.2 }, timp: false },   // the horn's first part: the tune whole, slow and low over the men, twice, the second time fuller; the undercurrent begins under it
       { n: 'A1', bars: 16, cres: [0.7, 0.8], prog: 'ii IV V V | I I IV I | IV I V I | I I vi V', pad: { p: 'sus', n: 2, reg: [36, 52], vel: 0.52, open: true }, pad2: { p: 'sus', inst: 'violas', n: 2, reg: [74, 86], vel: 0.34 }, bass: { pat: ['1--5', '1---', '1--5', '1---', '1--5', '1---', '1--5', '1---', '1---2---3---5---', '1-------', '1---2---3---5---', '1-------', '1---2---3---5---', '1-------', '1---2---3---5---', '1-------'], inst: { p: 'deep', sub: 0.95, att: 0.6, rel: 2.0 } },
-        lead: { ph: 'V1 r4 V2 r4', oct: -1, vel: 0.94, shape: 0.45, swell: 0.4, pan: -0.05 }, lead2: { ph: 'r4 PAh r4 PAh', inst: 'choirMenAh', oct: -1, vel: 0.68, shape: 0.4, width: 0.5 },
+        lead: { ph: 'V1 r4 V2 r4', oct: -1, vel: 0.94, shape: 0.45, swell: 0.4, pan: -0.05 }, lead2: { ph: 'r4 PAh r4 PAh', inst: 'choirMenAh', oct: -1, vel: 0.74, shape: 0.4, width: 0.5 },
         choir: { n: 2, reg: [43, 52], vel: 0.55, soft: true, width: 0.85 }, bell: { dens: 0.05, res: 1, reg: [76, 100], vel: 0.3 }, drums: { bdSoft: 'x...............', vel: 0.22 }, timp: false },   // the first variations (the sequence a step up, the fall in thirds), the men echoing the theme's head after each; the violas' pedal far above
       { n: 'B', bars: 8, cres: [0.68, 0.78], prog: 'IV I V I | ii IV V V', pad: { p: 'sus', n: 2, reg: [36, 52], vel: 0.52, open: true }, pad2: { p: 'swell', n: 2, reg: [72, 88], vel: 0.3 }, bass: { pat: ['1---2---3---5---', '1-------'], inst: { p: 'deep', sub: 0.95, att: 0.6, rel: 2.0 } },
         lead2: { ph: 'V2 r4', inst: 'bassoonIowa', oct: -2, vel: 0.62, shape: 0.35, swell: 0.2 }, lead: { ph: 'r4 V1', oct: -1, vel: 0.92, shape: 0.45, swell: 0.4, pan: -0.05 }, bell2: { ph: 'r4 TH', inst: 'tptSolo', oct: 1, vel: 0.26, shape: 0.4, swell: 0.35 }, choir: { n: 2, reg: [43, 52], vel: 0.45, soft: true, width: 0.85 },
@@ -66,7 +66,7 @@
         arp: { inst: 'marimba', pat: '0.2.1.3.0.2.3.1.', res: 4, vel: 0.46, reg: [72, 96] }, choir: { inst: 'choirMenAh', n: 3, reg: [43, 60], vel: 0.85 }, choir2: { inst: 'aah', n: 3, reg: [57, 74], vel: 0.66 }, timp: { p: 'beats', vel: 0.65 },
         bell: { dens: 0.1, res: 1, reg: [76, 100], vel: 0.36 }, drums: { snare: ['x..x.xx.x..x.xx.', 'x..x.xx.x..xxxxx'], kick: 'x.......x.......', vel: 0.5 } },   // the full brass on the motif, strongly: horns, trombones and trumpets in octaves, the snare and the bass drum, the timpani on the beat, the strings, the mallets' sparkle, the chamber open on ah
       { n: 'D', bars: 8, cres: [0.9, 0.58], prog: 'IV I I I | IV vi I I', pad: { p: 'sus', inst: 'strings', n: 3, reg: [55, 76], vel: 0.5 }, pad2: { p: 'sus', n: 2, reg: [36, 52], vel: 0.5, open: true }, bass: { pat: 'c---', pedal: true, inst: { p: 'deep', sub: 0.95, att: 1.0, rel: 2.4 } },
-        lead: { ph: 'L3 r4', oct: -1, vel: 0.9, shape: 0.45, swell: 0.3, pan: -0.05 }, lead2: { ph: 'r4 PAh', inst: 'choirMenAh', oct: -1, vel: 0.6, shape: 0.4, width: 0.5 }, choir: { n: 2, reg: [43, 52], vel: 0.55, soft: true, width: 0.85 }, choir2: { n: 2, reg: [69, 81], vel: 0.26, soft: true },
+        lead: { ph: 'L3 r4', oct: -1, vel: 0.9, shape: 0.45, swell: 0.3, pan: -0.05 }, lead2: { ph: 'r4 PAh', inst: 'choirMenAh', oct: -1, vel: 0.66, shape: 0.4, width: 0.5 }, choir: { n: 2, reg: [43, 52], vel: 0.55, soft: true, width: 0.85 }, choir2: { n: 2, reg: [69, 81], vel: 0.26, soft: true },
         timp: { kick: ['X...............', '................', '................', '................', '................', '................', '................', '................'], vel: 0.5 }, bell: { dens: 0.06, res: 1, reg: [76, 100], vel: 0.3 }, drums: false },   // the wind-down: the brass gone, the solo's fall over the strings, the men's last echo of the head, one timpani stroke
       { n: 'E', bars: 8, cres: [0.58, 0.36], prog: 'vi IM7 iii V | IV I V I', pad: { p: 'sus', n: 2, reg: [36, 52], vel: 0.5, open: true }, pad2: { p: 'swell', n: 2, reg: [72, 88], vel: 0.28 }, bass: { pat: 'c---', pedal: true, inst: { p: 'deep', sub: 0.95, att: 1.2, rel: 2.6 } },
         lead: { ph: 'V3 V2', oct: -1, vel: 0.84, shape: 0.45, swell: 0.3, pan: -0.05 }, choir: { n: 2, reg: [43, 52], vel: 0.5, soft: true, width: 0.85 }, bell: { dens: 0.04, res: 1, reg: [76, 100], vel: 0.28 }, drums: false, timp: false },   // the fade: the solo horn alone, the head in the relative minor and the fall in thirds, down into the drone
@@ -93,15 +93,24 @@
     Track('title:reed', d);
   })();
 
-  // The cello reading: the cello section as a singing line (the library has no solo cello) is the first soloist in the horn's own register,
-  // narrowed to one place; the window stays where the horn's was. The crest keeps the horns; the cello returns for the wind-down and the fade.
+  // The cello reading: one cello (the Iowa recordings) as the first soloist, an octave above the horn's place, in the cello's singing tenor:
+  // in the horn's own register it sat in unison with the cello section's chords and the men's hum (D3 over D3) and the low strings, the
+  // bass and the soloist ran together into one low cluster. So it takes the reed reading's window (the glow, the violas and the women
+  // moved higher still), the beds and the bass below it untouched. The crest keeps the horns; the cello returns for the wind-down and fade.
   (function () {
     const d = JSON.parse(JSON.stringify(Music._tracks.title)); delete d._p; delete d.id;
-    d.desc = 'Main theme, the cello reading — the same undercurrent with the cello as the first soloist, in the horn’s register, singing the commonwealth’s tune whole and slow over the humming men, twice; then its variations with the men echoing its head, the bassoon low, the oboe in the breath; the horns in canon and the full brass on the motif for the crescendo; the cello back for the wind-down and the fade';
+    d.desc = 'Main theme, the cello reading — the same undercurrent with one cello as the first soloist, high in its singing register above the low strings and the humming men, the commonwealth’s tune whole and slow, twice; then its variations with the men echoing its head, the bassoon low, the oboe in the breath; the horns in canon and the full brass on the motif for the crescendo; the cello back for the wind-down and the fade';
     d.hidden = true; d.variantOf = 'title';
     d.mix = Object.assign({}, d.mix, { lead: 2.4 });
     for (const s of d.sec) {
-      if (s.lead && typeof s.lead === 'object' && !s.lead.inst) { s.lead.inst = 'vcSolo'; s.lead.width = 0.6; s.lead.vel = Math.min(1, (s.lead.vel || 0.9) * 1.0); }
+      if (s.lead && typeof s.lead === 'object' && !s.lead.inst) {
+        s.lead.inst = 'vcSolo'; s.lead.width = 0.6; s.lead.oct = 0; s.lead.echo = 0;
+        s.lead.ph = [].concat(s.lead.ph).map(p => p.replace(/L2\^/g, 'L2').replace(/L3\^/g, 'L3')); if (s.lead.ph.length === 1) s.lead.ph = s.lead.ph[0];
+        if (s.pad2 && s.pad2.reg && s.pad2.reg[0] === 72) s.pad2.reg = [76, 91];
+        if (s.pad2 && s.pad2.inst === 'violas') s.pad2.reg = [77, 89];
+        if (s.pad && s.pad.inst === 'organSoft') s.pad.reg = [74, 86];
+        if (s.choir2 && s.choir2.reg) s.choir2.reg = [74, 86];
+      }
     }
     Track('title:cello', d);
   })();
@@ -122,7 +131,7 @@
     const VLN = (ph, vel, oct) => ({ ph, inst: 'strings', oct: oct || 0, vel, shape: 0.4, swell: 0.3, width: 0.6 });
     const VC = (ph, vel) => ({ ph, inst: 'cello', oct: -1, vel, shape: 0.35, swell: 0.2 });
     const SVC = (ph, vel) => ({ ph, inst: 'vcSolo', oct: -1, vel, shape: 0.35, swell: 0.2, width: 0.6 });   // one cello (the Iowa recordings) where a line is one voice's
-    const SVLA = (ph, vel) => ({ ph, inst: 'vlaSolo', oct: 0, vel, shape: 0.4, swell: 0.2, width: 0.6 });
+    const SVLA = (ph, vel) => ({ ph, inst: 'violas', oct: 0, vel, shape: 0.4, swell: 0.2, width: 0.6 });   // the viola section: the Iowa viola is out of tune by a third of a semitone and more
     const ONE = { kick: ['X...............', '................', '................', '................', '................', '................', '................', '................'], vel: 0.5 };
     const apply = (d, S, all) => { for (const sec of d.sec) { for (const k in all) sec[k] = all[k]; const o = S[sec.n]; if (o) for (const k in o) sec[k] = o[k]; } };
     // the symphony
@@ -145,7 +154,7 @@
     Track('title:symphony', d);
     // the chamber
     d = JSON.parse(JSON.stringify(Music._tracks.title)); delete d._p; delete d.id;
-    d.desc = 'Main theme, the chamber reading — strings alone, nothing struck or blown: the low strings and the basses first, the violas entering, the violins stating the commonwealth’s tune twice with the cellos an octave below and the basses plucked under them, one cello echoing the head between the variations and taking the fall low, one viola singing the breath, the violins and the cellos in canon, the full strings on the motif in three octaves over the spiccato ostinato and the tremolo, the cello’s wind-down, the violins’ fade high';
+    d.desc = 'Main theme, the chamber reading — strings alone, nothing struck or blown: the low strings and the basses first, the violas entering, the violins stating the commonwealth’s tune twice with the cellos an octave below and the basses plucked under them, one cello echoing the head between the variations and taking the fall low, the violas singing the breath, the violins and the cellos in canon, the full strings on the motif in three octaves over the spiccato ostinato and the tremolo, the cello’s wind-down, the violins’ fade high';
     d.hidden = true; d.variantOf = 'title';
     d.inst = Object.assign({}, d.inst, { pad: 'violas', pad2: 'cellos', lead: 'strings', arp: 'pizz' });
     d.mix = Object.assign({}, d.mix, { lead: 2.0, pad: 1.0, bass: 1.1 }); d.fx = { verb: 1.15, stage: 0.8, dly: 0.6 }; d.tone = { lo: 1.1, hi: 1.0 }; d.duck = 0.7;

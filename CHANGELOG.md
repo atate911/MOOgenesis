@@ -5,6 +5,25 @@ Versions follow `MAJOR.MINOR.PATCH`; the live version is the `VERSION` file.
 
 ## Unreleased
 
+- What still repeated, found by holding one note per instrument through the engine and folding its level by the zone’s loop length:
+  the solo horn’s C-sharp 4 (which also plays the theme’s D) ran its loop into the file’s last 30 ms, faded by the build, and sank 9 dB
+  at every wrap: a loop now stays 65 ms clear of a file’s end (the horn’s held D moves 1.6 dB, it was 7.7). The synthesized pads’ `ens`
+  doubling (a second copy of the looped buffer a few milliseconds behind) swelled 5 dB at every wrap of the analogue glow: off on the four
+  pads that had it, their levels trimmed by what it added (1 to 1.5 dB). The seam blend holds its level at any correlation of the two
+  sides (`?loopxfadapt=0`), and a seam whose two sides do not line up is moved within one cycle of the note to where they do
+  (`?loopalign=0`).
+- Tuning: the Iowa notes are played from the pitch they sound at, measured by the build within a semitone and a half of their name
+  (`measure_root`), not from the name: the cello ran 17 cents sharp on average and three of its notes, the F-sharp 3 that plays the
+  chamber reading’s G at 0:33 among them, half a semitone and more (the engine’s own tuner searches only a quarter-tone each way);
+  101 notes across the cello, trombone, bassoon and bass clarinet retuned, and the engine’s tuner now agrees with an independent
+  spectral measure on every zone. The Iowa viola, out of tune by a third of a semitone and mostly too unsteady to measure, is out of
+  the chamber reading (the viola section sings the breath again).
+- The bass as an undercurrent: with the piece’s `bassTie` (the title and its readings) a note the next step repeats is held through it
+  rather than struck again each bar, and a change of note is played legato with the last one let go as it arrives (it rang on two
+  seconds under the next). The octave echo the line generator adds to one weak-beat note in fourteen is off on recorded lines (on a solo
+  cello it was a stray note an octave up). The cello reading’s soloist sings an octave higher, in the reed reading’s window: in the
+  horn’s register it sat in unison with the cello section’s chords and the men’s hum. The title’s chorus 2 dB up, the men’s echoes
+  1 dB up again.
 - The Iowa soloists’ loops placed inside each note’s steady stretch (`loop='steady'` in `tools/samples/build.py`: the longest run of the
   note’s 250 ms level within 2.5 dB of its body, the loop as long as the run allows) rather than at a fixed point, a note that swells more
   than 4 dB inside its loop dropped for its neighbours to cover, and a file the splitter had cut with two takes in it (a held note that

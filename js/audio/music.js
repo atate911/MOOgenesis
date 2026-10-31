@@ -223,6 +223,8 @@
   };
   // a sampled preset: `smp` instrument (assets/audio), `fb` + `fbo` = the synth voice that plays until the samples are in
   const fbOf = name => { const o = Object.assign({}, SYN[name]); const fb = o.v; delete o.v; delete o.lvl; return { fb, fbo: o }; };
+  // (the synthesized pads carry no `ens` doubling: a second copy of a looped buffer a few milliseconds behind the first swelled 5 dB at
+  //  every wrap; the pad bus's chorus thickens them instead)
   const smp = (inst, lvl, extra, fbName) => Object.assign({ lvl, v: 'sample', smp: inst }, fbOf(fbName), extra || {});
   const INST = Object.assign({}, SYN, {
     // sustains: the string sections carry the harmony (Sonatina: 1st violins / violas / celli / basses, each in its seat on the stage;
@@ -236,11 +238,11 @@
     violas: smp('vlaSus', 0.15, { att: 0.25, rel: 1.0, hp: 100, eq: [[300, -2, 1], [7000, 1.5, 'hs']] }, 'strings'),   // the viola section as a bed of its own (the early pieces)
     tremLo: smp('vcTrem', 0.2, { att: 0.6, rel: 1.4, hp: 60, eq: [[250, -2, 1], [6000, 1.5, 'hs']] }, 'warm'),        // the cellos' tremolo, low and quiet: the unease of a late game
     airPad: smp('strEns', 0.12, { att: 0.45, rel: 1.3, cut: 5000 }, 'airPad'),
-    glassPad: smp('padGlass', 0.14, { ens: 0.35, att: 0.7, rel: 1.6 }, 'glassPad'),
+    glassPad: smp('padGlass', 0.122, { ens: 0, att: 0.7, rel: 1.6 }, 'glassPad'),
     dark: smp('strEns', 0.14, { att: 0.35, rel: 1.1, cut: 2200 }, 'dark'),
     drone: smp('strEns', 0.13, { att: 0.7, rel: 1.5, cut: 1800 }, 'drone'),
-    analog: smp('padSerrie', 0.17, { ens: 0.25, att: 0.9, rel: 2.0, hp: 110, eq: [[220, -2, 1], [1500, -2, 1.2], [6000, 1.5, 'hs']] }, 'warm'), air: smp('padAir', 0.14, { ens: 0.3, att: 1.4, rel: 2.6, hp: 300, eq: [[8000, 1.5, 'hs']] }, 'airPad'),
-    padGlass: smp('padGlass', 0.14, { ens: 0.35, att: 0.7, rel: 1.6 }, 'glassPad'),
+    analog: smp('padSerrie', 0.143, { ens: 0, att: 0.9, rel: 2.0, hp: 110, eq: [[220, -2, 1], [1500, -2, 1.2], [6000, 1.5, 'hs']] }, 'warm'), air: smp('padAir', 0.14, { ens: 0, att: 1.4, rel: 2.6, hp: 300, eq: [[8000, 1.5, 'hs']] }, 'airPad'),
+    padGlass: smp('padGlass', 0.125, { ens: 0, att: 0.7, rel: 1.6 }, 'glassPad'),
     organ: smp('organ', 0.13, {}, 'organ'), organSoft: smp('organSoft', 0.14, { att: 0.12 }, 'organ'),
     flutes: smp('fluteSus', 0.3, { att: 0.08 }, 'flute'),
     // basses: the bass section
@@ -518,15 +520,25 @@
   function genBass(C, s, cfg) {
     const P = norm(cfg, BASS, 'bass'), inst = resolveInst(cfg.inst, C.inst.bass || DEF_INST.bass);
     const pats = [].concat(P.pat), gate = num(P.gate, 0.88), vel = num(P.vel, 1);
+    // tie (the bass's `tie`, or the piece's `bassTie`): an undercurrent rather than a pulse. A note that the next step repeats is held
+    // through it (one note across the bars of a chord, not a new attack each bar), a change of note is played legato (the next note past
+    // its attack, the last one let go quickly as it arrives), so a slow bass never swells in again at every bar line.
+    const tie = P.tie !== undefined ? !!P.tie : !!(C.def && C.def.bassTie), notes = [];
     for (let bar = 0; bar < s.bars; bar++) {
       const pt = parseSteps(pats[bar % pats.length]), stepB = C.meter / pt.n;
       for (const st of pt.steps) {
         const beat = bar * C.meter + st.i * stepB, sg = segAt(s.R.segs, beat);
         const m = bassPitch(C, sg.ch, st.c, P.pedal);
         if (m === null) continue;
-        const onBeat = Math.abs(st.i * stepB - Math.round(st.i * stepB)) < 1e-6;
-        emit(C, 'bass', inst, s.start + beat, m, st.len * stepB * (st.len > 1 ? 0.97 : gate), vel * (onBeat ? 1 : 0.78) * (1 + (C.vrng() - 0.5) * 0.08));
+        const onBeat = Math.abs(st.i * stepB - Math.round(st.i * stepB)) < 1e-6, v = vel * (onBeat ? 1 : 0.78) * (1 + (C.vrng() - 0.5) * 0.08);
+        if (!tie) { emit(C, 'bass', inst, s.start + beat, m, st.len * stepB * (st.len > 1 ? 0.97 : gate), v); continue; }
+        const p = notes[notes.length - 1];
+        if (p && p.m === m && Math.abs(p.beat + p.len - beat) < 1e-6) p.len += st.len * stepB; else notes.push({ beat, m, len: st.len * stepB, v });
       }
+    }
+    for (let i = 0; i < notes.length; i++) {
+      const n = notes[i], nx = notes[i + 1], pv = notes[i - 1], into = nx && Math.abs(n.beat + n.len - nx.beat) < 1e-6, from = pv && Math.abs(pv.beat + pv.len - n.beat) < 1e-6;
+      emit(C, 'bass', inst, s.start + n.beat, n.m, into ? n.len + 0.08 : n.len * 0.97, n.v, Object.assign(from ? { leg: true, legAtt: 0.12 } : {}, into ? { rel: 0.3 } : {}));
     }
   }
 
@@ -663,7 +675,7 @@
     const ly = BUS[key], inst = resolveInst(spec.inst, C.inst[key] || DEF_INST[key]);
     const vel0 = num(spec.vel, key === 'lead' ? 0.9 : 0.7), art = num(spec.art, inst.v === 'pluck' || inst.v === 'bell' || inst.v === 'chime' ? 1 : 0.97);
     const harm = spec.harm || 0, oct = spec.oct || 0, rng = C.vrng, brassy = inst.v === 'brass' || inst.v === 'flute', blown = brassy || (inst.v === 'sample' && /^(horn|brass|flute|winds|oboe|clarinet|bassoon)/.test(inst.fb || ''));   // blown: no octave echo on a horn or a flute, synthesized or recorded
-    const graceP = num(spec.grace, brassy ? 0.18 : 0), flutterP = num(spec.flutter, 0), echoP = num(spec.echo, blown ? 0 : 0.07);   // flutter: the pipers' doubling before a long note
+    const graceP = num(spec.grace, brassy ? 0.18 : 0), flutterP = num(spec.flutter, 0), echoP = num(spec.echo, blown || inst.v === 'sample' ? 0 : 0.07);   // the octave echo is for the synthesized lines: on a recorded soloist it was a stray note an octave up   // flutter: the pipers' doubling before a long note
     const swellK = clamp(num(spec.swell, 0), 0, 0.8);   // swell: each note of two beats or more starts softer and opens to its dynamic through the recorded layers (the brass rising)
     const shape = clamp(num(spec.shape, 0), 0, 0.8);   // shape: each phrase played as a hairpin — soft at its ends, full in its middle and at its top, the long notes blooming (a singer's or a horn's phrasing)
     const ref = key === 'lead' ? s.R.L.lead2 : s.R.L.lead;                       // '@': double the other line (lead2 follows lead, lead follows lead2)

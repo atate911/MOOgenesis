@@ -57,17 +57,53 @@
   // same note. Done once per buffer, in the decoded audio, so every voice and every browser plays the smoothed loop.
   S.loopXf = true; S.loopXfFrac = 0.25; S.loopXfMax = 0.3;   // the blend: a quarter of the loop, at most 300 ms (a listening test may set these before preload)
   try { if (/[?&]loopxf=0\b/.test(location.search)) S.loopXf = false; } catch (e) { /* ignore */ }
-  function smoothLoop(buf, ls, le) {
+  S.loopXfAdapt = true; S.loopAlign = true;
+  try { if (/[?&]loopalign=0\b/.test(location.search)) S.loopAlign = false; } catch (e) { /* ignore */ }
+  try { if (/[?&]loopxfadapt=0\b/.test(location.search)) S.loopXfAdapt = false; } catch (e) { /* ignore */ }
+  // Before the blend, the seam itself: when the stretch before the loop's end and the stretch before its start do not line up (their
+  // correlation under 0.6: the loop is not a whole number of the note's cycles at that moment, as where the player's pitch moved inside
+  // the loop), the end is moved within one cycle of the note to where they line up best. A blend of two stretches out of phase cancels
+  // (the solo horn's C sharp, which also plays the theme's D, sank 9 dB before every wrap). Returns the loop end it used, in seconds.
+  function alignSeam(buf, a, b, root) {
+    const sr = buf.sampleRate, d = buf.getChannelData(0), P = Math.round(sr / (440 * Math.pow(2, ((root || 60) - 69) / 12))), N = Math.min(2048, a - 4);
+    if (!(P > 4) || N < 256 || b + P >= buf.length) return b;
+    const rhoAt = bb => { let xy = 0, xx = 0, yy = 0; for (let i = 0; i < N; i++) { const t = d[bb - N + i], l = d[a - N + i]; xy += t * l; xx += t * t; yy += l * l; } return xy / (Math.sqrt(xx * yy) + 1e-12); };
+    const r0 = rhoAt(b); if (r0 >= 0.6) return b;
+    let best = b, rb = r0;
+    for (let s = -P; s <= P; s++) { const bb = b + s; if (bb - N <= a + N) continue; const r = rhoAt(bb); if (r > rb) { rb = r; best = bb; } }
+    return rb > r0 + 0.05 ? best : b;
+  }
+  function smoothLoop(buf, ls, le, root) {
     if (!S.loopXf || !buf || !(le > ls)) return;
-    const sr = buf.sampleRate, a = Math.round(ls * sr), b = Math.min(Math.round(le * sr), buf.length);
+    const sr = buf.sampleRate, a = Math.round(ls * sr);
+    let b = Math.min(Math.round(le * sr), buf.length);
+    if (S.loopAlign && root) b = alignSeam(buf, a, b, root);
     const n = Math.floor(Math.min(S.loopXfFrac * (b - a), S.loopXfMax * sr, a - 0.02 * sr));
-    if (n < 64) return;
-    const key = a + ':' + b; buf._xf = buf._xf || {}; if (buf._xf[key]) return; buf._xf[key] = 1;
+    if (n < 64) return b / sr;
+    const key = a + ':' + b; buf._xf = buf._xf || {}; if (buf._xf[key]) return b / sr; buf._xf[key] = 1;
+    // The blend's gain law follows how alike the two sides are. A single player's note is the same wave on both sides (correlation near
+    // one) and a straight line keeps its level; a section or a choir is many players whose two sides do not line up (correlation 0.2 to
+    // 0.6), and the same straight line sank there by up to 3 dB halfway through, a dip at every wrap, the repeat heard on a held chord.
+    // So the correlation of the two sides is measured (in four stretches, interpolated) and both gains are divided by the root of the
+    // blend's power at that correlation: the level holds whatever the material. `?loopxfadapt=0` restores the straight line.
+    const K = 4, rho = new Float32Array(K);
+    if (S.loopXfAdapt) {
+      const d0 = buf.getChannelData(0), d1 = buf.numberOfChannels > 1 ? buf.getChannelData(1) : d0;
+      for (let k = 0; k < K; k++) { const i0 = Math.floor(k * n / K), i1 = Math.floor((k + 1) * n / K); let xy = 0, xx = 0, yy = 0;
+        for (let i = i0; i < i1; i++) { const t = 0.5 * (d0[b - n + i] + d1[b - n + i]), l = 0.5 * (d0[a - n + i] + d1[a - n + i]); xy += t * l; xx += t * t; yy += l * l; }
+        rho[k] = Math.max(-0.3, Math.min(1, xy / (Math.sqrt(xx * yy) + 1e-12))); }
+    }
     for (let c = 0; c < buf.numberOfChannels; c++) {
       const d = buf.getChannelData(c), seg = new Float32Array(n);
-      for (let i = 0; i < n; i++) { const w = (i + 1) / (n + 1); seg[i] = d[b - n + i] * (1 - w) + d[a - n + i] * w; }
+      for (let i = 0; i < n; i++) {
+        const w = (i + 1) / (n + 1); let g1 = 1 - w, g2 = w;
+        if (S.loopXfAdapt) { const x = Math.min(K - 1, Math.max(0, (i / n) * K - 0.5)), k0 = Math.floor(x), k1 = Math.min(K - 1, k0 + 1), r = rho[k0] + (rho[k1] - rho[k0]) * (x - k0);
+          const P = g1 * g1 + g2 * g2 + 2 * r * g1 * g2, q = 1 / Math.sqrt(Math.max(P, 0.25)); g1 *= q; g2 *= q; }
+        seg[i] = d[b - n + i] * g1 + d[a - n + i] * g2;
+      }
       if (buf.copyToChannel) buf.copyToChannel(seg, c, b - n); else d.set(seg, b - n);
     }
+    return b / sr;
   }
   S._smoothLoop = smoothLoop;
   // Loop breathing. Beyond the seam, a loop of a second or so carries one cycle of the player's vibrato and breath — a swell of four to
@@ -255,7 +291,7 @@
     S.inst[name] = inst;
     const jobs = (def.zones || []).map(z => loadBuf(z.file).then(buf => {
       let loop = z.loop ? [z.loop[0] + S.offset, z.loop[1] + S.offset] : null, root = num(z.root, 60);
-      if (loop && inst.loop) { const rl = relocateLoop(buf, loop[0], Math.min(loop[1], buf.duration - 0.001)), ls = rl[0]; root = inst.pitched ? refineRoot(buf, ls, rl[1], root) : root; const le = tuneLoop(buf, ls, rl[1], root); loop = [ls, le]; if (EVEN[name]) evenLoop(buf, ls, le, root); flattenLoop(buf, ls, le, root); smoothLoop(buf, ls, le); }   // the zone's true pitch; the loop a whole number of periods, its bands and its level even, its seam blended
+      if (loop && inst.loop) { const rl = relocateLoop(buf, loop[0], Math.min(loop[1], loop[1] - loop[0] > 0.5 ? buf.duration - 0.065 : buf.duration - 0.001)), ls = rl[0]; root = inst.pitched ? refineRoot(buf, ls, rl[1], root) : root; const le = tuneLoop(buf, ls, rl[1], root); loop = [ls, le]; if (EVEN[name]) evenLoop(buf, ls, le, root); flattenLoop(buf, ls, le, root); { const le2 = smoothLoop(buf, ls, le, inst.pitched ? root : 0); if (le2 > ls) loop = [ls, le2]; }; }   // the zone's true pitch; the loop a whole number of periods, its bands and its level even, its seam blended
       inst.zones.push({ buf, root, lo: num(z.lo, 0), hi: num(z.hi, 127), loop, vel: z.vel || [0, 1], rr: z.rr || 0, gain: dbtoa(num(z.gain, 0)), pan: z.pan !== undefined ? num(z.pan, 0) : undefined });
     }).catch(e => { inst.failed++; S.errors++; if (S.errors < 4) console.warn('[samples] ' + z.file + ' failed', e && e.message); }));
     return Promise.all(jobs).then(() => { inst.zones.sort((a, b) => a.root - b.root || a.vel[0] - b.vel[0] || a.rr - b.rr); alignLayers(inst); inst.ready = inst.zones.length > 0; return inst; });
@@ -299,6 +335,7 @@
     S.align[inst.name] = log;
   }
 
+  // (a loop stays 65 ms clear of the file's end: the build fades a file's last 30 ms, and a loop run into that fade sank at every wrap)
   // load everything (idempotent). Resolves when every instrument has been tried; partial sets are fine. S.loadSome(names) loads just those
   // instruments (a player page that starts one piece needs a fifth of the library, and a phone cannot hold all of it decoded); either can
   // follow the other, nothing loads twice. S.autoLoad = false (set before the engine is unlocked) keeps the unlock from loading everything.
