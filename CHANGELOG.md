@@ -5,6 +5,13 @@ Versions follow `MAJOR.MINOR.PATCH`; the live version is the `VERSION` file.
 
 ## Unreleased
 
+- The title’s bass as one low solid sound under the chorus, not a note struck each bar over it: a pedal (a low D held 30 and 60 s
+  through the men’s entrance, the horn’s statements and the duet) or the chords’ roots held whole bars, tied through repeats; no
+  fifth on the fourth beat, no walking figure, no soft bass drum on every downbeat (the crest keeps its drums). It sits a deep octave
+  down (D1) and is low-passed at 85 Hz (65 where its roots move through G1 to B1), its sine sub eased, so its weight stays below the men’s
+  hum; the low strings’ open chords sit under the hum (C2 to B2) and 6 dB back, the hum a step up (A2 to G3). Measured in the hum’s own
+  band (90 to 250 Hz) the bass had stood 6 dB and the low strings 5 to 7 dB over the voices; now the chorus leads there or stands level
+  under the solo’s entrances, and it leads every band above 250 Hz.
 - What still repeated, found by holding one note per instrument through the engine and folding its level by the zone’s loop length:
   the solo horn’s C-sharp 4 (which also plays the theme’s D) ran its loop into the file’s last 30 ms, faded by the build, and sank 9 dB
   at every wrap: a loop now stays 65 ms clear of a file’s end (the horn’s held D moves 1.6 dB, it was 7.7). The synthesized pads’ `ens`
