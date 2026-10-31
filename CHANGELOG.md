@@ -5,6 +5,10 @@ Versions follow `MAJOR.MINOR.PATCH`; the live version is the `VERSION` file.
 
 ## Unreleased
 
+- The title’s crest in two steps instead of one: a high horn on the tune with a low brass voice two bars behind it in canon (the duet),
+  then the full brass on the answer and the fall with the timpani on the beat, the strings and the mallets’ sparkle (the build), and the
+  quiet section after it (the horn section, the trombones and the trumpets had all entered at once on the tune and blared). In all four
+  readings; the organ’s is the full stop and the 16’ in canon, then the full organ.
 - Two more readings of the title, ready though the game may not play them: `title:organ` (the pipe organ as the instrument: one vast open
   chord across five octaves first, the full stop on the tune with the octave coupler, the organ in three octaves at once, the full organ at
   the crest, the organ’s own pedal with a 32’ under it, a great hall’s room) and `title:pipes` (the library has no bagpipes, so they are built as pipes are: the oboe as a chanter with the pipers’
