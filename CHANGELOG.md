@@ -5,6 +5,11 @@ Versions follow `MAJOR.MINOR.PATCH`; the live version is the `VERSION` file.
 
 ## Unreleased
 
+- Two more readings of the title on its settled shape: `title:symphony` (the full orchestra and no choir: the violins state the tune
+  twice with the cellos an octave below, the winds carry the variations with the clarinet echoing the head, the full brass on the motif
+  over pulsing strings and woodwind runs, the flute’s fade) and `title:chamber` (strings alone: the violins over the violas and the open
+  low strings with the basses plucked, the cellos echoing the head and taking the fall, the violas singing the breath, the full strings
+  in three octaves over the spiccato ostinato and the tremolo). The organ reading dropped.
 - The title’s shape settled: the solo states the commonwealth’s tune twice at the start, the second time fuller; the variations follow
   with the men echoing the theme’s head between them, the bassoon and the oboe; the horns in canon; the full brass on the motif strongly
   with the snare, the bass drum and the timpani; a wind-down over the strings with the men’s last echo; the fade on variations. A cello

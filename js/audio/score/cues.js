@@ -106,34 +106,63 @@
     Track('title:cello', d);
   })();
 
-  // The organ reading, ready though the game may never play it: the pipe organ is the instrument, in a great hall (a pipes-and-snare
-  // reading was built from the oboe and the bassoon and dropped: without real bagpipe samples it did not sound like pipes).
+  // Two more readings on the settled shape. The symphony: the full orchestra and no choir; the violins state the tune twice with the cellos
+  // an octave below, the winds carry the variations (the flute and the oboe, the clarinet echoing the head), the horns in canon, the full
+  // brass on the motif with the snare and the timpani over pulsing strings and woodwind runs, the violins' fall and the flute's fade. The
+  // chamber: strings alone, nothing struck or blown; the violins state the tune over the violas and the open low strings with the basses
+  // pizzicato, the cellos echo the head and take the fall, the violas sing the breath, the full strings on the motif in three octaves over
+  // the spiccato ostinato and the tremolo, the cello's wind-down, the violins' fade high.
   (function () {
-    const d = JSON.parse(JSON.stringify(Music._tracks.title)); delete d._p; delete d.id;
-    d.desc = 'Main theme, the organ reading — the pipe organ is the instrument, in a great hall: one vast open chord first across five octaves with the pedal under it, the men humming low; the full stop plays the commonwealth’s tune whole and slow with the octave coupler above it over the soft foundation, twice; then its variations with the men echoing its head; the organ in three octaves at once on the variations; the soft stop’s lyrical one in the breath; the tune back whole for the crescendo, the full stop and the 16’ in canon, then the full organ on the motif with the chamber open on ah and the timpani; the wind-down and the fade on variations, the soft stop alone over the pedal';
+    const ECHO = '1---2---3---5---';
+    const LOWS = (vel, p, n) => ({ p: p || 'sus', inst: 'cellos', n: n || 2, reg: n === 3 ? [36, 57] : [36, 52], vel, open: true });
+    const VLA = (vel, p) => ({ p: p || 'sus', inst: 'violas', n: 2, reg: [55, 69], vel });
+    const STR = (vel, p, n, reg) => ({ p: p || 'sus', inst: 'strings', n: n || 3, reg: reg || [55, 76], vel });
+    const BASS = (pat, sub) => ({ pat, inst: { p: 'deep', sub: sub || 0.8, att: 0.6, rel: 2.0 } });
+    const PED = { pat: 'c---', pedal: true, inst: { p: 'deep', sub: 0.8, att: 1.2, rel: 2.6 } };
+    const VLN = (ph, vel, oct) => ({ ph, inst: 'strings', oct: oct || 0, vel, shape: 0.4, swell: 0.3, width: 0.6 });
+    const VC = (ph, vel) => ({ ph, inst: 'cello', oct: -1, vel, shape: 0.35, swell: 0.2 });
+    const ONE = { kick: ['X...............', '................', '................', '................', '................', '................', '................', '................'], vel: 0.5 };
+    const apply = (d, S, all) => { for (const sec of d.sec) { for (const k in all) sec[k] = all[k]; const o = S[sec.n]; if (o) for (const k in o) sec[k] = o[k]; } };
+    // the symphony
+    let d = JSON.parse(JSON.stringify(Music._tracks.title)); delete d._p; delete d.id;
+    d.desc = 'Main theme, the symphony reading — the full orchestra, no choir: the low strings and the basses first, the violins stating the commonwealth’s tune twice with the cellos an octave below, the winds carrying the variations with the clarinet echoing the head, the bassoon low and the oboe answering, the oboe’s breath over the cellos, the horns in canon, the full brass on the motif with the snare and the timpani over pulsing strings and woodwind runs, the violins’ fall for the wind-down, the flute’s fade';
     d.hidden = true; d.variantOf = 'title';
-    d.inst = Object.assign({}, d.inst, { pad: 'organSoft', pad2: 'organ', lead: 'organ', lead2: 'organ', bell2: 'organ' });
-    d.mix = Object.assign({}, d.mix, { pad: 1.05, lead: 2.1, choir: 1.0, bass: 1.2 }); d.fx = { verb: 1.7, stage: 0.5, dly: 0.6 }; d.tone = { lo: 1.3, hi: 0.9 }; d.duck = 0.66;
-    d.sends = { lead: { verb: 0.3, stage: 0.25, dly: 0.04 }, choir: { verb: 0.4, stage: 0.1 }, bell: { verb: 0.45, stage: 0.15 } };
-    const PED = pat => ({ pat, inst: { p: 'organ', sub: 0.55, att: 0.08, rel: 1.2 } });                       // the pedal: the organ's own 16' with a 32' under it
-    const LOW = (vel, p) => ({ p: p || 'sus', inst: 'organ', n: 2, reg: [24, 43], vel, open: true });          // the great's foundation: roots and fifths from C1
-    const FND = (vel, p) => ({ p: p || 'sus', inst: 'organSoft', n: 3, reg: [43, 60], vel });                   // the soft foundation under the melody's octave
-    const HUM = vel => ({ n: 2, reg: [43, 52], vel, soft: true, width: 0.85 });
-    const SOLO = (ph, vel) => ({ ph, inst: 'organ', oct: 0, vel, shape: 0.3, swell: 0.3 });                      // the full stop, D4 to D5
-    const S = {};
-    S.drone = { pad: { p: 'swell', inst: 'organ', n: 4, reg: [43, 79], vel: 0.6 }, pad2: LOW(0.6, 'swell'), bass: Object.assign(PED('c---'), { pedal: true }), choir: false, bell2: { ph: 'ST2', inst: 'chime', vel: 0.36 }, bell: false, arp: false, timp: false, drums: false, cres: [0.6, 0.7] };
-    S.men = { pad: FND(0.5), pad2: LOW(0.55), bass: PED(['1---', '1--5']), choir: HUM(0.5), bell: false, arp: false, timp: false, drums: false, cres: [0.66, 0.72] };
-    S.horn = { pad: FND(0.48), pad2: LOW(0.55), bass: PED(['1--5', '1---']), lead: SOLO('PA*0.88 PB*0.94 PA*1 PB*1', 0.86), lead2: { ph: 'PA*0.88 PB*0.94 PA*1 PB*1', inst: 'organ', oct: 1, vel: 0.34, shape: 0.3 }, choir: HUM(0.5), bell: false, arp: false, drums: false, timp: false, cres: [0.7, 0.78] };
-    S.A1 = { pad: FND(0.5), pad2: LOW(0.56), bass: PED(['1--5', '1---']), lead: SOLO('V1 r4 V2 r4', 0.86), lead2: { ph: 'r4 PAh r4 PAh', inst: 'choirMenAh', oct: -1, vel: 0.8, shape: 0.4, width: 0.5 }, bell2: false, choir: HUM(0.5), bell: false, arp: false, drums: false, timp: false, cres: [0.72, 0.8] };
-    S.B = { pad: { p: 'sus', inst: 'organ', n: 4, reg: [43, 79], vel: 0.6 }, pad2: LOW(0.6), bass: PED(['1--5', '1---']), lead: SOLO('V2 V1', 0.9), lead2: { ph: 'V2 V1', inst: 'organ', oct: -1, vel: 0.62, shape: 0.3 }, bell2: { ph: 'V2 V1', inst: 'organ', oct: 1, vel: 0.4, shape: 0.3 }, choir: HUM(0.5), bell: false, arp: false, drums: false, timp: false, cres: [0.76, 0.86] };
-    S.C = { pad: { p: 'swell', inst: 'organSoft', n: 3, reg: [43, 62], vel: 0.42 }, pad2: LOW(0.4, 'swell'), bass: Object.assign(PED('c---'), { pedal: true }), lead: { ph: 'L2 L2', inst: 'organ', oct: -1, vel: 0.5, shape: 0.2 }, lead2: { ph: ['r4 V5', 'V5 r4'], inst: 'organSoft', oct: 0, vel: 0.62, shape: 0.3 }, bell2: false, choir: HUM(0.4), choir2: false, bell: false, arp: false, drums: false, timp: false, lv: 0.46, rise: 2 };
-    S.A2 = { pad: { p: 'sus', inst: 'organ', n: 4, reg: [43, 79], vel: 0.62 }, pad2: LOW(0.6), bass: PED(['1--5', '1---']), lead: SOLO('PA PB', 0.9), lead2: { ph: 'r2 PA PB', inst: 'organ', oct: -1, vel: 0.66, shape: 0.3 }, bell2: false, choir: HUM(0.5), choir2: false, bell: false, arp: false, drums: false, timp: { kick: ['X...............', '................', '................', '................', 'X...............', '................', '................', '................'], vel: 0.5 }, cres: [0.8, 0.92] };
-    S.A3 = { pad: { p: 'sus', inst: 'organ', n: 5, reg: [43, 84], vel: 0.74 }, pad2: LOW(0.68), bass: PED(['1--5', '1---']), lead: SOLO('PA PB', 0.98), lead2: { ph: 'PA PB', inst: 'organ', oct: -1, vel: 0.8, shape: 0.3, swell: 0.4 }, bell2: { ph: 'PA PB', inst: 'organ', oct: 1, vel: 0.5, shape: 0.3 }, choir: { inst: 'choirMenAh', n: 3, reg: [43, 60], vel: 0.88 }, choir2: { inst: 'aah', n: 3, reg: [57, 74], vel: 0.68 }, bell: false, arp: false, drums: false, timp: { p: 'beats', vel: 0.6 }, cres: [0.92, 1.08] };
-    S.D = { pad: FND(0.5), pad2: LOW(0.55), bass: Object.assign(PED('c---'), { pedal: true }), lead: { ph: 'L3 r4', inst: 'organSoft', oct: 0, vel: 0.76, shape: 0.3 }, lead2: { ph: 'r4 PAh', inst: 'choirMenAh', oct: -1, vel: 0.7, shape: 0.4, width: 0.5 }, bell2: false, choir: HUM(0.5), choir2: false, bell: false, arp: false, drums: false, timp: { kick: ['X...............', '................', '................', '................', '................', '................', '................', '................'], vel: 0.5 }, cres: [0.9, 0.6] };
-    S.E = { pad: FND(0.46), pad2: LOW(0.5), bass: Object.assign(PED('c---'), { pedal: true }), lead: { ph: 'V3 V2', inst: 'organSoft', oct: 0, vel: 0.7, shape: 0.3 }, lead2: false, bell2: false, choir: HUM(0.46), choir2: false, bell: false, arp: false, drums: false, timp: false, cres: [0.72, 0.44] };
-    for (const sec of d.sec) { const o = S[sec.n]; if (!o) continue; for (const k in o) sec[k] = o[k]; }
-    Track('title:organ', d);
+    d.inst = Object.assign({}, d.inst, { pad: 'strings', pad2: 'cellos', lead: 'strings', choir: 'choirMen' });
+    d.mix = Object.assign({}, d.mix, { lead: 2.0, pad: 1.0, bass: 1.15, choir: 1.0 }); d.fx = { verb: 1.1, stage: 0.9, dly: 0.8 }; d.tone = { lo: 1.2, hi: 1.0 }; d.duck = 0.66;
+    apply(d, {
+      drone: { pad: STR(0.5, 'swell'), pad2: LOWS(0.55, 'swell'), bass: PED, cres: [0.56, 0.62] },
+      men: { pad: STR(0.5, 'sus', 4, [50, 72]), pad2: LOWS(0.55), bass: BASS(['1---', '1--5']), lead2: { ph: 'r4 L2', inst: 'clarinet', oct: 0, vel: 0.5, shape: 0.3 }, arp: { inst: 'harp', pat: '0.......', res: 2, vel: 0.3, reg: [55, 81], skip: 0.3 }, bell: { dens: 0.04, res: 1, reg: [76, 100], vel: 0.28 }, cres: [0.62, 0.7] },
+      horn: { pad: VLA(0.4), pad2: LOWS(0.55), bass: BASS(['1--5', '1---']), lead: VLN('PA*0.88 PB*0.94 PA*1 PB*1', 0.92), lead2: VC('PA*0.88 PB*0.94 PA*1 PB*1', 0.55), bell: { dens: 0.04, res: 1, reg: [76, 100], vel: 0.28 }, drums: { bdSoft: ['................', 'x...............'], vel: 0.2 }, cres: [0.68, 0.78] },
+      A1: { pad: VLA(0.42), pad2: LOWS(0.56), bass: BASS(['1--5', '1---', '1--5', '1---', '1--5', '1---', '1--5', '1---', ECHO, '1-------', ECHO, '1-------', ECHO, '1-------', ECHO, '1-------']), lead: { ph: 'V1 r4 V2 r4', inst: 'flute', oct: 0, vel: 0.82, shape: 0.4, swell: 0.2 }, lead2: { ph: 'r4 PAh r4 PAh', inst: 'clarinet', oct: 0, vel: 0.64, shape: 0.4 }, drums: { bdSoft: 'x...............', vel: 0.22 }, cres: [0.7, 0.8] },
+      B: { pad: STR(0.5), pad2: LOWS(0.52), lead: { ph: 'r4 V1', inst: 'oboe', oct: 0, vel: 0.8, shape: 0.4, swell: 0.2 } },
+      C: { pad: STR(0.45, 'swell'), pad2: VLA(0.3, 'swell') },
+      A3: { pad: { p: 'pulse', inst: 'strings', pat: 'x.x.x.x.x.x.x.x.', n: 4, reg: [55, 79], vel: 0.6 }, pad2: LOWS(0.62, 'sus', 3), arp: { inst: 'flutes', p: 'up', res: 2, vel: 0.4, reg: [72, 96] } },
+      D: { pad: VLA(0.5), pad2: LOWS(0.5), lead: VLN('L3 r4', 0.82), lead2: { ph: 'r4 PAh', inst: 'clarinet', oct: 0, vel: 0.6, shape: 0.4 }, timp: ONE },
+      E: { pad: STR(0.42), pad2: LOWS(0.46), lead: { ph: 'V3 V2', inst: 'flute', oct: 0, vel: 0.72, shape: 0.45, swell: 0.2 } },
+    }, { choir: false, choir2: false });
+    Track('title:symphony', d);
+    // the chamber
+    d = JSON.parse(JSON.stringify(Music._tracks.title)); delete d._p; delete d.id;
+    d.desc = 'Main theme, the chamber reading — strings alone, nothing struck or blown: the low strings and the basses first, the violas entering, the violins stating the commonwealth’s tune twice with the cellos an octave below and the basses plucked under them, the cellos echoing the head between the variations and taking the fall low, the violas singing the breath, the violins and the cellos in canon, the full strings on the motif in three octaves over the spiccato ostinato and the tremolo, the cello’s wind-down, the violins’ fade high';
+    d.hidden = true; d.variantOf = 'title';
+    d.inst = Object.assign({}, d.inst, { pad: 'violas', pad2: 'cellos', lead: 'strings', arp: 'pizz' });
+    d.mix = Object.assign({}, d.mix, { lead: 2.0, pad: 1.0, bass: 1.1 }); d.fx = { verb: 1.15, stage: 0.8, dly: 0.6 }; d.tone = { lo: 1.1, hi: 1.0 }; d.duck = 0.7;
+    const PZ = { inst: 'pizz', pat: '0.......2.......', res: 2, vel: 0.32, reg: [43, 67] };
+    apply(d, {
+      drone: { pad: VLA(0.4, 'swell'), pad2: LOWS(0.55, 'swell'), bass: PED, bell2: false, cres: [0.56, 0.62] },
+      men: { pad: VLA(0.45), pad2: LOWS(0.55), bass: BASS(['1---', '1--5'], 0.7), lead2: VC('r4 L2', 0.5), cres: [0.62, 0.7] },
+      horn: { pad: VLA(0.42), pad2: LOWS(0.55), bass: BASS(['1--5', '1---'], 0.7), lead: VLN('PA*0.88 PB*0.94 PA*1 PB*1', 0.92), lead2: VC('PA*0.88 PB*0.94 PA*1 PB*1', 0.52), arp: PZ, cres: [0.68, 0.78] },
+      A1: { pad: VLA(0.42), pad2: LOWS(0.56), bass: BASS(['1--5', '1---', '1--5', '1---', '1--5', '1---', '1--5', '1---', ECHO, '1-------', ECHO, '1-------', ECHO, '1-------', ECHO, '1-------'], 0.7), lead: VLN('V1 r4 V2 r4', 0.9), lead2: VC('r4 PAh r4 PAh', 0.7), arp: { inst: 'pizz', pat: '0...2...1...3...', res: 1, vel: 0.3, reg: [43, 67] }, cres: [0.7, 0.8] },
+      B: { pad: VLA(0.45), pad2: LOWS(0.52), bass: BASS([ECHO, '1-------'], 0.7), lead2: VC('V2 r4', 0.72), lead: VLN('r4 V1', 0.9), bell2: false, arp: PZ },
+      C: { pad: STR(0.4, 'swell'), pad2: LOWS(0.4, 'swell'), lead2: { ph: ['r4 V5', 'V5 r4'], inst: 'violas', oct: 0, vel: 0.7, shape: 0.4, swell: 0.2, width: 0.6 }, arp: { inst: 'pizz', p: 'up8', vel: 0.3, reg: [43, 67], skip: 0.3 } },
+      A2: { pad: VLA(0.45), pad2: LOWS(0.56), lead: VLN('PA PB', 0.9), lead2: VC('r2 PA PB', 0.72), arp: PZ, timp: false },
+      A3: { pad: { p: 'sus', inst: 'strTrem', n: 3, reg: [55, 76], vel: 0.55 }, pad2: LOWS(0.62, 'sus', 3), bass: BASS('1---5---1---5---', 0.75), lead: VLN('PA PB', 0.92, 1), lead2: VC('PA PB', 0.8), bell2: { ph: 'PA PB', inst: 'violas', oct: 0, vel: 0.6, shape: 0.2 }, arp: { inst: 'strOst', pat: '0.1.0.2.0.1.0.3.', res: 4, vel: 0.6, reg: [50, 69], gate: 0.9 }, timp: false, cr: false },
+      D: { pad: STR(0.45), pad2: LOWS(0.5), lead: VC('L3 r4', 0.86), lead2: { ph: 'r4 PAh', inst: 'violas', oct: 0, vel: 0.6, shape: 0.4, width: 0.6 }, timp: false, arp: false },
+      E: { pad: VLA(0.4), pad2: LOWS(0.46), lead: VLN('V3 V2', 0.72, 1), arp: false },
+    }, { choir: false, choir2: false, drums: false, bell: false });
+    Track('title:chamber', d);
   })();
+
 
   Track('combat3', {
     desc: 'Battle — driving spiccato string ostinato, low-brass stabs, bass drum and snare, men’s choir, and the main theme hammered out by horns and full brass as the fight escalates',
