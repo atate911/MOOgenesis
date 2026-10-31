@@ -76,6 +76,53 @@
     Track('title:reed', d);
   })();
 
+  // Two more readings, ready though the game may never play them. The organ: the pipe organ's big wide chords are the bed (five voices
+  // across G2-C6 on the full organ, a soft upper manual above, the basses and the sub as the pedal), a cathedral's room, the men humming
+  // under it, the horn and the men and the full horns as in the title. The pipes: the library has no bagpipes, so they are built as pipes
+  // are: a double-reed chanter (the oboe, D4 to D5, with the pipers' grace notes before its long notes) over held reed drones two octaves
+  // below (the bassoon on the tonic and the fifth, the deep bass and its sub under), everything over one drone chord, the field snare
+  // keeping a slow march with its rolls, a drier room; the men low, the horn answering as before.
+  (function () {
+    const d = JSON.parse(JSON.stringify(Music._tracks.title)); delete d._p; delete d.id;
+    d.desc = 'Main theme, the organ reading — the pipe organ’s big wide chords as the bed, a cathedral’s room: the organ alone first with the pedal, the men humming under it, the solo horn’s first part the commonwealth’s tune whole and slow, the men taking it low, the bassoon and the horn, the oboe in the breath, the full organ and the horns at the crest, the solo horn alone at the close';
+    d.hidden = true; d.variantOf = 'title';
+    d.inst = Object.assign({}, d.inst, { pad: 'organ', pad2: 'organSoft' });
+    d.mix = Object.assign({}, d.mix, { pad: 1.1, lead: 2.3, choir: 1.0 }); d.fx = { verb: 1.35, stage: 0.7, dly: 1.0 }; d.tone = { lo: 1.2, hi: 0.8 };
+    for (const s of d.sec) {
+      const crest = s.n === 'A2', breath = s.n === 'C' || s.n === 'drone';
+      s.pad = { p: breath ? 'swell' : 'sus', inst: 'organ', n: 5, reg: [43, 84], vel: crest ? 0.72 : breath ? 0.46 : 0.6 };      // the full organ, five voices spread wide
+      s.pad2 = { p: 'sus', inst: 'organSoft', n: 3, reg: [67, 91], vel: crest ? 0.5 : 0.32 };                                   // the upper manual's halo
+      if (s.choir && s.choir.n === 2) s.choir.vel = Math.round(s.choir.vel * 0.8 * 100) / 100;                                 // the hum under the organ
+      if (s.bell) s.bell = false;
+      if (s.arp && s.arp.inst === 'harp') s.arp = false;
+    }
+    Track('title:organ', d);
+  })();
+  (function () {
+    const d = JSON.parse(JSON.stringify(Music._tracks.title)); delete d._p; delete d.id;
+    d.desc = 'Main theme, the pipes reading — the pipes as the library can build them: a double-reed chanter with the pipers’ grace notes over held reed drones two octaves below, one drone chord under the whole piece, the deep bass and its sub, the field snare keeping a slow march with its rolls, the men humming low, the horn answering, the full horns at the crest';
+    d.hidden = true; d.variantOf = 'title';
+    d.inst = Object.assign({}, d.inst, { lead: 'oboe', pad: 'bassoon', pad2: 'reed' });
+    d.mix = Object.assign({}, d.mix, { lead: 2.0, drums: 0.9, pad: 1.05 }); d.fx = { verb: 0.75, stage: 0.95, dly: 0.5 }; d.tone = { lo: 1.0, hi: 1.0 }; d.sends = Object.assign({}, d.sends, { drums: { stage: 0.1, verb: 0.05, dly: 0 } });
+    const SN = { drone: false, men: { sn: 'o.o.o.o.o.o.o.o.', vel: 0.22 }, horn: { sn: ['x.......x.......', 'x...o.o.x...o.o.'], vel: 0.38 }, A1: { sn: ['x...o.o.x...o.o.', 'x...o.o.x..xxxxx'], bd: 'x...............', vel: 0.44 }, B: { sn: ['x...o.o.x...o.o.', 'x...o.o.x..xxxxx'], bd: 'x...............', vel: 0.44 }, C: { sn: 'o.o.o.o.o.o.o.o.', vel: 0.2 }, A2: { p: 'field', vel: 0.78 }, E: { sn: 'o.o.o.o.o.o.o.o.', vel: 0.22 } };
+    for (const s of d.sec) {
+      s.prog = 'I:' + s.bars;                                                                                                   // one drone chord under everything
+      s.pad = { p: 'sus', inst: 'bassoon', n: 2, reg: [38, 50], vel: s.n === 'C' ? 0.4 : 0.52, open: true };                   // the drones: the tonic and the fifth, two octaves under the chanter
+      s.pad2 = s.n === 'A2' ? { p: 'sus', inst: 'reed', n: 2, reg: [57, 69], vel: 0.4, open: true } : false;                   // a tenor drone at the crest only
+      if (s.lead && typeof s.lead === 'object' && !s.lead.inst) {                                                             // the chanter: the oboe, D4 to D5, grace notes before its long notes
+        s.lead.oct = 0; s.lead.grace = 0.5; s.lead.vel = Math.min(1, (s.lead.vel || 0.9) * 0.96);
+        s.lead.ph = [].concat(s.lead.ph).map(p => p.replace(/L2\^/g, 'L2').replace(/L3\^/g, 'L3')); if (s.lead.ph.length === 1) s.lead.ph = s.lead.ph[0];
+      }
+      if (s.lead2 && s.lead2.inst === 'hornSolo') { s.lead2.grace = 0.3; s.lead2.ph = [].concat(s.lead2.ph).map(p => p.replace(/PI/g, 'L2^')); }   // over the drone the horn answers with the reach, not the inversion (its fourth and seventh rub the drone)
+      if (s.lead2 && s.lead2.inst === 'oboe') { s.lead2.grace = 0.5; }
+      s.drums = SN[s.n] === undefined ? false : SN[s.n];
+      if (s.bell) s.bell = false;
+      if (s.arp && s.arp.inst === 'harp') s.arp = false;
+      if (s.choir2) s.choir2 = false;
+    }
+    Track('title:pipes', d);
+  })();
+
   Track('combat3', {
     desc: 'Battle — driving spiccato string ostinato, low-brass stabs, bass drum and snare, men’s choir, and the main theme hammered out by horns and full brass as the fight escalates',
     bpm: 118, trim: 1.49, tone: { hi: 1.0, lo: 1.0 }, mix: { drums: 1.2, choir: 1.15 }, root: 'D', mode: 'minor', loopFrom: 'A1', tens: false, gate: { drums: 0.2, choir: 0.3, lead: 0.42, bell: 0.6 },
