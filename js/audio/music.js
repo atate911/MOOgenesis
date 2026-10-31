@@ -1032,8 +1032,23 @@
         const ov = (def.sends && def.sends[name]) || {};                                   // a piece's own send levels for one layer (dry drums for a march)
         const eraE = eraOf(def, this.o.era !== undefined ? this.o.era : S.era);                 // the room stays (it is what makes the recordings real); the echoes tighten
         sv.gain.value = num(ov.verb, L.verb) * num(fx.verb, 1) * (1 - 0.08 * eraE); sd.gain.value = num(ov.dly, L.dly) * num(fx.dly, 1) * (1 - 0.55 * eraE); ss.gain.value = num(ov.stage, num(L.stage, 0)) * num(fx.stage, 1);
-        const strip = eng.makeStrip ? eng.makeStrip(name) : null, post = strip ? strip.out : inG;
+        const strip = eng.makeStrip ? eng.makeStrip(name) : null, post0 = strip ? strip.out : inG;
         if (strip) { inG.connect(strip.in); this.choruses.push(strip); }
+        // lowMono (the piece's { layer: Hz }): below that frequency the layer's two channels are made one (its side signal high-passed),
+        // as a film mix keeps its low end: a wide recording of a low choir or a bass section had its left and right unrelated or opposed
+        // down there (the title's hum: a correlation near zero below 500 Hz), hollow on speakers and phasey in a sum. Above it, the stereo stays.
+        const lmHz = def.lowMono && num(def.lowMono[name], 0);
+        let post = post0;
+        if (lmHz > 0) {
+          const sp = mk(ctx.createChannelSplitter(2)), mg = mk(ctx.createChannelMerger(2)), m = mk(ctx.createGain()), sd0 = mk(ctx.createGain()), inv = mk(ctx.createGain()), sOut = mk(ctx.createGain()), sNeg = mk(ctx.createGain());
+          const out = mk(ctx.createGain()); post0.connect(sp);
+          sp.connect(m, 0); sp.connect(m, 1); m.gain.value = 0.5;                      // mid = (L + R) / 2
+          sp.connect(sd0, 0); sp.connect(inv, 1); inv.gain.value = -1; inv.connect(sd0); sd0.gain.value = 0.5;   // side = (L - R) / 2
+          let node = sd0; for (let k = 0; k < 2; k++) { const h = mk(ctx.createBiquadFilter()); h.type = 'highpass'; h.frequency.value = lmHz; h.Q.value = 0.707; node.connect(h); node = h; }
+          node.connect(sOut); node.connect(sNeg); sNeg.gain.value = -1;
+          m.connect(mg, 0, 0); m.connect(mg, 0, 1); sOut.connect(mg, 0, 0); sNeg.connect(mg, 0, 1);   // L = mid + side', R = mid - side'
+          mg.connect(out); post = out;
+        }
         post.connect(this.bus); post.connect(sv); sv.connect(this.verb); post.connect(sd); sd.connect(this.delay.in); post.connect(ss); ss.connect(this.stage);
         const chAmt = num(L.chorus, 0) * num(fx.chorus, 1);
         if (chAmt > 0 && eng.makeChorus) {              // ensemble chorus: wet copy beside the dry signal (also feeds the hall a little)
