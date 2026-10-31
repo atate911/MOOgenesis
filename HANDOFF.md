@@ -9,6 +9,15 @@ Browser-pane tip: animations use requestAnimationFrame, so in the built-in brows
 
 ## Session 11 (October 2026) — the score grows, branch `claude/festive-wozniak-7jy03r`
 
+**Latest (what the user heard after the Iowa import, fixed).** A repeating dip (the solo horn's D loop ran into its file's faded tail;
+the synth pads' `ens` doubling swelled at every wrap), tuning (Iowa notes now play from their measured pitch; the Iowa viola is out of
+use, too unsteady to tune), a bass that re-struck every bar (`bassTie`), the choir pumping under the solo (one dip a phrase) and set
+too low (+2 dB), the play button (per-piece loading, unlock inside the click). Tools for the next round, in the scratchpad's `iowa/`:
+`fold2.js` (a held note's level folded by its loop: what repeats and where), `tuning.js` (playback pitch against a spectral measure),
+`clash.js` and `notes-at.js` (what sounds when), `stems.js` (choir / lead / bed per section). Render four tracks at once: one
+`node tools/audio-report.js --full --tracks ONE ...` per track on its own `--port`, each browser takes a core and about 2.2 GB (five
+readings in 6.5 minutes instead of 40).
+
 **Latest (the Iowa soloists).** The library now holds real solo strings, winds and brass from the University of Iowa recordings
 (`scratchpad/iowa/raw` → `tools/samples/iowa.py` → staging → `tools/samples/build.py --vsco STAGING --only …`; the raw takes are not in
 the repo, the built mp3s and `instruments.json` are) and FreePats’ small bagpipe (`pipes`, `pipesDrone`, a pipe in G: a pipes reading
