@@ -299,19 +299,21 @@
     S.align[inst.name] = log;
   }
 
-  // load everything (idempotent). Resolves when every instrument has been tried; partial sets are fine.
+  // load everything (idempotent). Resolves when every instrument has been tried; partial sets are fine. S.loadSome(names) loads just those
+  // instruments (a player page that starts one piece needs a fifth of the library, and a phone cannot hold all of it decoded); either can
+  // follow the other, nothing loads twice. S.autoLoad = false (set before the engine is unlocked) keeps the unlock from loading everything.
+  S.autoLoad = true; const jobs = Object.create(null); let manP = null;
+  function manifestP() {
+    return manP || (manP = fetchBuf(S.base + 'instruments.json').then(ab => JSON.parse(new TextDecoder().decode(ab))).then(man => {
+      S.manifest = man; return calibrate(man).then(off => { S.offset = off; return man; });
+    }));
+  }
+  function loadNames(man, names) { const I = man.instruments || {}; return Promise.all(names.filter(n => I[n]).map(n => jobs[n] || (jobs[n] = loadInstrument(n, I[n])))); }
   S.load = function () {
     if (S.pending) return S.pending;
     if (!S.enabled || typeof fetch !== 'function') { S.state = 'disabled'; return (S.pending = Promise.resolve(false)); }
     S.state = 'loading';
-    S.pending = fetchBuf(S.base + 'instruments.json').then(ab => JSON.parse(new TextDecoder().decode(ab))).then(man => {
-      S.manifest = man;
-      return calibrate(man).then(off => {
-        S.offset = off;
-        const names = Object.keys(man.instruments || {});
-        return Promise.all(names.map(n => loadInstrument(n, man.instruments[n])));
-      });
-    }).then(() => {
+    S.pending = manifestP().then(man => loadNames(man, Object.keys(man.instruments || {}))).then(() => {
       S.state = 'ready';
       try { if (A.Music && A.Music.onSamplesReady) A.Music.onSamplesReady(); } catch (e) { console.warn('[samples] ready hook failed', e); }
       try { window.dispatchEvent(new CustomEvent('moo-samples-loaded')); } catch (e) { /* ignore */ }
@@ -319,13 +321,18 @@
     }).catch(e => { S.state = 'failed'; console.warn('[samples] manifest failed', e && e.message); return false; });
     return S.pending;
   };
+  S.loadSome = function (names) {
+    if (!S.enabled || typeof fetch !== 'function') return Promise.resolve(false);
+    if (S.state === 'idle' || S.state === undefined || S.state === 'disabled') S.state = 'partial';
+    return manifestP().then(man => loadNames(man, [].concat(names || []))).then(() => true).catch(e => { console.warn('[samples] manifest failed', e && e.message); return false; });
+  };
   S.preload = S.load;
   S.ready = name => { const i = S.inst[name]; return !!(i && i.ready); };
   S.has = name => !!(S.manifest && S.manifest.instruments && S.manifest.instruments[name]);
   S.status = () => ({ state: S.state, enabled: S.enabled, offsetMs: Math.round(S.offset * 1000), instruments: Object.keys(S.inst).filter(n => S.inst[n].ready).length, total: Object.keys(S.inst).length, mb: Math.round(S.bytes / 1048576), errors: S.errors });
   S.zones = name => (S.inst[name] ? S.inst[name].zones.map(z => ({ root: z.root, lo: z.lo, hi: z.hi, vel: z.vel, rr: z.rr, secs: Math.round(z.buf.duration * 100) / 100, loop: z.loop })) : null);
   // the real-time engine loads as soon as audio is unlocked
-  A.onReady(() => { S.load(); });
+  A.onReady(() => { if (S.autoLoad !== false) S.load(); });
 
   // ------------------------------------------------------------------ zone choice
   // the zones that should sound for (midi, dyn): one zone, or — for instruments recorded in dynamic layers (inst.xf) — the two layers
@@ -377,7 +384,7 @@
   // ------------------------------------------------------------------ the voice
   // o: smp (instrument), f (Hz; ignored for unpitched kits unless o.tune semitones), dur, vel 0..1+ (level), dyn 0..1 (which dynamic
   //    layer; defaults to vel), swell (dyn at the end of the note: a crescendo / diminuendo through the recorded layers), att/rel
-  //    (override the instrument's), pan (else the zone's / instrument's seat on the stage), prio, send, vib (cents), ens (0..1 second
+  //    (override the instrument's), pan (else the zone's / instrument's seat on the stage), prio, send, vib (cents), vibRate (Hz: the piece's tempo-locked rate, else 4.6-5.7 at random), ens (0..1 second
   //    detuned copy), cut (lowpass Hz), gain, leg (legato: start past the attack transient, short fade-in), hum (humanize: timing /
   //    pitch spread in ms / cents, 0 = none), fb / fbo (fallback synth voice + its params), oneShot (play the whole sample),
   //    alignEnd (one-shots that must end on the downbeat: swells, rolls), hold (shorts: extra ring after the written length)
@@ -457,7 +464,7 @@
       const off = leg ? Math.min(num(inst.legOff, 0.22), z.loop ? Math.max(0, z.loop[0] - 0.4) : 0.2) : 0;
       src.start(t0, off); src.stop(end); v.srcs.push(src);
       if (end > v.t1) v.t1 = end;
-      if (vib > 0 && !oneShot) { const lf = v.osc('sine', 4.6 + eng.rand() * 1.1, t0, end), lg = v.gain(0.0001); lg.gain.setValueAtTime(0.0001, t0 + 0.1); lg.gain.linearRampToValueAtTime(vib, t0 + 0.6); lf.connect(lg); lg.connect(src.detune); }
+      if (vib > 0 && !oneShot) { const vr = o.vibRate > 0 ? o.vibRate * (0.99 + eng.rand() * 0.02) : 4.6 + eng.rand() * 1.1, lf = v.osc('sine', vr, t0, end), lg = v.gain(0.0001); lg.gain.setValueAtTime(0.0001, t0 + 0.1); lg.gain.linearRampToValueAtTime(vib, t0 + 0.6); lf.connect(lg); lg.connect(src.detune); }
       return src;
     };
     const ens = oneShot ? 0 : num(o.ens, 0);

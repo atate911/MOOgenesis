@@ -156,6 +156,11 @@ Colour semantics are fixed: gold = BC/money, ember = industry, leaf = food/growt
 - Check a change with `node tools/score-lint.js` (schema, instruments, forms, phrases, themes, determinism, the programme's lists; `--strict`
   in a release pass) and `node tools/qa/music.js` (the seams in real time: directed programme, soft change, bridges, motif, snapshot / restore).
 
+- **Loops of note-by-note recordings** sit inside the note's steady stretch and run as long as it allows (`loop='steady'`); a note that
+  swells more than `swing_max` dB inside its loop is dropped, and a file holding two takes is cut to the longer. Check a new set with
+  `node tools/qa/loops.js --insts NAME` (one instrument a run: the whole library takes too long) before a piece uses it.
+- **The dip under the solo** (`duck`) is one dip a phrase, not one a note; keep a piece's `duck` at 0.7 or above (3 dB) unless the solo
+  truly needs more room, since the choir and the pads move with it. A sampled line's vibrato is locked to the beat (`vibRateFor`).
 - **Recorded soloists (the Iowa sets, `*Solo`, `*Iowa`, `bassClar`, `bassTbn`).** One player, three dynamic layers, a note every
   whole tone, mono except the strings. Use them where a line is one voice's (a duet partner, an echo, a solo reading); the VSCO sections
   stay the beds and the tutti. They were recorded note by note, so `tools/samples/build.py` levels them per recorded note (`norm='zone'`:

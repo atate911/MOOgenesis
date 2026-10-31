@@ -118,6 +118,77 @@ def find_loop_at(x, ls_sec, lmin_sec, lmax_sec, win):
     k = int(np.argmax(ncc)); le = lo + k
     return ls, le, float(ncc[k])
 
+def steady_span(x, ls_min=0.3, tol_db=2.5):
+    """the longest stretch of a held note whose slow level (250 ms) stays within tol_db of the note's body: (start, end) in seconds,
+    or None. The body runs from where the note first comes within 6 dB of its peak to where it last is within 9 dB of it."""
+    m = x if x.ndim == 1 else x[:, 0]
+    W = int(0.05 * SR); n = len(m) // W
+    if n < 12: return None
+    e = np.sqrt(np.mean(m[:n * W].reshape(n, W) ** 2, axis=1)); es = np.convolve(e, np.ones(5) / 5, 'same')
+    db = 20 * np.log10(es + 1e-9); mx = db.max()
+    on = int(np.argmax(db > mx - 6)); off = n - 1 - int(np.argmax(db[::-1] > mx - 9))
+    if off - on < 6: return None
+    med = float(np.median(db[on:off + 1])); best, run, st = (0, 0), 0, on
+    for i in range(on, off + 1):
+        if abs(db[i] - med) < tol_db:
+            if run == 0: st = i
+            run += 1
+            if run > best[1] - best[0]: best = (st, i + 1)
+        else: run = 0
+    a = max(best[0] * W / SR + 0.05, ls_min); b = best[1] * W / SR - 0.08          # clear of the smoothing's reach at both ends
+    return (a, b) if b - a > 0.5 else None
+
+def loop_swing(x, ls, le):
+    """the slow level swing inside a loop (dB, 95th less 5th percentile of a 240 ms envelope): what each wrap would repeat"""
+    m = x if x.ndim == 1 else x[:, 0]; seg = m[ls:le]; W = int(0.06 * SR); n = len(seg) // W
+    if n < 4: return 0.0
+    e = 20 * np.log10(np.sqrt(np.mean(seg[:n * W].reshape(n, W) ** 2, axis=1)) + 1e-9); es = np.convolve(e, np.ones(4) / 4, 'valid')
+    return float(np.percentile(es, 95) - np.percentile(es, 5))
+
+def longest_voiced(x, below_db=24, bridge=0.15):
+    """a recording cut from a long take can hold two notes with a silence between them: keep the longest stretch that sounds (frames
+    within below_db of the take's level, gaps shorter than `bridge` s bridged), from just before it starts to just after it ends"""
+    m = x if x.ndim == 1 else x[:, 0]; W = int(0.03 * SR); n = len(m) // W
+    if n < 8: return x, False
+    e = 20 * np.log10(np.sqrt(np.mean(m[:n * W].reshape(n, W) ** 2, axis=1)) + 1e-9)
+    on = e > np.percentile(e, 90) - below_db; gap = int(bridge * SR / W)
+    runs, st, off = [], None, 0
+    for i in range(n):
+        if on[i]:
+            if st is None: st = i
+            off = 0
+        elif st is not None:
+            off += 1
+            if off > gap: runs.append((st, i - off + 1)); st, off = None, 0
+    if st is not None: runs.append((st, n - off))
+    if len(runs) < 2: return x, False
+    a, b = max(runs, key=lambda r: r[1] - r[0])
+    y = x[max(0, a * W - int(0.01 * SR)):min(len(m), b * W + int(0.12 * SR))].copy()
+    f = int(0.02 * SR)
+    if y.ndim == 1: y[-f:] *= np.linspace(1, 0, f)
+    else: y[-f:] *= np.linspace(1, 0, f)[:, None]
+    return y, True
+
+def loop_gap(x, ls, le):
+    """how far the quietest 30 ms of a loop falls under the loop's median level (dB): a broken take with a dropout in its sustain"""
+    m = x if x.ndim == 1 else x[:, 0]; seg = m[ls:le]; W = int(0.03 * SR); n = len(seg) // W
+    if n < 4: return 0.0
+    e = 20 * np.log10(np.sqrt(np.mean(seg[:n * W].reshape(n, W) ** 2, axis=1)) + 1e-9)
+    return float(np.median(e) - e.min())
+
+def find_loop_steady(x, lmin_floor=0.6, lmax_cap=4.0, win=8192):
+    """a loop inside the note's steady stretch, as long as the stretch allows (at least 70% of it): fewer wraps, and no swell or decay
+    inside the loop for the wrap to repeat. Falls back to None when the note has no steady stretch."""
+    sp = steady_span(x)
+    if not sp: return None
+    a, b = sp; L = min(b - a, lmax_cap)
+    best = None
+    for off in (0.0, 0.05, 0.1, 0.15):
+        if a + off + lmin_floor > b: break
+        r = find_loop_at(x, a + off, max(lmin_floor, 0.7 * (L - off)), L - off - win / SR, win)
+        if r and (best is None or r[2] > best[2]): best = r
+    return best
+
 def find_start(x, le, lo_len, hi_len, win=8192):
     """best loop start for a fixed loop end: the window just before `le` is matched against windows ending in [le-hi_len, le-lo_len]."""
     m = x if x.ndim == 1 else x.mean(axis=1); W = win
@@ -225,8 +296,8 @@ SPECS = {
 # as v1 v2 v3; the 2012 strings stereo, the older winds and brass mono) and the FreePats bagpipe (CC0; its chanter and drones): built with
 # --vsco pointed at the staging folder, e.g. --vsco STAGING --only vlnSolo,vlaSolo,vcSolo,cbSolo,bassClar,hornIowa,tbnSolo,altoFluteIowa,pipes,pipesDrone
 R_IOWA = r'_(?P<note>[A-G]#?\d)_v(?P<dyn>\d)\.wav$'
-IOWA_SOLO = dict(re=R_IOWA, octave=0, dyn=[1, 2, 3], rr=1, step=2, kind='sustain', norm='zone', attack=0.08, release=0.5, ls=0.9, lmin=1.4, lmax=3.2, xf=True, xf_sec=0.6)
-IOWA_WIND = dict(re=R_IOWA, octave=0, dyn=[1, 2, 3], rr=1, step=2, kind='sustain', norm='zone', attack=0.06, release=0.35, ls=0.8, lmin=1.1, lmax=2.4, xf=True, xf_sec=0.5, stereo=False)
+IOWA_SOLO = dict(re=R_IOWA, octave=0, dyn=[1, 2, 3], rr=1, step=2, kind='sustain', norm='zone', loop='steady', swing_max=4.0, attack=0.08, release=0.5, ls=0.9, lmin=1.4, lmax=3.2, xf=True, xf_sec=0.6)
+IOWA_WIND = dict(re=R_IOWA, octave=0, dyn=[1, 2, 3], rr=1, step=2, kind='sustain', norm='zone', loop='steady', swing_max=4.0, attack=0.06, release=0.35, ls=0.8, lmin=1.1, lmax=2.4, xf=True, xf_sec=0.5, stereo=False)
 SPECS.update({
     'vlnSolo':   dict(IOWA_SOLO, src='Violin', stereo=True, pan=-0.12),
     'vlaSolo':   dict(IOWA_SOLO, src='Viola', stereo=True, pan=0.08),
@@ -581,16 +652,26 @@ def build_recorded(vsco, name, spec, out, log):
             for ri, f in enumerate(cands[:spec['rr']]):
                 x = decode(f['path'], spec.get('stereo', False), 'R' if spec.get('pan', 0) > 0 else 'L')
                 x = trim_head(x)
+                if spec.get('norm') == 'zone':
+                    x, cut = longest_voiced(x)
+                    if cut: log(f'  .. {name} {midi_name(root)} l{li}: two takes in one file, the longer kept ({len(x) / SR:.2f} s)'); x = trim_head(x)
                 if spec.get('bright', 0) and pitched: x = brighten(x)
                 keep = spec.get('keep')
                 if spec['kind'] == 'sustain':
-                    lp = find_loop(x, spec['ls'], spec['lmin'], spec['lmax'])
+                    lp = find_loop_steady(x, lmax_cap=spec['lmax']) if spec.get('loop') == 'steady' else None
+                    if lp and lp[2] < 0.6: lp = None                  # a poor seam inside the steady stretch: the fixed placement may do better
+                    if not lp: lp = find_loop(x, spec['ls'], spec['lmin'], spec['lmax'])
                     if not lp and spec.get('short_ok', True):     # a short recording: a shorter loop later in the note rather than no zone
                         for ls2, lmin2, lmax2 in ((0.45, 0.55, 1.5), (0.3, 0.35, 1.0)):
                             lp = find_loop(x, ls2, lmin2, min(lmax2, spec['lmax']))
                             if lp: log(f'  .. {name} {midi_name(root)}: short loop {lp[1] / SR - lp[0] / SR:.2f} s (ncc {lp[2]:.2f})'); break
                     if not lp: log(f'  !! {name} {midi_name(root)}: no loop found'); continue
-                    ls, le, q = lp; x = bake_loop(x, ls, le, xf_sec=spec.get('xf_sec', 0.25)); loop = [ls / SR, le / SR]
+                    ls, le, q = lp
+                    if spec.get('swing_max') and loop_swing(x, ls, le) > spec['swing_max'] and len(roots) > 2:
+                        log(f'  -- {name} {midi_name(root)} l{li}: dropped, the note swells {loop_swing(x, ls, le):.1f} dB inside its loop'); continue
+                    if spec.get('swing_max') and loop_gap(x, ls, le) > 12 and len(roots) > 2:
+                        log(f'  -- {name} {midi_name(root)} l{li}: dropped, a gap {loop_gap(x, ls, le):.1f} dB deep inside its loop'); continue
+                    x = bake_loop(x, ls, le, xf_sec=spec.get('xf_sec', 0.25)); loop = [ls / SR, le / SR]
                 else:
                     x = trim_tail(x); loop = None
                     if keep and len(x) > keep * SR: x = x[:int(keep * SR)]; x[-int(0.05 * SR):] *= np.linspace(1, 0, int(0.05 * SR))

@@ -388,6 +388,10 @@
   const DEFAULT_TRIM = 1, MIX_TRIM = 2.4;   // MIX_TRIM: the producer's master fader, set from the headless loudness report
 
   // ---------------------------------------------------------------- prepare (parse + validate once per track)
+  // the vibrato in time with the music: a whole number of cycles to a beat, as near five a second as the tempo allows (58 bpm: five to a beat,
+  // 4.8 Hz; 120 bpm: three, 6 Hz), so the players' vibrato and the pulse agree instead of drifting against each other note by note
+  function vibRateFor(bpm) { const bps = clamp(num(bpm, 90), 30, 220) / 60, n = Math.max(1, Math.round(5.1 / bps)); return n * bps; }
+  Music._vibRateFor = vibRateFor;
   function resolveInst(spec, fallback) {
     let s = spec === undefined || spec === null ? fallback : spec, base = {}, extra = null;
     if (typeof s === 'object') { extra = s; s = s.p || fallback; }
@@ -1060,18 +1064,29 @@
       if (this.only && !this.only[ev.ly]) return;
       if (L.i0 !== undefined && this.intensity < L.i0 - 0.02) return;
       const o = this.stretch === 1 || !ev.o || !ev.o.dur ? ev.o : Object.assign({}, ev.o, { dur: ev.o.dur * this.stretch });
-      const v = V[ev.v](this.eng, L.in, T, o);
+      const o2 = o && o.vib !== 0 && ev.v === 'sample' && this.def && this.def.bpm ? Object.assign({}, o, { vibRate: vibRateFor(this.bpmNow ? this.bpmNow(T) : this.def.bpm) }) : o;
+      const v = V[ev.v](this.eng, L.in, T, o2);
       if (v) this.live.add(v);
       if (ev.ly === 'lead' && o && o.dur > 0.2) this.duckBeds(T, o.dur);
     }
-    // the mixer's hand on the faders: while the melody sounds, the pad and choir beds sit 2 dB back and come up again after it
+    // the mixer's hand on the faders: while the melody sounds, the pad and choir beds sit back and come up again after it. A phrase is one
+    // dip: a note that starts before the dip has come back (or within 0.6 s of it, a breath between two notes) moves the restore to its own
+    // end instead of scheduling one inside itself (overlapping legato notes used to bring the beds up mid-note, and every gap between two
+    // notes swelled them back, a pump of the whole duck depth against the solo). The restore is slower (0.6 s) so a real rest breathes.
     duckBeds(T, dur) {
+      const dk = this.def && this.def.duck !== undefined ? clamp(num(this.def.duck, 0.79), 0.3, 1) : 0.79;   // a piece may ask for a deeper dip under its soloist (the title: 0.7, 3.1 dB)
+      const merge = Music.duckMerge !== false, end = T + dur, cont = merge && this._duckEnd !== undefined && T <= this._duckEnd + 0.6;
       for (const name of ['pad', 'pad2', 'choir', 'choir2', 'arp', 'arp2']) {
         const L = this.layers[name]; if (!L || L.i0 !== undefined) continue;
-        const dk = this.def && this.def.duck !== undefined ? clamp(num(this.def.duck, 0.79), 0.3, 1) : 0.79;   // a piece may ask for a deeper dip under its soloist (the title: 0.68, 3.3 dB)
         const g = L.in.gain, lv = L.level, k = name.indexOf('arp') === 0 ? 0.84 : dk;
-        try { g.setTargetAtTime(lv * k, T, 0.06); g.setTargetAtTime(lv, T + dur, 0.3); } catch (e) { /* ignore */ }
+        try {
+          if (!merge) { g.setTargetAtTime(lv * k, T, 0.06); g.setTargetAtTime(lv, T + dur, 0.3); continue; }
+          if (cont) { g.cancelScheduledValues(Math.max(T, this._duckEnd - 0.001)); g.setTargetAtTime(lv * k, Math.max(T, this._duckEnd - 0.001), 0.06); }
+          else g.setTargetAtTime(lv * k, T, 0.06);
+          g.setTargetAtTime(lv, Math.max(end, cont ? this._duckEnd : 0) + 0.15, 0.6);
+        } catch (e) { /* ignore */ }
       }
+      if (merge) this._duckEnd = Math.max(end, cont ? this._duckEnd : 0);
     }
     // schedule every event whose (shifted) time is < wEnd
     scheduleUntil(wEnd) {

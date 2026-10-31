@@ -5,6 +5,25 @@ Versions follow `MAJOR.MINOR.PATCH`; the live version is the `VERSION` file.
 
 ## Unreleased
 
+- The Iowa soloists’ loops placed inside each note’s steady stretch (`loop='steady'` in `tools/samples/build.py`: the longest run of the
+  note’s 250 ms level within 2.5 dB of its body, the loop as long as the run allows) rather than at a fixed point, a note that swells more
+  than 4 dB inside its loop dropped for its neighbours to cover, and a file the splitter had cut with two takes in it (a held note that
+  went silent and came back: 22 of them across the viola, cello, trombone and bass clarinet) cut down to its longer take. Through the
+  engine the solo cello now swings 1.0 dB inside a loop where the cello section the readings used before swung 2.3.
+- The beds’ dip under the solo holds through a phrase: a note that starts before the dip has come back (or within 0.6 s of it) moves the
+  restore to its own end. Overlapping legato notes used to bring the pads and the choir back up mid-note, and every gap between two notes
+  swelled them back by the whole dip, a pump of the choir against the solo. The restore is slower (0.6 s); the title’s dip is 3.1 dB (was
+  4.4). Measured on the title’s choir bus, its swing within a section fell from 5.5 to 3.4 dB under the horn’s first statement, from 6.6 to
+  4.1 in the oboe’s breath, from 9.4 to 7.2 at the crest. `Music.duckMerge = false` restores the old behaviour.
+- Vibrato in time: a sampled line’s vibrato runs at a whole number of cycles to the piece’s beat, as near five a second as the tempo allows
+  (58 bpm: five to a beat, 4.8 Hz), where it was a random 4.6 to 5.7 Hz per note, drifting against the pulse.
+- The title’s balance: the men’s sung echoes of the head 1.5 dB softer (they stood level with the solo horn they answer), the hum in the
+  bassoon’s section softer (it sat 3 dB under that quiet solo while elsewhere it sits 6 to 11 under).
+- `Samples.loadSome(names)` loads only the instruments named, and `Samples.autoLoad = false` keeps the unlock from loading everything;
+  the player page loads just the instruments a piece uses (the title: 26 of 80, 354 MB decoded instead of 733), fetches the engine while
+  the page opens, unlocks audio inside the click (what iOS needs), and says when the browser is holding sound back. Its movement cards
+  always play their recording (a stopped live piece used to swallow the click), a stale play() rejection no longer overwrites the status,
+  and a recording the server will not stream is fetched whole and played from memory.
 - The sampler keeps at most 16 sample fetches in flight (`S.fetchMax`) and retries a failed one once: with the library at some 1,800
   files, a browser asked for all of them at once refused the overflow (Chromium: `net::ERR_INSUFFICIENT_RESOURCES`) and whole instruments
   came up silent. The player page ships only the instruments a piece uses (80 of 92, 67 MB).
