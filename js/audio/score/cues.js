@@ -132,7 +132,7 @@
     const VLA = (vel, p) => ({ p: p || 'sus', inst: 'violas', n: 2, reg: [55, 69], vel });
     const STR = (vel, p, n, reg) => ({ p: p || 'sus', inst: 'strings', n: n || 3, reg: reg || [55, 76], vel });
     const BASS = (pat, sub, pedal) => ({ pat, pedal: !!pedal, inst: { p: 'deep', sub: sub || 0.8, att: 0.6, rel: 2.0 } });   // held (the title's bassTie): a pedal or the chords' roots, never struck again each bar
-    const PED = { pat: 'c---', pedal: true, inst: { p: 'deep', sub: 0.8, att: 1.2, rel: 2.6 } };
+    const PED = { pat: 'c---', pedal: true, inst: { p: 'deep', sub: 0.8, att: 6, rel: 2.6 } };   // the opening's pedal fades in with the bed
     const VLN = (ph, vel, oct) => ({ ph, inst: 'strings', oct: oct || 0, vel, shape: 0.4, swell: 0.3, width: 0.6 });
     const VC = (ph, vel) => ({ ph, inst: 'cello', oct: -1, vel, shape: 0.35, swell: 0.2 });
     const SVC = (ph, vel) => ({ ph, inst: 'vcSolo', oct: -1, vel, shape: 0.35, swell: 0.2, width: 0.6 });   // one cello (the Iowa recordings) where a line is one voice's
@@ -146,7 +146,7 @@
     d.inst = Object.assign({}, d.inst, { pad: 'strings', pad2: 'cellos', lead: 'strings', choir: 'choirMen' });
     d.mix = Object.assign({}, d.mix, { lead: 2.0, pad: 1.0, bass: 1.15, choir: 1.0 }); d.fx = { verb: 1.1, stage: 0.9, dly: 0.8 }; d.tone = { lo: 1.2, hi: 1.0 }; d.duck = 0.66;
     apply(d, {
-      drone: { pad: STR(0.5, 'swell'), pad2: LOWS(0.55, 'swell'), bass: PED, cres: [0.56, 0.62] },
+      drone: { pad: STR(0.5, 'swell'), pad2: LOWS(0.55, 'swell'), bass: PED, cres: [0.3, 0.62] },
       men: { pad: STR(0.5, 'sus', 4, [50, 72]), pad2: LOWS(0.55), bass: BASS('1---', 0.8, true), lead2: { ph: 'r4 L2', inst: 'clarinet', oct: 0, vel: 0.5, shape: 0.3 }, arp: false, bell: { dens: 0.04, res: 1, reg: [76, 100], vel: 0.28 }, cres: [0.62, 0.7] },
       horn: { pad: VLA(0.4), pad2: LOWS(0.55), bass: BASS('1---', 0.8, true), lead: VLN('PA*0.88 PB*0.94 PA*1 PB*1', 0.92), lead2: VC('PA*0.88 PB*0.94 PA*1 PB*1', 0.55), bell: { dens: 0.04, res: 1, reg: [76, 100], vel: 0.28 }, drums: false, cres: [0.68, 0.78] },
       A1: { pad: VLA(0.42), pad2: LOWS(0.56), bass: BASS('1---'), lead: { ph: 'V1 r4 V2 r4', inst: 'flute', oct: 0, vel: 0.82, shape: 0.4, swell: 0.2 }, lead2: { ph: 'r4 PAh r4 PAh', inst: 'bassClar', oct: -1, vel: 0.7, shape: 0.4 }, drums: false, cres: [0.7, 0.8] },
@@ -165,7 +165,7 @@
     d.mix = Object.assign({}, d.mix, { lead: 2.0, pad: 1.0, bass: 1.1 }); d.fx = { verb: 1.15, stage: 0.8, dly: 0.6 }; d.tone = { lo: 1.1, hi: 1.0 }; d.duck = 0.7;
     const PZ = { inst: 'pizz', pat: '0.......2.......', res: 2, vel: 0.32, reg: [43, 67] };
     apply(d, {
-      drone: { pad: VLA(0.4, 'swell'), pad2: LOWS(0.55, 'swell'), bass: PED, bell2: false, cres: [0.56, 0.62] },
+      drone: { pad: VLA(0.4, 'swell'), pad2: LOWS(0.55, 'swell'), bass: PED, bell2: false, cres: [0.3, 0.62] },
       men: { pad: VLA(0.45), pad2: LOWS(0.55), bass: BASS('1---', 0.7, true), lead2: SVC('r4 L2', 0.6), cres: [0.62, 0.7] },
       horn: { pad: VLA(0.42), pad2: LOWS(0.55), bass: BASS('1---', 0.7, true), lead: VLN('PA*0.88 PB*0.94 PA*1 PB*1', 0.92), lead2: VC('PA*0.88 PB*0.94 PA*1 PB*1', 0.52), arp: false, cres: [0.68, 0.78] },
       A1: { pad: VLA(0.42), pad2: LOWS(0.56), bass: BASS('1---', 0.7), lead: VLN('V1 r4 V2 r4', 0.9), lead2: SVC('r4 PAh r4 PAh', 0.7), arp: false, cres: [0.7, 0.8] },
