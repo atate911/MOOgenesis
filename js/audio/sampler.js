@@ -36,7 +36,19 @@
     const ctx = decodeCtx();
     return new Promise((res, rej) => { try { const p = ctx.decodeAudioData(ab, res, rej); if (p && p.catch) p.catch(rej); } catch (e) { rej(e); } });
   }
-  function fetchBuf(url) { return fetch(url).then(r => { if (!r.ok) throw new Error('HTTP ' + r.status + ' ' + url); return r.arrayBuffer(); }); }
+  // At most S.fetchMax requests in flight: the library is some 1,800 files, and a browser asked for all of them at once refuses the
+  // overflow (Chromium: net::ERR_INSUFFICIENT_RESOURCES), which left whole instruments silent. A failed fetch is tried once more.
+  S.fetchMax = 16; let inFlight = 0; const waiting = [];
+  function fetchBuf(url) {
+    return new Promise((res, rej) => {
+      const go = tries => { inFlight++;
+        fetch(url).then(r => { if (!r.ok) throw new Error('HTTP ' + r.status + ' ' + url); return r.arrayBuffer(); })
+          .then(ab => { done(); res(ab); }, e => { done(); if (tries > 0 && !/^HTTP 4/.test(e && e.message)) waiting.push(() => go(tries - 1)); else rej(e); pump(); }); };
+      waiting.push(() => go(1)); pump();
+    });
+  }
+  function done() { inFlight--; pump(); }
+  function pump() { while (inFlight < S.fetchMax && waiting.length) waiting.shift()(); }
   // Loop seams. A sustained note is a short recording looped by the browser, and Web Audio loops with no crossfade: where the loop points do
   // not meet in phase (a third of the string, chorus and solo-brass zones; the short oboe and clarinet loops worst of all) every wrap is a
   // click or a flutter at the loop rate. So the tail of each loop is blended into the audio that leads into its start: over the last `n`
