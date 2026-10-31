@@ -127,7 +127,7 @@
   Track('title:williams', {
     desc: 'Main theme, the Williams reading — a concert fanfare on the commonwealth’s tune: a dotted fanfare on its head in the trumpets, the tune in the horns over pulsing strings doubled an octave up with the snare and the timpani, a soaring variation in wide leaps, the lydian lift with the harp, a quiet middle for the oboe, the return in the trumpets with the horns in canon over the low brass and both choirs, a cadence coda',
     quotes: ['procession'], hidden: true, variantOf: 'title',
-    bpm: 76, root: 'D', mode: 'major', loopFrom: 'theme', trim: 2.2, tens: false, rubato: 0.015, tone: { lo: 1.1, hi: 1.1 }, fx: { verb: 1.0, stage: 1.0, dly: 0.5 }, mix: { lead: 1.6, drums: 0.9, choir: 1.0, bass: 1.1 }, duck: 0.72,
+    bpm: 76, root: 'D', mode: 'major', loopFrom: 'theme', trim: 1.75, tens: false, rubato: 0.015, tone: { lo: 1.1, hi: 1.1 }, fx: { verb: 1.0, stage: 1.0, dly: 0.5 }, mix: { lead: 1.6, drums: 0.9, choir: 1.0, bass: 1.1 }, duck: 0.72,
     sends: { lead: { verb: 0.12, stage: 0.3, dly: 0.03 }, drums: { stage: 0.12, verb: 0.05, dly: 0 } },
     forms: [['theme', 'soar', 'lydian', 'quiet', 'return', 'coda'], ['theme', 'soar', 'quiet', 'return', 'lydian', 'coda']],
     inst: { pad: 'strings', pad2: 'horn', bass: 'deep', lead: 'tpts', lead2: 'horn', bell: 'glass', bell2: 'bell', arp: 'harp', choir: 'aah', choir2: 'choirMen' },
