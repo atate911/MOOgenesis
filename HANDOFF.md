@@ -9,6 +9,16 @@ Browser-pane tip: animations use requestAnimationFrame, so in the built-in brows
 
 ## Session 11 (October 2026) — the score grows, branch `claude/festive-wozniak-7jy03r`
 
+**Latest (the orchestral system).** The user asked for a coherent system instead of fixes one at a time. Now: `orch: true` on a piece
+(the title and its five readings) sets every orchestral default and the soloist's window; the sampler meets an intake standard for
+every instrument at decode; `node tools/qa/library.js NAMES` (intake, per zone) and `node tools/qa/orchestral.js IDS` (acceptance,
+per piece) are the two gates, and every orchestral reading passes the second before it is published (see CONVENTIONS, the
+orchestral system). The real choir: St. Helen's Cantores and Micah's Choir from Pianobook (Decent Sampler packs; the raw packs are
+in the scratchpad's `choirs/`, staged under `choirs/staging/`, built as `choirHum`, `choirOoh`, `cantor`). Open: the repository is
+public and Pianobook's terms do not allow redistributing their samples: those three instruments' mp3s must leave the public repo (the
+user to choose: make the repo private, or remove them and rewrite the branch's history). A recorded concert-hall impulse (OpenAIR's
+Usina del Arte Symphony Hall) is still wanted for the hall; the engine still uses its generated one.
+
 **Latest (what the user heard after the Iowa import, fixed).** A repeating dip (the solo horn's D loop ran into its file's faded tail;
 the synth pads' `ens` doubling swelled at every wrap), tuning (Iowa notes now play from their measured pitch; the Iowa viola is out of
 use, too unsteady to tune), a bass that re-struck every bar (`bassTie`), the choir pumping under the solo (one dip a phrase) and set
