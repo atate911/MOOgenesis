@@ -7,10 +7,15 @@
 //   window      a bed or choir note within 3 semitones of the soloist's note sounds under it for at most 12% of the solo's time
 //   expressive  the tempo breathes (bar lengths spread 1% or more), the beds' expression moves 3 dB or more, 60% or more of the solo's
 //               held notes are shaped (rising into the climax, blooming on it, releasing after)
+//   performed   the ensemble plays as players: each part leans ahead and behind over time (its onsets against the score's grid, averaged
+//               over 8 beats, wander by 4 ms or more), a chord's notes spread (median 10 ms or more), each part's note levels vary (1.5 dB or
+//               more from the 10th to the 90th percentile) and the sections breathe on their own (the beds' and the choir's expression
+//               correlate under 0.97)
 // and from a rendered excerpt (a minute or two each):
 //   phase       below 150 Hz the bass, the choir and the beds agree left and right (correlation 0.9 or more); the mix 150-500 Hz 0.4 or more
 //               (full string sections are naturally wide there)
 //   carried     in the choir's own lowest octave neither the bass nor the beds stand more than 3 dB over the choir
+//   clean       the bass is a tone, not a bow: its energy above 500 Hz is 35 dB or more under its 30-250 Hz
 const { serve, open } = require('./lib');
 const argv = process.argv.slice(2), opt = {}; for (let i = 0; i < argv.length; i++) if (argv[i].startsWith('--')) opt[argv[i].slice(2)] = argv[i + 1] && !argv[i + 1].startsWith('--') ? argv[++i] : true;
 const IDS = (argv.find(a => !a.startsWith('--') && !Object.values(opt).includes(a)) || 'title').split(','), T0 = +opt.from || 10, T1 = +opt.to || 100;
@@ -42,6 +47,23 @@ const IDS = (argv.find(a => !a.startsWith('--') && !Object.values(opt).includes(
       const xg = ev.filter(e => e.v === 'expr' && e.ly === 'pad').map(e => e.o.g), xr = xg.length ? 20 * Math.log10(Math.max(...xg) / Math.min(...xg)) : 0;
       const held = solo.filter(e => e.bt >= 1.5), shaped = held.filter(e => e.o.swell !== undefined && Math.abs(e.o.swell - e.o.dyn) > 0.03).length, sf = held.length ? shaped / held.length : 1;
       checks.push({ name: 'expressive', pass: bsd >= 0.01 && xr >= 3 && sf >= 0.6, detail: 'tempo spread ±' + (100 * bsd).toFixed(1) + '%, the beds move ' + xr.toFixed(1) + ' dB, ' + Math.round(sf * 100) + '% of the solo\'s held notes shaped' });
+      // performed: the ensemble, part by part, against the score's grid
+      { const bt = r.beatsT, grid = b => { const i = Math.min(Math.floor(b), bt.length - 2), f = b - i; return bt[i] + f * (bt[i + 1] - bt[i]); }, q = (a, p) => { const x = a.slice().sort((u, v) => u - v); return x[Math.min(x.length - 1, Math.floor(p * x.length))]; };
+        const parts = {}; for (const e of ev) if (e.m && e.bt && e.ly !== 'drums') (parts[e.k || e.ly] = parts[e.k || e.ly] || []).push(e);
+        const flat = [], still = [], chords = [], lv = [];
+        for (const k in parts) {
+          const L = parts[k]; if (L.length < 8) continue;
+          const win = {}; for (const e of L) (win[Math.floor(e.b / 8)] = win[Math.floor(e.b / 8)] || []).push(1000 * (e.t - grid(e.b)));
+          const means = Object.values(win).filter(x => x.length >= 2).map(x => x.reduce((p, z) => p + z, 0) / x.length);
+          if (means.length >= 4) { const mm = means.reduce((p, z) => p + z, 0) / means.length, sd = Math.sqrt(means.reduce((p, z) => p + (z - mm) * (z - mm), 0) / means.length); if (sd < 4) still.push(k + ' ' + sd.toFixed(1) + ' ms'); }
+          const at = {}; for (const e of L) (at[e.b.toFixed(4)] = at[e.b.toFixed(4)] || []).push(e.t); for (const x of Object.values(at)) if (x.length > 1) chords.push(1000 * (Math.max(...x) - Math.min(...x)));
+          const g = L.filter(e => e.pf).map(e => e.pf[1]); const gr = g.length >= 8 ? q(g, 0.9) - q(g, 0.1) : 0; lv.push(gr); if (gr < 1.5) flat.push(k + ' ' + gr.toFixed(1) + ' dB');
+        }
+        const sp = chords.length ? q(chords, 0.5) : 0;
+        const xs = {}; for (const e of ev) if (e.v === 'expr') (xs[e.ly] = xs[e.ly] || []).push(Math.log(e.o.g));
+        const cor = (a, b) => { if (!a || !b) return 0; const n = Math.min(a.length, b.length); let ma = 0, mb = 0; for (let i = 0; i < n; i++) { ma += a[i] / n; mb += b[i] / n; } let ab = 0, aa = 0, bb = 0; for (let i = 0; i < n; i++) { ab += (a[i] - ma) * (b[i] - mb); aa += (a[i] - ma) ** 2; bb += (b[i] - mb) ** 2; } return ab / Math.sqrt(aa * bb + 1e-15); };
+        const sung = ev.some(e => e.m && e.ly === 'choir'), pc = sung ? cor(xs.pad, xs.choir) : 0;
+        checks.push({ name: 'performed', pass: !still.length && !flat.length && sp >= 10 && pc < 0.97, detail: (still.length ? 'on the grid: ' + still.join(', ') + '; ' : 'every part leans; ') + 'chords spread ' + Math.round(sp) + ' ms; ' + (flat.length ? 'level fixed: ' + flat.join(', ') : 'note levels vary ' + Math.min(...lv).toFixed(1) + '-' + Math.max(...lv).toFixed(1) + ' dB') + (sung ? '; beds and choir correlate ' + pc.toFixed(2) : '') }); }
       // phase and carried: a rendered excerpt, bus by bus
       const corr = async (buf, lo, hi) => {
         const oc = new OfflineAudioContext(2, buf.length, buf.sampleRate), src = oc.createBufferSource(); src.buffer = buf; let n = src;
@@ -61,6 +83,9 @@ const IDS = (argv.find(a => !a.startsWith('--') && !Object.values(opt).includes(
       if (!cn.length) checks.push({ name: 'carried', pass: true, detail: 'no choir' });
       else { const lo = Math.round(f0 * 0.85), hi = Math.round(f0 * 2.1), cb = await corr(stems.choir, lo, hi), bb = await corr(stems.bass, lo, hi), pb = await corr(stems.pad, lo, hi), over = Math.max(bb.db, pb.db) - cb.db, who = bb.db >= pb.db ? 'the bass' : 'the beds';
         checks.push({ name: 'carried', pass: over <= 3, detail: who + ' ' + (over >= 0 ? over.toFixed(1) + ' dB over' : (-over).toFixed(1) + ' dB under') + ' the choir in its lowest octave (' + lo + '-' + hi + ' Hz)' }); }
+      // clean: the bass's tone against its noise
+      { const hi = await corr(stems.bass, 500, 6000), lo = await corr(stems.bass, 30, 250), dd = hi.db - lo.db;
+        checks.push({ name: 'clean', pass: lo.n < 10 || dd <= -35, detail: lo.n < 10 ? 'no bass' : 'the bass above 500 Hz ' + (-dd).toFixed(0) + ' dB under its tone' }); }
       out[id] = { orch: !!d.orch, checks };
     }
     return out;

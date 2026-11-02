@@ -166,13 +166,27 @@ Colour semantics are fixed: gold = BC/money, ember = industry, leaf = food/growt
     sampler enforces the last three at decode for every instrument (`clearTail`, `agreeStereo`, the per-note layer order in
     `alignLayers`); tuning is the build's (`measure_root`). Run it on any new instrument; run `tools/qa/loops.js` too for a solo one.
   - **Acceptance** (`node tools/qa/orchestral.js IDS`): on the piece itself, nothing synthetic, held notes held, the solo's window clear,
-    the low end in phase, the choir carried (not covered) in its lowest octave. Every orchestral reading passes it before it is published.
+    the music expressive and performed (not mechanical), the low end in phase, the choir carried (not covered) in its lowest octave, the
+    bass clean. Every orchestral reading passes it before it is published.
   A new problem heard by ear becomes a check in one of these two before it is fixed, so it stays fixed.
   - **Expression** is part of the profile, not written note by note: each phrase's climax (its highest note) drives the line's
     dynamics, its held notes' direction and vibrato, the conductor's tempo (a pre-pass of the solo: press toward the climax, broaden on
     it, ease at the phrase's end, a ritardando on the last) and the beds' expression curve (the solo's intensity and the chord's
     tension, an expression stage per layer ahead of the dip under the solo). A section marks a `breath` before a crest; contrasts
     (a hush after a climax, a roll into it) are the score's. The acceptance test's `expressive` check keeps it from going flat again.
+    The beds, the choir and the bass each ride that movement their own way (`EXPR_LAYER`: the choir a little behind it and a little
+    more, the bass half as much, each with its own slow wander), so the sections never move as one fader.
+  - **The ensemble** (`perform`, after the legato is known; `perform: false` on a piece turns it off): no part plays exactly on the
+    grid or at exactly its written level, and how far it strays follows the movement. Each part (`PLAYERS`) speaks a little late as its
+    instrument does, leans ahead or behind in a slow wander of its own and varies note to note; soft passages are looser and loud ones
+    tighter; where the music builds the players press ahead, where it lets go they settle back; a chord's notes spread (10 ms at the
+    top, up to 40 ms when soft). Each part's level wanders against the others and varies note to note; the parts without an expression
+    stage of their own follow the movement in their notes, brighter as well as louder at the top. The solo strays least: its time is
+    the conductor's. Every event carries `pf: [ms, dB]`, what the ensemble did to it. The acceptance test's `performed` check keeps it.
+  - **The foundation is a tone, not a bow.** The bass plays through a steep low-pass at four times its note (200 Hz at most, `cutN: 2`)
+    unless its part sets a `cut`, and a change of note is a crossfade (0.45 s in from the steady part, the old note holding a fifth of a
+    beat into it and letting go over half a second). A bed voiced in the bass register (to E3) plays sul tasto (low-passed at ten times
+    its note, 1.4 kHz at most). The acceptance test's `clean` check holds the bass's energy above 500 Hz 35 dB under its tone.
 - **Loops of note-by-note recordings** sit inside the note's steady stretch and run as long as it allows (`loop='steady'`); a note that
   swells more than `swing_max` dB inside its loop is dropped, and a file holding two takes is cut to the longer. Check a new set with
   `node tools/qa/loops.js --insts NAME` (one instrument a run: the whole library takes too long) before a piece uses it.

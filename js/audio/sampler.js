@@ -2,7 +2,7 @@
 // Loads assets/audio/instruments.json + the MP3 multisamples it lists (lazily, after the first user gesture; never from file://, where
 // fetch is blocked: everything then stays on the procedural voices). Exposes
 //   MOO.Audio.Samples.{enabled, base, load(), preload(), ready(name), has(name), status(), zones(name)}
-//   MOO.Audio.Voices.sample(eng, dest, t, o)   o = {smp, f, dur, vel, dyn, swell, att, rel, pan, prio, send, vib, ens, cut, hp, eq, sub, leg, hum, alt, fb, fbo, oneShot}
+//   MOO.Audio.Voices.sample(eng, dest, t, o)   o = {smp, f, dur, vel, dyn, swell, att, rel, pan, prio, send, vib, ens, cut, cutN, hp, eq, sub, leg, hum, alt, fb, fbo, oneShot}
 // A sample voice is one AudioBufferSourceNode per sounding dynamic layer (pitched by playbackRate, looped on the library's loop points,
 // vibrato on `detune`; instruments recorded in layers crossfade between them with the asked dynamic, and a `swell` moves through them
 // over the note), an optional second detuned copy ("ens" — ensemble thickening), a velocity-tracked lowpass and an ADSR gain. Legato
@@ -505,7 +505,10 @@
     // velocity-tracked lowpass: soft notes are darker (the sample layers do most of the work; this is the glue between them)
     let node = mix;
     const cutK = num(o.cutK, inst.cutK), cut = o.cut !== undefined ? o.cut : (cutK ? cutK * (0.35 + 0.65 * dyn) : 0);   // the voice may bring its own cutK (a solo horn darker when soft)
-    if (cut > 0 && cut < 16000) { const lp = v.filter('lowpass', cut, 0.5); mix.connect(lp); node = lp; }
+    if (cut > 0 && cut < 16000) {                    // o.cutN 2: a steep low-pass (two stages): the tone and none of the bow's or the breath's noise above it
+      const steep = num(o.cutN, 1) >= 2, lp = v.filter('lowpass', cut, steep ? 0.707 : 0.5); mix.connect(lp); node = lp;
+      if (steep) { const lp2 = v.filter('lowpass', cut, 0.707); node.connect(lp2); node = lp2; }
+    }
     if (num(o.hp, 0) > 20) { const hpf = v.filter('highpass', num(o.hp, 0), 0.7); node.connect(hpf); node = hpf; }
     // per-instrument EQ (o.eq = [[Hz, dB, Q | 'hs' | 'ls'], ...]): the mixer's channel EQ on this voice
     if (Array.isArray(o.eq)) for (const e of o.eq) {

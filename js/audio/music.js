@@ -477,7 +477,14 @@
     // struck/ringing voices (bells, chimes) keep their own ring time; it only stretches a little with the written length
     if ((inst.v === 'bell' || inst.v === 'chime') && inst.dur) o.dur = inst.dur * clamp(0.7 + 0.15 * beats, 0.7, 1.4);
     if (ex) for (const k in ex) if (k !== 'art' && k !== 'dt' && ex[k] !== undefined) o[k] = ex[k];
-    if (C.def && C.def.orch && inst.v === 'sample') { o.ens = 0; o.sub = 0; }      // the orchestral profile: the recording as it is
+    if (C.def && C.def.orch && inst.v === 'sample') {
+      o.ens = 0; o.sub = 0;                                                         // the orchestral profile: the recording as it is
+      // the foundation is a tone, not a bow: the bass through a steep low-pass at four times its note, 200 Hz at most (its fundamental and
+      // first partials, never the rosin), and a bed voiced in the bass register (to E3) sul tasto, as an orchestra's low strings play a
+      // held bed: warm, the bite of the bow gone (low-passed at ten times its note, 1.4 kHz at most). A part that sets its own cut keeps it.
+      if (ly === 'bass' && o.cut === undefined) { o.cut = clamp(mtof(midi) * 4, 100, 200); o.cutN = 2; }
+      else if (ly === 'pad' && midi <= 52 && o.cut === undefined) { o.cut = clamp(mtof(midi) * 10, 650, 1400); o.cutN = 2; }
+    }
     delete o.p;
     const ev = { t: C.tAt(beat) + (ex && ex.dt || 0), v: inst.v, ly, o, m: midi, b: beat, bt: beats, k: C.key };
     C.ev.push(ev);
@@ -592,23 +599,83 @@
     });
     return iv;
   }
-  // the beds, the choir and the bass ride an expression curve (one point a beat, smoothed by the player): the solo's intensity where it
-  // sings, a four-bar hairpin where it does not, and the chord's tension (a dominant leans, a tonic settles)
-  function emitExpression(C, wraps, arcs) {
+  // the movement: one value a beat (about 0.6 to 1.25) for how much the music is saying there. Where the solo sings, its intensity; where
+  // it does not, a four-bar hairpin; the chord's tension on top (a dominant leans, a tonic settles); the breath before what comes next
+  function moveCurve(C, wraps, arcs) {
     const notes = []; for (const a of arcs) a.N.forEach((n, i) => notes.push([n.off, n.off + n.dur, a.I[i]]));
     const TENS = sym => /^(V|vii)/.test(sym) && !/^VI/.test(sym) ? 0.07 : /^(IV|ii)/.test(sym) ? 0.03 : /^(vi|iii)/.test(sym) ? 0.02 : 0;
+    const E = new Float32Array(Math.ceil(C.totalBeats) + 1).fill(1);
     for (const w of wraps) {
       const hasSolo = notes.some(([a, z]) => a < w.start + w.beats && z > w.start);
       for (let k = 0; k < w.beats; k++) {
         const b = w.start + k, sg = segAt(w.R.segs, k), t = TENS(sg && sg.ch ? sg.ch.sym : '');
-        let E;
-        if (hasSolo) { let I = null; for (const [a, z, v] of notes) if (b >= a - 0.25 && b < z) { I = v; break; } E = 0.88 + 0.6 * ((I === null ? 0.5 : I) - 0.6) + 1.5 * t; }
-        else E = 0.86 + 0.3 * Math.pow(Math.sin(Math.PI * (k % 16) / 16), 1.2) + 1.5 * t;
-        if (w.R.raw && w.R.raw.breath && k >= w.beats - 2) E *= 0.68;   // the breath before what comes next: the beds draw in
-        E = clamp(E, 0.6, 1.25);
-        for (const bus of ['pad', 'choir', 'bass']) C.ev.push({ t: C.tAt(b), v: 'expr', ly: bus, o: { g: bus === 'bass' ? 1 + 0.5 * (E - 1) : E }, m: 0, b, bt: 0, k: 'expr' });
+        let e;
+        if (hasSolo) { let I = null; for (const [a, z, v] of notes) if (b >= a - 0.25 && b < z) { I = v; break; } e = 0.88 + 0.6 * ((I === null ? 0.5 : I) - 0.6) + 1.5 * t; }
+        else e = 0.86 + 0.3 * Math.pow(Math.sin(Math.PI * (k % 16) / 16), 1.2) + 1.5 * t;
+        if (w.R.raw && w.R.raw.breath && k >= w.beats - 2) e *= 0.68;   // the breath before what comes next: the beds draw in
+        E[b] = clamp(e, 0.6, 1.25);
       }
     }
+    E[E.length - 1] = E[Math.max(0, E.length - 2)];
+    return E;
+  }
+  const moveAt = (E, b) => { const x = clamp(b, 0, E.length - 1), i = Math.floor(x), j = Math.min(E.length - 1, i + 1); return E[i] + (E[j] - E[i]) * (x - i); };
+  // a slow wander in [-1, 1]: a knot every `per` beats from its own stream, eased between them
+  function wander(rng, per) { const kn = []; return b => { const x = Math.max(0, b) / per, i = Math.floor(x), u = (1 - Math.cos(Math.PI * (x - i))) / 2; while (kn.length <= i + 1) kn.push(rng() * 2 - 1); return kn[i] + (kn[i + 1] - kn[i]) * u; }; }
+  const gauss = rng => clamp((rng() + rng() + rng() - 1.5) * 2, -2, 2);
+  // the beds, the choir and the bass ride the movement (one point a beat, smoothed by the player), each in its own way: the choir a little
+  // behind it and a little more, the bass half as much and a little behind, and each with its own slow rise and fall against the others,
+  // so the sections breathe as sections of players do, not as one fader
+  const EXPR_LAYER = { pad: { depth: 1, lag: 0, drift: 0.8, per: 7 }, choir: { depth: 1.15, lag: 0.75, drift: 1.0, per: 9 }, bass: { depth: 0.5, lag: 0.5, drift: 0.6, per: 11 } };
+  function emitExpression(C, E, seed) {
+    for (const bus in EXPR_LAYER) {
+      const X = EXPR_LAYER[bus], nz = wander(makeRng(seed + ':x:' + bus), X.per);
+      for (let b = 0; b < C.totalBeats; b++) {
+        const e = moveAt(E, b - X.lag), g = (1 + X.depth * (e - 1)) * Math.pow(10, X.drift * nz(b) / 20);
+        C.ev.push({ t: C.tAt(b), v: 'expr', ly: bus, o: { g }, m: 0, b, bt: 0, k: 'expr' });
+      }
+    }
+  }
+  // the ensemble (the orchestral profile): no part plays exactly on the grid or exactly at its written level, and how far it strays follows
+  // the movement. Each part speaks a little late as its instrument does (lat), leans ahead or behind in a slow wander of its own (drift),
+  // and varies a little note to note (jit); soft passages are looser and loud ones tighter; where the music builds the players press a
+  // little ahead and where it lets go they settle back. A chord is never struck at one instant: its notes spread, more when soft. Each
+  // part's level wanders against the others (lvl, dB) and varies note to note (vj, dB); the parts without an expression stage of their
+  // own (the second line, the bells, the arpeggio, the timpani) follow the movement in their notes (follow), brighter as well as louder
+  // at the top. The solo leads: its time is the conductor's, and it strays least.
+  const PLAYERS = {
+    lead: { lat: 0, drift: 0.005, jit: 0.004, lvl: 0.4, vj: 0.6, follow: 0 },
+    lead2: { lat: 0.008, drift: 0.012, jit: 0.006, lvl: 0.8, vj: 0.8, follow: 0.5, spread: 1 },
+    pad: { lat: 0.012, drift: 0.016, jit: 0.008, lvl: 0.9, vj: 1.0, follow: 0, spread: 1 },
+    choir: { lat: 0.018, drift: 0.018, jit: 0.008, lvl: 1.0, vj: 1.0, follow: 0 },
+    bass: { lat: 0.014, drift: 0.010, jit: 0.005, lvl: 0.6, vj: 0.6, follow: 0 },
+    bell: { lat: 0, drift: 0.008, jit: 0.006, lvl: 1.0, vj: 1.2, follow: 0.7, spread: 1 },
+    arp: { lat: 0, drift: 0.018, jit: 0.005, lvl: 0.8, vj: 1.5, follow: 0.6 },
+    drums: { lat: 0.004, drift: 0.008, jit: 0.006, lvl: 0.8, vj: 1.5, follow: 0.6 },
+    other: { lat: 0.006, drift: 0.010, jit: 0.006, lvl: 0.8, vj: 1.0, follow: 0.5 },
+  };
+  Music._players = PLAYERS;
+  function perform(C, E, seed) {
+    const parts = {}, chords = {};
+    const part = k => parts[k] || (parts[k] = { P: PLAYERS[k] || PLAYERS[BUS[k]] || PLAYERS.other, t: wander(makeRng(seed + ':t:' + k), 6), l: wander(makeRng(seed + ':l:' + k), 8), r: makeRng(seed + ':n:' + k) });
+    for (const e of C.ev) {
+      if (e.v === 'expr' || !e.o || e.o.vel === undefined) continue;
+      const k = e.k || e.ly, p = part(k), P = p.P, r = p.r, b = e.b;
+      const ev0 = moveAt(E, b), I = clamp((ev0 - 0.6) / 0.65, 0, 1), loose = 1.5 - I, slope = moveAt(E, b + 1) - moveAt(E, b - 1);
+      const lean = k === 'lead' ? 0 : slope > 0 ? -0.008 * clamp(slope / 0.08, 0, 1) : 0.012 * clamp(-slope / 0.08, 0, 1);
+      const dt = P.lat * (0.5 + 0.5 * loose) + P.drift * loose * p.t(b) + lean + P.jit * gauss(r);
+      let g = P.lvl * p.l(b) + P.vj * gauss(r);
+      if (P.follow) {
+        g += P.follow * 20 * Math.log10(ev0);
+        const bright = Math.pow(ev0, 0.5 * P.follow);
+        if (e.o.dyn !== undefined) e.o.dyn = clamp(e.o.dyn * bright, 0, 1);
+        if (e.o.swell !== undefined) e.o.swell = clamp(e.o.swell * bright, 0, 1);
+      }
+      e.o.vel *= Math.pow(10, g / 20); e.t = Math.max(0, e.t + dt); e.pf = [Math.round(dt * 1000), Math.round(g * 10) / 10];
+      if (P.spread && e.m) { const ck = k + '@' + b.toFixed(4); (chords[ck] = chords[ck] || []).push([e, I, r]); }
+    }
+    // a chord's notes spread: 10 ms apart at the top of the movement, up to 40 ms when soft
+    for (const ck in chords) { const g = chords[ck]; if (g.length < 2) continue; const [, I, r] = g[0], w = 0.010 + 0.030 * (1 - I); for (const x of g) { const d = r() * w; x[0].t += d; x[0].pf[0] += Math.round(d * 1000); } }
   }
   function padFlush(C, o, m, endAbs, cont) {
     const L = endAbs - o.b0; if (L <= 0) return;
@@ -665,7 +732,9 @@
     }
   }
   function sameVoice(a, b) { return a === b || (!!a && !!b && a.v === b.v && (a.smp || '') === (b.smp || '')); }   // one instrument, whatever its envelope settings
-  function bassWrite(C, n) { emit(C, 'bass', n.inst0 || n.inst, n.beat, n.m, n.into ? n.len + 0.08 : n.len * 0.97, n.v, Object.assign(n.from ? { leg: true, legAtt: 0.2, legOff: 'loop' } : {}, n.into ? { rel: 0.3 } : {})); }
+  // a change of note is a crossfade, not an attack: the new note rises over 0.45 s from the steady part of its recording while the old one
+  // holds a fifth of a beat into it and lets go over half a second (at 0.2 s and 0.08 of a beat the change was heard as a new bow)
+  function bassWrite(C, n) { emit(C, 'bass', n.inst0 || n.inst, n.beat, n.m, n.into ? n.len + 0.2 : n.len * 0.97, n.v, Object.assign(n.from ? { leg: true, legAtt: 0.45, legOff: 'loop' } : {}, n.into ? { rel: 0.5 } : {})); }
 
   function genArp(C, s, cfg, key) {
     const P = norm(cfg, ARPS, 'arp'), inst = resolveInst(cfg.inst, C.inst[key] || DEF_INST[key]), reg = inRange(inst, P.reg || [55, 84]);
@@ -1079,12 +1148,14 @@
     }
     C.key = 'trans';
     if (!orchOf(C.def)) genTransitions(C, wraps);   // the risers and swells between sections are synthesized: an orchestral piece makes its own
-    if (C.padCarry) for (const k in C.padCarry) if (C.padCarry[k]) { padFlushAll(C, C.padCarry[k]); C.padCarry[k] = null; }   // the held beds end with the pass
-    if (C.bassCarry) { bassWrite(C, C.bassCarry); C.bassCarry = null; }
-    if (soloArcs) emitExpression(C, wraps, soloArcs);
+    if (C.padCarry) for (const k in C.padCarry) if (C.padCarry[k]) { C.key = k; padFlushAll(C, C.padCarry[k]); C.padCarry[k] = null; }   // the held beds end with the pass (as the part they are)
+    if (C.bassCarry) { C.key = 'bass'; bassWrite(C, C.bassCarry); C.bassCarry = null; }
+    const perf = soloArcs && (def.perform !== undefined ? !!def.perform : true), pseed = def.id + ':pf' + pass + ':' + (take || 0), Emove = soloArcs ? moveCurve(C, wraps, soloArcs) : null;
+    if (soloArcs) emitExpression(C, Emove, pseed);
     C.ev.sort((a, b) => a.t - b.t);
     markLegato(C.ev);
-    return { events: C.ev, beats: C.totalBeats, len: tAcc, wraps, pass, snaps: C.snaps, bars, beatsT };
+    if (perf) { perform(C, Emove, pseed); C.ev.sort((a, b) => a.t - b.t); }   // the ensemble: after the legato is known, so a line's overlaps stay
+    return { events: C.ev, beats: C.totalBeats, len: tAcc, wraps, pass, snaps: C.snaps, bars, beatsT, move: Emove };
   }
   // phrasing: in a melodic line, a note that follows straight on from the previous one is played legato (the sampler then starts past the
   // bow / breath attack and the previous note is held a little into it, like a player who does not re-attack every note)

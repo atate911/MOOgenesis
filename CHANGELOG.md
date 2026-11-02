@@ -5,6 +5,15 @@ Versions follow `MAJOR.MINOR.PATCH`; the live version is the `VERSION` file.
 
 ## Unreleased
 
+- The ensemble, in the orchestral profile: no part plays exactly on the grid or at exactly its written level. Each part speaks a little
+  late as its instrument does, leans ahead or behind in its own slow wander and varies note to note; soft passages are looser and loud
+  ones tighter, the players press ahead where the music builds and settle back where it lets go, and a chord's notes spread (10 to
+  40 ms). Each part's level wanders against the others; the bells, the second line, the arpeggio and the timpani follow the movement
+  in their notes. The beds, the choir and the bass ride the movement each in its own way (depth, lag, wander) instead of as one fader.
+  New acceptance check `performed`; `perform: false` turns it off for a piece.
+- The bass as a clean tone: a steep low-pass (`cutN: 2`) at four times its note, 200 Hz at most, so the double basses give their
+  fundamental and first partials and none of the bow (the symphony's and the chamber's bass above 1 kHz fell from -36 to -85 dB); a
+  change of note is a 0.45 s crossfade; the low cellos' held chords play sul tasto. New acceptance check `clean`.
 - Expression, in the orchestral profile: every phrase has a destination (its climax: the highest note, the longest of equals), the line
   building to it, arriving and letting go faster than it came. Lines take their dynamics from the arc; a held note goes somewhere (into
   the next before the climax, a bloom on it, a release after), with vibrato only where a note is held, arriving after a moment and

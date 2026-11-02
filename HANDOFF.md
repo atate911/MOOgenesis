@@ -9,6 +9,13 @@ Browser-pane tip: animations use requestAnimationFrame, so in the built-in brows
 
 ## Session 11 (October 2026) — the score grows, branch `claude/festive-wozniak-7jy03r`
 
+**Latest (the ensemble, and a clean bass).** The user still heard it as artificial and asked for variation in the volume and timing of
+every part, matching the feel of the movement; then that the bass still sounded like strings at each note rather than a clean
+underlying tone. The orchestral profile now performs the score as an ensemble (CONVENTIONS, the ensemble) and plays the foundation as
+a tone (CONVENTIONS, the foundation); the acceptance test's `performed` and `clean` checks guard both, and all five title readings
+pass every check. Measured on the bass: in the main readings it was already clean (nothing above 240 Hz) and what read as "the bass"
+was the low cellos' bed and the symphony's and chamber's unfiltered double basses, whose bow sat only 14 to 21 dB under their tone.
+
 **Latest (expression).** The user found the instrumentation stoic and formulaic, the solo without purpose: a fixed tempo, beds held at
 one level, the same hairpin on every phrase and the same swell on every choir note. The orchestral profile now plays with expression
 (see CONVENTIONS, expression); the acceptance test's `expressive` check guards it. Renders and checks run one browser per core, four
