@@ -5,6 +5,17 @@ Versions follow `MAJOR.MINOR.PATCH`; the live version is the `VERSION` file.
 
 ## Unreleased
 
+- The foundation as one continuous note (the orchestral profile). The bass holds the key's tonic through the chords and its pattern's
+  rests; the beds' voices to E3 hold the tonic and the fifth, tuned pure, never in unison with the bass. The title readings' low end
+  went from about 20 note changes a minute to 2 or 3, and its level from moving 2.3 to 3.4 dB to 0.7 to 0.9 dB. New acceptance check
+  `continuous`.
+- Loops below 300 Hz evened on the channels' sum at decode (`flattenLow`): the double basses' held notes pulsed 1 to 2 dB once a loop
+  where the low end is mono (the soft D2 dipped 3.6 dB); now within about 1 dB.
+- A section's dynamic rides the expression stage for the beds, the choir and the bass, and a beat's dynamic is its own section's: a held
+  note had taken the dynamic of the section it was written in (the symphony's held D2 played on its soft layer, 15 dB down).
+- The ensemble's lean wanders over 12 beats (was 6) and keeps 0.7 of itself at the top (was 0.5); the bells lean 12 ms. The acceptance
+  test's `held` check counts a re-strike on the same instrument only (a hand-over at a section line is orchestration), and its lean
+  floor exempts the solo.
 - The ensemble, in the orchestral profile: no part plays exactly on the grid or at exactly its written level. Each part speaks a little
   late as its instrument does, leans ahead or behind in its own slow wander and varies note to note; soft passages are looser and loud
   ones tighter, the players press ahead where the music builds and settle back where it lets go, and a chord's notes spread (10 to

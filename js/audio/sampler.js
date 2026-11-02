@@ -136,6 +136,39 @@
     }
   }
   S._flattenLoop = flattenLoop;
+  // The low end, as the mono low end hears it. A section recorded on spaced microphones drifts in phase between its channels inside its
+  // loop, and its fundamental rises and falls against its overtones; below 250-300 Hz, where the orchestral profile sums the bass and the beds to
+  // mono, the sum then swells and dips once a loop although each channel's overall level is even (measured on the double basses: the soft
+  // D2 dipped 3.6 dB once a loop, held notes pulsed 1 to 2 dB at the loop's length, heard as "dummm dummm dumm" under a held bass). So the
+  // loop's band below 300 Hz (the beds' mono band; the bass's is 250) is split off without phase shift (a low-pass run forward and back, the band above the remainder, the two
+  // summing back exactly) and evened on the two channels' sum, the same gain on both, within ±6 dB, from the same lead-in as the level
+  // evening above; the band above keeps what that set. Only zones whose note is below 300 Hz; `?loopflat=0` turns it off with the rest.
+  const LOW_SPLIT = 300;
+  function flattenLow(buf, ls, le, root) {
+    if (!S.loopFlat || !buf || !(le > ls)) return;
+    const f0 = 440 * Math.pow(2, ((root || 60) - 69) / 12); if (f0 >= LOW_SPLIT) return;
+    const sr = buf.sampleRate, a = Math.round(ls * sr), b = Math.min(Math.round(le * sr), buf.length);
+    if (b - a < 0.4 * sr) return;
+    const key = 'l' + a + ':' + b; buf._xf = buf._xf || {}; if (buf._xf[key]) return; buf._xf[key] = 1;
+    const n = Math.floor(Math.min(0.25 * (b - a), 0.3 * sr, a - 0.02 * sr)), pre = Math.max(0, a - Math.max(n, 0) - Math.round(0.1 * sr)), ramp = Math.max(1, a - Math.max(n, 0) - pre);
+    const end = Math.min(buf.length, b + Math.round(0.05 * sr)), N = end - pre, nc = buf.numberOfChannels;
+    const w0 = 2 * Math.PI * LOW_SPLIT / sr, al = Math.sin(w0) / (2 * Math.SQRT1_2), cw = Math.cos(w0), a0 = 1 + al;
+    const B0 = (1 - cw) / 2 / a0, B1 = (1 - cw) / a0, B2 = B0, A1 = -2 * cw / a0, A2 = (1 - al) / a0;
+    const pass = (x, back) => { let x1 = 0, x2 = 0, y1 = 0, y2 = 0; const L = x.length; for (let k = 0; k < L; k++) { const i = back ? L - 1 - k : k, v = x[i], y = B0 * v + B1 * x1 + B2 * x2 - A1 * y1 - A2 * y2; x2 = x1; x1 = v; y2 = y1; y1 = y; x[i] = y; } };
+    const xs = [], lows = [];
+    for (let c = 0; c < nc; c++) { const x = buf.getChannelData(c).slice(pre, end), lo = x.slice(); pass(lo, false); pass(lo, true); xs.push(x); lows.push(lo); }
+    const win = Math.max(Math.round(0.1 * sr), Math.round(6 * sr / f0)), hop = Math.max(1, win >> 1), pts = [];
+    for (let i = 0; i < b - pre; i += hop) { let q = 0, m = 0; for (let k = i; k < Math.min(i + win, N); k++) { const v = nc > 1 ? 0.5 * (lows[0][k] + lows[1][k]) : lows[0][k]; q += v * v; m++; } pts.push(Math.sqrt(q / (m || 1))); }
+    let mean = 0, cnt = 0; for (let i = a - pre; i < b - pre; i += hop) { mean += pts[Math.min(pts.length - 1, Math.floor(i / hop))]; cnt++; }
+    mean = cnt ? mean / cnt : 0; if (!(mean > 1e-5)) return;
+    const gAt = i => { const x = (i - win / 2) / hop, j = Math.max(0, Math.floor(x)), t = Math.min(1, Math.max(0, x - j)), p0 = pts[Math.min(j, pts.length - 1)], p1 = pts[Math.min(j + 1, pts.length - 1)], e = p0 + (p1 - p0) * t; return Math.min(2, Math.max(0.5, mean / (e > 1e-6 ? e : mean))); };
+    for (let c = 0; c < nc; c++) {
+      const x = xs[c], lo = lows[c], seg = new Float32Array(b - pre);
+      for (let i = 0; i < b - pre; i++) { let g = gAt(i); if (i < ramp) g = 1 + (g - 1) * (i / ramp); seg[i] = x[i] + (g - 1) * lo[i]; }
+      if (buf.copyToChannel) buf.copyToChannel(seg, c, pre); else buf.getChannelData(c).set(seg, pre);
+    }
+  }
+  S._flattenLow = flattenLow;
   // Loop breathing, by band. The level evening above holds the loop's overall level; what a solo wind or brass loop still carries is a slow
   // cycle in its timbre (the breath: the harmonics rising and falling against the fundamental, the overall level held), and the hall's
   // early reflections turn that into a pulse of two or three decibels at the pitches whose fundamental they thin — heard as "looping" on a
@@ -292,7 +325,7 @@
     S.inst[name] = inst;
     const jobs = (def.zones || []).map(z => loadBuf(z.file).then(buf => {
       let loop = z.loop ? [z.loop[0] + S.offset, z.loop[1] + S.offset] : null, root = num(z.root, 60);
-      if (loop && inst.loop) { loop = clearTail(buf, loop); const rl = relocateLoop(buf, loop[0], Math.min(loop[1], buf.duration - 0.065)), ls = rl[0]; root = inst.pitched ? refineRoot(buf, ls, rl[1], root) : root; const le = tuneLoop(buf, ls, rl[1], root); loop = [ls, le]; if (EVEN[name]) evenLoop(buf, ls, le, root); flattenLoop(buf, ls, le, root); { const le2 = smoothLoop(buf, ls, le, inst.pitched ? root : 0); if (le2 > ls) loop = [ls, le2]; }; }   // the zone's true pitch; the loop a whole number of periods, its bands and its level even, its seam blended
+      if (loop && inst.loop) { loop = clearTail(buf, loop); const rl = relocateLoop(buf, loop[0], Math.min(loop[1], buf.duration - 0.065)), ls = rl[0]; root = inst.pitched ? refineRoot(buf, ls, rl[1], root) : root; const le = tuneLoop(buf, ls, rl[1], root); loop = [ls, le]; if (EVEN[name]) evenLoop(buf, ls, le, root); flattenLoop(buf, ls, le, root); flattenLow(buf, ls, le, inst.pitched ? root : 0); { const le2 = smoothLoop(buf, ls, le, inst.pitched ? root : 0); if (le2 > ls) loop = [ls, le2]; }; }   // the zone's true pitch; the loop a whole number of periods, its bands and its level even, its seam blended
       if (loop) agreeStereo(buf, loop, inst);
       inst.zones.push({ buf, root, lo: num(z.lo, 0), hi: num(z.hi, 127), loop, vel: z.vel || [0, 1], rr: z.rr || 0, gain: dbtoa(num(z.gain, 0)), pan: z.pan !== undefined ? num(z.pan, 0) : undefined });
     }).catch(e => { inst.failed++; S.errors++; if (S.errors < 4) console.warn('[samples] ' + z.file + ' failed', e && e.message); }));

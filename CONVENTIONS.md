@@ -164,7 +164,8 @@ Colour semantics are fixed: gold = BC/money, ember = industry, leaf = food/growt
   - **Intake** (`node tools/qa/library.js NAMES`): every looped zone as the sampler plays it is in tune by its whole-note median pitch
     (12 cents, 15 for an ensemble), its loop clear of the file's faded tail, its stereo agreeing in the low mids, its layers in order. The
     sampler enforces the last three at decode for every instrument (`clearTail`, `agreeStereo`, the per-note layer order in
-    `alignLayers`); tuning is the build's (`measure_root`). Run it on any new instrument; run `tools/qa/loops.js` too for a solo one.
+    `alignLayers`); tuning is the build's (`measure_root`). Every loop's level is evened at decode (`flattenLoop`, per channel), and below
+    300 Hz on the two channels' sum as well (`flattenLow`, split off without phase shift), since the profile hears the low end in mono. Run it on any new instrument; run `tools/qa/loops.js` too for a solo one.
   - **Acceptance** (`node tools/qa/orchestral.js IDS`): on the piece itself, nothing synthetic, held notes held, the solo's window clear,
     the music expressive and performed (not mechanical), the low end in phase, the choir carried (not covered) in its lowest octave, the
     bass clean. Every orchestral reading passes it before it is published.
@@ -187,6 +188,16 @@ Colour semantics are fixed: gold = BC/money, ember = industry, leaf = food/growt
     unless its part sets a `cut`, and a change of note is a crossfade (0.45 s in from the steady part, the old note holding a fifth of a
     beat into it and letting go over half a second). A bed voiced in the bass register (to E3) plays sul tasto (low-passed at ten times
     its note, 1.4 kHz at most). The acceptance test's `clean` check holds the bass's energy above 500 Hz 35 dB under its tone.
+  - **The foundation holds** (`holdLow: false` on a piece, or `hold: false` on a bass part, turns it off). The bass holds the key's
+    tonic in the octave its pattern asks, through the chords and the pattern's rests; a bed's voices to E3 hold the tonic and the fifth
+    above it (`holdLow`), the fifth tuned pure (a tempered fifth's coincident partials beat every four seconds), and never the bass's
+    own note in unison (two recordings of one pitch beat): with the bass on D2 they hold A2 and D3. So the bass is written first in each
+    section, after the solo. The harmony moves above. A low voice that followed the chords (A2, G2, A2, G2) was heard as "dummm dummm
+    dumm" whatever its attack. The acceptance test's `continuous` check: at most 4 low notes a minute, the held bass within 1.5 dB.
+  - **A section's dynamic is on the stage** for the beds, the choir and the bass (`STAGED`): their notes carry no `lv`/`cres` in their
+    level, the expression stage does (`o.g` = the movement `x` times the section's `lv`), so a note held across sections follows the
+    music. Their notes take their recorded layer from the dynamic across their length and hold it (no layer change mid-note). A beat's
+    dynamic is always its own section's (`lvAt` by the beat, not by the section being generated: a held note is written when it ends).
 - **Loops of note-by-note recordings** sit inside the note's steady stretch and run as long as it allows (`loop='steady'`); a note that
   swells more than `swing_max` dB inside its loop is dropped, and a file holding two takes is cut to the longer. Check a new set with
   `node tools/qa/loops.js --insts NAME` (one instrument a run: the whole library takes too long) before a piece uses it.

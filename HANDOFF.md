@@ -9,6 +9,14 @@ Browser-pane tip: animations use requestAnimationFrame, so in the built-in brows
 
 ## Session 11 (October 2026) — the score grows, branch `claude/festive-wozniak-7jy03r`
 
+**Latest (the foundation as one continuous note).** The user heard the bass as "dummm dummm dumm", most in the symphony, and wanted
+one continuous bass note. Measured: the double bass already held one note for 100 s; the low cellos just above it moved A2, G2, A2, G2
+with the chords (about 20 low note changes a minute), held loops pulsed 1 to 2 dB at the loop's length in the mono low band, the bass
+and the cellos on one D2 beat, the tempered open fifth beat every 4 s, and held notes took a later section's dynamic (the symphony's D2
+on its soft layer, 15 dB down). All five fixed in the profile (CONVENTIONS: the foundation holds; a section's dynamic is on the stage)
+and in the sampler (`flattenLow`). The men's hum still moves with the chords in the readings with choir: hold its lowest voice too if
+the user still hears a moving low line there. Test hooks: `Music._dbg = { noExpr, noPerform, noStage }`.
+
 **Latest (the ensemble, and a clean bass).** The user still heard it as artificial and asked for variation in the volume and timing of
 every part, matching the feel of the movement; then that the bass still sounded like strings at each note rather than a clean
 underlying tone. The orchestral profile now performs the score as an ensemble (CONVENTIONS, the ensemble) and plays the foundation as

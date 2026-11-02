@@ -469,11 +469,14 @@
   }
 
   // ---------------------------------------------------------------- compile context + emit
+  const STAGED = { pad: 1, choir: 1, bass: 1 };    // the layers whose section dynamic rides their expression stage (orchestral pieces)
   function emit(C, ly, inst, beat, midi, beats, vel, ex) {
     if (beat < 0 || beat >= C.totalBeats) return null;
     const o = Object.assign({}, inst);
-    o.f = mtof(midi); o.dur = Math.max(0.03, (C.tAt(beat + beats) - C.tAt(beat)) * (ex && ex.art !== undefined ? ex.art : 1)); o.vel = vel * (inst.lvl === undefined ? 1 : inst.lvl) * C.lvAt(beat); o.dyn = clamp(vel * C.lvAt(beat), 0, 1);
-    if (inst.v === 'sample' && beats >= 1.5) { const d1 = clamp(vel * C.lvAt(beat + beats), 0, 1); if (Math.abs(d1 - o.dyn) > 0.04) o.swell = d1; }   // long notes swell with the section's crescendo
+    const staged = C.lvStage && STAGED[ly];   // a staged layer's level is its expression stage's (the section's dynamic on it); the note keeps the timbre
+    o.f = mtof(midi); o.dur = Math.max(0.03, (C.tAt(beat + beats) - C.tAt(beat)) * (ex && ex.art !== undefined ? ex.art : 1)); o.vel = vel * (inst.lvl === undefined ? 1 : inst.lvl) * (staged ? 1 : C.lvAt(beat));
+    if (staged) { const k = Math.min(64, Math.max(1, Math.ceil(beats))); let q = 0; for (let i = 0; i < k; i++) q += C.lvAt(beat + (i + 0.5) * beats / k); o.dyn = clamp(vel * q / k, 0, 1); }   // its recorded layer from the dynamic across its length, held without a change of layer
+    else { o.dyn = clamp(vel * C.lvAt(beat), 0, 1); if (inst.v === 'sample' && beats >= 1.5) { const d1 = clamp(vel * C.lvAt(beat + beats), 0, 1); if (Math.abs(d1 - o.dyn) > 0.04) o.swell = d1; } }   // long notes swell with the section's crescendo
     // struck/ringing voices (bells, chimes) keep their own ring time; it only stretches a little with the written length
     if ((inst.v === 'bell' || inst.v === 'chime') && inst.dur) o.dur = inst.dur * clamp(0.7 + 0.15 * beats, 0.7, 1.4);
     if (ex) for (const k in ex) if (k !== 'art' && k !== 'dt' && ex[k] !== undefined) o[k] = ex[k];
@@ -484,6 +487,9 @@
       // held bed: warm, the bite of the bow gone (low-passed at ten times its note, 1.4 kHz at most). A part that sets its own cut keeps it.
       if (ly === 'bass' && o.cut === undefined) { o.cut = clamp(mtof(midi) * 4, 100, 200); o.cutN = 2; }
       else if (ly === 'pad' && midi <= 52 && o.cut === undefined) { o.cut = clamp(mtof(midi) * 10, 650, 1400); o.cutN = 2; }
+      // the held foundation's fifth is tuned pure, as string players tune a held open fifth: tempered, the fifth's third partial against the
+      // tonic's (D2 and A2 at 220.25 and 220 Hz) beats once every four seconds, a slow throb through the whole held low end
+      if (ly === 'pad' && midi <= LOW_TOP && holdsLow(C) && mod12(midi - C.P.tpc) === 7) o.f = mtof(midi + 0.0196);
     }
     delete o.p;
     const ev = { t: C.tAt(beat) + (ex && ex.dt || 0), v: inst.v, ly, o, m: midi, b: beat, bt: beats, k: C.key };
@@ -529,7 +535,7 @@
         const sg = segs[i]; let b1 = sg.b1;
         if (cfg.merge !== false) while (i + 1 < segs.length && segs[i + 1].ch.sym === sg.ch.sym) { i++; b1 = segs[i].b1; }
         const voiced = voiceChord(cfg.open ? openChord(sg.ch) : sg.ch, prev, reg[0], reg[1], n, (reg[0] + reg[1]) / 2); prev = voiced;
-        const notes = clearWindow(C, voiced, s.start + sg.b0, s.start + b1, reg[0], reg[1]);
+        const notes = holdLow(C, clearWindow(C, voiced, s.start + sg.b0, s.start + b1, reg[0], reg[1]), reg[0]);
         for (const m of Array.from(open.keys())) if (notes.indexOf(m) < 0) { padFlush(C, open.get(m), m, s.start + sg.b0, true); open.delete(m); }
         notes.forEach(function (m, j) { if (!open.has(m)) open.set(m, { b0: s.start + sg.b0, j, first: !any, inst, vel, n, width: num(cfg.width, 1), rel: cfg.rel, style, rng }); });
         any = true;
@@ -561,6 +567,22 @@
     C.prevPad[key] = prev;
   }
 
+  // The foundation holds (the orchestral profile; `holdLow: false` on a piece turns it off). A bed's voices in the bass register (to E3) do
+  // not move with the chords: they hold the key's tonic and the fifth above it, so the low end is one continuous sound and the harmony moves
+  // above it (a voice there that stepped A2, G2, A2, G2 with the chords was heard as "dummm dummm dumm", whatever its attack). Diatonic chords
+  // all sit over the open fifth: the subdominant and the supertonic as added-note colours, the dominant over its own root. The bed never
+  // doubles the bass in unison (the double basses and the cellos on one D2 beat against each other, 3 dB through the held low end): it holds
+  // the fifth and the octave above it instead. So the bass is written first in each section (after the solo).
+  const LOW_TOP = 52;
+  function holdsLow(C) { return orchOf(C.def) && C.def.holdLow !== false; }
+  function holdLow(C, notes, lo) {
+    if (!holdsLow(C)) return notes;
+    const low = notes.filter(m => m <= LOW_TOP); if (!low.length) return notes;
+    const P = []; for (let m = Math.max(24, Math.min(lo, Math.min(...low)) - 2); m <= LOW_TOP; m++) { const pc = mod12(m - C.P.tpc); if ((pc === 0 || pc === 7) && !(C.bassNow && C.bassNow.has(m))) P.push(m); }   // from the bed's floor (or a voice moved below it, out of the solo's way); never the bass's own note: two recordings in unison beat
+    if (!P.length) return notes;
+    const out = P.slice(0, low.length);
+    return out.concat(notes.filter(m => m > LOW_TOP && out.indexOf(m) < 0));
+  }
   function clearWindow(C, notes, a, b, lo, hi, slack) {   // slack: how far past its range a moved note may go (the beds 5 semitones, the choir none)
     if (!C.solo || !C.solo.length || !orchOf(C.def)) return notes;
     const near = m => C.solo.some(([s0, s1, sm]) => s0 < b - 0.01 && s1 > a + 0.01 && Math.abs(sm - m) <= 3);
@@ -627,12 +649,17 @@
   // behind it and a little more, the bass half as much and a little behind, and each with its own slow rise and fall against the others,
   // so the sections breathe as sections of players do, not as one fader
   const EXPR_LAYER = { pad: { depth: 1, lag: 0, drift: 0.8, per: 7 }, choir: { depth: 1.15, lag: 0.75, drift: 1.0, per: 9 }, bass: { depth: 0.5, lag: 0.5, drift: 0.6, per: 11 } };
-  function emitExpression(C, E, seed) {
+  // The stage also carries the section's own dynamic (its lv and cres) for these three layers, so a note held across sections follows the
+  // music: a note's level was fixed at its start, and the held foundation, begun in the opening drone at 0.3, stayed there for six minutes
+  // (7 to 11 dB under where the score had it). Their notes keep the section's dynamic in their timbre (which recorded layer sounds, and a
+  // long note's swell through the layers); their level is the stage's. `flat`: the section's dynamic alone (no movement, no wander).
+  function lvOfWraps(wraps, b) { let w = wraps[0]; for (const x of wraps) { if (b >= x.start - 1e-9) w = x; else break; } return w.R.lv0 + (w.R.lv1 - w.R.lv0) * clamp((b - w.start) / w.beats, 0, 1); }
+  function emitExpression(C, E, seed, wraps, flat) {
     for (const bus in EXPR_LAYER) {
       const X = EXPR_LAYER[bus], nz = wander(makeRng(seed + ':x:' + bus), X.per);
       for (let b = 0; b < C.totalBeats; b++) {
-        const e = moveAt(E, b - X.lag), g = (1 + X.depth * (e - 1)) * Math.pow(10, X.drift * nz(b) / 20);
-        C.ev.push({ t: C.tAt(b), v: 'expr', ly: bus, o: { g }, m: 0, b, bt: 0, k: 'expr' });
+        const e = flat ? 1 : moveAt(E, b - X.lag), lv = lvOfWraps(wraps, b), g = (1 + X.depth * (e - 1)) * (flat ? 1 : Math.pow(10, X.drift * nz(b) / 20));
+        C.ev.push({ t: C.tAt(b), v: 'expr', ly: bus, o: { g: g * lv, x: g, lv }, m: 0, b, bt: 0, k: 'expr' });
       }
     }
   }
@@ -649,7 +676,7 @@
     pad: { lat: 0.012, drift: 0.016, jit: 0.008, lvl: 0.9, vj: 1.0, follow: 0, spread: 1 },
     choir: { lat: 0.018, drift: 0.018, jit: 0.008, lvl: 1.0, vj: 1.0, follow: 0 },
     bass: { lat: 0.014, drift: 0.010, jit: 0.005, lvl: 0.6, vj: 0.6, follow: 0 },
-    bell: { lat: 0, drift: 0.008, jit: 0.006, lvl: 1.0, vj: 1.2, follow: 0.7, spread: 1 },
+    bell: { lat: 0, drift: 0.012, jit: 0.006, lvl: 1.0, vj: 1.2, follow: 0.7, spread: 1 },
     arp: { lat: 0, drift: 0.018, jit: 0.005, lvl: 0.8, vj: 1.5, follow: 0.6 },
     drums: { lat: 0.004, drift: 0.008, jit: 0.006, lvl: 0.8, vj: 1.5, follow: 0.6 },
     other: { lat: 0.006, drift: 0.010, jit: 0.006, lvl: 0.8, vj: 1.0, follow: 0.5 },
@@ -657,11 +684,12 @@
   Music._players = PLAYERS;
   function perform(C, E, seed) {
     const parts = {}, chords = {};
-    const part = k => parts[k] || (parts[k] = { P: PLAYERS[k] || PLAYERS[BUS[k]] || PLAYERS.other, t: wander(makeRng(seed + ':t:' + k), 6), l: wander(makeRng(seed + ':l:' + k), 8), r: makeRng(seed + ':n:' + k) });
+    const part = k => parts[k] || (parts[k] = { P: PLAYERS[k] || PLAYERS[BUS[k]] || PLAYERS.other, t: wander(makeRng(seed + ':t:' + k), 12), l: wander(makeRng(seed + ':l:' + k), 10), r: makeRng(seed + ':n:' + k) });
     for (const e of C.ev) {
       if (e.v === 'expr' || !e.o || e.o.vel === undefined) continue;
       const k = e.k || e.ly, p = part(k), P = p.P, r = p.r, b = e.b;
-      const ev0 = moveAt(E, b), I = clamp((ev0 - 0.6) / 0.65, 0, 1), loose = 1.5 - I, slope = moveAt(E, b + 1) - moveAt(E, b - 1);
+      const ev0 = moveAt(E, b), I = clamp((ev0 - 0.6) / 0.65, 0, 1), loose = 1.5 - 0.8 * I,   // tighter at the top, never mechanical (0.7 of the lean at full)
+         slope = moveAt(E, b + 1) - moveAt(E, b - 1);
       const lean = k === 'lead' ? 0 : slope > 0 ? -0.008 * clamp(slope / 0.08, 0, 1) : 0.012 * clamp(-slope / 0.08, 0, 1);
       const dt = P.lat * (0.5 + 0.5 * loose) + P.drift * loose * p.t(b) + lean + P.jit * gauss(r);
       let g = P.lvl * p.l(b) + P.vj * gauss(r);
@@ -703,19 +731,24 @@
     // through it (one note across the bars of a chord, not a new attack each bar), a change of note is played legato (the next note past
     // its attack, the last one let go quickly as it arrives), so a slow bass never swells in again at every bar line.
     const tie = P.tie !== undefined ? !!P.tie : !!(C.def && (C.def.bassTie || C.def.orch)), notes = [];
+    // hold (the bass's `hold`; on in the orchestral profile unless the piece says `holdLow: false`): the foundation is one continuous note,
+    // the key's tonic in the octave the pattern asks, held through the chords and the pattern's rests (the harmony moves above it)
+    const hold = tie && (P.hold !== undefined ? !!P.hold : holdsLow(C));
     for (let bar = 0; bar < s.bars; bar++) {
       const pt = parseSteps(pats[bar % pats.length]), stepB = C.meter / pt.n;
-      for (const st of pt.steps) {
+      pt.steps.forEach(function (st, si) {
         const beat = bar * C.meter + st.i * stepB, sg = segAt(s.R.segs, beat);
-        const m = bassPitch(C, sg.ch, st.c, P.pedal);
-        if (m === null) continue;
+        const m = hold ? bassPitch(C, sg.ch, /^[ca]$/.test(st.c) ? 'c' : /^[89]$/.test(st.c) ? '8' : '1', true) : bassPitch(C, sg.ch, st.c, P.pedal);
+        if (m === null) return;
         const onBeat = Math.abs(st.i * stepB - Math.round(st.i * stepB)) < 1e-6, v = vel * (onBeat ? 1 : 0.78) * (1 + (C.vrng() - 0.5) * 0.08);
-        if (!tie) { emit(C, 'bass', inst, s.start + beat, m, st.len * stepB * (st.len > 1 ? 0.97 : gate), v); continue; }
+        if (!tie) { emit(C, 'bass', inst, s.start + beat, m, st.len * stepB * (st.len > 1 ? 0.97 : gate), v); return; }
+        const len = hold ? ((pt.steps[si + 1] ? pt.steps[si + 1].i : pt.n) - st.i) * stepB : st.len * stepB;   // held: on to the next step, past any rest
         const p = notes[notes.length - 1];
-        if (p && p.m === m && Math.abs(p.beat + p.len - beat) < 1e-6) p.len += st.len * stepB; else notes.push({ beat, m, len: st.len * stepB, v });
-      }
+        if (p && p.m === m && Math.abs(p.beat + p.len - beat) < 1e-6) p.len += len; else notes.push({ beat, m, len, v });
+      });
     }
     if (!tie) return;
+    if (hold) C.bassNow = new Set(notes.map(n => n.m));
     // the held note carries on into the next section when it follows at once on the same note and instrument (no new attack at the
     // section line); the last note of a section waits to be written until the next section, or the end of the pass, says how long it is
     C.bassCarry = C.bassCarry || null; const cr = C.bassCarry; C.bassCarry = null;
@@ -1107,6 +1140,7 @@
       return w.t0 + tOf(w, b - w.start);
     };
     let soloArcs = null;
+    C.lvStage = orchOf(def) && !Music._dbg.noStage;
     if (orchOf(def)) {
       soloArcs = soloPrepass(C, wraps);
       const iv = tempoFromSolo(soloArcs);
@@ -1122,12 +1156,15 @@
     for (const w of wraps) { for (let k = 0; k < w.bars; k++) bars.push(C.tAt(w.start + k * w.R.meter)); for (let k = 0; k < w.beats; k++) beatsT.push(C.tAt(w.start + k)); }
     bars.push(tAcc); beatsT.push(tAcc);
     C.curW = null;
-    C.lvAt = function (b) { const w = C.curW; if (!w || w.R.lv0 === w.R.lv1) return w ? w.R.lv0 : 1; return w.R.lv0 + (w.R.lv1 - w.R.lv0) * clamp((b - w.start) / w.beats, 0, 1); };
+    // the section's dynamic at a beat: the section that beat is in (a held note written when it ends, sections later, took the dynamic of
+    // the section it was written in: the symphony's held D2 played on the soft layer, 15 dB under the rest)
+    C.lvAt = function (b) { return lvOfWraps(wraps, b); };
     for (const w of wraps) {
       C.curW = w; C.meter = w.R.meter; C.strong = w.R.strong; C.spb = 60 / w.b0;   // the section's meter and (opening) tempo
       const s = { R: w.R, start: w.start, bars: w.bars, beats: w.beats };
       const keys = Object.keys(w.R.L);
-      if (orchOf(C.def) && keys.indexOf('lead') > 0) { keys.splice(keys.indexOf('lead'), 1); keys.unshift('lead'); }   // the solo first: the beds keep its window
+      if (orchOf(C.def)) for (const k of ['bass', 'lead']) if (keys.indexOf(k) > 0) { keys.splice(keys.indexOf(k), 1); keys.unshift(k); }   // the solo first (the beds keep its window), then the bass (the beds keep off its note)
+      C.bassNow = null;
       C.solo = [];
       for (const key of keys) {
         const cfg = w.R.L[key];
@@ -1151,10 +1188,10 @@
     if (C.padCarry) for (const k in C.padCarry) if (C.padCarry[k]) { C.key = k; padFlushAll(C, C.padCarry[k]); C.padCarry[k] = null; }   // the held beds end with the pass (as the part they are)
     if (C.bassCarry) { C.key = 'bass'; bassWrite(C, C.bassCarry); C.bassCarry = null; }
     const perf = soloArcs && (def.perform !== undefined ? !!def.perform : true), pseed = def.id + ':pf' + pass + ':' + (take || 0), Emove = soloArcs ? moveCurve(C, wraps, soloArcs) : null;
-    if (soloArcs) emitExpression(C, Emove, pseed);
+    if (soloArcs) emitExpression(C, Emove, pseed, wraps, !!Music._dbg.noExpr);
     C.ev.sort((a, b) => a.t - b.t);
     markLegato(C.ev);
-    if (perf) { perform(C, Emove, pseed); C.ev.sort((a, b) => a.t - b.t); }   // the ensemble: after the legato is known, so a line's overlaps stay
+    if (perf && !Music._dbg.noPerform) { perform(C, Emove, pseed); C.ev.sort((a, b) => a.t - b.t); }   // the ensemble: after the legato is known, so a line's overlaps stay
     return { events: C.ev, beats: C.totalBeats, len: tAcc, wraps, pass, snaps: C.snaps, bars, beatsT, move: Emove };
   }
   // phrasing: in a melodic line, a note that follows straight on from the previous one is played legato (the sampler then starts past the
@@ -1326,7 +1363,7 @@
     }
     fire(ev, T) {
       const L = this.layers[ev.ly]; if (!L) return;
-      if (ev.v === 'expr') { try { L.in.gain.setTargetAtTime(clamp(ev.o.g, 0.5, 1.5), T, 0.45); } catch (e) { /* ignore */ } return; }
+      if (ev.v === 'expr') { try { L.in.gain.setTargetAtTime(clamp(ev.o.g, 0.02, 2), T, 0.45); } catch (e) { /* ignore */ } return; }
       if (this.only && !this.only[ev.ly]) return;
       if (L.i0 !== undefined && this.intensity < L.i0 - 0.02) return;
       const o = this.stretch === 1 || !ev.o || !ev.o.dur ? ev.o : Object.assign({}, ev.o, { dur: ev.o.dur * this.stretch });
@@ -1968,6 +2005,7 @@
     return out;
   };
   Music._compile = (id, pass, form0, alt0, take, era) => compilePass(TRACKS[id], pass || 0, form0, alt0, take, era);
+  Music._dbg = {};                                 // test hooks: { noExpr, noPerform } compile without the expression curve or the ensemble
   Music._define = Track;                          // test hook: register a (hidden) track at run time
   Music._quietStart = def => quietStart(def);      // test hook: where a piece's quiet half begins
   Music._tracks = TRACKS; Music._INST = INST; Music._parseChord = parseChord;
