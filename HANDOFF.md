@@ -9,6 +9,12 @@ Browser-pane tip: animations use requestAnimationFrame, so in the built-in brows
 
 ## Session 11 (October 2026) — the score grows, branch `claude/festive-wozniak-7jy03r`
 
+**Latest (the orchestra with the choir).** After the foundation was held the user heard only the choir. Measured: the balance per
+section was the same as before (within 1 dB) but the choir had always stood 3 to 8 dB over the strings where the ear listens, and with
+the low cellos no longer moving the choir carried all the harmony. Rebalanced (CONVENTIONS, an orchestra with a choir); the `balance`
+check fails the old mix (5.6 and 6.8 dB) and passes the new (0.2 to 3.2). Do not answer "too much choir" by opening the bass's filter:
+at any cut the bass already stands 12 to 15 dB over the choir at 60-250 Hz, and a wider filter covers the choir's lowest octave.
+
 **Latest (the foundation as one continuous note).** The user heard the bass as "dummm dummm dumm", most in the symphony, and wanted
 one continuous bass note. Measured: the double bass already held one note for 100 s; the low cellos just above it moved A2, G2, A2, G2
 with the chords (about 20 low note changes a minute), held loops pulsed 1 to 2 dB at the loop's length in the mono low band, the bass

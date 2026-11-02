@@ -5,6 +5,9 @@ Versions follow `MAJOR.MINOR.PATCH`; the live version is the `VERSION` file.
 
 ## Unreleased
 
+- The title readings with the choir rebalanced: the choir 1.6 -> 1.25, the upper strings x1.8 (new `part` balance for parts that
+  share a layer), the opening's glow raised, the bass 0.86 -> 0.75 so the choir's lowest octave stays carried. The choir now leads the
+  strings by 0 to 3 dB at 250 Hz-4 kHz (was 3 to 8). New acceptance check `balance`. The symphony and chamber keep their own balance.
 - The foundation as one continuous note (the orchestral profile). The bass holds the key's tonic through the chords and its pattern's
   rests; the beds' voices to E3 hold the tonic and the fifth, tuned pure, never in unison with the bass. The title readings' low end
   went from about 20 note changes a minute to 2 or 3, and its level from moving 2.3 to 3.4 dB to 0.7 to 0.9 dB. New acceptance check

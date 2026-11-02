@@ -194,6 +194,11 @@ Colour semantics are fixed: gold = BC/money, ember = industry, leaf = food/growt
     own note in unison (two recordings of one pitch beat): with the bass on D2 they hold A2 and D3. So the bass is written first in each
     section, after the solo. The harmony moves above. A low voice that followed the chords (A2, G2, A2, G2) was heard as "dummm dummm
     dumm" whatever its attack. The acceptance test's `continuous` check: at most 4 low notes a minute, the held bass within 1.5 dB.
+  - **An orchestra with a choir, not a choir alone.** Holding the low end takes the strings' harmonic movement out of the bass register,
+    and the choir then carries all of it: the user heard nothing but the choir (it stood 3 to 8 dB over the strings at 250 Hz-4 kHz).
+    So the upper strings carry the harmony with the voices (a piece's `part: { pad2: 1.8 }` balances parts that share a layer), the
+    choir sits back a little, and the acceptance test's `balance` check holds the choir at most 4.5 dB over the strings there. The
+    choir's own lowest octave stays clear (`carried`): balance the strings above it, not with the low beds or the bass.
   - **A section's dynamic is on the stage** for the beds, the choir and the bass (`STAGED`): their notes carry no `lv`/`cres` in their
     level, the expression stage does (`o.g` = the movement `x` times the section's `lv`), so a note held across sections follows the
     music. Their notes take their recorded layer from the dynamic across their length and hold it (no layer change mid-note). A beat's

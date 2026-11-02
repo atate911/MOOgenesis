@@ -17,6 +17,8 @@
 //               (full string sections are naturally wide there)
 //   carried     in the choir's own lowest octave neither the bass nor the beds stand more than 3 dB over the choir
 //   clean       the bass is a tone, not a bow: its energy above 500 Hz is 35 dB or more under its 30-250 Hz
+//   balance     an orchestra with a choir, not a choir alone: in the excerpt the choir stands at most 4.5 dB over the strings where the
+//               ear is most sensitive (250 Hz-4 kHz)
 //   continuous  the foundation is one continuous sound: the bass and the beds' voices below E3 begin at most 4 notes a minute (from the
 //               score), and the bass's level 40-300 Hz moves 1.5 dB or less between 0.3 s and 6 s (a loop's swell, a pulse at each bar)
 const { serve, open } = require('./lib');
@@ -87,6 +89,9 @@ const IDS = (argv.find(a => !a.startsWith('--') && !Object.values(opt).includes(
       if (!cn.length) checks.push({ name: 'carried', pass: true, detail: 'no choir' });
       else { const lo = Math.round(f0 * 0.85), hi = Math.round(f0 * 2.1), cb = await corr(stems.choir, lo, hi), bb = await corr(stems.bass, lo, hi), pb = await corr(stems.pad, lo, hi), over = Math.max(bb.db, pb.db) - cb.db, who = bb.db >= pb.db ? 'the bass' : 'the beds';
         checks.push({ name: 'carried', pass: over <= 3, detail: who + ' ' + (over >= 0 ? over.toFixed(1) + ' dB over' : (-over).toFixed(1) + ' dB under') + ' the choir in its lowest octave (' + lo + '-' + hi + ' Hz)' }); }
+      // balance: the choir against the strings, 250 Hz-4 kHz
+      if (cn.length) { const cb2 = await corr(stems.choir, 250, 4000), pb2 = await corr(stems.pad, 250, 4000), lead = cb2.db - pb2.db;
+        checks.push({ name: 'balance', pass: lead <= 4.5, detail: 'the choir ' + (lead >= 0 ? lead.toFixed(1) + ' dB over' : (-lead).toFixed(1) + ' dB under') + ' the strings, 250 Hz-4 kHz' }); }
       // clean: the bass's tone against its noise
       { const hi = await corr(stems.bass, 500, 6000), lo = await corr(stems.bass, 30, 250), dd = hi.db - lo.db;
         checks.push({ name: 'clean', pass: lo.n < 10 || dd <= -35, detail: lo.n < 10 ? 'no bass' : 'the bass above 500 Hz ' + (-dd).toFixed(0) + ' dB under its tone' }); }

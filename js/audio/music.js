@@ -480,6 +480,7 @@
     // struck/ringing voices (bells, chimes) keep their own ring time; it only stretches a little with the written length
     if ((inst.v === 'bell' || inst.v === 'chime') && inst.dur) o.dur = inst.dur * clamp(0.7 + 0.15 * beats, 0.7, 1.4);
     if (ex) for (const k in ex) if (k !== 'art' && k !== 'dt' && ex[k] !== undefined) o[k] = ex[k];
+    if (C.def && C.def.part && C.def.part[C.key] !== undefined) o.vel *= num(C.def.part[C.key], 1);   // the balance of parts that share a layer (pad and pad2, choir and choir2)
     if (C.def && C.def.orch && inst.v === 'sample') {
       o.ens = 0; o.sub = 0;                                                         // the orchestral profile: the recording as it is
       // the foundation is a tone, not a bow: the bass through a steep low-pass at four times its note, 200 Hz at most (its fundamental and

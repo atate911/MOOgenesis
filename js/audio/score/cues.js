@@ -8,7 +8,7 @@
   Track('title', {
     desc: 'Main theme — the undercurrent: a deep bed first (deep open chords in the low strings, the double bass on a slow line with its sub nearly sub-bass, the planetarium’s analogue glow, one chime), the men entering humming low; the solo horn’s first part the commonwealth’s tune itself, as the Commonwealth plays it, in the major, whole and slow over them, twice; then its variations with the men echoing its head between them, the bassoon low and the horn in variation, a soft trumpet high above once; the oboe’s lyrical variation in the breath over the cellos laying the head; the tune back whole for the crescendo in two steps, a high horn and a low brass voice in canon, then the full brass on the motif strongly with the snare, the timpani, the strings and the mallets and the chamber open on ah; the wind-down over the strings with the men’s last echo; the fade on variations, the solo horn alone, down into the drone',
     quotes: ['procession'],
-    bpm: 58, root: 'D', mode: 'major', loopFrom: 'A1', trim: 2.5, orch: true, tens: false, rubato: 0.025, tone: { lo: 1.4, hi: 0.6 }, fx: { verb: 1.0, stage: 0.8, dly: 1.6 }, mix: { choir: 1.6, pad: 0.95, lead: 2.2, bass: 0.86 }, duck: 0.7,
+    bpm: 58, root: 'D', mode: 'major', loopFrom: 'A1', trim: 2.5, orch: true, tens: false, rubato: 0.025, tone: { lo: 1.4, hi: 0.6 }, fx: { verb: 1.0, stage: 0.8, dly: 1.6 }, mix: { choir: 1.25, pad: 0.95, lead: 2.2, bass: 0.75 }, part: { pad2: 1.8 }, duck: 0.7,
     sends: { lead: { verb: 0.08, stage: 0.36, dly: 0.06 }, choir: { verb: 0.32, stage: 0.12 }, bell: { verb: 0.5, stage: 0.2 } },   // the solo at the front of the stage and dry, the bed behind it in the hall; the high trumpet and the points far back
     forms: [['A1', 'B', 'C', 'A2', 'A3', 'D', 'E'], ['A1', 'C', 'B', 'A2', 'A3', 'D', 'E']],
     alts: [{}, { choir2: 'choirWomen' }],
@@ -54,8 +54,8 @@
     // one soft trumpet high above, the timpani only at the crest. 'title:reed' (below) is the same piece with the cor anglais as the first
     // soloist an octave above the horn, its window moved up with it.
     sec: [
-      { n: 'drone', bars: 4, cres: [0.3, 0.62], prog: 'I:4', pad: { p: 'swell', n: 2, reg: [36, 47], vel: 0.25, open: true }, pad2: { p: 'swell', n: 2, reg: [60, 76], vel: 0.28 }, bass: { pat: 'c---', pedal: true, inst: { p: 'deep', sub: 0, cut: 85, att: 6, rel: 2.8 } }, bell2: { ph: 'r2 ST2', inst: 'chime', vel: 0.36 }, choir: { n: 2, reg: [45, 55], vel: 0.56, soft: true, width: 0.85, att: 6 }, choir2: { n: 2, reg: [64, 76], vel: 0.2, soft: true, width: 0.7, att: 8 }, timp: false, drums: false },   // the bed alone: deep open chords, the pedal, the glow, one chime
-      { n: 'men', bars: 8, cres: [0.62, 0.7], prog: 'I I IV I | I vi IV I', pad: { p: 'sus', n: 2, reg: [36, 47], vel: 0.22, open: true }, pad2: { p: 'swell', n: 2, reg: [60, 76], vel: 0.28 }, bass: { pat: 'c---', pedal: true, inst: { p: 'deep', sub: 0, cut: 85, att: 1.0, rel: 2.4 } },
+      { n: 'drone', bars: 4, cres: [0.3, 0.62], prog: 'I:4', pad: { p: 'swell', n: 2, reg: [36, 47], vel: 0.25, open: true }, pad2: { p: 'swell', n: 2, reg: [60, 76], vel: 0.4 }, bass: { pat: 'c---', pedal: true, inst: { p: 'deep', sub: 0, cut: 85, att: 6, rel: 2.8 } }, bell2: { ph: 'r2 ST2', inst: 'chime', vel: 0.36 }, choir: { n: 2, reg: [45, 55], vel: 0.56, soft: true, width: 0.85, att: 6 }, choir2: { n: 2, reg: [64, 76], vel: 0.2, soft: true, width: 0.7, att: 8 }, timp: false, drums: false },   // the bed alone: deep open chords, the pedal, the glow, one chime
+      { n: 'men', bars: 8, cres: [0.62, 0.7], prog: 'I I IV I | I vi IV I', pad: { p: 'sus', n: 2, reg: [36, 47], vel: 0.22, open: true }, pad2: { p: 'swell', n: 2, reg: [60, 76], vel: 0.4 }, bass: { pat: 'c---', pedal: true, inst: { p: 'deep', sub: 0, cut: 85, att: 1.0, rel: 2.4 } },
         choir: { n: 2, reg: [45, 55], vel: 0.62, soft: true, width: 0.85 }, choir2: { n: 2, reg: [64, 76], vel: 0.22, soft: true, width: 0.7 }, bell: { dens: 0.04, res: 1, reg: [76, 100], vel: 0.28 }, timp: false, drums: false },   // the men enter humming low, one chord to a bar
       { n: 'horn', bars: 16, cres: [0.68, 0.78], prog: 'I I IV I | I I IV V | I I IV I | I I IV V', pad: { p: 'sus', n: 2, reg: [36, 47], vel: 0.26, open: true }, pad2: { p: 'swell', n: 2, reg: [72, 88], vel: 0.3 }, bass: { pat: 'c---', pedal: true, inst: { p: 'deep', sub: 0, cut: 85, att: 0.6, rel: 2.0 } },
         lead: { ph: 'PA*0.88 PB*0.94 PA*1 PB*1', oct: -1, vel: 0.95, shape: 0.45, swell: 0.4, pan: -0.05 }, choir: { n: 2, reg: [45, 55], vel: 0.55, soft: true, width: 0.85 }, bell: { dens: 0.04, res: 1, reg: [76, 100], vel: 0.28 },
@@ -145,7 +145,7 @@
     const ONE = { kick: ['X...............', '................', '................', '................', '................', '................', '................', '................'], vel: 0.5 };
     const apply = (d, S, all) => { for (const sec of d.sec) { for (const k in all) sec[k] = all[k]; const o = S[sec.n]; if (o) for (const k in o) sec[k] = o[k]; } };
     // the symphony
-    let d = JSON.parse(JSON.stringify(Music._tracks.title)); delete d._p; delete d.id;
+    let d = JSON.parse(JSON.stringify(Music._tracks.title)); delete d._p; delete d.id; delete d.part;   // no choir to balance the strings against: the title's own string balance
     d.desc = 'Main theme, the symphony reading — the full orchestra, no choir: the low strings and the basses first, the violins stating the commonwealth’s tune twice with the cellos an octave below, the winds carrying the variations with the bass clarinet echoing the head low, the bassoon low and the oboe answering, the oboe’s breath over the cellos, the horns in canon, the full brass on the motif with the snare and the timpani over pulsing strings and woodwind runs, the violins’ fall for the wind-down, the flute’s fade';
     d.hidden = true; d.variantOf = 'title';
     d.inst = Object.assign({}, d.inst, { pad: 'strings', pad2: 'cellos', lead: 'strings', choir: 'choirMen' });
@@ -163,7 +163,7 @@
     }, { choir: false, choir2: false });
     Track('title:symphony', d);
     // the chamber
-    d = JSON.parse(JSON.stringify(Music._tracks.title)); delete d._p; delete d.id;
+    d = JSON.parse(JSON.stringify(Music._tracks.title)); delete d._p; delete d.id; delete d.part;   // no choir to balance the strings against: the title's own string balance
     d.desc = 'Main theme, the chamber reading — strings alone, nothing struck or blown: the low strings and the basses first, the violas entering, the violins stating the commonwealth’s tune twice with the cellos an octave below and the basses plucked under them, one cello echoing the head between the variations and taking the fall low, the violas singing the breath, the violins and the cellos in canon, the full strings on the motif in three octaves over the spiccato ostinato and the tremolo, the cello’s wind-down, the violins’ fade high';
     d.hidden = true; d.variantOf = 'title';
     d.inst = Object.assign({}, d.inst, { pad: 'violas', pad2: 'cellos', lead: 'strings', arp: 'pizz' });
