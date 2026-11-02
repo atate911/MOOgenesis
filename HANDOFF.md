@@ -9,6 +9,13 @@ Browser-pane tip: animations use requestAnimationFrame, so in the built-in brows
 
 ## Session 11 (October 2026) — the score grows, branch `claude/festive-wozniak-7jy03r`
 
+**Latest (expression).** The user found the instrumentation stoic and formulaic, the solo without purpose: a fixed tempo, beds held at
+one level, the same hairpin on every phrase and the same swell on every choir note. The orchestral profile now plays with expression
+(see CONVENTIONS, expression); the acceptance test's `expressive` check guards it. Renders and checks run one browser per core, four
+at once (this container: 4 cores, 15 GB, no GPU): the scratchpad's `pass/render-par.sh OUT ids...` and `pass/accept-par.sh OUT ids...`.
+Next if the user wants more: the macro shape (quieter, more intimate passages; orchestration that thins and fills by section), which
+the expression inside phrases does not change much (the loudness range rose only from 10.3 to 11.1 LU).
+
 **Latest (the orchestral system).** The user asked for a coherent system instead of fixes one at a time. Now: `orch: true` on a piece
 (the title and its five readings) sets every orchestral default and the soloist's window; the sampler meets an intake standard for
 every instrument at decode; `node tools/qa/library.js NAMES` (intake, per zone) and `node tools/qa/orchestral.js IDS` (acceptance,

@@ -168,6 +168,11 @@ Colour semantics are fixed: gold = BC/money, ember = industry, leaf = food/growt
   - **Acceptance** (`node tools/qa/orchestral.js IDS`): on the piece itself, nothing synthetic, held notes held, the solo's window clear,
     the low end in phase, the choir carried (not covered) in its lowest octave. Every orchestral reading passes it before it is published.
   A new problem heard by ear becomes a check in one of these two before it is fixed, so it stays fixed.
+  - **Expression** is part of the profile, not written note by note: each phrase's climax (its highest note) drives the line's
+    dynamics, its held notes' direction and vibrato, the conductor's tempo (a pre-pass of the solo: press toward the climax, broaden on
+    it, ease at the phrase's end, a ritardando on the last) and the beds' expression curve (the solo's intensity and the chord's
+    tension, an expression stage per layer ahead of the dip under the solo). A section marks a `breath` before a crest; contrasts
+    (a hush after a climax, a roll into it) are the score's. The acceptance test's `expressive` check keeps it from going flat again.
 - **Loops of note-by-note recordings** sit inside the note's steady stretch and run as long as it allows (`loop='steady'`); a note that
   swells more than `swing_max` dB inside its loop is dropped, and a file holding two takes is cut to the longer. Check a new set with
   `node tools/qa/loops.js --insts NAME` (one instrument a run: the whole library takes too long) before a piece uses it.
