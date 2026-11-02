@@ -5,6 +5,8 @@
 //   synthetic   no synthesized voice and no synth-family recording sounds (drums, the timpani and struck bells aside)
 //   held        the beds and the bass do not strike a note again that they were holding into a bar line (at most 2% of their notes)
 //   window      a bed or choir note within 3 semitones of the soloist's note sounds under it for at most 12% of the solo's time
+//   expressive  the tempo breathes (bar lengths spread 1% or more), the beds' expression moves 3 dB or more, 60% or more of the solo's
+//               held notes are shaped (rising into the climax, blooming on it, releasing after)
 // and from a rendered excerpt (a minute or two each):
 //   phase       below 150 Hz the bass, the choir and the beds agree left and right (correlation 0.9 or more); the mix 150-500 Hz 0.4 or more
 //               (full string sections are naturally wide there)
@@ -19,7 +21,7 @@ const IDS = (argv.find(a => !a.startsWith('--') && !Object.values(opt).includes(
   const res = await page.evaluate(async ([IDS, T0, T1]) => {
     const A = MOO.Audio, M = A.Music, S = A.Samples; await S.preload(); const out = {};
     const SYNTH_SMP = /^pad(Serrie|Glass|Air|Dark)|^organ/;                    // the synthesized pads among the recordings
-    const OK_V = { sample: 1, drum: 1, kick: 1, snare: 1, hat: 1, timp: 1 };
+    const OK_V = { sample: 1, drum: 1, kick: 1, snare: 1, hat: 1, timp: 1, expr: 1 };   // expr: the expression curve, not a sound
     for (const id of IDS) {
       const d = M._tracks[id], r = M._compile(id, 0), spb = 60 / d.bpm, meter = d.meter || 4, ev = r.events.filter(e => e.o), checks = [];
       // synthetic
@@ -35,6 +37,11 @@ const IDS = (argv.find(a => !a.startsWith('--') && !Object.values(opt).includes(
       for (const s of solo) { const a = s.b, b = s.b + s.bt; soloT += s.bt; let c = 0; for (const u of under) { if (Math.abs(u.m - s.m) > 3) continue; const ov = Math.min(b, u.b + u.bt) - Math.max(a, u.b); if (ov > 0) c = Math.max(c, ov); } clashT += c; if (c > 1.5 && !worst) worst = (s.b * spb).toFixed(0) + ' s'; }
       const wf = soloT ? clashT / soloT : 0;
       checks.push({ name: 'window', pass: wf <= 0.12, detail: Math.round(wf * 100) + '% of the solo\'s time has a bed or choir note within 3 semitones' + (worst ? ' (first at ' + worst + ')' : '') });
+      // expressive: the tempo breathes, the beds move with the music, the solo's held notes go somewhere
+      const bl = []; for (let i = 1; i < r.bars.length; i++) bl.push(r.bars[i] - r.bars[i - 1]); const bm = bl.reduce((p, q) => p + q, 0) / bl.length, bsd = Math.sqrt(bl.reduce((p, q) => p + (q - bm) * (q - bm), 0) / bl.length) / bm;
+      const xg = ev.filter(e => e.v === 'expr' && e.ly === 'pad').map(e => e.o.g), xr = xg.length ? 20 * Math.log10(Math.max(...xg) / Math.min(...xg)) : 0;
+      const held = solo.filter(e => e.bt >= 1.5), shaped = held.filter(e => e.o.swell !== undefined && Math.abs(e.o.swell - e.o.dyn) > 0.03).length, sf = held.length ? shaped / held.length : 1;
+      checks.push({ name: 'expressive', pass: bsd >= 0.01 && xr >= 3 && sf >= 0.6, detail: 'tempo spread ±' + (100 * bsd).toFixed(1) + '%, the beds move ' + xr.toFixed(1) + ' dB, ' + Math.round(sf * 100) + '% of the solo\'s held notes shaped' });
       // phase and carried: a rendered excerpt, bus by bus
       const corr = async (buf, lo, hi) => {
         const oc = new OfflineAudioContext(2, buf.length, buf.sampleRate), src = oc.createBufferSource(); src.buffer = buf; let n = src;
@@ -62,7 +69,7 @@ const IDS = (argv.find(a => !a.startsWith('--') && !Object.values(opt).includes(
   let fails = 0;
   for (const id in res) {
     console.log(id + (res[id].orch ? '' : '  (not marked orch: the profile is off)'));
-    for (const c of res[id].checks) { if (!c.pass) fails++; console.log('  ' + (c.pass ? 'pass' : 'FAIL') + '  ' + c.name.padEnd(10) + c.detail); }
+    for (const c of res[id].checks) { if (!c.pass) fails++; console.log('  ' + (c.pass ? 'pass' : 'FAIL') + '  ' + c.name.padEnd(11) + c.detail); }
   }
   if (opt.json) require('fs').writeFileSync(opt.json, JSON.stringify(res, null, 1));
   console.log(fails ? '\n' + fails + ' check(s) failed' : '\nall checks pass');

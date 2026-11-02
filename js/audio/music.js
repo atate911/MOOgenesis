@@ -403,6 +403,20 @@
   // may still set any of these itself; tools/qa/orchestral.js checks the result.
   const ORCH_LOWMONO = { choir: 450, bass: 250, pad: 300 };   // the choir up to 450 Hz: the Sonatina choir's two microphones are opposed in phase through 150-500 Hz (a hollow hum)
   function orchOf(def) { return !!(def && def.orch); }
+  // Expression (the orchestral profile). A phrase has a destination: its climax, the highest note (the longest of equals; when the
+  // phrase opens on its top note, the longest note of its second half). The line builds toward it, arrives, and lets go faster than it
+  // came: intensity rises from 0.6 to 1 at the climax and falls to 0.45 at the phrase's end. Lines take their dynamics from it, long
+  // notes their direction (into the next note before the climax, a bloom on it, a release after), vibrato its depth, the conductor's
+  // tempo its push and broadening, the beds and the choir their breathing.
+  function phraseArc(N, pitchOf) {
+    const n = N.length, I = new Array(n).fill(0.75); if (!n) return { I, ci: 0 };
+    let ci = 0; for (let i = 1; i < n; i++) { const a = pitchOf(N[i]), b = pitchOf(N[ci]); if (a > b || (a === b && N[i].dur > N[ci].dur)) ci = i; }
+    if (ci === 0 && n > 2) { let best = -1; for (let i = Math.floor(n / 2); i < n; i++) if (best < 0 || N[i].dur > N[best].dur) best = i; if (best > 0 && N[best].dur >= N[0].dur) ci = best; }
+    const p0 = N[0].off, pc = N[ci].off, pe = N[n - 1].off;
+    for (let i = 0; i < n; i++) { const p = N[i].off; I[i] = i <= ci ? (pc > p0 ? 0.6 + 0.4 * Math.pow((p - p0) / (pc - p0), 1.3) : 1) : 1 - 0.55 * Math.pow((p - pc) / Math.max(1e-6, pe - pc), 0.8); }
+    return { I, ci };
+  }
+  const VIB_FAM = { brass: [3, 6], winds: [4, 9], strings: [6, 11], choir: [0, 0], low: [3, 6] };   // cents at rest and added at full intensity
   function vibRateFor(bpm) { const bps = clamp(num(bpm, 90), 30, 220) / 60, n = Math.max(1, Math.round(5.1 / bps)); return n * bps; }
   Music._vibRateFor = vibRateFor;
   function resolveInst(spec, fallback) {
@@ -552,6 +566,49 @@
       else if (up <= hi + sl && !near(up) && out.indexOf(up) < 0 && notes.indexOf(up) < 0) out.push(up);
     }
     return out.length ? out : notes.filter(m => !near(m)).length ? notes.filter(m => !near(m)) : out;
+  }
+  // the solo, played once ahead of the performance (its own random stream: the performance's is untouched), to know its phrases
+  function soloPrepass(C, wraps) {
+    const out = []; C.phPick = C.phPick || new Map();
+    for (const w of wraps) {
+      const cfg = w.R.L && w.R.L.lead; if (!cfg || (typeof cfg === 'object' && cfg.skip)) continue;
+      const C2 = Object.create(C); C2.ev = []; C2.key = 'lead'; C2.snaps = 0; C2.lvAt = () => 1; C2.vrng = makeRng(C.def.id + ':pre'); C2.warn = () => {}; C2.curW = w; C2.meter = w.R.meter; C2.strong = w.R.strong; C2.spb = 60 / w.R.bpm;
+      try { genLine(C2, { R: w.R, start: w.start, bars: w.bars, beats: w.beats }, cfg, 'lead'); } catch (e) { continue; }
+      for (const e of C2.ev) if (e.m && e.bt && e.k === 'lead') out.push({ off: e.b, dur: e.bt, m: e.m });
+    }
+    out.sort((a, b) => a.off - b.off);
+    const phrases = []; let cur = [];
+    for (const n of out) { const last = cur[cur.length - 1]; if (last && n.off - (last.off + last.dur) > 0.75) { phrases.push(cur); cur = []; } cur.push(n); }
+    if (cur.length) phrases.push(cur);
+    return phrases.map(N => Object.assign({ N }, phraseArc(N, n => n.m)));
+  }
+  function tempoFromSolo(arcs) {
+    const iv = [];
+    arcs.forEach(({ N, ci }, j) => {
+      if (N.length < 2) return; const c = N[ci], last = N[N.length - 1], final = j === arcs.length - 1;
+      if (c.off - 2 >= N[0].off) iv.push([c.off - 2, c.off, 1.035]);                          // pressing on toward the climax
+      iv.push([c.off, c.off + Math.min(c.dur, 2), 0.93]);                                      // broadening on it
+      if (last !== c) iv.push([last.off, last.off + Math.min(last.dur, final ? 4 : 2), final ? 0.8 : 0.91]);   // easing at the phrase's end; the last one a true ritardando
+    });
+    return iv;
+  }
+  // the beds, the choir and the bass ride an expression curve (one point a beat, smoothed by the player): the solo's intensity where it
+  // sings, a four-bar hairpin where it does not, and the chord's tension (a dominant leans, a tonic settles)
+  function emitExpression(C, wraps, arcs) {
+    const notes = []; for (const a of arcs) a.N.forEach((n, i) => notes.push([n.off, n.off + n.dur, a.I[i]]));
+    const TENS = sym => /^(V|vii)/.test(sym) && !/^VI/.test(sym) ? 0.07 : /^(IV|ii)/.test(sym) ? 0.03 : /^(vi|iii)/.test(sym) ? 0.02 : 0;
+    for (const w of wraps) {
+      const hasSolo = notes.some(([a, z]) => a < w.start + w.beats && z > w.start);
+      for (let k = 0; k < w.beats; k++) {
+        const b = w.start + k, sg = segAt(w.R.segs, k), t = TENS(sg && sg.ch ? sg.ch.sym : '');
+        let E;
+        if (hasSolo) { let I = null; for (const [a, z, v] of notes) if (b >= a - 0.25 && b < z) { I = v; break; } E = 0.88 + 0.6 * ((I === null ? 0.5 : I) - 0.6) + 1.5 * t; }
+        else E = 0.86 + 0.3 * Math.pow(Math.sin(Math.PI * (k % 16) / 16), 1.2) + 1.5 * t;
+        if (w.R.raw && w.R.raw.breath && k >= w.beats - 2) E *= 0.68;   // the breath before what comes next: the beds draw in
+        E = clamp(E, 0.6, 1.25);
+        for (const bus of ['pad', 'choir', 'bass']) C.ev.push({ t: C.tAt(b), v: 'expr', ly: bus, o: { g: bus === 'bass' ? 1 + 0.5 * (E - 1) : E }, m: 0, b, bt: 0, k: 'expr' });
+      }
+    }
   }
   function padFlush(C, o, m, endAbs, cont) {
     const L = endAbs - o.b0; if (L <= 0) return;
@@ -771,9 +828,13 @@
       if (restP && rng() < restP) { cur += ph.bars * C.meter; continue; }        // the player leaves this phrase out: a breath in the line
       const first = ph.notes.length ? ph.notes[0].d - 1 : 0;
       const span = shape ? ph.notes.reduce((x, n) => Math.max(x, n.off + n.dur), 0) || 1 : 1, dLo = shape ? Math.min(...ph.notes.map(n => n.d)) : 0, dHi = shape ? Math.max(...ph.notes.map(n => n.d)) : 0;
+      const orch = orchOf(C.def), arc = orch ? phraseArc(ph.notes, n => n.d + (n.acc || 0) * 0.01) : null, velOf = i => vel0 * md.vel * (0.66 + 0.44 * arc.I[i]);
+      const fam = orch ? (FAMILY[inst.smp] || V_FAMILY[inst.v] || '') : '', vf = VIB_FAM[fam];
+      let ni = -1;
       for (const nt of ph.notes) {
+        ni++;
         const off = cur + nt.off;
-        const vel = (shape ? vel0 * (1 - shape * (1 - Math.min(1, 0.65 * Math.pow(Math.sin(Math.PI * Math.min(1, (nt.off + nt.dur / 2) / span)), 0.6) + 0.35 * (nt.d - dLo) / Math.max(1, dHi - dLo) + (nt.dur >= 2 ? 0.1 : 0)))) : vel0) * md.vel;   // the phrase's dynamic mark
+        const vel = orch ? velOf(ni) : (shape ? vel0 * (1 - shape * (1 - Math.min(1, 0.65 * Math.pow(Math.sin(Math.PI * Math.min(1, (nt.off + nt.dur / 2) / span)), 0.6) + 0.35 * (nt.d - dLo) / Math.max(1, dHi - dLo) + (nt.dur >= 2 ? 0.1 : 0)))) : vel0) * md.vel;   // the phrase's dynamic mark
         if (off >= s.beats - 1e-6) break;
         let step = nt.d - 1;
         if (md.inv) step = 2 * first - step;
@@ -785,8 +846,20 @@
         const dt = (rng() - 0.5) * 0.012;
         if (flutterP && nt.dur >= 1.5 && rng() < flutterP) { for (let k = 0; k < 3; k++) emit(C, ly, inst, s.start + off - 0.17 + k * 0.055, foldRange(inst, stepMidi(C, step + (k % 2 === 0 ? 1 : 0), 0)), 0.055, vel * 0.6, { art: 1, dt: 0 }); }
         else if (graceP && nt.dur >= 1.5 && rng() < graceP) emit(C, ly, inst, s.start + off - 0.09, foldRange(inst, stepMidi(C, step - 1, 0)), 0.09, vel * 0.55, { art: 1, dt: 0 });
-        const sw = swellK && nt.dur >= 2 ? { dyn: clamp(vel * C.lvAt(s.start + off) * (1 - swellK), 0.12, 1), swell: clamp(vel * C.lvAt(s.start + off + nt.dur), 0, 1) } : null;
-        emit(C, ly, inst, s.start + off, m, nt.dur, vel, Object.assign({ art: art, dt: dt, pan: spec.pan, width: spec.width }, sw || {}));
+        let sw = swellK && nt.dur >= 2 ? { dyn: clamp(vel * C.lvAt(s.start + off) * (1 - swellK), 0.12, 1), swell: clamp(vel * C.lvAt(s.start + off + nt.dur), 0, 1) } : null;
+        let ex2 = null;
+        if (orch) {
+          const nx = ph.notes[ni + 1], lv0 = C.lvAt(s.start + off), lv1 = C.lvAt(s.start + off + nt.dur), I = arc.I[ni];
+          sw = null;
+          if (nt.dur >= 1.5) {          // a long note goes somewhere: into the next note before the climax, a bloom on it, a release after
+            const d0 = vel * lv0 * (ni < arc.ci ? 0.86 : ni === arc.ci ? 0.9 : 1), d1 = ni < arc.ci ? (nx ? velOf(ni + 1) : vel) * lv1 : ni === arc.ci ? vel * lv1 * 1.12 : vel * lv1 * 0.75;
+            sw = { dyn: clamp(d0, 0.1, 1), swell: clamp(d1, 0.08, 1) };
+          }
+          ex2 = { vib: vf && nt.dur >= 1.5 ? vf[0] + vf[1] * I : 0, vibDelay: 0.35 };   // vibrato only where a note is held, deeper as it means more
+          if (!nx) ex2.art = art * 0.9;                                                 // the breath at the phrase's end
+          if (ni === 0) ex2.dt = dt + 0.025;                                             // and the lean into its first note
+        }
+        emit(C, ly, inst, s.start + off, m, nt.dur, vel, Object.assign({ art: art, dt: dt, pan: spec.pan, width: spec.width }, sw || {}, ex2 || {}));
         if (echoP && (!strong || spec.echo) && rng() < echoP) emit(C, ly, inst, s.start + off + 0.04, foldRange(inst, m + 12), Math.min(nt.dur, 1) * 0.8, vel * 0.3, { art: art, pan: (rng() - 0.5) * 0.8 });
         if (harm) {
           let hm = stepMidi(C, step + harm, 0);
@@ -964,6 +1037,18 @@
       if (b > w.start + w.beats) return w.t0 + w.len + (b - w.start - w.beats) * 60 / w.b1;
       return w.t0 + tOf(w, b - w.start);
     };
+    let soloArcs = null;
+    if (orchOf(def)) {
+      soloArcs = soloPrepass(C, wraps);
+      const iv = tempoFromSolo(soloArcs);
+      if (iv.length) {                // the time map again, the solo's push and broadening in it: an orchestra following its soloist
+        const tAt0 = C.tAt, K = 8, nK = Math.ceil(C.totalBeats * K) + 1, T = new Float64Array(nK + 1);
+        for (let k = 0; k < nK; k++) { const b = k / K; let mul = 1; for (const [a, z, m] of iv) if (b + 0.5 / K >= a && b + 0.5 / K < z) mul *= m; T[k + 1] = T[k] + (tAt0(b + 1 / K) - tAt0(b)) / mul; }
+        C.tAt = function (b) { if (b <= 0) return tAt0(b); const x = b * K, k = Math.floor(x); if (k >= nK) return T[nK] + (tAt0(b) - tAt0(nK / K)); return T[k] + (T[k + 1] - T[k]) * (x - k); };
+        for (const w of wraps) { w.t0 = C.tAt(w.start); w.len = C.tAt(w.start + w.beats) - w.t0; }
+        tAcc = C.tAt(C.totalBeats);
+      }
+    }
     const bars = [], beatsT = [];
     for (const w of wraps) { for (let k = 0; k < w.bars; k++) bars.push(C.tAt(w.start + k * w.R.meter)); for (let k = 0; k < w.beats; k++) beatsT.push(C.tAt(w.start + k)); }
     bars.push(tAcc); beatsT.push(tAcc);
@@ -996,6 +1081,7 @@
     if (!orchOf(C.def)) genTransitions(C, wraps);   // the risers and swells between sections are synthesized: an orchestral piece makes its own
     if (C.padCarry) for (const k in C.padCarry) if (C.padCarry[k]) { padFlushAll(C, C.padCarry[k]); C.padCarry[k] = null; }   // the held beds end with the pass
     if (C.bassCarry) { bassWrite(C, C.bassCarry); C.bassCarry = null; }
+    if (soloArcs) emitExpression(C, wraps, soloArcs);
     C.ev.sort((a, b) => a.t - b.t);
     markLegato(C.ev);
     return { events: C.ev, beats: C.totalBeats, len: tAcc, wraps, pass, snaps: C.snaps, bars, beatsT };
@@ -1088,7 +1174,8 @@
           post.connect(ch.in); ch.out.connect(cg); cg.connect(this.bus); cg.connect(sv);
           this.choruses.push(ch);
         }
-        this.layers[name] = { in: inG, level: L.lvl * num(mix[name], 1), i0: L.i0 };
+        const exG = mk(ctx.createGain()); exG.gain.value = 1; exG.connect(inG);   // the expression stage (orchestral pieces' curve); the dip under the solo is inG
+        this.layers[name] = { in: exG, duck: inG, level: L.lvl * num(mix[name], 1), i0: L.i0 };
         inG.gain.value = this.layers[name].i0 !== undefined ? 0 : this.layers[name].level;
       }
       const gate = def.gate || {};
@@ -1168,6 +1255,7 @@
     }
     fire(ev, T) {
       const L = this.layers[ev.ly]; if (!L) return;
+      if (ev.v === 'expr') { try { L.in.gain.setTargetAtTime(clamp(ev.o.g, 0.5, 1.5), T, 0.45); } catch (e) { /* ignore */ } return; }
       if (this.only && !this.only[ev.ly]) return;
       if (L.i0 !== undefined && this.intensity < L.i0 - 0.02) return;
       const o = this.stretch === 1 || !ev.o || !ev.o.dur ? ev.o : Object.assign({}, ev.o, { dur: ev.o.dur * this.stretch });
@@ -1185,7 +1273,7 @@
       const merge = Music.duckMerge !== false, end = T + dur, cont = merge && this._duckEnd !== undefined && T <= this._duckEnd + 0.6;
       for (const name of ['pad', 'pad2', 'choir', 'choir2', 'arp', 'arp2']) {
         const L = this.layers[name]; if (!L || L.i0 !== undefined) continue;
-        const g = L.in.gain, lv = L.level, k = name.indexOf('arp') === 0 ? 0.84 : dk;
+        const g = (L.duck || L.in).gain, lv = L.level, k = name.indexOf('arp') === 0 ? 0.84 : dk;
         try {
           if (!merge) { g.setTargetAtTime(lv * k, T, 0.06); g.setTargetAtTime(lv, T + dur, 0.3); continue; }
           if (cont) { g.cancelScheduledValues(Math.max(T, this._duckEnd - 0.001)); g.setTargetAtTime(lv * k, Math.max(T, this._duckEnd - 0.001), 0.06); }

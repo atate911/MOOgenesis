@@ -5,6 +5,16 @@ Versions follow `MAJOR.MINOR.PATCH`; the live version is the `VERSION` file.
 
 ## Unreleased
 
+- Expression, in the orchestral profile: every phrase has a destination (its climax: the highest note, the longest of equals), the line
+  building to it, arriving and letting go faster than it came. Lines take their dynamics from the arc; a held note goes somewhere (into
+  the next before the climax, a bloom on it, a release after), with vibrato only where a note is held, arriving after a moment and
+  deeper as it means more (vibDelay); the last note before a rest breathes, the first leans in. The conductor follows the soloist: the
+  solo is played once ahead (its own random stream), and the tempo presses toward each climax, broadens on it and eases at the phrase's
+  end, the final phrase a true ritardando (bars 4.07 to 5.17 s where they were all 4.14). The beds, the choir and the bass ride an
+  expression curve from the solo's intensity and the chord's tension (3.8 dB of movement; they held every note at one level before),
+  in an expression stage of their own ahead of the dip under the solo. A section may breathe (`breath`: the beds draw in over its last
+  beats). The title: the duet breathes and the timpani roll into the crest; after the crest a sudden hush. The acceptance test checks it
+  (`expressive`: the tempo's spread, the beds' movement, the solo's shaped notes).
 - An orchestral system in place of the fixes one at a time. `orch: true` (the title and its five readings) sets the orchestral
   defaults in one place, adds the soloist's window (the solo generated first; beds and choir moved out of three semitones around it: the
   readings had a bed or choir note there for 40 to 54% of the solo's time, now 1 to 4%) and drops the synthesized transitions. Two gates:

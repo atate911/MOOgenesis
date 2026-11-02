@@ -461,7 +461,7 @@
   // ------------------------------------------------------------------ the voice
   // o: smp (instrument), f (Hz; ignored for unpitched kits unless o.tune semitones), dur, vel 0..1+ (level), dyn 0..1 (which dynamic
   //    layer; defaults to vel), swell (dyn at the end of the note: a crescendo / diminuendo through the recorded layers), att/rel
-  //    (override the instrument's), pan (else the zone's / instrument's seat on the stage), prio, send, vib (cents), vibRate (Hz: the piece's tempo-locked rate, else 4.6-5.7 at random), ens (0..1 second
+  //    (override the instrument's), pan (else the zone's / instrument's seat on the stage), prio, send, vib (cents), vibDelay (s before it starts), vibRate (Hz: the piece's tempo-locked rate, else 4.6-5.7 at random), ens (0..1 second
   //    detuned copy), cut (lowpass Hz), gain, leg (legato: start past the attack transient, short fade-in), hum (humanize: timing /
   //    pitch spread in ms / cents, 0 = none), fb / fbo (fallback synth voice + its params), oneShot (play the whole sample),
   //    alignEnd (one-shots that must end on the downbeat: swells, rolls), hold (shorts: extra ring after the written length)
@@ -543,7 +543,7 @@
       const off = leg ? (o.legOff === 'loop' && z.loop ? Math.max(0, z.loop[0] - 0.05) : Math.min(num(inst.legOff, 0.22), z.loop ? Math.max(0, z.loop[0] - 0.4) : 0.2)) : 0;
       src.start(t0, off); src.stop(end); v.srcs.push(src);
       if (end > v.t1) v.t1 = end;
-      if (vib > 0 && !oneShot) { const vr = o.vibRate > 0 ? o.vibRate * (0.99 + eng.rand() * 0.02) : 4.6 + eng.rand() * 1.1, lf = v.osc('sine', vr, t0, end), lg = v.gain(0.0001); lg.gain.setValueAtTime(0.0001, t0 + 0.1); lg.gain.linearRampToValueAtTime(vib, t0 + 0.6); lf.connect(lg); lg.connect(src.detune); }
+      if (vib > 0 && !oneShot) { const vr = o.vibRate > 0 ? o.vibRate * (0.99 + eng.rand() * 0.02) : 4.6 + eng.rand() * 1.1, lf = v.osc('sine', vr, t0, end), lg = v.gain(0.0001), vd = num(o.vibDelay, 0.1); lg.gain.setValueAtTime(0.0001, t0 + vd); lg.gain.linearRampToValueAtTime(vib, t0 + vd + 0.5); lf.connect(lg); lg.connect(src.detune); }
       return src;
     };
     const ens = oneShot ? 0 : num(o.ens, 0);
