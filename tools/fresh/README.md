@@ -44,3 +44,4 @@ Render a step: `node tools/fresh/render-step.js tools/fresh/step1c.js 52 OUTDIR`
 - `full5.js` now has a high solo trumpet (Iowa) at the peak on the theme's 4th-6th notes an octave up (A5 B5 A5); `full5b.js` the 5th-8th (B5 A5 F#5 E5).
 - `full6.js`: the user heard 3:10-3:50 (the rise and peak) as muddy, unmusical, over the top, hard to hear: thinned to fewer lines in clear registers (`clarity.js`: the tune 2.3 -> 3.4 dB over the rest there; the peak no louder than the climax).
 - `full7.js` (the production candidate): full4 (before the held peak, which the user found too much) with full6's clearer rise. The tune 3.6 dB over the rest at the rise; about 5:20.
+- `full8.js`: full7 paced with breathing room: soft bed-only passages S1 (3 bars after the theme), S2 (2, before the theme builds), S3 (2, after the climax), the release 6 bars. About 6:00, LRA 11.8; the soft passages about -21 LUFS short-term.
