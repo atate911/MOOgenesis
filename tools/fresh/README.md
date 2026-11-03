@@ -41,3 +41,4 @@ Render a step: `node tools/fresh/render-step.js tools/fresh/step1c.js 52 OUTDIR`
   B 8, M 8 (RISE: the rising idea in sequence to a peak on V), R 8 (RES: the head broadened, falling home), L 4 (strings and choir),
   E 8 (I2 on the cello), Z 6. About 5:20; the rise about 1 dB over the climax.
 - `full5.js`: full4 with a held tutti peak (P, 3 bars on V) before the resolution: strings across the octaves (cellos open A2-A3 below, the section to E6), the trombones A3, the horn section E5, the trumpets A5, the flutes C#6, the choir full (the women to E5), the timpani rolling. About 5:35; the peak about -9 LUFS short-term.
+- `full5.js` now has a high solo trumpet (Iowa) at the peak on the theme's 4th-6th notes an octave up (A5 B5 A5); `full5b.js` the 5th-8th (B5 A5 F#5 E5).
