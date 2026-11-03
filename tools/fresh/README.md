@@ -29,4 +29,9 @@ Render a step: `node tools/fresh/render-step.js tools/fresh/step1c.js 52 OUTDIR`
 - `full.js`: the whole piece from 4e: intro (4 bars, the bed alone), A (8, the low French horn's tune), A2 (8, fuller, a breath and
   a roll), B (the crest), D (8, the wind-down, the horn's strain once more), E (4, settling); loops from A. About 2:50, -17 to -10 to
   -19 LUFS short-term, LRA 8.9. Not yet in the game's score: it replaces the title once the user approves it.
-- `full2.js`: the climax's horns fuller. x: the horn section at D4-D5 with the solo French horn an octave below, the trombones under them; y: the horn section with a second horn a third below (harm -2), the trombones an octave below.
+- `full2.js` (approved: x, the production variation): the climax's horns fuller. x: the horn section at D4-D5 with the solo French horn an octave below, the trombones under them; y: the horn section with a second horn a third below (harm -2), the trombones an octave below.
+- `full3.js`: the production arrangement in the user's form: theme (the question) - interlude (brooding) - theme (building) -
+  majestic resolution (the answer) - conclusion. intro 4, A 8 (the low French horn, PA PB, ending open), I 8 (the solo cello, V3 V4
+  through the relative minor, the men low, no brass), A2 8 (fuller, a breath, a roll), B 8 (the climax of x), M 8 (HY CD in the horns,
+  falling home to the tonic), Z 8 (the low horn recalls the head, settling). About 3:30, loops from A; -18 in the interlude, -10 at
+  the climax and the answer (no louder), LRA 10.3.
