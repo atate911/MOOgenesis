@@ -11,7 +11,10 @@ score yet: a step is written into `js/audio/score/cues.js` once approved.
   loop repeats (`bass-bursts.js`: 51 bursts over 6 dB in 20 s); the solo bass is clean on every note it plays here (`transients.js`).
 
 Render a step: `node tools/fresh/render-step.js tools/fresh/step1c.js 52 OUTDIR` (WAV and MP3, LUFS, the low end's movement).
-- `step2.js`: the choir on step 1c. a: the Sonatina men (G2-C4, three parts) with the Pianobook ooh above; b: the men alone (G2-E4,
+- `step2.js` (approved: a): the choir on step 1c. a: the Sonatina men (G2-C4, three parts) with the Pianobook ooh above; b: the men alone (G2-E4,
   four parts). Both sit 1.5 to 2 dB under the strings at 250 Hz-4 kHz (`render-step.js` prints the figure). The user also wants to
-  try Pianobook's "Choir of the Fallen" (one singer's low throat singing, binaurally processed: check it in mono); it needs a
-  Pianobook login, so the user downloads it and shares a Dropbox or Google Drive link.
+  try Pianobook's "Choir of the Fallen" (one singer's low throat singing), listened to it and found it the wrong sound. The user heard
+  a and b alike; a goes forward (its upper voices for the climax).
+- `step3.js`: the horn with the tune on step 2a, the commonwealth's strain and its answer twice (D4-D5) after a bar of the bed alone,
+  closing on the tonic (18 bars). a: the solo horn (Iowa); b: the horn section in unison. The solo stands 4 to 5.5 dB over the
+  strings and choir; both are clean in their tone band (the section has more texture above 1.5 kHz).
