@@ -15,6 +15,9 @@ Render a step: `node tools/fresh/render-step.js tools/fresh/step1c.js 52 OUTDIR`
   four parts). Both sit 1.5 to 2 dB under the strings at 250 Hz-4 kHz (`render-step.js` prints the figure). The user also wants to
   try Pianobook's "Choir of the Fallen" (one singer's low throat singing), listened to it and found it the wrong sound. The user heard
   a and b alike; a goes forward (its upper voices for the climax).
-- `step3.js`: the horn with the tune on step 2a, the commonwealth's strain and its answer twice (D4-D5) after a bar of the bed alone,
+- `step3.js` (approved: a, the solo French horn): the horn with the tune on step 2a, the commonwealth's strain and its answer twice (D4-D5) after a bar of the bed alone,
   closing on the tonic (18 bars). a: the solo horn (Iowa); b: the horn section in unison. The solo stands 4 to 5.5 dB over the
   strings and choir; both are clean in their tone band (the section has more texture above 1.5 kHz).
+- `step4.js`: the build. 3a states the tune once softly (cres 0.38-0.58, a breath and a timpani roll), then the crest: the horn
+  section with the trombones an octave below, the timpani on the strong beats, the strings higher, the men on ah with the women
+  above (cres 0.95-1.15), a closing tonic bar. The crest about 5 dB over the first statement (LRA 7.1).
