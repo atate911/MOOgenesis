@@ -2,8 +2,8 @@
 // statement quieter on a softer voice, the French horn keeping the second (the theme building). a: the alto flute (Iowa), D4-D5;
 // b: the solo trombone (Iowa), D3-D4.
 const F8 = require('./full8.js')['fresh:prod6'];
-const make = (inst, oct) => { const d = JSON.parse(JSON.stringify(F8)), intro = d.sec.find(s => s.n === 'intro'), A = d.sec.find(s => s.n === 'A');
+const make = (inst, oct, vel) => { const d = JSON.parse(JSON.stringify(F8)), intro = d.sec.find(s => s.n === 'intro'), A = d.sec.find(s => s.n === 'A');
   Object.assign(intro, { bars: 6, prog: 'I I IV I | IV I', cres: [0.22, 0.34] });
-  Object.assign(A, { cres: [0.3, 0.42] }); A.lead = { ph: 'PA*0.85 PB*0.9', inst, oct, vel: 0.8, pan: -0.05 };
+  Object.assign(A, { cres: [0.3, 0.42] }); A.lead = { ph: 'PA*0.85 PB*0.9', inst, oct, vel: vel || 0.8, pan: -0.05 };
   return d; };
-module.exports = { a: { 'fresh:prod7a': make('altoFluteIowa', 0) }, b: { 'fresh:prod7b': make('tbnSolo', -1) }, c: { 'fresh:prod7c': make('clarIowa', 0) } };   // c: the clarinet (Iowa), D4-D5 (the user: soft, rounded, warm)
+module.exports = { a: { 'fresh:prod7a': make('altoFluteIowa', 0) }, b: { 'fresh:prod7b': make('tbnSolo', -1) }, c: { 'fresh:prod7c': make('clarIowa', 0) }, d: { 'fresh:prod7d': make({ p: 'fluteIowa', lvl: 0.73 }, 1, 1.0) } };   // the preset's level (0.071) left it 16 dB under the soft bed: raised to stand about 3 dB over it   // d: the concert flute (Iowa) an octave up, D5-D6: its singing register (the user found the alto flute low)   // c: the clarinet (Iowa), D4-D5 (the user: soft, rounded, warm)
