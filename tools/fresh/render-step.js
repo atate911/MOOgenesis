@@ -21,9 +21,12 @@ const DEFS = require(path.resolve(process.argv[2])), SECS = +process.argv[3] || 
       const mav = (v, R) => v.map((_, i) => { let q = 0, c = 0; for (let k = Math.max(0, i - R); k <= Math.min(v.length - 1, i + R); k++) { q += v[k]; c++; } return q / c; });
       const sm = mav(e, 3), tr = mav(e, 60), f = []; for (let i = 240; i < e.length - 80; i++) f.push(sm[i] - tr[i]); f.sort((p, q) => p - q);
       a.lowMoves = f.length ? +(f[Math.floor(f.length * 0.95)] - f[Math.floor(f.length * 0.05)]).toFixed(1) : 0;
+      // the choir against the strings where the ear is most sensitive (250 Hz-4 kHz), each rendered alone
+      const lv = async b => { const oc2 = new OfflineAudioContext(1, b.length, b.sampleRate), s2 = oc2.createBufferSource(); s2.buffer = b; let m = s2; for (const [t, f] of [['highpass', 250], ['highpass', 250], ['lowpass', 4000], ['lowpass', 4000]]) { const q = oc2.createBiquadFilter(); q.type = t; q.frequency.value = f; m.connect(q); m = q; } m.connect(oc2.destination); s2.start(); const y = (await oc2.startRendering()).getChannelData(0); let q = 0; for (let i = 12 * b.sampleRate; i < y.length - 3 * b.sampleRate; i++) q += y[i] * y[i]; return 10 * Math.log10(q / (y.length - 15 * b.sampleRate) + 1e-15); };
+      if (def.sec.some(s => s.choir || s.choir2)) { const ch = await M.renderOffline(id, SECS, { sampleRate: 22050, loop: false, seed: 1, only: ['choir'] }), pd = await M.renderOffline(id, SECS, { sampleRate: 22050, loop: false, seed: 1, only: ['pad'] }); a.choirOverStrings = +((await lv(ch)) - (await lv(pd))).toFixed(1); }
       return { a, wav: AM.wavBase64(buf) }; }, [id, DEFS[id], SECS]);
     const name = id.replace(/[:]/g, '-'), wav = path.join(OUT, name + '.wav'); fs.writeFileSync(wav, Buffer.from(r.wav, 'base64'));
     execFileSync('ffmpeg', ['-y', '-loglevel', 'error', '-i', wav, '-codec:a', 'libmp3lame', '-b:a', '256k', wav.replace(/\.wav$/, '.mp3')]);
-    const a = r.a; console.log(id.padEnd(12), 'LUFS', a.lufs, 'peak', a.peak, 'clicks', a.clicks, 'LRA', a.lra, 'bands', a.bands ? a.bands.join('/') : '', 'low end moves', a.lowMoves, 'dB');
+    const a = r.a; console.log(id.padEnd(12), 'LUFS', a.lufs, 'peak', a.peak, 'clicks', a.clicks, 'LRA', a.lra, 'bands', a.bands ? a.bands.join('/') : '', 'low end moves', a.lowMoves, 'dB' + (a.choirOverStrings !== undefined ? ', the choir ' + a.choirOverStrings + ' dB against the strings (250 Hz-4 kHz)' : ''));
   }
   await browser.close(); srv.close(); })().catch(e => { console.error(e); process.exit(1); });
