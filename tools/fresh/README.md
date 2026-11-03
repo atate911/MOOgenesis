@@ -29,3 +29,4 @@ Render a step: `node tools/fresh/render-step.js tools/fresh/step1c.js 52 OUTDIR`
 - `full.js`: the whole piece from 4e: intro (4 bars, the bed alone), A (8, the low French horn's tune), A2 (8, fuller, a breath and
   a roll), B (the crest), D (8, the wind-down, the horn's strain once more), E (4, settling); loops from A. About 2:50, -17 to -10 to
   -19 LUFS short-term, LRA 8.9. Not yet in the game's score: it replaces the title once the user approves it.
+- `full2.js`: the climax's horns fuller. x: the horn section at D4-D5 with the solo French horn an octave below, the trombones under them; y: the horn section with a second horn a third below (harm -2), the trombones an octave below.
