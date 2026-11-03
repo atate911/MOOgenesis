@@ -25,3 +25,4 @@ Render a step: `node tools/fresh/render-step.js tools/fresh/step1c.js 52 OUTDIR`
   energy at the crest): the choir 1.3 (level with the strings), the strings' spiccato ostinato in eighths under the crest; the
   loudness unchanged within 0.2 dB.
   Then more choir at the build (the men 1.25, the women 0.78 at the crest), the crest strings 0.9: the same loudness.
+- `step4v.js`: d, the choir 1.5 throughout (more choir over the horn); e, d with the first statement's French horn an octave lower (D3-D4).
