@@ -21,3 +21,6 @@ Render a step: `node tools/fresh/render-step.js tools/fresh/step1c.js 52 OUTDIR`
 - `step4.js`: the build. 3a states the tune once softly (cres 0.38-0.58, a breath and a timpani roll), then the crest: the horn
   section with the trombones an octave below, the timpani on the strong beats, the strings higher, the men on ah with the women
   above (cres 0.95-1.15), a closing tonic bar. The crest about 5 dB over the first statement (LRA 7.1).
+  Revised after the user's notes (background music: no louder; the timpani and brass right; a little more choir; a little more
+  energy at the crest): the choir 1.3 (level with the strings), the strings' spiccato ostinato in eighths under the crest; the
+  loudness unchanged within 0.2 dB.
