@@ -35,3 +35,8 @@ Render a step: `node tools/fresh/render-step.js tools/fresh/step1c.js 52 OUTDIR`
   through the relative minor, the men low, no brass), A2 8 (fuller, a breath, a roll), B 8 (the climax of x), M 8 (HY CD in the horns,
   falling home to the tonic), Z 8 (the low horn recalls the head, settling). About 3:30, loops from A; -18 in the interlude, -10 at
   the climax and the answer (no louder), LRA 10.3.
+- `full4.js`: the user found the interlude filler and the answer weak, and asked for about 5 min, more time away from the theme, an
+  answer that rises above the climax and then resolves, a release on the strings and choir, an echo of the interlude. intro 4, A 8,
+  I1 8 (the cello, the rising idea from the sixth, a half close), I2 8 (the horn answers, the cello lays the head beneath), A2 8,
+  B 8, M 8 (RISE: the rising idea in sequence to a peak on V), R 8 (RES: the head broadened, falling home), L 4 (strings and choir),
+  E 8 (I2 on the cello), Z 6. About 5:20; the rise about 1 dB over the climax.
