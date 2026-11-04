@@ -931,7 +931,7 @@
       if (restP && rng() < restP) { cur += ph.bars * C.meter; continue; }        // the player leaves this phrase out: a breath in the line
       const first = ph.notes.length ? ph.notes[0].d - 1 : 0;
       const span = shape ? ph.notes.reduce((x, n) => Math.max(x, n.off + n.dur), 0) || 1 : 1, dLo = shape ? Math.min(...ph.notes.map(n => n.d)) : 0, dHi = shape ? Math.max(...ph.notes.map(n => n.d)) : 0;
-      const orch = orchOf(C.def), arc = orch ? phraseArc(ph.notes, n => n.d + (n.acc || 0) * 0.01) : null, velOf = i => vel0 * md.vel * (0.66 + 0.44 * arc.I[i]);
+      const orch = orchOf(C.def), arc = orch ? phraseArc(ph.notes, n => n.d + (n.acc || 0) * 0.01) : null, ek = clamp(num(spec.expr, 1), 0, 2.5), vk = clamp(num(spec.vibK, 1), 0, 4), velOf = i => vel0 * md.vel * (1 - 0.34 * ek + 0.44 * ek * arc.I[i]);   // expr: how far the phrase's arc moves the line (1 as before); vibK: its vibrato's depth
       const fam = orch ? (FAMILY[inst.smp] || V_FAMILY[inst.v] || '') : '', vf = VIB_FAM[fam];
       let ni = -1;
       for (const nt of ph.notes) {
@@ -955,10 +955,10 @@
           const nx = ph.notes[ni + 1], lv0 = C.lvAt(s.start + off), lv1 = C.lvAt(s.start + off + nt.dur), I = arc.I[ni];
           sw = null;
           if (nt.dur >= 1.5) {          // a long note goes somewhere: into the next note before the climax, a bloom on it, a release after
-            const d0 = vel * lv0 * (ni < arc.ci ? 0.86 : ni === arc.ci ? 0.9 : 1), d1 = ni < arc.ci ? (nx ? velOf(ni + 1) : vel) * lv1 : ni === arc.ci ? vel * lv1 * 1.12 : vel * lv1 * 0.75;
+            const d0 = vel * lv0 * (ni < arc.ci ? 1 - 0.14 * ek : ni === arc.ci ? 1 - 0.1 * ek : 1), d1 = ni < arc.ci ? (nx ? velOf(ni + 1) : vel) * lv1 : ni === arc.ci ? vel * lv1 * (1 + 0.12 * ek) : vel * lv1 * (1 - 0.25 * ek);
             sw = { dyn: clamp(d0, 0.1, 1), swell: clamp(d1, 0.08, 1) };
           }
-          ex2 = { vib: vf && nt.dur >= 1.5 ? vf[0] + vf[1] * I : 0, vibDelay: 0.35 };   // vibrato only where a note is held, deeper as it means more
+          ex2 = { vib: vf && nt.dur >= 1.5 ? (vf[0] + vf[1] * I) * vk : 0, vibDelay: 0.35 };   // vibrato only where a note is held, deeper as it means more
           if (!nx) ex2.art = art * 0.9;                                                 // the breath at the phrase's end
           if (ni === 0) ex2.dt = dt + 0.025;                                             // and the lean into its first note
         }
