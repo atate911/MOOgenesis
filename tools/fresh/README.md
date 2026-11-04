@@ -56,3 +56,7 @@ Render a step: `node tools/fresh/render-step.js tools/fresh/step1c.js 52 OUTDIR`
   sits at D2-A2), the first statement on the solo violin (Iowa, D4-D5, expr 1.6, vibK 1.3, its level raised to 2.4 dB over the bed),
   the horn's first entry vel 0.8 (4.9 dB over the rest).
 - `full12.js` (`full12g/h.js`): the first statement on the oboe (Iowa, level raised: it sat 4.4 dB under the bed) or the cor anglais, about 3 dB over the bed; more bass mass and presence: the master's shelves via `tone` (lo 2.5 dB at 120 Hz, hi 3.0 dB at 5 kHz), the solo bass x1.6 (+1.4 dB at 40-80 Hz, +1.3 dB at 5-12 kHz). The double-bass section at D1-A1 was tried for mass and rejected: rough overtones (the old plucking).
+- `full12h.js` approved (the cor anglais). `full13.js`: an organ pedal (a new third bed part `pad3`, and a bed's `root: true`, only the
+  chord's root) tried for sub-bass: the library's organ recordings carry almost no fundamental (-72 dB at 25-60 Hz alone), so no
+  effect. The tuba's D1 and the section basses' D1 and G1 are rough. `full14.js`: a piece's `subBass` (a sine an octave under the
+  bass, allowed again for the bass only in this orchestral piece, as a film mix reinforces its low strings): 25-45 Hz +14 dB.

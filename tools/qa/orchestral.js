@@ -30,7 +30,7 @@ const IDS = (argv.find(a => !a.startsWith('--') && !Object.values(opt).includes(
   await page.waitForFunction(() => window.MOO && MOO.Audio && MOO.Audio.Music);
   const res = await page.evaluate(async ([IDS, T0, T1]) => {
     const A = MOO.Audio, M = A.Music, S = A.Samples; await S.preload(); const out = {};
-    const SYNTH_SMP = /^pad(Serrie|Glass|Air|Dark)|^organ/;                    // the synthesized pads among the recordings
+    const SYNTH_SMP = /^pad(Serrie|Glass|Air|Dark)/;                    // the synthesized pads among the recordings (the organs are recordings: VSCO 2 and Sonatina)
     const OK_V = { sample: 1, drum: 1, kick: 1, snare: 1, hat: 1, timp: 1, expr: 1, fx: 1 };   // expr: the expression curve, not a sound
     for (const id of IDS) {
       const d = M._tracks[id], r = M._compile(id, 0), spb = 60 / d.bpm, meter = d.meter || 4, ev = r.events.filter(e => e.o), checks = [];

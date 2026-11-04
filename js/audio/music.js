@@ -314,7 +314,7 @@
     drums: { lvl: 0.68, verb: 0.08, stage: 0.32, dly: 0 }, fx: { lvl: 0.6, verb: 0.5, stage: 0.2, dly: 0 },
     x1: { lvl: 0.8, verb: 0.12, dly: 0, i0: 0.12 }, x2: { lvl: 0.7, verb: 0.2, dly: 0.3, i0: 0.38 }, x3: { lvl: 0.9, verb: 0.3, dly: 0, i0: 0.62 },
   };
-  const BUS = { pad: 'pad', pad2: 'pad', bass: 'bass', arp: 'arp', arp2: 'arp', drums: 'drums', perc: 'drums', timp: 'drums', lead: 'lead', lead2: 'lead', bell: 'bell', bell2: 'bell', choir: 'choir', choir2: 'choir' };
+  const BUS = { pad: 'pad', pad2: 'pad', pad3: 'pad', bass: 'bass', arp: 'arp', arp2: 'arp', drums: 'drums', perc: 'drums', timp: 'drums', lead: 'lead', lead2: 'lead', bell: 'bell', bell2: 'bell', choir: 'choir', choir2: 'choir' };
   const DEF_INST = { pad: 'warm', pad2: 'warm', bass: 'sub', arp: 'arp', arp2: 'arp', lead: 'brass', lead2: 'bell', bell: 'glass', bell2: 'glass', choir: 'ooh', choir2: 'aah' };
   const LINES = { lead: 1, lead2: 1, bell: 1, bell2: 1 };
 
@@ -454,7 +454,7 @@
       // a section's own meter and tempo (an interlude's opening bars keep the outgoing piece's; a tempo may ramp across a section)
       R.meter = num(s.meter, meter); R.strong = s.strong || def.strong || (STRONG[R.meter] || [0]); R.bpm = num(s.bpm, def.bpm); R.bpmTo = num(s.bpmTo, R.bpm);
       R.segs = expandProg(s.prog, s.bars, R.meter, tpc);
-      for (const key of ['pad', 'pad2', 'bass', 'arp', 'arp2', 'drums', 'perc', 'timp', 'lead', 'lead2', 'bell', 'bell2', 'choir', 'choir2']) {
+      for (const key of ['pad', 'pad2', 'pad3', 'bass', 'arp', 'arp2', 'drums', 'perc', 'timp', 'lead', 'lead2', 'bell', 'bell2', 'choir', 'choir2']) {
         let v = s[key] !== undefined ? s[key] : base[key];
         if (v === true) v = base[key];
         if (v) R.L[key] = v;
@@ -482,7 +482,7 @@
     if (ex) for (const k in ex) if (k !== 'art' && k !== 'dt' && ex[k] !== undefined) o[k] = ex[k];
     if (C.def && C.def.part && C.def.part[C.key] !== undefined) o.vel *= num(C.def.part[C.key], 1);   // the balance of parts that share a layer (pad and pad2, choir and choir2)
     if (C.def && C.def.orch && inst.v === 'sample') {
-      o.ens = 0; o.sub = 0;                                                         // the orchestral profile: the recording as it is
+      o.ens = 0; o.sub = ly === 'bass' && C.def.subBass ? clamp(num(C.def.subBass, 0), 0, 1.5) : 0;   // the orchestral profile: the recording as it is (a piece's `subBass`: a sine an octave under its bass, felt under the real double bass, as a film mix reinforces it)
       // the foundation is a tone, not a bow: the bass through a steep low-pass at four times its note, 200 Hz at most (its fundamental and
       // first partials, never the rosin), and a bed voiced in the bass register (to E3) sul tasto, as an orchestra's low strings play a
       // held bed: warm, the bite of the bow gone (low-passed at ten times its note, 1.4 kHz at most). A part that sets its own cut keeps it.
@@ -535,7 +535,8 @@
       for (let i = 0; i < segs.length; i++) {
         const sg = segs[i]; let b1 = sg.b1;
         if (cfg.merge !== false) while (i + 1 < segs.length && segs[i + 1].ch.sym === sg.ch.sym) { i++; b1 = segs[i].b1; }
-        const voiced = voiceChord(cfg.open ? openChord(sg.ch) : sg.ch, prev, reg[0], reg[1], n, (reg[0] + reg[1]) / 2); prev = voiced;
+        // root (a bed's `root`): only the chord's root, the lowest in the bed's range (an organ pedal under the bass)
+        const voiced = cfg.root ? [(m => { while (m < reg[0]) m += 12; return m; })(reg[0] + mod12(((sg.ch.bassPc !== undefined ? sg.ch.bassPc : sg.ch.pc)) - reg[0]))] : voiceChord(cfg.open ? openChord(sg.ch) : sg.ch, prev, reg[0], reg[1], n, (reg[0] + reg[1]) / 2); prev = voiced;
         const notes = holdLow(C, clearWindow(C, voiced, s.start + sg.b0, s.start + b1, reg[0], reg[1]), reg[0]);
         for (const m of Array.from(open.keys())) if (notes.indexOf(m) < 0) { padFlush(C, open.get(m), m, s.start + sg.b0, true); open.delete(m); }
         notes.forEach(function (m, j) { if (!open.has(m)) open.set(m, { b0: s.start + sg.b0, j, first: !any, inst, vel, n, width: num(cfg.width, 1), rel: cfg.rel, style, rng }); });
@@ -1003,7 +1004,7 @@
     }
   }
 
-  const GEN = { pad: genPad, pad2: genPad, bass: genBass, arp: genArp, arp2: genArp, drums: genDrums, perc: genDrums, timp: genTimp, choir: genChoir, choir2: genChoir, lead: genLine, lead2: genLine };
+  const GEN = { pad: genPad, pad2: genPad, pad3: genPad, bass: genBass, arp: genArp, arp2: genArp, drums: genDrums, perc: genDrums, timp: genTimp, choir: genChoir, choir2: genChoir, lead: genLine, lead2: genLine };
 
   // ---------------------------------------------------------------- tension overlays (layers x1..x3, gated by setIntensity)
   function genTension(C, s) {
