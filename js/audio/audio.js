@@ -326,6 +326,7 @@
       const lc = mk(ctx.createDynamicsCompressor()); lc.threshold.value = -22; lc.ratio.value = 2; lc.attack.value = 0.03; lc.release.value = 0.3; lc.knee.value = 8;
       const lg = mk(ctx.createGain()); lg.gain.value = dbtoa(-makeupDb(-22, 2) + 1.0);
       lo.out.disconnect(); lo.out.connect(lc); lc.connect(lg); lg.connect(out);
+      eng.mbLow = lg; eng.mbLowDb = -makeupDb(-22, 2) + 1.0;   // the low band's level after its compressor: a piece may lift it (Music: def.lowBand, dB)
       return { in: inG, out };
     })();
     eng.musicBus.connect(eqL); eqL.connect(eqM); eqM.connect(mb.in); mb.out.connect(eqH); eqH.connect(eqS); eqS.connect(eqA); eqA.connect(width.in); width.out.connect(glue); glue.connect(glueMake); glueMake.connect(sat); sat.connect(duck); duck.connect(master);

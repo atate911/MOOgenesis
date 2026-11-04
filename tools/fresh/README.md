@@ -60,3 +60,11 @@ Render a step: `node tools/fresh/render-step.js tools/fresh/step1c.js 52 OUTDIR`
   chord's root) tried for sub-bass: the library's organ recordings carry almost no fundamental (-72 dB at 25-60 Hz alone), so no
   effect. The tuba's D1 and the section basses' D1 and G1 are rough. `full14.js`: a piece's `subBass` (a sine an octave under the
   bass, allowed again for the bass only in this orchestral piece, as a film mix reinforces its low strings): 25-45 Hz +14 dB.
+- `full14.js` (the cor anglais approved, "no more experimenting"): the sub (subBass 0.6), 50-120 Hz body (the solo bass x1.9, the low
+  cellos x1.2) and a piece's `lowBand` (new: lifts the master's low band, which its 2:1 compressor otherwise holds even: +2.5 dB):
+  50-120 Hz +2.8 dB absolute, the sub +2.7.
+- `full15.js`: the bass at the swell as a new register: a bass `fresh` entry (new: not tied or legato from before) with a strong attack,
+  the section tuba on the roots (pad3, root) through the climax and the rise, and a section's `subBass` (new) opening the sub there.
+- `full16.js` (current): another low bass instrument (the bass clarinet on the roots, D2-B2, in every section but the climax and the
+  rise, clean on its held notes) and the sub +1 dB throughout, the low band 3.5: the sub +1.7 dB, 50-120 Hz +0.7; at the swell the sub
+  about 5 dB over the bars before.

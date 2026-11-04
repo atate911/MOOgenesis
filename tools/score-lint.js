@@ -17,9 +17,9 @@ for (const f of files) vm.runInContext(fs.readFileSync(path.join(ROOT, f), 'utf8
 const Music = ctx.MOO.Audio.Music, T = Music._tracks, INST = Music._INST, R = Music._rotation;
 const problems = [], warns = [];
 const bad = (id, msg) => problems.push(id + ': ' + msg), warn = (id, msg) => warns.push(id + ': ' + msg);
-const TOP = new Set(['id', 'desc', 'bpm', 'meter', 'root', 'mode', 'tonic', 'oct', 'bassC', 'trim', 'tone', 'mix', 'fx', 'sends', 'duck', 'bassTie', 'padTie', 'lowMono', 'orch', 'perform', 'holdLow', 'part', 'subBass', 'tens', 'gate', 'gentle', 'eraSens', 'rubato', 'loopFrom', 'forms', 'alts', 'eraAlts', 'inst', 'ph', 'base', 'variantOf', 'sec', 'strong', 'lintMin', 'hidden', 'interlude', 'bridge', 'tags', 'eraWin', 'motif', 'motifInst', 'quotes', 'tomTune', '_p']);
+const TOP = new Set(['id', 'desc', 'bpm', 'meter', 'root', 'mode', 'tonic', 'oct', 'bassC', 'trim', 'tone', 'mix', 'fx', 'sends', 'duck', 'bassTie', 'padTie', 'lowMono', 'orch', 'perform', 'holdLow', 'part', 'subBass', 'lowBand', 'tens', 'gate', 'gentle', 'eraSens', 'rubato', 'loopFrom', 'forms', 'alts', 'eraAlts', 'inst', 'ph', 'base', 'variantOf', 'sec', 'strong', 'lintMin', 'hidden', 'interlude', 'bridge', 'tags', 'eraWin', 'motif', 'motifInst', 'quotes', 'tomTune', '_p']);
 const LAYERS = ['pad', 'pad2', 'pad3', 'bass', 'arp', 'arp2', 'drums', 'perc', 'timp', 'lead', 'lead2', 'bell', 'bell2', 'choir', 'choir2'];
-const SEC = new Set(['n', 'bars', 'barsVar', 'lv', 'cres', 'prog', 'fill', 'cr', 'rise', 'hit', 'tens', 'breath', 'verb'].concat(LAYERS));
+const SEC = new Set(['n', 'bars', 'barsVar', 'lv', 'cres', 'prog', 'fill', 'cr', 'rise', 'hit', 'tens', 'breath', 'verb', 'subBass'].concat(LAYERS));
 const AXES = ['solitude', 'contact', 'tension', 'war', 'grief', 'grandeur', 'energy', 'dark', 'ceremony'];
 const instOk = v => v === undefined || v === false || (typeof v === 'string' ? !!INST[v] : typeof v === 'object' && (v.p === undefined || !!INST[v.p]));
 const ids = only.length ? only : Object.keys(T);

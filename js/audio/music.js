@@ -482,7 +482,7 @@
     if (ex) for (const k in ex) if (k !== 'art' && k !== 'dt' && ex[k] !== undefined) o[k] = ex[k];
     if (C.def && C.def.part && C.def.part[C.key] !== undefined) o.vel *= num(C.def.part[C.key], 1);   // the balance of parts that share a layer (pad and pad2, choir and choir2)
     if (C.def && C.def.orch && inst.v === 'sample') {
-      o.ens = 0; o.sub = ly === 'bass' && C.def.subBass ? clamp(num(C.def.subBass, 0), 0, 1.5) : 0;   // the orchestral profile: the recording as it is (a piece's `subBass`: a sine an octave under its bass, felt under the real double bass, as a film mix reinforces it)
+      o.ens = 0; o.sub = ly === 'bass' ? clamp(num((wAt => wAt && wAt.R.raw && wAt.R.raw.subBass !== undefined ? wAt.R.raw.subBass : C.def.subBass)(C.wraps && C.wraps.find(w => beat >= w.start - 1e-9 && beat < w.start + w.beats)), 0), 0, 1.5) : 0;   // the orchestral profile: the recording as it is (a piece's `subBass`: a sine an octave under its bass, felt under the real double bass, as a film mix reinforces it)
       // the foundation is a tone, not a bow: the bass through a steep low-pass at four times its note, 200 Hz at most (its fundamental and
       // first partials, never the rosin), and a bed voiced in the bass register (to E3) sul tasto, as an orchestra's low strings play a
       // held bed: warm, the bite of the bow gone (low-passed at ten times its note, 1.4 kHz at most). A part that sets its own cut keeps it.
@@ -755,7 +755,10 @@
     // section line); the last note of a section waits to be written until the next section, or the end of the pass, says how long it is
     C.bassCarry = C.bassCarry || null; const cr = C.bassCarry; C.bassCarry = null;
     for (const n of notes) n.beat += s.start;
-    if (cr) {
+    // fresh (the bass's `fresh`): the section's first note is a new entry with its own attack, not tied or played legato from the note
+    // before (the bass arriving at a climax as an event)
+    if (cr && P.fresh) bassWrite(C, cr);
+    else if (cr) {
       const f = notes[0];
       if (f && Math.abs(cr.beat + cr.len - f.beat) < 1e-6 && cr.m === f.m && sameVoice(cr.inst, inst)) { f.beat = cr.beat; f.len += cr.len; f.v = cr.v; f.from = cr.from; f.inst0 = cr.inst0 || cr.inst; }
       else { if (f && Math.abs(cr.beat + cr.len - f.beat) < 1e-6 && sameVoice(cr.inst, inst)) { cr.into = true; f.from = true; } bassWrite(C, cr); }
@@ -1129,7 +1132,7 @@
       }
       wraps.push({ R, start: beat, beats: R.bars * R.meter, bars: R.bars }); beat += R.bars * R.meter;
     }
-    C.totalBeats = beat;
+    C.totalBeats = beat; C.wraps = wraps;
     // the time map: each section runs at its tempo (and may ramp to bpmTo across its bars); t(beat) integrates it, so a ramp is a true
     // accelerando or ritardando and every event, bar line and beat sits where the music puts it
     const tOf = (w, b) => { const d = w.b1 - w.b0; return d ? 60 * w.beats / d * Math.log((w.b0 + d * b / w.beats) / w.b0) : 60 * b / w.b0; };
@@ -1359,7 +1362,13 @@
       K.fadeParam(this.verb.gain, this.verb.gain.value, 0, t, sec, 'out'); K.fadeParam(this.stage.gain, this.stage.gain.value, 0, t, sec, 'out');
       this.killAt = t + sec + 0.15;
     }
-    begin(t0) { this.t0 = t0; this.nextPass(); }
+    begin(t0) {
+      this.t0 = t0;
+      // the master's low band (under 160 Hz, held even by its compressor): a piece's `lowBand` lifts its level, in dB, while it plays
+      // (the bass and the sub turned up in a piece were otherwise taken back by that compressor); every other piece sets it back
+      const e = this.eng; if (e.mbLow && e.mbLowDb !== undefined) { try { e.mbLow.gain.setTargetAtTime(Math.pow(10, (e.mbLowDb + clamp(num(this.def.lowBand, 0), -6, 6)) / 20), Math.max(0, t0), 0.8); } catch (err) { /* ignore */ } }
+      this.nextPass();
+    }
     nextPass() {
       this.passNo++;
       const prevEnd = this.pass ? this.pass.start + this.pass.len : this.t0;
