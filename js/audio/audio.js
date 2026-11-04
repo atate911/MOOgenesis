@@ -169,6 +169,23 @@
   A.soundstage = 1;
   try { if (/[?&]soundstage=0\b/.test(location.search)) A.soundstage = 0; } catch (e) { /* ignore */ }
   function makeIR(ctx, o) { const b = new IRBuilder(ctx, o); b.run(Infinity); return b.buf; }
+  // A.loadIR(name, url): a recorded hall's impulse (a WAV), decoded once and kept as plain channel data for every engine made after it;
+  // its energy scaled to the generated hall's (IR_HALL), so choosing it changes the room's character and not its level
+  A.irs = {};
+  A.loadIR = function (name, url) {
+    if (A.irs[name]) return Promise.resolve(true);
+    const OAC = window.OfflineAudioContext || window.webkitOfflineAudioContext;
+    return fetch(url).then(r => { if (!r.ok) throw new Error('HTTP ' + r.status); return r.arrayBuffer(); }).then(ab => {
+      const oc = new OAC(2, 1, 44100);
+      return new Promise((res, rej) => { const p = oc.decodeAudioData(ab, res, rej); if (p && p.then) p.then(res, rej); });
+    }).then(b => {
+      const ch = []; for (let c = 0; c < b.numberOfChannels; c++) ch.push(b.getChannelData(c).slice());
+      const en = a => a.reduce((p, x) => p + x * x, 0), gen = makeIR(new OAC(2, 1, b.sampleRate), IR_HALL);
+      let eg = 0, er = 0; for (let c = 0; c < gen.numberOfChannels; c++) eg += en(gen.getChannelData(c)); for (const a of ch) er += en(a);
+      A.irs[name] = { sr: b.sampleRate, ch, gain: Math.sqrt(eg / Math.max(1e-9, er * gen.numberOfChannels / ch.length)) };
+      return true;
+    }).catch(e => { console.warn('[audio] impulse ' + name + ' failed', e && e.message); return false; });
+  };
   const IR_STAGE = { seconds: 0.9, rt60: 0.55, pre: 0.008, diff: 0.03, hiStart: 0.9, hiEnd: 0.45, damp: 0.6, er: 12, seed: 23 };   // a stage: short, bright, early reflections
   const IR_HALL = { seconds: 3.8, rt60: 3.3, pre: 0.036, diff: 0.05, hiStart: 0.7, hiEnd: 0.22, damp: 1.2, er: 8, seed: 11 };   // a large, open hall: long dark tail, a little more pre-delay
   const IR_PLATE = { seconds: 1.2, rt60: 1.0, pre: 0.003, diff: 0.008, hiStart: 0.85, hiEnd: 0.25, damp: 0.7, er: 0, seed: 23 };
@@ -368,6 +385,18 @@
       return inp;
     };
     eng.hallIn = verb('hall', IR_HALL, eng.musicBus, 260, 11000);   // the hall carries no low mids: openness
+    // recorded halls (A.loadIR): a convolver per hall from the decoded recording (resampled to this context's rate when it differs), its
+    // energy matched to the generated hall's so a piece can choose it (Music: def.hall) without the room's level changing
+    eng.halls = {};
+    for (const name in A.irs) {
+      const d = A.irs[name], ratio = sr / d.sr, len = Math.max(1, Math.round(d.ch[0].length * ratio)), buf = ctx.createBuffer(2, len, sr);
+      for (let c = 0; c < 2; c++) { const src = d.ch[Math.min(c, d.ch.length - 1)], dst = buf.getChannelData(c);
+        for (let i = 0; i < len; i++) { const x = i / ratio, k = Math.floor(x), f = x - k; dst[i] = d.gain * ((src[k] || 0) * (1 - f) + (src[k + 1] || 0) * f); } }
+      const inp = mk(ctx.createGain()), h = mk(ctx.createBiquadFilter()), conv = mk(ctx.createConvolver()), l = mk(ctx.createBiquadFilter()), out = mk(ctx.createGain());
+      h.type = 'highpass'; h.frequency.value = 260; h.Q.value = 0.5; l.type = 'lowpass'; l.frequency.value = 11000; l.Q.value = 0.5;
+      conv.normalize = false; conv.buffer = buf; inp.connect(h); h.connect(conv); conv.connect(l); l.connect(out); out.connect(eng.musicBus);
+      eng.halls[name] = inp;
+    }
     eng.stageIn = verb('stage', IR_STAGE, eng.musicBus, 220, 13000);   // the close plane: drums, lead, plucks, bells
     eng.sfxVerbIn = verb('plate', IR_PLATE, eng.sfxBus, 120, 11000);
     if (jobs.length) {                                  // keep every main-thread task well under a frame: <=2.5 ms slices, one buffer assignment per task

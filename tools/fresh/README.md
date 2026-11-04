@@ -68,3 +68,6 @@ Render a step: `node tools/fresh/render-step.js tools/fresh/step1c.js 52 OUTDIR`
 - `full16.js` (current): another low bass instrument (the bass clarinet on the roots, D2-B2, in every section but the climax and the
   rise, clean on its held notes) and the sub +1 dB throughout, the low band 3.5: the sub +1.7 dB, 50-120 Hz +0.7; at the swell the sub
   about 5 dB over the bars before.
+- `full17.js`: full16 in a recorded hall (a piece's `hall`, new): Voxengo's Musikvereinsaal impulse, stored unaltered with its license
+  in assets/audio/ir/voxengo/, decoded once (A.loadIR), resampled per engine, its energy matched to the generated hall's. The tune
+  +0.5 dB clearer in the interlude and at the climax; loudness and range unchanged.

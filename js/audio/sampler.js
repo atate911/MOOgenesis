@@ -423,7 +423,8 @@
     if (S.pending) return S.pending;
     if (!S.enabled || typeof fetch !== 'function') { S.state = 'disabled'; return (S.pending = Promise.resolve(false)); }
     S.state = 'loading';
-    S.pending = manifestP().then(man => loadNames(man, Object.keys(man.instruments || {}))).then(() => {
+    const irs = A.loadIR ? A.loadIR('musikverein', S.base + 'ir/voxengo/Musikvereinsaal.wav') : Promise.resolve(false);   // the recorded hall (Voxengo's Musikvereinsaal impulse, unaltered, license beside it)
+    S.pending = Promise.all([manifestP().then(man => loadNames(man, Object.keys(man.instruments || {}))), irs]).then(() => {
       S.state = 'ready';
       try { if (A.Music && A.Music.onSamplesReady) A.Music.onSamplesReady(); } catch (e) { console.warn('[samples] ready hook failed', e); }
       try { window.dispatchEvent(new CustomEvent('moo-samples-loaded')); } catch (e) { /* ignore */ }
@@ -434,7 +435,8 @@
   S.loadSome = function (names) {
     if (!S.enabled || typeof fetch !== 'function') return Promise.resolve(false);
     if (S.state === 'idle' || S.state === undefined || S.state === 'disabled') S.state = 'partial';
-    return manifestP().then(man => loadNames(man, [].concat(names || []))).then(() => true).catch(e => { console.warn('[samples] manifest failed', e && e.message); return false; });
+    const irs = A.loadIR ? A.loadIR('musikverein', S.base + 'ir/voxengo/Musikvereinsaal.wav') : Promise.resolve(false);
+    return Promise.all([manifestP().then(man => loadNames(man, [].concat(names || []))), irs]).then(() => true).catch(e => { console.warn('[samples] manifest failed', e && e.message); return false; });
   };
   S.preload = S.load;
   S.ready = name => { const i = S.inst[name]; return !!(i && i.ready); };

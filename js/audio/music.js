@@ -1252,7 +1252,7 @@
         n.connect(eng.musicBus);
       } else this.bus.connect(eng.musicBus);
       this.verb = mk(ctx.createGain());
-      const pre = mk(ctx.createDelay(0.2)); pre.delayTime.value = clamp((60 / def.bpm) / 16, 0.02, 0.09); this.verb.connect(pre); pre.connect(eng.hallIn);   // the room breathes with the bar
+      const pre = mk(ctx.createDelay(0.2)); pre.delayTime.value = clamp((60 / def.bpm) / 16, 0.02, 0.09); this.verb.connect(pre); pre.connect(def.hall && eng.halls && eng.halls[def.hall] ? eng.halls[def.hall] : eng.hallIn);   // the room breathes with the bar; a piece may stand in a recorded hall (def.hall)
       this.stage = mk(ctx.createGain()); if (eng.stageIn) this.stage.connect(eng.stageIn);
       const spb = this.P.spb;
       this.delay = eng.makeDelay(spb * 0.75, spb, 0.42, 3200);
