@@ -1190,6 +1190,9 @@
     if (C.bassCarry) { C.key = 'bass'; bassWrite(C, C.bassCarry); C.bassCarry = null; }
     const perf = soloArcs && (def.perform !== undefined ? !!def.perform : true), pseed = def.id + ':pf' + pass + ':' + (take || 0), Emove = soloArcs ? moveCurve(C, wraps, soloArcs) : null;
     if (soloArcs) emitExpression(C, Emove, pseed, wraps, !!Music._dbg.noExpr);
+    // the hall's ride (a section's `verb`, a multiplier on the reverb send, 1 by default): a loud climax in a big hall washes over, the
+    // tail filling every gap; a section may take the hall back a little and the next one gives it again (eased over a second or so)
+    if (wraps.some(w => w.R.raw && w.R.raw.verb !== undefined)) for (const w of wraps) C.ev.push({ t: C.tAt(w.start), v: 'fx', ly: '_fx', o: { verb: clamp(num(w.R.raw && w.R.raw.verb, 1), 0.2, 1.5) }, m: 0, b: w.start, bt: 0, k: 'fx' });
     C.ev.sort((a, b) => a.t - b.t);
     markLegato(C.ev);
     if (perf && !Music._dbg.noPerform) { perform(C, Emove, pseed); C.ev.sort((a, b) => a.t - b.t); }   // the ensemble: after the legato is known, so a line's overlaps stay
@@ -1334,7 +1337,7 @@
       this.intensity = x;
       const t = this.eng.ctx.currentTime;
       // the room dries up as the fight escalates (full intensity keeps a third less hall); the stage stays
-      if (!this.stopped) { try { const vg = this.verb.gain; vg.cancelScheduledValues(t); vg.setTargetAtTime(1 - 0.33 * x, t, immediate ? 0.01 : 2.0); } catch (e) { /* ignore */ } }
+      if (!this.stopped) { try { const vg = this.verb.gain; vg.cancelScheduledValues(t); vg.setTargetAtTime((1 - 0.33 * x) * (this.verbK || 1), t, immediate ? 0.01 : 2.0); } catch (e) { /* ignore */ } }
       for (const name in this.layers) {
         const L = this.layers[name]; if (L.i0 === undefined) continue;
         const target = L.level * smooth((x - L.i0) / 0.25), g = L.in.gain;
@@ -1363,6 +1366,7 @@
       if (this.stretch !== 1) this.pass.len *= this.stretch;
     }
     fire(ev, T) {
+      if (ev.v === 'fx') { this.verbK = ev.o.verb; if (!this.stopped) { try { this.verb.gain.setTargetAtTime((1 - 0.33 * this.intensity) * this.verbK, T, 1.2); } catch (e) { /* ignore */ } } return; }
       const L = this.layers[ev.ly]; if (!L) return;
       if (ev.v === 'expr') { try { L.in.gain.setTargetAtTime(clamp(ev.o.g, 0.02, 2), T, 0.45); } catch (e) { /* ignore */ } return; }
       if (this.only && !this.only[ev.ly]) return;

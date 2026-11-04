@@ -48,3 +48,10 @@ Render a step: `node tools/fresh/render-step.js tools/fresh/step1c.js 52 OUTDIR`
 - `full9.js` (`full9a/b/c.js`): full8 with a gentler opening (6 bars, the theme's first statement at cres 0.3-0.42, vel 0.8) on a softer voice: a the alto flute, b the solo trombone (an octave down), c the clarinet. The first statement about -20 LUFS short-term (was -14 to -15 on the horn).
   d (`full9d.js`): the concert flute (Iowa) an octave up, D5-D6, with its level raised (lvl 0.73; the preset's 0.071 left it 16 dB under the bed): 2.8 dB over the rest in the first statement. The user heard the trombone faintly and the clarinet not at all (the trombone measured 2.8 dB under; the Iowa clarinet's preset level 0.084 is as low as the flute's).
   e/f (`full9e.js`, `full9f.js`): the alto flute and the concert flute with more lift (about 3.3 dB over the bed), feeling and dynamics: `expr: 1.6` (the phrase's arc and the long notes' swells half again as strong) and `vibK: 2.2` (a deeper vibrato on held notes), new options on a line in the orchestral profile (1 = as before); the statement's crescendo 0.26-0.48.
+- `full10.js`: full9f's climax reviewed for clarity (the tune 2.5 dB over the rest there, against 7.5 in the interlude): the women
+  above the horns, the ostinato below, the strings thinner and higher, the horns +1.5 dB and the men -1 dB at the climax, and a new
+  section setting `verb` (the hall's send, ridden: 0.7 through the climax and the rise, 0.85 in the resolution): 3.1 dB. The user heard
+  the alto flute as flat: its tuning in the theme's range is within 5 cents (and the bed within 3), so it is its dull tone there.
+- `full11.js`: more bass (the solo double bass x1.4, the tone's lo 1.3: +2 dB at 60-120 Hz; below 60 Hz unchanged, since the bass
+  sits at D2-A2), the first statement on the solo violin (Iowa, D4-D5, expr 1.6, vibK 1.3, its level raised to 2.4 dB over the bed),
+  the horn's first entry vel 0.8 (4.9 dB over the rest).
