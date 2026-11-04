@@ -55,3 +55,4 @@ Render a step: `node tools/fresh/render-step.js tools/fresh/step1c.js 52 OUTDIR`
 - `full11.js`: more bass (the solo double bass x1.4, the tone's lo 1.3: +2 dB at 60-120 Hz; below 60 Hz unchanged, since the bass
   sits at D2-A2), the first statement on the solo violin (Iowa, D4-D5, expr 1.6, vibK 1.3, its level raised to 2.4 dB over the bed),
   the horn's first entry vel 0.8 (4.9 dB over the rest).
+- `full12.js` (`full12g/h.js`): the first statement on the oboe (Iowa, level raised: it sat 4.4 dB under the bed) or the cor anglais, about 3 dB over the bed; more bass mass and presence: the master's shelves via `tone` (lo 2.5 dB at 120 Hz, hi 3.0 dB at 5 kHz), the solo bass x1.6 (+1.4 dB at 40-80 Hz, +1.3 dB at 5-12 kHz). The double-bass section at D1-A1 was tried for mass and rejected: rough overtones (the old plucking).
