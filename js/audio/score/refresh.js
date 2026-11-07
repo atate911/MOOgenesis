@@ -43,7 +43,7 @@
     'galaxy6': {orch: true, upgrade: true, holdLow: false, hall: 'musikverein', tone: {lo: 3, hi: 3, pres: 4}, lowBand: 2.5, subBass: 0.22, mix: {lead: 3.37, choir: 1.5, bass: 1.41}, space: {A1: {pad: {velK: 0.75}}, B: {pad: {velK: 0.75}}, C: {choir: {velK: 0.6}}, A2: {pad: {velK: 0.75}}}, trim: 3.92},
     'galaxy7': {orch: true, upgrade: true, holdLow: false, hall: 'musikverein', tone: {lo: 3, hi: -1, pres: 1.5}, lowBand: 2.5, subBass: 0.67, mix: {lead: 2.51, choir: 2.97, bass: 1.39}, trim: 1.93},
     'galaxy8': {orch: true, upgrade: true, holdLow: false, hall: 'musikverein', tone: {lo: 3, hi: 3.14, pres: 4}, lowBand: 2.5, subBass: 0.28, mix: {lead: 3.39, bass: 1.25}, trim: 2.3},
-    'galaxy9': {brassHarm: false, orch: true, upgrade: true, holdLow: false, hall: 'musikverein', tone: {lo: 3, hi: 1.5, pres: 4}, lowBand: 0, subBass: 0.07, mix: {lead: 1.15}, verb: {B: 0.8, A2: 0.72}, sing: {sections: ['B', 'A2'], inst: 'choirOoh', oct: 0, lvl: 0.209}, space: {A1: {pad: {velK: 0.75}}, A2: {pad2: {reg: [76,88]}, pad3: {velK: 0.75}}, B: {pad3: {velK: 0.75}}}, trim: 2.02},
+    'galaxy9': {oldMen: {vel: 0.35}, brassHarm: false, orch: true, upgrade: true, holdLow: false, hall: 'musikverein', tone: {lo: 3, hi: 1.5, pres: 4}, lowBand: 0, subBass: 0.07, mix: {lead: 1.15}, verb: {B: 0.8, A2: 0.72}, sing: {sections: ['B', 'A2'], inst: 'choirOoh', oct: 0, lvl: 0.209}, space: {A1: {pad: {velK: 0.75}}, A2: {pad2: {reg: [76,88]}, pad3: {velK: 0.75}}, B: {pad3: {velK: 0.75}}}, trim: 2.02},
     'galaxy10': {brassHarm: false, orch: true, upgrade: true, holdLow: false, hall: 'musikverein', tone: {lo: 1.9, hi: 1.08}, lowBand: 2.5, subBass: 0.41, mix: {lead: 2.75}, verb: {B: 0.8, A2: 0.72}, space: {intro: {pad: {reg: [60,76]}}, A1: {pad: {reg: [60,76]}, pad2: {velK: 0.7}}, B: {pad: {reg: [69,83]}, pad2: {velK: 0.7}, choir2: {velK: 0.6}}, A2: {pad: {reg: [69,83]}, pad2: {velK: 0.7}, choir2: {velK: 0.6}}}, trim: 1.32},
     'galaxy11': {orch: true, upgrade: true, holdLow: false, hall: 'musikverein', tone: {lo: 0.38, hi: -0.62, pres: 2.4}, lowBand: 2.5, subBass: 0.06, mix: {lead: 4.3, choir: 1.36}, sing: {sections: ['rise'], inst: 'choirOoh', oct: 0, lvl: 0.238}, trim: 4.04},
     'galaxy12': {orch: true, upgrade: true, holdLow: false, hall: 'musikverein', tone: {lo: 1.9, hi: 3.23, pres: 1.2}, lowBand: 1.5, subBass: 0.36, mix: {lead: 2.81}, sing: {sections: ['V6'], inst: 'choirOoh', oct: 0, lvl: 0.187}, space: {V4: {pad: {velK: 0.75}}, V6: {pad: {velK: 0.75}}}, trim: 3.45},
@@ -54,9 +54,9 @@
     'galaxy17': {orch: true, upgrade: true, holdLow: false, hall: 'musikverein', tone: {lo: 3, hi: -0.39}, lowBand: 3.5, subBass: 0.56, mix: {lead: 1.99, choir: 2.97, bass: 1.41}, space: {still: {pad: {velK: 0.75}}, canon3b: {pad: {velK: 0.75}}}, trim: 4.01},
     'galaxy18': {orch: true, upgrade: true, holdLow: false, hall: 'musikverein', tone: {lo: 2.84, hi: 0.24}, lowBand: 2.5, subBass: 0.23, mix: {lead: 3.53}, sing: {sections: ['crest'], inst: 'choirOoh', oct: 0, lvl: 0.238}, trim: 2.97},
     'galaxy19': {orch: true, upgrade: true, holdLow: false, hall: 'musikverein', tone: {lo: 3, hi: 1.99}, lowBand: 2.5, subBass: 0.26, mix: {lead: 4.15, choir: 1.7, bass: 1.32}, verb: {ch3: 0.8}, sing: {sections: ['ch3'], inst: 'choirOoh', oct: 0, lvl: 0.155}, space: {ch2: {pad: {velK: 0.75}}, ch3: {pad: {velK: 0.75}}, amen: {pad: {reg: [60,79]}}}, trim: 2.34},
-    'galaxy20': {orch: true, upgrade: true, holdLow: false, hall: 'musikverein', tone: {lo: 3, hi: 3.5, pres: 4}, lowBand: 2.5, subBass: 0.32, mix: {lead: 2.95, bass: 1.35}, sing: {sections: ['M3', 'M4'], inst: 'choirMen', oct: 0, lvl: 0.28}, space: {M2: {pad: {reg: [54,68]}, choir: {velK: 0.6}}, M3: {pad: {reg: [60,76]}}, M4: {pad: {reg: [68,82]}, choir: {velK: 0.6}}}, trim: 3.05},
+    'galaxy20': {oldMen: {vel: 0.35}, orch: true, upgrade: true, holdLow: false, hall: 'musikverein', tone: {lo: 3, hi: 3.5, pres: 4}, lowBand: 2.5, subBass: 0.32, mix: {lead: 2.95, bass: 1.35}, sing: {sections: ['M3', 'M4'], inst: 'choirMen', oct: 0, lvl: 0.28}, space: {M2: {pad: {reg: [54,68]}, choir: {velK: 0.6}}, M3: {pad: {reg: [60,76]}}, M4: {pad: {reg: [68,82]}, choir: {velK: 0.6}}}, trim: 3.05},
     'galaxy21': {orch: true, upgrade: true, holdLow: false, hall: 'musikverein', tone: {lo: 0, hi: 3.3, pres: 3.3}, lowBand: 1.5, subBass: 0.24, trim: 3.98},
-    'galaxy22': {orch: true, upgrade: true, holdLow: false, hall: 'musikverein', tone: {lo: 1.7, hi: 1.56, pres: 1.1}, lowBand: 1.5, subBass: 0.22, mix: {lead: 1.91}, verb: {crest: 0.8}, space: {men: {pad: {reg: [62,76]}, choir2: {velK: 0.6}}, satb: {pad: {velK: 0.7}, choir2: {velK: 0.6}}, satb2: {pad: {velK: 0.75}, pad2: {velK: 0.7}, choir: {velK: 0.6}}, still: {pad: {reg: [58,72]}, choir2: {velK: 0.6}}, crest: {pad: {velK: 0.7}, choir: {velK: 0.6}, pad2: {velK: 0.7}}}, trim: 3.61},
+    'galaxy22': {oldMen: {vel: 0.35}, orch: true, upgrade: true, holdLow: false, hall: 'musikverein', tone: {lo: 1.7, hi: 1.56, pres: 1.1}, lowBand: 1.5, subBass: 0.22, mix: {lead: 1.91}, verb: {crest: 0.8}, space: {men: {pad: {reg: [62,76]}, choir2: {velK: 0.6}}, satb: {pad: {velK: 0.7}, choir2: {velK: 0.6}}, satb2: {pad: {velK: 0.75}, pad2: {velK: 0.7}, choir: {velK: 0.6}}, still: {pad: {reg: [58,72]}, choir2: {velK: 0.6}}, crest: {pad: {velK: 0.7}, choir: {velK: 0.6}, pad2: {velK: 0.7}}}, trim: 3.61},
     'galaxy23': {},
     'galaxy24': {sing: {sections: ['D'], inst: 'choirOoh', oct: 0, lvl: 0.238}},   // the homeworld: the choir sings the climb at the height, the organ beneath   // the weaver: written to the refreshed standard (its own definition carries the profile, the hall and the low end)
     'race:alkari': {hall: 'musikverein', tone: {lo: 1.15, hi: 0, pres: 1.5}, lowBand: 3, mix: {lead: 0.88}, trim: 1.76},
@@ -139,6 +139,15 @@
       else if (v === null) delete sc[k]; else sc[k] = v;
     }
   }
+  // oldMen: the old men's choir layered gently under the new one (the user: its darker, modulated sound has its place): in the sections
+  // where the choir sings (or those named), a held bed in the men's deep register, voice-led through the changes (notes the chords
+  // share carry on, the moving voices glide), long in and out, low in the mix
+  function oldMen(d, o) {
+    for (const sc of d.sec) { if (o.sections ? !o.sections.includes(sc.n) : !(sc.choir || sc.choir2 || sc.lead3)) continue; if (sc.choir3) continue;
+      if ((sc.cres ? sc.cres[1] : num(sc.lv, 1)) < (o.min === undefined ? 0.55 : o.min)) continue;
+      sc.choir3 = { p: 'sus', inst: 'choirMenOld', n: 3, reg: o.reg || [43, 57], vel: o.vel || 0.35, tie: true };
+    }
+  }
   function apply(d, p) {
     for (const k in p) {
       if (k === 'choirFwd' || k === 'brassHarm') continue;
@@ -146,6 +155,7 @@
       else if (k === 'sing') sing(d, p.sing);
       else if (k === 'descant') descant(d, p.descant);
       else if (k === 'secs') secs(d, p.secs);
+      else if (k === 'oldMen') oldMen(d, p.oldMen);
       else if (k === 'space') space(d, p.space);
       else if (k === 'verb') { for (const n in p.verb) { const s = d.sec.find(x => x.n === n); if (s) s.verb = p.verb[n]; } }
       else if (k === 'mix' || k === 'tone') d[k] = Object.assign({}, d[k] || {}, p[k]);

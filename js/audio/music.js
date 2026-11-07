@@ -305,6 +305,9 @@
   // the piano (the Iowa Steinway, pp mf ff): struck and let ring as with the sustain pedal down, never tied (plucked, above)
   INST.piano = smp('pianoIowa', 0.5, { rel: 1.6, hold: 1.2, range: [24, 108] }, 'pluck');
   INST.pianoDeep = smp('pianoIowa', 0.5, { rel: 2.4, hold: 2.0, range: [24, 108] }, 'pluck');   // the left hand's deep chords and octaves, longer still
+  // the old men's choir (the Sonatina men) kept by name for the pieces that layer it gently under the new choir (its darker, modulated
+  // colour): never swapped by the refresh; played as a held bed (choir3, voice-led like strings) with long entries and releases
+  INST.choirMenOld = smp('chorusMen', 0.23, { att: 1.8, rel: 2.5, hp: 90, hum: 1.5, eq: [[5000, 2, 'hs']] }, 'uuh');
   INST.choirMenNew = smp('choirOoh', 0.144, { att: 0.3, rel: 1.4, hp: 70, eq: [[6000, 1.5, 'hs']], range: [38, 78], stretch: 9 }, 'uuh');
   INST.choirMenAhNew = smp('choirOoh', 0.246, { att: 0.3, rel: 1.4, hp: 70, eq: [[6000, 1.5, 'hs']], range: [38, 78], stretch: 9 }, 'aah');
   const inRange = (inst, reg) => { const r = inst.range; if (!r || !reg) return reg; const lo = Math.max(reg[0], r[0]), hi = Math.min(reg[1], r[1]); return hi - lo >= 7 ? [lo, hi] : reg; };
@@ -322,8 +325,8 @@
     drums: { lvl: 0.68, verb: 0.08, stage: 0.32, dly: 0 }, fx: { lvl: 0.6, verb: 0.5, stage: 0.2, dly: 0 },
     x1: { lvl: 0.8, verb: 0.12, dly: 0, i0: 0.12 }, x2: { lvl: 0.7, verb: 0.2, dly: 0.3, i0: 0.38 }, x3: { lvl: 0.9, verb: 0.3, dly: 0, i0: 0.62 },
   };
-  const BUS = { pad: 'pad', pad2: 'pad', pad3: 'pad', bass: 'bass', arp: 'arp', arp2: 'arp', drums: 'drums', perc: 'drums', timp: 'drums', lead: 'lead', lead2: 'lead', lead3: 'lead', lead4: 'lead', bell: 'bell', bell2: 'bell', choir: 'choir', choir2: 'choir' };
-  const DEF_INST = { pad: 'warm', pad2: 'warm', bass: 'sub', arp: 'arp', arp2: 'arp', lead: 'brass', lead2: 'bell', lead3: 'choirOoh', lead4: 'tpts', bell: 'glass', bell2: 'glass', choir: 'ooh', choir2: 'aah' };
+  const BUS = { pad: 'pad', pad2: 'pad', pad3: 'pad', bass: 'bass', arp: 'arp', arp2: 'arp', drums: 'drums', perc: 'drums', timp: 'drums', lead: 'lead', lead2: 'lead', lead3: 'lead', lead4: 'lead', bell: 'bell', bell2: 'bell', choir: 'choir', choir2: 'choir', choir3: 'choir' };
+  const DEF_INST = { pad: 'warm', pad2: 'warm', bass: 'sub', arp: 'arp', arp2: 'arp', lead: 'brass', lead2: 'bell', lead3: 'choirOoh', lead4: 'tpts', choir3: 'choirMenOld', bell: 'glass', bell2: 'glass', choir: 'ooh', choir2: 'aah' };
   Music._DEF_INST = DEF_INST;
   const LINES = { lead: 1, lead2: 1, lead3: 1, lead4: 1, bell: 1, bell2: 1 };   // lead4: a descant over the tune (the refresh's descant)   // lead3: a third line, the choir singing the tune (the refresh's sing)
 
@@ -465,7 +468,7 @@
       // a section's own meter and tempo (an interlude's opening bars keep the outgoing piece's; a tempo may ramp across a section)
       R.meter = num(s.meter, meter); R.strong = s.strong || def.strong || (STRONG[R.meter] || [0]); R.bpm = num(s.bpm, def.bpm); R.bpmTo = num(s.bpmTo, R.bpm);
       R.segs = expandProg(s.prog, s.bars, R.meter, tpc);
-      for (const key of ['pad', 'pad2', 'pad3', 'bass', 'arp', 'arp2', 'drums', 'perc', 'timp', 'lead', 'lead2', 'lead3', 'lead4', 'bell', 'bell2', 'choir', 'choir2']) {
+      for (const key of ['pad', 'pad2', 'pad3', 'bass', 'arp', 'arp2', 'drums', 'perc', 'timp', 'lead', 'lead2', 'lead3', 'lead4', 'bell', 'bell2', 'choir', 'choir2', 'choir3']) {
         let v = s[key] !== undefined ? s[key] : base[key];
         if (v === true) v = base[key];
         if (v) R.L[key] = v;
@@ -1034,7 +1037,7 @@
     }
   }
 
-  const GEN = { pad: genPad, pad2: genPad, pad3: genPad, bass: genBass, arp: genArp, arp2: genArp, drums: genDrums, perc: genDrums, timp: genTimp, choir: genChoir, choir2: genChoir, lead: genLine, lead3: genLine, lead4: genLine, lead2: genLine };
+  const GEN = { pad: genPad, pad2: genPad, pad3: genPad, bass: genBass, arp: genArp, arp2: genArp, drums: genDrums, perc: genDrums, timp: genTimp, choir: genChoir, choir2: genChoir, lead: genLine, lead3: genLine, lead4: genLine, choir3: genPad, lead2: genLine };
 
   // ---------------------------------------------------------------- tension overlays (layers x1..x3, gated by setIntensity)
   function genTension(C, s) {
