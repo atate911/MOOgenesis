@@ -483,6 +483,8 @@
     if ((inst.v === 'bell' || inst.v === 'chime') && inst.dur) o.dur = inst.dur * clamp(0.7 + 0.15 * beats, 0.7, 1.4);
     if (ex) for (const k in ex) if (k !== 'art' && k !== 'dt' && ex[k] !== undefined) o[k] = ex[k];
     if (C.def && C.def.part && C.def.part[C.key] !== undefined) o.vel *= num(C.def.part[C.key], 1);   // the balance of parts that share a layer (pad and pad2, choir and choir2)
+    // outside the profile a piece's subBass is a floor under its recorded bass's own sub (the refresh gives the synth-era cues their weight)
+    if (C.def && !C.def.orch && ly === 'bass' && inst.v === 'sample' && C.def.subBass !== undefined) o.sub = Math.max(num(o.sub, 0), clamp(num(C.def.subBass, 0), 0, 1.5));
     if (C.def && C.def.orch && inst.v === 'sample') {
       o.ens = 0; o.sub = ly === 'bass' ? clamp(num((wAt => wAt && wAt.R.raw && wAt.R.raw.subBass !== undefined ? wAt.R.raw.subBass : C.def.subBass)(C.wraps && C.wraps.find(w => beat >= w.start - 1e-9 && beat < w.start + w.beats)), 0), 0, 1.5) : 0;   // the orchestral profile: the recording as it is (a piece's `subBass`: a sine an octave under its bass, felt under the real double bass, as a film mix reinforces it)
       // the foundation is a tone, not a bow: the bass through a steep low-pass at four times its note, 200 Hz at most (its fundamental and
