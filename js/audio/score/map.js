@@ -540,15 +540,16 @@
     mix: { lead: 1.25, pad: 1, bass: 1, choir: 1 },
     ph: {
       PA: '@procession.A1', PB: '@procession.A2', CD: '@procession.CD', H1: '@hymn.H1', H2: '@hymn.H2', K: '@hymn.K',
+      HM1: '3:2 2:2 | 1:3 5:1 | 6:2 5:2 | 3:4', HM2: '4:2 3:2 | 2:3 6:1 | 5:2 4:2 | 3:4',          // its own consoling tune: falling, then a reach and home
     },
     sec: [
       { n: 'intro', bars: 4, cres: [0.38, 0.48], prog: 'I IV vi V', pad: { p: 'stab', pat: 'x.......', n: 4, reg: [43, 64], vel: 0.55, gate: 3 }, bass: { pat: '1---', vel: 0.6 } },
       // the climb, one quiet line over low chords on the pulse, the strings a breath beneath
       { n: 'A', bars: 16, lv: 0.56, prog: 'I V vi IV | I V IV V | I V vi IV | ii V I I', pad: { p: 'stab', pat: 'x..x..x.', n: 4, reg: [43, 64], vel: 0.5, gate: 1.6 }, bass: { pat: '1---', vel: 0.6 },
-        pad2: { p: 'swell', n: 3, reg: [55, 72], vel: 0.25 }, lead: { ph: 'PA r4 PB r4', vel: 0.52, shape: 0.35, swell: 0.1 } },
+        pad2: { p: 'swell', n: 3, reg: [55, 72], vel: 0.25 }, lead: { ph: 'H1 r4 H2 r4', vel: 0.52, shape: 0.35, swell: 0.1 } },
       // the hymn, the voices humming beneath it
       { n: 'B', bars: 16, lv: 0.6, prog: 'vi IV I V | vi IV ii V | I IV vi V | IV V I I', pad: { p: 'stab', pat: 'x...x.x.', n: 4, reg: [43, 64], vel: 0.5, gate: 1.6 }, bass: { pat: '1---', vel: 0.6 },
-        pad2: { p: 'swell', n: 3, reg: [55, 72], vel: 0.25 }, lead: { ph: 'H1 r4 H2 r4', vel: 0.54, shape: 0.35, swell: 0.1 }, choir: { n: 3, reg: [57, 69], vel: 0.24, soft: true } },
+        pad2: { p: 'swell', n: 3, reg: [55, 72], vel: 0.25 }, lead: { ph: 'HM1 r4 HM2 r4', vel: 0.54, shape: 0.35, swell: 0.1 }, choir: { n: 3, reg: [57, 69], vel: 0.24, soft: true } },
       // space: chords alone, the hymn's call once
       { n: 'C', bars: 8, lv: 0.44, prog: 'IV:2 I:2 | ii:2 V:2', pad: { p: 'stab', pat: 'x.......', n: 4, reg: [43, 64], vel: 0.48, gate: 3 }, bass: { pat: '1-------', vel: 0.5 },
         lead: { ph: 'r8 K', vel: 0.46, shape: 0.35, swell: 0.1 } },
@@ -557,7 +558,7 @@
         pad2: { p: 'swell', n: 4, reg: [55, 76], vel: 0.36 }, lead: { ph: 'PA PB PA CD', vel: 0.35, shape: 0.35, swell: 0.1 }, choir: { n: 3, reg: [57, 72], vel: 0.32 }, choir2: { n: 3, reg: [43, 57], vel: 0.28 } },
       // the coda: chords alone, the theme's head, home
       { n: 'E', bars: 8, cres: [0.5, 0.32], prog: 'I IV I V | IV V I I', pad: { p: 'stab', pat: 'x.......', n: 4, reg: [43, 64], vel: 0.46, gate: 3 }, bass: { pat: '1---', vel: 0.5 },
-        lead: { ph: 'K r4 CD', vel: 0.46, shape: 0.35, swell: 0.1 } },
+        lead: { ph: 'K HM2', vel: 0.46, shape: 0.35, swell: 0.1 } },
     ],
   });
 

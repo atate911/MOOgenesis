@@ -5,7 +5,7 @@
 
 Every `step` semitones from `lo` to `hi` (MIDI), each dynamic: downloaded, its attack found (the first moment within 40 dB of the
 note's peak), trimmed to the note's singing length (12 s in the bass to 4 s at the top, the piano's own decay inside it), the last
-third faded out, and encoded as stereo MP3 (OUT_DIR/pianoIowa-<Note>-l<layer>-r0.mp3, layer 0 pp, 1 mf, 2 ff). One gain per note for
+third faded out, and encoded as mono MP3 from the stronger microphone (OUT_DIR/pianoIowa-<Note>-l<layer>-r0.mp3, layer 0 pp, 1 mf, 2 ff). One gain per note for
 its three dynamics (the mf's peak at -6 dBFS), so the recorded difference between pp and ff stays. Prints the instruments.json entry.
 The recordings may be used for any project without restriction (theremin.music.uiowa.edu/MIS.html)."""
 import os, sys, json, subprocess, urllib.request, urllib.parse, tempfile
@@ -48,6 +48,10 @@ def main():
             f0 = int(len(y) * 0.66); fade = np.linspace(1, 0, len(y) - f0) ** 2; y[f0:] *= fade[:, None]
             takes[d] = y
         if 'mf' not in takes: continue
+        # mono, from the note's stronger microphone (the same for its three dynamics): the collection's two channels are spaced and in
+        # places opposed in phase (C5 at -0.73), hollow and smeared when summed; the mix seats the piano like any other instrument
+        ch = 0 if np.mean(takes['mf'][:, 0] ** 2) >= np.mean(takes['mf'][:, 1] ** 2) else 1
+        for d in takes: takes[d] = np.repeat(takes[d][:, ch:ch + 1], 2, axis=1)
         g = 0.5 / max(np.abs(takes['mf']).max(), 1e-9)   # one gain for the note: its mf's peak at -6 dBFS
         for li, d in enumerate(DYN):
             if d not in takes: continue
