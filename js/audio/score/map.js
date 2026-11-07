@@ -502,61 +502,62 @@
     },
     sec: [
       { n: 'intro', bars: 4, cres: [0.3, 0.45], prog: 'I IV I V', pad: { p: 'swell', n: 3, reg: [55, 74], vel: 0.5 }, bass: false,
-        arp: { pat: '012345', res: 2, gate: 2.6, vel: 0.34, reg: [43, 79] } },
+        arp: { pat: '012345432101', res: 4, gate: 3, vel: 0.24, reg: [43, 79] } },
       { n: 'A1', bars: 16, lv: 0.56, prog: 'I V vi IV | I V IV V | I V vi IV | ii V I I', pad: { p: 'sus', n: 3, reg: [55, 72], vel: 0.55 }, bass: { pat: '1--', vel: 0.6, inst: { p: 'deep', att: 0.8, rel: 2.0 } },
-        arp: { pat: '012321', res: 2, gate: 2.4, vel: 0.27, reg: [43, 67] }, lead: { ph: 'PA3 PB3', vel: 0.6, harm: -2, shape: 0.35, swell: 0.15 }, choir2: { n: 3, reg: [62, 74], vel: 0.2, soft: true } },
+        arp: { pat: '012345432101', res: 4, gate: 3, vel: 0.2, reg: [43, 72] }, lead: { ph: 'PA3 PB3', vel: 0.52, harm: -2, shape: 0.35, swell: 0.15 }, lead2: { ph: '@', inst: 'violas', vel: 0.32, shape: 0.4, swell: 0.3 }, choir2: { n: 3, reg: [62, 74], vel: 0.2, soft: true } },
       { n: 'B', bars: 16, lv: 0.62, prog: 'vi iii IV I | ii V I I | vi iii IV I | ii V vi V', pad: { p: 'swell', n: 3, reg: [57, 74], vel: 0.45 }, bass: { pat: '1--', vel: 0.6, inst: { p: 'deep', att: 0.8, rel: 2.0 } },
-        arp: { pat: '012321', res: 2, gate: 2.4, vel: 0.24, reg: [43, 64] }, lead: { ph: 'HB1 HB2', vel: 0.62, harm: -2, shape: 0.35, swell: 0.15 },
+        arp: { pat: '012345432101', res: 4, gate: 3, vel: 0.18, reg: [43, 67] }, lead: { ph: 'HB1 HB2', vel: 0.54, harm: -2, shape: 0.35, swell: 0.15 },
         lead2: { ph: 'CB CB', oct: -1, vel: 0.5, shape: 0.35, swell: 0.3 }, choir2: { n: 3, reg: [64, 76], vel: 0.3, soft: true } },
       { n: 'C', bars: 8, lv: 0.5, prog: 'IV:2 ii:2 | V:2 V:2', pad: { p: 'swell', n: 2, reg: [62, 76], vel: 0.35 }, bass: { pat: '1--', pedal: true, vel: 0.5, inst: { p: 'deep', att: 1.2, rel: 2.6 } },
         arp: { pat: ['012345678', '876543210'], res: 3, gate: 3, vel: 0.32, reg: [43, 91] }, choir: { n: 2, reg: [64, 76], vel: 0.22, soft: true } },
       { n: 'breath', bars: 2, barsVar: [1, 2], lv: 0.3, prog: 'I:2', tens: false, pad: { p: 'swell', n: 2, reg: [62, 79], vel: 0.3 },
         arp: { pat: '0.....', res: 2, gate: 4, vel: 0.26, reg: [55, 79] } },
       { n: 'A2', bars: 16, cres: [0.66, 0.8], prog: 'I V vi IV | I V IV V | I V vi IV | ii V I I', pad: { p: 'sus', n: 4, reg: [55, 79], vel: 0.65 }, pad2: { p: 'swell', n: 2, reg: [40, 52], vel: 0.5 },
-        bass: { pat: '1--', vel: 0.7, inst: { p: 'deep', att: 0.6, rel: 1.8 } }, arp: { pat: '012321', res: 2, gate: 2.4, vel: 0.28, reg: [43, 67] },
-        lead: { ph: 'PA3 PB3', vel: 0.66, harm: -2, shape: 0.35, swell: 0.15 }, lead2: { ph: '@', inst: HARP_SOFT, oct: 1, vel: 0.36 }, choir: { n: 3, reg: [55, 72], vel: 0.4, soft: true } },
+        bass: { pat: '1--', vel: 0.7, inst: { p: 'deep', att: 0.6, rel: 1.8 } }, arp: { pat: '012345432101', res: 4, gate: 3, vel: 0.21, reg: [43, 72] },
+        lead: { ph: 'PA3 PB3', vel: 0.56, harm: -2, shape: 0.35, swell: 0.15 }, lead2: { ph: '@', inst: 'choirOoh', vel: 0.34, shape: 0.4, swell: 0.3 }, choir: { n: 3, reg: [55, 72], vel: 0.4, soft: true } },
       // the cello takes the theme (its answer, then the climb) and the harp turns to filigree around it, quick and high
       { n: 'D', bars: 16, lv: 0.6, prog: 'IV I V vi | IV I V V | IV I V vi | ii V I I', pad: { p: 'swell', n: 3, reg: [55, 72], vel: 0.45 }, bass: { pat: '1--', vel: 0.6, inst: { p: 'deep', att: 0.8, rel: 2.0 } },
         arp: { pat: '012321012', res: 3, gate: 2.2, vel: 0.24, reg: [62, 86] }, lead: { ph: 'PB3 PA3', inst: 'cello', oct: -1, vel: 0.62, shape: 0.35, swell: 0.3 }, choir2: { n: 2, reg: [64, 76], vel: 0.24, soft: true } },
       { n: 'E', bars: 8, cres: [0.5, 0.3], prog: 'I IV I V | IV V I I', pad: { p: 'swell', n: 3, reg: [55, 72], vel: 0.45 }, bass: { pat: '1--', vel: 0.5, inst: { p: 'deep', att: 1.0, rel: 2.4 } },
-        arp: { pat: '012321', res: 2, gate: 2.6, vel: 0.22, reg: [43, 67] }, lead: { ph: 'PH PE', vel: 0.56, harm: -2, shape: 0.35, swell: 0.15 } },
+        arp: { pat: '012345432101', res: 4, gate: 3, vel: 0.17, reg: [43, 72] }, lead: { ph: 'PH PE', vel: 0.5, harm: -2, shape: 0.35, swell: 0.15 }, lead2: { ph: '@', inst: 'violas', vel: 0.28, shape: 0.4, swell: 0.3 } },
     ],
   });
 
-  // The Homeworld (the twenty-fourth piece, written for the refresh): the piano with both of the game's themes. The left hand deep and
-  // open (low chords and the bass in octaves, let ring), the right hand singing in octaves over rolling arpeggios: first the new main
-  // theme's climb (the procession's), then the first main theme's hymn, the choir entering beneath it; a quiet passage of the hymn's
-  // call in fragments; then the choir sings the climb with the piano, the pipe organ beneath the voices and the strings swelling; a coda
-  // for the piano alone. In D, the main theme's own key.
+  // The Homeworld (the twenty-fourth piece, written for the refresh; second version): the piano as the score's warm, low heart, with
+  // both of the game's themes. Chords rather than runs: voiced in the low middle of the keyboard on a gentle 3-3-2 pulse (one, the
+  // and of two, four), rests between them, the bass a single low root; the melody one quiet line in the middle of the keyboard, sparse,
+  // often resting (the new main theme's climb, then the first main theme's hymn); a soft string bed seats it in the hall with the
+  // orchestra. At the height the choir sings the climb (the organ beneath the voices) and the piano becomes the pulse under them; a coda
+  // of chords alone and the theme's head. The tone softened, the dynamic held in the middle. In D, the main theme's own key.
   Track('galaxy24', {
-    desc: 'Calm exploration, the homeworld: the piano with both of the game\'s themes — deep open chords and octaves, the climb and then the hymn sung in octaves over rolling arpeggios, the choir entering, the voices and the organ carrying the climb with the piano at the height; a coda for the piano alone',
-    tags: { solitude: 0.6, contact: 0.3, tension: 0, war: 0, grief: 0.15, grandeur: 0.45, energy: 0.3, dark: 0.05 },
-    bpm: 66, trim: 3, root: 'D', mode: 'major', loopFrom: 'A', tens: false, gentle: true, rubato: 0.02, quotes: ['procession', 'hymn'],
-    eraWin: [0, 0.8], fx: { dly: 0.9, verb: 1.1 },
-    orch: true, holdLow: false, hall: 'musikverein', tone: { lo: 1.5, hi: 1, pres: 1.5 }, lowBand: 2.5, subBass: 0.3,
-    forms: [['A', 'B', 'C', 'D', 'E'], ['A', 'B', 'D', 'C', 'E']],
-    inst: { pad: 'pianoDeep', pad2: 'strings', bass: 'pianoDeep', lead: 'piano', lead2: 'piano', arp: 'piano', choir: 'choirOoh', choir2: 'choirMen' },
-    mix: { lead: 1.4, arp: 0.8, pad: 1, bass: 1.1, choir: 1.1 },
-    ph: { PA: '@procession.A1', PB: '@procession.A2', CD: '@procession.CD', H1: '@hymn.H1', H2: '@hymn.H2', K: '@hymn.K' },
+    desc: 'Calm exploration, the homeworld: the piano with both of the game\'s themes — low, warm chords on a gentle pulse with space between them, a quiet single line of the climb and then the hymn, a soft string bed; at the height the choir and the organ carry the climb over the piano\'s pulse; a coda of chords alone',
+    tags: { solitude: 0.6, contact: 0.3, tension: 0, war: 0, grief: 0.15, grandeur: 0.35, energy: 0.35, dark: 0.05 },
+    bpm: 72, trim: 3, root: 'D', mode: 'major', loopFrom: 'A', tens: false, gentle: true, rubato: 0.02, quotes: ['procession', 'hymn'],
+    eraWin: [0, 0.8], fx: { dly: 0.6, verb: 1.05 },
+    orch: true, holdLow: false, hall: 'musikverein', tone: { lo: 1.5, hi: 0, pres: 1 }, lowBand: 2.5, subBass: 0.25,
+    forms: [['A', 'B', 'C', 'D', 'E'], ['A', 'C', 'B', 'D', 'E']],
+    inst: { pad: { p: 'piano', cut: 3800, hold: 0.8 }, pad2: 'strings', bass: { p: 'pianoDeep', cut: 2400, hold: 1.0 }, lead: { p: 'piano', cut: 4200 }, choir: 'choirOoh', choir2: 'choirMen' },
+    mix: { lead: 1.25, pad: 1, bass: 1, choir: 1 },
+    ph: {
+      PA: '@procession.A1', PB: '@procession.A2', CD: '@procession.CD', H1: '@hymn.H1', H2: '@hymn.H2', K: '@hymn.K',
+    },
     sec: [
-      { n: 'intro', bars: 4, cres: [0.35, 0.5], prog: 'I IV vi V', pad: { p: 'sus', n: 3, reg: [36, 52], vel: 0.6 }, bass: { pat: '1---', vel: 0.7 } },
-      // the climb in octaves over rolling arpeggios and the deep left hand
-      { n: 'A', bars: 16, lv: 0.6, prog: 'I V vi IV | I V IV V | I V vi IV | ii V I I', pad: { p: 'sus', n: 3, reg: [36, 52], vel: 0.55 }, bass: { pat: '1-8-', vel: 0.65 },
-        arp: { pat: '01234321', res: 2, gate: 2, vel: 0.24, reg: [45, 64] }, lead: { ph: 'PA PB PA CD', vel: 0.62, shape: 0.3, swell: 0.1 }, lead2: { ph: '@', oct: 1, vel: 0.4 } },
-      // the hymn, the choir entering beneath it
-      { n: 'B', bars: 16, lv: 0.66, prog: 'vi IV I V | vi IV ii V | I IV vi V | IV V I I', pad: { p: 'sus', n: 3, reg: [36, 52], vel: 0.55 }, bass: { pat: '1-8-', vel: 0.65 },
-        arp: { pat: '01234321', res: 2, gate: 2, vel: 0.22, reg: [45, 64] }, lead: { ph: 'H1 H2 H1 H2', vel: 0.64, shape: 0.3, swell: 0.1 }, lead2: { ph: '@', oct: 1, vel: 0.4 },
-        choir: { n: 3, reg: [57, 72], vel: 0.32, soft: true }, choir2: { n: 3, reg: [43, 57], vel: 0.26, soft: true }, pad2: { p: 'swell', n: 3, reg: [62, 79], vel: 0.3 } },
-      // the piano alone: the hymn's call in fragments over slow rolling chords
-      { n: 'C', bars: 8, lv: 0.46, prog: 'IV:2 I:2 | ii:2 V:2', pad: { p: 'sus', n: 3, reg: [36, 52], vel: 0.45 }, bass: { pat: '1-------', vel: 0.5 },
-        arp: { pat: '0123', res: 1, gate: 3, vel: 0.22, reg: [45, 64] }, lead: { ph: 'K K', vel: 0.52, shape: 0.35, swell: 0.1 } },
-      // the height: the voices and the piano carry the climb (the refresh's sing puts the choir on it, the organ beneath), the strings swell
-      { n: 'D', bars: 16, cres: [0.72, 0.88], prog: 'I V vi IV | I V IV V | I V vi IV | ii V I I', pad: { p: 'sus', n: 4, reg: [36, 52], vel: 0.65 }, bass: { pat: '1-8-', vel: 0.75 },
-        arp: { pat: '01234321', res: 2, gate: 2, vel: 0.24, reg: [45, 64] }, lead: { ph: 'PA PB PA CD', vel: 0.7, shape: 0.3, swell: 0.1 }, lead2: { ph: '@', oct: 1, vel: 0.44 },
-        choir: { n: 3, reg: [57, 74], vel: 0.38 }, choir2: { n: 3, reg: [43, 57], vel: 0.32 }, pad2: { p: 'swell', n: 4, reg: [55, 81], vel: 0.45 } },
-      // the coda: the piano alone, the theme's head, home
-      { n: 'E', bars: 8, cres: [0.5, 0.3], prog: 'I IV I V | IV V I I', pad: { p: 'sus', n: 3, reg: [36, 52], vel: 0.45 }, bass: { pat: '1---', vel: 0.55 },
-        arp: { pat: '0123', res: 1, gate: 3, vel: 0.2, reg: [45, 64] }, lead: { ph: 'K CD', vel: 0.54, shape: 0.35, swell: 0.1 } },
+      { n: 'intro', bars: 4, cres: [0.38, 0.48], prog: 'I IV vi V', pad: { p: 'stab', pat: 'x.......', n: 4, reg: [43, 64], vel: 0.55, gate: 3 }, bass: { pat: '1---', vel: 0.6 } },
+      // the climb, one quiet line over low chords on the pulse, the strings a breath beneath
+      { n: 'A', bars: 16, lv: 0.56, prog: 'I V vi IV | I V IV V | I V vi IV | ii V I I', pad: { p: 'stab', pat: 'x..x..x.', n: 4, reg: [43, 64], vel: 0.5, gate: 1.6 }, bass: { pat: '1---', vel: 0.6 },
+        pad2: { p: 'swell', n: 3, reg: [55, 72], vel: 0.25 }, lead: { ph: 'PA r4 PB r4', vel: 0.52, shape: 0.35, swell: 0.1 } },
+      // the hymn, the voices humming beneath it
+      { n: 'B', bars: 16, lv: 0.6, prog: 'vi IV I V | vi IV ii V | I IV vi V | IV V I I', pad: { p: 'stab', pat: 'x...x.x.', n: 4, reg: [43, 64], vel: 0.5, gate: 1.6 }, bass: { pat: '1---', vel: 0.6 },
+        pad2: { p: 'swell', n: 3, reg: [55, 72], vel: 0.25 }, lead: { ph: 'H1 r4 H2 r4', vel: 0.54, shape: 0.35, swell: 0.1 }, choir: { n: 3, reg: [57, 69], vel: 0.24, soft: true } },
+      // space: chords alone, the hymn's call once
+      { n: 'C', bars: 8, lv: 0.44, prog: 'IV:2 I:2 | ii:2 V:2', pad: { p: 'stab', pat: 'x.......', n: 4, reg: [43, 64], vel: 0.48, gate: 3 }, bass: { pat: '1-------', vel: 0.5 },
+        lead: { ph: 'r8 K', vel: 0.46, shape: 0.35, swell: 0.1 } },
+      // the height: the choir sings the climb (the organ beneath it), the piano is the pulse under the voices, the strings swell
+      { n: 'D', bars: 16, cres: [0.68, 0.82], prog: 'I V vi IV | I V IV V | I V vi IV | ii V I I', pad: { p: 'stab', pat: 'x..x..x.', n: 4, reg: [43, 64], vel: 0.56, gate: 1.6 }, bass: { pat: '1---', vel: 0.68 },
+        pad2: { p: 'swell', n: 4, reg: [55, 76], vel: 0.36 }, lead: { ph: 'PA PB PA CD', vel: 0.35, shape: 0.35, swell: 0.1 }, choir: { n: 3, reg: [57, 72], vel: 0.32 }, choir2: { n: 3, reg: [43, 57], vel: 0.28 } },
+      // the coda: chords alone, the theme's head, home
+      { n: 'E', bars: 8, cres: [0.5, 0.32], prog: 'I IV I V | IV V I I', pad: { p: 'stab', pat: 'x.......', n: 4, reg: [43, 64], vel: 0.46, gate: 3 }, bass: { pat: '1---', vel: 0.5 },
+        lead: { ph: 'K r4 CD', vel: 0.46, shape: 0.35, swell: 0.1 } },
     ],
   });
 
