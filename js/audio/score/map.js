@@ -440,6 +440,52 @@
     ],
   });
 
+  // The Weaver (the twenty-third piece, written for the refresh): a harp nocturne in three. The harp is the voice throughout: it sings
+  // the game's theme (the procession's climb, read in three: the climb, then a falling answer that consoles it), weaves its own low
+  // arpeggios beneath, answers itself in a new tune in the relative minor against a cello's long line, and plays a cadenza (sweeps
+  // across three octaves over a held pedal) before the theme comes home in octaves; a while it turns to filigree around the cello's
+  // reading of the theme. The strings, the new choir far back and the hall
+  // hold it, as in the rest of the map. In G, the main theme's subdominant: of its family, in a colour of its own.
+  Track('galaxy23', {
+    desc: 'Calm exploration, the weaver: a harp nocturne in three — the harp sings the game theme over its own rolling arpeggios, answers it with a new tune against a cello, sweeps through a cadenza and brings the theme home in octaves; strings and a distant choir',
+    tags: { solitude: 0.75, contact: 0.25, tension: 0, war: 0, grief: 0.05, grandeur: 0.3, energy: 0.35, dark: 0 },
+    bpm: 78, meter: 3, trim: 3, root: 'G', mode: 'major', loopFrom: 'A1', tens: false, gentle: true, rubato: 0.02, quotes: ['procession'],
+    eraWin: [0, 0.75], fx: { dly: 1.2, verb: 1.1 },
+    orch: true, holdLow: false, hall: 'musikverein', tone: { lo: 1.5, hi: 1, pres: 1.5 }, lowBand: 2.5, subBass: 0.35,
+    forms: [['A1', 'B', 'C', 'breath', 'A2', 'D', 'E'], ['A1', 'B', 'D', 'A2', 'C', 'breath', 'E']],
+    inst: { pad: 'strings', pad2: 'cellos', bass: 'deep', lead: 'harp', lead2: 'cello', arp: 'harp', choir: 'choirOoh', choir2: 'choirHum' },
+    mix: { lead: 1.5, arp: 0.9, choir: 1.1 },
+    ph: {
+      PA3: '1:2 2:1 | 3:1 5:2 | 6:2 5:1 | 3:3 | 3:2 2:1 | 3:1 5:2 | 8:2 7:1 | 5:3',          // the theme's climb in three, twice (the second reaching the octave)
+      PB3: '6:2 5:1 | 4:1 3:2 | 5:2 4:1 | 2:3 | 3:2 4:1 | 5:1 6:2 | 5:2 2:1 | 1:3',          // its answer: falling, then home
+      HB1: '3:1 5:1 6:1 | 8:2 7:1 | 6:1 5:1 3:1 | 5:3 | 4:1 6:1 7:1 | 9:2 8:1 | 7:1 6:1 4:1 | 6:3',   // the new tune: a rising sequence
+      HB2: '10:2 9:1 | 8:1 6:2 | 7:2 6:1 | 5:3 | 6:2 5:1 | 4:1 2:2 | 3:2 2:1 | 1:3',                 // and its way down
+      CB: '3:3 | 4:3 | 5:3 | 4:3 | 3:3 | 2:3 | 3:3 | 5:3',                                     // the cello's long line beneath it
+      PH: '1:2 2:1 | 3:1 5:2 | 6:6', PE: '5:3 | 3:3 | 2:3 | 1:3',                              // the coda: the theme's head, then the way home
+    },
+    sec: [
+      { n: 'intro', bars: 4, cres: [0.3, 0.45], prog: 'I IV I V', pad: { p: 'swell', n: 3, reg: [55, 74], vel: 0.5 }, bass: false,
+        arp: { pat: '012345', res: 2, vel: 0.4, reg: [43, 79] } },
+      { n: 'A1', bars: 16, lv: 0.56, prog: 'I V vi IV | I V IV V | I V vi IV | ii V I I', pad: { p: 'sus', n: 3, reg: [55, 72], vel: 0.55 }, bass: { pat: '1--', vel: 0.6, inst: { p: 'deep', att: 0.8, rel: 2.0 } },
+        arp: { pat: '021212', res: 2, vel: 0.32, reg: [43, 67] }, lead: { ph: 'PA3 PB3', vel: 0.7, shape: 0.3, swell: 0.15 } },
+      { n: 'B', bars: 16, lv: 0.62, prog: 'vi iii IV I | ii V I I | vi iii IV I | ii V vi V', pad: { p: 'swell', n: 3, reg: [57, 74], vel: 0.45 }, bass: { pat: '1--', vel: 0.6, inst: { p: 'deep', att: 0.8, rel: 2.0 } },
+        arp: { pat: '0.1.2.', res: 2, vel: 0.28, reg: [43, 64] }, lead: { ph: 'HB1 HB2', vel: 0.72, shape: 0.3, swell: 0.15 },
+        lead2: { ph: 'CB CB', oct: -1, vel: 0.5, shape: 0.35, swell: 0.3 }, choir2: { n: 3, reg: [64, 76], vel: 0.3, soft: true } },
+      { n: 'C', bars: 8, lv: 0.5, prog: 'IV:2 ii:2 | V:2 V:2', pad: { p: 'swell', n: 2, reg: [62, 76], vel: 0.35 }, bass: { pat: '1--', pedal: true, vel: 0.5, inst: { p: 'deep', att: 1.2, rel: 2.6 } },
+        arp: { pat: ['012345678987', '876543210123'], res: 4, vel: 0.42, reg: [43, 91] }, choir: { n: 2, reg: [64, 76], vel: 0.22, soft: true } },
+      { n: 'breath', bars: 2, barsVar: [1, 2], lv: 0.3, prog: 'I:2', tens: false, pad: { p: 'swell', n: 2, reg: [62, 79], vel: 0.3 },
+        arp: { pat: '0.....', res: 2, vel: 0.3, reg: [55, 79] } },
+      { n: 'A2', bars: 16, cres: [0.66, 0.8], prog: 'I V vi IV | I V IV V | I V vi IV | ii V I I', pad: { p: 'sus', n: 4, reg: [55, 79], vel: 0.65 }, pad2: { p: 'swell', n: 2, reg: [40, 52], vel: 0.5 },
+        bass: { pat: '1--', vel: 0.7, inst: { p: 'deep', att: 0.6, rel: 1.8 } }, arp: { pat: '021212', res: 2, vel: 0.34, reg: [43, 67] },
+        lead: { ph: 'PA3 PB3', vel: 0.78, shape: 0.3, swell: 0.15 }, lead2: { ph: '@', inst: 'harp', oct: 1, vel: 0.42 }, choir: { n: 3, reg: [55, 72], vel: 0.4, soft: true } },
+      // the cello takes the theme (its answer, then the climb) and the harp turns to filigree around it, quick and high
+      { n: 'D', bars: 16, lv: 0.6, prog: 'IV I V vi | IV I V V | IV I V vi | ii V I I', pad: { p: 'swell', n: 3, reg: [55, 72], vel: 0.45 }, bass: { pat: '1--', vel: 0.6, inst: { p: 'deep', att: 0.8, rel: 2.0 } },
+        arp: { pat: '012321012321', res: 4, vel: 0.3, reg: [62, 86] }, lead: { ph: 'PB3 PA3', inst: 'cello', oct: -1, vel: 0.62, shape: 0.35, swell: 0.3 }, choir2: { n: 2, reg: [64, 76], vel: 0.24, soft: true } },
+      { n: 'E', bars: 8, cres: [0.5, 0.3], prog: 'I IV I V | IV V I I', pad: { p: 'swell', n: 3, reg: [55, 72], vel: 0.45 }, bass: { pat: '1--', vel: 0.5, inst: { p: 'deep', att: 1.0, rel: 2.4 } },
+        arp: { pat: '0.1.2.', res: 2, vel: 0.26, reg: [43, 67] }, lead: { ph: 'PH PE', vel: 0.64, shape: 0.3, swell: 0.15 } },
+    ],
+  });
+
   Music._hitsVariant('galaxy9'); Music._hitsVariant('galaxy10');   // the war-time readings of the rare pieces
 
   // ---------------------------------------------------------------- the twelve movements written in session 11
