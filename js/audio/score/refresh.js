@@ -19,14 +19,14 @@
     // and the race themes (and the battle cue, whose bite the profile softened) the mastering alone, with a sub under their bass. Then
     // the choir's sung lead in twelve of them (sing), room for every melody (space: tools/fresh/space.js) and one low end across the score
     // (the sub toward -5 dB and 50-120 Hz toward +2 dB of the whole, the main theme's family).
-    'title': {},   // the main theme: its own mix, hall and tone as approved; the new choir (the men included) like every other piece
+    'title': {space: {A: {pad: {velK: 0.75}}}},   // the main theme: its own mix, hall and tone as approved; the new choir (the men included) like every other piece
     'combat3': {hall: 'musikverein', tone: {lo: 1.5, hi: 1.5, pres: 2.3}, lowBand: 3, subBass: 0.1, space: {A1: {pad2: {velK: 0.7}}, B1: {pad2: {velK: 0.7}}, A2: {pad2: {velK: 0.7}}, B2: {pad2: {velK: 0.7}}}, trim: 1.42},
     'combat1': {hall: 'musikverein', tone: {lo: 1.7, hi: 1, pres: 2}, lowBand: 3, subBass: 0.28, space: {A1: {pad: {reg: [74,88]}}, A2: {pad: {reg: [74,88]}}, A3: {pad: {reg: [74,88]}}}, trim: 1.37},
     'combat2': {hall: 'musikverein', tone: {lo: 1.6, hi: 1, pres: 1.6}, lowBand: 3, subBass: 0.4, space: {A1: {pad: {velK: 0.7}}, A2: {pad: {velK: 0.7}}, A3: {pad: {velK: 0.7}}}, trim: 1.33},
     'ground': {hall: 'musikverein', tone: {lo: 3, hi: 0, pres: 0.5}, lowBand: 3, subBass: 0.78, mix: {lead: 2.54, choir: 2.97}, space: {B1: {pad: {reg: [72,86]}}, B2: {pad: {reg: [72,86]}}, D: {pad: {reg: [73,87]}}, E: {pad: {reg: [72,86]}}}, trim: 1.88},
     'council': {orch: true, upgrade: true, holdLow: false, hall: 'musikverein', tone: {lo: 0.5, hi: 0.42, pres: 2}, lowBand: 2.5, subBass: 0.69, mix: {lead: 1.35}, verb: {A3: 0.8, B2: 0.8}, sing: {sections: ['A3', 'B2'], inst: 'choirOoh', oct: 0, lvl: 0.352}, trim: 0.86},
     'council2': {orch: true, upgrade: true, holdLow: false, hall: 'musikverein', tone: {lo: 3, hi: 1.39, pres: 2.6}, lowBand: 3.5, subBass: 0.45, mix: {lead: 1.84, bass: 2.47}, verb: {B: 0.8, R: 0.8}, sing: {sections: ['B', 'R'], inst: 'choirOoh', oct: 0, lvl: 0.286}, space: {B: {pad: {velK: 0.75}}, R: {pad: {velK: 0.75}}}, trim: 1.46},
-    'procession': {orch: true, upgrade: true, holdLow: false, hall: 'musikverein', tone: {lo: 3, hi: 2.32, pres: 2.6}, lowBand: 3.5, subBass: 0.35, mix: {lead: 1.6, bass: 1.95, drums: 1.7}, sends: {drums: {verb: 0.05, stage: 0.36}, lead: {verb: 0.08, stage: 0.4, dly: 0.04}}, verb: {B: 0.8, R: 0.8}, sing: {sections: ['B', 'R'], inst: 'choirOoh', oct: 0, lvl: 0.264}, descant: {sections: ['A2', 'B', 'R'], inst: 'tpts', oct: 1, lvl: 0.4}, trim: 1.42},
+    'procession': {orch: true, upgrade: true, holdLow: false, hall: 'musikverein', tone: {lo: 3, hi: 2.32, pres: 2.6}, lowBand: 3.5, subBass: 0.35, mix: {lead: 1.6, bass: 1.95, drums: 1.7}, sends: {drums: {verb: 0.05, stage: 0.36}, lead: {verb: 0.08, stage: 0.4, dly: 0.04}}, verb: {B: 0.8, R: 0.8}, sing: {sections: ['B', 'R'], inst: 'choirOoh', oct: 0, lvl: 0.264}, descant: {sections: ['A2', 'B', {n: 'T', harm: -2}, 'R'], inst: 'tpts', oct: 1, lvl: 0.4}, secs: {T: {lv: 0.85, cres: null, lead: {harm: -2}, pad2: {p: 'sus', inst: 'horn', n: 4, reg: [53,72], vel: 0.75}}}, space: {B: {pad: {velK: 0.75}}}, trim: 1.42},
     'victory': {orch: true, upgrade: true, holdLow: false, hall: 'musikverein', tone: {lo: 1.35, hi: 0, pres: 1.9}, lowBand: 2.5, subBass: 0.72, mix: {lead: 1.23, choir: 1.2}, verb: {A2: 0.8, B2: 0.8, A3: 0.72}, trim: 1.1},
     'defeat': {orch: true, upgrade: true, holdLow: false, hall: 'musikverein', tone: {lo: 0.5, hi: 1.2, pres: 1.6}, lowBand: 2.5, subBass: 0.47, mix: {lead: 1.24}, trim: 1.5},
     'spy': {orch: true, upgrade: true, holdLow: false, hall: 'musikverein', tone: {lo: 0.08, hi: 0.35, pres: 4}, lowBand: 2.5, subBass: 0.57, mix: {choir: 1.79, lead: 1.3}, trim: 1.16},
@@ -43,7 +43,7 @@
     'galaxy6': {orch: true, upgrade: true, holdLow: false, hall: 'musikverein', tone: {lo: 3, hi: 3, pres: 4}, lowBand: 2.5, subBass: 0.22, mix: {lead: 3.37, choir: 1.5, bass: 1.41}, space: {A1: {pad: {velK: 0.75}}, B: {pad: {velK: 0.75}}, C: {choir: {velK: 0.6}}, A2: {pad: {velK: 0.75}}}, trim: 3.92},
     'galaxy7': {orch: true, upgrade: true, holdLow: false, hall: 'musikverein', tone: {lo: 3, hi: -1, pres: 1.5}, lowBand: 2.5, subBass: 0.67, mix: {lead: 2.51, choir: 2.97, bass: 1.39}, trim: 1.93},
     'galaxy8': {orch: true, upgrade: true, holdLow: false, hall: 'musikverein', tone: {lo: 3, hi: 3.14, pres: 4}, lowBand: 2.5, subBass: 0.28, mix: {lead: 3.39, bass: 1.25}, trim: 2.3},
-    'galaxy9': {orch: true, upgrade: true, holdLow: false, hall: 'musikverein', tone: {lo: 3, hi: 1.5, pres: 4}, lowBand: 0, subBass: 0.07, mix: {lead: 1.15}, verb: {B: 0.8, A2: 0.72}, sing: {sections: ['B', 'A2'], inst: 'choirOoh', oct: 0, lvl: 0.209}, space: {A1: {pad: {velK: 0.75}}, A2: {pad2: {reg: [76,88]}}}, trim: 2.02},
+    'galaxy9': {orch: true, upgrade: true, holdLow: false, hall: 'musikverein', tone: {lo: 3, hi: 1.5, pres: 4}, lowBand: 0, subBass: 0.07, mix: {lead: 1.15}, verb: {B: 0.8, A2: 0.72}, sing: {sections: ['B', 'A2'], inst: 'choirOoh', oct: 0, lvl: 0.209}, space: {A1: {pad: {velK: 0.75}}, A2: {pad2: {reg: [76,88]}, pad3: {velK: 0.75}}, B: {pad3: {velK: 0.75}}}, trim: 2.02},
     'galaxy10': {orch: true, upgrade: true, holdLow: false, hall: 'musikverein', tone: {lo: 1.9, hi: 1.08}, lowBand: 2.5, subBass: 0.41, mix: {lead: 2.75}, verb: {B: 0.8, A2: 0.72}, space: {intro: {pad: {reg: [60,76]}}, A1: {pad: {reg: [60,76]}, pad2: {velK: 0.7}}, B: {pad: {reg: [69,83]}, pad2: {velK: 0.7}, choir2: {velK: 0.6}}, A2: {pad: {reg: [69,83]}, pad2: {velK: 0.7}, choir2: {velK: 0.6}}}, trim: 1.32},
     'galaxy11': {orch: true, upgrade: true, holdLow: false, hall: 'musikverein', tone: {lo: 0.38, hi: -0.62, pres: 2.4}, lowBand: 2.5, subBass: 0.06, mix: {lead: 4.3, choir: 1.36}, sing: {sections: ['rise'], inst: 'choirOoh', oct: 0, lvl: 0.238}, trim: 4.04},
     'galaxy12': {orch: true, upgrade: true, holdLow: false, hall: 'musikverein', tone: {lo: 1.9, hi: 3.23, pres: 1.2}, lowBand: 1.5, subBass: 0.36, mix: {lead: 2.81}, sing: {sections: ['V6'], inst: 'choirOoh', oct: 0, lvl: 0.187}, space: {V4: {pad: {velK: 0.75}}, V6: {pad: {velK: 0.75}}}, trim: 3.45},
@@ -56,7 +56,7 @@
     'galaxy19': {orch: true, upgrade: true, holdLow: false, hall: 'musikverein', tone: {lo: 3, hi: 1.99}, lowBand: 2.5, subBass: 0.26, mix: {lead: 4.15, choir: 1.7, bass: 1.32}, verb: {ch3: 0.8}, sing: {sections: ['ch3'], inst: 'choirOoh', oct: 0, lvl: 0.155}, space: {ch2: {pad: {velK: 0.75}}, ch3: {pad: {velK: 0.75}}, amen: {pad: {reg: [60,79]}}}, trim: 2.34},
     'galaxy20': {orch: true, upgrade: true, holdLow: false, hall: 'musikverein', tone: {lo: 3, hi: 3.5, pres: 4}, lowBand: 2.5, subBass: 0.32, mix: {lead: 2.95, bass: 1.35}, sing: {sections: ['M3', 'M4'], inst: 'choirMen', oct: 0, lvl: 0.28}, space: {M2: {pad: {reg: [54,68]}, choir: {velK: 0.6}}, M3: {pad: {reg: [60,76]}}, M4: {pad: {reg: [68,82]}, choir: {velK: 0.6}}}, trim: 3.05},
     'galaxy21': {orch: true, upgrade: true, holdLow: false, hall: 'musikverein', tone: {lo: 0, hi: 3.3, pres: 3.3}, lowBand: 1.5, subBass: 0.24, trim: 3.98},
-    'galaxy22': {orch: true, upgrade: true, holdLow: false, hall: 'musikverein', tone: {lo: 1.7, hi: 1.56, pres: 1.1}, lowBand: 1.5, subBass: 0.22, mix: {lead: 1.91}, verb: {crest: 0.8}, space: {men: {pad: {reg: [62,76]}, choir2: {velK: 0.6}}, satb: {pad: {velK: 0.7}, choir2: {velK: 0.6}}, satb2: {pad: {velK: 0.75}, pad2: {velK: 0.7}, choir: {velK: 0.6}}, still: {pad: {reg: [58,72]}, choir2: {velK: 0.6}}, crest: {pad: {velK: 0.75}, choir: {velK: 0.6}, pad2: {velK: 0.7}}}, trim: 3.61},
+    'galaxy22': {orch: true, upgrade: true, holdLow: false, hall: 'musikverein', tone: {lo: 1.7, hi: 1.56, pres: 1.1}, lowBand: 1.5, subBass: 0.22, mix: {lead: 1.91}, verb: {crest: 0.8}, space: {men: {pad: {reg: [62,76]}, choir2: {velK: 0.6}}, satb: {pad: {velK: 0.7}, choir2: {velK: 0.6}}, satb2: {pad: {velK: 0.75}, pad2: {velK: 0.7}, choir: {velK: 0.6}}, still: {pad: {reg: [58,72]}, choir2: {velK: 0.6}}, crest: {pad: {velK: 0.7}, choir: {velK: 0.6}, pad2: {velK: 0.7}}}, trim: 3.61},
     'galaxy23': {},   // the weaver: written to the refreshed standard (its own definition carries the profile, the hall and the low end)
     'race:alkari': {hall: 'musikverein', tone: {lo: 1.15, hi: 0, pres: 1.5}, lowBand: 3, mix: {lead: 0.88}, trim: 1.76},
     'race:bulrathi': {hall: 'musikverein', tone: {lo: 1.15, hi: 2.28, pres: 0.6}, lowBand: 3, subBass: 0.1, mix: {lead: 1.45, choir: 1.58}, space: {A: {pad: {reg: [64,78]}}, B: {pad: {reg: [64,78]}, choir: {velK: 0.7}}, C: {pad: {reg: [62,76]}}}, trim: 1.04},
@@ -101,6 +101,8 @@
   function sing(d, o) {
     for (const n of o.sections) for (const sc of d.sec.filter(x => x.n === n)) {
       if (!sc.lead || typeof sc.lead !== 'object' || sc.lead3) continue;
+      // the pipe organ beneath the voices, as in the Chorale (the user: the voices and the organ are the feel of the game)
+      if (o.organ !== false && !sc.pad3) sc.pad3 = { p: 'swell', inst: 'organ', n: 3, reg: [55, 72], vel: 0.5 };   // a little above the low mids: its colour without thickening the bottom
       sc.lead3 = Object.assign({}, sc.lead, { inst: { p: o.inst, lvl: o.lvl * CHOIR_FWD.sing }, oct: num(sc.lead.oct, 0) + (o.oct || 0), vel: num(sc.lead.vel, 0.9) * (o.vel || 0.95), pan: -num(sc.lead.pan, 0) * 0.6 + 0.08, vibK: 0, harm: undefined, echo: undefined, skip: undefined });   // it sings whenever the section plays (where the instrument rests, the choir carries the tune alone)
     }
   }
@@ -109,10 +111,11 @@
   // descant: a section of high voices over the tune in a piece's crowning statement (the sections named): the melody, as written, an
   // octave (oct) above on its own line (lead4), loud and bright (the music's full dynamic gives it the brassy recording), at the front.
   function descant(d, o) {
-    for (const n of o.sections) for (const sc of d.sec.filter(x => x.n === n)) {
-      if (!sc.lead || typeof sc.lead !== 'object' || sc.lead4) continue;
-      sc.lead4 = Object.assign({}, sc.lead, { inst: { p: o.inst, lvl: o.lvl }, oct: num(sc.lead.oct, 0) + (o.oct === undefined ? 1 : o.oct), vel: num(sc.lead.vel, 0.9) * (o.vel || 1), pan: num(o.pan, 0.12), vibK: num(o.vibK, 0.6), harm: undefined, echo: undefined, skip: undefined });
-    }
+    for (const it of o.sections) { const n = typeof it === 'string' ? it : it.n, harm = typeof it === 'object' ? it.harm : undefined;   // { n, harm }: the section's descant in two parts
+      for (const sc of d.sec.filter(x => x.n === n)) {
+        if (!sc.lead || typeof sc.lead !== 'object' || sc.lead4) continue;
+        sc.lead4 = Object.assign({}, sc.lead, { inst: { p: o.inst, lvl: o.lvl }, oct: num(sc.lead.oct, 0) + (o.oct === undefined ? 1 : o.oct), vel: num(sc.lead.vel, 0.9) * (o.vel || 1), pan: num(o.pan, 0.12), vibK: num(o.vibK, 0.6), harm, echo: undefined, skip: undefined });
+      } }
   }
   // space: room in a crowded section, without changing what is written. A bed or a chordal choir that sits on the melody's notes, or a
   // third sustained sound stacked in the low mids (A2-C4) where two already are, is voiced elsewhere (reg: the range its chord notes are
@@ -126,11 +129,21 @@
       sc[ly] = spec;
     }
   }
+  // secs: a section reshaped for its part in the piece: { section: { key: value } }; a layer's object merges into its own (a preset
+  // name becomes { p: name }), anything else (lv, cres) replaces
+  function secs(d, o) {
+    for (const n in o) for (const sc of d.sec.filter(x => x.n === n)) for (const k in o[n]) {
+      const v = o[n][k], cur = sc[k];
+      if (v && typeof v === 'object' && !Array.isArray(v)) sc[k] = Object.assign({}, typeof cur === 'string' ? { p: cur } : (cur && typeof cur === 'object' ? cur : {}), v);
+      else if (v === null) delete sc[k]; else sc[k] = v;
+    }
+  }
   function apply(d, p) {
     for (const k in p) {
       if (k === 'upgrade') { if (p.upgrade) upgradeAll(d); }
       else if (k === 'sing') sing(d, p.sing);
       else if (k === 'descant') descant(d, p.descant);
+      else if (k === 'secs') secs(d, p.secs);
       else if (k === 'space') space(d, p.space);
       else if (k === 'verb') { for (const n in p.verb) { const s = d.sec.find(x => x.n === n); if (s) s.verb = p.verb[n]; } }
       else if (k === 'mix' || k === 'tone') d[k] = Object.assign({}, d[k] || {}, p[k]);
