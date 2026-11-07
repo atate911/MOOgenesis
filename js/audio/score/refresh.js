@@ -100,10 +100,11 @@
   function sing(d, o) {
     for (const n of o.sections) for (const sc of d.sec.filter(x => x.n === n)) {
       if (!sc.lead || typeof sc.lead !== 'object' || sc.lead3) continue;
-      sc.lead3 = Object.assign({}, sc.lead, { inst: { p: o.inst, lvl: o.lvl }, oct: num(sc.lead.oct, 0) + (o.oct || 0), vel: num(sc.lead.vel, 0.9) * (o.vel || 0.95), pan: -num(sc.lead.pan, 0) * 0.6 + 0.08, vibK: 0, harm: undefined, echo: undefined, skip: undefined });   // it sings whenever the section plays (where the instrument rests, the choir carries the tune alone)
+      sc.lead3 = Object.assign({}, sc.lead, { inst: { p: o.inst, lvl: o.lvl * CHOIR_FWD.sing }, oct: num(sc.lead.oct, 0) + (o.oct || 0), vel: num(sc.lead.vel, 0.9) * (o.vel || 0.95), pan: -num(sc.lead.pan, 0) * 0.6 + 0.08, vibK: 0, harm: undefined, echo: undefined, skip: undefined });   // it sings whenever the section plays (where the instrument rests, the choir carries the tune alone)
     }
   }
   const num = (v, f) => (typeof v === 'number' && isFinite(v) ? v : f);
+  const CHOIR_FWD = { mix: 1.4, verb: 0.28, stage: 0.28, sing: 1.25 };   // +2.9 dB; the hall 0.42 -> 0.28, the close stage 0.18 -> 0.28; sung lines 1 dB under their instrument -> 1 dB over
   // descant: a section of high voices over the tune in a piece's crowning statement (the sections named): the melody, as written, an
   // octave (oct) above on its own line (lead4), loud and bright (the music's full dynamic gives it the brassy recording), at the front.
   function descant(d, o) {
@@ -138,6 +139,10 @@
     // the melody at the front of the stage, as in the main theme: little hall, the close stage's reflections, a touch of delay (an
     // orchestral piece that does not seat its own lead); the key instrument heard close and alive, the atmosphere behind it
     if (d.orch && !(d.sends && d.sends.lead)) d.sends = Object.assign({}, d.sends || {}, { lead: { verb: 0.12, stage: 0.36, dly: 0.05 } });
+    // the choir forward, in every piece (the user: a choir and brass is the game's signature sound): about 3 dB up, nearer (less hall,
+    // more of the close stage), its sung melodies over their instruments rather than under them
+    d.mix = Object.assign({}, d.mix || {}, { choir: ((d.mix && d.mix.choir) || 1) * CHOIR_FWD.mix });
+    d.sends = Object.assign({}, d.sends || {}); d.sends.choir = Object.assign({}, d.sends.choir || {}, { verb: CHOIR_FWD.verb, stage: CHOIR_FWD.stage });
     upgradeAll(d, CHOIRS);
     d.refreshed = true; delete d._p;   // the engine's prepared form of the piece, made again from the refreshed definition
   }
