@@ -6,6 +6,7 @@
 //                                                      render also saves <id>-full.beats.json, each beat's time in it)
 //   node tools/audio-report.js --json FILE             machine-readable report (everything that is printed, plus per-item metrics)
 //   node tools/audio-report.js --query refresh=0       load the page with a query (here: the pieces as they were, before js/audio/score/refresh.js)
+//   node tools/audio-report.js --interludes drift/galaxy10/galaxy23   an interlude as the game builds it: template/next/from (full renders: --full)
 //   node tools/audio-report.js --no-samples            render with the procedural voices only (what a file:// or offline player hears)
 // Levels are measured at unity bus gain (the Options volumes are not applied) after the master compressor / soft clipper,
 // so "knee %" = share of samples the limiter is bending (> 0.6) and "hot %" = share above 0.9.  LUFS per ITU-R BS.1770.
@@ -44,6 +45,14 @@ function table(head, rows) {
     const f = path.join(wavDir, name + '.wav'); fs.writeFileSync(f, Buffer.from(b64, 'base64'));
     if (opt.mp3) { try { execFileSync('ffmpeg', ['-y', '-loglevel', 'error', '-i', f, '-codec:a', 'libmp3lame', '-b:a', '320k', f.replace(/\.wav$/, '.mp3')]); fs.unlinkSync(f); } catch (e) { /* keep the wav */ } }
   };
+
+  // ---- interludes built as the game builds them (--interludes template/next/from,...: the drift or bridge between two pieces, in the
+  // key of the next, from the one ending); the built ids join --tracks
+  if (typeof opt.interludes === 'string') {
+    const built = await page.evaluate(specs => specs.map(s => { const [tpl, next, from] = s.split('/'), M = MOO.Audio.Music;
+      return M._rotation.interludeFor(tpl, next, { from: from ? M._tracks[from] : null }); }), list(opt.interludes));
+    console.log('interludes:', built.join(', ')); opt.tracks = (typeof opt.tracks === 'string' ? opt.tracks + ',' : '') + built.filter(Boolean).join(',');
+  }
 
   // ---- composition lint (no rendering) ---------------------------------------------------------------------------------
   const lint = await page.evaluate(asked => { const M = MOO.Audio.Music, out = {}; const ids = M.list().map(t => t.id); for (const id of asked || []) if (ids.indexOf(id) < 0 && M._tracks[id]) ids.push(id);   // a hidden reading asked for by name is linted and rendered too
