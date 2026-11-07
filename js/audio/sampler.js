@@ -458,10 +458,20 @@
       if (n) { const near = zs.filter(z => Math.abs(z.root - midi) >= 0.5 && Math.abs(z.root - midi) <= 1.5 && z.vel[0] === cands[0].vel[0]); if (near.length) cands = [near[(n - 1) % near.length]]; }
     }
     if (!cands.length) { let best = zs[0], bd = 1e9; for (const z of zs) { const d = Math.abs(z.root - midi); if (d < bd) { bd = d; best = z; } } cands = zs.filter(z => z.root === best.root); }
+    // recordings known rough (measured: a scrape inside the stretch the loop repeats, heard as plucking under a held note) give way to the
+    // nearest smooth recording of the same dynamic layer within four semitones, transposed. `?avoidzones=0` plays them as recorded.
+    const bad = S.avoid[inst.name];
+    if (bad && S.avoidOn) cands = cands.map(c => { if (!bad.some(b => Math.abs(c.root - b.root) < 0.6 && c.vel[0] === b.vel0)) return c; let best = null, bd = 4.01; for (const z of zs) { if (z.vel[0] !== c.vel[0] || bad.some(b => Math.abs(z.root - b.root) < 0.6 && z.vel[0] === b.vel0)) continue; const d = Math.abs(z.root - midi); if (d < bd) { bd = d; best = z; } } return best || c; });
     const byLayer = new Map();
     for (const z of cands) { const k = z.vel[0]; if (!byLayer.has(k)) byLayer.set(k, []); byLayer.get(k).push(z); }
     return [...byLayer.entries()].sort((a, b) => a[0] - b[0]).map(([k, list]) => ({ c: (list[0].vel[0] + list[0].vel[1]) / 2, list }));
   }
+  // the double-bass section's loud G1, D2, E2 and F#2 (D2: 51 bursts over 6 dB in a 20 s hold through the engine, the plucking the user
+  // heard under held bass notes; G1 over 200 of 3 dB), in its own set and in the full-section set built from the same recordings
+  const ROUGH_BASS = [{ root: 31, vel0: 0.5 }, { root: 38, vel0: 0.5 }, { root: 40, vel0: 0.5 }, { root: 42, vel0: 0.5 }];   // G1, D2, E2, F#2 (benched note by note, G1 to A2)
+  S.avoid = { cbSus: ROUGH_BASS, strEns: ROUGH_BASS };
+  S.avoidOn = true;
+  try { if (/[?&]avoidzones=0\b/.test(location.search)) S.avoidOn = false; } catch (e) { /* ignore */ }
   function rrPick(inst, list) {
     if (list.length === 1) return list[0];
     const k = inst.name + ':' + list[0].root + ':' + list[0].vel[0], i = (S.rr[k] = ((S.rr[k] || 0) + 1) % list.length);
