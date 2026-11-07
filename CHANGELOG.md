@@ -5,6 +5,14 @@ Versions follow `MAJOR.MINOR.PATCH`; the live version is the `VERSION` file.
 
 ## Unreleased
 
+- The score finalised in one style (the Vigil, the Tide and the Abyss for the map; the main theme for quality and mix): the game's theme
+  quoted once per map piece, at its height, the pieces' own phrases elsewhere (the Beacon, the Long Night, the Watch, Noon, the
+  Frontier, the Nebula, the Lanes); the Pianobook choir everywhere the old men's sound was, the old men layered gently beneath it in the
+  map pieces; the choir and brass forward as the signature; every map piece at -17 LUFS within a decibel on a deep bass and sub
+  foundation. The Weaver (galaxy23), a nocturne for the alto flute over men's voices and soft organ, joins the exploration rotation;
+  the piano piece (galaxy24) and its samples are gone. `tools/audio-report.js --interludes template/next/from` renders an interlude
+  as the game builds it between two pieces.
+
 - The refresh (`js/audio/score/refresh.js`): every cue, galaxy piece and race theme brought to the main theme's sound without
   rewriting it. The orchestral pieces take the orchestral profile (their bass lines as written), the three-layer solo recordings, the
   Musikverein, presence, low weight and a sub, the hall ridden down in their climaxes and the solo clear of the accompaniment; the
