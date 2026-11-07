@@ -71,3 +71,37 @@ Render a step: `node tools/fresh/render-step.js tools/fresh/step1c.js 52 OUTDIR`
 - `full17.js`: full16 in a recorded hall (a piece's `hall`, new): Voxengo's Musikvereinsaal impulse, stored unaltered with its license
   in assets/audio/ir/voxengo/, decoded once (A.loadIR), resampled per engine, its energy matched to the generated hall's. The tune
   +0.5 dB clearer in the interlude and at the climax; loudness and range unchanged.
+
+## The refresh: every other piece brought to the theme's standard
+
+The user: "apply what we've learned about mastering and sound design to all the other pieces. I don't want to re-write them, let's just
+optimize them." Then: the best samples, playing nicely together, the fine tuning matching; and the dynamic recording chosen to suit
+the movement, consistent with the notes around it.
+
+- `js/audio/score/refresh.js`: one entry per piece (47), changing only how it is performed and mastered (`?refresh=0` plays the pieces
+  as they were). The notes, forms and instruments' parts are untouched.
+- `sweep.js` measures a piece's first 100 s (after 8): level, six band shares (sub 25-50, low 50-120, low mids 120-400, mids 400-2k,
+  presence 2-5k, air 5-12k), the tune over the rest and the choir against the strings (250 Hz-4 kHz); `sweep.js IDS PORT JSON PATCH`
+  tries refresh entries before they are written. Three passes, four processes at a time (the machine's four cores):
+  - baseline: most map pieces 10-16 dB lighter in the sub than the theme, many with their top cut 2.5 dB, the tune under 1 dB over the
+    accompaniment in half of them;
+  - pass 1 (the recipe from the theme): the orchestral profile, the hall, presence and low shelves, the low band, a sine sub, the hall
+    ridden down in climaxes (sections at 0.95+), the solo lifted toward 2.5 dB over the rest, the choir toward -3 dB of the strings.
+    The battle cue lost its bite under the profile (presence -7.2 -> -14.7 dB): mastering only. The plucked basses keep their pluck
+    (the profile no longer ties or low-passes pizzicato, harp, mallets);
+  - pass 2: presence restored where the profile's sul tasto beds dulled it, the low shelf trimmed where 50-120 Hz passed +2.5 dB, The
+    Tide's low end returned to its own; a `subBass` floor for the synth-era cues (the engine allows it outside the profile now);
+  - pass 3: `tone.pres` (new: a broad lift at 3 kHz, where the 5 kHz shelf does not reach) toward each piece's former presence (-14 dB
+    at least), the last solo and choir lifts, the trim (the master's compression takes back about half a trim change).
+  - after: every piece within 0.5 dB of its former level; the tune over the accompaniment positive in all but two ambient pieces.
+- The recordings (`upgrade` in an entry): the one-layer flute, oboe, clarinet, alto flute, bassoon, solo horn and solo trumpet
+  replaced by the library's three-layer recordings of the same instruments (Iowa), at matched loudness (old against new on the same
+  held notes at two dynamics). Their dynamic range widens from 1-6 dB to 7-13 dB; the old alto flute sat about 20 dB under its own
+  setting, the old solo horn louder soft than loud.
+- Tuning (`tools/qa/tuning.js`, every pitched zone as played against A440): the looped zones were already tuned at decode; now the
+  struck and plucked ones are too (just after the attack, a stricter estimator), bells and drums excepted. Three recordings too far
+  out for the correction window fixed at the source: the solo double bass's loud Bb3 (57 cents flat), the Iowa clarinet's loud Ab6
+  (52 flat), and the soft Iowa alto flute G3 (its pitch wanders +-60 cents: kept at its written root, `fix`).
+- The layer flow (`layerFlow`, music.js; the sampler's `flowLayer`): which recording (soft, mid, loud) a note plays from follows the
+  phrase and the section rather than each note's written dynamic, with hysteresis inside a phrase. Recording changes between
+  neighbouring notes of a phrase, over the refreshed pieces: 10.3 per 100 notes before, 0.2 after.

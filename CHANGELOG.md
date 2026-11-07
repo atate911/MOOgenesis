@@ -5,6 +5,15 @@ Versions follow `MAJOR.MINOR.PATCH`; the live version is the `VERSION` file.
 
 ## Unreleased
 
+- The refresh (`js/audio/score/refresh.js`): every cue, galaxy piece and race theme brought to the main theme's sound without
+  rewriting it. The orchestral pieces take the orchestral profile (their bass lines as written), the three-layer solo recordings, the
+  Musikverein, presence, low weight and a sub, the hall ridden down in their climaxes and the solo clear of the accompaniment; the
+  synth-era cues, battle cues and race themes the hall, presence, the low band and a sub. Levels kept. `?refresh=0` plays the old.
+- Recordings tuned as played: struck and plucked notes now measured and played from their true pitch, as held notes were; three flat
+  recordings corrected at the source. New audit `tools/qa/tuning.js`.
+- The dynamic layer follows the music: a part's recording (soft, mid, loud) moves with the phrase and the section, not note by note.
+- A piece's `tone.pres` (a 3 kHz lift); `subBass` outside the orchestral profile; the profile leaves plucked parts plucked; full
+  renders save their beat times (`<id>-full.beats.json`) so two renders can be lined up.
 - The new main theme (`title`), rebuilt from scratch with the user (tools/fresh/): plays at the menu and the game's setup, and now and
   then on the map (a rare piece of the exploration rotation, p 0.25). The previous theme is `title:classic` (hidden), its readings
   (reed, cello, symphony, chamber) derived from it. About 6 min, -15.1 LUFS, LRA 10.
