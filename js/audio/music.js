@@ -319,10 +319,10 @@
     drums: { lvl: 0.68, verb: 0.08, stage: 0.32, dly: 0 }, fx: { lvl: 0.6, verb: 0.5, stage: 0.2, dly: 0 },
     x1: { lvl: 0.8, verb: 0.12, dly: 0, i0: 0.12 }, x2: { lvl: 0.7, verb: 0.2, dly: 0.3, i0: 0.38 }, x3: { lvl: 0.9, verb: 0.3, dly: 0, i0: 0.62 },
   };
-  const BUS = { pad: 'pad', pad2: 'pad', pad3: 'pad', bass: 'bass', arp: 'arp', arp2: 'arp', drums: 'drums', perc: 'drums', timp: 'drums', lead: 'lead', lead2: 'lead', lead3: 'lead', bell: 'bell', bell2: 'bell', choir: 'choir', choir2: 'choir' };
-  const DEF_INST = { pad: 'warm', pad2: 'warm', bass: 'sub', arp: 'arp', arp2: 'arp', lead: 'brass', lead2: 'bell', lead3: 'choirOoh', bell: 'glass', bell2: 'glass', choir: 'ooh', choir2: 'aah' };
+  const BUS = { pad: 'pad', pad2: 'pad', pad3: 'pad', bass: 'bass', arp: 'arp', arp2: 'arp', drums: 'drums', perc: 'drums', timp: 'drums', lead: 'lead', lead2: 'lead', lead3: 'lead', lead4: 'lead', bell: 'bell', bell2: 'bell', choir: 'choir', choir2: 'choir' };
+  const DEF_INST = { pad: 'warm', pad2: 'warm', bass: 'sub', arp: 'arp', arp2: 'arp', lead: 'brass', lead2: 'bell', lead3: 'choirOoh', lead4: 'tpts', bell: 'glass', bell2: 'glass', choir: 'ooh', choir2: 'aah' };
   Music._DEF_INST = DEF_INST;
-  const LINES = { lead: 1, lead2: 1, lead3: 1, bell: 1, bell2: 1 };   // lead3: a third line, the choir singing the tune (the refresh's sing)
+  const LINES = { lead: 1, lead2: 1, lead3: 1, lead4: 1, bell: 1, bell2: 1 };   // lead4: a descant over the tune (the refresh's descant)   // lead3: a third line, the choir singing the tune (the refresh's sing)
 
   const DRUMV = {
     kick: { v: 'sample', smp: 'bassDrum', fb: 'kick', fbo: { f: 48, f0: 135, dur: 0.36 }, lvl: 0.85 }, snare: { v: 'sample', smp: 'snare', fb: 'snare', fbo: {}, lvl: 0.7 },
@@ -462,7 +462,7 @@
       // a section's own meter and tempo (an interlude's opening bars keep the outgoing piece's; a tempo may ramp across a section)
       R.meter = num(s.meter, meter); R.strong = s.strong || def.strong || (STRONG[R.meter] || [0]); R.bpm = num(s.bpm, def.bpm); R.bpmTo = num(s.bpmTo, R.bpm);
       R.segs = expandProg(s.prog, s.bars, R.meter, tpc);
-      for (const key of ['pad', 'pad2', 'pad3', 'bass', 'arp', 'arp2', 'drums', 'perc', 'timp', 'lead', 'lead2', 'lead3', 'bell', 'bell2', 'choir', 'choir2']) {
+      for (const key of ['pad', 'pad2', 'pad3', 'bass', 'arp', 'arp2', 'drums', 'perc', 'timp', 'lead', 'lead2', 'lead3', 'lead4', 'bell', 'bell2', 'choir', 'choir2']) {
         let v = s[key] !== undefined ? s[key] : base[key];
         if (v === true) v = base[key];
         if (v) R.L[key] = v;
@@ -686,7 +686,8 @@
   const PLAYERS = {
     lead: { lat: 0, drift: 0.005, jit: 0.004, lvl: 0.4, vj: 0.6, follow: 0 },
     lead2: { lat: 0.008, drift: 0.012, jit: 0.006, lvl: 0.8, vj: 0.8, follow: 0.5, spread: 1 },
-    lead3: { lat: 0.018, drift: 0.014, jit: 0.007, lvl: 0.6, vj: 0.6, follow: 0, spread: 1 },   // a choir singing the tune: it speaks as a choir does
+    lead3: { lat: 0.018, drift: 0.014, jit: 0.007, lvl: 0.6, vj: 0.6, follow: 0, spread: 1 },
+    lead4: { lat: 0.006, drift: 0.008, jit: 0.005, lvl: 0.5, vj: 0.6, follow: 0, spread: 1 },   // a trumpet section's descant: together, on the beat   // a choir singing the tune: it speaks as a choir does
     pad: { lat: 0.012, drift: 0.016, jit: 0.008, lvl: 0.9, vj: 1.0, follow: 0, spread: 1 },
     choir: { lat: 0.018, drift: 0.018, jit: 0.008, lvl: 1.0, vj: 1.0, follow: 0 },
     bass: { lat: 0.014, drift: 0.010, jit: 0.005, lvl: 0.6, vj: 0.6, follow: 0 },
@@ -1030,7 +1031,7 @@
     }
   }
 
-  const GEN = { pad: genPad, pad2: genPad, pad3: genPad, bass: genBass, arp: genArp, arp2: genArp, drums: genDrums, perc: genDrums, timp: genTimp, choir: genChoir, choir2: genChoir, lead: genLine, lead3: genLine, lead2: genLine };
+  const GEN = { pad: genPad, pad2: genPad, pad3: genPad, bass: genBass, arp: genArp, arp2: genArp, drums: genDrums, perc: genDrums, timp: genTimp, choir: genChoir, choir2: genChoir, lead: genLine, lead3: genLine, lead4: genLine, lead2: genLine };
 
   // ---------------------------------------------------------------- tension overlays (layers x1..x3, gated by setIntensity)
   function genTension(C, s) {
