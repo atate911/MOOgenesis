@@ -3,6 +3,347 @@
 Versions follow `MAJOR.MINOR.PATCH`; the live version is the `VERSION` file.
 `scripts/upgrade.sh` refuses to move to an older `VERSION` unless told to.
 
+## Unreleased
+
+- The score finalised in one style (the Vigil, the Tide and the Abyss for the map; the main theme for quality and mix): the game's theme
+  quoted once per map piece, at its height, the pieces' own phrases elsewhere (the Beacon, the Long Night, the Watch, Noon, the
+  Frontier, the Nebula, the Lanes); the Pianobook choir everywhere the old men's sound was, the old men layered gently beneath it in the
+  map pieces; the choir and brass forward as the signature; every map piece at -17 LUFS within a decibel on a deep bass and sub
+  foundation. The Weaver (galaxy23), a nocturne for the alto flute over men's voices and soft organ, joins the exploration rotation;
+  the piano piece (galaxy24) and its samples are gone. `tools/audio-report.js --interludes template/next/from` renders an interlude
+  as the game builds it between two pieces.
+
+- The refresh (`js/audio/score/refresh.js`): every cue, galaxy piece and race theme brought to the main theme's sound without
+  rewriting it. The orchestral pieces take the orchestral profile (their bass lines as written), the three-layer solo recordings, the
+  Musikverein, presence, low weight and a sub, the hall ridden down in their climaxes and the solo clear of the accompaniment; the
+  synth-era cues, battle cues and race themes the hall, presence, the low band and a sub. Levels kept. `?refresh=0` plays the old.
+- Recordings tuned as played: struck and plucked notes now measured and played from their true pitch, as held notes were; three flat
+  recordings corrected at the source. New audit `tools/qa/tuning.js`.
+- The dynamic layer follows the music: a part's recording (soft, mid, loud) moves with the phrase and the section, not note by note.
+- A piece's `tone.pres` (a 3 kHz lift); `subBass` outside the orchestral profile; the profile leaves plucked parts plucked; full
+  renders save their beat times (`<id>-full.beats.json`) so two renders can be lined up.
+- The new main theme (`title`), rebuilt from scratch with the user (tools/fresh/): plays at the menu and the game's setup, and now and
+  then on the map (a rare piece of the exploration rotation, p 0.25). The previous theme is `title:classic` (hidden), its readings
+  (reed, cello, symphony, chamber) derived from it. About 6 min, -15.1 LUFS, LRA 10.
+- Engine additions from the rebuild: a line's `expr` and `vibK`; a section's `verb` (the hall ridden) and `subBass`; a piece's `part`,
+  `subBass`, `lowBand` (the master's low band), `hall` (a recorded hall: Voxengo's Musikvereinsaal, unaltered, its license beside it);
+  a third bed `pad3` and a bed's `root`; a bass's `fresh` entry. The acceptance test's `carried` takes a piece's `accept.carriedDb`, and
+  `continuous` applies in full only to a piece that holds its low end.
+- The title readings with the choir rebalanced: the choir 1.6 -> 1.25, the upper strings x1.8 (new `part` balance for parts that
+  share a layer), the opening's glow raised, the bass 0.86 -> 0.75 so the choir's lowest octave stays carried. The choir now leads the
+  strings by 0 to 3 dB at 250 Hz-4 kHz (was 3 to 8). New acceptance check `balance`. The symphony and chamber keep their own balance.
+- The foundation as one continuous note (the orchestral profile). The bass holds the key's tonic through the chords and its pattern's
+  rests; the beds' voices to E3 hold the tonic and the fifth, tuned pure, never in unison with the bass. The title readings' low end
+  went from about 20 note changes a minute to 2 or 3, and its level from moving 2.3 to 3.4 dB to 0.7 to 0.9 dB. New acceptance check
+  `continuous`.
+- Loops below 300 Hz evened on the channels' sum at decode (`flattenLow`): the double basses' held notes pulsed 1 to 2 dB once a loop
+  where the low end is mono (the soft D2 dipped 3.6 dB); now within about 1 dB.
+- A section's dynamic rides the expression stage for the beds, the choir and the bass, and a beat's dynamic is its own section's: a held
+  note had taken the dynamic of the section it was written in (the symphony's held D2 played on its soft layer, 15 dB down).
+- The ensemble's lean wanders over 12 beats (was 6) and keeps 0.7 of itself at the top (was 0.5); the bells lean 12 ms. The acceptance
+  test's `held` check counts a re-strike on the same instrument only (a hand-over at a section line is orchestration), and its lean
+  floor exempts the solo.
+- The ensemble, in the orchestral profile: no part plays exactly on the grid or at exactly its written level. Each part speaks a little
+  late as its instrument does, leans ahead or behind in its own slow wander and varies note to note; soft passages are looser and loud
+  ones tighter, the players press ahead where the music builds and settle back where it lets go, and a chord's notes spread (10 to
+  40 ms). Each part's level wanders against the others; the bells, the second line, the arpeggio and the timpani follow the movement
+  in their notes. The beds, the choir and the bass ride the movement each in its own way (depth, lag, wander) instead of as one fader.
+  New acceptance check `performed`; `perform: false` turns it off for a piece.
+- The bass as a clean tone: a steep low-pass (`cutN: 2`) at four times its note, 200 Hz at most, so the double basses give their
+  fundamental and first partials and none of the bow (the symphony's and the chamber's bass above 1 kHz fell from -36 to -85 dB); a
+  change of note is a 0.45 s crossfade; the low cellos' held chords play sul tasto. New acceptance check `clean`.
+- Expression, in the orchestral profile: every phrase has a destination (its climax: the highest note, the longest of equals), the line
+  building to it, arriving and letting go faster than it came. Lines take their dynamics from the arc; a held note goes somewhere (into
+  the next before the climax, a bloom on it, a release after), with vibrato only where a note is held, arriving after a moment and
+  deeper as it means more (vibDelay); the last note before a rest breathes, the first leans in. The conductor follows the soloist: the
+  solo is played once ahead (its own random stream), and the tempo presses toward each climax, broadens on it and eases at the phrase's
+  end, the final phrase a true ritardando (bars 4.07 to 5.17 s where they were all 4.14). The beds, the choir and the bass ride an
+  expression curve from the solo's intensity and the chord's tension (3.8 dB of movement; they held every note at one level before),
+  in an expression stage of their own ahead of the dip under the solo. A section may breathe (`breath`: the beds draw in over its last
+  beats). The title: the duet breathes and the timpani roll into the crest; after the crest a sudden hush. The acceptance test checks it
+  (`expressive`: the tempo's spread, the beds' movement, the solo's shaped notes).
+- An orchestral system in place of the fixes one at a time. `orch: true` (the title and its five readings) sets the orchestral
+  defaults in one place, adds the soloist's window (the solo generated first; beds and choir moved out of three semitones around it: the
+  readings had a bed or choir note there for 40 to 54% of the solo's time, now 1 to 4%) and drops the synthesized transitions. Two gates:
+  `tools/qa/library.js` (the intake standard, per zone) and `tools/qa/orchestral.js` (the acceptance test, per piece); all five readings
+  pass it. The sampler meets the intake standard at decode for every instrument: opposed stereo narrowed until the channels agree (the
+  double basses, the cello and string sections, the Sonatina chorus), short loops kept clear of the file's faded tail, louder layers
+  louder at every note (two trombone-section notes were 15 dB under the layer below).
+- A real choir: St. Helen's Cantores (a school choir, Pianobook) for the hum and the ooh, and one cantor (Micah's Choir, Pianobook) for
+  the men's sung echoes of the theme; the hum above the horn in the main reading (a halo, the low strings and the bass under the solo),
+  below the soloist in the reed and cello readings. Section C's soft organ is strings.
+- Held beds and a held bass, as an orchestra holds them (the piece’s `padTie` and `bassTie`; the title and its readings). The string
+  beds struck a beat at every bar line: each chord change bowed every note again, the shared ones too, and a `swell` bed faded every
+  chord in from silence (the symphony: 132 notes of its string ensemble started on a bar line, 35 of them pitches already sounding).
+  Now a note the next chord shares keeps sounding, one it drops lets go at the change, one it adds comes in legato at the steady part of its
+  note, just before the loop, past every trace of the bow’s bite (`legOff: 'loop'`, the bass’s moving notes too); only a phrase’s first chord swells in; and held notes carry on across a section line on the same instrument (beds, bass and
+  the choir alike). The bass holds one low D from the first second to the first variations, then moves only when the chord’s root does.
+  The soft hum breathes in turn (16 s phrases, each voice’s return fading in over a second). The per-bar plucks are out of the calm
+  sections (the symphony’s harp under the men, the chamber’s pizzicato under the statements, the variations and the duet).
+- The title opens as one fade: four bars of the bed, the deep D and the men’s hum all coming in from silence together (the hum from the
+  first second, over six), the chime on the third bar.
+- The title’s bass as one low solid sound under the chorus, not a note struck each bar over it: a pedal (a low D held 30 and 60 s
+  through the men’s entrance, the horn’s statements and the duet) or the chords’ roots held whole bars, tied through repeats; no
+  fifth on the fourth beat, no walking figure, no soft bass drum on every downbeat (the crest keeps its drums). It sits a deep octave
+  down (D1) and is low-passed at 85 Hz (65 where its roots move through G1 to B1), its sine sub eased, so its weight stays below the men’s
+  hum; the low strings’ open chords sit under the hum (C2 to B2) and 6 dB back, the hum a step up (A2 to G3). Measured in the hum’s own
+  band (90 to 250 Hz) the bass had stood 6 dB and the low strings 5 to 7 dB over the voices; now the chorus leads there or stands level
+  under the solo’s entrances, and it leads every band above 250 Hz.
+- What still repeated, found by holding one note per instrument through the engine and folding its level by the zone’s loop length:
+  the solo horn’s C-sharp 4 (which also plays the theme’s D) ran its loop into the file’s last 30 ms, faded by the build, and sank 9 dB
+  at every wrap: a loop now stays 65 ms clear of a file’s end (the horn’s held D moves 1.6 dB, it was 7.7). The synthesized pads’ `ens`
+  doubling (a second copy of the looped buffer a few milliseconds behind) swelled 5 dB at every wrap of the analogue glow: off on the four
+  pads that had it, their levels trimmed by what it added (1 to 1.5 dB). The seam blend holds its level at any correlation of the two
+  sides (`?loopxfadapt=0`), and a seam whose two sides do not line up is moved within one cycle of the note to where they do
+  (`?loopalign=0`).
+- Tuning: the Iowa notes are played from the pitch they sound at, measured by the build within a semitone and a half of their name
+  (`measure_root`), not from the name: the cello ran 17 cents sharp on average and three of its notes, the F-sharp 3 that plays the
+  chamber reading’s G at 0:33 among them, half a semitone and more (the engine’s own tuner searches only a quarter-tone each way);
+  101 notes across the cello, trombone, bassoon and bass clarinet retuned, and the engine’s tuner now agrees with an independent
+  spectral measure on every zone. The Iowa viola, out of tune by a third of a semitone and mostly too unsteady to measure, is out of
+  the chamber reading (the viola section sings the breath again).
+- The bass as an undercurrent: with the piece’s `bassTie` (the title and its readings) a note the next step repeats is held through it
+  rather than struck again each bar, and a change of note is played legato with the last one let go as it arrives (it rang on two
+  seconds under the next). The octave echo the line generator adds to one weak-beat note in fourteen is off on recorded lines (on a solo
+  cello it was a stray note an octave up). The cello reading’s soloist sings an octave higher, in the reed reading’s window: in the
+  horn’s register it sat in unison with the cello section’s chords and the men’s hum. The title’s chorus 2 dB up, the men’s echoes
+  1 dB up again. In the title’s section B the bass holds whole notes instead of walking up through the bassoon’s falling line in the
+  same octave (two low melodies crossing inside the low strings), the bassoon 2 dB up; the chamber reading’s soft sections (B, the fade)
+  have their strings’ melody up and the bed down 1.5 dB, where the melody had sat level with the bed or under it.
+- The Iowa soloists’ loops placed inside each note’s steady stretch (`loop='steady'` in `tools/samples/build.py`: the longest run of the
+  note’s 250 ms level within 2.5 dB of its body, the loop as long as the run allows) rather than at a fixed point, a note that swells more
+  than 4 dB inside its loop dropped for its neighbours to cover, and a file the splitter had cut with two takes in it (a held note that
+  went silent and came back: 22 of them across the viola, cello, trombone and bass clarinet) or with seconds of room noise before its note
+  (27 viola notes: the G-sharp 4 sounded only after 14 s, so a viola G or A was silent) cut down to the take that sounds. Through the
+  engine the viola now swings 0.6 dB inside a loop (it was 7.2, the worst note 61). Through the
+  engine the solo cello now swings 1.0 dB inside a loop where the cello section the readings used before swung 2.3.
+- The beds’ dip under the solo holds through a phrase: a note that starts before the dip has come back (or within 0.6 s of it) moves the
+  restore to its own end. Overlapping legato notes used to bring the pads and the choir back up mid-note, and every gap between two notes
+  swelled them back by the whole dip, a pump of the choir against the solo. The restore is slower (0.6 s); the title’s dip is 3.1 dB (was
+  4.4). Measured on the title’s choir bus, its swing within a section fell from 5.5 to 3.4 dB under the horn’s first statement, from 6.6 to
+  4.1 in the oboe’s breath, from 9.4 to 7.2 at the crest. `Music.duckMerge = false` restores the old behaviour.
+- Vibrato in time: a sampled line’s vibrato runs at a whole number of cycles to the piece’s beat, as near five a second as the tempo allows
+  (58 bpm: five to a beat, 4.8 Hz), where it was a random 4.6 to 5.7 Hz per note, drifting against the pulse. The pad bus’s ensemble
+  chorus (three delayed copies swept at a free 0.29, 0.37 and 0.43 Hz: about ±10 cents and a slow swell of level, on the recorded cellos
+  and violas as well as the synthesized pads) sweeps over 5, 4 and 3 beats instead, so its slow movement keeps time with the music
+  (`Music.chorusSync = false` for the free rates). The Iowa cello and viola carry little vibrato of their own (±1 and ±6 to ±11 cents):
+  their wobble against the beat was the loop wraps, now steadier.
+- The title’s balance: the men’s sung echoes of the head 1.5 dB softer (they stood level with the solo horn they answer), the hum in the
+  bassoon’s section softer (it sat 3 dB under that quiet solo while elsewhere it sits 6 to 11 under).
+- `Samples.loadSome(names)` loads only the instruments named, and `Samples.autoLoad = false` keeps the unlock from loading everything;
+  the player page loads just the instruments a piece uses (the title: 26 of 80, 354 MB decoded instead of 733), fetches the engine while
+  the page opens, unlocks audio inside the click (what iOS needs), and says when the browser is holding sound back. Its movement cards
+  always play their recording (a stopped live piece used to swallow the click), a stale play() rejection no longer overwrites the status,
+  and a recording the server will not stream is fetched whole and played from memory.
+- The sampler keeps at most 16 sample fetches in flight (`S.fetchMax`) and retries a failed one once: with the library at some 1,800
+  files, a browser asked for all of them at once refused the overflow (Chromium: `net::ERR_INSUFFICIENT_RESOURCES`) and whole instruments
+  came up silent. The player page ships only the instruments a piece uses (80 of 92, 67 MB).
+- Real soloists in the library: the University of Iowa recordings (free for any use) cut from their long takes by the new
+  `tools/samples/iowa.py` (silence and pitch segmentation, pp/mf/ff layers, the string sets per string) and built by `tools/samples/build.py`
+  as `vlnSolo`, `vlaSolo`, `vcSolo`, `cbSolo`, `hornIowa`, `tbnSolo`, `bassTbn`, `tubaIowa`, `tptIowa`, `bassClar`, `clarIowa`, `oboeIowa`,
+  `bassoonIowa`, `fluteIowa`, `altoFluteIowa`; FreePats’ CC0 bagpipe as `pipes` (the chanter) and `pipesDrone`. Build fixes they needed:
+  a mono recording asked for its right channel decoded as silence (every right-panned mono instrument was empty), note-by-note recordings
+  are now levelled per recorded note (`norm='zone'`: the loud layer’s loop to the target, a median over neighbouring notes, a
+  99.9th-percentile peak clamp and a soft limiter in place of the one click that used to drag a whole instrument 15 dB down; the layer
+  spacing baked per note too, 8 dB per unit of layer distance, because a player’s pp sits 20 dB under the ff on one note and 7 dB on the
+  next and a solo line hears every such step), and a short recording gets a shorter loop rather than no zone. The readings use them: the title’s duet is a solo trombone behind the high horn and
+  its low fall is the Iowa bassoon; the cello reading is one cello; the chamber reading’s echoes, fall and breath are one cello and one
+  viola; the symphony’s head echo is the bass clarinet low. Player: the five readings re-rendered on them; the hour mix dropped from the
+  page to make room for the larger sample packs.
+- Two more readings of the title on its settled shape: `title:symphony` (the full orchestra and no choir: the violins state the tune
+  twice with the cellos an octave below, the winds carry the variations with the clarinet echoing the head, the full brass on the motif
+  over pulsing strings and woodwind runs, the flute’s fade) and `title:chamber` (strings alone: the violins over the violas and the open
+  low strings with the basses plucked, the cellos echoing the head and taking the fall, the violas singing the breath, the full strings
+  in three octaves over the spiccato ostinato and the tremolo). The organ reading dropped.
+- The title’s shape settled: the solo states the commonwealth’s tune twice at the start, the second time fuller; the variations follow
+  with the men echoing the theme’s head between them, the bassoon and the oboe; the horns in canon; the full brass on the motif strongly
+  with the snare, the bass drum and the timpani; a wind-down over the strings with the men’s last echo; the fade on variations. A cello
+  reading (`title:cello`, the cello section as a singing line, no solo cello in the library) beside the horn, reed and organ readings. The
+  Williams reading dropped: it did not work for this piece.
+- The title’s crest brass holds one recorded dynamic layer per line (a hand-over mid-note sounded like a different horn); the bass
+  echoes the hook (root, second, third, fifth on each chord) under the variations and the cellos lay the head in whole notes under the
+  breath, so the piece leans toward the hook’s return. A fourth reading, `title:williams`: a concert fanfare on the tune in John
+  Williams’s manner (the dotted fanfare on its head, the tune in the horns over pulsing strings doubled an octave up, a soaring variation
+  in wide leaps, the lydian lift, a quiet middle for the oboe, the return in the trumpets with the horns in canon, a cadence coda).
+- The title’s tune stated where it counts and varied between: the solo horn states it whole and the men once more; between them and after
+  the crescendo everything is variation drawn from it by classical means (the strain as a real sequence a step up to a half close, the
+  fall as a chain of descending thirds to the cadence, the head answered in the relative minor in augmentation through a major seventh,
+  the answer’s octave hanging on the dominant, the oboe’s lyrical one from the third); the tune returns whole for the crescendo and the
+  fade is variation. The pipes reading dropped: without real bagpipe samples it did not sound like pipes (the pipers’ `flutter` stays as
+  a line option).
+- The title’s crest in two steps instead of one: a high horn on the tune with a low brass voice two bars behind it in canon (the duet),
+  then the full brass on the answer and the fall with the timpani on the beat, the strings and the mallets’ sparkle (the build), and the
+  quiet section after it (the horn section, the trombones and the trumpets had all entered at once on the tune and blared). In all four
+  readings; the organ’s is the full stop and the 16’ in canon, then the full organ.
+- Two more readings of the title, ready though the game may not play them: `title:organ` (the pipe organ as the instrument: one vast open
+  chord across five octaves first, the full stop on the tune with the octave coupler, the organ in three octaves at once, the full organ at
+  the crest, the organ’s own pedal with a 32’ under it, a great hall’s room) and `title:pipes` (the library has no bagpipes, so they are built as pipes are: the oboe as a chanter with the pipers’
+  grace notes and doublings (a line’s `flutter`) over held bassoon drones two octaves below, one drone chord under the whole piece, the field snare keeping a slow march).
+- The title in the major, on the commonwealth’s tune and nothing else: the same tune in the minor over the men’s choir was heard as
+  Crimson Tide, and the hymn’s rising fourth is gone from the title; the brooding is in the bed (the deep open chords, the bass line and
+  its sub, the flat seventh and the sixth degree), not the mode. One melody at a time (the solo horn first, the men low with the horn
+  answering when they stop, the bassoon low with the horn answering, the oboe in the breath, the full horns at the crest), the soloist
+  forward (its fader up, the beds ducking 4.4 dB under it, nothing else in its octave), fewer layers everywhere.
+- The title deeper and its soloist clearer: deep open chords in the low strings (a pad voiced `open`, roots and fifths), the double bass on
+  a slow line with its sub nearly sub-bass, the men taking the tune low after the horn's statement with the horn answering above them, the
+  bassoon low against the fall and a soft solo trumpet high above as an accent; a window around the soloist (nothing else in its octave,
+  the hum to the sides, the beds ducking 3.3 dB under it with the piece's `duck`, its sends dry), so the solo rises without being louder.
+  A second reading, `title:reed`, with the cor anglais as the first soloist an octave above the horn, hidden from the menu and on the
+  player page beside the horn reading.
+- The main theme as an undercurrent, deeper and brooding: a deep bed (the cellos as two tenor voices, the deep pedal with its sub, the
+  planetarium’s glow, points of light), the men humming low one chord to a bar, the solo horn’s first part the commonwealth’s tune itself, whole, slow and low
+  over them (the strain and its answer: the game’s theme set at once), every later horn phrase drawn from it (its head in whole notes an
+  octave up, its fall home, its inversion); modal harmony,
+  never the dominant seventh; a soft bass drum once a bar under the loop; the hymn’s head sung low as the second idea; a crest that stays a
+  swell with the timpani only there; the solo horn alone again at the close. A voice’s `width` in the sampler (the choir recordings are
+  wide; a line sung alone had no centre).
+- The full pass over every piece against the compass (Williams for the themes, Shore for the weight, Zimmer for the manner, Serrie under the
+  map): every sung or blown line on the map, in the cues and in the race themes phrased (`shape`, `swell`); the low register cleared in every
+  piece that piled thirds below C3 (the passacaglia, the chorale, the nocturne, the lanes, the vigil, the council, the procession and its
+  state reading, Orion, the Antarans, the ground assault, the Silicoid, the Meklar); the lines that were bent onto their chords rewritten on
+  them (the battle's crest lines with the strings' counter-line, the procession's big phrase over the flat-sixth lift, the Antarans' lines
+  on their own chords with the tritone leaps kept, the spy's progression under its line, the Darlok's second section) and the race themes'
+  hostile readings in modes their intervals survive; the sampler aligns the recorded dynamic layers of every pitched sustain when its files
+  are decoded (the soft strings, trumpets, trombones, low brass and cellos sat eighteen to twenty decibels under their loud layers; `?layeralign=0`)
+  and the quiet solo winds are lifted to their family (the alto flute, the flute, the solo trumpet), so every solo on the map sits with or
+  above its bed; the crest women's voices under the horns in Noon and First Light. Every piece re-judged and re-ranked (`MUSIC-REVIEW.md`),
+  the player page updated with the ranking and new renders.
+- The map's plan, steps six to ten: the harp interlude on the air and the soft organ, the violas' with an alto flute, the marimba pulse
+  replaced by the held note (one low cello note, the air, the harp); the bridges open on the tonic of the piece that is playing and land on
+  the cue's dominant, with a dark bridge (Orion, the Antarans, the defeat) and a bright one (the chamber, the victory) beside the tense and
+  the calm, and the calm bridge into and out of the news bed; a soft programme change between far-apart pieces takes the long breath; the
+  map back from a fight lands on its piece's quiet half; every map piece's trim set from a whole-piece loudness render (-17 LUFS within a
+  decibel, the interludes three and a half below); the Lantern at four minutes; the eight planetarium pieces each with an order and a crest
+  of their own.
+- The main theme rebuilt around the horn: the chorus hums and the solo horn states the call, then sings the whole hymn over the chorus; the
+  horn section joins the men; the crest has the horns in full with the trumpets crowning the answer and the chamber open on ah, with the
+  timpani; the solo horn closes it. A wider dynamic range, and every line phrased with the engine's new `shape` (a hairpin over each phrase).
+- The title opens with the men alone, singing the commonwealth's climb on the hymn's harmony, a chime and a deep pedal rising under them,
+  and the horn's call answers them as the strings join; the strings rather than the organ under the solo; a little less hall and a touch
+  more presence on the whole piece.
+- The title's horns forward and rising above: the solo horn 2 dB above its bed (it was 6 dB under), brighter, every long note swelling;
+  at the build and the crest the horn section high above the men in the written octave, the trombones under it and the trumpets on the
+  answer, in the Roll Tide manner. A line's `swell`. The sampler's dynamic layers hand over briefly instead of blending (two recordings
+  of one note beat by eight to sixteen decibels when both sound), and each zone's pitch is measured when its file is decoded.
+- The title's solo horn in its middle register and played as a soloist: a dynamic plan across its phrases (a dynamic mark on a phrase
+  token, `H3*1`), deeper hairpins, a delayed vibrato, a tone that darkens when soft, a presence lift, a place near the centre at the front
+  of the stage (a layer's own sends), and a window in the texture with the bed below it and a halo above.
+- The commonwealth's oboe tune (the procession's first strain) declared the score's second leitmotif and woven into six map pieces as a
+  variation reading of each piece's own tune drawn toward its climb, into the title's breath as the oboe's answer to the flute, and stated
+  in full by the horns at the victory.
+- A subtle, wide, live soundstage under every piece: the pads and the chorus sent lightly into the same early-reflection room the lines
+  stand in, and the bus's side lifted a little (side/mid up a decibel, correlation down a tenth, loudness unchanged; `?soundstage=0` plays
+  the old staging).
+- The "looping" on long solo notes, fixed in the engine: the sampler evens every loop's level when a file is decoded and, for the solo winds
+  and brass, each partial's slow cycle; loop ends are tuned to whole periods; loops under half a second (the oboe's) are moved onto the
+  file's steady stretch. The music bus's high band is delayed to match the band compressors' six-millisecond lookahead, which had put a comb
+  across the bus. `node tools/qa/loops.js` holds one note per recorded zone of every sustain instrument through the bus and flags a pulse or a
+  click. First Light's chorus sits a little lower against the orchestra.
+- The score grows by twelve movements, all written for the sampled orchestra and chorus and held together by the score's themes (the
+  leitmotif — a rising fourth and a falling step — the men's chanted phrase, the procession's theme, the chorale), each quoted once in
+  every movement, while each movement has a principal theme and a foundation of its own. Three for variety: *the nebula* (a drift in
+  Jonn Serrie's manner: the analogue and air pads on chords that change every four bars, sub-bass swells, crotales and celeste answered by
+  a long delay, an alto flute in a few long notes; the strings and the horn's hymn rise through it once), *the long night* (a passacaglia:
+  a ground that never leaves the basses under a set of variations, each a texture of its own — cellos alone, cor anglais, running harp,
+  all-pizzicato with a staccato bassoon, the hymn with the men, trembling strings and tubular bells, the full chorale), *the watch* (a
+  nocturne for a very soft solo trumpet over a walking pizzicato bass and off-beat harp chords, chimes at midnight). Nine for the phases
+  of a game: the early years — *first light* (one long sunrise from violas alone to brass, both choirs and timpani, then dusk), *the lantern*
+  (a chorale prelude in a broad six: the cradle tune in long notes under a running clarinet), *the survey* (a minimalist pulse at 76,
+  eighth-note violas and marimba under staccato flute cells); the middle years — *the commonwealth* (a canon for oboe, clarinet and flute
+  over a walking bassoon, no strings), *the lanes* (a sequence in Serrie's manner: a celeste running in sixteenths with a faint synth pluck on the beats under the strings
+  and an oboe tune; the sequence stops for the men, the horn brings the hymn at the crest), *noon* (a
+  chorale for brass choir with a strain of its own, the hymn as its answer, the choirs at the full); the late years — *the frontier* (a
+  slow march on whispered field drums and a tuba step, a dotted trombone theme, the hymn at half speed at the crest), *the embers* (a
+  sarabande with its stressed second beat in the low strings, the leitmotif inverted in the middle), *the vigil* (a sung chorale: the men,
+  then the women in octaves and in a descant, an organ verse, brass only at the crest). The men's and women's voices are in every movement.
+  New recorded colours for the palette: the viola section, trombones, tuba, the trumpet section, the cellos' tremolo.
+- The music follows the game's phases without a cut. Each phase movement carries an era window, and every new cycle of the programme is
+  composed from the pieces whose window holds the moment, so the early pieces fall silent as the galaxy fills and the late ones arrive, a
+  cycle at a time. A change of programme at the end of a turn (first contact, a war, a peace) no longer crossfades mid-phrase: the piece
+  that is playing reaches its next breath or section line, an interlude in the new key follows, and only then the new programme's first
+  piece enters, with the long seam fades of the rotation. Two more interludes join the bridges between pieces: the choir alone, and the
+  violas with a trumpet far away. Plucked and bass notes no longer land at identical levels.
+- Interludes modulate. The interlude between two pieces now opens on the outgoing piece's tonic, in the outgoing piece's meter and felt
+  pulse (a quick six hands over at its dotted beat, a march at its half bar), so the piece ending decays into its own chord and bar; its
+  opening bars then walk the way into the new key — a pivot chord the two keys share with a pre-dominant role in the new one, or a walk
+  round the circle of fifths when they share nothing, or the Neapolitan when they are far — and arrive on the new dominant seventh, while
+  the tempo glides to the new piece's as a true accelerando or ritardando; the body continues in the new meter at the new tempo. The
+  compiler gained a tempo map (a section may carry its own tempo, and a tempo may ramp across it) and a per-section meter; every existing
+  piece compiles to the same notes as before.
+- Interludes keep the colour. Every instrument belongs to a family (strings, brass, winds, choir, plucked, bells, the analogue pads), and a
+  piece has a palette: how much of each it is scored for, with its opening and closing sections counted most. The seam chooses its interlude
+  by that palette (and the pieces' character) against the seven templates, so a choir piece is far likelier to be followed by the choir
+  interlude and a strings piece by the violas or the harp — by weighted chance, never the same one twice running. The template's own
+  alternation is pinned to the one that sits best between the two pieces, the sustained voice the old piece ends in holds under the
+  interlude's opening bars, and the voice the new piece opens with is already there under its last bars; the interlude's own voice keeps the
+  middle. Only a colour that can be held is carried (strings, the pads, choir, brass, winds; a harp in a pad slot would only tick). Its
+  opening level meets the level the piece ended at (within the breath's range). `tools/audio-seams.js` captures four seams from the
+  real-time engine as MP3s, with a log of what each seam built; they are on the demo page.
+- The map's plan, steps one to five (MUSIC-REVIEW.md, "Steps 1 to 5: done"). The chord voicer keeps the low-interval limit (no
+  second or third below C3, open spacing below G2) and the map's men's choir and low beds sit above the bass pedal's third: close low
+  intervals fell from 28% of a piece's length to under 2%. The Abyss, the Tide, the Chorale, the Cradle, Wonder and the Beacon are
+  re-harmonised bar by bar from their tunes, so the engine snaps none of their notes onto a chord. The men's one sung phrase stays in
+  four stills; eleven pieces have a still of their own. The bell sparkle is left to the planetarium pieces, the Nebula, the Watch and
+  First Light. The pieces that sounded like each other are told apart by bed and tempo: no two map pieces measure above 0.89 in
+  likeness.
+- The score reviewed and ranked (MUSIC-REVIEW.md): every piece read and measured, the errors corrected, the rest marked on six
+  criteria (craft, creativity, uniqueness, pleasure, fit, identity) with a measured penalty for sounding like other pieces and a capped
+  bonus for carrying the shared themes, and ranked out of a hundred. The demo page has three tabs: the movements and the seams, every
+  piece ranked with a live play button, and any two pieces with the seam the engine would make between them (the game's engine and
+  the sampled orchestra run in the page; the samples travel packed in four files and are served to the sampler from memory). A
+  directed programme that opened on a piece other than its first used to list that piece twice and drop the first; fixed.
+- Every recorded instrument knows its range. The engine carries the sounding range of each recording (the horn to F5, the tubular bells
+  to F5, the glockenspiel from G5, the crotales from C6, the men's choir to A4, the basses with the C extension); a pad, choir,
+  arpeggio or sparkle keeps its register inside it, and a written line folds a stray note by an octave, as a player would. The review
+  (tools/score-review.js) found the lines written out of reach and they are corrected in the score: the council's horn was an octave
+  above the instrument (the piece's octave shift removed), the sunrise's trumpets an octave too high, the tubular bells in four of the
+  movements and in Orion an octave above their range, the glockenspiel lines in the lantern, the survey, the defeat cue and the Meklar
+  theme an octave below theirs (the defeat cue's lone bell is now the celeste), the crotales used as a lead two octaves below their range
+  in the research cue and the Psilon theme (now the celeste), the Alkari wind chimes and the Silicoid chimes rewritten in range, the
+  determination piece's horn given its middle register for the second strain. The war readings no longer carry a bell line's octave into
+  the brass, and their men's choir sings in its own register.
+- The pivot chords take their time. Each chord of the way into the new key now lasts about five seconds at least, and the first (the old
+  tonic) seven or more, so it spans the fade of the piece ending; a long walk round the circle moves on sooner in its middle. Before, a
+  chord lasted one outgoing bar, which at a halved pulse could be under three seconds.
+- The score has a shared theme library and a story. The themes the pieces quote (the hymn, the men's phrase, the procession, the
+  chorale, the planetarium's four notes, the tide's rise, the wonder tune, the cradle, the abyss's step) are written once in
+  `js/audio/score/themes.js` and quoted by name; sixty-five copied phrases became references with no note changed, and
+  `Music.themeIndex()` lists which piece carries which theme. The story reaches the music: when a race is first met, the next interlude
+  carries the first bars of that race's theme in the interlude's own voice and key; as the Galactic Council approaches, the procession's
+  call rides the next interlude and the procession itself grows likelier in the programme.
+- The music is split into an engine and a score. `js/audio/music.js` keeps the engine (notation, generators, player, scheduler, director);
+  the pieces live in `js/audio/score/` (themes, cues, map, races, programme), loaded after it. `node tools/score-lint.js` checks the whole
+  score against its schema and the engine's analysis (instruments, forms, phrases, themes, tags, era windows, determinism, the programme's
+  lists), and `node tools/qa/music.js` drives the seams in real time (a directed programme, a soft change on a section line through an
+  interlude, bridges into a fight and back, a motif on an interlude, snapshot and restore, never a silence).
+- A music director chooses the map's pieces. Every map piece now carries tags on eight axes of the game's situation (solitude,
+  contact, tension, war, grief, grandeur, energy, dark), and at the end of each turn the soundscape reads the galaxy on the same axes:
+  who has been met, how cold relations are, how crowded the player's space is, the fleets around it, whether there is a war (remembered
+  for some turns after a peace), colonies and ships recently lost, the empire's size. When a programme needs its next piece the director
+  scores each candidate by how close its tags sit to the situation, tilts the weight by the key (near on the circle of fifths after the
+  piece just heard), by how recently it was heard (almost never within twenty-five minutes) and by its rarity, and draws one at random
+  from those weights: still a shuffle, leaning the way the game leans. The music's level tilts a little with the situation, never more
+  than about a decibel: up at war or for a grand empire, down when the player is alone and nothing presses.
+- Seams breathe. When the next piece is far from the last in energy, darkness or key, the director chooses one of the quiet interludes
+  (the pad, the voices, the choir alone), lengthens it by half and widens the fade; never silence, but a restrained quiet before a piece
+  of a very different kind.
+- Bridges for cues that cannot wait. A fight, a landing, the council chamber and the return to the map after a battle are no longer cut
+  to: a two-bar bridge in the new cue's key starts on the next beat (a string tremolo swelling under a timpani roll for a fight, one
+  swell of strings and soft organ with a chime for the chamber and the map), the old piece fades under it, and the cue enters as the
+  bridge crests. A switch already armed is no longer lost when the sampled instruments finish loading.
+- `node tools/audio-hour.js` captures a scripted hour of the map's music from the real-time engine (the early programme alone, first
+  contact, a war, peace, the late years, the era rising throughout) with a log of every change of piece.
+- Loop seams. A sustained note is a short recording looped by the browser, and Web Audio loops with no crossfade, so wherever a
+  library loop point did not meet itself in phase (a third of the string-section, chorus and solo-brass zones, and the short oboe and
+  clarinet loops worst of all) every wrap was a click, or a flutter at the loop rate: the "clipping" and "looping" heard on held notes.
+  The sampler now blends the tail of every loop into the audio that leads into its start when the file is decoded (a quarter of the loop,
+  at most 300 ms), so the wrap continues the very waveform the loop start plays; `?loopxf=0` plays the old loops for comparison. Measured
+  on the files: discontinuous seams 67 of 218 before, 11 after, and the phase match at the wrap 1.00 on every instrument.
+- Every new movement passes the composition lint (deterministic, every form × instrumentation × take compiles, few or no melodic snaps)
+  and the headless loudness pass (trims set to the -16.5 LUFS underscore target, no limiter engagement, no clipping); the soft programme
+  change was driven in headless Chromium (the switch lands on a breath of the running piece, the interlude takes over under its decay,
+  never a silence).
+
 ## 1.3.0 — 2026-10-28
 
 - Release pass. The whole of `main` was run through every check before this version was cut: the syntax check (120 files),

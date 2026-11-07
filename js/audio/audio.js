@@ -163,7 +163,29 @@
     }
     return true;
   };
+  // The soundstage: a subtle, wide, live stage under every piece — the pads and the chorus sent into the same early-reflection room the
+  // lines stand in (they had the hall only, far back, and so sat in a different space from the melody), and the side of the image lifted a
+  // little more. `?soundstage=0` plays the old staging for comparison.
+  A.soundstage = 1;
+  try { if (/[?&]soundstage=0\b/.test(location.search)) A.soundstage = 0; } catch (e) { /* ignore */ }
   function makeIR(ctx, o) { const b = new IRBuilder(ctx, o); b.run(Infinity); return b.buf; }
+  // A.loadIR(name, url): a recorded hall's impulse (a WAV), decoded once and kept as plain channel data for every engine made after it;
+  // its energy scaled to the generated hall's (IR_HALL), so choosing it changes the room's character and not its level
+  A.irs = {};
+  A.loadIR = function (name, url) {
+    if (A.irs[name]) return Promise.resolve(true);
+    const OAC = window.OfflineAudioContext || window.webkitOfflineAudioContext;
+    return fetch(url).then(r => { if (!r.ok) throw new Error('HTTP ' + r.status); return r.arrayBuffer(); }).then(ab => {
+      const oc = new OAC(2, 1, 44100);
+      return new Promise((res, rej) => { const p = oc.decodeAudioData(ab, res, rej); if (p && p.then) p.then(res, rej); });
+    }).then(b => {
+      const ch = []; for (let c = 0; c < b.numberOfChannels; c++) ch.push(b.getChannelData(c).slice());
+      const en = a => a.reduce((p, x) => p + x * x, 0), gen = makeIR(new OAC(2, 1, b.sampleRate), IR_HALL);
+      let eg = 0, er = 0; for (let c = 0; c < gen.numberOfChannels; c++) eg += en(gen.getChannelData(c)); for (const a of ch) er += en(a);
+      A.irs[name] = { sr: b.sampleRate, ch, gain: Math.sqrt(eg / Math.max(1e-9, er * gen.numberOfChannels / ch.length)) };
+      return true;
+    }).catch(e => { console.warn('[audio] impulse ' + name + ' failed', e && e.message); return false; });
+  };
   const IR_STAGE = { seconds: 0.9, rt60: 0.55, pre: 0.008, diff: 0.03, hiStart: 0.9, hiEnd: 0.45, damp: 0.6, er: 12, seed: 23 };   // a stage: short, bright, early reflections
   const IR_HALL = { seconds: 3.8, rt60: 3.3, pre: 0.036, diff: 0.05, hiStart: 0.7, hiEnd: 0.22, damp: 1.2, er: 8, seed: 11 };   // a large, open hall: long dark tail, a little more pre-delay
   const IR_PLATE = { seconds: 1.2, rt60: 1.0, pre: 0.003, diff: 0.008, hiStart: 0.85, hiEnd: 0.25, damp: 0.7, er: 0, seed: 23 };
@@ -291,7 +313,7 @@
     (function () { const n = 2048, c = new Float32Array(n), d = 1.6; for (let i = 0; i < n; i++) { const x = (i / (n - 1)) * 2 - 1; c[i] = Math.tanh(d * x) / d; } sat.curve = c; try { sat.oversample = '2x'; } catch (e) { /* ignore */ } })();
     const duck = mk(ctx.createGain());
     const width = (function () {                   // M = (L+R)/2, S = (L-R)/2 ; S -> hp 120 -> +1.5 dB @ 6k -> x w ; L' = M + S', R' = M - S'
-      const w = 1.15, inG = mk(ctx.createGain()), split = mk(ctx.createChannelSplitter(2)), merge = mk(ctx.createChannelMerger(2));
+      const w = 1.15 + 0.15 * A.soundstage, inG = mk(ctx.createGain()), split = mk(ctx.createChannelSplitter(2)), merge = mk(ctx.createChannelMerger(2));   // the soundstage lifts the side a little more
       const mid = mk(ctx.createGain()), side = mk(ctx.createGain()), lToM = mk(ctx.createGain()), rToM = mk(ctx.createGain()), lToS = mk(ctx.createGain()), rToS = mk(ctx.createGain());
       lToM.gain.value = 0.5; rToM.gain.value = 0.5; lToS.gain.value = 0.5; rToS.gain.value = -0.5;
       inG.connect(split); split.connect(lToM, 0); split.connect(rToM, 1); split.connect(lToS, 0); split.connect(rToS, 1);
@@ -309,7 +331,11 @@
       const lr = (type, f) => { const a = mk(ctx.createBiquadFilter()), b = mk(ctx.createBiquadFilter()); for (const n of [a, b]) { n.type = type; n.frequency.value = f; n.Q.value = Math.SQRT1_2; } a.connect(b); return { in: a, out: b }; };
       const lo = lr('lowpass', 160), hiA = lr('highpass', 160), mid = lr('lowpass', 450), hi = lr('highpass', 450);
       inG.connect(lo.in); lo.out.connect(out);
-      inG.connect(hiA.in); hiA.out.connect(mid.in); hiA.out.connect(hi.in); hi.out.connect(out);
+      // the band compressors look ahead six milliseconds (measured: 264 samples at 44.1k, 288 at 48k); the high band, which has none,
+      // is delayed the same, else the bands recombine through a comb (notches every 167 Hz) that turns a held note's vibrato into a level
+      // ripple at some pitches and not others — the "looping" heard on long solo notes
+      const hiDelay = mk(ctx.createDelay(0.05)); hiDelay.delayTime.value = 0.006;
+      inG.connect(hiA.in); hiA.out.connect(mid.in); hiA.out.connect(hi.in); hi.out.connect(hiDelay); hiDelay.connect(out);
       const cp = mk(ctx.createDynamicsCompressor()); cp.threshold.value = -30; cp.ratio.value = 3; cp.attack.value = 0.025; cp.release.value = 0.25; cp.knee.value = 6;
       const cg = mk(ctx.createGain()); cg.gain.value = dbtoa(-makeupDb(-30, 3) - 1.5);   // makeup taken back: the band only ever ducks
       mid.out.connect(cp); cp.connect(cg); cg.connect(out);
@@ -317,10 +343,11 @@
       const lc = mk(ctx.createDynamicsCompressor()); lc.threshold.value = -22; lc.ratio.value = 2; lc.attack.value = 0.03; lc.release.value = 0.3; lc.knee.value = 8;
       const lg = mk(ctx.createGain()); lg.gain.value = dbtoa(-makeupDb(-22, 2) + 1.0);
       lo.out.disconnect(); lo.out.connect(lc); lc.connect(lg); lg.connect(out);
+      eng.mbLow = lg; eng.mbLowDb = -makeupDb(-22, 2) + 1.0;   // the low band's level after its compressor: a piece may lift it (Music: def.lowBand, dB)
       return { in: inG, out };
     })();
     eng.musicBus.connect(eqL); eqL.connect(eqM); eqM.connect(mb.in); mb.out.connect(eqH); eqH.connect(eqS); eqS.connect(eqA); eqA.connect(width.in); width.out.connect(glue); glue.connect(glueMake); glueMake.connect(sat); sat.connect(duck); duck.connect(master);
-    eng.glue = glue;
+    eng.glue = glue; eng._stages = { eqL, eqM, mbIn: mb.in, mbOut: mb.out, eqH, widthIn: width.in, widthOut: width.out, glue, sat, duck };   // the bus's stages, for a listening test to tap
     eng.duck = duck; eng.duckUntil = 0; eng.duckLevel = 1;
     // dip the music by `depthDb` for `hold` seconds (15 ms in, ~250 ms release). While an earlier duck is still holding, the depth
     // never decreases (the deeper one is kept, the hold is extended); a shorter + shallower request inside a running duck is ignored.
@@ -358,6 +385,18 @@
       return inp;
     };
     eng.hallIn = verb('hall', IR_HALL, eng.musicBus, 260, 11000);   // the hall carries no low mids: openness
+    // recorded halls (A.loadIR): a convolver per hall from the decoded recording (resampled to this context's rate when it differs), its
+    // energy matched to the generated hall's so a piece can choose it (Music: def.hall) without the room's level changing
+    eng.halls = {};
+    for (const name in A.irs) {
+      const d = A.irs[name], ratio = sr / d.sr, len = Math.max(1, Math.round(d.ch[0].length * ratio)), buf = ctx.createBuffer(2, len, sr);
+      for (let c = 0; c < 2; c++) { const src = d.ch[Math.min(c, d.ch.length - 1)], dst = buf.getChannelData(c);
+        for (let i = 0; i < len; i++) { const x = i / ratio, k = Math.floor(x), f = x - k; dst[i] = d.gain * ((src[k] || 0) * (1 - f) + (src[k + 1] || 0) * f); } }
+      const inp = mk(ctx.createGain()), h = mk(ctx.createBiquadFilter()), conv = mk(ctx.createConvolver()), l = mk(ctx.createBiquadFilter()), out = mk(ctx.createGain());
+      h.type = 'highpass'; h.frequency.value = 260; h.Q.value = 0.5; l.type = 'lowpass'; l.frequency.value = 11000; l.Q.value = 0.5;
+      conv.normalize = false; conv.buffer = buf; inp.connect(h); h.connect(conv); conv.connect(l); l.connect(out); out.connect(eng.musicBus);
+      eng.halls[name] = inp;
+    }
     eng.stageIn = verb('stage', IR_STAGE, eng.musicBus, 220, 13000);   // the close plane: drums, lead, plucks, bells
     eng.sfxVerbIn = verb('plate', IR_PLATE, eng.sfxBus, 120, 11000);
     if (jobs.length) {                                  // keep every main-thread task well under a frame: <=2.5 ms slices, one buffer assignment per task
@@ -456,10 +495,12 @@
     eng.makeChorus = function (o) {
       o = o || {};
       const nodes = [], N = n => { nodes.push(n); eng.nodeCount++; return n; };
-      const inp = N(ctx.createGain()), out = N(ctx.createGain()), taps = [[0.0135, -0.75, 0.29], [0.0185, 0, 0.37], [0.0235, 0.75, 0.43]];
+      // o.bps (the piece's beats a second): each sweep lasts a whole number of beats (5, 4 and 3: about the free rates at 60 bpm), so the
+      // ensemble's slow pitch and level movement keeps time with the music instead of drifting across it; without it the free rates
+      const inp = N(ctx.createGain()), out = N(ctx.createGain()), taps = [[0.0135, -0.75, 0.29, 5], [0.0185, 0, 0.37, 4], [0.0235, 0.75, 0.43, 3]];
       for (const tp of taps) {
         const d = N(ctx.createDelay(0.1)), lfo = N(ctx.createOscillator()), lg = N(ctx.createGain()), pn = N(ctx.createStereoPanner()), g = N(ctx.createGain());
-        d.delayTime.value = tp[0]; lfo.type = 'sine'; lfo.frequency.value = tp[2] * num(o.rate, 1); lg.gain.value = num(o.depth, 0.0026); pn.pan.value = tp[1]; g.gain.value = 0.55;
+        d.delayTime.value = tp[0]; lfo.type = 'sine'; lfo.frequency.value = o.bps > 0 ? o.bps / tp[3] : tp[2] * num(o.rate, 1); lg.gain.value = num(o.depth, 0.0026); pn.pan.value = tp[1]; g.gain.value = 0.55;
         lfo.connect(lg); lg.connect(d.delayTime); lfo.start();
         inp.connect(d); d.connect(g); g.connect(pn); pn.connect(out);
       }

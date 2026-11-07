@@ -1597,8 +1597,8 @@
     run.musicStarted = false;
     if (musicCur() !== 'gnn') return;
     const m = Mu();
-    if (run.prevSnap && run.prevSnap.id !== 'gnn' && m && typeof m.restore === 'function') { try { m.restore(run.prevSnap, { fade: 1.4 }); return; } catch (e) { /* fall back to the plain track */ } }
-    if (run.prevTrack && run.prevTrack !== 'gnn') musicPlay(run.prevTrack, { fade: 1.4 }); else musicStop({ fade: 1.4 });
+    if (run.prevSnap && run.prevSnap.id !== 'gnn' && m && typeof m.restore === 'function') { try { m.restore(run.prevSnap, { fade: 1.4, bridge: 'calm' }); return; } catch (e) { /* fall back to the plain track */ } }
+    if (run.prevTrack && run.prevTrack !== 'gnn') musicPlay(run.prevTrack, { fade: 1.4, bridge: 'calm' }); else musicStop({ fade: 1.4 });
   }
   function finish(skipped) {
     if (!R || R.finishing) return;
@@ -1688,7 +1688,7 @@
     buildTicker();
     applySegment(0);
     try { root.focus({ preventScroll: true }); } catch (e) { /* not focusable yet */ }
-    musicPlay('gnn', { fade: 0.8 }); R.musicStarted = true;
+    musicPlay('gnn', { fade: 0.8, bridge: 'calm' }); R.musicStarted = true;   // the news bed is led into by the calm bridge, and the map back out of it
   }
 
   // ================================================================== screen + public API

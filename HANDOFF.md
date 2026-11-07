@@ -7,6 +7,167 @@ Docs: `PROGRESS.md` (plan/status/25-feature acceptance checklist) · `CONVENTION
 Commands: `node tools/check.js` (syntax of every manifest file) · `node tools/rules-test.js [area]` · `node tools/soak.js` (24-thread AI-vs-AI soak/balance; `tools/SOAK.md`) · `node tools/headless.js`.
 Browser-pane tip: animations use requestAnimationFrame, so in the built-in browser pane a tab must be fronted (`tabs_select`) for anything animated (GNN, audiences, scenes, combat) to advance.
 
+## Session 11 (October 2026) — the score grows, branch `claude/festive-wozniak-7jy03r`
+
+**Latest (the new main theme).** After a run of fixes that kept breaking something, the user asked to start fresh: the main theme was
+rebuilt from scratch one approved layer at a time (tools/fresh/, its README records every step and decision), then written into the
+score as `title` (menu, setup, and a rare piece on the map); the old theme is `title:classic`. Next: refresh the other pieces' sound
+with what the rebuild taught, without rewriting them.
+
+**Latest (the orchestra with the choir).** After the foundation was held the user heard only the choir. Measured: the balance per
+section was the same as before (within 1 dB) but the choir had always stood 3 to 8 dB over the strings where the ear listens, and with
+the low cellos no longer moving the choir carried all the harmony. Rebalanced (CONVENTIONS, an orchestra with a choir); the `balance`
+check fails the old mix (5.6 and 6.8 dB) and passes the new (0.2 to 3.2). Do not answer "too much choir" by opening the bass's filter:
+at any cut the bass already stands 12 to 15 dB over the choir at 60-250 Hz, and a wider filter covers the choir's lowest octave.
+
+**Latest (the foundation as one continuous note).** The user heard the bass as "dummm dummm dumm", most in the symphony, and wanted
+one continuous bass note. Measured: the double bass already held one note for 100 s; the low cellos just above it moved A2, G2, A2, G2
+with the chords (about 20 low note changes a minute), held loops pulsed 1 to 2 dB at the loop's length in the mono low band, the bass
+and the cellos on one D2 beat, the tempered open fifth beat every 4 s, and held notes took a later section's dynamic (the symphony's D2
+on its soft layer, 15 dB down). All five fixed in the profile (CONVENTIONS: the foundation holds; a section's dynamic is on the stage)
+and in the sampler (`flattenLow`). The men's hum still moves with the chords in the readings with choir: hold its lowest voice too if
+the user still hears a moving low line there. Test hooks: `Music._dbg = { noExpr, noPerform, noStage }`.
+
+**Latest (the ensemble, and a clean bass).** The user still heard it as artificial and asked for variation in the volume and timing of
+every part, matching the feel of the movement; then that the bass still sounded like strings at each note rather than a clean
+underlying tone. The orchestral profile now performs the score as an ensemble (CONVENTIONS, the ensemble) and plays the foundation as
+a tone (CONVENTIONS, the foundation); the acceptance test's `performed` and `clean` checks guard both, and all five title readings
+pass every check. Measured on the bass: in the main readings it was already clean (nothing above 240 Hz) and what read as "the bass"
+was the low cellos' bed and the symphony's and chamber's unfiltered double basses, whose bow sat only 14 to 21 dB under their tone.
+
+**Latest (expression).** The user found the instrumentation stoic and formulaic, the solo without purpose: a fixed tempo, beds held at
+one level, the same hairpin on every phrase and the same swell on every choir note. The orchestral profile now plays with expression
+(see CONVENTIONS, expression); the acceptance test's `expressive` check guards it. Renders and checks run one browser per core, four
+at once (this container: 4 cores, 15 GB, no GPU): the scratchpad's `pass/render-par.sh OUT ids...` and `pass/accept-par.sh OUT ids...`.
+Next if the user wants more: the macro shape (quieter, more intimate passages; orchestration that thins and fills by section), which
+the expression inside phrases does not change much (the loudness range rose only from 10.3 to 11.1 LU).
+
+**Latest (the orchestral system).** The user asked for a coherent system instead of fixes one at a time. Now: `orch: true` on a piece
+(the title and its five readings) sets every orchestral default and the soloist's window; the sampler meets an intake standard for
+every instrument at decode; `node tools/qa/library.js NAMES` (intake, per zone) and `node tools/qa/orchestral.js IDS` (acceptance,
+per piece) are the two gates, and every orchestral reading passes the second before it is published (see CONVENTIONS, the
+orchestral system). The real choir: St. Helen's Cantores and Micah's Choir from Pianobook (Decent Sampler packs; the raw packs are
+in the scratchpad's `choirs/`, staged under `choirs/staging/`, built as `choirHum`, `choirOoh`, `cantor`). Open: the repository is
+public and Pianobook's terms do not allow redistributing their samples: those three instruments' mp3s must leave the public repo (the
+user to choose: make the repo private, or remove them and rewrite the branch's history). A recorded concert-hall impulse (OpenAIR's
+Usina del Arte Symphony Hall) is still wanted for the hall; the engine still uses its generated one.
+
+**Latest (what the user heard after the Iowa import, fixed).** A repeating dip (the solo horn's D loop ran into its file's faded tail;
+the synth pads' `ens` doubling swelled at every wrap), tuning (Iowa notes now play from their measured pitch; the Iowa viola is out of
+use, too unsteady to tune), a bass that re-struck every bar (`bassTie`), the choir pumping under the solo (one dip a phrase) and set
+too low (+2 dB), the play button (per-piece loading, unlock inside the click). Tools for the next round, in the scratchpad's `iowa/`:
+`fold2.js` (a held note's level folded by its loop: what repeats and where), `tuning.js` (playback pitch against a spectral measure),
+`clash.js` and `notes-at.js` (what sounds when), `stems.js` (choir / lead / bed per section). Render four tracks at once: one
+`node tools/audio-report.js --full --tracks ONE ...` per track on its own `--port`, each browser takes a core and about 2.2 GB (five
+readings in 6.5 minutes instead of 40).
+
+**Latest (the Iowa soloists).** The library now holds real solo strings, winds and brass from the University of Iowa recordings
+(`scratchpad/iowa/raw` → `tools/samples/iowa.py` → staging → `tools/samples/build.py --vsco STAGING --only …`; the raw takes are not in
+the repo, the built mp3s and `instruments.json` are) and FreePats’ small bagpipe (`pipes`, `pipesDrone`, a pipe in G: a pipes reading
+would have to sit in G). Three build fixes went with them (see CHANGELOG: the mono right channel, per-note levelling `norm='zone'`, the
+short-loop fallback); the `smp` gains of the new presets in `js/audio/music.js` were set from the scratch level test (`inst-level.js`:
+each solo at vel 0.5 alone, integrated LUFS, aimed at the horn’s −32 to −35). The readings use them where a line is one voice’s (the
+title’s duet trombone and bassoon, the cello reading, the chamber’s echoes and breath, the symphony’s bass clarinet); the sections and
+the solo horn stay VSCO, which the user has approved by ear many times. Still untried: `hornIowa` for the title’s solo (noisier, 27 dB
+SNR at ff, but three layers and 69 notes), the Iowa oboe (its loops are weak, median 0.67: the VSCO oboe stays), the Philharmonia zips in
+`scratchpad/iowa/phil` (short notes mostly; brass worth a look).
+
+**Latest (the full pass, and the title as an undercurrent).** The main theme is now a brooding undercurrent (the solo horn’s lament over the men humming low, the commonwealth’s climb as a reach upward, the hymn’s head as the second idea, a crest that stays a swell); the user did not want a sung tune or a march on the title, nor the Crimson Tide manner. A voice may carry `width` (the choir recordings are wide; a line alone needs a centre). Every piece revisited against the compass and re-ranked; `MUSIC-REVIEW.md` ("The full pass") has what changed
+and the new table. Engine: the sampler aligns the recorded dynamic layers of every pitched sustain at decode time (`alignLayers` in
+`js/audio/sampler.js`, K-weighted, 4 dB per half range, `?layeralign=0` to compare; `A.Samples.align` holds what it did per instrument), the
+alto flute / flute / solo trumpet presets lifted, war readings keep an augmented chord where the scale allows and never put the stabs an
+octave down, `WAR[race].mode` picks the hostile mode. Score: phrasing everywhere, mud and snap fixes per `CONVENTIONS.md` (the music
+section, the two new bullets). Measure a solo against its bed with the scratch scripts' method (render `only: ['lead']` and the bed layers
+apart, compare integrated loudness). Then:
+
+**Next (the user's direction).** The commonwealth's tune is the game's theme, set by the title's first horn part, in the major as the
+Commonwealth plays it (the minor reading and any hymn fragment on the title read as Crimson Tide); one melody at a time, the soloist forward (`title`; `title:reed`, `title:cello`, `title:symphony` and `title:chamber` are the same piece with the cor anglais first, the cello first, as the full orchestra without the choir, and as strings alone, for the player page and for later; the organ reading was dropped; a Williams-manner fanfare reading was dropped as not working for the piece; a pipes-and-snare reading built from the oboe and the bassoon was dropped as not sounding like pipes). The title wants bass meat: deep open chords, the double bass on a line with its sub,
+the chorus and the low instruments carrying the melody, high accents (a soft trumpet) few. Later it should be
+heard on other instruments for effect — a trombone, a baritone horn, a baritone saxophone, a bass clarinet, a bassoon, other unusual
+colours — for a creepy organic-against-artificial feel made with real, unusual instrument sounds rather than synths. On hand: the trombone
+section (`trombones`), the tuba, the bassoon, the cor anglais, the alto flute, the contrabasses. Now in the library (Iowa, see Latest): a solo trombone (`tbnSolo`), the bass trombone, a bass clarinet (`bassClar`), solo strings; and FreePats’ CC0 bagpipe in G (`pipes`, `pipesDrone`: a smaller pipe than the Great Highland pipes, chanter F4–G6, drones G2/G3). Still missing: a baritone saxophone, a baritone horn / euphonium, a contrabassoon, a bass flute; they would come from a CC source through `tools/samples/build.py`.
+
+**Earlier (the map's plan, steps 6 to 10, and after).** `MUSIC-REVIEW.md` has the plan, what each of its ten steps did, and the work after
+it: the main theme rebuilt around the solo horn and the horn section with a wider dynamic range and phrase shaping (`shape` on a line), the
+commonwealth's oboe tune as the second leitmotif (an `echo` section in nine pieces), the sampler's loop treatment (`js/audio/sampler.js`:
+relocate, tune, even by band, even the level, blend the seam; `?loop...=0` flags to compare) and the music bus's band alignment
+(`js/audio/audio.js`, the multiband stage). Check with `node tools/qa/music.js` (27 checks), `node tools/qa/loops.js` (every looped zone held
+through the bus), `node tools/score-lint.js`, `node tools/score-review.js`. Levels: map pieces at -17 LUFS integrated, interludes at -20.5,
+bridges near -18 (`CONVENTIONS.md`, the music section). The player page (the artifact) carries the live engine and the renders of the main
+theme, First Light and the Commonwealth.
+Twelve movements added to `js/audio/music.js` (`galaxy11`..`galaxy22`), all for the sampled orchestra and chorus. Each has a principal theme and a
+foundation of its own (a planetarium drift and a sequence in Jonn Serrie's manner — `analog`/`air`/`subSwell`/`glass`/`crystal`, `fx.dly` 2.2-2.8, chords
+every four bars; the user disliked the 5/4 clockwork and the 7/4 dance that stood here first — a passacaglia's variations, a nocturne's walking bass,
+one long sunrise, a chorale prelude, a minimalist pulse, a canon, a brass choir, a slow march, a sarabande, a sung chorale) and quotes one of the score's themes once (H1 the leitmotif,
+CM the men's phrase, the procession's A1/CD, the chorale HY1-4) — the first draft poured all twelve into one mould (strings pad + air + harp + celeste
++ soft choir, the same nine sections at 50-66 bpm) and sounded like one piece; the user asked for movements. Tempi now 48-76, meters 3 4 6 (no odd meters: the user hears them as wrong).
+Three for variety (orrery 5/4 Bb, passacaglia B minor with the ground written into the bass pattern — `['1--b', '1--7', '1--2', '1---']` over
+`i bVIM7 bIII V` — the watch Ab with `tptSolo`) and nine for the phases, each with an era window `eraWin: [lo, hi]` (early [0, .55], middle [.15, .9],
+late [.4, 1]). Textural devices worth reusing: `pad: { p: 'pulse' | 'stab', pat }` for rhythmic string beds (the survey's eighths, the sarabande's
+second beat, the nocturne's off-beat harp chords), `arp` with a wind instrument for a running figuration (the lantern's clarinet), `arp` on `strOst`
+for a spiccato dance ostinato, `bass: { p: 'walk', inst: 'bassoon' }`, `art: 0.5` for staccato lines, `lead`/`lead2`/`bell2` with offsets (`r2`, `r4`)
+for a canon, a line in `choirWomen` / `choirMen` for sung melody, `cres: [hi, lo]` for a diminuendo, pattern arrays that thin out for a run-down.
+Engine: `fitsEra` / `eraList` filter a programme's regular pieces by `S.era` when a cycle is composed (`composeOrder`) and when `setMood` picks a
+start (never below three pieces); `makePlaylist()` builds a playlist apart from starting it; `Music.setMood(mood, { soft: true })` →
+`softSwitch()` arms the new programme at `Player.nextSectionBoundary(minAhead, maxAhead)` (a breath — lv ≤ .35 — within reach is preferred,
+else the next section line, else a bar line before `maxAhead`), through an interlude in the new key, old piece decaying under it (`oldFade`
+= fade + 4); `soundscape.js` uses it at turn end. New `INST` presets `violas` (vlaSus), `trombones` (tbnSus), `tuba` (tubaSus), `tpts` (tptSus),
+`tremLo` (vcTrem); interludes `drift6` (the choir) and `drift7` (violas, trumpet far off); arps and bass get ±6 % / ±4 % seeded level variation.
+Pitfall met and fixed: roman numerals are major-scale degrees, so minor-key chords are `bVI`/`bIII`/`bVII` (a plain `VI` in C# minor is Bb major).
+Loop seams (the user heard clicks / a looping flutter on held notes): `sampler.js` `smoothLoop(buf, ls, le)` crossfades each loop at decode time
+(tail of the loop into the lead-in before loopStart, n = min(loop/4, 300 ms, loopStart - 20 ms), linear, once per buffer+loop, `S.loopXf`,
+`?loopxf=0` to hear the old loops). Audit scripts lived in the scratchpad: decode each zone with ffmpeg, measure |x[ls]-x[le-1]|/RMS and the
+correlation of the 30 ms before loopEnd with the 30 ms before loopStart; before: 67/218 poor seams, oboe/clarinet corr 0.5-0.8 with loops as
+short as 0.13 s; after: corr 1.00 everywhere. Layout since this session: `js/audio/music.js` = engine; `js/audio/score/{themes,cues,map,races,programme}.js` = the score (manifest order; the
+test page tools/test-audio.html lists them too). Themes: `Music.defineThemes({group: {NAME: phrase}})`, quoted as `'@group.NAME'` (` x2` / ` /2` scale
+the values) and resolved in `prepare()`, which records `P.themes`; `quotes: [...]` declares a hand-adapted quotation; `Music.themeIndex()`. Motifs:
+`Music.setMotif(id | {ph, inst})` (races carry `motif` / `motifInst`, the procession `motif: '@hymn.K'`), spent by the next `interludeFor(..., {motif})`
+(the interlude's A section plays it once); soundscape.js sets it on a newly met race and when `readState().council >= 0.5` (Council.colonised >=
+threshold, next sitting within 6 years; `q.council` also lifts pieces tagged `ceremony`). Checks: `node tools/score-lint.js [--strict]`, `node
+tools/qa/music.js`. The compile hash of all 69 tracks was identical before and after the split and the theme conversion.
+Tempo map and meter per section: a section may set `meter`, `strong`, `bpm`, `bpmTo` (prepare → R.meter/R.strong/R.bpm/R.bpmTo); compilePass builds
+`C.tAt(beat)` (closed-form integral of a linear tempo ramp per section) and the pass carries `bars` / `beatsT` (line times) and `w.t0`; every emit,
+the player's `nextBoundary` / `boundaryAfter` / `nextSectionBoundary`, `Music.list()` and `analyze` read them (generators keep `C.meter` /
+`C.strong` / `C.spb` per section; genLine parses phrases in the section's meter). Modulation (music.js 'modulation'): `pivotPath(from, to)` → the
+opening chords of an interlude as numerals of the new key (old tonic, a shared pre-dominant pivot | circle-of-fifths walk | Neapolitan, V7);
+`pulseK(from, targetBpm)` ∈ {1,2,3}; `interludeFor(tpl, next, { from })` sets the 'in' section's meter = from.meter / k, bpm = from.bpm / k,
+bpmTo = next.bpm, prog = the path with a dwell per chord in outgoing bars (the old tonic ≥ 7 s — it spans the old piece's 10 s fade — every other chord ≥ 5 s;
+middle chords shortened first when the opening would pass 26 s), and the body's bpm / meter to the next piece's (lines silenced when the body is not in four); the seams pass
+`from: outgoing(p)` (the piece actually ending — a war variant keeps its base's key — else the director's last piece; an interlude or bridge is never a `from`).
+War / hits variants carry `variantOf`, and the director's history counts them as their piece.
+The demo page (artifact UyNUm64ht9AvpKaRhaLwdM; source in the session scratchpad, player/score-player.html) runs the engine live in its second and third tabs: the engine
+files under engine/js, instruments.json under engine/assets/audio, and the 841 sample MP3s concatenated into engine/samples/pack0-3.mp3 with an index.json of byte
+offsets; the page wraps window.fetch so the sampler's requests for engine/assets/audio/<file> are answered from the packs (the host serves only media types and at most
+511 files). `Music.play` / `Music.playlist` take `opts.from` (seconds into the first pass) for the 'let the piece reach its close' demo. MUSIC-REVIEW.md holds the
+review and the ranking; tools/score-review.js the measurements behind it.
+Colour (music.js 'colour'): `FAMILY` maps each sample set to a family (`familyOf(name)`, synth voices by `v`); `palette(def, 'head'|'tail'|undefined)` weighs the
+families across sections (bars × level × vel, edge sections ×3; bass and drums left out; alternations a share each; memoised in a WeakMap); `colourFit(tpl, from, next)`
+= 0.7 × cosine(template palette, blend of from's tail and next's head) + 0.3 × closeness of the template's `tags` {dark, energy} (map.js gives each drift template
+its two) to the pair's mean; `chooseTemplate(pool, from, next)` picks by exp(6 × fit); interludeFor pins the best alternation into `d.inst`, carries `colourOf(from, 'tail')`
+into a free sustain slot of 'in' (pad2 / choir2 / choir; choir colours into a choir slot with `soft`) at vel 0.5 and `colourOf(next, 'head')` into the last section at 0.45,
+skipping a family the section already has (and only a family in `SUSTAINS`: strings, synth, choir, brass, winds), and opens 'in' at 0.8 × the piece's closing level
+(bounded by the template's own and 0.55). qa/music.js checks the carried voices. `tools/audio-seams.js` captures four real seams (soft change through
+`R.softSwitch`) as MP3s with a log of each seam's choices; the demo page carries them. Checked: the compile hash of all 69 pieces unchanged by the compiler change; 840 pairings compile (score-lint);
+qa/music.js checks a quick-six → B-minor seam (opens on F in meter 2 at the lullaby's bar length, arrives on F#7, bars lengthen into 50).
+The director (music.js, 'the director'): map pieces carry `tags: { solitude, contact, tension, war, grief, grandeur, energy, dark }` (0..1); `Music.setSituation(q)`
+takes the game's reading on the same axes (soundscape.js `situation()`, from `readState()` — the era's components plus own colonies, fleet peaks and
+a remembered war / loss: `warMem` decays 0.88 a turn, `griefMem` 0.9), `pickNext(pl, last)` weights candidates by `exp(4 * affinity)` × recency
+(0.08 inside 25 min, 1 after 70) × circle-of-fifths distance from the last piece (relative major/minor 1.25, a fifth 1.15 … four steps 0.7; the same
+root 0.35) × rarity, and draws one; `director: true` on a rotation turns it on (all three map rotations). `farApart(a, b)` (energy ≥ .45 apart, dark ≥ .5,
+or ≥ 4 fifths) → a QUIET interlude (`drift`, `drift3`, `drift6`) in its `:long` reading (A × 1.5, lv × .85, out 3 bars) and a wider seam fade. Bridges:
+`startTrack(id, { bridge: 'tense' | 'calm' })` arms `bridge:<kind>:<id>` (interludeFor of a hidden 2-bar template) on the next beat with `switchAt.then`
+= the cue at the bridge's crest; `tickAll` re-arms `then` after a switch; `Music.play` returns true for a cue already behind a bridge; soundscape
+uses tense bridges into combat / ground and calm ones into the council and back onto the map after a fight. `Music.setSituation` also tilts the
+level (`DIR.gainDb`, ±1.2 dB; `Player.trimBase` × `dirMul()`, running players ramp over 3 s once faded in). Tag table and a picker test: the
+session's scratch `director` test (alone → planetarium pieces, war → frontier / vigil / long night, grief → embers; recency 0.6 % at 10 min).
+`node tools/audio-hour.js [outDir]` captures a scripted hour of the map from the real-time engine (alone / first contact at 13 min / war at 34 / peace
+at 46, era 0.02 -> 0.92) as raw PCM plus a log of every piece change; the demo page's hour was made from it. The remaining realism limits are in the assets (short oboe/clarinet loops; dynamic-layer
+crossfades beat slightly on swells) and need the source libraries and `build.py`.
+Checked: Node-only lint (every form × alt × take × era compiles, deterministic, zero snaps on all twelve), `tools/audio-report.js` trims (-16.5 LUFS),
+a Playwright seam test (`softSwitch` lands on the running piece's breath, interlude then the queued piece, no silence, era lists correct). Still not
+heard through speakers; the MP3 sample set is LAME VBR q0 (the top MP3 setting) — a lossless or higher-rate rebuild needs the source libraries and
+`tools/samples/build.py`.
+
 ## Session 10 (October 2026) — release 1.3.0, branch `claude/release-1-3-0`
 Release pass over `main` with everything merged (phone fit, Tech Lab, visual system, polish): `node tools/check.js` (120 files),
 `node tools/rules-test.js` (860), `tools/soak.js` 24 games classic + 24 expanded `--strict` (one WARN: seed 20 darlok/average, the

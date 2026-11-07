@@ -2,8 +2,11 @@
 //   node tools/audio-report.js                         lint + a 30 s window of every track + the first 20 s + every effect
 //   node tools/audio-report.js --full                  also the whole loop of every track
 //   node tools/audio-report.js --tracks title,combat1 --sfx click,laser --intensity 0,1 --secs 30
-//   node tools/audio-report.js --wav DIR [--mp3]       also save the renders (16-bit WAV; --mp3 converts with ffmpeg when present)
+//   node tools/audio-report.js --wav DIR [--mp3]       also save the renders (16-bit WAV; --mp3 converts with ffmpeg when present; a full
+//                                                      render also saves <id>-full.beats.json, each beat's time in it)
 //   node tools/audio-report.js --json FILE             machine-readable report (everything that is printed, plus per-item metrics)
+//   node tools/audio-report.js --query refresh=0       load the page with a query (here: the pieces as they were, before js/audio/score/refresh.js)
+//   node tools/audio-report.js --interludes drift/galaxy10/galaxy23   an interlude as the game builds it: template/next/from (full renders: --full)
 //   node tools/audio-report.js --no-samples            render with the procedural voices only (what a file:// or offline player hears)
 // Levels are measured at unity bus gain (the Options volumes are not applied) after the master compressor / soft clipper,
 // so "knee %" = share of samples the limiter is bending (> 0.6) and "hot %" = share above 0.9.  LUFS per ITU-R BS.1770.
@@ -27,7 +30,7 @@ function table(head, rows) {
 (async () => {
   const srv = await serve(PORT);
   const { browser, page, errors } = await open();
-  await page.goto(`http://localhost:${PORT}/tools/test-audio.html`);
+  await page.goto(`http://localhost:${PORT}/tools/test-audio.html` + (opt.query ? '?' + opt.query : ''));
   await page.addScriptTag({ url: `http://localhost:${PORT}/tools/lib/audio-metrics.js` });
   await page.waitForFunction(() => window.MOO && MOO.Audio && MOO.Audio.Music && MOO.Audio.SFX && window.AudioMetrics);
   if (!opt['no-samples']) {
@@ -43,8 +46,17 @@ function table(head, rows) {
     if (opt.mp3) { try { execFileSync('ffmpeg', ['-y', '-loglevel', 'error', '-i', f, '-codec:a', 'libmp3lame', '-b:a', '320k', f.replace(/\.wav$/, '.mp3')]); fs.unlinkSync(f); } catch (e) { /* keep the wav */ } }
   };
 
+  // ---- interludes built as the game builds them (--interludes template/next/from,...: the drift or bridge between two pieces, in the
+  // key of the next, from the one ending); the built ids join --tracks
+  if (typeof opt.interludes === 'string') {
+    const built = await page.evaluate(specs => specs.map(s => { const [tpl, next, from] = s.split('/'), M = MOO.Audio.Music;
+      return M._rotation.interludeFor(tpl, next, { from: from ? M._tracks[from] : null }); }), list(opt.interludes));
+    console.log('interludes:', built.join(', ')); opt.tracks = (typeof opt.tracks === 'string' ? opt.tracks + ',' : '') + built.filter(Boolean).join(',');
+  }
+
   // ---- composition lint (no rendering) ---------------------------------------------------------------------------------
-  const lint = await page.evaluate(() => { const out = {}; for (const t of MOO.Audio.Music.list()) { try { out[t.id] = MOO.Audio.Music.analyze(t.id); } catch (e) { out[t.id] = { error: e.message }; } } return out; });
+  const lint = await page.evaluate(asked => { const M = MOO.Audio.Music, out = {}; const ids = M.list().map(t => t.id); for (const id of asked || []) if (ids.indexOf(id) < 0 && M._tracks[id]) ids.push(id);   // a hidden reading asked for by name is linted and rendered too
+    for (const id of ids) { try { out[id] = M.analyze(id); } catch (e) { out[id] = { error: e.message }; } } return out; }, list(opt.tracks) || []);
   report.lint = lint;
   const trackIds = list(opt.tracks) || Object.keys(lint);
   if (!opt['no-lint']) {
@@ -62,7 +74,7 @@ function table(head, rows) {
     if (pre) { const off = Math.round(pre * buf.sampleRate), b = new AudioBuffer({ numberOfChannels: buf.numberOfChannels, length: buf.length - off, sampleRate: buf.sampleRate }); for (let c = 0; c < buf.numberOfChannels; c++) b.copyToChannel(buf.getChannelData(c).subarray(off), c); buf = b; }
     const a = AM.analyze(buf); a.voices = { peak: st.peak || 0, created: st.created || 0, stolen: st.stolen || 0, refused: st.refused || 0 }; a.renderMs = Math.round(performance.now() - t0);
     delete a.env; delete a.feat;
-    return { a, wav: o.wav ? AM.wavBase64(buf) : null };
+    return { a, wav: o.wav ? AM.wavBase64(buf) : null, beats: o.wav && buf.mooBeats ? buf.mooBeats.map(t => Math.round((t - pre) * 1000) / 1000) : null };
   }, [id, secs, o]);
   const musicFlags = a => {
     const f = [];
@@ -91,6 +103,7 @@ function table(head, rows) {
         if (opt.full) {
           const f = await renderTrack(id, intro + loop, { from: 0, intensity: inten, sr: SR, wav: !!wavDir });
           report.music[id + ':full' + tag] = f.a; rows.push(musicRow(id + ' full' + tag, f.a)); saveWav(id + '-full' + (tag ? tag.replace('@', '-i') : ''), f.wav);
+          if (wavDir && f.beats) fs.writeFileSync(path.join(wavDir, id + '-full' + (tag ? tag.replace('@', '-i') : '') + '.beats.json'), JSON.stringify(f.beats));   // each beat's time: lines up two renders of a piece (the player's A/B)
         }
       }
       process.stderr.write('.');

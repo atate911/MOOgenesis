@@ -839,7 +839,7 @@
     function decide(v) { if (closing >= 0) return; answer = !!v && can; closing = tl; sfx(v ? 'bomb' : 'cancel', { vol: 0.8 }); panel.style.transition = 'opacity .3s'; panel.style.opacity = '0'; panel.style.pointerEvents = 'none'; setHint(''); }
     return {
       phase: () => (closing >= 0 ? 'closing' : 'prompt'),
-      music() { music('antarans', { fade: 1.0 }); },
+      music() { music('antarans', { fade: 1.0, bridge: 'dark' }); },
       update(dt, sp) { tl += dt * (sp || 1); if (closing >= 0 && tl - closing > 0.4 && !ended) { ended = true; endRun(run, answer); } },
       draw(ctx, w, hh) {
         const info = bombBackdrop(ctx, w, hh, tl, Object.assign({ planet: { desc: planetDesc(P, VI), size: 1.08, x: 0.27, y: 1.0 } }, bg)), pl = info.planet;
@@ -925,7 +925,7 @@
 
     return {
       phase: () => (closing >= 0 ? 'closing' : shown ? 'result' : 'bombing'),
-      music() { music(destroyed ? 'orion' : 'antarans', { fade: 0.8 }); },
+      music() { music(destroyed ? 'orion' : 'antarans', { fade: 0.8, bridge: 'dark' }); },
       update(dt, sp) {
         tl += dt * (sp === 0 ? 1e3 : sp); flash = max(0, flash - dt * 2.4);
         const fx = H.fx;

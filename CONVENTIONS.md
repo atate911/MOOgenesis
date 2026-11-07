@@ -73,5 +73,148 @@ Colour semantics are fixed: gold = BC/money, ember = industry, leaf = food/growt
   `read_console_messages`, and **close your tab when finished**. Prefer fixing what you see over describing it.
 - Final reply: **≤150 words** — files written, public API (one line each), known gaps. No code dumps.
 
+## The music (engine and score)
+- The compass: John Williams for the themes (a tune that can be sung, stated by the orchestra and answered), Howard Shore for the weight
+  and the modes (the choir, the low strings, the chorale), and above all Hans Zimmer for the manner (the pulse, the swell through every
+  long brass note, the horns rising above the men's choir as in Roll Tide, the slow dark bed under a choir as Mutiny opens), with Jonn
+  Serrie's planetarium underneath the map (the analogue sky, the air, points of light in a long delay). The title must carry all of it from
+  its first bar: it opens with the men alone over the planetarium's bed, the horn's call answers, and the crest is Zimmer's.
+- `js/audio/music.js` is the engine only: notation, generators, the player, the scheduler, the director. The score lives in `js/audio/score/`
+  and loads after it, in manifest order: `themes.js` (the shared themes, quoted as `'@hymn.H1'`), `cues.js` (title, battle, council, procession,
+  news, endings, espionage), `map.js` (the exploration pieces, interludes, bridges), `races.js` (the race themes; hostile readings derived),
+  `programme.js` (which pieces play when: programmes, moods, rotations). A piece is `Track(id, def)`; the engine's notation is documented in
+  the header of music.js.
+- Every map piece carries `tags` for the director (solitude, contact, tension, war, grief, grandeur, energy, dark, 0..1), an `eraWin` if it
+  belongs to a phase, and quotes at least one shared theme (by reference, or `quotes: ['hymn']` for a hand-adapted reading). New pieces get a
+  `trim` from `node tools/audio-report.js --tracks <id> --json r.json` + `node tools/audio-trims.js r.json --apply`.
+- A section may carry its own `meter`, `bpm` and `bpmTo` (a tempo ramp across it); the engine's time map places every note, bar line and beat.
+  Interludes use this to open in the outgoing piece's meter and pulse and glide to the next piece's tempo. They also keep the colour: the seam
+  picks the template by palette fit to the pieces either side (`Music._colour`), and the voice one piece ends in holds under the interlude's
+  opening bars while the voice the next opens with sits under its last. A new instrument preset needs a family in `FAMILY` (by its sample set);
+  a new interlude template needs `tags: { dark, energy }`.
+- A line (lead, lead2, bell2) may carry `shape` (0..0.8): each phrase played as a hairpin, soft at its ends, full in its middle and at
+  its top, the long notes blooming — a singer's or a horn player's phrasing. The title's lines all carry it; use it on anything sung or blown
+  that is heard alone.
+- A line may carry `swell` (0..0.8): each note of two beats or more starts that much softer and opens to its written dynamic through the
+  recorded layers (the brass rising). The sampler plays one dynamic layer at a time and hands over to the next in a quarter of a second
+  where a swell crosses between them; it never blends two recordings of one note for long (they beat).
+- A phrase token may carry a dynamic mark: `'H1*0.74 H2*0.84 H3*1 H4*0.88'` plays each phrase at that fraction of the line's velocity (a
+  hairpin across the phrases, the answer on top). A line may carry `pan` (a soloist near the centre) and a piece may give one layer its own
+  send levels with `sends: { lead: { verb, stage, dly } }` (a soloist at the front of the stage, the bed behind it). A line or a choir may
+  carry `width` (0..1): the recording's side scaled against its mid in the voice, so a wide choir recording sung as one line stands at the
+  centre (the title's men, 0.35; its hum 0.6) — alone, a choir line has no centre at all (correlation near zero reads as phasey). A piece
+  may set `duck` (the gain its beds fall to under every lead note; 0.79, 2 dB, by default; the title 0.68) and a pad may be voiced `open`
+  (roots and fifths only: deep chords below C3 in the low strings that must not smear, the thirds left to the voices above). A soloist's
+  window is registers first: nothing else in the soloist's octave (the title's horn has D3-D4 to itself: the low strings below it, the
+  glow, the violas and the women above A4, the hum spread to the sides), then the duck, then its own dry sends; the solo then rises without
+  being louder. A derived reading of a piece (`title:reed`, the cor anglais an octave above the horn; `title:organ`) is registered hidden from the
+  title's definition at the end of `cues.js`, its window moved with its soloist. A line may carry `grace` (one grace note below a long
+  note) or `flutter` (the pipers' doubling: three quick notes before it). A theme is stated where it counts and varied between: the title
+  states its tune twice at the start, returns it whole for the crescendo, and fills the rest with variations drawn from it by the
+  classical means (sequence, a chain of thirds, the relative minor in augmentation, the answer's octave to the dominant), each over
+  chords of its own. A soloist also needs
+  a window in the texture: the title keeps the organ and the men below D4 and the women's hum and the analogue halo above A4 while the
+  solo horn plays, and the men's answer an octave under it.
+- The second leitmotif is the procession's first strain as the commonwealth's oboe states it (`@procession.A1`). It is woven in, never
+  dropped in: a piece that echoes it writes one variation reading of its own tune drawn toward the climb (its head, 1 2 3 5, fits any tonic
+  bar; the whole strain wants I I IV V or near it), in its own rhythm, metre and mode, over its own chords, and declares `quotes:
+  ['procession']`. Check the reading with the snap tool before keeping it. A separate section for it is a cut-in; the victory's full horn
+  statement is the one exception.
+- Bridges are `bridge:tense` (fights), `bridge:bright` (the chamber, the victory), `bridge:dark` (Orion, the Antarans, the defeat) and
+  `bridge:calm` (back onto the map from any cue, the news bed both ways); each opens on the tonic of the piece that is playing and lands on
+  the cue's dominant (`interludeFor` with `from`). `setMood(..., { quiet: true })` lands a piece on its quiet half (the map back from a
+  fight); a soft programme change between far-apart pieces takes the long breath like the director's seam.
+- The soundstage (`A.soundstage`, `?soundstage=0` for the old staging): the pads and the chorus are sent lightly into the stage's early
+  reflections (0.16 and 0.18; the lines have 0.22 to 0.26), so the whole ensemble stands in one room, and the bus's side is lifted to 1.3.
+  Measured on a minute of three pieces: side/mid up 1.1 dB, stereo correlation down 0.03 to 0.10, loudness unchanged. Subtle by design;
+  anything wider starts to pull the chorus out of the hall.
+- Levels: map pieces sit at -17 LUFS integrated (whole-piece render), within a decibel; interludes three and a half below; bridges near -18.
+  Re-measure after a change with `node tools/audio-report.js --full --tracks <ids> --no-sfx --json r.json` (interludes and bridges are hidden:
+  render them with `Music.renderOffline` as `tools/qa` scripts do).
+- The sampler treats every looped sustain when its file is decoded (`js/audio/sampler.js`): a loop shorter than half a second is moved onto
+  the file's longest steady stretch (`?looplong=0` keeps the file's), its end is tuned to a whole number of periods (`?looptune=0`), the solo
+  winds and brass have each partial's slow breath evened across the loop (`?loopeven=0`), every loop's level is evened (`?loopflat=0`) and
+  its seam blended (`?loopxf=0`). `node tools/qa/loops.js` holds one note per zone of every sustain instrument through the bus and flags a
+  pulse or a click (on the mono sum; the stereo image's sway is reported apart). Two recorded dynamics of one note never blend for long:
+  the sampler plays one layer and hands over in a quarter of a second where a swell crosses between them.
+- The sampler aligns the recorded dynamic layers of every pitched sustain when its files are decoded (`alignLayers`, `?layeralign=0` plays
+  them as recorded): each layer's steady loudness (K-weighted, the median over its zones) is set against the loudest layer at four decibels
+  per half of the dynamic range, so the soft layer of a section sits 4 dB under its loud one and the engine's velocity law carries the rest.
+  The library had the soft strings, trumpets, trombones, low brass and cellos eighteen to twenty decibels under their loud layers: a pad at
+  a soft dynamic all but vanished against the chorus, a crescendo lurched at the hand-over, and a solo written soft sat under its bed (the
+  trombones' theme twenty decibels under the Frontier's). The single-layer solo winds are lifted to their family in `INST` instead (the
+  alto flute 10 dB, the flute 5, the solo trumpet 6). Measure a voice alone with a one-line test track through `Music.renderOffline`
+  (`only: ['lead']`); a solo should sit within about three decibels of its bed, above it where it is meant to lead.
+- A line is written on its chords. The engine snaps a note a semitone from a chord tone on a strong beat (or two beats long) onto the chord,
+  which patches a clash but flattens a line: when a phrase is reused over another progression, write the reading for that progression
+  (the battle's crest lines, the procession's big phrase over the flat-sixth lift) or move the chord to the tune (the spy's dominant where
+  the line cadences, a major seventh under the commonwealth's cadence); a dissonance meant to be heard is marked `!` (the Antarans' tritone
+  leaps and half-step grinds, the Mrrshan reed's flat second, a battle line's passing ninth). `node tools/score-review.js` shows each
+  piece's snap rate (under ten percent) and its low-register mud (close thirds below C3: keep the pads, the men and the stabs above the
+  bass's octave; under five percent). A race's hostile reading takes the `mode` its theme's intervals survive (`WAR` in `races.js`:
+  mixolydian for the Alkari, dorian for the Sakkra, the whole tone and the phrygian dominant kept) rather than the darkest one.
+- Check a change with `node tools/score-lint.js` (schema, instruments, forms, phrases, themes, determinism, the programme's lists; `--strict`
+  in a release pass) and `node tools/qa/music.js` (the seams in real time: directed programme, soft change, bridges, motif, snapshot / restore).
+
+- **The orchestral system (`orch: true`).** An orchestral piece sets one switch, not a flag per problem. It gives: beds and the bass
+  held through chord changes and section lines (shared notes keep sounding, moving voices enter legato at the steady part of the note);
+  the choir breathing in turn; the solo generated first in each section and every bed and choir note kept out of a three-semitone window
+  around it (moved an octave, or dropped); the low end mono (choir below 450 Hz, bass 250, beds 300); no synthesized voice, transition,
+  doubling (`ens`), sine sub or bus chorus. Then two gates, both automatic:
+  - **Intake** (`node tools/qa/library.js NAMES`): every looped zone as the sampler plays it is in tune by its whole-note median pitch
+    (12 cents, 15 for an ensemble), its loop clear of the file's faded tail, its stereo agreeing in the low mids, its layers in order. The
+    sampler enforces the last three at decode for every instrument (`clearTail`, `agreeStereo`, the per-note layer order in
+    `alignLayers`); tuning is the build's (`measure_root`). Every loop's level is evened at decode (`flattenLoop`, per channel), and below
+    300 Hz on the two channels' sum as well (`flattenLow`, split off without phase shift), since the profile hears the low end in mono. Run it on any new instrument; run `tools/qa/loops.js` too for a solo one.
+  - **Acceptance** (`node tools/qa/orchestral.js IDS`): on the piece itself, nothing synthetic, held notes held, the solo's window clear,
+    the music expressive and performed (not mechanical), the low end in phase, the choir carried (not covered) in its lowest octave, the
+    bass clean. Every orchestral reading passes it before it is published.
+  A new problem heard by ear becomes a check in one of these two before it is fixed, so it stays fixed.
+  - **Expression** is part of the profile, not written note by note: each phrase's climax (its highest note) drives the line's
+    dynamics, its held notes' direction and vibrato, the conductor's tempo (a pre-pass of the solo: press toward the climax, broaden on
+    it, ease at the phrase's end, a ritardando on the last) and the beds' expression curve (the solo's intensity and the chord's
+    tension, an expression stage per layer ahead of the dip under the solo). A section marks a `breath` before a crest; contrasts
+    (a hush after a climax, a roll into it) are the score's. The acceptance test's `expressive` check keeps it from going flat again.
+    The beds, the choir and the bass each ride that movement their own way (`EXPR_LAYER`: the choir a little behind it and a little
+    more, the bass half as much, each with its own slow wander), so the sections never move as one fader.
+  - **The ensemble** (`perform`, after the legato is known; `perform: false` on a piece turns it off): no part plays exactly on the
+    grid or at exactly its written level, and how far it strays follows the movement. Each part (`PLAYERS`) speaks a little late as its
+    instrument does, leans ahead or behind in a slow wander of its own and varies note to note; soft passages are looser and loud ones
+    tighter; where the music builds the players press ahead, where it lets go they settle back; a chord's notes spread (10 ms at the
+    top, up to 40 ms when soft). Each part's level wanders against the others and varies note to note; the parts without an expression
+    stage of their own follow the movement in their notes, brighter as well as louder at the top. The solo strays least: its time is
+    the conductor's. Every event carries `pf: [ms, dB]`, what the ensemble did to it. The acceptance test's `performed` check keeps it.
+  - **The foundation is a tone, not a bow.** The bass plays through a steep low-pass at four times its note (200 Hz at most, `cutN: 2`)
+    unless its part sets a `cut`, and a change of note is a crossfade (0.45 s in from the steady part, the old note holding a fifth of a
+    beat into it and letting go over half a second). A bed voiced in the bass register (to E3) plays sul tasto (low-passed at ten times
+    its note, 1.4 kHz at most). The acceptance test's `clean` check holds the bass's energy above 500 Hz 35 dB under its tone.
+  - **The foundation holds** (`holdLow: false` on a piece, or `hold: false` on a bass part, turns it off). The bass holds the key's
+    tonic in the octave its pattern asks, through the chords and the pattern's rests; a bed's voices to E3 hold the tonic and the fifth
+    above it (`holdLow`), the fifth tuned pure (a tempered fifth's coincident partials beat every four seconds), and never the bass's
+    own note in unison (two recordings of one pitch beat): with the bass on D2 they hold A2 and D3. So the bass is written first in each
+    section, after the solo. The harmony moves above. A low voice that followed the chords (A2, G2, A2, G2) was heard as "dummm dummm
+    dumm" whatever its attack. The acceptance test's `continuous` check: at most 4 low notes a minute, the held bass within 1.5 dB.
+  - **An orchestra with a choir, not a choir alone.** Holding the low end takes the strings' harmonic movement out of the bass register,
+    and the choir then carries all of it: the user heard nothing but the choir (it stood 3 to 8 dB over the strings at 250 Hz-4 kHz).
+    So the upper strings carry the harmony with the voices (a piece's `part: { pad2: 1.8 }` balances parts that share a layer), the
+    choir sits back a little, and the acceptance test's `balance` check holds the choir at most 4.5 dB over the strings there. The
+    choir's own lowest octave stays clear (`carried`): balance the strings above it, not with the low beds or the bass.
+  - **A section's dynamic is on the stage** for the beds, the choir and the bass (`STAGED`): their notes carry no `lv`/`cres` in their
+    level, the expression stage does (`o.g` = the movement `x` times the section's `lv`), so a note held across sections follows the
+    music. Their notes take their recorded layer from the dynamic across their length and hold it (no layer change mid-note). A beat's
+    dynamic is always its own section's (`lvAt` by the beat, not by the section being generated: a held note is written when it ends).
+- **Loops of note-by-note recordings** sit inside the note's steady stretch and run as long as it allows (`loop='steady'`); a note that
+  swells more than `swing_max` dB inside its loop is dropped, and a file holding two takes is cut to the longer. Check a new set with
+  `node tools/qa/loops.js --insts NAME` (one instrument a run: the whole library takes too long) before a piece uses it.
+- **The dip under the solo** (`duck`) is one dip a phrase, not one a note; keep a piece's `duck` at 0.7 or above (3 dB) unless the solo
+  truly needs more room, since the choir and the pads move with it. A sampled line's vibrato is locked to the beat (`vibRateFor`).
+- **Recorded soloists (the Iowa sets, `*Solo`, `*Iowa`, `bassClar`, `bassTbn`).** One player, three dynamic layers, a note every
+  whole tone, mono except the strings. Use them where a line is one voice's (a duet partner, an echo, a solo reading); the VSCO sections
+  stay the beds and the tutti. They were recorded note by note, so `tools/samples/build.py` levels them per recorded note (`norm='zone'`:
+  the loud layer to the target, the softer layers a fixed 8 dB per unit of layer distance under it), not per instrument; new recordings
+  of that kind get the same flag. The raw takes are cut by `tools/samples/iowa.py` into
+  `STAGING/<Inst>/<Inst>_<Note>_v<dyn>.wav` first. Their `smp` gains were set from the level test (each solo alone at vel 0.5, integrated
+  LUFS, within 3 dB of `hornSolo`); a new preset gets measured the same way before it is used in a piece.
+
 ## Namespaces & key contracts (filled in as modules land)
 `MOO.Gfx.{Icons,Space,Planets,Ships,Portraits,Fx,Scenes}` · `MOO.Audio.{init,Music,SFX}` · `MOO.UI.*` · `MOO.Data.*` · `MOO.Sim.*` · `MOO.AI.*` · `MOO.Game`
