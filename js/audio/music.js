@@ -314,10 +314,10 @@
     drums: { lvl: 0.68, verb: 0.08, stage: 0.32, dly: 0 }, fx: { lvl: 0.6, verb: 0.5, stage: 0.2, dly: 0 },
     x1: { lvl: 0.8, verb: 0.12, dly: 0, i0: 0.12 }, x2: { lvl: 0.7, verb: 0.2, dly: 0.3, i0: 0.38 }, x3: { lvl: 0.9, verb: 0.3, dly: 0, i0: 0.62 },
   };
-  const BUS = { pad: 'pad', pad2: 'pad', pad3: 'pad', bass: 'bass', arp: 'arp', arp2: 'arp', drums: 'drums', perc: 'drums', timp: 'drums', lead: 'lead', lead2: 'lead', bell: 'bell', bell2: 'bell', choir: 'choir', choir2: 'choir' };
-  const DEF_INST = { pad: 'warm', pad2: 'warm', bass: 'sub', arp: 'arp', arp2: 'arp', lead: 'brass', lead2: 'bell', bell: 'glass', bell2: 'glass', choir: 'ooh', choir2: 'aah' };
+  const BUS = { pad: 'pad', pad2: 'pad', pad3: 'pad', bass: 'bass', arp: 'arp', arp2: 'arp', drums: 'drums', perc: 'drums', timp: 'drums', lead: 'lead', lead2: 'lead', lead3: 'lead', bell: 'bell', bell2: 'bell', choir: 'choir', choir2: 'choir' };
+  const DEF_INST = { pad: 'warm', pad2: 'warm', bass: 'sub', arp: 'arp', arp2: 'arp', lead: 'brass', lead2: 'bell', lead3: 'choirOoh', bell: 'glass', bell2: 'glass', choir: 'ooh', choir2: 'aah' };
   Music._DEF_INST = DEF_INST;
-  const LINES = { lead: 1, lead2: 1, bell: 1, bell2: 1 };
+  const LINES = { lead: 1, lead2: 1, lead3: 1, bell: 1, bell2: 1 };   // lead3: a third line, the choir singing the tune (the refresh's sing)
 
   const DRUMV = {
     kick: { v: 'sample', smp: 'bassDrum', fb: 'kick', fbo: { f: 48, f0: 135, dur: 0.36 }, lvl: 0.85 }, snare: { v: 'sample', smp: 'snare', fb: 'snare', fbo: {}, lvl: 0.7 },
@@ -457,7 +457,7 @@
       // a section's own meter and tempo (an interlude's opening bars keep the outgoing piece's; a tempo may ramp across a section)
       R.meter = num(s.meter, meter); R.strong = s.strong || def.strong || (STRONG[R.meter] || [0]); R.bpm = num(s.bpm, def.bpm); R.bpmTo = num(s.bpmTo, R.bpm);
       R.segs = expandProg(s.prog, s.bars, R.meter, tpc);
-      for (const key of ['pad', 'pad2', 'pad3', 'bass', 'arp', 'arp2', 'drums', 'perc', 'timp', 'lead', 'lead2', 'bell', 'bell2', 'choir', 'choir2']) {
+      for (const key of ['pad', 'pad2', 'pad3', 'bass', 'arp', 'arp2', 'drums', 'perc', 'timp', 'lead', 'lead2', 'lead3', 'bell', 'bell2', 'choir', 'choir2']) {
         let v = s[key] !== undefined ? s[key] : base[key];
         if (v === true) v = base[key];
         if (v) R.L[key] = v;
@@ -680,6 +680,7 @@
   const PLAYERS = {
     lead: { lat: 0, drift: 0.005, jit: 0.004, lvl: 0.4, vj: 0.6, follow: 0 },
     lead2: { lat: 0.008, drift: 0.012, jit: 0.006, lvl: 0.8, vj: 0.8, follow: 0.5, spread: 1 },
+    lead3: { lat: 0.018, drift: 0.014, jit: 0.007, lvl: 0.6, vj: 0.6, follow: 0, spread: 1 },   // a choir singing the tune: it speaks as a choir does
     pad: { lat: 0.012, drift: 0.016, jit: 0.008, lvl: 0.9, vj: 1.0, follow: 0, spread: 1 },
     choir: { lat: 0.018, drift: 0.018, jit: 0.008, lvl: 1.0, vj: 1.0, follow: 0 },
     bass: { lat: 0.014, drift: 0.010, jit: 0.005, lvl: 0.6, vj: 0.6, follow: 0 },
@@ -920,7 +921,7 @@
     const graceP = num(spec.grace, brassy ? 0.18 : 0), flutterP = num(spec.flutter, 0), echoP = num(spec.echo, blown || inst.v === 'sample' ? 0 : 0.07);   // the octave echo is for the synthesized lines: on a recorded soloist it was a stray note an octave up   // flutter: the pipers' doubling before a long note
     const swellK = clamp(num(spec.swell, 0), 0, 0.8);   // swell: each note of two beats or more starts softer and opens to its dynamic through the recorded layers (the brass rising)
     const shape = clamp(num(spec.shape, 0), 0, 0.8);   // shape: each phrase played as a hairpin — soft at its ends, full in its middle and at its top, the long notes blooming (a singer's or a horn's phrasing)
-    const ref = key === 'lead' ? s.R.L.lead2 : s.R.L.lead;                       // '@': double the other line (lead2 follows lead, lead follows lead2)
+    const ref = key === 'lead' ? s.R.L.lead2 : s.R.L.lead;                       // (lead3 follows lead)                       // '@': double the other line (lead2 follows lead, lead follows lead2)
     let phs = spec.ph === '@' ? (ref && (ref.ph || ref)) : spec.ph;
     if (Array.isArray(phs)) {                                                   // several written readings of the line: one per performance
       const picks = C.phPick || (C.phPick = new Map());                          // (a doubling that says ph: '@' follows the lead's choice)
@@ -1012,7 +1013,7 @@
     }
   }
 
-  const GEN = { pad: genPad, pad2: genPad, pad3: genPad, bass: genBass, arp: genArp, arp2: genArp, drums: genDrums, perc: genDrums, timp: genTimp, choir: genChoir, choir2: genChoir, lead: genLine, lead2: genLine };
+  const GEN = { pad: genPad, pad2: genPad, pad3: genPad, bass: genBass, arp: genArp, arp2: genArp, drums: genDrums, perc: genDrums, timp: genTimp, choir: genChoir, choir2: genChoir, lead: genLine, lead3: genLine, lead2: genLine };
 
   // ---------------------------------------------------------------- tension overlays (layers x1..x3, gated by setIntensity)
   function genTension(C, s) {
@@ -1408,7 +1409,7 @@
       if (ev.v === 'fx') { this.verbK = ev.o.verb; if (!this.stopped) { try { this.verb.gain.setTargetAtTime((1 - 0.33 * this.intensity) * this.verbK, T, 1.2); } catch (e) { /* ignore */ } } return; }
       const L = this.layers[ev.ly]; if (!L) return;
       if (ev.v === 'expr') { try { L.in.gain.setTargetAtTime(clamp(ev.o.g, 0.02, 2), T, 0.45); } catch (e) { /* ignore */ } return; }
-      if (this.only && !this.only[ev.ly]) return;
+      if (this.only && !this.only[ev.ly] && !(ev.k && this.only[ev.k])) return;   // a bus, or one line by its own name (lead3)
       if (L.i0 !== undefined && this.intensity < L.i0 - 0.02) return;
       const o = this.stretch === 1 || !ev.o || !ev.o.dur ? ev.o : Object.assign({}, ev.o, { dur: ev.o.dur * this.stretch });
       const o2 = o && o.vib !== 0 && ev.v === 'sample' && this.def && this.def.bpm ? Object.assign({}, o, { vibRate: vibRateFor(this.bpmNow ? this.bpmNow(T) : this.def.bpm) }) : o;
