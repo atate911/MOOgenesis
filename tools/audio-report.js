@@ -4,6 +4,7 @@
 //   node tools/audio-report.js --tracks title,combat1 --sfx click,laser --intensity 0,1 --secs 30
 //   node tools/audio-report.js --wav DIR [--mp3]       also save the renders (16-bit WAV; --mp3 converts with ffmpeg when present)
 //   node tools/audio-report.js --json FILE             machine-readable report (everything that is printed, plus per-item metrics)
+//   node tools/audio-report.js --query refresh=0       load the page with a query (here: the pieces as they were, before js/audio/score/refresh.js)
 //   node tools/audio-report.js --no-samples            render with the procedural voices only (what a file:// or offline player hears)
 // Levels are measured at unity bus gain (the Options volumes are not applied) after the master compressor / soft clipper,
 // so "knee %" = share of samples the limiter is bending (> 0.6) and "hot %" = share above 0.9.  LUFS per ITU-R BS.1770.
@@ -27,7 +28,7 @@ function table(head, rows) {
 (async () => {
   const srv = await serve(PORT);
   const { browser, page, errors } = await open();
-  await page.goto(`http://localhost:${PORT}/tools/test-audio.html`);
+  await page.goto(`http://localhost:${PORT}/tools/test-audio.html` + (opt.query ? '?' + opt.query : ''));
   await page.addScriptTag({ url: `http://localhost:${PORT}/tools/lib/audio-metrics.js` });
   await page.waitForFunction(() => window.MOO && MOO.Audio && MOO.Audio.Music && MOO.Audio.SFX && window.AudioMetrics);
   if (!opt['no-samples']) {
