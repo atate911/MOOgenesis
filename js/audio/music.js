@@ -316,6 +316,7 @@
   };
   const BUS = { pad: 'pad', pad2: 'pad', pad3: 'pad', bass: 'bass', arp: 'arp', arp2: 'arp', drums: 'drums', perc: 'drums', timp: 'drums', lead: 'lead', lead2: 'lead', bell: 'bell', bell2: 'bell', choir: 'choir', choir2: 'choir' };
   const DEF_INST = { pad: 'warm', pad2: 'warm', bass: 'sub', arp: 'arp', arp2: 'arp', lead: 'brass', lead2: 'bell', bell: 'glass', bell2: 'glass', choir: 'ooh', choir2: 'aah' };
+  Music._DEF_INST = DEF_INST;
   const LINES = { lead: 1, lead2: 1, bell: 1, bell2: 1 };
 
   const DRUMV = {

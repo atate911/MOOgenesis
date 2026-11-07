@@ -70,25 +70,44 @@
   // new at the same notes and dynamics (tools/fresh: the level match), so the part keeps its place in the mix; its dynamic range widens.
   const UPGRADE = { flute: ['fluteIowa', 2.71], oboe: ['oboeIowa', 1.27], clarinet: ['clarIowa', 3.05], altoFlute: ['altoFluteIowa', 0.11],
     bassoon: ['bassoonIowa', 1.92], hornSolo: ['hornIowa', 0.62], tptSolo: ['tptIowa', 2.43] };
-  function upgrade(v) {
-    const INST = Music._INST, name = typeof v === 'string' ? v : v && typeof v === 'object' ? v.p : null, u = name && UPGRADE[name];
+  // the choirs, in every refreshed piece: the mixed and the women's voices from the Sonatina sets to the Pianobook choir the main theme
+  // uses (much the better recordings: an ooh, and a hum for the closed 'uuh'); the men stay on the Sonatina men, whose deep bass voices
+  // the new choir does not reach (it starts at D3), as in the theme. Matched in loudness the same way.
+  const CHOIRS = { ooh: ['choirOoh', 1.33], aah: ['choirOoh', 0.71], eeh: ['choirOoh', 0.68], choirWomen: ['choirOoh', 0.76], uuh: ['choirHum', 0.80] };
+  function upgrade(v, MAP) {
+    const INST = Music._INST, name = typeof v === 'string' ? v : v && typeof v === 'object' ? v.p : null, u = name && (MAP || UPGRADE)[name];
     if (!u || !INST[u[0]] || !INST[name]) return v;
     const lvl = (typeof v === 'object' && v.lvl !== undefined ? v.lvl : INST[name].lvl) * u[1] * INST[u[0]].lvl / INST[name].lvl;
     return Object.assign({}, typeof v === 'object' ? v : {}, { p: u[0], lvl: Math.round(lvl * 1000) / 1000 });
   }
-  function upgradeAll(d) {
-    for (const k in d.inst || {}) d.inst[k] = upgrade(d.inst[k]);
-    for (const a of d.alts || []) for (const k in a) a[k] = upgrade(a[k]);
-    for (const k in d.eraAlts || {}) d.eraAlts[k] = upgrade(d.eraAlts[k]);
-    for (const s of d.sec) for (const k in s) if (s[k] && typeof s[k] === 'object' && !Array.isArray(s[k]) && s[k].inst !== undefined) s[k] = Object.assign({}, s[k], { inst: upgrade(s[k].inst) });
+  function upgradeAll(d, MAP) {
+    // a layer the piece plays without naming its instrument takes the engine's default: name it, so it is upgraded as well
+    const D = Music._DEF_INST || {}; d.inst = d.inst || {};
+    for (const sc of d.sec) for (const k in D) if (sc[k] && d.inst[k] === undefined && MAP && MAP[D[k]]) d.inst[k] = D[k];
+    for (const k in d.inst || {}) d.inst[k] = upgrade(d.inst[k], MAP);
+    for (const a of d.alts || []) for (const k in a) a[k] = upgrade(a[k], MAP);
+    for (const k in d.eraAlts || {}) d.eraAlts[k] = upgrade(d.eraAlts[k], MAP);
+    for (const s of d.sec) for (const k in s) if (s[k] && typeof s[k] === 'object' && !Array.isArray(s[k]) && s[k].inst !== undefined) s[k] = Object.assign({}, s[k], { inst: upgrade(s[k].inst, MAP) });
   }
+  // sing: the choir takes the tune in a piece's big statements (the sections named), singing the melody with its instrument: the
+  // section's lead line, as written, given to the second line on a choir (inst; oct moves it by octaves into the voices' range; vel and
+  // lvl set it beside the instrument, so it leads with it rather than under it). Its own recorded vibrato: none added.
+  function sing(d, o) {
+    for (const n of o.sections) for (const sc of d.sec.filter(x => x.n === n)) {
+      if (!sc.lead || typeof sc.lead !== 'object' || sc.lead2) continue;
+      sc.lead2 = Object.assign({}, sc.lead, { inst: { p: o.inst, lvl: o.lvl }, oct: num(sc.lead.oct, 0) + (o.oct || 0), vel: num(sc.lead.vel, 0.9) * (o.vel || 0.95), pan: -num(sc.lead.pan, 0) * 0.6 + 0.08, vibK: 0, harm: undefined, echo: undefined });
+    }
+  }
+  const num = (v, f) => (typeof v === 'number' && isFinite(v) ? v : f);
   function apply(d, p) {
     for (const k in p) {
       if (k === 'upgrade') { if (p.upgrade) upgradeAll(d); }
+      else if (k === 'sing') sing(d, p.sing);
       else if (k === 'verb') { for (const n in p.verb) { const s = d.sec.find(x => x.n === n); if (s) s.verb = p.verb[n]; } }
       else if (k === 'mix' || k === 'tone') d[k] = Object.assign({}, d[k] || {}, p[k]);
       else d[k] = p[k];
     }
+    upgradeAll(d, CHOIRS);
     d.refreshed = true;
   }
   Music._refresh = R; Music._applyRefresh = apply;   // tools try a refresh before it is written here (tools/fresh/sweep.js --patch)
