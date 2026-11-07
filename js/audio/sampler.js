@@ -486,9 +486,10 @@
   // the music has not gone past the line between them by HYST (a sixth of a three-layer recording's range); a phrase's first note chooses
   // afresh. Kept per instrument and part.
   const HYST = 0.055, flowState = Object.create(null);
-  function flowLayer(inst, midi, key, ld, fresh) {
+  function flowLayer(inst, midi, key, ld, fresh, aside) {
     const L = layersAt(inst, midi, false); if (L.length < 2) return ld;
     let near = L[0]; for (const l of L) if (Math.abs(l.c - ld) < Math.abs(near.c - ld)) near = l;
+    if (aside) return near.c;   // a note the line sets apart in the other colour: played so, and the part's own recording kept
     const prev = flowState[key];
     if (!fresh && prev !== undefined && prev !== near.c) { const pl = L.find(l => Math.abs(l.c - prev) < 1e-6);
       if (pl && Math.abs(L.indexOf(pl) - L.indexOf(near)) === 1 && Math.abs(ld - (pl.c + near.c) / 2) < HYST) { flowState[key] = pl.c; return pl.c; } }
@@ -547,7 +548,10 @@
     // the recording follows the part's playing dynamic (o.ldyn, from the score's layer flow) and stays put inside a phrase until the music
     // is clearly into the next recording's range; a held note's own swell still moves through the recordings as written
     let ld0 = dyn, ld1 = dyn1;
-    if (o.ldyn !== undefined && o.part) { const l = flowLayer(inst, midi, o.smp + '|' + o.part, clamp(o.ldyn, 0, 1), !!o.lnew); ld0 = l; ld1 = clamp(l + (dyn1 - dyn), 0, 1); }
+    if (o.ldyn !== undefined && o.part) {
+      const l = flowLayer(inst, midi, o.smp + '|' + o.part, clamp(o.ldyn, 0, 1), !!o.lnew); ld0 = l; ld1 = clamp(l + (dyn1 - dyn), 0, 1);
+      if (o.lto !== undefined) ld1 = flowLayer(inst, midi, o.smp + '|' + o.part, clamp(o.lto, 0, 1), false, true);   // into the other colour through the note
+    }
     const picks = pickZones(inst, midi, ld0, ld1, !!o.alt); if (!picks.length) return null;
     const z0 = picks[0].z;
     const pan = o.pan !== undefined ? o.pan : (z0.pan !== undefined ? z0.pan : inst.pan);

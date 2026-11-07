@@ -477,6 +477,7 @@
     if (beat < 0 || beat >= C.totalBeats) return null;
     const o = Object.assign({}, inst);
     const staged = C.lvStage && STAGED[ly];   // a staged layer's level is its expression stage's (the section's dynamic on it); the note keeps the timbre
+    o.lv = C.lvAt(beat); o.pv = vel;   // the section's dynamic here and the part's own velocity (the layer flow reads both)
     o.f = mtof(midi); o.dur = Math.max(0.03, (C.tAt(beat + beats) - C.tAt(beat)) * (ex && ex.art !== undefined ? ex.art : 1)); o.vel = vel * (inst.lvl === undefined ? 1 : inst.lvl) * (staged ? 1 : C.lvAt(beat));
     if (staged) { const k = Math.min(64, Math.max(1, Math.ceil(beats))); let q = 0; for (let i = 0; i < k; i++) q += C.lvAt(beat + (i + 0.5) * beats / k); o.dyn = clamp(vel * q / k, 0, 1); }   // its recorded layer from the dynamic across its length, held without a change of layer
     else { o.dyn = clamp(vel * C.lvAt(beat), 0, 1); if (inst.v === 'sample' && beats >= 1.5) { const d1 = clamp(vel * C.lvAt(beat + beats), 0, 1); if (Math.abs(d1 - o.dyn) > 0.04) o.swell = d1; } }   // long notes swell with the section's crescendo
@@ -943,7 +944,7 @@
       const span = shape ? ph.notes.reduce((x, n) => Math.max(x, n.off + n.dur), 0) || 1 : 1, dLo = shape ? Math.min(...ph.notes.map(n => n.d)) : 0, dHi = shape ? Math.max(...ph.notes.map(n => n.d)) : 0;
       const orch = orchOf(C.def), arc = orch ? phraseArc(ph.notes, n => n.d + (n.acc || 0) * 0.01) : null, ek = clamp(num(spec.expr, 1), 0, 2.5), vk = clamp(num(spec.vibK, 1), 0, 4), velOf = i => vel0 * md.vel * (1 - 0.34 * ek + 0.44 * ek * arc.I[i]);   // expr: how far the phrase's arc moves the line (1 as before); vibK: its vibrato's depth
       const fam = orch ? (FAMILY[inst.smp] || V_FAMILY[inst.v] || '') : '', vf = VIB_FAM[fam];
-      let ni = -1;
+      let ni = -1, prevM = null;
       for (const nt of ph.notes) {
         ni++;
         const off = cur + nt.off;
@@ -956,6 +957,7 @@
         let m = stepMidi(C, step, nt.acc);
         if (!nt.keep && (strong || nt.dur >= 2) && !isChordTone(m, sg.ch) && clashes(m, sg.ch)) { m = snapToChord(m, sg.ch); C.snaps++; }
         m = foldRange(inst, m);
+        const pm = prevM; prevM = m;
         const dt = (rng() - 0.5) * 0.012;
         if (flutterP && nt.dur >= 1.5 && rng() < flutterP) { for (let k = 0; k < 3; k++) emit(C, ly, inst, s.start + off - 0.17 + k * 0.055, foldRange(inst, stepMidi(C, step + (k % 2 === 0 ? 1 : 0), 0)), 0.055, vel * 0.6, { art: 1, dt: 0 }); }
         else if (graceP && nt.dur >= 1.5 && rng() < graceP) emit(C, ly, inst, s.start + off - 0.09, foldRange(inst, stepMidi(C, step - 1, 0)), 0.09, vel * 0.55, { art: 1, dt: 0 });
@@ -969,6 +971,16 @@
             sw = { dyn: clamp(d0, 0.1, 1), swell: clamp(d1, 0.08, 1) };
           }
           ex2 = { vib: vf && nt.dur >= 1.5 ? (vf[0] + vf[1] * I) * vk : 0, vibDelay: 0.35 };   // vibrato only where a note is held, deeper as it means more
+          // the colour against the music, rarely, where the line asks for it (the layer flow otherwise keeps a phrase in one recording):
+          // in quiet music, a climax reached by a leap of a fourth or more and held rings out on the fuller, brassier recording; in full
+          // music, a long top note reached by step at the phrase's close floats on the softer one. At most one per part and section.
+          if (ni === arc.ci && nt.dur >= 1.5 && pm !== null) {
+            const lvN = lv0, sk = key + '@' + s.start; C.axSeen = C.axSeen || {};
+            if (!C.axSeen[sk] && lvN <= 0.72 && m - pm >= 5) { ex2.ax = 1; C.axSeen[sk] = 1; }
+            else if (!C.axSeen[sk] && lvN >= 0.95 && nt.dur >= 3 && Math.abs(m - pm) <= 2 && ni >= ph.notes.length - 2) { ex2.ax = -1; C.axSeen[sk] = 1; }
+            // played, not switched: the climax opens as it swells (a little louder at its height), the floated top thins as it tapers
+            if (ex2.ax && sw) sw.swell = clamp(sw.swell * (ex2.ax > 0 ? 1.12 : 0.75), 0.08, 1);
+          }
           if (!nx) ex2.art = art * 0.9;                                                 // the breath at the phrase's end
           if (ni === 0) ex2.dt = dt + 0.025;                                             // and the lean into its first note
         }
@@ -1221,11 +1233,22 @@
     for (const e of evs) if (e.v === 'sample' && e.m && e.o && e.o.dyn !== undefined && !e.o.oneShot) (parts[e.k || e.ly] = parts[e.k || e.ly] || []).push(e);
     for (const k in parts) {
       const L = parts[k]; let s = 0, end = -1e9, lastT = -1e9;
+      // the dynamic a note is played at, as a player hears it: from the music (the section's dynamic, its crescendo) and the phrase (the
+      // note's velocity against the part's usual one: a climax leans in, a phrase's end lets go), not from the part's place in the mix
+      // (a horn written at half velocity to sit back in the balance is not playing softly). Under mp (the section's dynamic below about
+      // 0.55) the soft recording, mf to f the middle one, f and over (0.83) the full one: smooth when quiet, brassy when it must project.
+      const pvs = L.map(e => e.o.pv).filter(v => v > 0).sort((a, b) => a - b), med = pvs.length ? pvs[pvs.length >> 1] : 1;
+      for (const e of L) e.o.pdyn = e.o.lv !== undefined && e.o.pv > 0 ? clamp((e.o.lv - 0.25) * 1.15 * Math.pow(e.o.pv / med, 0.7), 0, 1) : e.o.dyn;
       for (let i = 0; i < L.length; i++) {
         const e = L[i], o = e.o, fresh = e.t - end > 1.5;
-        if (fresh) { let q = 0, n = 0; for (let j = i; j < L.length && n < 3 && (j === i || L[j].t - (L[j - 1].t + L[j - 1].o.dur) <= 1.5); j++, n++) q += L[j].o.dyn; s = q / n; }
-        else if (e.t - lastT > 0.03) s += (o.dyn - s) * (1 - Math.exp(-Math.max(0.05, o.dur) / 1.5));
+        if (fresh) { let q = 0, n = 0; for (let j = i; j < L.length && n < 3 && (j === i || L[j].t - (L[j - 1].t + L[j - 1].o.dur) <= 1.5); j++, n++) q += L[j].o.pdyn; s = q / n; }
+        else if (e.t - lastT > 0.03 && !o.ax) s += (o.pdyn - s) * (1 - Math.exp(-Math.max(0.05, o.dur) / 1.5));
         o.ldyn = clamp(s, 0, 1); o.part = k; if (fresh) o.lnew = true;
+        // the rare note in the other colour (genLine's ax): it starts in the line's own and moves into the other through its length (the
+        // sampler crosses recordings inside a held note), the brassy climax with the one or two notes before it leaning in; the flow then
+        // keeps its own course
+        if (o.ax) { o.lto = clamp(s + 0.3 * o.ax, 0, 1); o.lx = true; }
+        else { const n1 = L[i + 1], n2 = L[i + 2]; if (n1 && n1.o.ax > 0 && n1.t - (e.t + o.dur) < 1) o.ldyn = clamp(s + 0.12, 0, 1); else if (n2 && n2.o.ax > 0 && n2.t - (e.t + o.dur) < 2) o.ldyn = clamp(s + 0.06, 0, 1); }
         lastT = e.t; end = Math.max(end, e.t + o.dur);
       }
     }
