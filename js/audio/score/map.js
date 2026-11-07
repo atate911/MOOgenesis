@@ -532,7 +532,8 @@
   Track('galaxy24', {
     desc: 'Calm exploration, the homeworld: the piano with both of the game\'s themes — low, warm chords on a gentle pulse with space between them, a quiet single line of the climb and then the hymn, a soft string bed; at the height the choir and the organ carry the climb over the piano\'s pulse; a coda of chords alone',
     tags: { solitude: 0.6, contact: 0.3, tension: 0, war: 0, grief: 0.15, grandeur: 0.35, energy: 0.35, dark: 0.05 },
-    bpm: 72, trim: 3, root: 'D', mode: 'major', loopFrom: 'A', tens: false, gentle: true, rubato: 0.02, quotes: ['procession', 'hymn'],
+    bpm: 72, trim: 5.2,   // -15.5 LUFS with the rest (the chords' soft dynamic and the mono piano measured -20.2 at 3)
+    root: 'D', mode: 'major', loopFrom: 'A', tens: false, gentle: true, rubato: 0.02, quotes: ['procession', 'hymn'],
     eraWin: [0, 0.8], fx: { dly: 0.6, verb: 1.05 },
     orch: true, holdLow: false, hall: 'musikverein', tone: { lo: 1.5, hi: 0, pres: 1 }, lowBand: 2.5, subBass: 0.25,
     forms: [['A', 'B', 'C', 'D', 'E'], ['A', 'C', 'B', 'D', 'E']],
