@@ -126,7 +126,7 @@
     d.refreshed = true; delete d._p;   // the engine's prepared form of the piece, made again from the refreshed definition
   }
   Music._refresh = R; Music._applyRefresh = apply;   // tools try a refresh before it is written here (tools/fresh/sweep.js --patch)
-  if (off) return;
+  if (off) { Music._dbg.noLayerFlow = true; return; }   // as they were: the layer flow and its rare exceptions too (the main theme's A)
   for (const id in R) {
     const b = T[id], w = T[id + ':war'], p = R[id]; if (!b) continue;
     const k = p.trim ? p.trim / b.trim : 1; apply(b, p);

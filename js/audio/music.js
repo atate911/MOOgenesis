@@ -974,7 +974,7 @@
           // the colour against the music, rarely, where the line asks for it (the layer flow otherwise keeps a phrase in one recording):
           // in quiet music, a climax reached by a leap of a fourth or more and held rings out on the fuller, brassier recording; in full
           // music, a long top note reached by step at the phrase's close floats on the softer one. At most one per part and section.
-          if (ni === arc.ci && nt.dur >= 1.5 && pm !== null) {
+          if (ni === arc.ci && nt.dur >= 1.5 && pm !== null && !Music._dbg.noLayerFlow) {
             const lvN = lv0, sk = key + '@' + s.start; C.axSeen = C.axSeen || {};
             if (!C.axSeen[sk] && lvN <= 0.72 && m - pm >= 5) { ex2.ax = 1; C.axSeen[sk] = 1; }
             else if (!C.axSeen[sk] && lvN >= 0.95 && nt.dur >= 3 && Math.abs(m - pm) <= 2 && ni >= ph.notes.length - 2) { ex2.ax = -1; C.axSeen[sk] = 1; }
