@@ -403,6 +403,8 @@
   // may still set any of these itself; tools/qa/orchestral.js checks the result.
   const ORCH_LOWMONO = { choir: 450, bass: 250, pad: 300 };   // the choir up to 450 Hz: the Sonatina choir's two microphones are opposed in phase through 150-500 Hz (a hollow hum)
   function orchOf(def) { return !!(def && def.orch); }
+  // a plucked or struck part (pizzicato, harp, mallets) keeps its articulation in the orchestral profile: no ties, no tone cut
+  function plucked(inst) { return !!inst && (/Pizz|harp|marimba|vibes|kora/i.test(inst.smp || '') || inst.fb === 'pluck' || inst.fb === 'harp'); }
   // Expression (the orchestral profile). A phrase has a destination: its climax, the highest note (the longest of equals; when the
   // phrase opens on its top note, the longest note of its second half). The line builds toward it, arrives, and lets go faster than it
   // came: intensity rises from 0.6 to 1 at the climax and falls to 0.45 at the phrase's end. Lines take their dynamics from it, long
@@ -486,7 +488,7 @@
       // the foundation is a tone, not a bow: the bass through a steep low-pass at four times its note, 200 Hz at most (its fundamental and
       // first partials, never the rosin), and a bed voiced in the bass register (to E3) sul tasto, as an orchestra's low strings play a
       // held bed: warm, the bite of the bow gone (low-passed at ten times its note, 1.4 kHz at most). A part that sets its own cut keeps it.
-      if (ly === 'bass' && o.cut === undefined) { o.cut = clamp(mtof(midi) * 4, 100, 200); o.cutN = 2; }
+      if (ly === 'bass' && o.cut === undefined && !plucked(inst)) { o.cut = clamp(mtof(midi) * 4, 100, 200); o.cutN = 2; }
       else if (ly === 'pad' && midi <= 52 && o.cut === undefined) { o.cut = clamp(mtof(midi) * 10, 650, 1400); o.cutN = 2; }
       // the held foundation's fifth is tuned pure, as string players tune a held open fifth: tempered, the fifth's third partial against the
       // tonic's (D2 and A2 at 220.25 and 220 Hz) beats once every four seconds, a slow throb through the whole held low end
@@ -525,7 +527,7 @@
     // sounding through the change instead of being bowed again; a note the next chord drops lets go at the change; a note it adds comes
     // in legato, past its bow's attack. Only the first chord of the section enters with the bed's attack (or its swell): with a swell
     // per chord, or a fresh bow on every note of every chord, the strings struck a beat at each bar line.
-    const tie = cfg.tie !== undefined ? !!cfg.tie : !!(C.def && (C.def.padTie || C.def.orch));
+    const tie = cfg.tie !== undefined ? !!cfg.tie : !!(C.def && (C.def.padTie || (C.def.orch && !plucked(inst))));
     if (tie && (style === 'sus' || style === 'swell')) {
       // the held notes carry on into the next section when it follows at once on the same instrument (a section line is no reason to
       // bow again); otherwise they end where their section ended. Every held note is written once, when its length is known.
@@ -732,7 +734,7 @@
     // tie (the bass's `tie`, or the piece's `bassTie`): an undercurrent rather than a pulse. A note that the next step repeats is held
     // through it (one note across the bars of a chord, not a new attack each bar), a change of note is played legato (the next note past
     // its attack, the last one let go quickly as it arrives), so a slow bass never swells in again at every bar line.
-    const tie = P.tie !== undefined ? !!P.tie : !!(C.def && (C.def.bassTie || C.def.orch)), notes = [];
+    const tie = P.tie !== undefined ? !!P.tie : !!(C.def && (C.def.bassTie || (C.def.orch && !plucked(inst)))), notes = [];
     // hold (the bass's `hold`; on in the orchestral profile unless the piece says `holdLow: false`): the foundation is one continuous note,
     // the key's tonic in the octave the pattern asks, held through the chords and the pattern's rests (the harmony moves above it)
     const hold = tie && (P.hold !== undefined ? !!P.hold : holdsLow(C));

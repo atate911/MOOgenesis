@@ -7,7 +7,7 @@ const fs = require('fs'), vm = require('vm'), path = require('path');
 const ROOT = path.join(__dirname, '..');
 const ctx = vm.createContext({ console, setInterval: () => 0, clearInterval: () => 0, setTimeout: () => 0, performance: { now: () => 0 }, navigator: { hardwareConcurrency: 4, userAgent: 'node' }, location: { protocol: 'http:', search: '' }, document: { hidden: false, addEventListener() {} }, window: null, Math, JSON, WeakMap });
 ctx.window = ctx;
-for (const f of ['js/core/ns.js', 'js/audio/audio.js', 'js/audio/sampler.js', 'js/audio/music.js', 'js/audio/score/themes.js', 'js/audio/score/cues.js', 'js/audio/score/map.js', 'js/audio/score/races.js', 'js/audio/score/programme.js']) vm.runInContext(fs.readFileSync(path.join(ROOT, f), 'utf8'), ctx, { filename: f });
+for (const f of ['js/core/ns.js', 'js/audio/audio.js', 'js/audio/sampler.js', 'js/audio/music.js', 'js/audio/score/themes.js', 'js/audio/score/cues.js', 'js/audio/score/map.js', 'js/audio/score/races.js', 'js/audio/score/programme.js', 'js/audio/score/refresh.js']) vm.runInContext(fs.readFileSync(path.join(ROOT, f), 'utf8'), ctx, { filename: f });
 const M = ctx.MOO.Audio.Music, T = M._tracks, CO = M._colour, R = M._rotation;
 // the sounding range of each recorded instrument (MIDI; C4 = 60): what a real section or player can give
 const RANGE = { strEns: [28, 100], strEnsTrem: [28, 100], vln1Trem: [55, 100], vlaSus: [48, 88], vcSus: [36, 84], vcTrem: [36, 84], cbSus: [28, 55], cbPizz: [28, 55], subBass: [24, 55],
