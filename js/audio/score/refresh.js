@@ -19,7 +19,7 @@
     // and the race themes (and the battle cue, whose bite the profile softened) the mastering alone, with a sub under their bass. Then
     // the choir's sung lead in twelve of them (sing), room for every melody (space: tools/fresh/space.js) and one low end across the score
     // (the sub toward -5 dB and 50-120 Hz toward +2 dB of the whole, the main theme's family).
-    'title': {space: {A: {pad: {velK: 0.75}}}},   // the main theme: its own mix, hall and tone as approved; the new choir (the men included) like every other piece
+    'title': {choirFwd: false},   // the main theme as approved (its mix, hall, tone, arrangement and choir seat: the solo and the brass in front); only the new choir recordings, like every other piece
     'combat3': {hall: 'musikverein', tone: {lo: 1.5, hi: 1.5, pres: 2.3}, lowBand: 3, subBass: 0.1, space: {A1: {pad2: {velK: 0.7}}, B1: {pad2: {velK: 0.7}}, A2: {pad2: {velK: 0.7}}, B2: {pad2: {velK: 0.7}}}, trim: 1.42},
     'combat1': {hall: 'musikverein', tone: {lo: 1.7, hi: 1, pres: 2}, lowBand: 3, subBass: 0.28, space: {A1: {pad: {reg: [74,88]}}, A2: {pad: {reg: [74,88]}}, A3: {pad: {reg: [74,88]}}}, trim: 1.37},
     'combat2': {hall: 'musikverein', tone: {lo: 1.6, hi: 1, pres: 1.6}, lowBand: 3, subBass: 0.4, space: {A1: {pad: {velK: 0.7}}, A2: {pad: {velK: 0.7}}, A3: {pad: {velK: 0.7}}}, trim: 1.33},
@@ -140,6 +140,7 @@
   }
   function apply(d, p) {
     for (const k in p) {
+      if (k === 'choirFwd') continue;
       if (k === 'upgrade') { if (p.upgrade) upgradeAll(d); }
       else if (k === 'sing') sing(d, p.sing);
       else if (k === 'descant') descant(d, p.descant);
@@ -155,8 +156,11 @@
     if (d.orch && !(d.sends && d.sends.lead)) d.sends = Object.assign({}, d.sends || {}, { lead: { verb: 0.12, stage: 0.36, dly: 0.05 } });
     // the choir forward, in every piece (the user: a choir and brass is the game's signature sound): about 3 dB up, nearer (less hall,
     // more of the close stage), its sung melodies over their instruments rather than under them
-    d.mix = Object.assign({}, d.mix || {}, { choir: ((d.mix && d.mix.choir) || 1) * CHOIR_FWD.mix });
-    d.sends = Object.assign({}, d.sends || {}); d.sends.choir = Object.assign({}, d.sends.choir || {}, { verb: CHOIR_FWD.verb, stage: CHOIR_FWD.stage });
+    // (a piece built around its soloist keeps its own choir seat: choirFwd: false, the main theme)
+    if (p.choirFwd !== false) {
+      d.mix = Object.assign({}, d.mix || {}, { choir: ((d.mix && d.mix.choir) || 1) * CHOIR_FWD.mix });
+      d.sends = Object.assign({}, d.sends || {}); d.sends.choir = Object.assign({}, d.sends.choir || {}, { verb: CHOIR_FWD.verb, stage: CHOIR_FWD.stage });
+    }
     upgradeAll(d, CHOIRS);
     d.refreshed = true; delete d._p;   // the engine's prepared form of the piece, made again from the refreshed definition
   }
