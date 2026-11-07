@@ -19,7 +19,7 @@
     // and the race themes (and the battle cue, whose bite the profile softened) the mastering alone, with a sub under their bass. Then
     // the choir's sung lead in twelve of them (sing), room for every melody (space: tools/fresh/space.js) and one low end across the score
     // (the sub toward -5 dB and 50-120 Hz toward +2 dB of the whole, the main theme's family).
-    'title': {settled: true, choirFwd: false, brassHarm: false},   // the main theme as approved (its mix, hall, tone, arrangement and choir seat: the solo and the brass in front); only the new choir recordings, like every other piece
+    'title': {settled: true, oldMen: {vel: 0.28, min: 0.3}, choirFwd: false, brassHarm: false},   // the main theme as approved (its mix, hall, tone, arrangement and choir seat: the solo and the brass in front); only the new choir recordings, like every other piece
     'combat3': {hall: 'musikverein', tone: {lo: 1.5, hi: 1.5, pres: 2.3}, lowBand: 3, subBass: 0.1, space: {A1: {pad2: {velK: 0.7}}, B1: {pad2: {velK: 0.7}}, A2: {pad2: {velK: 0.7}}, B2: {pad2: {velK: 0.7}}}, trim: 1.42},
     'combat1': {hall: 'musikverein', tone: {lo: 1.7, hi: 1, pres: 2}, lowBand: 3, subBass: 0.28, space: {A1: {pad: {reg: [74,88]}}, A2: {pad: {reg: [74,88]}}, A3: {pad: {reg: [74,88]}}}, trim: 1.37},
     'combat2': {hall: 'musikverein', tone: {lo: 1.6, hi: 1, pres: 1.6}, lowBand: 3, subBass: 0.4, space: {A1: {pad: {velK: 0.7}}, A2: {pad: {velK: 0.7}}, A3: {pad: {velK: 0.7}}}, trim: 1.33},
