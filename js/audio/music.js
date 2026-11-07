@@ -1993,7 +1993,7 @@
     opts = opts || {};
     const def = TRACKS[id];
     if (!def) return Promise.reject(new Error('unknown track ' + id));
-    let pl = null, stats = null;
+    let pl = null, stats = null, first = null;
     return A.renderWindowed(seconds, { sampleRate: opts.sampleRate || 44100, window: 1.5, seed: opts.seed || 1, teardown: eng => { stats = eng.stats; } }, function (eng, t0, t1) {
       if (!pl) {
         pl = new Player(eng, def, { loop: opts.loop !== false, intensity: num(opts.intensity, S.intensity), era: opts.era });
@@ -2001,10 +2001,10 @@
         pl.bus.gain.value = pl.trim; pl.verb.gain.value = 1;
         pl.shift = num(opts.from, 0); pl.skipBefore = 0;
         if (opts.only) { pl.only = {}; for (const k of [].concat(opts.only)) pl.only[k] = 1; }
-        pl.begin(0);
+        pl.begin(0); first = pl.pass ? { beatsT: pl.pass.beatsT.slice(), st: pl.stretch || 1, shift: pl.shift } : null;
       }
       pl.scheduleUntil(t1);
-    }).then(buf => { buf.mooStats = stats; return buf; });
+    }).then(buf => { buf.mooStats = stats; if (first) buf.mooBeats = first.beatsT.map(t => t * first.st - first.shift); return buf; });   // mooBeats: each beat's time in the render (first pass), to line up two renders of one piece
   };
 
   // ================================================================== analysis / lint (used by the test page)

@@ -2,7 +2,8 @@
 //   node tools/audio-report.js                         lint + a 30 s window of every track + the first 20 s + every effect
 //   node tools/audio-report.js --full                  also the whole loop of every track
 //   node tools/audio-report.js --tracks title,combat1 --sfx click,laser --intensity 0,1 --secs 30
-//   node tools/audio-report.js --wav DIR [--mp3]       also save the renders (16-bit WAV; --mp3 converts with ffmpeg when present)
+//   node tools/audio-report.js --wav DIR [--mp3]       also save the renders (16-bit WAV; --mp3 converts with ffmpeg when present; a full
+//                                                      render also saves <id>-full.beats.json, each beat's time in it)
 //   node tools/audio-report.js --json FILE             machine-readable report (everything that is printed, plus per-item metrics)
 //   node tools/audio-report.js --query refresh=0       load the page with a query (here: the pieces as they were, before js/audio/score/refresh.js)
 //   node tools/audio-report.js --no-samples            render with the procedural voices only (what a file:// or offline player hears)
@@ -64,7 +65,7 @@ function table(head, rows) {
     if (pre) { const off = Math.round(pre * buf.sampleRate), b = new AudioBuffer({ numberOfChannels: buf.numberOfChannels, length: buf.length - off, sampleRate: buf.sampleRate }); for (let c = 0; c < buf.numberOfChannels; c++) b.copyToChannel(buf.getChannelData(c).subarray(off), c); buf = b; }
     const a = AM.analyze(buf); a.voices = { peak: st.peak || 0, created: st.created || 0, stolen: st.stolen || 0, refused: st.refused || 0 }; a.renderMs = Math.round(performance.now() - t0);
     delete a.env; delete a.feat;
-    return { a, wav: o.wav ? AM.wavBase64(buf) : null };
+    return { a, wav: o.wav ? AM.wavBase64(buf) : null, beats: o.wav && buf.mooBeats ? buf.mooBeats.map(t => Math.round((t - pre) * 1000) / 1000) : null };
   }, [id, secs, o]);
   const musicFlags = a => {
     const f = [];
@@ -93,6 +94,7 @@ function table(head, rows) {
         if (opt.full) {
           const f = await renderTrack(id, intro + loop, { from: 0, intensity: inten, sr: SR, wav: !!wavDir });
           report.music[id + ':full' + tag] = f.a; rows.push(musicRow(id + ' full' + tag, f.a)); saveWav(id + '-full' + (tag ? tag.replace('@', '-i') : ''), f.wav);
+          if (wavDir && f.beats) fs.writeFileSync(path.join(wavDir, id + '-full' + (tag ? tag.replace('@', '-i') : '') + '.beats.json'), JSON.stringify(f.beats));   // each beat's time: lines up two renders of a piece (the player's A/B)
         }
       }
       process.stderr.write('.');
