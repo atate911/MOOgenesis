@@ -304,6 +304,7 @@
   // replaces (matched in the men's register: ooh x0.88, aah x1.50). A voice may still split to another recording (o.split) where one is wanted.
   // the old men's choir (the Sonatina men) kept by name for the pieces that layer it gently under the new choir (its darker, modulated
   // colour): never swapped by the refresh; played as a held bed (choir3, voice-led like strings) with long entries and releases
+  INST.choirMenOldLine = smp('chorusMen', 0.23, { att: 0.12, rel: 1.3, hp: 100, hum: 1.5, alt: true, eq: [[5000, 2.5, 'hs']] }, 'uuh');   // the old men singing a line (their own articulation)
   INST.choirMenOld = smp('chorusMen', 0.23, { att: 1.8, rel: 2.5, hp: 90, hum: 1.5, eq: [[5000, 2, 'hs']] }, 'uuh');
   INST.choirMenNew = smp('choirOoh', 0.144, { att: 0.3, rel: 1.4, hp: 70, eq: [[6000, 1.5, 'hs']], range: [38, 78], stretch: 9 }, 'uuh');
   INST.choirMenAhNew = smp('choirOoh', 0.246, { att: 0.3, rel: 1.4, hp: 70, eq: [[6000, 1.5, 'hs']], range: [38, 78], stretch: 9 }, 'aah');
