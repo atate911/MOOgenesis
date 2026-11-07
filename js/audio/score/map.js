@@ -483,7 +483,8 @@
   Track('galaxy23', {
     desc: 'Calm exploration, the weaver: a nocturne in three — the alto flute sings the game theme over slow, softly rolled harp chords, a cello answers with a new tune, the harp sweeps quietly over a held pedal, and the violins and the choir bring the theme home',
     tags: { solitude: 0.75, contact: 0.25, tension: 0, war: 0, grief: 0.05, grandeur: 0.3, energy: 0.25, dark: 0 },
-    bpm: 72, meter: 3, trim: 3, root: 'G', mode: 'major', loopFrom: 'A1', tens: false, gentle: true, rubato: 0.02, quotes: ['procession'],
+    bpm: 72, meter: 3, trim: 5.7,   // with the quieter map pieces (the soft rolled harp and the singing voices measured -19.7 LUFS at 3)
+    root: 'G', mode: 'major', loopFrom: 'A1', tens: false, gentle: true, rubato: 0.02, quotes: ['procession'],
     eraWin: [0, 0.75], fx: { dly: 1.0, verb: 1.15 },
     orch: true, holdLow: false, hall: 'musikverein', tone: { lo: 1.5, hi: 0.5, pres: 1 }, lowBand: 2.5, subBass: 0.3,
     forms: [['A1', 'B', 'C', 'A2', 'D', 'E'], ['A1', 'C', 'B', 'D', 'A2', 'E']],
