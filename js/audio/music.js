@@ -302,9 +302,6 @@
   // the men on the new choir (the refresh): the Pianobook ooh through the men's whole register, its lowest recordings (E3) carried down to
   // G2 (stretch: up to 9 semitones under them, where the Sonatina men's modulated sound had been), at the level of the men's preset it
   // replaces (matched in the men's register: ooh x0.88, aah x1.50). A voice may still split to another recording (o.split) where one is wanted.
-  // the piano (the Iowa Steinway, pp mf ff): struck and let ring as with the sustain pedal down, never tied (plucked, above)
-  INST.piano = smp('pianoIowa', 0.5, { rel: 1.6, hold: 1.2, range: [24, 108] }, 'pluck');
-  INST.pianoDeep = smp('pianoIowa', 0.5, { rel: 2.4, hold: 2.0, range: [24, 108] }, 'pluck');   // the left hand's deep chords and octaves, longer still
   // the old men's choir (the Sonatina men) kept by name for the pieces that layer it gently under the new choir (its darker, modulated
   // colour): never swapped by the refresh; played as a held bed (choir3, voice-led like strings) with long entries and releases
   INST.choirMenOld = smp('chorusMen', 0.23, { att: 1.8, rel: 2.5, hp: 90, hum: 1.5, eq: [[5000, 2, 'hs']] }, 'uuh');
@@ -416,7 +413,7 @@
   const ORCH_LOWMONO = { choir: 450, bass: 250, pad: 300 };   // the choir up to 450 Hz: the Sonatina choir's two microphones are opposed in phase through 150-500 Hz (a hollow hum)
   function orchOf(def) { return !!(def && def.orch); }
   // a plucked or struck part (pizzicato, harp, mallets) keeps its articulation in the orchestral profile: no ties, no tone cut
-  function plucked(inst) { return !!inst && (/Pizz|harp|marimba|vibes|kora|piano/i.test(inst.smp || '') || inst.fb === 'pluck' || inst.fb === 'harp'); }
+  function plucked(inst) { return !!inst && (/Pizz|harp|marimba|vibes|kora/i.test(inst.smp || '') || inst.fb === 'pluck' || inst.fb === 'harp'); }
   // Expression (the orchestral profile). A phrase has a destination: its climax, the highest note (the longest of equals; when the
   // phrase opens on its top note, the longest note of its second half). The line builds toward it, arrives, and lets go faster than it
   // came: intensity rises from 0.6 to 1 at the climax and falls to 0.45 at the phrase's end. Lines take their dynamics from it, long

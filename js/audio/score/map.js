@@ -475,93 +475,54 @@
     ],
   });
 
-  // the Weaver's harp: played softly and let ring (the pedal down), its tone a little darkened; the arpeggios overlap into rolling waves
-  const HARP_SOFT = { p: 'harp', rel: 3.5, hold: 1.6, cut: 5200 }, HARP_ROLL = { p: 'harp', rel: 3.5, hold: 2.2, cut: 4600 };
-  // The Weaver (the twenty-third piece, written for the refresh): a harp nocturne in three. The harp is the voice throughout: it sings
-  // the game's theme (the procession's climb, read in three: the climb, then a falling answer that consoles it) in two voices, rolls its
-  // own ringing arpeggios beneath (softly, the pedal down: waves, not plucks), answers itself in a new tune in the relative minor against a cello's long line, and plays a cadenza (sweeps
-  // across three octaves over a held pedal) before the theme comes home in octaves; a while it turns to filigree around the cello's
-  // reading of the theme. The strings, the new choir far back and the hall
-  // hold it, as in the rest of the map. In G, the main theme's subdominant: of its family, in a colour of its own.
+  // The Weaver (the twenty-third piece, written for the refresh; third version): a nocturne in three, the harp its colour rather than
+  // its voice. The melody on singing voices (the alto flute with the game's theme, read in three: the climb, then a falling answer that
+  // consoles it; a cello with a new tune in the relative minor, the violas beneath; at the return the violins and the choir together);
+  // the harp beneath them in one slow, soft rolled chord to the bar, low and dark-toned, ringing into the next, and in a cadenza of a few
+  // slow sweeps over a held pedal. Strings, the new choir far back and the hall hold it. In G, the main theme's subdominant.
   Track('galaxy23', {
-    desc: 'Calm exploration, the weaver: a harp nocturne in three — the harp sings the game theme over its own rolling arpeggios, answers it with a new tune against a cello, sweeps through a cadenza and brings the theme home in octaves; strings and a distant choir',
-    tags: { solitude: 0.75, contact: 0.25, tension: 0, war: 0, grief: 0.05, grandeur: 0.3, energy: 0.35, dark: 0 },
-    bpm: 78, meter: 3, trim: 3, root: 'G', mode: 'major', loopFrom: 'A1', tens: false, gentle: true, rubato: 0.02, quotes: ['procession'],
-    eraWin: [0, 0.75], fx: { dly: 1.2, verb: 1.1 },
-    orch: true, holdLow: false, hall: 'musikverein', tone: { lo: 1.5, hi: 1, pres: 1.5 }, lowBand: 2.5, subBass: 0.35,
-    forms: [['A1', 'B', 'C', 'breath', 'A2', 'D', 'E'], ['A1', 'B', 'D', 'A2', 'C', 'breath', 'E']],
-    inst: { pad: 'strings', pad2: 'cellos', bass: 'deep', lead: HARP_SOFT, lead2: 'cello', arp: HARP_ROLL, choir: 'choirOoh', choir2: 'choirHum' },
-    mix: { lead: 1.5, arp: 0.9, choir: 1.1 },
+    desc: 'Calm exploration, the weaver: a nocturne in three — the alto flute sings the game theme over slow, softly rolled harp chords, a cello answers with a new tune, the harp sweeps quietly over a held pedal, and the violins and the choir bring the theme home',
+    tags: { solitude: 0.75, contact: 0.25, tension: 0, war: 0, grief: 0.05, grandeur: 0.3, energy: 0.25, dark: 0 },
+    bpm: 72, meter: 3, trim: 3, root: 'G', mode: 'major', loopFrom: 'A1', tens: false, gentle: true, rubato: 0.02, quotes: ['procession'],
+    eraWin: [0, 0.75], fx: { dly: 1.0, verb: 1.15 },
+    orch: true, holdLow: false, hall: 'musikverein', tone: { lo: 1.5, hi: 0.5, pres: 1 }, lowBand: 2.5, subBass: 0.3,
+    forms: [['A1', 'B', 'C', 'A2', 'D', 'E'], ['A1', 'C', 'B', 'D', 'A2', 'E']],
+    inst: { pad: 'strings', pad2: 'cellos', bass: 'deep', lead: 'altoFluteIowa', lead2: 'violas', arp: { p: 'harp', rel: 4, hold: 3, cut: 3600 }, choir: 'choirOoh', choir2: 'choirHum' },
+    mix: { lead: 1.5, arp: 0.85 },
     ph: {
       PA3: '1:2 2:1 | 3:1 5:2 | 6:2 5:1 | 3:3 | 3:2 2:1 | 3:1 5:2 | 8:2 7:1 | 5:3',          // the theme's climb in three, twice (the second reaching the octave)
       PB3: '6:2 5:1 | 4:1 3:2 | 5:2 4:1 | 2:3 | 3:2 4:1 | 5:1 6:2 | 5:2 2:1 | 1:3',          // its answer: falling, then home
-      HB1: '3:1 5:1 6:1 | 8:2 7:1 | 6:1 5:1 3:1 | 5:3 | 4:1 6:1 7:1 | 9:2 8:1 | 7:1 6:1 4:1 | 6:3',   // the new tune: a rising sequence
+      HB1: '3:1 5:1 6:1 | 8:2 7:1 | 6:1 5:1 3:1 | 5:3 | 4:1 6:1 7:1 | 9:2 8:1 | 7:1 6:1 4:1 | 6:3',   // the cello's tune: a rising sequence
       HB2: '10:2 9:1 | 8:1 6:2 | 7:2 6:1 | 5:3 | 6:2 5:1 | 4:1 2:2 | 3:2 2:1 | 1:3',                 // and its way down
-      CB: '3:3 | 4:3 | 5:3 | 4:3 | 3:3 | 2:3 | 3:3 | 5:3',                                     // the cello's long line beneath it
+      CB: '3:3 | 4:3 | 5:3 | 4:3 | 3:3 | 2:3 | 3:3 | 5:3',                                     // the violas' long line beneath it
       PH: '1:2 2:1 | 3:1 5:2 | 6:6', PE: '5:3 | 3:3 | 2:3 | 1:3',                              // the coda: the theme's head, then the way home
     },
     sec: [
-      { n: 'intro', bars: 4, cres: [0.3, 0.45], prog: 'I IV I V', pad: { p: 'swell', n: 3, reg: [55, 74], vel: 0.5 }, bass: false,
-        arp: { pat: '012345432101', res: 4, gate: 3, vel: 0.24, reg: [43, 79] } },
-      { n: 'A1', bars: 16, lv: 0.56, prog: 'I V vi IV | I V IV V | I V vi IV | ii V I I', pad: { p: 'sus', n: 3, reg: [55, 72], vel: 0.55 }, bass: { pat: '1--', vel: 0.6, inst: { p: 'deep', att: 0.8, rel: 2.0 } },
-        arp: { pat: '012345432101', res: 4, gate: 3, vel: 0.2, reg: [43, 72] }, lead: { ph: 'PA3 PB3', vel: 0.52, harm: -2, shape: 0.35, swell: 0.15 }, lead2: { ph: '@', inst: 'violas', vel: 0.32, shape: 0.4, swell: 0.3 }, choir2: { n: 3, reg: [62, 74], vel: 0.2, soft: true } },
-      { n: 'B', bars: 16, lv: 0.62, prog: 'vi iii IV I | ii V I I | vi iii IV I | ii V vi V', pad: { p: 'swell', n: 3, reg: [57, 74], vel: 0.45 }, bass: { pat: '1--', vel: 0.6, inst: { p: 'deep', att: 0.8, rel: 2.0 } },
-        arp: { pat: '012345432101', res: 4, gate: 3, vel: 0.18, reg: [43, 67] }, lead: { ph: 'HB1 HB2', vel: 0.54, harm: -2, shape: 0.35, swell: 0.15 },
-        lead2: { ph: 'CB CB', oct: -1, vel: 0.5, shape: 0.35, swell: 0.3 }, choir2: { n: 3, reg: [64, 76], vel: 0.3, soft: true } },
-      { n: 'C', bars: 8, lv: 0.5, prog: 'IV:2 ii:2 | V:2 V:2', pad: { p: 'swell', n: 2, reg: [62, 76], vel: 0.35 }, bass: { pat: '1--', pedal: true, vel: 0.5, inst: { p: 'deep', att: 1.2, rel: 2.6 } },
-        arp: { pat: ['012345678', '876543210'], res: 3, gate: 3, vel: 0.32, reg: [43, 91] }, choir: { n: 2, reg: [64, 76], vel: 0.22, soft: true } },
-      { n: 'breath', bars: 2, barsVar: [1, 2], lv: 0.3, prog: 'I:2', tens: false, pad: { p: 'swell', n: 2, reg: [62, 79], vel: 0.3 },
-        arp: { pat: '0.....', res: 2, gate: 4, vel: 0.26, reg: [55, 79] } },
-      { n: 'A2', bars: 16, cres: [0.66, 0.8], prog: 'I V vi IV | I V IV V | I V vi IV | ii V I I', pad: { p: 'sus', n: 4, reg: [55, 79], vel: 0.65 }, pad2: { p: 'swell', n: 2, reg: [40, 52], vel: 0.5 },
-        bass: { pat: '1--', vel: 0.7, inst: { p: 'deep', att: 0.6, rel: 1.8 } }, arp: { pat: '012345432101', res: 4, gate: 3, vel: 0.21, reg: [43, 72] },
-        lead: { ph: 'PA3 PB3', vel: 0.56, harm: -2, shape: 0.35, swell: 0.15 }, lead2: { ph: '@', inst: 'choirOoh', vel: 0.34, shape: 0.4, swell: 0.3 }, choir: { n: 3, reg: [55, 72], vel: 0.4, soft: true } },
-      // the cello takes the theme (its answer, then the climb) and the harp turns to filigree around it, quick and high
-      { n: 'D', bars: 16, lv: 0.6, prog: 'IV I V vi | IV I V V | IV I V vi | ii V I I', pad: { p: 'swell', n: 3, reg: [55, 72], vel: 0.45 }, bass: { pat: '1--', vel: 0.6, inst: { p: 'deep', att: 0.8, rel: 2.0 } },
-        arp: { pat: '012321012', res: 3, gate: 2.2, vel: 0.24, reg: [62, 86] }, lead: { ph: 'PB3 PA3', inst: 'cello', oct: -1, vel: 0.62, shape: 0.35, swell: 0.3 }, choir2: { n: 2, reg: [64, 76], vel: 0.24, soft: true } },
-      { n: 'E', bars: 8, cres: [0.5, 0.3], prog: 'I IV I V | IV V I I', pad: { p: 'swell', n: 3, reg: [55, 72], vel: 0.45 }, bass: { pat: '1--', vel: 0.5, inst: { p: 'deep', att: 1.0, rel: 2.4 } },
-        arp: { pat: '012345432101', res: 4, gate: 3, vel: 0.17, reg: [43, 72] }, lead: { ph: 'PH PE', vel: 0.5, harm: -2, shape: 0.35, swell: 0.15 }, lead2: { ph: '@', inst: 'violas', vel: 0.28, shape: 0.4, swell: 0.3 } },
+      { n: 'intro', bars: 4, cres: [0.3, 0.42], prog: 'I IV I V', pad: { p: 'swell', n: 3, reg: [55, 72], vel: 0.45 }, bass: false,
+        arp: { pat: '012345', res: 2, gate: 4, vel: 0.2, reg: [43, 64] } },
+      // the flute sings the theme; the harp rolls one soft chord to the bar beneath it
+      { n: 'A1', bars: 16, lv: 0.54, prog: 'I V vi IV | I V IV V | I V vi IV | ii V I I', pad: { p: 'sus', n: 3, reg: [55, 69], vel: 0.5 }, bass: { pat: '1--', vel: 0.6, inst: { p: 'deep', att: 0.8, rel: 2.0 } },
+        arp: { pat: '01234.', res: 2, gate: 4, vel: 0.18, reg: [43, 62] }, lead: { ph: 'PA3 PB3', vel: 0.58, shape: 0.35, swell: 0.25 }, choir2: { n: 3, reg: [62, 74], vel: 0.18, soft: true } },
+      // the cello's tune in the relative minor, the violas' long line beneath
+      { n: 'B', bars: 16, lv: 0.6, prog: 'vi iii IV I | ii V I I | vi iii IV I | ii V vi V', pad: { p: 'swell', n: 3, reg: [57, 72], vel: 0.42 }, bass: { pat: '1--', vel: 0.6, inst: { p: 'deep', att: 0.8, rel: 2.0 } },
+        arp: { pat: '01234.', res: 2, gate: 4, vel: 0.16, reg: [43, 60] }, lead: { ph: 'HB1 HB2', inst: 'cello', oct: -1, vel: 0.6, shape: 0.35, swell: 0.3 },
+        lead2: { ph: 'CB CB', oct: -1, vel: 0.4, shape: 0.4, swell: 0.3 }, choir2: { n: 3, reg: [64, 76], vel: 0.22, soft: true } },
+      // the harp's moment: a few slow sweeps across the chords over a held pedal, ringing out
+      { n: 'C', bars: 8, lv: 0.46, prog: 'IV:2 ii:2 | V:2 V:2', pad: { p: 'swell', n: 2, reg: [62, 76], vel: 0.32 }, bass: { pat: '1--', pedal: true, vel: 0.5, inst: { p: 'deep', att: 1.2, rel: 2.6 } },
+        arp: { pat: ['01234567....', '76543210....'], res: 4, gate: 5, vel: 0.2, reg: [43, 86] }, choir: { n: 2, reg: [64, 76], vel: 0.2, soft: true } },
+      // the theme home: the violins and the choir together, the harp rolling beneath
+      { n: 'A2', bars: 16, cres: [0.62, 0.76], prog: 'I V vi IV | I V IV V | I V vi IV | ii V I I', pad: { p: 'sus', n: 4, reg: [55, 76], vel: 0.6 }, pad2: { p: 'swell', n: 2, reg: [40, 52], vel: 0.5 },
+        bass: { pat: '1--', vel: 0.7, inst: { p: 'deep', att: 0.6, rel: 1.8 } }, arp: { pat: '01234.', res: 2, gate: 4, vel: 0.2, reg: [43, 62] },
+        lead: { ph: 'PA3 PB3', inst: 'strings', vel: 0.62, shape: 0.35, swell: 0.3 }, lead2: { ph: '@', inst: 'choirOoh', vel: 0.4, shape: 0.4, swell: 0.3 }, choir: { n: 3, reg: [55, 69], vel: 0.3, soft: true } },
+      // the flute takes the cello's tune, an octave higher, over the strings and the harp's rolls
+      { n: 'D', bars: 16, lv: 0.58, prog: 'vi iii IV I | ii V I I | vi iii IV I | ii V I V', pad: { p: 'sus', n: 3, reg: [55, 72], vel: 0.5 }, pad2: { p: 'swell', n: 2, reg: [40, 52], vel: 0.45 }, bass: { pat: '1--', vel: 0.6, inst: { p: 'deep', att: 0.8, rel: 2.0 } },
+        arp: { pat: '01234.', res: 2, gate: 4, vel: 0.17, reg: [43, 62] }, lead: { ph: 'HB1 HB2', vel: 0.56, shape: 0.35, swell: 0.25 }, choir2: { n: 3, reg: [62, 74], vel: 0.2, soft: true } },
+      // the coda: the flute with the theme's head, then home
+      { n: 'E', bars: 8, cres: [0.48, 0.3], prog: 'I IV I V | IV V I I', pad: { p: 'swell', n: 3, reg: [55, 69], vel: 0.42 }, bass: { pat: '1--', vel: 0.5, inst: { p: 'deep', att: 1.0, rel: 2.4 } },
+        arp: { pat: '01234.', res: 2, gate: 4, vel: 0.16, reg: [43, 62] }, lead: { ph: 'PH PE', vel: 0.52, shape: 0.35, swell: 0.25 } },
     ],
   });
 
-  // The Homeworld (the twenty-fourth piece, written for the refresh; second version): the piano as the score's warm, low heart, with
-  // both of the game's themes. Chords rather than runs: voiced in the low middle of the keyboard on a gentle 3-3-2 pulse (one, the
-  // and of two, four), rests between them, the bass a single low root; the melody one quiet line in the middle of the keyboard, sparse,
-  // often resting (the new main theme's climb, then the first main theme's hymn); a soft string bed seats it in the hall with the
-  // orchestra. At the height the choir sings the climb (the organ beneath the voices) and the piano becomes the pulse under them; a coda
-  // of chords alone and the theme's head. The tone softened, the dynamic held in the middle. In D, the main theme's own key.
-  Track('galaxy24', {
-    desc: 'Calm exploration, the homeworld: the piano with both of the game\'s themes — low, warm chords on a gentle pulse with space between them, a quiet single line of the climb and then the hymn, a soft string bed; at the height the choir and the organ carry the climb over the piano\'s pulse; a coda of chords alone',
-    tags: { solitude: 0.6, contact: 0.3, tension: 0, war: 0, grief: 0.15, grandeur: 0.35, energy: 0.35, dark: 0.05 },
-    bpm: 72, trim: 5.2,   // -15.5 LUFS with the rest (the chords' soft dynamic and the mono piano measured -20.2 at 3)
-    root: 'D', mode: 'major', loopFrom: 'A', tens: false, gentle: true, rubato: 0.02, quotes: ['procession', 'hymn'],
-    eraWin: [0, 0.8], fx: { dly: 0.6, verb: 1.05 },
-    orch: true, holdLow: false, hall: 'musikverein', tone: { lo: 1.5, hi: 0, pres: 1 }, lowBand: 2.5, subBass: 0.25,
-    forms: [['A', 'B', 'C', 'D', 'E'], ['A', 'C', 'B', 'D', 'E']],
-    inst: { pad: { p: 'piano', cut: 3800, hold: 0.8 }, pad2: 'strings', bass: { p: 'pianoDeep', cut: 2400, hold: 1.0 }, lead: { p: 'piano', cut: 4200 }, choir: 'choirOoh', choir2: 'choirMen' },
-    mix: { lead: 1.25, pad: 1, bass: 1, choir: 1 },
-    ph: {
-      PA: '@procession.A1', PB: '@procession.A2', CD: '@procession.CD', H1: '@hymn.H1', H2: '@hymn.H2', K: '@hymn.K',
-      HM1: '3:2 2:2 | 1:3 5:1 | 6:2 5:2 | 3:4', HM2: '4:2 3:2 | 2:3 6:1 | 5:2 4:2 | 3:4',          // its own consoling tune: falling, then a reach and home
-    },
-    sec: [
-      { n: 'intro', bars: 4, cres: [0.38, 0.48], prog: 'I IV vi V', pad: { p: 'stab', pat: 'x.......', n: 4, reg: [43, 64], vel: 0.55, gate: 3 }, bass: { pat: '1---', vel: 0.6 } },
-      // the climb, one quiet line over low chords on the pulse, the strings a breath beneath
-      { n: 'A', bars: 16, lv: 0.56, prog: 'I V vi IV | I V IV V | I V vi IV | ii V I I', pad: { p: 'stab', pat: 'x..x..x.', n: 4, reg: [43, 64], vel: 0.5, gate: 1.6 }, bass: { pat: '1---', vel: 0.6 },
-        pad2: { p: 'swell', n: 3, reg: [55, 72], vel: 0.25 }, lead: { ph: 'H1 r4 H2 r4', vel: 0.52, shape: 0.35, swell: 0.1 } },
-      // the hymn, the voices humming beneath it
-      { n: 'B', bars: 16, lv: 0.6, prog: 'vi IV I V | vi IV ii V | I IV vi V | IV V I I', pad: { p: 'stab', pat: 'x...x.x.', n: 4, reg: [43, 64], vel: 0.5, gate: 1.6 }, bass: { pat: '1---', vel: 0.6 },
-        pad2: { p: 'swell', n: 3, reg: [55, 72], vel: 0.25 }, lead: { ph: 'HM1 r4 HM2 r4', vel: 0.54, shape: 0.35, swell: 0.1 }, choir: { n: 3, reg: [57, 69], vel: 0.24, soft: true } },
-      // space: chords alone, the hymn's call once
-      { n: 'C', bars: 8, lv: 0.44, prog: 'IV:2 I:2 | ii:2 V:2', pad: { p: 'stab', pat: 'x.......', n: 4, reg: [43, 64], vel: 0.48, gate: 3 }, bass: { pat: '1-------', vel: 0.5 },
-        lead: { ph: 'r8 K', vel: 0.46, shape: 0.35, swell: 0.1 } },
-      // the height: the choir sings the climb (the organ beneath it), the piano is the pulse under the voices, the strings swell
-      { n: 'D', bars: 16, cres: [0.68, 0.82], prog: 'I V vi IV | I V IV V | I V vi IV | ii V I I', pad: { p: 'stab', pat: 'x..x..x.', n: 4, reg: [43, 64], vel: 0.56, gate: 1.6 }, bass: { pat: '1---', vel: 0.68 },
-        pad2: { p: 'swell', n: 4, reg: [55, 76], vel: 0.36 }, lead: { ph: 'PA PB PA CD', vel: 0.35, shape: 0.35, swell: 0.1 }, choir: { n: 3, reg: [57, 72], vel: 0.32 }, choir2: { n: 3, reg: [43, 57], vel: 0.28 } },
-      // the coda: chords alone, the theme's head, home
-      { n: 'E', bars: 8, cres: [0.5, 0.32], prog: 'I IV I V | IV V I I', pad: { p: 'stab', pat: 'x.......', n: 4, reg: [43, 64], vel: 0.46, gate: 3 }, bass: { pat: '1---', vel: 0.5 },
-        lead: { ph: 'K HM2', vel: 0.46, shape: 0.35, swell: 0.1 } },
-    ],
-  });
 
   Music._hitsVariant('galaxy9'); Music._hitsVariant('galaxy10');   // the war-time readings of the rare pieces
 
