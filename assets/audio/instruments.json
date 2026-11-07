@@ -25931,7 +25931,7 @@
     },
     {
      "file": "clarIowa-Gs6-l2-r0.mp3",
-     "root": 92,
+     "root": 91.48,
      "lo": 92,
      "hi": 93,
      "vel": [
@@ -26049,6 +26049,7 @@
     {
      "file": "altoFluteIowa-G3-l0-r0.mp3",
      "root": 55,
+     "fix": true,
      "lo": 53,
      "hi": 57,
      "vel": [

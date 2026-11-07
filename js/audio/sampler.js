@@ -329,8 +329,8 @@
     S.inst[name] = inst;
     const jobs = (def.zones || []).map(z => loadBuf(z.file).then(buf => {
       let loop = z.loop ? [z.loop[0] + S.offset, z.loop[1] + S.offset] : null, root = num(z.root, 60);
-      if (loop && inst.loop) { loop = clearTail(buf, loop); const rl = relocateLoop(buf, loop[0], Math.min(loop[1], buf.duration - 0.065)), ls = rl[0]; root = inst.pitched ? refineRoot(buf, ls, rl[1], root) : root; const le = tuneLoop(buf, ls, rl[1], root); loop = [ls, le]; if (EVEN[name]) evenLoop(buf, ls, le, root); flattenLoop(buf, ls, le, root); flattenLow(buf, ls, le, inst.pitched ? root : 0); { const le2 = smoothLoop(buf, ls, le, inst.pitched ? root : 0); if (le2 > ls) loop = [ls, le2]; }; }   // the zone's true pitch; the loop a whole number of periods, its bands and its level even, its seam blended
-      else if (!loop && inst.pitched && !NO_REFINE.test(name)) root = refineRoot(buf, Math.min(0.06, buf.duration * 0.1), Math.min(buf.duration, 0.7), root, true);   // a struck or plucked note: its pitch just after the attack
+      if (loop && inst.loop) { loop = clearTail(buf, loop); const rl = relocateLoop(buf, loop[0], Math.min(loop[1], buf.duration - 0.065)), ls = rl[0]; root = inst.pitched && !z.fix ? refineRoot(buf, ls, rl[1], root) : root;   /* z.fix: a zone whose pitch wanders too far to measure keeps its written root */ const le = tuneLoop(buf, ls, rl[1], root); loop = [ls, le]; if (EVEN[name]) evenLoop(buf, ls, le, root); flattenLoop(buf, ls, le, root); flattenLow(buf, ls, le, inst.pitched ? root : 0); { const le2 = smoothLoop(buf, ls, le, inst.pitched ? root : 0); if (le2 > ls) loop = [ls, le2]; }; }   // the zone's true pitch; the loop a whole number of periods, its bands and its level even, its seam blended
+      else if (!loop && inst.pitched && !z.fix && !NO_REFINE.test(name)) root = refineRoot(buf, Math.min(0.06, buf.duration * 0.1), Math.min(buf.duration, 0.7), root, true);   // a struck or plucked note: its pitch just after the attack
       if (loop) agreeStereo(buf, loop, inst);
       inst.zones.push({ buf, root, lo: num(z.lo, 0), hi: num(z.hi, 127), loop, vel: z.vel || [0, 1], rr: z.rr || 0, gain: dbtoa(num(z.gain, 0)), pan: z.pan !== undefined ? num(z.pan, 0) : undefined });
     }).catch(e => { inst.failed++; S.errors++; if (S.errors < 4) console.warn('[samples] ' + z.file + ' failed', e && e.message); }));
@@ -482,6 +482,19 @@
     const k = inst.name + ':' + list[0].root + ':' + list[0].vel[0], i = (S.rr[k] = ((S.rr[k] || 0) + 1) % list.length);
     return list[i];
   }
+  // the playing dynamic -> the dynamic the recording is chosen at: the nearest recording's, unless the part was in a neighbouring one and
+  // the music has not gone past the line between them by HYST (a sixth of a three-layer recording's range); a phrase's first note chooses
+  // afresh. Kept per instrument and part.
+  const HYST = 0.055, flowState = Object.create(null);
+  function flowLayer(inst, midi, key, ld, fresh) {
+    const L = layersAt(inst, midi, false); if (L.length < 2) return ld;
+    let near = L[0]; for (const l of L) if (Math.abs(l.c - ld) < Math.abs(near.c - ld)) near = l;
+    const prev = flowState[key];
+    if (!fresh && prev !== undefined && prev !== near.c) { const pl = L.find(l => Math.abs(l.c - prev) < 1e-6);
+      if (pl && Math.abs(L.indexOf(pl) - L.indexOf(near)) === 1 && Math.abs(ld - (pl.c + near.c) / 2) < HYST) { flowState[key] = pl.c; return pl.c; } }
+    flowState[key] = near.c; return near.c;
+  }
+  S._flowLayer = flowLayer;
   // -> [{ z, g0, g1 }] : zones with their gain at the start (dyn0) and the end (dyn1) of the note
   function pickZones(inst, midi, dyn0, dyn1, alt) {
     const L = layersAt(inst, midi, alt); if (!L.length) return [];
@@ -531,7 +544,11 @@
       while (midi < lo - 2 && midi + 12 <= hi) midi += 12;
       while (midi > hi + 2 && midi - 12 >= lo) midi -= 12;
     }
-    const picks = pickZones(inst, midi, dyn, dyn1, !!o.alt); if (!picks.length) return null;
+    // the recording follows the part's playing dynamic (o.ldyn, from the score's layer flow) and stays put inside a phrase until the music
+    // is clearly into the next recording's range; a held note's own swell still moves through the recordings as written
+    let ld0 = dyn, ld1 = dyn1;
+    if (o.ldyn !== undefined && o.part) { const l = flowLayer(inst, midi, o.smp + '|' + o.part, clamp(o.ldyn, 0, 1), !!o.lnew); ld0 = l; ld1 = clamp(l + (dyn1 - dyn), 0, 1); }
+    const picks = pickZones(inst, midi, ld0, ld1, !!o.alt); if (!picks.length) return null;
     const z0 = picks[0].z;
     const pan = o.pan !== undefined ? o.pan : (z0.pan !== undefined ? z0.pan : inst.pan);
     const v = eng.voice(dest, t, o.prio || (inst.kind === 'sustain' ? 1 : 2), pan, o.send); if (!v) return null;

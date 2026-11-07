@@ -1204,8 +1204,31 @@
     C.ev.sort((a, b) => a.t - b.t);
     markLegato(C.ev);
     if (perf && !Music._dbg.noPerform) { perform(C, Emove, pseed); C.ev.sort((a, b) => a.t - b.t); }   // the ensemble: after the legato is known, so a line's overlaps stay
+    if (!Music._dbg.noLayerFlow && (def.orch || def.refreshed)) layerFlow(C.ev);   // the refreshed pieces and the orchestral profile
     return { events: C.ev, beats: C.totalBeats, len: tAcc, wraps, pass, snaps: C.snaps, bars, beatsT, move: Emove };
   }
+  // Which recording (soft, middle or loud, where an instrument has them) a note is played from follows the music, not the note: a player's
+  // tone changes with the phrase and the section's dynamic, and does not flicker between colours on neighbouring notes as the written
+  // dynamic wavers either side of the line between two recordings. Each part carries a playing dynamic (ldyn): a phrase (notes no more
+  // than 1.5 s apart) opens at the level it lives in (its first notes looked ahead), and moves toward each note's own dynamic at the pace
+  // of the notes (a long note moves it more than a quick one: a time constant of 1.5 s). The sampler picks the recording from it, and
+  // changes recording inside a phrase only once the music is clearly into the next one's range (lnew marks a phrase's first note, where
+  // it may choose afresh). A held note's own swell still crosses recordings as written. `Music._dbg.noLayerFlow` turns it off.
+  function layerFlow(evs) {
+    const parts = Object.create(null);
+    for (const e of evs) if (e.v === 'sample' && e.m && e.o && e.o.dyn !== undefined && !e.o.oneShot) (parts[e.k || e.ly] = parts[e.k || e.ly] || []).push(e);
+    for (const k in parts) {
+      const L = parts[k]; let s = 0, end = -1e9, lastT = -1e9;
+      for (let i = 0; i < L.length; i++) {
+        const e = L[i], o = e.o, fresh = e.t - end > 1.5;
+        if (fresh) { let q = 0, n = 0; for (let j = i; j < L.length && n < 3 && (j === i || L[j].t - (L[j - 1].t + L[j - 1].o.dur) <= 1.5); j++, n++) q += L[j].o.dyn; s = q / n; }
+        else if (e.t - lastT > 0.03) s += (o.dyn - s) * (1 - Math.exp(-Math.max(0.05, o.dur) / 1.5));
+        o.ldyn = clamp(s, 0, 1); o.part = k; if (fresh) o.lnew = true;
+        lastT = e.t; end = Math.max(end, e.t + o.dur);
+      }
+    }
+  }
+  Music._layerFlow = layerFlow;
   // phrasing: in a melodic line, a note that follows straight on from the previous one is played legato (the sampler then starts past the
   // bow / breath attack and the previous note is held a little into it, like a player who does not re-attack every note)
   function markLegato(evs) {
