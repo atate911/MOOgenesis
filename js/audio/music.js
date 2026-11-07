@@ -299,6 +299,11 @@
     vlnSolo: [55, 100], vlaSolo: [48, 88], vcSolo: [36, 81], cbSolo: [28, 62], hornIowa: [34, 77], tbnSolo: [40, 72], bassTbn: [28, 62], tubaIowa: [24, 60], tptIowa: [52, 86], bassClar: [38, 79], clarIowa: [50, 91], altoFluteIowa: [55, 91], fluteIowa: [60, 96], oboeIowa: [58, 91], bassoonIowa: [34, 77], pipes: [65, 91], pipesDrone: [40, 60],
     chorus: [40, 81], chorusMen: [38, 69], chorusWomen: [53, 81] };
   for (const k in INST) if (INST[k].smp && SET_RANGE[INST[k].smp]) INST[k].range = SET_RANGE[INST[k].smp];
+  // the men on the new choir (the refresh): the Pianobook ooh through the men's whole register, its lowest recordings (E3) carried down to
+  // G2 (stretch: up to 9 semitones under them, where the Sonatina men's modulated sound had been), at the level of the men's preset it
+  // replaces (matched in the men's register: ooh x0.88, aah x1.50). A voice may still split to another recording (o.split) where one is wanted.
+  INST.choirMenNew = smp('choirOoh', 0.144, { att: 0.3, rel: 1.4, hp: 70, eq: [[6000, 1.5, 'hs']], range: [38, 78], stretch: 9 }, 'uuh');
+  INST.choirMenAhNew = smp('choirOoh', 0.246, { att: 0.3, rel: 1.4, hp: 70, eq: [[6000, 1.5, 'hs']], range: [38, 78], stretch: 9 }, 'aah');
   const inRange = (inst, reg) => { const r = inst.range; if (!r || !reg) return reg; const lo = Math.max(reg[0], r[0]), hi = Math.min(reg[1], r[1]); return hi - lo >= 7 ? [lo, hi] : reg; };
   const foldRange = (inst, m) => { const r = inst.range; if (!r) return m; while (m > r[1]) m -= 12; while (m < r[0]) m += 12; return m; };
   Music._range = { SET_RANGE, inRange, foldRange };

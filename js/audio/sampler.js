@@ -530,7 +530,7 @@
   //    pitch spread in ms / cents, 0 = none), fb / fbo (fallback synth voice + its params), oneShot (play the whole sample),
   //    alignEnd (one-shots that must end on the downbeat: swells, rolls), hold (shorts: extra ring after the written length)
   V.sample = function (eng, dest, t, o) {
-    const inst = S.inst[o.smp];
+    let inst = S.inst[o.smp];
     if (!inst || !inst.ready) {
       if (o.fb === 'none') return null;             // a pure sweetener layer: nothing plays until the samples are in
       const fb = V[o.fb || 'pad']; if (!fb || fb === V.sample) return null;
@@ -538,11 +538,15 @@
       for (const k of ['f', 'dur', 'vel', 'pan', 'prio', 'send']) if (o[k] !== undefined) fo[k] = o[k];
       return fb(eng, dest, t, fo);
     }
-    const vel = clamp(num(o.vel, 0.6), 0, 1.5), dyn = clamp(num(o.dyn, Math.min(1, vel)), 0, 1), dyn1 = o.swell !== undefined ? clamp(num(o.swell, dyn), 0, 1) : dyn;
+    let vel = clamp(num(o.vel, 0.6), 0, 1.5); const dyn = clamp(num(o.dyn, Math.min(1, vel)), 0, 1), dyn1 = o.swell !== undefined ? clamp(num(o.swell, dyn), 0, 1) : dyn;
     let midi = inst.pitched ? ftom(Math.max(8, o.f || 261.6)) : 60 + num(o.tune, 0);
+    // a split voice (o.split: { below, smp, k }): under a note the part is played from another recording, at its own level (the new
+    // choir down to D3, the deep men's recording beneath it)
+    if (o.split && inst.pitched && midi < o.split.below) { const alt = S.inst[o.split.smp]; if (alt && alt.ready) { inst = alt; vel = clamp(vel * num(o.split.k, 1), 0, 1.5); } }
     if (inst.pitched && inst.zones.length) {        // far outside the recorded range: fold by octaves (timpani asked for a bass note, choir for a high one)
       const lo = inst.zones[0].lo, hi = inst.zones[inst.zones.length - 1].hi;
-      while (midi < lo - 2 && midi + 12 <= hi) midi += 12;
+      const ext = num(o.stretch, 2);                // how far below its lowest recording a voice may be played as itself (o.stretch semitones)
+      while (midi < lo - ext && midi + 12 <= hi) midi += 12;
       while (midi > hi + 2 && midi - 12 >= lo) midi -= 12;
     }
     // the recording follows the part's playing dynamic (o.ldyn, from the score's layer flow) and stays put inside a phrase until the music
