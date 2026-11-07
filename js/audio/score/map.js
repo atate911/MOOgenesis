@@ -440,6 +440,41 @@
     ],
   });
 
+  // First Light, rewritten for the refresh (simpler, one clear voice at each stage of the morning): one long sunrise. The violas alone
+  // in the dark; the alto flute's dawn theme (a slow climb up the chord) alone at the grey; the strings warming and the harp rolling
+  // softly beneath it as it glows, the women humming far above; the climb passing to the horn as it rises, the choir entering; at the
+  // sunrise the hymn, the horns in two parts and the choir singing it (the organ beneath), a soft pulse of timpani; the flute's theme
+  // again in the day, and the violas at dusk.
+  Track('galaxy14', {
+    desc: 'The early years, first light: one long sunrise — the violas alone in the dark, the alto flute\'s dawn theme at the grey, the strings and a softly rolling harp as it glows, the horn and the choir as it rises, the hymn in horns and voices at the sunrise itself, then the day and the fall to dusk',
+    tags: { solitude: 0.9, contact: 0.2, tension: 0, war: 0, grief: 0, grandeur: 0.5, energy: 0.45, dark: 0.1 },
+    bpm: 54, trim: 5, root: 'Db', mode: 'major', loopFrom: 'grey', tens: false, gentle: true, rubato: 0.03, eraWin: [0, 0.55], fx: { dly: 1.4, verb: 1.15 },
+    orch: true, holdLow: false, hall: 'musikverein', tone: { lo: 1.5, hi: 1.5, pres: 2 }, lowBand: 2.5, subBass: 0.3,
+    forms: [['grey', 'glow', 'rise', 'sunrise', 'day', 'dusk'], ['grey', 'glow', 'day', 'rise', 'sunrise', 'dusk']],
+    inst: { pad: 'violas', pad2: 'cellos', bass: 'deep', lead: 'altoFluteIowa', lead2: 'hornIowa', arp: { p: 'harp', rel: 3.5, hold: 2.2, cut: 4600 }, choir: 'choirOoh', choir2: 'choirMen' },
+    mix: { lead: 1.6, arp: 0.9 },
+    ph: {
+      D1: '1:4 | 3:2 5:2 | 6:4 | 5:2 3:2', D2: '1:4 | 3:2 5:2 | 9:2 10:2 | 7:2 5:2',                // the dawn theme: a slow climb up the chord, and back
+      D3: '6:2 8:2 | 10:3 9:1 | 8:2 6:2 | 5:4', D4: '10:2 8:2 | 7:3 5:1 | 6:2 5:2 | 5:4',            // the climb from higher up, as the light rises
+      H1: '@hymn.H1', H2: '@hymn.H2',                                                              // the hymn at the sunrise
+    },
+    sec: [
+      { n: 'night', bars: 8, cres: [0.3, 0.42], prog: 'IM7:4 IVM7:4', pad: { p: 'swell', n: 2, reg: [50, 64], vel: 0.6 }, bass: { pat: '1---', pedal: true, inst: { p: 'deep', att: 2.0, rel: 3.0 } } },
+      { n: 'grey', bars: 8, cres: [0.42, 0.52], prog: 'IM7:2 IVM7:2 | IM7:2 V:2', pad: { p: 'swell', n: 3, reg: [50, 67], vel: 0.6 }, bass: { pat: '1---', inst: { p: 'deep', att: 1.6, rel: 2.8 } },
+        lead: { ph: ['D1 D2', 'D2 D1'], vel: 0.5, shape: 0.35, swell: 0.2 } },
+      { n: 'glow', bars: 8, cres: [0.52, 0.66], prog: 'IM7:2 IVM7:2 | IM7:2 V:2', pad: { p: 'sus', inst: 'strings', n: 3, reg: [50, 69], vel: 0.6 }, pad2: { p: 'swell', n: 2, reg: [43, 55], vel: 0.5 }, bass: { pat: '1---', inst: { p: 'deep', att: 1.4, rel: 2.6 } },
+        arp: { pat: '01232101', res: 2, gate: 2.4, vel: 0.26, reg: [43, 62] }, lead: { ph: ['D1 D2', 'D2 D1'], vel: 0.54, shape: 0.35, swell: 0.2 }, choir: { n: 2, reg: [67, 79], vel: 0.26, soft: true } },
+      { n: 'rise', bars: 8, cres: [0.66, 0.88], prog: 'vi7:2 IVM7:2 | IM7:2 V:2', pad: { p: 'sus', inst: 'strings', n: 4, reg: [50, 72], vel: 0.72 }, pad2: { p: 'swell', n: 2, reg: [43, 55], vel: 0.55 }, bass: { pat: '1---', inst: { p: 'deep', att: 1.0, rel: 2.2 } },
+        arp: { pat: '01232101', res: 2, gate: 2.4, vel: 0.28, reg: [43, 62] }, lead2: { ph: 'D3 D4', vel: 0.62, shape: 0.35, swell: 0.3 }, choir: { n: 3, reg: [62, 76], vel: 0.38, soft: true }, choir2: { n: 3, reg: [45, 57], vel: 0.32, soft: true } },
+      { n: 'sunrise', bars: 8, cres: [0.92, 1.02], prog: 'IM7:2 V:2 | IVM7:2 IM7:2', cr: false, pad: { p: 'sus', inst: 'strings', n: 3, reg: [62, 79], vel: 0.75 }, pad2: { p: 'swell', n: 2, reg: [43, 55], vel: 0.6 },
+        bass: { pat: '1---', inst: { p: 'deep', att: 0.6, rel: 1.8 } }, lead: { ph: 'H1 H2', inst: 'hornIowa', vel: 0.72, harm: -2, shape: 0.35, swell: 0.35 }, choir: { n: 3, reg: [60, 74], vel: 0.42 }, choir2: { n: 3, reg: [45, 57], vel: 0.4 }, timp: { p: 'two', vel: 0.45 } },
+      { n: 'day', bars: 8, lv: 0.64, prog: 'IM7:2 IVM7:2 | IM7:2 V:2', pad: { p: 'sus', inst: 'strings', n: 3, reg: [50, 69], vel: 0.6 }, bass: { pat: '1---', inst: { p: 'deep', att: 1.2, rel: 2.4 } },
+        arp: { pat: '01232101', res: 2, gate: 2.4, vel: 0.26, reg: [43, 62] }, lead: { ph: ['D1 D2', 'D2 D1'], vel: 0.54, shape: 0.35, swell: 0.2 }, choir: { n: 2, reg: [67, 79], vel: 0.24, soft: true } },
+      { n: 'dusk', bars: 8, cres: [0.56, 0.38], prog: 'IM7:2 V:2 | IM7:4', pad: { p: 'swell', n: 3, reg: [50, 67], vel: 0.55 }, bass: { pat: '1---', pedal: true, inst: { p: 'deep', att: 1.8, rel: 3.0 } },
+        lead: { ph: ['D1 r4', 'r4 D1'], vel: 0.46, shape: 0.35, swell: 0.2 } },
+    ],
+  });
+
   // the Weaver's harp: played softly and let ring (the pedal down), its tone a little darkened; the arpeggios overlap into rolling waves
   const HARP_SOFT = { p: 'harp', rel: 3.5, hold: 1.6, cut: 5200 }, HARP_ROLL = { p: 'harp', rel: 3.5, hold: 2.2, cut: 4600 };
   // The Weaver (the twenty-third piece, written for the refresh): a harp nocturne in three. The harp is the voice throughout: it sings
@@ -485,6 +520,43 @@
         arp: { pat: '012321012', res: 3, gate: 2.2, vel: 0.24, reg: [62, 86] }, lead: { ph: 'PB3 PA3', inst: 'cello', oct: -1, vel: 0.62, shape: 0.35, swell: 0.3 }, choir2: { n: 2, reg: [64, 76], vel: 0.24, soft: true } },
       { n: 'E', bars: 8, cres: [0.5, 0.3], prog: 'I IV I V | IV V I I', pad: { p: 'swell', n: 3, reg: [55, 72], vel: 0.45 }, bass: { pat: '1--', vel: 0.5, inst: { p: 'deep', att: 1.0, rel: 2.4 } },
         arp: { pat: '012321', res: 2, gate: 2.6, vel: 0.22, reg: [43, 67] }, lead: { ph: 'PH PE', vel: 0.56, harm: -2, shape: 0.35, swell: 0.15 } },
+    ],
+  });
+
+  // The Homeworld (the twenty-fourth piece, written for the refresh): the piano with both of the game's themes. The left hand deep and
+  // open (low chords and the bass in octaves, let ring), the right hand singing in octaves over rolling arpeggios: first the new main
+  // theme's climb (the procession's), then the first main theme's hymn, the choir entering beneath it; a quiet passage of the hymn's
+  // call in fragments; then the choir sings the climb with the piano, the pipe organ beneath the voices and the strings swelling; a coda
+  // for the piano alone. In D, the main theme's own key.
+  Track('galaxy24', {
+    desc: 'Calm exploration, the homeworld: the piano with both of the game\'s themes — deep open chords and octaves, the climb and then the hymn sung in octaves over rolling arpeggios, the choir entering, the voices and the organ carrying the climb with the piano at the height; a coda for the piano alone',
+    tags: { solitude: 0.6, contact: 0.3, tension: 0, war: 0, grief: 0.15, grandeur: 0.45, energy: 0.3, dark: 0.05 },
+    bpm: 66, trim: 3, root: 'D', mode: 'major', loopFrom: 'A', tens: false, gentle: true, rubato: 0.02, quotes: ['procession', 'hymn'],
+    eraWin: [0, 0.8], fx: { dly: 0.9, verb: 1.1 },
+    orch: true, holdLow: false, hall: 'musikverein', tone: { lo: 1.5, hi: 1, pres: 1.5 }, lowBand: 2.5, subBass: 0.3,
+    forms: [['A', 'B', 'C', 'D', 'E'], ['A', 'B', 'D', 'C', 'E']],
+    inst: { pad: 'pianoDeep', pad2: 'strings', bass: 'pianoDeep', lead: 'piano', lead2: 'piano', arp: 'piano', choir: 'choirOoh', choir2: 'choirMen' },
+    mix: { lead: 1.4, arp: 0.8, pad: 1, bass: 1.1, choir: 1.1 },
+    ph: { PA: '@procession.A1', PB: '@procession.A2', CD: '@procession.CD', H1: '@hymn.H1', H2: '@hymn.H2', K: '@hymn.K' },
+    sec: [
+      { n: 'intro', bars: 4, cres: [0.35, 0.5], prog: 'I IV vi V', pad: { p: 'sus', n: 3, reg: [36, 52], vel: 0.6 }, bass: { pat: '1---', vel: 0.7 } },
+      // the climb in octaves over rolling arpeggios and the deep left hand
+      { n: 'A', bars: 16, lv: 0.6, prog: 'I V vi IV | I V IV V | I V vi IV | ii V I I', pad: { p: 'sus', n: 3, reg: [36, 52], vel: 0.55 }, bass: { pat: '1-8-', vel: 0.65 },
+        arp: { pat: '01234321', res: 2, gate: 2, vel: 0.24, reg: [45, 64] }, lead: { ph: 'PA PB PA CD', vel: 0.62, shape: 0.3, swell: 0.1 }, lead2: { ph: '@', oct: 1, vel: 0.4 } },
+      // the hymn, the choir entering beneath it
+      { n: 'B', bars: 16, lv: 0.66, prog: 'vi IV I V | vi IV ii V | I IV vi V | IV V I I', pad: { p: 'sus', n: 3, reg: [36, 52], vel: 0.55 }, bass: { pat: '1-8-', vel: 0.65 },
+        arp: { pat: '01234321', res: 2, gate: 2, vel: 0.22, reg: [45, 64] }, lead: { ph: 'H1 H2 H1 H2', vel: 0.64, shape: 0.3, swell: 0.1 }, lead2: { ph: '@', oct: 1, vel: 0.4 },
+        choir: { n: 3, reg: [57, 72], vel: 0.32, soft: true }, choir2: { n: 3, reg: [43, 57], vel: 0.26, soft: true }, pad2: { p: 'swell', n: 3, reg: [62, 79], vel: 0.3 } },
+      // the piano alone: the hymn's call in fragments over slow rolling chords
+      { n: 'C', bars: 8, lv: 0.46, prog: 'IV:2 I:2 | ii:2 V:2', pad: { p: 'sus', n: 3, reg: [36, 52], vel: 0.45 }, bass: { pat: '1-------', vel: 0.5 },
+        arp: { pat: '0123', res: 1, gate: 3, vel: 0.22, reg: [45, 64] }, lead: { ph: 'K K', vel: 0.52, shape: 0.35, swell: 0.1 } },
+      // the height: the voices and the piano carry the climb (the refresh's sing puts the choir on it, the organ beneath), the strings swell
+      { n: 'D', bars: 16, cres: [0.72, 0.88], prog: 'I V vi IV | I V IV V | I V vi IV | ii V I I', pad: { p: 'sus', n: 4, reg: [36, 52], vel: 0.65 }, bass: { pat: '1-8-', vel: 0.75 },
+        arp: { pat: '01234321', res: 2, gate: 2, vel: 0.24, reg: [45, 64] }, lead: { ph: 'PA PB PA CD', vel: 0.7, shape: 0.3, swell: 0.1 }, lead2: { ph: '@', oct: 1, vel: 0.44 },
+        choir: { n: 3, reg: [57, 74], vel: 0.38 }, choir2: { n: 3, reg: [43, 57], vel: 0.32 }, pad2: { p: 'swell', n: 4, reg: [55, 81], vel: 0.45 } },
+      // the coda: the piano alone, the theme's head, home
+      { n: 'E', bars: 8, cres: [0.5, 0.3], prog: 'I IV I V | IV V I I', pad: { p: 'sus', n: 3, reg: [36, 52], vel: 0.45 }, bass: { pat: '1---', vel: 0.55 },
+        arp: { pat: '0123', res: 1, gate: 3, vel: 0.2, reg: [45, 64] }, lead: { ph: 'K CD', vel: 0.54, shape: 0.35, swell: 0.1 } },
     ],
   });
 
@@ -597,35 +669,7 @@
     ],
   });
 
-  Track('galaxy14', {
-    desc: 'The early years, first light: one long sunrise — the violas alone in the dark, the cellos and an alto flute at the grey with a dawn theme that climbs the chord, the harp and the strings as it glows, the horns and both choirs as it rises, the hymn blazing in brass and voices with timpani at the sunrise itself, then the warmth of the day and the fall to dusk',
-    tags: { solitude: 0.9, contact: 0.2, tension: 0, war: 0, grief: 0, grandeur: 0.5, energy: 0.5, dark: 0.1 },
-    bpm: 54, trim: 5.74, tone: { hi: -2.5 }, root: 'Db', mode: 'major', loopFrom: 'grey', tens: false, gentle: true, rubato: 0.03, eraWin: [0, 0.55], mix: { choir: 1.0 }, fx: { dly: 1.8, verb: 1.25 },
-    forms: [['grey', 'glow', 'rise', 'sunrise', 'day', 'dusk'], ['grey', 'glow', 'day', 'rise', 'sunrise', 'dusk'], ['grey', 'day', 'glow', 'rise', 'sunrise', 'dusk']],
-    alts: [{}, { lead: 'flute', lead2: 'cello' }, { lead: 'clarinet', arp: 'vibes' }], eraAlts: { pad2: 'cellos', lead: 'cello', choir: 'choirMen' },
-    inst: { pad: 'violas', pad2: 'cellos', bass: 'deep', lead: 'altoFlute', lead2: 'horn', bell: 'crystal', arp: 'harp', choir: 'choirWomen', choir2: 'choirMen' },
-    ph: {
-      D1: '1:4 | 3:2 5:2 | 6:4 | 5:2 3:2', D2: '1:4 | 3:2 5:2 | 9:2 10:2 | 7:2 5:2',                                // the dawn theme: a slow climb up the chord, and back
-      D3: '6:2 8:2 | 10:3 9:1 | 8:2 6:2 | 5:4', D4: '10:2 8:2 | 7:3 5:1 | 6:2 5:2 | 5:4',                            // the climb from higher up, as the light rises
-      FL1: '@wonder.W1',                                                                 // the wonder tune (the first piece), one glance back at the day
-      H1: '@hymn.H1', H2: '@hymn.H2',                 // the hymn
-    },
-    sec: [
-      { n: 'night', bars: 8, cres: [0.3, 0.42], prog: 'IM7:4 IVM7:4', pad: { p: 'swell', n: 2, reg: [48, 64], vel: 0.6 }, bass: { pat: '1---', pedal: true, inst: { p: 'deep', att: 2.0, rel: 3.0, sub: 0.5 } } },
-      { n: 'grey', bars: 8, cres: [0.42, 0.55], prog: 'IM7:2 IVM7:2 | IM7:2 V:2', pad: { p: 'swell', n: 3, reg: [48, 67], vel: 0.65 }, pad2: { p: 'swell', n: 2, reg: [45, 62], vel: 0.5 }, bass: { pat: '1---', inst: { p: 'deep', att: 1.6, rel: 2.8, sub: 0.5 } },
-        lead: { ph: ['D1 r4', 'r4 D2', 'D1 D2'], vel: 0.48, shape: 0.35, swell: 0.2 }, arp: { pat: '0.......', res: 2, vel: 0.3, reg: [55, 79], skip: 0.3 } },
-      { n: 'glow', bars: 8, cres: [0.55, 0.7], prog: 'IM7:2 IVM7:2 | IM7:2 V:2', pad: { p: 'sus', inst: 'strings', n: 3, reg: [50, 72], vel: 0.7 }, pad2: { p: 'swell', n: 2, reg: [45, 62], vel: 0.55 }, bass: { pat: '1---', inst: { p: 'deep', att: 1.4, rel: 2.6, sub: 0.5 } }, arp: { pat: '0...2...', res: 2, vel: 0.34, reg: [55, 84] },
-        lead: { ph: ['D1 D2', 'D2 D1'], vel: 0.54, shape: 0.35, swell: 0.2 }, lead2: { ph: ['r4 D1', 'r8'], inst: 'cello', oct: -1, vel: 0.42, skip: 0.4, shape: 0.35 }, choir: { n: 2, reg: [67, 81], vel: 0.36, soft: true }, bell: { dens: 0.06, res: 1, reg: [76, 100], vel: 0.36 } },
-      { n: 'rise', bars: 8, cres: [0.7, 0.9], prog: 'vi7:2 IVM7:2 | IM7:2 V:2', pad: { p: 'sus', inst: 'strings', n: 4, reg: [50, 76], vel: 0.8 }, pad2: { p: 'sus', inst: 'horn', n: 3, reg: [50, 69], vel: 0.5 }, bass: { pat: '1---', inst: { p: 'deep', att: 1.0, rel: 2.2, sub: 0.55 } }, arp: { pat: '0.1.2.3.', res: 2, vel: 0.38, reg: [55, 84] },
-        lead: { ph: 'D3 D4', vel: 0.6, shape: 0.35, swell: 0.2 }, lead2: { ph: ['r4 D4', 'r8'], vel: 0.46, shape: 0.35, swell: 0.35 }, choir: { n: 3, reg: [64, 81], vel: 0.44 }, choir2: { n: 3, reg: [43, 60], vel: 0.4 }, timp: { kick: '................', roll: 2, vel: 0.5 }, bell: { dens: 0.1, res: 1, reg: [76, 100], vel: 0.4 } },
-      { n: 'sunrise', bars: 8, cres: [0.95, 1.05], prog: 'IM7:2 V:2 | IVM7:2 IM7:2', cr: false, pad: { p: 'sus', inst: 'strings', n: 4, reg: [50, 78], vel: 0.9 }, pad2: { p: 'sus', inst: 'horn', n: 3, reg: [50, 69], vel: 0.7 }, bass: { pat: ['1---', 'c---'], inst: { p: 'deep', att: 0.6, rel: 1.8, sub: 0.6 } }, arp: { p: 'up8', vel: 0.4, reg: [55, 86] },
-        lead2: { ph: 'H1 H2', inst: 'horn', vel: 0.75, harm: -2, shape: 0.35, swell: 0.35 }, lead: { ph: 'H1 H2', inst: 'tpts', oct: 0, vel: 0.5, shape: 0.35, swell: 0.35 }, bell2: { ph: 'H1 H2', inst: 'choirWomen', vel: 0.48, shape: 0.4 }, choir: { n: 3, reg: [57, 74], vel: 0.64 }, choir2: { n: 3, reg: [43, 60], vel: 0.62 }, timp: { p: 'two', vel: 0.6 }, bell: { dens: 0.16, res: 1, reg: [76, 100], vel: 0.45 } },
-      { n: 'day', bars: 8, lv: 0.68, prog: 'IM7:2 IVM7:2 | IM7:2 V:2', pad: { p: 'sus', inst: 'strings', n: 3, reg: [50, 72], vel: 0.7 }, pad2: { p: 'swell', n: 2, reg: [45, 62], vel: 0.5 }, bass: { pat: '1---', inst: { p: 'deep', att: 1.2, rel: 2.4, sub: 0.5 } }, arp: { pat: '0...2...', res: 2, vel: 0.34, reg: [55, 84] },
-        lead: { ph: ['D1 D2', 'FL1 D2'], vel: 0.56, shape: 0.35, swell: 0.2 }, choir: { n: 3, reg: [64, 81], vel: 0.42, soft: true }, bell: { dens: 0.08, res: 1, reg: [76, 100], vel: 0.38 } },
-      { n: 'dusk', bars: 8, cres: [0.6, 0.4], prog: 'IM7:2 V:2 | IM7:4', pad: { p: 'swell', n: 3, reg: [48, 67], vel: 0.6 }, pad2: { p: 'swell', n: 2, reg: [45, 62], vel: 0.45 }, bass: { pat: '1---', pedal: true, inst: { p: 'deep', att: 1.8, rel: 3.0, sub: 0.5 } },
-        lead: { ph: ['D1 r4', 'r4 D1', 'D1 D1'], vel: 0.46, shape: 0.35, swell: 0.2 }, choir2: { n: 3, reg: [43, 60], vel: 0.32, soft: true, skip: 0.4 }, arp: { pat: '0.......', res: 2, vel: 0.28, reg: [55, 79] } },
-    ],
-  });
+
 
   Track('galaxy15', {
     desc: 'The early years, the lantern: a chorale prelude in a broad six — the cradle tune in long notes as a cantus firmus (the horn, then the men, then both) under a clarinet that never stops running its arpeggio figure, the ship’s soft organ holding the chords, a flute trio in the middle, the glockenspiel in the still; Bach’s manner for a sleeping ship, in four minutes',

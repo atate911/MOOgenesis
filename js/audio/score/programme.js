@@ -8,13 +8,13 @@
   // Moods: game-level names -> tracks (lists rotate so repeated requests do not replay the same piece)
   // the exploration programme: the eleven pieces of the whole game and the nine written for its phases (three early, three middle, three late — each
   // with an era window, see fitsEra), so fourteen to seventeen pieces are in the programme at any moment and about an hour passes before anything returns
-  const GALAXY = ['galaxy4', 'galaxy14', 'galaxy1', 'galaxy17', 'galaxy11', 'galaxy20', 'galaxy5', 'galaxy15', 'galaxy2', 'galaxy18', 'galaxy13', 'galaxy21', 'galaxy8', 'galaxy16', 'galaxy3', 'galaxy19', 'galaxy12', 'galaxy22', 'galaxy7', 'galaxy6', 'galaxy23', 'galaxy10'];   // the Chorale a regular now: its voices and organ are the feel of the game
+  const GALAXY = ['galaxy4', 'galaxy14', 'galaxy1', 'galaxy17', 'galaxy11', 'galaxy20', 'galaxy5', 'galaxy15', 'galaxy2', 'galaxy18', 'galaxy13', 'galaxy21', 'galaxy8', 'galaxy16', 'galaxy3', 'galaxy19', 'galaxy12', 'galaxy22', 'galaxy7', 'galaxy6', 'galaxy23', 'galaxy10', 'galaxy24'];   // the Chorale a regular now: its voices and organ are the feel of the game
   // the first years, alone among the stars: the planetarium pieces only (big sky, synth pads, bells, no choir or drums), the pad and harp interludes
   const GALAXY_EARLY = ['galaxy4', 'galaxy14', 'galaxy8', 'galaxy1', 'galaxy15', 'galaxy11', 'galaxy5', 'galaxy16', 'galaxy13', 'galaxy7', 'galaxy23'];
   const MOODS = {
     title: 'title', menu: 'title', explore: GALAXY, galaxy: GALAXY, map: GALAXY, galaxyEarly: GALAXY_EARLY,
     calm: GALAXY, wonder: 'galaxy1', patient: 'galaxy2', determined: 'galaxy3', deep: 'galaxy4', veil: 'galaxy5', abyss: 'galaxy6', cradle: 'galaxy7', beacon: 'galaxy8', tide: 'galaxy9', chorale: 'galaxy10', nebula: 'galaxy11', passacaglia: 'galaxy12', watch: 'galaxy13',
-    firstLight: 'galaxy14', lantern: 'galaxy15', survey: 'galaxy16', commonwealth: 'galaxy17', lanes: 'galaxy18', noon: 'galaxy19', frontier: 'galaxy20', embers: 'galaxy21', vigil: 'galaxy22', weaver: 'galaxy23', design: 'design', research: 'research', tech: 'research',
+    firstLight: 'galaxy14', lantern: 'galaxy15', survey: 'galaxy16', commonwealth: 'galaxy17', lanes: 'galaxy18', noon: 'galaxy19', frontier: 'galaxy20', embers: 'galaxy21', vigil: 'galaxy22', weaver: 'galaxy23', homeworld: 'galaxy24', design: 'design', research: 'research', tech: 'research',
     combat: ['combat3', 'combat1', 'combat2'], battle: ['combat3', 'combat1', 'combat2'], tension: 'ground', ground: 'ground', news: 'gnn', gnn: 'gnn', council: ['council2', 'council'], procession: 'procession',
     orion: 'orion', antarans: 'antarans', victory: 'victory', defeat: 'defeat', spy: 'spy', espionage: 'spy', intrigue: 'spy',
   };

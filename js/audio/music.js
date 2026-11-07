@@ -302,6 +302,9 @@
   // the men on the new choir (the refresh): the Pianobook ooh through the men's whole register, its lowest recordings (E3) carried down to
   // G2 (stretch: up to 9 semitones under them, where the Sonatina men's modulated sound had been), at the level of the men's preset it
   // replaces (matched in the men's register: ooh x0.88, aah x1.50). A voice may still split to another recording (o.split) where one is wanted.
+  // the piano (the Iowa Steinway, pp mf ff): struck and let ring as with the sustain pedal down, never tied (plucked, above)
+  INST.piano = smp('pianoIowa', 0.5, { rel: 1.6, hold: 1.2, range: [24, 108] }, 'pluck');
+  INST.pianoDeep = smp('pianoIowa', 0.5, { rel: 2.4, hold: 2.0, range: [24, 108] }, 'pluck');   // the left hand's deep chords and octaves, longer still
   INST.choirMenNew = smp('choirOoh', 0.144, { att: 0.3, rel: 1.4, hp: 70, eq: [[6000, 1.5, 'hs']], range: [38, 78], stretch: 9 }, 'uuh');
   INST.choirMenAhNew = smp('choirOoh', 0.246, { att: 0.3, rel: 1.4, hp: 70, eq: [[6000, 1.5, 'hs']], range: [38, 78], stretch: 9 }, 'aah');
   const inRange = (inst, reg) => { const r = inst.range; if (!r || !reg) return reg; const lo = Math.max(reg[0], r[0]), hi = Math.min(reg[1], r[1]); return hi - lo >= 7 ? [lo, hi] : reg; };
@@ -410,7 +413,7 @@
   const ORCH_LOWMONO = { choir: 450, bass: 250, pad: 300 };   // the choir up to 450 Hz: the Sonatina choir's two microphones are opposed in phase through 150-500 Hz (a hollow hum)
   function orchOf(def) { return !!(def && def.orch); }
   // a plucked or struck part (pizzicato, harp, mallets) keeps its articulation in the orchestral profile: no ties, no tone cut
-  function plucked(inst) { return !!inst && (/Pizz|harp|marimba|vibes|kora/i.test(inst.smp || '') || inst.fb === 'pluck' || inst.fb === 'harp'); }
+  function plucked(inst) { return !!inst && (/Pizz|harp|marimba|vibes|kora|piano/i.test(inst.smp || '') || inst.fb === 'pluck' || inst.fb === 'harp'); }
   // Expression (the orchestral profile). A phrase has a destination: its climax, the highest note (the longest of equals; when the
   // phrase opens on its top note, the longest note of its second half). The line builds toward it, arrives, and lets go faster than it
   // came: intensity rises from 0.6 to 1 at the climax and falls to 0.45 at the phrase's end. Lines take their dynamics from it, long
