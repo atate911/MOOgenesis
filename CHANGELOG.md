@@ -5,6 +5,13 @@ Versions follow `MAJOR.MINOR.PATCH`; the live version is the `VERSION` file.
 
 ## Unreleased
 
+- The new main theme (`title`), rebuilt from scratch with the user (tools/fresh/): plays at the menu and the game's setup, and now and
+  then on the map (a rare piece of the exploration rotation, p 0.25). The previous theme is `title:classic` (hidden), its readings
+  (reed, cello, symphony, chamber) derived from it. About 6 min, -15.1 LUFS, LRA 10.
+- Engine additions from the rebuild: a line's `expr` and `vibK`; a section's `verb` (the hall ridden) and `subBass`; a piece's `part`,
+  `subBass`, `lowBand` (the master's low band), `hall` (a recorded hall: Voxengo's Musikvereinsaal, unaltered, its license beside it);
+  a third bed `pad3` and a bed's `root`; a bass's `fresh` entry. The acceptance test's `carried` takes a piece's `accept.carriedDb`, and
+  `continuous` applies in full only to a piece that holds its low end.
 - The title readings with the choir rebalanced: the choir 1.6 -> 1.25, the upper strings x1.8 (new `part` balance for parts that
   share a layer), the opening's glow raised, the bass 0.86 -> 0.75 so the choir's lowest octave stays carried. The choir now leads the
   strings by 0 to 3 dB at 250 Hz-4 kHz (was 3 to 8). New acceptance check `balance`. The symphony and chamber keep their own balance.

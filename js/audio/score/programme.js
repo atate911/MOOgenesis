@@ -24,7 +24,7 @@
   // the music never stops on the map: every piece crossfades into an interlude in the next piece's key, and that into the next piece
   const INTERLUDES = ['drift', 'drift2', 'drift3', 'drift4', 'drift5', 'drift6', 'drift7'];
   // the rare pieces (the tide, the chorale) are slipped into a cycle about a third of the time each; at war their readings with the synthetic hits, more often
-  const CALM_ROT = { director: true, gap: 0, gapIn: 0, fade: 6, between: INTERLUDES, betweenP: 1, rare: { ids: ['galaxy9', 'galaxy10', 'procession'], p: { galaxy9: 0.35, galaxy10: 0.35, procession: 0.25 } } };   // the procession rarer still: an occasion
+  const CALM_ROT = { director: true, gap: 0, gapIn: 0, fade: 6, between: INTERLUDES, betweenP: 1, rare: { ids: ['galaxy9', 'galaxy10', 'procession', 'title'], p: { galaxy9: 0.35, galaxy10: 0.35, procession: 0.25, title: 0.25 } } };   // the main theme comes back now and then on the map   // the procession rarer still: an occasion
   const EARLY_ROT = { director: true, gap: 0, gapIn: 0, fade: 7, between: ['drift', 'drift2', 'drift4', 'drift5', 'drift7'], betweenP: 1 };
   const MOOD_ROTATE = { explore: CALM_ROT, galaxy: CALM_ROT, map: CALM_ROT, calm: CALM_ROT, galaxyEarly: EARLY_ROT, galaxyWar: { director: true, gap: 0, gapIn: 0, fade: 5, between: INTERLUDES, betweenP: 0.8, rare: { ids: ['galaxy9:war', 'galaxy10:war'], p: 0.6 } } };
   Music.defineProgramme({ moods: MOODS, rotate: MOOD_ROTATE, galaxy: GALAXY, early: GALAXY_EARLY, interludes: INTERLUDES });

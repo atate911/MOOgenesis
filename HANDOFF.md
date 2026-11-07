@@ -9,6 +9,11 @@ Browser-pane tip: animations use requestAnimationFrame, so in the built-in brows
 
 ## Session 11 (October 2026) — the score grows, branch `claude/festive-wozniak-7jy03r`
 
+**Latest (the new main theme).** After a run of fixes that kept breaking something, the user asked to start fresh: the main theme was
+rebuilt from scratch one approved layer at a time (tools/fresh/, its README records every step and decision), then written into the
+score as `title` (menu, setup, and a rare piece on the map); the old theme is `title:classic`. Next: refresh the other pieces' sound
+with what the rebuild taught, without rewriting them.
+
 **Latest (the orchestra with the choir).** After the foundation was held the user heard only the choir. Measured: the balance per
 section was the same as before (within 1 dB) but the choir had always stood 3 to 8 dB over the strings where the ear listens, and with
 the low cellos no longer moving the choir carried all the harmony. Rebalanced (CONVENTIONS, an orchestra with a choir); the `balance`

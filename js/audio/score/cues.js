@@ -5,7 +5,71 @@
   'use strict';
   const Music = M.Audio.Music, Track = Music._define;
 
+  // The main theme (the main movement, rebuilt from scratch with the user one approved step at a time: tools/fresh/, README there).
+  // Theme (the question) - interlude (brooding) - theme (building) - majestic resolution (the answer) - conclusion, paced with soft
+  // passages between: the bed alone; the commonwealth's tune on the cor anglais, softly; the interlude on the solo cello, then its
+  // answer on the French horn over the cello laying the head; the theme building on the French horn; the climax (the horn section with
+  // the solo horn an octave below, the trombones, the timpani, the spiccato ostinato, the choir open), the bass arriving there as a new
+  // register (a fresh entry, the tuba, the sub opening); the majestic rise above the theme and the resolution home; the release; the
+  // echo of the interlude; the conclusion. Strings, the solo double bass with a bass clarinet on the roots and a felt sub, the Sonatina
+  // men with the Pianobook ooh, in Vienna's Musikverein (a recorded hall). Plays at the menu and now and then on the map.
   Track('title', {
+    desc: 'Main theme: the commonwealth\u2019s tune as a question on the cor anglais, a brooding interlude on the cello and the horn, the theme building to the climax with the bass arriving as a new register, a majestic rise and resolution, the release, the echo, the conclusion',
+    quotes: ['procession'],
+    bpm: 58,
+    root: 'D',
+    mode: 'major',
+    orch: true,
+    holdLow: false,
+    tens: false,
+    trim: 1.75,   // about -15.5 LUFS over the whole, with the other pieces
+    accept: { carriedDb: 13 },   // the bass mass the user asked for stands well over the men's lowest octave
+    rubato: 0,
+    loopFrom: 'A',
+    fx: {verb: 1.25, stage: 0.8, dly: 0.5},
+    tone: {lo: 2.5, hi: 3},
+    mix: {pad: 1, bass: 1.9, choir: 1.5, lead: 1.8},
+    inst: {pad: 'strings', pad2: 'cellos', bass: 'deep'},
+    bassC: 40,
+    sends: {lead: {verb: 0.12, stage: 0.36, dly: 0.05}, choir: {verb: 0.32, stage: 0.12}},
+    subBass: 0.67,
+    lowBand: 3.5,
+    hall: 'musikverein',
+    ph: {
+      PA: '@procession.A1',
+      PB: '@procession.A2',
+      V3: '6:4 | 7:2 8:2 | 10:4 | 11:2 10:2',
+      V4: '8:2 7:1 6:1 | 5:2 3:2 | 4:3 2:1 | 2:4',
+      HY: '@procession.HY',
+      CD: '@procession.CD',
+      PAh: '1:3 2:1 | 3:2 5:2 | r:8',
+      I1: '6:3 7:1 | 8:2 6:2 | 5:3 6:1 | 7:2 5:2 | 10:3 9:1 | 8:2 6:2 | 9:3 8:1 | 7:4',
+      I2: '4:2 6:2 | 5:2 7:2 | 10:3 9:1 | 8:2 6:2 | 6:3 5:1 | 3:2 5:2 | 5:2 2:2 | 3:4',
+      HEAD: '1:4 | 2:4 | 3:4 | 5:4 | 4:4 | 3:4 | 2:4 | 3:4',
+      RISE: '5:3 6:1 | 8:2 11:2 | 12:3 11:1 | 9:2 7:2 | 11:3 10:1 | 12:4 | 13:2 12:2 | 12:2 9:2',
+      RES: '3:3 5:1 | 6:2 4:2 | 5:2 3:2 | 2:4 | 4:3 3:1 | 2:2 5:2 | 3:2 2:2 | 1:4',
+    },
+    sec: [
+      {n: 'intro', bars: 6, cres: [0.22, 0.34], prog: 'I I IV I | IV I', pad: {p: 'swell', inst: 'strings', n: 4, reg: [55, 81], vel: 1}, pad2: {p: 'swell', inst: 'cellos', n: 2, reg: [38, 52], vel: 0.72, open: true}, bass: {pat: '1---', vel: 0.85, inst: {p: 'cbSolo', att: 3, rel: 2.5}}, timp: false, drums: false, choir: {inst: 'choirMenAh', n: 3, reg: [43, 60], vel: 0.9, soft: true, width: 0.85, att: 3}, choir2: {inst: 'choirOoh', n: 3, reg: [64, 76], vel: 0.5, soft: true, width: 0.8, att: 4}, breath: false, pad3: {p: 'sus', inst: 'bassClar', root: true, n: 1, reg: [38, 46], vel: 0.7}},
+      {n: 'A', bars: 8, cres: [0.26, 0.48], prog: 'I I IV I | I I IV V', pad: {p: 'swell', inst: 'strings', n: 4, reg: [55, 81], vel: 1}, pad2: {p: 'swell', inst: 'cellos', n: 2, reg: [38, 52], vel: 0.72, open: true}, bass: {pat: '1---', vel: 0.85, inst: {p: 'cbSolo', att: 3, rel: 2.5}}, timp: false, drums: false, choir: {inst: 'choirMenAh', n: 3, reg: [43, 60], vel: 0.9, soft: true, width: 0.85, att: 3}, choir2: {inst: 'choirOoh', n: 3, reg: [64, 76], vel: 0.5, soft: true, width: 0.8, att: 4}, lead: {ph: 'PA*0.85 PB*0.9', inst: {p: 'reed', lvl: 0.55}, oct: 0, vel: 0.95, pan: -0.05, expr: 1.6, vibK: 1.5}, breath: false, pad3: {p: 'sus', inst: 'bassClar', root: true, n: 1, reg: [38, 46], vel: 0.7}},
+      {n: 'S1', bars: 3, cres: [0.4, 0.3], prog: 'I IV IV', pad: {p: 'swell', inst: 'strings', n: 3, reg: [55, 72], vel: 0.6}, pad2: {p: 'swell', inst: 'cellos', n: 2, reg: [38, 52], vel: 0.72, open: true}, bass: {pat: '1---', vel: 0.85, inst: {p: 'cbSolo', att: 3, rel: 2.5}}, timp: false, drums: false, choir: {inst: 'choirMenAh', n: 3, reg: [43, 57], vel: 0.6, soft: true, width: 0.85}, choir2: false, breath: false, arp: false, pad3: {p: 'sus', inst: 'bassClar', root: true, n: 1, reg: [38, 46], vel: 0.7}},
+      {n: 'I1', bars: 8, cres: [0.36, 0.5], prog: 'vi IV I V | vi IV ii V', pad: {p: 'swell', inst: 'strings', n: 4, reg: [52, 74], vel: 0.85}, pad2: {p: 'swell', inst: 'cellos', n: 2, reg: [38, 52], vel: 0.72, open: true}, bass: {pat: '1---', vel: 0.85, inst: {p: 'cbSolo', att: 3, rel: 2.5}}, timp: false, drums: false, choir: {inst: 'choirMenAh', n: 3, reg: [43, 58], vel: 0.8, soft: true, width: 0.85}, choir2: false, lead: {ph: 'I1', inst: 'vcSolo', oct: -1, vel: 0.95, pan: 0.1}, breath: false, pad3: {p: 'sus', inst: 'bassClar', root: true, n: 1, reg: [38, 46], vel: 0.7}},
+      {n: 'I2', bars: 8, cres: [0.48, 0.58], prog: 'IV V iii vi | IV I V I', pad: {p: 'swell', inst: 'strings', n: 4, reg: [52, 74], vel: 0.85}, pad2: {p: 'swell', inst: 'cellos', n: 2, reg: [38, 52], vel: 0.72, open: true}, bass: {pat: '1---', vel: 0.85, inst: {p: 'cbSolo', att: 3, rel: 2.5}}, timp: false, drums: false, choir: {inst: 'choirMenAh', n: 3, reg: [43, 58], vel: 0.8, soft: true, width: 0.85}, choir2: false, lead: {ph: 'I2', inst: 'hornIowa', oct: -1, vel: 0.95, pan: -0.05}, breath: false, lead2: {ph: 'HEAD', inst: 'vcSolo', oct: -1, vel: 0.7, pan: 0.15}, pad3: {p: 'sus', inst: 'bassClar', root: true, n: 1, reg: [38, 46], vel: 0.7}},
+      {n: 'S2', bars: 2, cres: [0.42, 0.36], prog: 'V V', pad: {p: 'swell', inst: 'strings', n: 3, reg: [55, 72], vel: 0.6}, pad2: {p: 'swell', inst: 'cellos', n: 2, reg: [38, 52], vel: 0.72, open: true}, bass: {pat: '1---', vel: 0.85, inst: {p: 'cbSolo', att: 3, rel: 2.5}}, timp: false, drums: false, choir: {inst: 'choirMenAh', n: 3, reg: [43, 57], vel: 0.6, soft: true, width: 0.85}, choir2: false, breath: false, arp: false, pad3: {p: 'sus', inst: 'bassClar', root: true, n: 1, reg: [38, 46], vel: 0.7}},
+      {n: 'A2', bars: 8, cres: [0.5, 0.66], prog: 'I I IV I | I I IV V', pad: {p: 'swell', inst: 'strings', n: 4, reg: [55, 81], vel: 1}, pad2: {p: 'swell', inst: 'cellos', n: 2, reg: [38, 52], vel: 0.72, open: true}, bass: {pat: '1---', vel: 0.85, inst: {p: 'cbSolo', att: 3, rel: 2.5}}, timp: {p: 'hits', roll: 2}, drums: false, choir: {inst: 'choirMenAh', n: 3, reg: [43, 60], vel: 0.9, soft: true, width: 0.85, att: 3}, choir2: {inst: 'choirOoh', n: 3, reg: [64, 76], vel: 0.5, soft: true, width: 0.8, att: 4}, lead: {ph: 'PA*0.95 PB*1', inst: 'hornIowa', oct: -1, vel: 0.8, pan: -0.05}, breath: true, pad3: {p: 'sus', inst: 'bassClar', root: true, n: 1, reg: [38, 46], vel: 0.7}},
+      {n: 'B', bars: 8, cres: [0.95, 1.15], prog: 'I I IV I | I I IV V', pad: {p: 'sus', inst: 'strings', n: 3, reg: [67, 88], vel: 0.9}, pad2: {p: 'swell', inst: 'cellos', n: 2, reg: [38, 52], vel: 0.72, open: true}, bass: {pat: '1---', vel: 1.15, inst: {p: 'cbSolo', att: 0.2, rel: 2.5}, fresh: true}, timp: {p: 'beats', vel: 0.6}, drums: false, choir: {inst: 'choirMenAh', n: 3, reg: [43, 60], vel: 1.1, width: 0.9}, choir2: {inst: 'choirWomen', n: 3, reg: [71, 86], vel: 0.78, width: 0.85}, lead: {ph: 'PA PB', inst: 'horn', vel: 1.1}, lead2: {ph: 'PA PB', inst: 'hornIowa', oct: -1, vel: 0.9}, arp: {inst: 'strOst', pat: '0.2.1.3.0.2.3.1.', res: 4, vel: 0.34, reg: [48, 60]}, bell2: {ph: 'PA PB', inst: 'trombones', oct: -1, vel: 0.7}, verb: 0.7, subBass: 1.12, pad3: {p: 'sus', inst: 'tuba', root: true, n: 1, reg: [38, 46], vel: 0.8}},
+      {n: 'S3', bars: 2, cres: [0.55, 0.45], prog: 'vi IV', pad: {p: 'swell', inst: 'strings', n: 3, reg: [55, 72], vel: 0.6}, pad2: {p: 'swell', inst: 'cellos', n: 2, reg: [38, 52], vel: 0.72, open: true}, bass: {pat: '1---', vel: 0.85, inst: {p: 'cbSolo', att: 3, rel: 2.5}}, timp: false, drums: false, choir: {inst: 'choirMenAh', n: 3, reg: [43, 57], vel: 0.6, soft: true, width: 0.85}, choir2: false, breath: false, arp: false, pad3: {p: 'sus', inst: 'bassClar', root: true, n: 1, reg: [38, 46], vel: 0.7}},
+      {n: 'M', bars: 8, cres: [1, 1.1], prog: 'I IV I V | IV I vi V', pad: {p: 'sus', inst: 'strings', n: 3, reg: [57, 81], vel: 0.85}, pad2: {p: 'swell', inst: 'cellos', n: 2, reg: [38, 52], vel: 0.72, open: true}, bass: {pat: '1---', vel: 0.85, inst: {p: 'cbSolo', att: 3, rel: 2.5}}, timp: {p: 'hits', roll: 2}, drums: false, choir: {inst: 'choirMenAh', n: 3, reg: [43, 60], vel: 1, width: 0.9}, choir2: false, lead: {ph: 'RISE', inst: 'horn', vel: 0.95}, lead2: {ph: 'RISE', inst: 'hornIowa', oct: -1, vel: 0.9}, arp: {inst: 'strOst', pat: '0.2.1.3.0.2.3.1.', res: 4, vel: 0.3, reg: [48, 60]}, bell2: false, breath: true, verb: 0.7, subBass: 1.01, pad3: {p: 'sus', inst: 'tuba', root: true, n: 1, reg: [38, 46], vel: 0.8}},
+      {n: 'R', bars: 8, cres: [1.05, 0.8], prog: 'I IV I V | IV V I I', pad: {p: 'sus', inst: 'strings', n: 4, reg: [60, 86], vel: 0.9}, pad2: {p: 'swell', inst: 'cellos', n: 2, reg: [38, 52], vel: 0.72, open: true}, bass: {pat: '1---', vel: 0.85, inst: {p: 'cbSolo', att: 3, rel: 2.5}}, timp: {p: 'beats', vel: 0.6}, drums: false, choir: {inst: 'choirMenAh', n: 3, reg: [43, 60], vel: 1.25, width: 0.9}, choir2: {inst: 'choirWomen', n: 3, reg: [64, 79], vel: 0.78, width: 0.85}, lead: {ph: 'RES', inst: 'horn', vel: 0.92}, lead2: {ph: 'RES', inst: 'hornIowa', oct: -1, vel: 0.85}, arp: false, bell2: {ph: 'RES', inst: 'trombones', oct: -1, vel: 0.62}, verb: 0.85, pad3: {p: 'sus', inst: 'bassClar', root: true, n: 1, reg: [38, 46], vel: 0.7}},
+      {n: 'L', bars: 6, cres: [0.55, 0.36], prog: 'I IV I | vi IV I', pad: {p: 'swell', inst: 'strings', n: 4, reg: [52, 74], vel: 0.85}, pad2: {p: 'swell', inst: 'cellos', n: 2, reg: [38, 52], vel: 0.72, open: true}, bass: {pat: '1---', vel: 0.85, inst: {p: 'cbSolo', att: 3, rel: 2.5}}, timp: false, drums: false, choir: {inst: 'choirMenAh', n: 3, reg: [43, 60], vel: 1, soft: true, width: 0.9}, choir2: {inst: 'choirOoh', n: 3, reg: [64, 76], vel: 0.55, soft: true, width: 0.8}, breath: false, pad3: {p: 'sus', inst: 'bassClar', root: true, n: 1, reg: [38, 46], vel: 0.7}},
+      {n: 'E', bars: 8, cres: [0.46, 0.36], prog: 'IV V iii vi | IV I V I', pad: {p: 'swell', inst: 'strings', n: 4, reg: [52, 74], vel: 0.85}, pad2: {p: 'swell', inst: 'cellos', n: 2, reg: [38, 52], vel: 0.72, open: true}, bass: {pat: '1---', vel: 0.85, inst: {p: 'cbSolo', att: 3, rel: 2.5}}, timp: false, drums: false, choir: {inst: 'choirMenAh', n: 3, reg: [43, 58], vel: 0.8, soft: true, width: 0.85}, choir2: false, lead: {ph: 'I2', inst: 'vcSolo', oct: -1, vel: 0.9, pan: 0.1}, breath: false, pad3: {p: 'sus', inst: 'bassClar', root: true, n: 1, reg: [38, 46], vel: 0.7}},
+      {n: 'Z', bars: 6, cres: [0.4, 0.22], prog: 'I I IV I | I I', pad: {p: 'swell', inst: 'strings', n: 4, reg: [55, 81], vel: 1}, pad2: {p: 'swell', inst: 'cellos', n: 2, reg: [38, 52], vel: 0.72, open: true}, bass: {pat: '1---', vel: 0.85, inst: {p: 'cbSolo', att: 3, rel: 2.5}}, timp: false, drums: false, choir: {inst: 'choirMenAh', n: 3, reg: [43, 60], vel: 0.9, soft: true, width: 0.85, att: 3}, choir2: false, lead: {ph: 'PAh r4', inst: 'hornIowa', oct: -1, vel: 0.9, pan: -0.05}, breath: false, pad3: {p: 'sus', inst: 'bassClar', root: true, n: 1, reg: [38, 46], vel: 0.7}},
+    ],
+  });
+
+  // The previous main theme (the undercurrent), kept for its readings below (reed, cello, symphony, chamber).
+  Track('title:classic', {
+    hidden: true,
     desc: 'Main theme — the undercurrent: a deep bed first (deep open chords in the low strings, the double bass on a slow line with its sub nearly sub-bass, the planetarium’s analogue glow, one chime), the men entering humming low; the solo horn’s first part the commonwealth’s tune itself, as the Commonwealth plays it, in the major, whole and slow over them, twice; then its variations with the men echoing its head between them, the bassoon low and the horn in variation, a soft trumpet high above once; the oboe’s lyrical variation in the breath over the cellos laying the head; the tune back whole for the crescendo in two steps, a high horn and a low brass voice in canon, then the full brass on the motif strongly with the snare, the timpani, the strings and the mallets and the chamber open on ah; the wind-down over the strings with the men’s last echo; the fade on variations, the solo horn alone, down into the drone',
     quotes: ['procession'],
     bpm: 58, root: 'D', mode: 'major', loopFrom: 'A1', trim: 2.5, orch: true, tens: false, rubato: 0.025, tone: { lo: 1.4, hi: 0.6 }, fx: { verb: 1.0, stage: 0.8, dly: 1.6 }, mix: { choir: 1.25, pad: 0.95, lead: 2.2, bass: 0.75 }, part: { pad2: 1.8 }, duck: 0.7,
@@ -87,7 +151,7 @@
   // middle), the window in the bed moved up with it (the cellos under it, the glow, the violas and the women higher still). The crest keeps
   // the horn section; the breath keeps the oboe. Hidden: the menu plays the title; this reading is for the player page and for later.
   (function () {
-    const d = JSON.parse(JSON.stringify(Music._tracks.title)); delete d._p; delete d.id;
+    const d = JSON.parse(JSON.stringify(Music._tracks['title:classic'])); delete d._p; delete d.id;
     d.desc = 'Main theme, the reed reading — the same undercurrent with the cor anglais as the first soloist, an octave above the horn: the commonwealth’s tune whole and slow over the humming men, as the Commonwealth plays it, twice; then its variations with the men echoing its head, the bassoon and the horn in variation; the tune back whole for the crescendo, the horns in canon, then the full brass on the motif; the wind-down and the fade on variations';
     d.hidden = true; d.variantOf = 'title';
     for (const s of d.sec) {
@@ -108,7 +172,7 @@
   // bass and the soloist ran together into one low cluster. So it takes the reed reading's window (the glow, the violas and the women
   // moved higher still), the beds and the bass below it untouched. The crest keeps the horns; the cello returns for the wind-down and fade.
   (function () {
-    const d = JSON.parse(JSON.stringify(Music._tracks.title)); delete d._p; delete d.id;
+    const d = JSON.parse(JSON.stringify(Music._tracks['title:classic'])); delete d._p; delete d.id;
     d.desc = 'Main theme, the cello reading — the same undercurrent with one cello as the first soloist, high in its singing register above the low strings and the humming men, the commonwealth’s tune whole and slow, twice; then its variations with the men echoing its head, the bassoon low, the oboe in the breath; the horns in canon and the full brass on the motif for the crescendo; the cello back for the wind-down and the fade';
     d.hidden = true; d.variantOf = 'title';
     d.mix = Object.assign({}, d.mix, { lead: 2.4 });
@@ -145,7 +209,7 @@
     const ONE = { kick: ['X...............', '................', '................', '................', '................', '................', '................', '................'], vel: 0.5 };
     const apply = (d, S, all) => { for (const sec of d.sec) { for (const k in all) sec[k] = all[k]; const o = S[sec.n]; if (o) for (const k in o) sec[k] = o[k]; } };
     // the symphony
-    let d = JSON.parse(JSON.stringify(Music._tracks.title)); delete d._p; delete d.id; delete d.part;   // no choir to balance the strings against: the title's own string balance
+    let d = JSON.parse(JSON.stringify(Music._tracks['title:classic'])); delete d._p; delete d.id; delete d.part;   // no choir to balance the strings against: the title's own string balance
     d.desc = 'Main theme, the symphony reading — the full orchestra, no choir: the low strings and the basses first, the violins stating the commonwealth’s tune twice with the cellos an octave below, the winds carrying the variations with the bass clarinet echoing the head low, the bassoon low and the oboe answering, the oboe’s breath over the cellos, the horns in canon, the full brass on the motif with the snare and the timpani over pulsing strings and woodwind runs, the violins’ fall for the wind-down, the flute’s fade';
     d.hidden = true; d.variantOf = 'title';
     d.inst = Object.assign({}, d.inst, { pad: 'strings', pad2: 'cellos', lead: 'strings', choir: 'choirMen' });
@@ -163,7 +227,7 @@
     }, { choir: false, choir2: false });
     Track('title:symphony', d);
     // the chamber
-    d = JSON.parse(JSON.stringify(Music._tracks.title)); delete d._p; delete d.id; delete d.part;   // no choir to balance the strings against: the title's own string balance
+    d = JSON.parse(JSON.stringify(Music._tracks['title:classic'])); delete d._p; delete d.id; delete d.part;   // no choir to balance the strings against: the title's own string balance
     d.desc = 'Main theme, the chamber reading — strings alone, nothing struck or blown: the low strings and the basses first, the violas entering, the violins stating the commonwealth’s tune twice with the cellos an octave below and the basses plucked under them, one cello echoing the head between the variations and taking the fall low, the violas singing the breath, the violins and the cellos in canon, the full strings on the motif in three octaves over the spiccato ostinato and the tremolo, the cello’s wind-down, the violins’ fade high';
     d.hidden = true; d.variantOf = 'title';
     d.inst = Object.assign({}, d.inst, { pad: 'violas', pad2: 'cellos', lead: 'strings', arp: 'pizz' });

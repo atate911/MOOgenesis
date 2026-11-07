@@ -19,7 +19,9 @@
 //   clean       the bass is a tone, not a bow: its energy above 500 Hz is 35 dB or more under its 30-250 Hz
 //   balance     an orchestra with a choir, not a choir alone: in the excerpt the choir stands at most 4.5 dB over the strings where the
 //               ear is most sensitive (250 Hz-4 kHz)
-//   continuous  the foundation is one continuous sound: the bass and the beds' voices below E3 begin at most 4 notes a minute (from the
+//   (carried takes a piece's accept.carriedDb when it declares a heavier bass on purpose)
+//   continuous  the foundation is one continuous sound (for a piece that holds its low end; one whose bass moves with the chords only
+//               keeps its held notes' level steady, 3 dB): the bass and the beds' voices below E3 begin at most 4 notes a minute (from the
 //               score), and the bass's level 40-300 Hz moves 1.5 dB or less between 0.3 s and 6 s (a loop's swell, a pulse at each bar)
 const { serve, open } = require('./lib');
 const argv = process.argv.slice(2), opt = {}; for (let i = 0; i < argv.length; i++) if (argv[i].startsWith('--')) opt[argv[i].slice(2)] = argv[i + 1] && !argv[i + 1].startsWith('--') ? argv[++i] : true;
@@ -31,6 +33,7 @@ const IDS = (argv.find(a => !a.startsWith('--') && !Object.values(opt).includes(
   const res = await page.evaluate(async ([IDS, T0, T1]) => {
     const A = MOO.Audio, M = A.Music, S = A.Samples; await S.preload(); const out = {};
     const SYNTH_SMP = /^pad(Serrie|Glass|Air|Dark)/;                    // the synthesized pads among the recordings (the organs are recordings: VSCO 2 and Sonatina)
+    const num0 = (v, dflt) => (typeof v === 'number' && isFinite(v) ? v : dflt);
     const OK_V = { sample: 1, drum: 1, kick: 1, snare: 1, hat: 1, timp: 1, expr: 1, fx: 1 };   // expr: the expression curve, not a sound
     for (const id of IDS) {
       const d = M._tracks[id], r = M._compile(id, 0), spb = 60 / d.bpm, meter = d.meter || 4, ev = r.events.filter(e => e.o), checks = [];
@@ -88,7 +91,8 @@ const IDS = (argv.find(a => !a.startsWith('--') && !Object.values(opt).includes(
       const cn = ev.filter(e => e.m && e.ly === 'choir').map(e => e.m).sort((p, q) => p - q), f0 = cn.length ? 440 * Math.pow(2, (cn[Math.floor(cn.length * 0.1)] - 69) / 12) : 0;
       if (!cn.length) checks.push({ name: 'carried', pass: true, detail: 'no choir' });
       else { const lo = Math.round(f0 * 0.85), hi = Math.round(f0 * 2.1), cb = await corr(stems.choir, lo, hi), bb = await corr(stems.bass, lo, hi), pb = await corr(stems.pad, lo, hi), over = Math.max(bb.db, pb.db) - cb.db, who = bb.db >= pb.db ? 'the bass' : 'the beds';
-        checks.push({ name: 'carried', pass: over <= 3, detail: who + ' ' + (over >= 0 ? over.toFixed(1) + ' dB over' : (-over).toFixed(1) + ' dB under') + ' the choir in its lowest octave (' + lo + '-' + hi + ' Hz)' }); }
+        const lim = num0(d.accept && d.accept.carriedDb, 3);   // a piece may declare a heavier bass on purpose (the main theme: the user asked for bass mass)
+        checks.push({ name: 'carried', pass: over <= lim, detail: who + ' ' + (over >= 0 ? over.toFixed(1) + ' dB over' : (-over).toFixed(1) + ' dB under') + ' the choir in its lowest octave (' + lo + '-' + hi + ' Hz)' }); }
       // balance: the choir against the strings, 250 Hz-4 kHz
       if (cn.length) { const cb2 = await corr(stems.choir, 250, 4000), pb2 = await corr(stems.pad, 250, 4000), lead = cb2.db - pb2.db;
         checks.push({ name: 'balance', pass: lead <= 4.5, detail: 'the choir ' + (lead >= 0 ? lead.toFixed(1) + ' dB over' : (-lead).toFixed(1) + ' dB under') + ' the strings, 250 Hz-4 kHz' }); }
@@ -104,7 +108,8 @@ const IDS = (argv.find(a => !a.startsWith('--') && !Object.values(opt).includes(
         const mav = (v, R) => v.map((_, i) => { let q = 0, c = 0; for (let k = Math.max(0, i - R); k <= Math.min(v.length - 1, i + R); k++) { q += v[k]; c++; } return q / c; });
         const sm = mav(e, 3), tr = mav(e, 60), f = []; for (let i = Math.round(T0 / 0.05); i < Math.min(e.length, Math.round(T1 / 0.05)); i++) if (e[i] > -90) f.push(sm[i] - tr[i]);
         const so = f.sort((p, q) => p - q), mv = so.length ? so[Math.floor(so.length * 0.95)] - so[Math.floor(so.length * 0.05)] : 0;
-        checks.push({ name: 'continuous', pass: perMin <= 4 && mv <= 1.5, detail: perMin.toFixed(1) + ' low notes begin a minute; the held bass moves ' + mv.toFixed(1) + ' dB' }); }
+        const holds = d.holdLow !== false;   // only a piece that holds its low end (the main theme's bass moves with the chords: the user's choice)
+        checks.push({ name: 'continuous', pass: holds ? perMin <= 4 && mv <= 1.5 : mv <= 3, detail: perMin.toFixed(1) + ' low notes begin a minute' + (holds ? '' : ' (the bass moves with the chords)') + '; the held bass moves ' + mv.toFixed(1) + ' dB' }); }
       out[id] = { orch: !!d.orch, checks };
     }
     return out;
