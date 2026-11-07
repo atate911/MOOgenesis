@@ -1249,10 +1249,11 @@
       this.loop = this.o.loop !== false; this.intensity = num(this.o.intensity, 0);
       const ctx = eng.ctx, mk = n => { this.nodes.push(n); eng.nodeCount++; return n; };
       this.bus = mk(ctx.createGain());
-      if (def.tone && (def.tone.hi || def.tone.lo)) {       // the piece's own tone: the exploration pieces sit darker than the dramatic cues
+      if (def.tone && (def.tone.hi || def.tone.lo || def.tone.pres)) {       // the piece's own tone: the exploration pieces sit darker than the dramatic cues; pres: a broad lift at 3 kHz where the shelf above 5 kHz does not reach (the voices' and the strings' presence)
         let n = this.bus;
         if (def.tone.hi) { const f = mk(ctx.createBiquadFilter()); f.type = 'highshelf'; f.frequency.value = 5000; f.gain.value = def.tone.hi; n.connect(f); n = f; }
         if (def.tone.lo) { const f = mk(ctx.createBiquadFilter()); f.type = 'lowshelf'; f.frequency.value = 120; f.gain.value = def.tone.lo; n.connect(f); n = f; }
+        if (def.tone.pres) { const f = mk(ctx.createBiquadFilter()); f.type = 'peaking'; f.frequency.value = 3000; f.Q.value = 0.8; f.gain.value = Math.max(-6, Math.min(6, def.tone.pres)); n.connect(f); n = f; }
         n.connect(eng.musicBus);
       } else this.bus.connect(eng.musicBus);
       this.verb = mk(ctx.createGain());

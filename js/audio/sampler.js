@@ -287,16 +287,20 @@
   // decibels while either layer alone was flat. So each looped zone's fundamental is measured when its file is decoded (the period by
   // autocorrelation around the nominal, refined between samples, the median over the loop) and the zone is played from that root, to a
   // fraction of a cent. `?looptune=0` keeps the manifest's roots as well as its loop ends.
-  function refineRoot(buf, ls, le, root) {
+  // the one-shots are measured too (a pizzicato, a harp string, a mallet: just after the attack, while the tone is clear), but not the
+  // instruments whose heard pitch is not the period of the wave (tubular chimes' strike tone, the timpani, gongs and cymbals)
+  const NO_REFINE = /^(chimes|crotales|timp|gong|crash|cymSwell|anvil|bassDrum|snare|tenor|tamb|claves|shaker|taps|woodBlock|triangle|bellTree|sleigh)/;
+  function refineRoot(buf, ls, le, root, oneShot) {
     if (!S.loopTune || !buf || !(le > ls)) return root;
     const sr = buf.sampleRate, d = buf.getChannelData(0), a = Math.round(ls * sr), b = Math.min(Math.round(le * sr), buf.length);
-    const f = 440 * Math.pow(2, (root - 69) / 12), P0 = sr / f; if (P0 < 8 || P0 > sr / 25) return root;
-    const L = Math.round(Math.max(6 * P0, 0.02 * sr)), lo = Math.floor(P0 * 0.97), hi = Math.ceil(P0 * 1.03), hop = Math.round(0.025 * sr), ps = [];
+    const f = 440 * Math.pow(2, (root - 69) / 12), P0 = sr / f; if (P0 < 16 || P0 > sr / 25) return root;   // above about F7 the period is too few samples to measure to a cent
+    // a one-shot is short and its tone changes as it decays: finer steps, and only the clearly periodic moments count (a loop has plenty)
+    const L = Math.round(Math.max(6 * P0, (oneShot ? 0.04 : 0.02) * sr)), lo = Math.floor(P0 * 0.97), hi = Math.ceil(P0 * 1.03), hop = Math.round((oneShot ? 0.01 : 0.025) * sr), thr = oneShot ? 0.8 : 0.7, ps = [];
     for (let at = a; at + L + hi < b; at += hop) {
       let best = -2, bk = Math.round(P0); const cs = {};
       const c = k => { let s = 0, e1 = 0, e2 = 0; for (let i = 0; i < L; i++) { s += d[at + i] * d[at + k + i]; e1 += d[at + i] * d[at + i]; e2 += d[at + k + i] * d[at + k + i]; } return s / Math.sqrt(e1 * e2 + 1e-12); };
       for (let k = lo; k <= hi; k++) { cs[k] = c(k); if (cs[k] > best) { best = cs[k]; bk = k; } }
-      if (best < 0.6) continue;
+      if (best < thr) continue;
       const c0 = cs[bk - 1] !== undefined ? cs[bk - 1] : c(bk - 1), c2 = cs[bk + 1] !== undefined ? cs[bk + 1] : c(bk + 1), den = c0 - 2 * best + c2;
       ps.push(bk + (den < 0 ? 0.5 * (c0 - c2) / den : 0));
     }
@@ -326,6 +330,7 @@
     const jobs = (def.zones || []).map(z => loadBuf(z.file).then(buf => {
       let loop = z.loop ? [z.loop[0] + S.offset, z.loop[1] + S.offset] : null, root = num(z.root, 60);
       if (loop && inst.loop) { loop = clearTail(buf, loop); const rl = relocateLoop(buf, loop[0], Math.min(loop[1], buf.duration - 0.065)), ls = rl[0]; root = inst.pitched ? refineRoot(buf, ls, rl[1], root) : root; const le = tuneLoop(buf, ls, rl[1], root); loop = [ls, le]; if (EVEN[name]) evenLoop(buf, ls, le, root); flattenLoop(buf, ls, le, root); flattenLow(buf, ls, le, inst.pitched ? root : 0); { const le2 = smoothLoop(buf, ls, le, inst.pitched ? root : 0); if (le2 > ls) loop = [ls, le2]; }; }   // the zone's true pitch; the loop a whole number of periods, its bands and its level even, its seam blended
+      else if (!loop && inst.pitched && !NO_REFINE.test(name)) root = refineRoot(buf, Math.min(0.06, buf.duration * 0.1), Math.min(buf.duration, 0.7), root, true);   // a struck or plucked note: its pitch just after the attack
       if (loop) agreeStereo(buf, loop, inst);
       inst.zones.push({ buf, root, lo: num(z.lo, 0), hi: num(z.hi, 127), loop, vel: z.vel || [0, 1], rr: z.rr || 0, gain: dbtoa(num(z.gain, 0)), pan: z.pan !== undefined ? num(z.pan, 0) : undefined });
     }).catch(e => { inst.failed++; S.errors++; if (S.errors < 4) console.warn('[samples] ' + z.file + ' failed', e && e.message); }));

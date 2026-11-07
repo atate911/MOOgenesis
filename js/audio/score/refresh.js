@@ -15,9 +15,27 @@
   const off = typeof location !== 'undefined' && /[?&]refresh=0\b/.test(location.search || '');
   const R = {
   };
+  // upgrade: the solo winds and brass from the one-layer recordings to the library's three-layer ones of the same instruments (soft, mid
+  // and loud each recorded, so a phrase's dynamics change the tone as a player's do). The factor is the loudness of the old against the
+  // new at the same notes and dynamics (tools/fresh: the level match), so the part keeps its place in the mix; its dynamic range widens.
+  const UPGRADE = { flute: ['fluteIowa', 2.71], oboe: ['oboeIowa', 1.27], clarinet: ['clarIowa', 3.05], altoFlute: ['altoFluteIowa', 0.11],
+    bassoon: ['bassoonIowa', 1.92], hornSolo: ['hornIowa', 0.62], tptSolo: ['tptIowa', 2.43] };
+  function upgrade(v) {
+    const INST = Music._INST, name = typeof v === 'string' ? v : v && typeof v === 'object' ? v.p : null, u = name && UPGRADE[name];
+    if (!u || !INST[u[0]] || !INST[name]) return v;
+    const lvl = (typeof v === 'object' && v.lvl !== undefined ? v.lvl : INST[name].lvl) * u[1] * INST[u[0]].lvl / INST[name].lvl;
+    return Object.assign({}, typeof v === 'object' ? v : {}, { p: u[0], lvl: Math.round(lvl * 1000) / 1000 });
+  }
+  function upgradeAll(d) {
+    for (const k in d.inst || {}) d.inst[k] = upgrade(d.inst[k]);
+    for (const a of d.alts || []) for (const k in a) a[k] = upgrade(a[k]);
+    for (const k in d.eraAlts || {}) d.eraAlts[k] = upgrade(d.eraAlts[k]);
+    for (const s of d.sec) for (const k in s) if (s[k] && typeof s[k] === 'object' && !Array.isArray(s[k]) && s[k].inst !== undefined) s[k] = Object.assign({}, s[k], { inst: upgrade(s[k].inst) });
+  }
   function apply(d, p) {
     for (const k in p) {
-      if (k === 'verb') { for (const n in p.verb) { const s = d.sec.find(x => x.n === n); if (s) s.verb = p.verb[n]; } }
+      if (k === 'upgrade') { if (p.upgrade) upgradeAll(d); }
+      else if (k === 'verb') { for (const n in p.verb) { const s = d.sec.find(x => x.n === n); if (s) s.verb = p.verb[n]; } }
       else if (k === 'mix' || k === 'tone') d[k] = Object.assign({}, d[k] || {}, p[k]);
       else d[k] = p[k];
     }
