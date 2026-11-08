@@ -5,6 +5,13 @@ Versions follow `MAJOR.MINOR.PATCH`; the live version is the `VERSION` file.
 
 ## Unreleased
 
+- The music selection: a change of scene is heard within about two seconds, on the next beat, through a bridge the engine chooses from
+  both sides (the colour and character of what is playing against the cue's, and whether the scene is rising or settling), handing the
+  old piece's held colour to the cue's; back on the map from a cue, an interlude opens in the cue's key and pulse and walks the circle
+  of fifths to the map's piece while the tempo glides. The research screen's music starts after a few seconds there, and leaving it (or
+  the news, or a spy scene) resumes the map's piece where it was, as the same performance. A new game leads with the whole main theme.
+  The director's memory of what was heard is kept across sessions. Every cue carries character tags. Council in state is played by a full
+  military band.
 - The laboratory: three short, loopable pieces for the research screen (The Laboratory, Discovery, The Instrument; about a minute each),
   played in turn by a new `lab` mood that the research screens set. The unused cues are gone (the older Council Fanfare, Research, Ship
   Design); the Grand Council scene now plays Council in state, rewritten as a brisk ceremonial march. Ground assault opens on its theme with

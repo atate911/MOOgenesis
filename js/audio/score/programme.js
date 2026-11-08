@@ -9,7 +9,7 @@
   // the exploration programme: the eleven pieces of the whole game and the nine written for its phases (three early, three middle, three late — each
   // with an era window, see fitsEra), so fourteen to seventeen pieces are in the programme at any moment and about an hour passes before anything returns
   const GALAXY = ['galaxy4', 'galaxy14', 'galaxy1', 'galaxy17', 'galaxy11', 'galaxy20', 'galaxy5', 'galaxy15', 'galaxy2', 'galaxy18', 'galaxy13', 'galaxy21', 'galaxy8', 'galaxy16', 'galaxy3', 'galaxy19', 'galaxy12', 'galaxy22', 'galaxy7', 'galaxy6', 'galaxy23', 'galaxy10', 'galaxy9'];   // the Chorale a regular now: its voices and organ are the feel of the game
-  // the first years, alone among the stars: the planetarium pieces only (big sky, synth pads, bells, no choir or drums), the pad and harp interludes
+  // the first years, alone among the stars: the open, unhurried pieces (big sky, soft voices at most, no drums), the pad and harp interludes
   const GALAXY_EARLY = ['galaxy4', 'galaxy14', 'galaxy8', 'galaxy1', 'galaxy15', 'galaxy11', 'galaxy5', 'galaxy16', 'galaxy13', 'galaxy7', 'galaxy23'];
   const MOODS = {
     title: 'title', menu: 'title', explore: GALAXY, galaxy: GALAXY, map: GALAXY, galaxyEarly: GALAXY_EARLY,
