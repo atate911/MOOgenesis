@@ -996,12 +996,17 @@
         }
         emit(C, ly, inst, s.start + off, m, nt.dur, vel, Object.assign({ art: art, dt: dt, pan: spec.pan, width: spec.width }, sw || {}, ex2 || {}));
         if (echoP && (!strong || spec.echo) && rng() < echoP) emit(C, ly, inst, s.start + off + 0.04, foldRange(inst, m + 12), Math.min(nt.dur, 1) * 0.8, vel * 0.3, { art: art, pan: (rng() - 0.5) * 0.8 });
+        // harm: a voice under the tune (a step count: -2 a third below, -7 an octave), or several (an array: a section playing the tune in
+        // close harmony, [-2, -4] a triad under it), each voice spread a little across the stage
         if (harm) {
-          let hm = stepMidi(C, step + harm, 0);
-          if (!isChordTone(hm, sg.ch) && clashes(hm, sg.ch)) hm = snapToChord(hm, sg.ch);
-          hm = foldRange(inst, hm);
-          C.key = key + '_h';
-          emit(C, ly, inst, s.start + off, hm, nt.dur, vel * num(spec.hvel, 0.7), { art: art, dt: dt, pan: num(spec.pan, 0) * 0.5 - 0.25 });
+          const hs = Array.isArray(harm) ? harm : [harm];
+          hs.forEach((h, hi) => {
+            let hm = stepMidi(C, step + h, 0);
+            if (!isChordTone(hm, sg.ch) && clashes(hm, sg.ch)) hm = snapToChord(hm, sg.ch);
+            hm = foldRange(inst, hm);
+            C.key = key + '_h' + (hi || '');
+            emit(C, ly, inst, s.start + off, hm, nt.dur, vel * num(spec.hvel, 0.7), { art: art, dt: dt + 0.006 * hi, pan: num(spec.pan, 0) * 0.5 + (hs.length > 1 ? (hi % 2 ? 0.28 : -0.28) : -0.25) });
+          });
           C.key = key;
         }
       }
