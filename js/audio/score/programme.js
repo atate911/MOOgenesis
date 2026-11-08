@@ -14,8 +14,8 @@
   const MOODS = {
     title: 'title', menu: 'title', explore: GALAXY, galaxy: GALAXY, map: GALAXY, galaxyEarly: GALAXY_EARLY,
     calm: GALAXY, wonder: 'galaxy1', patient: 'galaxy2', determined: 'galaxy3', deep: 'galaxy4', veil: 'galaxy5', abyss: 'galaxy6', cradle: 'galaxy7', beacon: 'galaxy8', tide: 'galaxy9', chorale: 'galaxy10', nebula: 'galaxy11', passacaglia: 'galaxy12', watch: 'galaxy13',
-    firstLight: 'galaxy14', lantern: 'galaxy15', survey: 'galaxy16', commonwealth: 'galaxy17', lanes: 'galaxy18', noon: 'galaxy19', frontier: 'galaxy20', embers: 'galaxy21', vigil: 'galaxy22', weaver: 'galaxy23', design: 'design', research: 'research', tech: 'research',
-    combat: ['combat3', 'combat1', 'combat2'], battle: ['combat3', 'combat1', 'combat2'], tension: 'ground', ground: 'ground', news: 'gnn', gnn: 'gnn', council: ['council2', 'council'], procession: 'procession',
+    firstLight: 'galaxy14', lantern: 'galaxy15', survey: 'galaxy16', commonwealth: 'galaxy17', lanes: 'galaxy18', noon: 'galaxy19', frontier: 'galaxy20', embers: 'galaxy21', vigil: 'galaxy22', weaver: 'galaxy23',
+    combat: ['combat3', 'combat1', 'combat2'], battle: ['combat3', 'combat1', 'combat2'], tension: 'ground', ground: 'ground', news: 'gnn', gnn: 'gnn', council: 'council2', lab: ['lab1', 'lab2', 'lab3'], research: ['lab1', 'lab2', 'lab3'], procession: 'procession',
     orion: 'orion', antarans: 'antarans', victory: 'victory', defeat: 'defeat', spy: 'spy', espionage: 'spy', intrigue: 'spy',
   };
   // array moods listed here play as a shuffled playlist with a pause between pieces (the original's map was silent; a breath between
@@ -26,7 +26,9 @@
   // the rare pieces (the tide, the chorale) are slipped into a cycle about a third of the time each; at war their readings with the synthetic hits, more often
   const CALM_ROT = { director: true, gap: 0, gapIn: 0, fade: 6, between: INTERLUDES, betweenP: 1, rare: { ids: ['procession', 'title'], p: { procession: 0.25, title: 0.25 } } };   // the main theme comes back now and then on the map   // the procession rarer still: an occasion
   const EARLY_ROT = { director: true, gap: 0, gapIn: 0, fade: 7, between: ['drift', 'drift2', 'drift4', 'drift5', 'drift7'], betweenP: 1 };
-  const MOOD_ROTATE = { explore: CALM_ROT, galaxy: CALM_ROT, map: CALM_ROT, calm: CALM_ROT, galaxyEarly: EARLY_ROT, galaxyWar: { director: true, gap: 0, gapIn: 0, fade: 5, between: INTERLUDES, betweenP: 0.8, rare: { ids: ['galaxy9:war', 'galaxy10:war'], p: 0.6 } } };
+  // the laboratory: its three short pieces in turn, each played through once and crossfaded into the next (no interludes)
+  const LAB_ROT = { gap: 0, gapIn: 0, fade: 3, between: null, betweenP: 0 };
+  const MOOD_ROTATE = { lab: LAB_ROT, research: LAB_ROT, explore: CALM_ROT, galaxy: CALM_ROT, map: CALM_ROT, calm: CALM_ROT, galaxyEarly: EARLY_ROT, galaxyWar: { director: true, gap: 0, gapIn: 0, fade: 5, between: INTERLUDES, betweenP: 0.8, rare: { ids: ['galaxy9:war', 'galaxy10:war'], p: 0.6 } } };
   Music.defineProgramme({ moods: MOODS, rotate: MOOD_ROTATE, galaxy: GALAXY, early: GALAXY_EARLY, interludes: INTERLUDES });
 
 })(window.MOO);

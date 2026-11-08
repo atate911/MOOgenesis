@@ -24,7 +24,6 @@
     'combat1': {hall: 'musikverein', tone: {lo: 1.7, hi: 1, pres: 2}, lowBand: 3, subBass: 0.28, space: {A1: {pad: {reg: [74,88]}}, A2: {pad: {reg: [74,88]}}, A3: {pad: {reg: [74,88]}}}, trim: 1.37},
     'combat2': {hall: 'musikverein', tone: {lo: 1.6, hi: 1, pres: 1.6}, lowBand: 3, subBass: 0.4, space: {A1: {pad: {velK: 0.7}}, A2: {pad: {velK: 0.7}}, A3: {pad: {velK: 0.7}}}, trim: 1.33},
     'ground': {hall: 'musikverein', tone: {lo: 3, hi: 0, pres: 0.5}, lowBand: 3, subBass: 0.78, mix: {lead: 2.54, choir: 2.97}, space: {B1: {pad: {reg: [72,86]}}, B2: {pad: {reg: [72,86]}}, D: {pad: {reg: [73,87]}}, E: {pad: {reg: [72,86]}}}, trim: 1.88},
-    'council': {oldMen: {vel: 0.35}, orch: true, upgrade: true, holdLow: false, hall: 'musikverein', tone: {lo: 0.5, hi: 0.42, pres: 2}, lowBand: 2.5, subBass: 0.69, mix: {lead: 1.35}, verb: {A3: 0.8, B2: 0.8}, sing: {sections: ['A3', 'B2'], inst: 'choirOoh', oct: 0, lvl: 0.352}, trim: 0.86},
     // Council in state: a ceremonial march in the Sousa manner (the user: forward and ceremonial, not the brooding of the map): brisk, the
     // snare and bass drum forward with cymbals on the entries, the theme in two-part horns at the big phrase, the refrain and the horn
     // section, the trumpets soaring over the theme, a drier, brighter room; the choir and the brass keep it in the game's sound
@@ -36,8 +35,10 @@
     'gnn': {hall: 'musikverein', tone: {lo: 3, hi: 0.06}, lowBand: 4, subBass: 0.56, mix: {lead: 1.46}, trim: 0.7},
     'orion': {oldMen: {vel: 0.35}, orch: true, upgrade: true, holdLow: false, hall: 'musikverein', tone: {lo: 0.55, hi: 1.34, pres: 2.3}, lowBand: 2.5, subBass: 0.32, mix: {lead: 2.13}, verb: {A3: 0.8}, sing: {sections: ['A3'], inst: 'choirOoh', oct: 0, lvl: 0.207}, trim: 1.88},
     'antarans': {hall: 'musikverein', tone: {lo: 3, hi: 0}, lowBand: 4, subBass: 0.1, mix: {lead: 2.11, choir: 2.18, bass: 1.22}, space: {A2: {choir: {velK: 0.7}}, A3: {choir: {velK: 0.7}}}, trim: 1.56},
-    'research': {hall: 'musikverein', tone: {lo: 3, hi: 3, pres: 1.1}, lowBand: 3, subBass: 0.62, mix: {choir: 1.48, lead: 0.88, bass: 1.22}, trim: 1.32},
-    'design': {hall: 'musikverein', tone: {lo: 1.3, hi: 0, pres: 1.6}, lowBand: 3, subBass: 0.54, trim: 1.13},
+    // the laboratory (the research screen): bright and near, a light foundation
+    'lab1': {orch: true, upgrade: true, holdLow: false, hall: 'musikverein', tone: {lo: 1.5, hi: 1.5, pres: 2}, lowBand: 2, subBass: 0.25, trim: 3},
+    'lab2': {orch: true, upgrade: true, holdLow: false, hall: 'musikverein', tone: {lo: 1.5, hi: 1.5, pres: 2}, lowBand: 2, subBass: 0.25, trim: 3},
+    'lab3': {orch: true, upgrade: true, holdLow: false, hall: 'musikverein', tone: {lo: 1.5, hi: 1.5, pres: 2}, lowBand: 2, subBass: 0.25, trim: 3},
     'galaxy1': {orch: true, upgrade: true, holdLow: false, hall: 'musikverein', tone: {lo: 0.95, hi: -0.68, pres: 1}, lowBand: 2.5, subBass: 0.42, mix: {lead: 1.23}, trim: 2.08},
     'galaxy2': {orch: true, upgrade: true, holdLow: false, hall: 'musikverein', tone: {lo: 2.52, hi: -0.98, pres: 4}, lowBand: 2.5, subBass: 0.26, trim: 1.96},
     'galaxy3': {oldMen: {vel: 0.35}, orch: true, upgrade: true, holdLow: false, hall: 'musikverein', tone: {lo: 3, hi: -0.68, pres: 1.7}, lowBand: 3.5, subBass: 0.25, mix: {choir: 2.74, lead: 0.85, bass: 1.16}, sing: {sections: ['B2'], inst: 'choirOoh', oct: 0, lvl: 0.238}, space: {A3: {pad: {velK: 0.75}}}, trim: 1.86},

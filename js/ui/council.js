@@ -13,7 +13,7 @@
 //   MOO.UI.Council.isActive() -> bool
 //   screen 'council'  (params {_run}; opened without one it shows a demo chamber with the live electorate, Esc closes it)
 // Keys: Space / Enter / click = next · Esc / right-click = skip the replay (and abstain at the ballot) · 1 / 2 / 0 = your vote · Y / N = accept / defy.
-// Soft dependencies (all guarded): Gfx.Scenes.council, Gfx.Portraits, Audio.Music ('council') / SFX ('vote','gavel','war'), Settings ('animSpeed','reduceMotion'), Perf.q.
+// Soft dependencies (all guarded): Gfx.Scenes.council, Gfx.Portraits, Audio.Music ('council2') / SFX ('vote','gavel','war'), Settings ('animSpeed','reduceMotion'), Perf.q.
 (function (M) {
   'use strict';
   const UI = M.UI, U = M.Util, h = UI.h, G = M.Game, doc = document;
@@ -590,7 +590,7 @@
     CN.skip.style.display = spec.kind === 'vote' ? '' : 'none';
     UI.clear(CN.cards); say(R, ['']); setHint([]);
     try { CN.root.focus({ preventScroll: true }); } catch (e) { /* not focusable yet */ }
-    musicPlay('council', { fade: 1.0 });
+    musicPlay('council2', { fade: 1.0 });   // Council in state, the procession's march in ceremony
     drive(R);
   }
   async function drive(R) {

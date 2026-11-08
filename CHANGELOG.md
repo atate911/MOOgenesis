@@ -5,6 +5,12 @@ Versions follow `MAJOR.MINOR.PATCH`; the live version is the `VERSION` file.
 
 ## Unreleased
 
+- The laboratory: three short, loopable pieces for the research screen (The Laboratory, Discovery, The Instrument; about a minute each),
+  played in turn by a new `lab` mood that the research screens set. The unused cues are gone (the older Council Fanfare, Research, Ship
+  Design); the Grand Council scene now plays Council in state, rewritten as a brisk ceremonial march. Ground assault opens on its theme with
+  the timpani. Mislabelled samples corrected (the harp's B3 was a C4, so its B3 to C#4 played a semitone sharp in twenty pieces; 23 zones in
+  all, found by `tools/qa/roots.py`); The Weaver's harmony fitted to its melody so every note sounds as written; the buried harps raised;
+  a piece that reaches its end with nothing following rings down over six seconds rather than being cut.
 - The score finalised in one style (the Vigil, the Tide and the Abyss for the map; the main theme for quality and mix): the game's theme
   quoted once per map piece, at its height, the pieces' own phrases elsewhere (the Beacon, the Long Night, the Watch, Noon, the
   Frontier, the Nebula, the Lanes); the Pianobook choir everywhere the old men's sound was, the old men layered gently beneath it in the

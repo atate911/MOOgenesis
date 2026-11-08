@@ -17,7 +17,8 @@
   const MAP = {
     menu: ['title', 'title'], setup: ['title', 'title'], options: null, saveload: null,
     galaxy: ['galaxy', 'galaxy'], planets: null, fleets: null, overview: null, system: null,
-    design: null, tech: null, techtree: null, research: null,          // management screens keep the underscore: no jump cuts for a menu
+    design: null,                                                     // management screens keep the underscore: no jump cuts for a menu
+    tech: ['lab', 'lab'], techtree: ['lab', 'lab'], research: ['lab', 'lab'],   // the research screen: the laboratory's three short pieces in turn
     combat: ['combat', 'combat'], landing: ['ground', 'ground'], ground: ['ground', 'ground'],
     council: ['council', 'council'],
   };
