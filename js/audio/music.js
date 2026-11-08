@@ -1363,10 +1363,11 @@
       this.applyIntensity(this.intensity, true);
       this.pass = null; this.passNo = -1; this.idx = 0; this.t0 = 0; this.skipBefore = -1e9; this.shift = 0;
       const rnd = () => (eng.offline ? eng.rand() : Math.random());
-      this.form0 = def.forms && def.forms.length ? Math.floor(rnd() * def.forms.length) : 0;   // which long block opens this performance
-      this.alt0 = def.alts && def.alts.length ? Math.floor(rnd() * def.alts.length) : 0;        // and which instrumentation
-      this.take = Math.floor(rnd() * 8);                                                        // and which reading of the small variations
-      this.era = eraOf(def, this.o.era !== undefined ? this.o.era : S.era);                       // how contentious the game is, read once per performance
+      const pf = this.o.perf || {};                                                                // a performance resumed (Music.restore) is rebuilt exactly as it was
+      this.form0 = pf.form0 !== undefined ? pf.form0 : def.forms && def.forms.length ? Math.floor(rnd() * def.forms.length) : 0;   // which long block opens this performance
+      this.alt0 = pf.alt0 !== undefined ? pf.alt0 : def.alts && def.alts.length ? Math.floor(rnd() * def.alts.length) : 0;        // and which instrumentation
+      this.take = pf.take !== undefined ? pf.take : Math.floor(rnd() * 8);                                                        // and which reading of the small variations
+      this.era = pf.era !== undefined ? pf.era : eraOf(def, this.o.era !== undefined ? this.o.era : S.era);                       // how contentious the game is, read once per performance
       this.stretch = (def.rubato ? 1 + (rnd() * 2 - 1) * def.rubato : 1) * (1 + 0.045 * this.era); // a performance is never at exactly the written tempo; tenser eras lift it a little
       this.schedDone = false; this.endAt = Infinity;
     }
@@ -1599,6 +1600,10 @@
   // up when the galaxy is at war or the empire is grand, down when the player is alone and nothing presses.
   const AXES = { solitude: 1, contact: 0.8, tension: 1, war: 1.2, grief: 1, grandeur: 0.7, energy: 0.3, dark: 0.5 };
   const DIR = { q: null, hist: Object.create(null), lastPiece: null, gainDb: 0 };
+  // what was heard and when, in wall-clock seconds, kept in the browser: a game quit and reopened within the hour does not replay its pieces
+  const wall = () => Date.now() / 1000, HIST_KEY = 'moo.music.hist';
+  try { const h = JSON.parse(localStorage.getItem(HIST_KEY) || '{}'), t = wall(); for (const k in h) if (typeof h[k] === 'number' && t - h[k] < 7200) DIR.hist[k] = h[k]; } catch (e) { /* no storage */ }
+  function heard(id) { DIR.hist[id] = wall(); try { localStorage.setItem(HIST_KEY, JSON.stringify(DIR.hist)); } catch (e) { /* no storage */ } }
   function affinity(def) {                            // 0..1: how well a piece's tags fit the situation (0.5 when nothing is known)
     const q = DIR.q, t = def && def.tags; if (!q || !t) return 0.5;
     let sum = 0, w = 0; for (const a in AXES) { if (q[a] === undefined || t[a] === undefined) continue; sum += AXES[a] * (1 - Math.abs(t[a] - q[a])); w += AXES[a]; }
@@ -1612,7 +1617,7 @@
   const farApart = (a, b) => { const ta = (a && a.tags) || {}, tb = (b && b.tags) || {}; return Math.abs(num(ta.energy, 0.5) - num(tb.energy, 0.5)) >= 0.45 || Math.abs(num(ta.dark, 0.3) - num(tb.dark, 0.3)) >= 0.5 || (a && b && fifthsDist(a, b) >= 4); };
   const QUIET = { drift: 1, drift3: 1, drift5: 1, drift6: 1 };   // the interludes that breathe: a pad and a few points of light, the voices, one held note, the choir alone
   function pickNext(pl, last) {
-    const now = A.engine ? A.engine.ctx.currentTime : 0, lastDef = DIR.lastPiece ? TRACKS[DIR.lastPiece] : null;
+    const now = wall(), lastDef = DIR.lastPiece ? TRACKS[DIR.lastPiece] : null;
     const lastRare = !!(pl.rare && DIR.lastPiece && pl.rare.ids.indexOf(DIR.lastPiece) >= 0);
     const cands = eraList(pl.ids).filter(id => id !== last).concat(pl.rare && !lastRare ? pl.rare.ids.filter(id => id !== last) : []);
     if (!cands.length) return pl.ids[0];
@@ -1774,8 +1779,22 @@
     const ws = pool.map(t => TRACKS[t] ? Math.exp(6 * colourFit(TRACKS[t], from, next)) : 1), tot = ws.reduce((a, b) => a + b, 0);
     let r = Math.random() * tot; for (let i = 0; i < pool.length; i++) { r -= ws[i]; if (r <= 0) return pool[i]; } return pool[pool.length - 1];
   }
+  const BRIDGES = ['bridge:tense', 'bridge:dark', 'bridge:bright', 'bridge:calm'];
+  function bridgeFit(d, from, next) {
+    const tgt = blend(from && palette(from, 'tail'), next && palette(next, 'head')), c = cosine(palette(d), tgt), tg = d.tags || {};
+    const toward = k => { const a = from ? num((from.tags || {})[k], 0.4) : null, b = next ? num((next.tags || {})[k], 0.4) : null; return a === null ? b : b === null ? a : 0.3 * a + 0.7 * b; };
+    let f = 1, n = 0; for (const k of ['dark', 'energy', 'tension', 'grandeur']) { const v = toward(k); if (v === null || tg[k] === undefined) continue; f -= Math.abs(tg[k] - v); n++; }
+    // the direction of the change: settling from a fight wants the calm bridge, rising into one the tense (or, into darkness, the dark)
+    const ft = from ? num((from.tags || {}).tension, 0.4) : null, nt = next ? num((next.tags || {}).tension, 0.4) : null, nd = next ? num((next.tags || {}).dark, 0.4) : 0.4;
+    const dir = ft === null || nt === null ? 0 : nt - ft, nm = d.id || '';
+    const lean = dir < -0.4 ? (/calm/.test(nm) ? 0.12 : 0) : dir > 0.4 ? (/tense/.test(nm) && nd < 0.75 ? 0.1 : /dark/.test(nm) && nd >= 0.75 ? 0.1 : 0) : 0;
+    return 0.4 * c + 0.6 * (n ? Math.max(0, 1 - (1 - f) / n) : 0.5) + lean;
+  }
+  function chooseBridge(from, next) {                   // the best fit: a bridge is a moment's joinery, not a place for variety
+    let best = 'calm', bw = -1; for (const t of BRIDGES) { if (!TRACKS[t]) continue; const w = bridgeFit(TRACKS[t], from, next); if (w > bw) { bw = w; best = t.slice(7); } } return best;
+  }
   const freeSlot = (sc, choir) => (choir ? ['choir2', 'choir', 'pad2'] : ['pad2', 'choir2', 'choir']).find(k => !sc[k]) || null;
-  Music._colour = { palette, familyOf, colourOf, colourFit, chooseTemplate };
+  Music._colour = { palette, familyOf, colourOf, colourFit, chooseTemplate, bridgeFit, chooseBridge };
 
   // the interlude for the piece that follows: the template transposed to its key and mode (cached as a hidden track 'drift:<id>'); with
   // o.from (the piece ending) its opening bars keep that piece's meter and pulse, walk the pivot chords from its key while the tempo glides to
@@ -1786,6 +1805,7 @@
     try { const P = prepare(def), r = compilePass(def, 0); for (let i = (P.loopIdx || 0) + 1; i < r.wraps.length; i++) { const w = r.wraps[i]; if (w.bars >= 4 && Math.max(w.R.lv0, w.R.lv1) <= 0.5 && w.R.tens !== false) return w.t0; } for (let i = (P.loopIdx || 0) + 1; i < r.wraps.length; i++) { const w = r.wraps[i]; if (w.bars >= 4 && Math.max(w.R.lv0, w.R.lv1) <= 0.52) return w.t0; } } catch (e) { /* a piece without a still */ }
     return 0;
   }
+  const BRIDGE_SECS = 2.2;                               // a bridge's length: under three seconds from the request to the cue, with the beat it waits for
   function interludeFor(template, nextId, o) {
     const T = TRACKS[template], N = TRACKS[nextId], long = !!(o && o.long);
     if (!T || !N || N.interlude) return null;
@@ -1813,9 +1833,13 @@
       sct.prog = toks.length > 1 && prog ? prog : toks.map(t => respell(t, oldScale, newScale)).join(' ');   // the consonant walk of each mode; a lone chord is simply re-spelled
     }
     if (N.tonic !== undefined) d.tonic = N.tonic; else if (N.oct) d.oct = N.oct;
-    if (from && T.bridge) {                               // a bridge: its first bar on the outgoing tonic, its second on the cue's dominant seventh, at its own pace
+    if (from && T.bridge) {                               // a bridge: its first bar on the outgoing tonic, its second on the cue's dominant seventh
       const path = pivotPath(from, N), B = d.sec[0];
       if (path && B) B.prog = path[0] + ' ' + path[path.length - 1];
+    }
+    if (T.bridge) {                                       // and quick: a change of scene is heard within about two seconds, whatever the bridge's own tempo
+      const beats = d.sec.reduce((a, x) => a + num(x.bars, 1) * (x.meter || d.meter || 4), 0), bpm = beats * 60 / BRIDGE_SECS;
+      if (bpm > d.bpm) d.bpm = bpm;
     } else if (from) {
       const inS = d.sec.find(x => x.n === 'in'), path = pivotPath(from, N), k = pulseK(from, N.bpm);
       if (inS) {
@@ -1841,6 +1865,11 @@
       sc[slot] = SUSTAIN[slot] && /choir/.test(slot) ? Object.assign(spec, { soft: true }) : Object.assign(spec, { p: 'swell' });
     };
     if (from && !T.bridge) carry(inS, colourOf(from, 'tail'), 0.5);
+    if (T.bridge && outS) {                               // a bridge hands over in its two bars: the old piece's held colour under it, the cue's opening colour arriving,
+      if (from) carry(outS, colourOf(from, 'tail'), 0.42);   // from the level the old piece leaves at toward the level the cue opens at
+      carry(outS, colourOf(N, 'head'), 0.4);
+      if (from && !outS.cres) { const a = secLevel(from.sec[from.sec.length - 1]), b = secLevel(N.sec[0]); outS.cres = [clamp(a * 0.9, 0.35, 0.95), clamp(Math.max(b, a * 0.8), 0.4, 1)]; delete outS.lv; }
+    }
     if (outS && outS !== inS && !T.bridge) { carry(outS, colourOf(N, 'head'), 0.45); if (outS.lv !== undefined && !outS.cres) { const lv = secLevel(N.sec[0]); outS.cres = [outS.lv, clamp(lv * 0.8, outS.lv, 0.5)]; delete outS.lv; } }
     d.hidden = true; d.interlude = true; d.desc = (T.desc || template) + ' (in the key of ' + nextId + ')';
     return Track(id, d).id;
@@ -1850,6 +1879,7 @@
   // change of scene reads as a phrase ending rather than a jump cut.
   function startTrack(id, opts) {
     const def = TRACKS[id], eng = A.engine, fade = num(opts.fade, 3.5);
+    if (opts.bridge === 'auto' && S.cur && !S.cur.stopped && S.cur.id !== id) opts = Object.assign({}, opts, { bridge: chooseBridge(outgoing(S.cur), def) });   // the bridge chosen from both sides
     if (opts.bridge && S.cur && !S.cur.stopped && S.cur.id !== id && !S.cur.def.bridge && TRACKS['bridge:' + opts.bridge]) {
       // a cue that cannot wait still gets a way in: a two-bar bridge in its key starts on the next beat, the old piece fades under it, and the
       // cue enters as the bridge crests
@@ -1868,10 +1898,10 @@
     }
     S.switchAt = null;
     if (!opts.keepPlaylist) { S.playlist = null; S.plWait = null; }
-    const p = new Player(eng, def, { loop: opts.loop !== false, intensity: S.intensity });
+    const p = new Player(eng, def, { loop: opts.loop !== false, intensity: S.intensity, perf: opts.perf });
     if (opts.from > 0) { p.shift = num(opts.from, 0); p.skipBefore = 0; }   // start part-way through the first pass (a demo, a test)
     else if (opts.quiet) { const q = quietStart(def); if (q > 0) { p.shift = q; p.skipBefore = 0; } }   // land on the piece's quiet half (back from a fight)
-    if (!def.hidden || def.variantOf) { const pid = def.variantOf || id; DIR.hist[pid] = eng.ctx.currentTime; DIR.lastPiece = pid; }   // a war-time reading counts as its piece
+    if (!def.hidden || def.variantOf) { const pid = def.variantOf || id; heard(pid); DIR.lastPiece = pid; }   // a war-time reading counts as its piece
     if (S.cur) { S.cur.fadeOut(num(opts.oldFade, fade)); S.old.push(S.cur); }    // oldFade: let a piece that is ending ring out under the next one
     S.cur = p;
     p.fadeIn(num(opts.inFade, fade));
@@ -1933,10 +1963,21 @@
       opts = opts || {};
       const pl = makePlaylist(ids, opts);
       if (!pl) return false;
+      // lead: one piece heard whole before the programme (the main theme as a new game begins); if it is already playing, from near its
+      // start, it simply carries on and the programme follows it, otherwise it starts from the top
+      if (opts.lead && TRACKS[opts.lead]) {
+        const c = S.cur, eng = A.engine;
+        if (c && !c.stopped && c.id === opts.lead && eng && c.pass && c.passNo === 0 && eng.ctx.currentTime - c.pass.start < 40) {   // its first pass, near the start: carry on
+          c.loop = false; S.switchAt = null; S.plWait = null; S.playlist = pl; pl.advancing = false;
+          pl.order = pl.order.filter(id => id !== opts.lead); pl.i = -1; DIR.lastPiece = opts.lead;
+          ensureTimer(); return opts.lead;
+        }
+        pl.order = [opts.lead].concat(pl.order.filter(id => id !== opts.lead));
+      }
       const first = pl.order[0];
       if (!A.isReady()) { S.pending = { id: first, opts: { loop: false } }; S.playlist = pl; A.onReady(() => { const p = S.pending; if (p) { S.pending = null; startTrack(p.id, { fade: 1, loop: false, keepPlaylist: true }); } }); return 'pending'; }
       S.playlist = pl;
-      return startTrack(first, { fade: num(opts.firstFade, 1.5), loop: false, keepPlaylist: true, bridge: opts.bridge, from: opts.from, quiet: opts.quiet });
+      return startTrack(first, { fade: num(opts.firstFade, 1.5), loop: false, keepPlaylist: true, bridge: opts.bridge, from: opts.from, quiet: opts.quiet, perf: opts.perf, quantize: opts.quantize });
     } catch (e) { console.warn('[music] playlist failed', e); return false; }
   };
   Music.setIntensity = function (x) {
@@ -1959,14 +2000,28 @@
   // A scene that borrows the music (GNN, lab, spy panels) takes a snapshot first and restores it afterwards: a running playlist
   // (the galaxy rotation) comes back as a playlist, a single looping track as that track, silence as silence.
   Music.snapshot = function () {
-    const pl = S.playlist;
-    return { id: Music.current(), playlist: pl ? { ids: pl.ids.slice(), shuffle: pl.shuffle, gap: pl.gap, gapIn: pl.gapIn, fade: pl.fade, between: pl.between, betweenP: pl.betweenP, rare: pl.rare, director: pl.director, start: pl.queued || (S.plWait && S.plWait.id) || pl.order[pl.i] } : null };
+    const pl = S.playlist, p = S.cur, eng = A.engine;
+    // the running piece, to resume it where it was (not an interlude or a bridge: those simply give way to the programme)
+    let resume = null;
+    if (p && !p.stopped && eng && !p.def.interlude && !p.def.bridge && p.pass) {
+      const now = eng.ctx.currentTime, at = Math.max(0, now - p.t0) + (p.shift || 0), left = p.pass.start + p.pass.len - now;
+      resume = { id: p.id, at, left, perf: { form0: p.form0, alt0: p.alt0, take: p.take, era: p.era } };
+    }
+    return { resume, id: Music.current(), playlist: pl ? { ids: pl.ids.slice(), shuffle: pl.shuffle, gap: pl.gap, gapIn: pl.gapIn, fade: pl.fade, between: pl.between, betweenP: pl.betweenP, rare: pl.rare, director: pl.director, start: pl.queued || (S.plWait && S.plWait.id) || pl.order[pl.i] } : null };
   };
   Music.restore = function (snap, opts) {
     try {
       opts = opts || {};
       const fade = num(opts.fade, 1.5);
       if (!snap) return Music.stop({ fade });
+      // resume: the piece that was interrupted carries on a little before where it stopped, as the same performance, faded in; a programme
+      // that was running continues after it (enough of the piece must be left to be worth resuming, else the programme simply goes on)
+      const r = opts.resume && snap.resume && TRACKS[snap.resume.id] && snap.resume.left > 25 ? snap.resume : null;
+      if (r) {
+        const from = Math.max(0, r.at - 2);
+        if (snap.playlist && (snap.playlist.ids.indexOf(r.id) >= 0 || (snap.playlist.rare && snap.playlist.rare.ids.indexOf(r.id) >= 0))) { const pl = snap.playlist; return Music.playlist(pl.ids, { shuffle: pl.shuffle, gap: pl.gap, gapIn: pl.gapIn, fade: pl.fade, between: pl.between, betweenP: pl.betweenP, rare: pl.rare, director: pl.director, start: r.id, firstFade: fade, from, perf: r.perf, quantize: false }); }
+        return startTrack(r.id, { fade, from, perf: r.perf, quantize: false });
+      }
       if (snap.playlist) { const pl = snap.playlist; return Music.playlist(pl.ids, { shuffle: pl.shuffle, gap: pl.gap, gapIn: pl.gapIn, fade: pl.fade, between: pl.between, betweenP: pl.betweenP, rare: pl.rare, director: pl.director, start: pl.start, firstFade: fade, bridge: opts.bridge, quiet: opts.quiet }); }
       if (snap.id) return Music.play(snap.id, { fade, bridge: opts.bridge });
       return Music.stop({ fade });
@@ -2015,7 +2070,7 @@
         const cur = list.indexOf(Music.current()), next = list[cur >= 0 ? (cur + 1) % list.length : (moodTick++) % list.length];
         if (rot) {
           if (opts.soft) { const r = softSwitch(pick, rot, opts); if (r) return r; }
-          const r = Music.playlist(pick, Object.assign({}, rot, { shuffle: true, start: rot.director ? undefined : next, firstFade: num(opts.fade, 2), bridge: opts.bridge, quiet: opts.quiet })); return r === false ? false : (rot.director ? (S.playlist && S.playlist.order[0]) || next : next);
+          const r = Music.playlist(pick, Object.assign({}, rot, { shuffle: true, start: rot.director ? undefined : next, firstFade: num(opts.fade, 2), bridge: opts.bridge, quiet: opts.quiet, quantize: opts.quantize, lead: opts.lead })); return r === false ? false : (rot.director ? (S.playlist && S.playlist.order[0]) || next : next);
         }
         pick = next;
       }

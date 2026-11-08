@@ -147,18 +147,50 @@
     try { m.setMood(galaxyMood(), { fade: 6, quantize: 'bar', soft: true }); } catch (e2) { /* audio optional */ }   // soft: the running piece reaches its next breath or section line first, then the new programme enters through an interlude
   }
 
+  // The laboratory (the research screens) is a place the player passes through often and briefly: its music starts only after a few
+  // seconds there, and leaving puts the map's piece back where it was (the same performance, a moment before it stopped), so a quick
+  // look at the research queue never interrupts the map, and a long stay never costs the map its place in the programme.
+  const LAB_DWELL = 4000;
+  let themeFirst = false;                                   // set by a new game: its first map screen leads with the whole main theme
+  let labTimer = null, labSnap = null;
+  function labEnter(m, pickMood) {
+    clearTimeout(labTimer);
+    labTimer = setTimeout(() => {
+      labTimer = null; if (group !== 'lab') return;
+      try { labSnap = m.snapshot ? m.snapshot() : null; m.setMood(pickMood, { fade: 3, quantize: 'bar' }); } catch (e) { /* audio optional */ }
+    }, LAB_DWELL);
+  }
+  // leaving the laboratory: true when the leaving is handled here (a quick visit that changed nothing, or the map put back as it was)
+  function labLeave(m, toGroup) {
+    if (labTimer) { clearTimeout(labTimer); labTimer = null; labSnap = null; return toGroup === 'galaxy'; }
+    const snap = labSnap; labSnap = null;
+    if (toGroup !== 'galaxy' || !snap || !m.restore) return false;
+    try { return m.restore(snap, { fade: 3, resume: true }) !== false; } catch (e) { return false; }
+  }
+
   function onScreen(id, params) {
     const m = music(); if (!m || !m.setMood) return;
     const pick = moodFor(id, params); if (!pick) return;
     if (pick[0] === group) return;
     const from = group; group = pick[0];
+    if (group === 'lab') { labEnter(m, pick[1]); return; }
+    // a new game: the main theme is heard whole first (carrying on if the menu's is playing), then the map's programme
+    if (group === 'galaxy' && themeFirst) {
+      themeFirst = false;
+      try { m.setMood(pick[1], { fade: 2, quantize: 'beat', lead: 'title' }); return; } catch (e) { /* audio optional */ }
+    }
+    if (from === 'lab' && labLeave(m, group)) return;
     // a cue that cannot wait is led into by a two-bar bridge that starts in the key of what is playing and lands on the cue's dominant: a tense
     // one into a fight, a bright one into the chamber and the victory, a dark one into the defeat, a calm one back onto the map from any cue
-    const bridge = group === 'combat' || group === 'ground' ? 'tense' : group === 'council' || group === 'victory' ? 'bright' : group === 'defeat' ? 'dark' : group === 'galaxy' && from && from !== 'menu' ? 'calm' : undefined;
+    // the bridge is the engine's choice, from both sides: the colour and character of what is playing against those of the cue (a fight from
+    // the map's dusk gets the tense or the dark one, the chamber the bright one, the map after a fight the calm one); none from the menu
+    const bridge = from && from !== 'title' ? 'auto' : undefined;
     const quiet = group === 'galaxy' && (from === 'combat' || from === 'ground');   // back from a fight the map lands on the quiet half of its piece, not its first bar
     try {
       if (group !== 'combat' && m.setIntensity) m.setIntensity(0);           // before the new track is built: its players copy the current level
-      m.setMood(pick[1], group === 'combat' ? { fade: 1.5, quantize: 'beat', bridge } : { fade: 4.5, quantize: 'bar', bridge, quiet });
+      // a new scene is a new scenario: the change is heard within about three seconds — on the next beat, through a quick bridge in the new
+      // key where the two differ (or a two-second crossfade), however far apart the pieces are
+      m.setMood(pick[1], group === 'combat' ? { fade: 1.5, quantize: 'beat', bridge } : { fade: 2, quantize: 'beat', bridge, quiet });
     } catch (e) { /* audio optional */ }
   }
   function calm() { const m = music(); if (m && m.setIntensity) { try { m.setIntensity(0); } catch (e) { /* audio optional */ } } }
@@ -167,9 +199,9 @@
     if (!M.Bus) return;
     M.Bus.on('screen', onScreen);
     M.Bus.on('turn:end', onTurnEnd);
-    M.Bus.on('game:new', () => { group = ''; eraSeeded = false; warMem = griefMem = peakOwn = peakFleet = 0; metSeen = null; calm(); UI.sfx('confirm'); });
-    M.Bus.on('game:loaded', () => { eraSeeded = false; warMem = griefMem = peakOwn = peakFleet = 0; metSeen = null; });
-    M.Bus.on('game:quit', () => { group = ''; eraSeeded = false; warMem = griefMem = peakOwn = peakFleet = 0; metSeen = null; calm(); const m = music(); if (m && m.setSituation) { try { m.setSituation(null); } catch (e) { /* ignore */ } } });
+    M.Bus.on('game:new', () => { themeFirst = true; group = ''; eraSeeded = false; warMem = griefMem = peakOwn = peakFleet = 0; metSeen = null; calm(); UI.sfx('confirm'); });
+    M.Bus.on('game:loaded', () => { themeFirst = false; eraSeeded = false; warMem = griefMem = peakOwn = peakFleet = 0; metSeen = null; });
+    M.Bus.on('game:quit', () => { clearTimeout(labTimer); labTimer = null; labSnap = null; group = ''; eraSeeded = false; warMem = griefMem = peakOwn = peakFleet = 0; metSeen = null; calm(); const m = music(); if (m && m.setSituation) { try { m.setSituation(null); } catch (e) { /* ignore */ } } });
   }
   UI.Soundscape = { install, onScreen, moodFor, eraTarget, situation, era: () => era };
   install();

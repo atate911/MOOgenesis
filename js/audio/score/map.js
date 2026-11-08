@@ -363,6 +363,7 @@
   // cue is led into instead of cut to; startTrack builds one with interludeFor when asked for `bridge: 'tense' | 'calm' | 'dark' | 'bright'`; the first bar is on the tonic of the piece that is ending, the second on the cue's dominant (interludeFor).
   Track('bridge:tense', {
     desc: 'A bridge into a cue that cannot wait: the strings tremble and swell with a timpani roll over two bars, in the key of the piece that follows',
+    tags: { dark: 0.6, energy: 0.75, tension: 0.9, grandeur: 0.4 },
     bpm: 92, trim: 2.92, root: 'C', mode: 'minor', hidden: true, interlude: true, bridge: true, tens: false, rubato: 0,
     inst: { pad: 'strTrem', pad2: 'lowBrass', bass: 'deep' },
     sec: [{ n: 'B', bars: 2, cres: [0.45, 0.95], prog: 'i:2', pad: { p: 'swell', n: 4, reg: [50, 76], vel: 0.85 }, pad2: { p: 'swell', n: 2, reg: [45, 62], vel: 0.6 }, bass: { pat: 'c---', pedal: true, inst: { p: 'deep', att: 0.6, sub: 0.6 } }, timp: { kick: '................', roll: 2, vel: 0.9 } }],
@@ -370,6 +371,7 @@
 
   Track('bridge:dark', {
     desc: 'A bridge into a cue that cannot wait: the low strings tremble on a sunk pedal under the drone, the tam-tam and a timpani roll, over two bars, in the key of the piece that follows',
+    tags: { dark: 0.9, energy: 0.35, tension: 0.6, grandeur: 0.3 },
     bpm: 60, trim: 3.29, root: 'C', mode: 'minor', hidden: true, interlude: true, bridge: true, tens: false, rubato: 0,
     inst: { pad: 'tremLo', pad2: 'drone', bass: 'deep' },
     sec: [{ n: 'B', bars: 2, cres: [0.45, 0.9], prog: 'i:2', pad: { p: 'swell', n: 3, reg: [40, 62], vel: 0.8 }, pad2: { p: 'swell', n: 3, reg: [45, 67], vel: 0.55 }, bass: { pat: 'c---', pedal: true, inst: { p: 'deep', att: 0.8, sub: 0.65 } }, timp: { kick: '................', roll: 2, vel: 0.7 }, drums: { tam: 'x...............', vel: 0.7 } }],
@@ -377,6 +379,7 @@
 
   Track('bridge:bright', {
     desc: 'A bridge into a cue that cannot wait: one swell of the brass and the strings together, the harp running up, two timpani strokes, over two bars, in the key of the piece that follows',
+    tags: { dark: 0.1, energy: 0.65, tension: 0.2, grandeur: 0.9 },
     bpm: 72, trim: 2.6, root: 'C', mode: 'major', hidden: true, interlude: true, bridge: true, tens: false, rubato: 0,
     inst: { pad: 'brass', pad2: 'strings', bass: 'deep', arp: 'harp' },
     sec: [{ n: 'B', bars: 2, cres: [0.5, 0.95], prog: 'I:2', pad: { p: 'swell', n: 4, reg: [52, 76], vel: 0.8 }, pad2: { p: 'swell', n: 4, reg: [50, 76], vel: 0.7 }, bass: { pat: '1---', pedal: true, inst: { p: 'deep', att: 0.6, rel: 1.6, sub: 0.5 } }, arp: { p: 'up8', vel: 0.5, reg: [55, 88] }, timp: { p: 'two', vel: 0.7 } }],
@@ -384,6 +387,7 @@
 
   Track('bridge:calm', {
     desc: 'A bridge into a cue that cannot wait: one swell of the strings and the soft organ with a chime, over two bars, in the key of the piece that follows',
+    tags: { dark: 0.25, energy: 0.2, tension: 0.1, grandeur: 0.2 },
     bpm: 60, trim: 5.33, root: 'C', mode: 'major', hidden: true, interlude: true, bridge: true, tens: false, rubato: 0,
     inst: { pad: 'strings', pad2: 'organSoft', bass: 'deep', bell: 'chime' },
     sec: [{ n: 'B', bars: 2, cres: [0.45, 0.8], prog: 'I:2', pad: { p: 'swell', n: 4, reg: [50, 76], vel: 0.7 }, pad2: { p: 'swell', n: 3, reg: [45, 69], vel: 0.5 }, bass: { pat: '1---', pedal: true, inst: { p: 'deep', att: 1.0, rel: 2.0, sub: 0.5 } }, bell: { dens: 0.3, res: 1, reg: [72, 96], vel: 0.5 } }],

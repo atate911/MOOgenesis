@@ -29,6 +29,23 @@
   // the laboratory: its three short pieces in turn, each played through once and crossfaded into the next (no interludes)
   const LAB_ROT = { gap: 0, gapIn: 0, fade: 3, between: null, betweenP: 0 };
   const MOOD_ROTATE = { lab: LAB_ROT, research: LAB_ROT, explore: CALM_ROT, galaxy: CALM_ROT, map: CALM_ROT, calm: CALM_ROT, galaxyEarly: EARLY_ROT, galaxyWar: { director: true, gap: 0, gapIn: 0, fade: 5, between: INTERLUDES, betweenP: 0.8, rare: { ids: ['galaxy9:war', 'galaxy10:war'], p: 0.6 } } };
+  // The character of the cues the map does not choose among (every map piece carries its own tags): read by the bridges, which choose the
+  // way into a cue from both sides, and by the director wherever a cue is in a programme (the war rotation's).
+  const CUE_TAGS = {
+    title: { solitude: 0.4, contact: 0.5, tension: 0.3, war: 0.1, grief: 0.2, grandeur: 1, energy: 0.5, dark: 0.35, ceremony: 0.6 },
+    combat1: { tension: 1, war: 1, grief: 0.2, grandeur: 0.4, energy: 1, dark: 0.7 }, combat2: { tension: 1, war: 1, grief: 0.3, grandeur: 0.5, energy: 0.95, dark: 0.8 },
+    combat3: { tension: 0.95, war: 1, grief: 0.2, grandeur: 0.6, energy: 0.9, dark: 0.6 },
+    victory: { tension: 0.1, war: 0.3, grief: 0, grandeur: 1, energy: 0.8, dark: 0.05, ceremony: 0.8 }, defeat: { tension: 0.3, war: 0.5, grief: 1, grandeur: 0.3, energy: 0.2, dark: 0.95 },
+    orion: { solitude: 0.6, tension: 0.6, war: 0.2, grief: 0.2, grandeur: 0.8, energy: 0.35, dark: 0.85 }, antarans: { solitude: 0.3, tension: 0.9, war: 0.8, grief: 0.2, grandeur: 0.6, energy: 0.6, dark: 0.95 },
+    gnn: { contact: 0.7, tension: 0.2, war: 0.1, grief: 0, grandeur: 0.4, energy: 0.7, dark: 0.1 },
+  };
+  const RACE_TAGS = { contact: 1, tension: 0.35, war: 0.15, grief: 0.05, grandeur: 0.5, energy: 0.55, dark: 0.35 };   // an audience: a meeting, wary
+  for (const id in Music._tracks) {
+    const T = Music._tracks[id]; if (T.tags) continue;
+    if (CUE_TAGS[id]) T.tags = CUE_TAGS[id];
+    else if (/^race:[a-z]+$/.test(id)) T.tags = RACE_TAGS;
+    else if (/^race:[a-z]+:war$/.test(id)) T.tags = Object.assign({}, RACE_TAGS, { tension: 0.85, war: 0.8, dark: 0.7, energy: 0.7 });
+  }
   Music.defineProgramme({ moods: MOODS, rotate: MOOD_ROTATE, galaxy: GALAXY, early: GALAXY_EARLY, interludes: INTERLUDES });
 
 })(window.MOO);

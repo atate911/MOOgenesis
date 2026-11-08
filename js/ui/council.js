@@ -590,7 +590,7 @@
     CN.skip.style.display = spec.kind === 'vote' ? '' : 'none';
     UI.clear(CN.cards); say(R, ['']); setHint([]);
     try { CN.root.focus({ preventScroll: true }); } catch (e) { /* not focusable yet */ }
-    musicPlay('council2', { fade: 1.0 });   // Council in state, the procession's march in ceremony
+    musicPlay('council2', { fade: 1.0, quantize: 'beat', bridge: 'auto' });   // Council in state, led in by the bridge that fits what was playing
     drive(R);
   }
   async function drive(R) {
