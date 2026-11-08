@@ -190,7 +190,8 @@
       if (group !== 'combat' && m.setIntensity) m.setIntensity(0);           // before the new track is built: its players copy the current level
       // a new scene is a new scenario: the change is heard within about three seconds — on the next beat, through a quick bridge in the new
       // key where the two differ (or a two-second crossfade), however far apart the pieces are
-      m.setMood(pick[1], group === 'combat' ? { fade: 1.5, quantize: 'beat', bridge } : { fade: 2, quantize: 'beat', bridge, quiet });
+      if (group === 'galaxy' && from && from !== 'title') m.setMood(pick[1], { fade: 2.5, quantize: 'beat', interlude: true });   // back on the map: through an interlude that walks from the cue's key and pulse to the map's
+      else m.setMood(pick[1], group === 'combat' ? { fade: 1.5, quantize: 'beat', bridge } : { fade: 2, quantize: 'beat', bridge, quiet });
     } catch (e) { /* audio optional */ }
   }
   function calm() { const m = music(); if (m && m.setIntensity) { try { m.setIntensity(0); } catch (e) { /* audio optional */ } } }

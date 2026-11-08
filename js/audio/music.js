@@ -1974,7 +1974,13 @@
         }
         pl.order = [opts.lead].concat(pl.order.filter(id => id !== opts.lead));
       }
-      const first = pl.order[0];
+      let first = pl.order[0];
+      // interlude: the programme is entered through one of its interludes (back on the map from a cue): it opens in the key, meter and pulse
+      // of what was playing, walks the circle of fifths to the first piece's key while the tempo glides, and the piece follows it
+      if (opts.interlude && pl.between && S.cur && !S.cur.stopped && A.isReady()) {
+        const from = outgoing(S.cur), tpl = chooseTemplate(pl.between, from, TRACKS[first]), d = tpl && interludeFor(tpl, first, { from });
+        if (d) { pl.queued = first; pl.lastTpl = tpl; first = d; }
+      }
       if (!A.isReady()) { S.pending = { id: first, opts: { loop: false } }; S.playlist = pl; A.onReady(() => { const p = S.pending; if (p) { S.pending = null; startTrack(p.id, { fade: 1, loop: false, keepPlaylist: true }); } }); return 'pending'; }
       S.playlist = pl;
       return startTrack(first, { fade: num(opts.firstFade, 1.5), loop: false, keepPlaylist: true, bridge: opts.bridge, from: opts.from, quiet: opts.quiet, perf: opts.perf, quantize: opts.quantize });
@@ -2070,7 +2076,7 @@
         const cur = list.indexOf(Music.current()), next = list[cur >= 0 ? (cur + 1) % list.length : (moodTick++) % list.length];
         if (rot) {
           if (opts.soft) { const r = softSwitch(pick, rot, opts); if (r) return r; }
-          const r = Music.playlist(pick, Object.assign({}, rot, { shuffle: true, start: rot.director ? undefined : next, firstFade: num(opts.fade, 2), bridge: opts.bridge, quiet: opts.quiet, quantize: opts.quantize, lead: opts.lead })); return r === false ? false : (rot.director ? (S.playlist && S.playlist.order[0]) || next : next);
+          const r = Music.playlist(pick, Object.assign({}, rot, { shuffle: true, start: rot.director ? undefined : next, firstFade: num(opts.fade, 2), bridge: opts.bridge, quiet: opts.quiet, quantize: opts.quantize, lead: opts.lead, interlude: opts.interlude })); return r === false ? false : (rot.director ? (S.playlist && S.playlist.order[0]) || next : next);
         }
         pick = next;
       }
