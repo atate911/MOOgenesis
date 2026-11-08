@@ -10184,7 +10184,7 @@
     },
     {
      "file": "harp-B3-l0-r0.mp3",
-     "root": 59.18,
+     "root": 60.18,
      "lo": 59,
      "hi": 61,
      "vel": [
@@ -10383,7 +10383,7 @@
     },
     {
      "file": "glock-B3-l0-r0.mp3",
-     "root": 59.0,
+     "root": 60.0,
      "lo": 59,
      "hi": 61,
      "vel": [
@@ -16051,7 +16051,7 @@
     },
     {
      "file": "pipes-Ds5-l0-r0.mp3",
-     "root": 75,
+     "root": 74,
      "lo": 75,
      "hi": 75,
      "vel": [
@@ -16066,7 +16066,7 @@
     },
     {
      "file": "pipes-E5-l0-r0.mp3",
-     "root": 76,
+     "root": 75,
      "lo": 76,
      "hi": 76,
      "vel": [
@@ -17270,7 +17270,7 @@
    "zones": [
     {
      "file": "vlaSolo-C3-l0-r0.mp3",
-     "root": 48,
+     "root": 47,
      "lo": 46,
      "hi": 49,
      "vel": [
@@ -17285,7 +17285,7 @@
     },
     {
      "file": "vlaSolo-C3-l1-r0.mp3",
-     "root": 48,
+     "root": 47,
      "lo": 46,
      "hi": 49,
      "vel": [
@@ -17300,7 +17300,7 @@
     },
     {
      "file": "vlaSolo-C3-l2-r0.mp3",
-     "root": 48,
+     "root": 47,
      "lo": 46,
      "hi": 49,
      "vel": [
@@ -17405,7 +17405,7 @@
     },
     {
      "file": "vlaSolo-Fs3-l0-r0.mp3",
-     "root": 54,
+     "root": 55,
      "lo": 54,
      "hi": 55,
      "vel": [
@@ -17420,7 +17420,7 @@
     },
     {
      "file": "vlaSolo-Fs3-l1-r0.mp3",
-     "root": 54,
+     "root": 55,
      "lo": 54,
      "hi": 55,
      "vel": [
@@ -17435,7 +17435,7 @@
     },
     {
      "file": "vlaSolo-Fs3-l2-r0.mp3",
-     "root": 54,
+     "root": 55,
      "lo": 54,
      "hi": 55,
      "vel": [
@@ -17750,7 +17750,7 @@
     },
     {
      "file": "vlaSolo-Gs4-l2-r0.mp3",
-     "root": 68,
+     "root": 69,
      "lo": 68,
      "hi": 69,
      "vel": [
@@ -17765,7 +17765,7 @@
     },
     {
      "file": "vlaSolo-As4-l0-r0.mp3",
-     "root": 70,
+     "root": 69,
      "lo": 70,
      "hi": 71,
      "vel": [
@@ -17780,7 +17780,7 @@
     },
     {
      "file": "vlaSolo-As4-l1-r0.mp3",
-     "root": 70,
+     "root": 69,
      "lo": 70,
      "hi": 71,
      "vel": [
@@ -17855,7 +17855,7 @@
     },
     {
      "file": "vlaSolo-D5-l0-r0.mp3",
-     "root": 74,
+     "root": 75,
      "lo": 74,
      "hi": 75,
      "vel": [
@@ -17870,7 +17870,7 @@
     },
     {
      "file": "vlaSolo-D5-l1-r0.mp3",
-     "root": 74,
+     "root": 75,
      "lo": 74,
      "hi": 75,
      "vel": [
@@ -17885,7 +17885,7 @@
     },
     {
      "file": "vlaSolo-D5-l2-r0.mp3",
-     "root": 74,
+     "root": 75,
      "lo": 74,
      "hi": 75,
      "vel": [
@@ -17930,7 +17930,7 @@
     },
     {
      "file": "vlaSolo-E5-l2-r0.mp3",
-     "root": 76,
+     "root": 78,
      "lo": 76,
      "hi": 77,
      "vel": [
@@ -17975,7 +17975,7 @@
     },
     {
      "file": "vlaSolo-Gs5-l2-r0.mp3",
-     "root": 80,
+     "root": 79,
      "lo": 80,
      "hi": 81,
      "vel": [
@@ -17990,7 +17990,7 @@
     },
     {
      "file": "vlaSolo-As5-l0-r0.mp3",
-     "root": 82,
+     "root": 80,
      "lo": 82,
      "hi": 83,
      "vel": [
@@ -18005,7 +18005,7 @@
     },
     {
      "file": "vlaSolo-As5-l1-r0.mp3",
-     "root": 82,
+     "root": 80,
      "lo": 82,
      "hi": 83,
      "vel": [
@@ -18020,7 +18020,7 @@
     },
     {
      "file": "vlaSolo-C6-l0-r0.mp3",
-     "root": 84,
+     "root": 85,
      "lo": 84,
      "hi": 85,
      "vel": [
@@ -18035,7 +18035,7 @@
     },
     {
      "file": "vlaSolo-C6-l1-r0.mp3",
-     "root": 84,
+     "root": 85,
      "lo": 84,
      "hi": 85,
      "vel": [
@@ -21158,7 +21158,7 @@
     },
     {
      "file": "tbnSolo-E2-l2-r0.mp3",
-     "root": 40.0,
+     "root": 39.0,
      "lo": 38,
      "hi": 41,
      "vel": [

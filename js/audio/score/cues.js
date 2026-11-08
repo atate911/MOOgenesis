@@ -371,15 +371,15 @@
   Track('ground', {
     desc: 'Tense ground assault: low toms, a menacing plucked ostinato and brass swells in phrygian',
     tags: { solitude: 0, contact: 0.2, tension: 0.9, war: 1, grief: 0.3, grandeur: 0.3, energy: 0.6, dark: 0.8 },
-    bpm: 100, trim: 2.99, root: 'A', mode: 'phrygian', loopFrom: 'A1', tens: { x1: false },
-    forms: [['A1', 'B1', 'A2', 'C', 'B2', 'D', 'E', 'A1', 'C', 'B1', 'A2', 'D', 'B2', 'E', 'A1', 'E'], ['A1', 'C', 'B1', 'A2', 'D', 'B2', 'E', 'A1', 'B1', 'C', 'A2', 'B2', 'D', 'E', 'A1', 'E']],
+    bpm: 100, trim: 2.99, root: 'A', mode: 'phrygian', loopFrom: 'B1', tens: { x1: false },   // straight to the point: the theme with the timpani from the first bars (a landing does not last long)
+    forms: [['B1', 'A2', 'B2', 'D', 'A1', 'C', 'B2', 'E'], ['B1', 'A1', 'D', 'B2', 'C', 'A2', 'B2', 'E']],
     inst: { pad: 'dark', bass: 'moog', lead: 'horn', lead2: 'brass', arp: 'seq', bell: 'chime' },
     ph: {
       G1: '8:3 7:1 | 5:2 3:2 | 9:3 8:1 | 6:2 4:2',
       G2: '5:2 8:2 | 7:2 5:2 | 7:3 5:1 | 4:2 7:2',
     },
     sec: [
-      { n: 'intro', bars: 4, lv: 0.5, prog: 'i', pad: { p: 'swell' }, bass: { pat: '1---', pedal: true }, drums: { t5: 'X...............', shk: 'o.o.o.o.o.o.o.o.' }, hit: true },
+      { n: 'intro', bars: 1, lv: 0.75, prog: 'i', pad: { p: 'swell' }, bass: { pat: '1---', pedal: true }, drums: { t5: 'X.......X...X.X.' }, timp: { p: 'two', roll: 1 }, hit: true },
       { n: 'A1', bars: 8, lv: 0.7, prog: 'i:2 bII:2 i:2 bVII:2', pad: 'sus', bass: 'half', arp: { pat: '0.00.3.1', res: 2, vel: 0.5, reg: [48, 72], gate: 0.6 }, drums: { t5: 'X.....x...x.....', t4: '........x.....o.', rim: '..o...o...o...o.', shk: 'o.o.o.o.o.o.o.o.', hat: 'o.o.o.o.o.o.o.o.' }, bell: { dens: 0.15, res: 1, reg: [64, 88], vel: 0.6 } },
       { n: 'B1', bars: 8, lv: 0.82, prog: 'i:2 bII:2 i:2 bVII:2', pad: 'sus', bass: 'half', arp: { pat: '0.00.3.1', res: 2, vel: 0.5, reg: [48, 72], gate: 0.6 }, drums: { t5: 'X.....x...x.....', t4: '........x.....o.', rim: '..o...o...o...o.', shk: 'o.o.o.o.o.o.o.o.', hat: 'o.o.o.o.o.o.o.o.' }, lead: 'G1 G2', timp: 'two', bell: { dens: 0.2, res: 1, reg: [64, 88], vel: 0.6 } },
       { n: 'A2', bars: 8, lv: 0.78, prog: 'i:2 bII:2 i:2 bVII:2', pad: { p: 'sus', inst: 'strings' }, bass: 'gallop', arp: { pat: '0.00.3.1', res: 2, vel: 0.5, reg: [48, 72], gate: 0.6 }, drums: { t5: 'X.....x...x.....', t4: '........x.....o.', t3: '..o.......o.....', rim: '..o...o...o...o.', hat: 'o.o.o.o.o.o.o.o.' }, timp: 'beats' },
@@ -483,7 +483,7 @@
   (function () {
     const d = JSON.parse(JSON.stringify(Music._tracks.procession)); delete d._p; delete d.id;
     d.desc = 'Galactic Council: the procession in state — the same march, abbreviated and ceremonial: tam-tam and timpani under a brass fanfare on the call, the organ of the chamber, horns and brass doubling the theme, the big phrase within the first quarter minute, the hymn while the votes are cast, the full chamber for the result';
-    d.bpm = 72; d.tone = { lo: 1.0 };   // broad and stately: the Grand Council sits once in fifty or a hundred turns d.fx = { stage: 0.8, verb: 1.25 }; d.sends = { drums: { stage: 0.15, verb: 0.08, dly: 0 } };
+    d.bpm = 104; d.tone = { lo: 1.0 };   // a march in the Sousa manner: the Grand Council sits once in fifty or a hundred turns, and it should sound like an occasion d.fx = { stage: 0.9, verb: 0.85 }; d.sends = { drums: { stage: 0.15, verb: 0.08, dly: 0 } };   // a drier, nearer room than the map's
     d.mix = Object.assign({}, d.mix, { choir: 1.3, lead: 1.1, drums: 1.0, pad: 1.1 });
     d.forms = [['B', 'A1', 'R', 'D', 'E'], ['B', 'A2', 'D', 'R', 'E'], ['A1', 'B', 'R', 'T', 'E'], ['B', 'T', 'A2', 'R', 'E']];
     for (const s of d.sec) {
