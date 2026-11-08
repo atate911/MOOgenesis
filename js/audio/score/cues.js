@@ -519,16 +519,14 @@
   })();
 
   // The main theme, the grand reading (investigatory; for the start of a new game only, never in place of the main theme): the same theme,
-  // form and phrases, played by the whole orchestra with the freedoms of Council in state. The brooding opening becomes the drums and
-  // timpani building into a four-bar fanfare of the whole orchestra's chords; the soloists' statements become sections (the horns in
-  // octaves, the violins, the trumpets in harmony), with octave doublings above, countermelodies beneath and the climax in full; the
-  // reflective close kept, so the game opens on a breath. Dressed in js/audio/score/refresh.js ('title:grand').
+  // form and phrases, played by the whole orchestra with the freedoms of Council in state, between the original and a full-orchestra
+  // version: the original's brooding opening and the cor anglais's first statement kept (the violins and a cellos' countermelody joining
+  // it softly), then the soloists' statements become sections (the violins, the horn section, the trumpets in harmony), with octave
+  // doublings above, countermelodies beneath and the climax in full; the reflective close kept, so the game opens on a breath. Dressed in js/audio/score/refresh.js ('title:grand').
   (function () {
     const d = JSON.parse(JSON.stringify(Music._tracks.title)); delete d._p; delete d.id;
-    d.desc = 'The main theme, the grand reading for a new game: the drums build into a fanfare of the whole orchestra, then the theme in the horn section, the violins and the trumpets in harmony, doubled above and answered beneath, the climax in full, the reflective close kept';
-    d.hidden = true; d.bpm = 64;
-    const i = d.sec.findIndex(x => x.n === 'intro');
-    d.sec.splice(i, 1, { n: 'intro', bars: 2, cres: [0.45, 0.8], prog: 'I:2' }, { n: 'F', bars: 4, lv: 1.15, prog: 'I:1 IV:1 I:1 V7:1', hit: 'tam', cr: true });
+    d.desc = 'The main theme, the grand reading for a new game: the original\'s opening and the cor anglais\'s first statement with the violins and a cellos\' countermelody joining it, then the theme in the violins, the horn section and the trumpets in harmony, doubled above and answered beneath, the climax in full, the reflective close kept';
+    d.hidden = true; d.bpm = 60;   // the original's opening kept (no drums or fanfare: the user), a shade more forward than its 58
     Track('title:grand', d);
   })();
 
