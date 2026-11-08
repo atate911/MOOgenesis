@@ -448,7 +448,7 @@
   Track('galaxy14', {
     desc: 'The early years, first light: one long sunrise — the violas alone in the dark, the alto flute\'s dawn theme at the grey, the strings and a softly rolling harp as it glows, the horn and the choir as it rises, the hymn in horns and voices at the sunrise itself, then the day and the fall to dusk',
     tags: { solitude: 0.9, contact: 0.2, tension: 0, war: 0, grief: 0, grandeur: 0.5, energy: 0.45, dark: 0.1 },
-    bpm: 54, trim: 3.88, root: 'Db', mode: 'major', loopFrom: 'grey', tens: false, gentle: true, rubato: 0.03, eraWin: [0, 0.55], fx: { dly: 1.4, verb: 1.15 },
+    bpm: 54, trim: 3.34, root: 'Db', mode: 'major', loopFrom: 'grey', tens: false, gentle: true, rubato: 0.03, eraWin: [0, 0.55], fx: { dly: 1.4, verb: 1.15 },
     orch: true, holdLow: false, hall: 'musikverein', tone: { lo: 1.5, hi: 1.5, pres: 2 }, lowBand: 2.5, subBass: 0.3,
     forms: [['grey', 'glow', 'rise', 'sunrise', 'day', 'dusk'], ['grey', 'glow', 'day', 'rise', 'sunrise', 'dusk']],
     inst: { pad: 'violas', pad2: 'cellos', bass: 'deep', lead: 'altoFluteIowa', lead2: 'hornIowa', arp: { p: 'harp', rel: 3.5, hold: 2.2, cut: 4600 }, choir: 'choirOoh', choir2: 'choirMen' },
