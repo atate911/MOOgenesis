@@ -923,10 +923,42 @@
     C.prevChoir[key] = prev;
   }
 
+  // a countermelody drawn from the harmony against the tune already written in the section (ph: '@counter'): where the tune moves the
+  // counter holds a chord tone, joined smoothly to its last; where the tune holds or rests it moves, in quarter notes through the chord's
+  // tones, against the tune's last direction; never the tune's own pitch, never a clash (chord tones only). The horns' answering line
+  // under a march, the strings' moving line under a held melody.
+  function genCounter(C, s, spec, key, ly, inst) {
+    const segs = s.R.segs || []; if (!segs.length) return;
+    const end = segs[segs.length - 1].b1, reg = spec.reg || [53, 72], vel0 = num(spec.vel, 0.55);
+    const tune = C.ev.filter(e => e.k === 'lead' && e.m && e.b >= s.start - 1e-6 && e.b < s.start + end).sort((a, b) => a.b - b.b);
+    const tuneAt = b => { let m = null; for (const e of tune) { if (e.b <= b + 1e-6 && e.b + e.bt > b) m = e.m; if (e.b > b) break; } return m; };
+    let prev = Math.round((reg[0] + reg[1]) / 2), dir = 1;
+    const pick = (ch, near, b, avoid) => {
+      const tm = tuneAt(b); let best = null, bd = 1e9;
+      for (const m of chordTones(ch, reg[0], reg[1])) { if (tm !== null && Math.abs(m - tm) <= 2) continue; if (avoid !== undefined && m === avoid) continue; const d = Math.abs(m - near); if (d < bd) { bd = d; best = m; } }
+      return best;
+    };
+    for (const sg of segs) {
+      const b0 = sg.b0, b1 = sg.b1, len = b1 - b0; if (len <= 0) continue;
+      const inside = tune.filter(e => e.b >= s.start + b0 - 1e-6 && e.b < s.start + b1 - 1e-6), moving = inside.length >= Math.max(2, len);
+      if (inside.length >= 2) { const a = inside[0].m, z = inside[inside.length - 1].m; if (z !== a) dir = z > a ? -1 : 1; }   // against the tune's direction
+      if (moving || len < 2) {                                                  // the tune is busy: hold one chord tone across it
+        const m = pick(sg.ch, prev, s.start + b0); if (m === null) continue;
+        emit(C, ly, inst, s.start + b0, m, len, vel0, { art: 0.97, pan: spec.pan }); prev = m;
+      } else {                                                                  // the tune holds or rests: move, a quarter note a beat
+        for (let b = 0; b < len - 1e-6; b += 1) {
+          const want = prev + dir * 3, m = pick(sg.ch, want, s.start + b0 + b, prev); if (m === null) continue;
+          if (m >= reg[1] - 1) dir = -1; else if (m <= reg[0] + 1) dir = 1;
+          emit(C, ly, inst, s.start + b0 + b, m, Math.min(1, len - b), vel0 * (b === 0 ? 1 : 0.9), { art: 0.92, pan: spec.pan }); prev = m;
+        }
+      }
+    }
+  }
   // melodic lines from hand-written phrases (lead, lead2, bell, bell2)
   function genLine(C, s, cfg, key) {
     const spec = typeof cfg === 'string' ? { ph: cfg } : cfg;
     const ly = BUS[key], inst = resolveInst(spec.inst, C.inst[key] || DEF_INST[key]);
+    if (spec.ph === '@counter') { genCounter(C, s, spec, key, ly, inst); return; }
     const vel0 = num(spec.vel, key === 'lead' ? 0.9 : 0.7), art = num(spec.art, inst.v === 'pluck' || inst.v === 'bell' || inst.v === 'chime' ? 1 : 0.97);
     const harm = spec.harm || 0, oct = spec.oct || 0, rng = C.vrng, brassy = inst.v === 'brass' || inst.v === 'flute', blown = brassy || (inst.v === 'sample' && /^(horn|brass|flute|winds|oboe|clarinet|bassoon)/.test(inst.fb || ''));   // blown: no octave echo on a horn or a flute, synthesized or recorded
     const graceP = num(spec.grace, brassy ? 0.18 : 0), flutterP = num(spec.flutter, 0), echoP = num(spec.echo, blown || inst.v === 'sample' ? 0 : 0.07);   // the octave echo is for the synthesized lines: on a recorded soloist it was a stray note an octave up   // flutter: the pipers' doubling before a long note
