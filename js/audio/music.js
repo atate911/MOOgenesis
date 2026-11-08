@@ -1492,7 +1492,9 @@
       for (const v of this.live) if (v.dead) this.live.delete(v);
       if (this.stopped) { if (now >= this.killAt) this.finished = true; return; }
       this.scheduleUntil(now + look);
-      if (this.schedDone && now > this.endAt + 5) this.finished = true;
+      // a piece played once that reaches its last bar with nothing taking over (the programme normally crossfades before it): what still
+      // sounds (a held drone, the last chord, the hall) rings down over six seconds, as at a seam, rather than being cut when it is disposed
+      if (this.schedDone && now >= this.endAt) { this.fadeOut(6); return; }
     }
     dispose() {
       if (this.disposed) return;

@@ -488,8 +488,8 @@
     eraWin: [0, 0.75], fx: { dly: 0.9, verb: 1.25 },
     orch: true, holdLow: false, hall: 'musikverein', tone: { lo: 2.5, hi: 1, pres: 1 }, lowBand: 2.5, subBass: 0.8,   // the Tide's and the Abyss's deep foundation beneath the voices
     forms: [['A1', 'B', 'C', 'A2', 'E'], ['A1', 'C', 'B', 'A2', 'E']],
-    inst: { pad: 'strings', pad2: 'organSoft', bass: 'deep', lead: 'altoFluteIowa', lead2: 'choirMen', arp: { p: 'harp', rel: 4, hold: 3, cut: 3400 }, choir: 'choirOoh', choir2: 'choirMen' },
-    mix: { lead: 1.5, arp: 0.8, choir: 1.1 },
+    inst: { pad: 'strings', pad2: 'organSoft', bass: 'deep', lead: 'altoFluteIowa', lead2: 'choirMen', arp: { p: 'harp', rel: 1.8, hold: 1.2, cut: 5200 }, choir: 'choirOoh', choir2: 'choirMen' },
+    mix: { lead: 1.5, arp: 1.5, choir: 1.1 },
     ph: {
       W1: '5:3 | 8:2 7:1 | 6:2 5:1 | 3:3 | 4:2 5:1 | 6:2 8:1 | 7:3 | 5:3',          // the flute's tune: up to the octave, and an answering climb
       W2: '6:2 5:1 | 4:2 3:1 | 2:2 3:1 | 5:3 | 4:2 3:1 | 2:2 1:1 | 2:3 | 1:3',          // and the slow way home
@@ -502,23 +502,23 @@
     sec: [
       { n: 'intro', bars: 4, cres: [0.32, 0.44], prog: 'I:2 IV:1 I:1', pad2: { p: 'swell', n: 3, reg: [50, 67], vel: 0.42 }, bass: { pat: '1--', pedal: true, vel: 0.5, inst: { p: 'deep', att: 1.6, rel: 2.8, sub: 0.7 } },
         choir2: { n: 3, reg: [43, 57], vel: 0.3, soft: true } },
-      // the flute alone over the bed; the harp one soft low roll every other bar
-      { n: 'A1', bars: 16, lv: 0.54, prog: 'I vi IV V | I vi ii V | I vi IV V | ii V I I', pad: { p: 'swell', n: 3, reg: [55, 69], vel: 0.4 }, pad2: { p: 'sus', n: 3, reg: [48, 64], vel: 0.38 },
-        bass: { pat: '1--', vel: 0.6, inst: { p: 'deep', att: 1.0, rel: 2.2, sub: 0.7 } }, arp: { pat: '01234.......', res: 2, gate: 4, vel: 0.15, reg: [43, 60] },
+      // the flute alone over the bed; the harp one soft roll every other bar, ringing within its bar
+      { n: 'A1', bars: 16, lv: 0.54, prog: 'I vi IV V | IV vi V V | I IV ii V | ii V V I', pad: { p: 'swell', n: 3, reg: [55, 69], vel: 0.4 }, pad2: { p: 'sus', n: 3, reg: [48, 64], vel: 0.38 },
+        bass: { pat: '1--', vel: 0.6, inst: { p: 'deep', att: 1.0, rel: 2.2, sub: 0.7 } }, arp: { pat: '01234.......', res: 2, gate: 2, vel: 0.24, reg: [50, 67] },
         lead: { ph: 'W1 W2', vel: 0.56, shape: 0.35, swell: 0.25 }, choir2: { n: 3, reg: [43, 57], vel: 0.32, soft: true } },
       // the men's tune in the relative minor, the flute silent; the organ and the women far above
-      { n: 'B', bars: 16, lv: 0.62, prog: 'vi iii IV I | ii V I I | vi iii IV I | ii V vi V', pad2: { p: 'sus', n: 4, reg: [48, 67], vel: 0.48 }, bass: { pat: '1--', vel: 0.62, inst: { p: 'deep', att: 0.8, rel: 2.0, sub: 0.7 } },
+      { n: 'B', bars: 16, lv: 0.62, prog: 'vi I vi V | ii IV ii vi | iii vi V I | IV ii V I', pad2: { p: 'sus', n: 4, reg: [48, 67], vel: 0.48 }, bass: { pat: '1--', vel: 0.62, inst: { p: 'deep', att: 0.8, rel: 2.0, sub: 0.7 } },
         lead2: { ph: 'HB1 HB2', oct: -1, vel: 0.62, shape: 0.4 }, choir: { n: 2, reg: [67, 79], vel: 0.22, soft: true } },
       // the harp's moment: a few slow sweeps over a held pedal, the men humming
       { n: 'C', bars: 8, lv: 0.46, prog: 'IV:2 ii:1 | V:3', pad2: { p: 'swell', n: 3, reg: [50, 67], vel: 0.36 }, bass: { pat: '1--', pedal: true, vel: 0.5, inst: { p: 'deep', att: 1.4, rel: 2.8, sub: 0.7 } },
-        arp: { pat: ['01234567....', '76543210....'], res: 4, gate: 5, vel: 0.18, reg: [43, 84] }, choir2: { n: 3, reg: [43, 57], vel: 0.3, soft: true } },
+        arp: { pat: ['01234567....', '76543210....'], res: 4, gate: 3, vel: 0.26, reg: [48, 84] }, choir2: { n: 3, reg: [43, 57], vel: 0.3, soft: true } },
       // the theme, once: the flute and the choir together, the strings and the men beneath, the harp rolling softly
-      { n: 'A2', bars: 16, cres: [0.62, 0.78], prog: 'I V vi IV | I V IV V | I V vi IV | ii V I I', pad: { p: 'sus', n: 4, reg: [55, 74], vel: 0.55 }, pad2: { p: 'sus', n: 3, reg: [48, 64], vel: 0.42 },
-        bass: { pat: '1--', vel: 0.7, inst: { p: 'deep', att: 0.6, rel: 1.8, sub: 0.7 } }, arp: { pat: '01234.', res: 2, gate: 4, vel: 0.16, reg: [43, 60] },
+      { n: 'A2', bars: 16, cres: [0.62, 0.78], prog: 'I V vi iii | I V IV V | I V vi IV | V IV V I', pad: { p: 'sus', n: 4, reg: [55, 74], vel: 0.55 }, pad2: { p: 'sus', n: 3, reg: [48, 64], vel: 0.42 },
+        bass: { pat: '1--', vel: 0.7, inst: { p: 'deep', att: 0.6, rel: 1.8, sub: 0.7 } }, arp: { pat: '01234.', res: 2, gate: 2, vel: 0.24, reg: [50, 67] },
         lead: { ph: 'PA3 PB3', vel: 0.6, shape: 0.35, swell: 0.25 }, lead3: { ph: 'PA3 PB3', inst: 'choirOoh', vel: 0.36, shape: 0.4, swell: 0.3 }, choir2: { n: 3, reg: [43, 57], vel: 0.4, soft: true } },
       // the close: the flute's tune, home
       { n: 'E', bars: 8, cres: [0.48, 0.3], prog: 'I IV I V | IV V I I', pad2: { p: 'swell', n: 3, reg: [48, 64], vel: 0.38 }, bass: { pat: '1--', vel: 0.5, inst: { p: 'deep', att: 1.2, rel: 2.6, sub: 0.7 } },
-        arp: { pat: '01234.......', res: 2, gate: 4, vel: 0.14, reg: [43, 60] }, lead: { ph: 'WE PE', vel: 0.5, shape: 0.35, swell: 0.25 }, choir2: { n: 3, reg: [43, 57], vel: 0.28, soft: true } },
+        arp: { pat: '01234.......', res: 2, gate: 2, vel: 0.22, reg: [50, 67] }, lead: { ph: 'WE PE', vel: 0.5, shape: 0.35, swell: 0.25 }, choir2: { n: 3, reg: [43, 57], vel: 0.28, soft: true } },
     ],
   });
 
