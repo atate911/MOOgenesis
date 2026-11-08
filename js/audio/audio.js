@@ -339,6 +339,7 @@
       const cp = mk(ctx.createDynamicsCompressor()); cp.threshold.value = -30; cp.ratio.value = 3; cp.attack.value = 0.025; cp.release.value = 0.25; cp.knee.value = 6;
       const cg = mk(ctx.createGain()); cg.gain.value = dbtoa(-makeupDb(-30, 3) - 1.5);   // makeup taken back: the band only ever ducks
       mid.out.connect(cp); cp.connect(cg); cg.connect(out);
+      eng.mbMid = cp;   // the mid band's compressor: a piece may loosen it while it plays (Music: def.dyn {ratio, thresh}) for its dynamics, the default back for the next
       // the low band (under 160 Hz) is held even: a slow 2.5:1 so the bass and the sub sit at one weight whatever the register
       const lc = mk(ctx.createDynamicsCompressor()); lc.threshold.value = -22; lc.ratio.value = 2; lc.attack.value = 0.03; lc.release.value = 0.3; lc.knee.value = 8;
       const lg = mk(ctx.createGain()); lg.gain.value = dbtoa(-makeupDb(-22, 2) + 1.0);

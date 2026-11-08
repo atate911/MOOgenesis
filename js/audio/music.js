@@ -1467,6 +1467,8 @@
       this.t0 = t0;
       // the master's low band (under 160 Hz, held even by its compressor): a piece's `lowBand` lifts its level, in dB, while it plays
       // (the bass and the sub turned up in a piece were otherwise taken back by that compressor); every other piece sets it back
+      // the master's mid band: a piece with dynamics of its own (a march's build, a fanfare's entry) loosens its compressor while it plays
+      const e0 = this.eng; if (e0.mbMid) { const dy = this.def.dyn || {}; try { e0.mbMid.ratio.setTargetAtTime(clamp(num(dy.ratio, 3), 1, 20), Math.max(0, t0), 0.5); e0.mbMid.threshold.setTargetAtTime(clamp(num(dy.thresh, -30), -60, 0), Math.max(0, t0), 0.5); } catch (err) { /* ignore */ } }
       const e = this.eng; if (e.mbLow && e.mbLowDb !== undefined) { try { e.mbLow.gain.setTargetAtTime(Math.pow(10, (e.mbLowDb + clamp(num(this.def.lowBand, 0), -6, 6)) / 20), Math.max(0, t0), 0.8); } catch (err) { /* ignore */ } }
       this.nextPass();
     }
