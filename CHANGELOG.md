@@ -5,6 +5,11 @@ Versions follow `MAJOR.MINOR.PATCH`; the live version is the `VERSION` file.
 
 ## Unreleased
 
+- One more pass over every piece to the current standard. Wherever a melody met a chord a semitone off it (so that the engine bent the
+  note to fit), the chord beneath now holds the note as written: sixteen map pieces, Victory, Defeat, the news, Ground assault, the
+  Human and Bulrathi themes and both battle pieces (a sus4 or a seventh where the line leans, the epic flat-third for the battle's
+  Neapolitan, the Neapolitan's major seventh where the line holds the tonic); the pieces approved by ear are left as heard. The engine
+  fits each map interlude's chords to its line in the key it is played in (bent notes across the 161 interludes from 50 to 13).
 - The opening and the game's setup play the main theme's grand reading (the main theme for the whole orchestra, free of the score's
   general rules); a new game then leads with the main theme itself before the map's programme. Council in state rebuilt as a ceremonial
   march-fanfare (the drums' build, a four-bar fanfare of the whole orchestra, the march with countermelody and octave doublings). The

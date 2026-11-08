@@ -339,7 +339,7 @@
     ph: { CM: '@men.CM', CM2: '@men.CM2' },
     sec: [
       { n: 'in', bars: 2, cres: [0.38, 0.48], prog: 'I:2', pad: { p: 'swell', n: 2, reg: [64, 81], vel: 0.6 }, bass: { pat: '1---', pedal: true, inst: { p: 'deep', att: 2.0, rel: 3.0, sub: 0.5 } }, choir2: { n: 3, reg: [43, 60], vel: 0.38, soft: true } },
-      { n: 'A', bars: 8, lv: 0.46, prog: 'I:2 IV:2 | vi:2 V:2', pad: { p: 'swell', n: 2, reg: [64, 81], vel: 0.6, skip: 0.3 }, bass: { pat: '1---', pedal: true, inst: { p: 'deep', att: 2.0, rel: 3.0, sub: 0.5 } },
+      { n: 'A', bars: 8, lv: 0.46, prog: 'I:2 IV:2 | vi:2 IV/V:2', pad: { p: 'swell', n: 2, reg: [64, 81], vel: 0.6, skip: 0.3 }, bass: { pat: '1---', pedal: true, inst: { p: 'deep', att: 2.0, rel: 3.0, sub: 0.5 } },
         lead: { ph: ['CM', 'CM2', 'r8'], oct: -1, vel: 0.44 }, choir: { n: 2, reg: [65, 79], vel: 0.38, soft: true }, choir2: { n: 3, reg: [43, 60], vel: 0.4, soft: true }, bell: { dens: 0.05, res: 1, reg: [64, 88], vel: 0.32 } },
       { n: 'out', bars: 2, barsVar: [1, 2], lv: 0.36, prog: 'I:2', pad: { p: 'swell', n: 2, reg: [64, 81], vel: 0.6 }, choir2: { n: 3, reg: [43, 60], vel: 0.32, soft: true }, bell: { dens: 0.04, res: 1, reg: [64, 88], vel: 0.3 } },
     ],

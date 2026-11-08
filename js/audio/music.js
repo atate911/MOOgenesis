@@ -997,7 +997,7 @@
         step += md.shift + (md.oct + oct) * L;
         const sg = segAt(s.R.segs, off), strong = isStrong(C, off);
         let m = stepMidi(C, step, nt.acc);
-        if (!nt.keep && (strong || nt.dur >= 2) && !isChordTone(m, sg.ch) && clashes(m, sg.ch)) { m = snapToChord(m, sg.ch); C.snaps++; }
+        if (!nt.keep && (strong || nt.dur >= 2) && !isChordTone(m, sg.ch) && clashes(m, sg.ch)) { const m0 = m; m = snapToChord(m, sg.ch); C.snaps++; (C.snapLog || (C.snapLog = [])).push({ sec: s.R.n, key, bar: Math.floor(off / C.meter) + 1, beat: +(off % C.meter + 1).toFixed(2), dur: nt.dur, from: m0, to: m, ch: sg.ch.sym }); }   // the log: where a written note met a chord it clashes with (a test hook: tools/qa)
         m = foldRange(inst, m);
         const pm = prevM; prevM = m;
         const dt = (rng() - 0.5) * 0.012;
@@ -1266,7 +1266,7 @@
     markLegato(C.ev);
     if (perf && !Music._dbg.noPerform) { perform(C, Emove, pseed); C.ev.sort((a, b) => a.t - b.t); }   // the ensemble: after the legato is known, so a line's overlaps stay
     if (!Music._dbg.noLayerFlow && (def.orch || def.refreshed)) layerFlow(C.ev);   // the refreshed pieces and the orchestral profile
-    return { events: C.ev, beats: C.totalBeats, len: tAcc, wraps, pass, snaps: C.snaps, bars, beatsT, move: Emove };
+    return { events: C.ev, beats: C.totalBeats, len: tAcc, wraps, pass, snaps: C.snaps, snapLog: C.snapLog || [], bars, beatsT, move: Emove };
   }
   // Which recording (soft, middle or loud, where an instrument has them) a note is played from follows the music, not the note: a player's
   // tone changes with the phrase and the section's dynamic, and does not flicker between colours on neighbouring notes as the written
@@ -1911,7 +1911,31 @@
     }
     if (outS && outS !== inS && !T.bridge) { carry(outS, colourOf(N, 'head'), 0.45); if (outS.lv !== undefined && !outS.cres) { const lv = secLevel(N.sec[0]); outS.cres = [outS.lv, clamp(lv * 0.8, outS.lv, 0.5)]; delete outS.lv; } }
     d.hidden = true; d.interlude = true; d.desc = (T.desc || template) + ' (in the key of ' + nextId + ')';
+    if (!T.bridge) { d.id = id; fitUnder(d); }
     return Track(id, d).id;
+  }
+  // the interlude's line kept as written in its new key: the mode's walk is laid under a line written for another, so where a strong or held
+  // note meets a chord a semitone off it, that chord (each place it recurs) becomes the key's triad that holds the note, the one that leaves
+  // the fewest notes bent across the whole interlude; a few rounds, each heard again (the pivot bars into the key are left as walked)
+  function fitUnder(d) {
+    const tpc = PCS[d.root], tri = triads(d).filter(c => c.q === '' || c.q === 'm'), nf = (d.forms || [0]).length;
+    if (tpc === undefined || !tri.length) return;
+    const bent = () => { delete d._p; const out = []; try { for (let f = 0; f < nf; f++) for (let pass = 0; pass < 4; pass++) for (const x of compilePass(d, pass, f).snapLog || []) out.push(x); } catch (e) { return null; } return out; };   // every reading the variations allow
+    let log = bent();
+    for (let round = 0; log && log.length && round < 6; round++) {
+      const x = log.find(y => y.sec !== 'in'), sct = x && d.sec.find(s => s.n === x.sec); if (!sct) break;
+      const toks = String(sct.prog).replace(/\|/g, ' ').trim().split(/\s+/); if (toks.length < 2) break;
+      const durs = toks.map(t => { const p = t.split(':'); return p[1] ? parseFloat(p[1]) : 1; }), meter = sct.meter || d.meter || 4, at = x.bar - 1 + (x.beat - 1) / meter;
+      let b = 0, i = 0; while (b + durs[i % toks.length] <= at + 1e-9 && i < 999) { b += durs[i % toks.length]; i++; }
+      const k = i % toks.length, keep = sct.prog; let best = null, bn = log.length;
+      for (const c of tri) {
+        if (!(QUAL[c.q] || QUAL['']).some(v => mod12(c.root + v) === mod12(x.from))) continue;
+        const t2 = toks.slice(); t2[k] = romanIn(c, tpc) + (toks[k].indexOf(':') >= 0 ? ':' + toks[k].split(':')[1] : '');
+        sct.prog = t2.join(' '); const l2 = bent(); if (l2 && l2.length < bn) { bn = l2.length; best = sct.prog; }
+      }
+      sct.prog = best || keep; if (!best) break; log = bent();
+    }
+    delete d._p;
   }
 
   // Switches happen on the bar (opts.quantize 'bar', the default; 'beat' for urgent cues; false = now) with long crossfades, so a
