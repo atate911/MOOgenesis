@@ -178,7 +178,8 @@
       try { const WA = M.Gfx.WorldArt; if (WA) WA.get(WA.scene('galaxy')); } catch (e) { /* optional */ }
       t0 = performance.now() / 1000;
       buildMenu();
-      try { if (M.Audio && M.Audio.Music) M.Audio.Music.play('title', { fade: 2.5 }); } catch (e) { /* audio optional */ }
+      // the opening and the setup: the main theme's grand reading (the main theme itself leads the new game)
+      try { if (M.Audio && M.Audio.Music) M.Audio.Music.play('title:grand', { fade: 2.5 }); } catch (e) { /* audio optional */ }
     },
     leave() { },
     resize() { bgKey = ''; },

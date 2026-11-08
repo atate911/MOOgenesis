@@ -15,7 +15,7 @@
 
   // screen id → [group, mood]. Unlisted screens keep whatever is playing.
   const MAP = {
-    menu: ['title', 'title'], setup: ['title', 'title'], options: null, saveload: null,
+    menu: ['title', 'titleGrand'], setup: ['title', 'titleGrand'], options: null, saveload: null,   // the opening and the setup: the grand reading
     galaxy: ['galaxy', 'galaxy'], planets: null, fleets: null, overview: null, system: null,
     design: null,                                                     // management screens keep the underscore: no jump cuts for a menu
     tech: ['lab', 'lab'], techtree: ['lab', 'lab'], research: ['lab', 'lab'],   // the research screen: the laboratory's three short pieces in turn

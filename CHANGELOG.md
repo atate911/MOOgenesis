@@ -5,6 +5,11 @@ Versions follow `MAJOR.MINOR.PATCH`; the live version is the `VERSION` file.
 
 ## Unreleased
 
+- The opening and the game's setup play the main theme's grand reading (the main theme for the whole orchestra, free of the score's
+  general rules); a new game then leads with the main theme itself before the map's programme. Council in state rebuilt as a ceremonial
+  march-fanfare (the drums' build, a four-bar fanfare of the whole orchestra, the march with countermelody and octave doublings). The
+  engine: several harmony voices under a melody, a countermelody generator (ph: '@counter'), per-piece master dynamics (def.dyn), and the
+  refresh's rules individually breakable (bassHold, quietPerc, choirFwd).
 - The music selection: a change of scene is heard within about two seconds, on the next beat, through a bridge the engine chooses from
   both sides (the colour and character of what is playing against the cue's, and whether the scene is rising or settling), handing the
   old piece's held colour to the cue's; back on the map from a cue, an interlude opens in the cue's key and pulse and walks the circle
