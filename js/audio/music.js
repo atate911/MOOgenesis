@@ -1267,6 +1267,7 @@
     markLegato(C.ev);
     if (perf && !Music._dbg.noPerform) { perform(C, Emove, pseed); C.ev.sort((a, b) => a.t - b.t); }   // the ensemble: after the legato is known, so a line's overlaps stay
     if (!Music._dbg.noLayerFlow && (def.orch || def.refreshed)) layerFlow(C.ev);   // the refreshed pieces and the orchestral profile
+    if (def.smpK) for (const e of C.ev) { const k = e.o && def.smpK[e.o.smp]; if (k) e.o = Object.assign({}, e.o, { lvl: num(e.o.lvl, 1) * k }); }   // a recording up or down in this piece (the refresh's oldMenK: the old men's choir)
     return { events: C.ev, beats: C.totalBeats, len: tAcc, wraps, pass, snaps: C.snaps, snapLog: C.snapLog || [], bars, beatsT, move: Emove };
   }
   // Which recording (soft, middle or loud, where an instrument has them) a note is played from follows the music, not the note: a player's

@@ -5,8 +5,10 @@ Versions follow `MAJOR.MINOR.PATCH`; the live version is the `VERSION` file.
 
 ## Unreleased
 
-- The old men's choir a little more present throughout (3 dB up wherever it sings: the main theme, Orion, Defeat and the map
-  pieces), and now beneath Wonder's and Patience's choirs too.
+- The old men's choir more present, set piece by piece: 3 dB up across the score, then more again in the dark, solemn and nocturnal
+  pieces (the Vigil, the Long Night, the Abyss, the Embers, the Watch, Deep Field, the Frontier, Defeat, Orion; the Tide a little), and
+  back to its old level in the bright ones (Wonder, the Survey, the Cradle, the Commonwealth); now beneath Wonder's and Patience's choirs
+  too. The engine: a recording's level set per piece (def.smpK; the refresh's oldMenK).
 - One more pass over every piece to the current standard. Wherever a melody met a chord a semitone off it (so that the engine bent the
   note to fit), the chord beneath now holds the note as written: sixteen map pieces, Victory, Defeat, the news, Ground assault, the
   Human and Bulrathi themes and both battle pieces (a sus4 or a seventh where the line leans, the epic flat-third for the battle's
