@@ -518,6 +518,20 @@
     Track('council2', d);
   })();
 
+  // The main theme, the grand reading (investigatory; for the start of a new game only, never in place of the main theme): the same theme,
+  // form and phrases, played by the whole orchestra with the freedoms of Council in state. The brooding opening becomes the drums and
+  // timpani building into a four-bar fanfare of the whole orchestra's chords; the soloists' statements become sections (the horns in
+  // octaves, the violins, the trumpets in harmony), with octave doublings above, countermelodies beneath and the climax in full; the
+  // reflective close kept, so the game opens on a breath. Dressed in js/audio/score/refresh.js ('title:grand').
+  (function () {
+    const d = JSON.parse(JSON.stringify(Music._tracks.title)); delete d._p; delete d.id;
+    d.desc = 'The main theme, the grand reading for a new game: the drums build into a fanfare of the whole orchestra, then the theme in the horn section, the violins and the trumpets in harmony, doubled above and answered beneath, the climax in full, the reflective close kept';
+    d.hidden = true; d.bpm = 64;
+    const i = d.sec.findIndex(x => x.n === 'intro');
+    d.sec.splice(i, 1, { n: 'intro', bars: 2, cres: [0.45, 0.8], prog: 'I:2' }, { n: 'F', bars: 4, lv: 1.15, prog: 'I:1 IV:1 I:1 V7:1', hit: 'tam', cr: true });
+    Track('title:grand', d);
+  })();
+
   Track('orion', {
     desc: 'Ancient and mysterious, awe: deep drones, metallic chimes and a double-harmonic melody',
     bpm: 54, trim: 3.19, root: 'D', mode: 'dblHarm', loopFrom: 'A1',
