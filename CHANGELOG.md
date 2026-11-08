@@ -5,6 +5,8 @@ Versions follow `MAJOR.MINOR.PATCH`; the live version is the `VERSION` file.
 
 ## Unreleased
 
+- The old men's choir a little more present throughout (3 dB up wherever it sings: the main theme, Orion, Defeat and the map
+  pieces), and now beneath Wonder's and Patience's choirs too.
 - One more pass over every piece to the current standard. Wherever a melody met a chord a semitone off it (so that the engine bent the
   note to fit), the chord beneath now holds the note as written: sixteen map pieces, Victory, Defeat, the news, Ground assault, the
   Human and Bulrathi themes and both battle pieces (a sus4 or a seventh where the line leans, the epic flat-third for the battle's
