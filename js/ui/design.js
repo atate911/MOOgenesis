@@ -1400,7 +1400,6 @@
     },
     leave() {
       closePopup(true);
-      try { const A = M.Audio && M.Audio.Music; if (A && A.stop && (!A.current || A.current() === 'design')) A.stop({ fade: 0.8 }); } catch (e) { /* ignore */ }
     },
     update(dt, t) { frame(dt, t); },
     resize() { PV.refit = true; },

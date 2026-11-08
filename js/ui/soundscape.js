@@ -1,5 +1,6 @@
 // Soundscape glue: chooses the music mood for the active screen and plays a few game-level cues. Everything is optional — if the audio engine is missing or locked, nothing happens.
-//   Bus 'screen' (id, params) → Music.setMood(...) only when the mood GROUP changes (so galaxy → ledger → galaxy keeps the same track)
+//   Bus 'screen' (id, params) → Music.setMood(...) only when the mood GROUP changes (so galaxy → ledger → galaxy keeps the same track);
+//   fights, landings, the chamber and the endings are led into by a bridge from the key that is playing into theirs; the map's programmes are directed (Music.setSituation each turn end)
 //   Bus 'turn:end' → SFX 'newturn' · 'game:new' → SFX 'confirm' · 'game:quit' → title music
 // Screens that run their own music (the GNN broadcast snapshots + restores it, menu starts 'title') are left alone; the lab and spy
 // panels no longer borrow a cue of their own (their stingers play over the underscore, as a film would).
@@ -14,9 +15,10 @@
 
   // screen id → [group, mood]. Unlisted screens keep whatever is playing.
   const MAP = {
-    menu: ['title', 'title'], setup: ['title', 'title'], options: null, saveload: null,
+    menu: ['title', 'titleGrand'], setup: ['title', 'titleGrand'], options: null, saveload: null,   // the opening and the setup: the grand reading
     galaxy: ['galaxy', 'galaxy'], planets: null, fleets: null, overview: null, system: null,
-    design: null, tech: null, techtree: null, research: null,          // management screens keep the underscore: no jump cuts for a menu
+    design: null,                                                     // management screens keep the underscore: no jump cuts for a menu
+    tech: ['lab', 'lab'], techtree: ['lab', 'lab'], research: ['lab', 'lab'],   // the research screen: the laboratory's three short pieces in turn
     combat: ['combat', 'combat'], landing: ['ground', 'ground'], ground: ['ground', 'ground'],
     council: ['council', 'council'],
   };
@@ -48,10 +50,13 @@
   // hundredths a turn, so the music tightens without anyone hearing it move; it reaches the music only when the next piece is compiled.
   let era = 0, eraSeeded = false;
   const HULL_W = [1, 5, 25, 125];
-  function eraTarget() {
+  // the reading of the state the era and the director share: {t, metK, met, n, crowd, arms, coldK, wars, own, stars}
+  let reading = null;
+  function eraTarget() { const r = readState(); reading = r; return r ? r.t : 0; }
+  function readState() {
     try {
-      const S = M.Game && M.Game.S; if (!S) return 0;
-      const me = S.empires[S.playerId]; if (!me || !me.relations) return 0;
+      const S = M.Game && M.Game.S; if (!S) return null;
+      const me = S.empires[S.playerId]; if (!me || !me.relations) return null;
       const others = S.empires.filter(e => e && e.alive !== false && e.id !== me.id), n = Math.max(1, others.length);
       // who is met, who is cold, who is at war
       let met = 0, cold = 0, wars = 0;
@@ -78,14 +83,43 @@
       }
       const arms = Math.min(1, 0.6 * theirFleet / (theirFleet + myFleet + 20) + 0.4 * Math.min(1, theirFleet / (60 * n)));
       const t = 0.2 * metK + 0.28 * crowd + 0.2 * arms + 0.12 * (met ? cold / met : 0) + 0.4 * Math.min(1, wars / 2);
-      return Math.max(0, Math.min(1, t));
-    } catch (e) { return 0; }
+      let own = 0; if (S.planets) for (const p of S.planets) if (p.owner === me.id) own++;
+      const metIds = others.filter(e => { const r = me.relations[e.id]; return r && (r.met || r.contact); }).map(e => e.id + ':' + e.race);
+      // the council: how near the next sitting is (0 far or not yet possible, 0.5 within six years, 1 within three or due)
+      let council = 0; try { const C = M.Sim && M.Sim.Council, c = S.council; if (C && C.colonised && C.threshold && C.colonised(S) >= C.threshold(S) && !(c && (c.over || c.finalWar))) { const every = (M.Data && M.Data.Config && M.Data.Config.COUNCIL_EVERY) || 25, left = c && c.held ? (every - (S.year % every)) % every : 0; council = left <= 3 ? 1 : left <= 6 ? 0.5 : 0; } } catch (e) { council = 0; }
+      return { t: Math.max(0, Math.min(1, t)), metK, met, n, crowd, arms, coldK: met ? cold / met : 0, wars, own, stars: S.stars ? S.stars.length : 1, myFleet, theirFleet, turn: S.turn || 0, metIds, council };
+    } catch (e) { return null; }
+  }
+  // The director's situation: what the galaxy is like for the player right now, on the axes the pieces are tagged with. War and loss are
+  // remembered for a while after they pass (a peace is not instantly calm; a lost colony is mourned for some turns).
+  let warMem = 0, griefMem = 0, peakOwn = 0, peakFleet = 0, metSeen = null;
+  // the story's motifs: a race just met puts the first bars of its theme into the next interlude; the council approaching, the procession's call
+  function motifs(r) {
+    const m = music(); if (!m || !m.setMotif) return;
+    try {
+      if (metSeen) { const fresh = r.metIds.filter(x => metSeen.indexOf(x) < 0); if (fresh.length) m.setMotif('race:' + fresh[fresh.length - 1].split(':')[1]); }
+      else if (r.council >= 0.5 && !m.getMotif()) m.setMotif('procession');
+    } catch (e) { /* audio optional */ }
+    metSeen = r.metIds.slice();
+  }
+  function situation() {
+    const r = reading || readState(); if (!r) return null;
+    motifs(r);
+    const warNow = r.wars > 0 ? 1 : 0; warMem = Math.max(warNow, warMem * 0.88);
+    peakOwn = Math.max(peakOwn, r.own); peakFleet = Math.max(peakFleet, r.myFleet);
+    const lost = peakOwn > 0 ? (peakOwn - r.own) / peakOwn : 0, fleetLost = peakFleet > 0 ? (peakFleet - r.myFleet) / peakFleet : 0;
+    griefMem = Math.max(Math.min(1, lost * 2.5 + fleetLost * 0.8), griefMem * 0.9);
+    peakOwn = Math.max(r.own, peakOwn * 0.995); peakFleet = Math.max(r.myFleet, peakFleet * 0.99);   // the peaks forget slowly, so a settled loss stops being news
+    const metShare = r.n ? r.met / r.n : 0, tension = Math.min(1, 0.45 * r.coldK + 0.3 * r.crowd + 0.35 * r.arms + 0.15 * warMem);
+    const solitude = Math.min(1, (1 - metShare) * (r.turn < 70 ? 1 : 0.85) + (metShare === 0 ? 0.15 : 0));
+    const grandeur = Math.min(1, 0.55 * Math.min(1, r.own / Math.max(6, r.stars * 0.25)) + 0.45 * era);
+    return { solitude, contact: metShare * (1 - 0.7 * warMem), tension, war: warMem, grief: griefMem, grandeur, energy: 0.5, dark: Math.min(1, 0.8 * Math.max(tension, griefMem, warMem)), council: r.council };
   }
   function eraStep() {
     const t = eraTarget();
     if (!eraSeeded) { era = t; eraSeeded = true; }                  // a loaded or new game starts where its state says, then drifts
     else era += (t - era) * (t > era ? 0.04 : 0.025);               // tightening takes ~60 turns to go most of the way; easing is slower still
-    const m = music(); if (m && m.setEra) { try { m.setEra(era); } catch (e) { /* audio optional */ } }
+    const m = music(); if (m && m.setEra) { try { m.setEra(era); if (m.setSituation) m.setSituation(situation()); } catch (e) { /* audio optional */ } }
   }
   function raceMood(params) {
     const S = M.Game && M.Game.S; if (!S || !params) return null;
@@ -102,24 +136,62 @@
     if (id === 'galaxy') { war = atWar(); early = earlyYears(); eraStep(); return ['galaxy', galaxyMood()]; }
     return MAP[id] || null;
   }
-  // a declaration of war, a peace treaty or the first contact changes the map's music at the end of the turn, on the bar, never mid-phrase
+  // a declaration of war, a peace treaty or the first contact changes the map's programme at the end of the turn — softly: the piece that is
+  // playing reaches its next breath or section line, an interlude in the new key follows, and only then the new programme's first piece
   function onTurnEnd() {
     UI.sfx('newturn');
     const m = music(); if (!m || !m.setMood || group !== 'galaxy') return;
     const before = galaxyMood();
     war = atWar(); early = earlyYears(); eraStep();
     if (galaxyMood() === before) return;
-    try { m.setMood(galaxyMood(), { fade: 6, quantize: 'bar' }); } catch (e2) { /* audio optional */ }
+    try { m.setMood(galaxyMood(), { fade: 6, quantize: 'bar', soft: true }); } catch (e2) { /* audio optional */ }   // soft: the running piece reaches its next breath or section line first, then the new programme enters through an interlude
+  }
+
+  // The laboratory (the research screens) is a place the player passes through often and briefly: its music starts only after a few
+  // seconds there, and leaving puts the map's piece back where it was (the same performance, a moment before it stopped), so a quick
+  // look at the research queue never interrupts the map, and a long stay never costs the map its place in the programme.
+  const LAB_DWELL = 4000;
+  let themeFirst = false;                                   // set by a new game: its first map screen leads with the whole main theme
+  let labTimer = null, labSnap = null;
+  function labEnter(m, pickMood) {
+    clearTimeout(labTimer);
+    labTimer = setTimeout(() => {
+      labTimer = null; if (group !== 'lab') return;
+      try { labSnap = m.snapshot ? m.snapshot() : null; m.setMood(pickMood, { fade: 3, quantize: 'bar' }); } catch (e) { /* audio optional */ }
+    }, LAB_DWELL);
+  }
+  // leaving the laboratory: true when the leaving is handled here (a quick visit that changed nothing, or the map put back as it was)
+  function labLeave(m, toGroup) {
+    if (labTimer) { clearTimeout(labTimer); labTimer = null; labSnap = null; return toGroup === 'galaxy'; }
+    const snap = labSnap; labSnap = null;
+    if (toGroup !== 'galaxy' || !snap || !m.restore) return false;
+    try { return m.restore(snap, { fade: 3, resume: true }) !== false; } catch (e) { return false; }
   }
 
   function onScreen(id, params) {
     const m = music(); if (!m || !m.setMood) return;
     const pick = moodFor(id, params); if (!pick) return;
     if (pick[0] === group) return;
-    group = pick[0];
+    const from = group; group = pick[0];
+    if (group === 'lab') { labEnter(m, pick[1]); return; }
+    // a new game: the main theme is heard whole first (carrying on if the menu's is playing), then the map's programme
+    if (group === 'galaxy' && themeFirst) {
+      themeFirst = false;
+      try { m.setMood(pick[1], { fade: 2, quantize: 'beat', lead: 'title' }); return; } catch (e) { /* audio optional */ }
+    }
+    if (from === 'lab' && labLeave(m, group)) return;
+    // a cue that cannot wait is led into by a two-bar bridge that starts in the key of what is playing and lands on the cue's dominant: a tense
+    // one into a fight, a bright one into the chamber and the victory, a dark one into the defeat, a calm one back onto the map from any cue
+    // the bridge is the engine's choice, from both sides: the colour and character of what is playing against those of the cue (a fight from
+    // the map's dusk gets the tense or the dark one, the chamber the bright one, the map after a fight the calm one); none from the menu
+    const bridge = from && from !== 'title' ? 'auto' : undefined;
+    const quiet = group === 'galaxy' && (from === 'combat' || from === 'ground');   // back from a fight the map lands on the quiet half of its piece, not its first bar
     try {
       if (group !== 'combat' && m.setIntensity) m.setIntensity(0);           // before the new track is built: its players copy the current level
-      m.setMood(pick[1], group === 'combat' ? { fade: 1.5, quantize: 'beat' } : { fade: 4.5, quantize: 'bar' });
+      // a new scene is a new scenario: the change is heard within about three seconds — on the next beat, through a quick bridge in the new
+      // key where the two differ (or a two-second crossfade), however far apart the pieces are
+      if (group === 'galaxy' && from && from !== 'title') m.setMood(pick[1], { fade: 2.5, quantize: 'beat', interlude: true });   // back on the map: through an interlude that walks from the cue's key and pulse to the map's
+      else m.setMood(pick[1], group === 'combat' ? { fade: 1.5, quantize: 'beat', bridge } : { fade: 2, quantize: 'beat', bridge, quiet });
     } catch (e) { /* audio optional */ }
   }
   function calm() { const m = music(); if (m && m.setIntensity) { try { m.setIntensity(0); } catch (e) { /* audio optional */ } } }
@@ -128,10 +200,10 @@
     if (!M.Bus) return;
     M.Bus.on('screen', onScreen);
     M.Bus.on('turn:end', onTurnEnd);
-    M.Bus.on('game:new', () => { group = ''; eraSeeded = false; calm(); UI.sfx('confirm'); });
-    M.Bus.on('game:loaded', () => { eraSeeded = false; });
-    M.Bus.on('game:quit', () => { group = ''; eraSeeded = false; calm(); });
+    M.Bus.on('game:new', () => { themeFirst = true; group = ''; eraSeeded = false; warMem = griefMem = peakOwn = peakFleet = 0; metSeen = null; calm(); UI.sfx('confirm'); });
+    M.Bus.on('game:loaded', () => { themeFirst = false; eraSeeded = false; warMem = griefMem = peakOwn = peakFleet = 0; metSeen = null; });
+    M.Bus.on('game:quit', () => { clearTimeout(labTimer); labTimer = null; labSnap = null; group = ''; eraSeeded = false; warMem = griefMem = peakOwn = peakFleet = 0; metSeen = null; calm(); const m = music(); if (m && m.setSituation) { try { m.setSituation(null); } catch (e) { /* ignore */ } } });
   }
-  UI.Soundscape = { install, onScreen, moodFor, eraTarget, era: () => era };
+  UI.Soundscape = { install, onScreen, moodFor, eraTarget, situation, era: () => era };
   install();
 })(window.MOO);

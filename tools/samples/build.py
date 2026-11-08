@@ -37,10 +37,19 @@ def decode(path, stereo=False, chan=None):
     never the average: these recordings are wide and largely uncorrelated (the horns partly anti-phase), and summing them comb-filters
     the tone with 4-8 dB notches across the midrange -- the hollow, phasey colour that reads as "digital".  One microphone is a
     natural mono signal; the section is then seated on the stage by its pan."""
+    # a mono recording has no second channel: asking the pan filter for c1 there yields silence, so take c0 whatever the pan
+    if not stereo and chan == 'R' and channels_of(path) < 2: chan = 'L'
     af = [] if stereo else ['-af', 'pan=mono|c0=c1' if chan == 'R' else 'pan=mono|c0=c0']
     out = subprocess.run(['ffmpeg', '-v', 'error', '-i', path] + af + ['-f', 'f32le', '-ac', '2' if stereo else '1', '-ar', str(SR), '-'], capture_output=True, check=True).stdout
     y = np.frombuffer(out, dtype='<f4').astype(np.float64)
     return y.reshape(-1, 2) if stereo else y
+
+def channels_of(path):
+    """channel count of a recording (ffprobe), 2 when it cannot be read"""
+    try:
+        out = subprocess.run(['ffprobe', '-v', 'error', '-select_streams', 'a:0', '-show_entries', 'stream=channels', '-of', 'csv=p=0', path], capture_output=True, text=True).stdout.strip()
+        return int(out.split(',')[0]) if out else 2
+    except Exception: return 2
 
 def read_wav_stereo(path):
     import wave
@@ -108,6 +117,102 @@ def find_loop_at(x, ls_sec, lmin_sec, lmax_sec, win):
     ncc = corr / (np.sqrt(eng * np.sum(A * A)) + 1e-9)
     k = int(np.argmax(ncc)); le = lo + k
     return ls, le, float(ncc[k])
+
+def steady_span(x, ls_min=0.3, tol_db=2.5):
+    """the longest stretch of a held note whose slow level (250 ms) stays within tol_db of the note's body: (start, end) in seconds,
+    or None. The body runs from where the note first comes within 6 dB of its peak to where it last is within 9 dB of it."""
+    m = x if x.ndim == 1 else x[:, 0]
+    W = int(0.05 * SR); n = len(m) // W
+    if n < 12: return None
+    e = np.sqrt(np.mean(m[:n * W].reshape(n, W) ** 2, axis=1)); es = np.convolve(e, np.ones(5) / 5, 'same')
+    db = 20 * np.log10(es + 1e-9); mx = db.max()
+    on = int(np.argmax(db > mx - 6)); off = n - 1 - int(np.argmax(db[::-1] > mx - 9))
+    if off - on < 6: return None
+    med = float(np.median(db[on:off + 1])); best, run, st = (0, 0), 0, on
+    for i in range(on, off + 1):
+        if abs(db[i] - med) < tol_db:
+            if run == 0: st = i
+            run += 1
+            if run > best[1] - best[0]: best = (st, i + 1)
+        else: run = 0
+    a = max(best[0] * W / SR + 0.05, ls_min); b = best[1] * W / SR - 0.08          # clear of the smoothing's reach at both ends
+    return (a, b) if b - a > 0.5 else None
+
+def loop_swing(x, ls, le):
+    """the slow level swing inside a loop (dB, 95th less 5th percentile of a 240 ms envelope): what each wrap would repeat"""
+    m = x if x.ndim == 1 else x[:, 0]; seg = m[ls:le]; W = int(0.06 * SR); n = len(seg) // W
+    if n < 4: return 0.0
+    e = 20 * np.log10(np.sqrt(np.mean(seg[:n * W].reshape(n, W) ** 2, axis=1)) + 1e-9); es = np.convolve(e, np.ones(4) / 4, 'valid')
+    return float(np.percentile(es, 95) - np.percentile(es, 5))
+
+def measure_root(x, midi, a=None, b=None, span=1.6):
+    """the note's real pitch, as a fractional MIDI number: normalised autocorrelation over lags within `span` semitones of the written
+    note (so neither an octave nor a fifth can be taken for it), the median over windows across the steady part. None when the windows
+    disagree or the correlation is weak (a breathy or noisy note): the written root is then kept."""
+    m = x if x.ndim == 1 else x.mean(axis=1)
+    a = int(a if a is not None else 0.4 * SR); b = int(b if b is not None else len(m) - 0.1 * SR)
+    f0 = 440 * 2 ** ((midi - 69) / 12); lo = int(SR / (f0 * 2 ** (span / 12))); hi = int(SR / (f0 * 2 ** (-span / 12))) + 2
+    W = int(max(4 * hi, 0.05 * SR)); out = []
+    for s in range(a, max(a + 1, b - W - hi), int(0.08 * SR)):
+        seg = m[s:s + W + hi]
+        if len(seg) < W + hi: break
+        A = seg[:W]; ea = float(np.dot(A, A)) + 1e-12; cs = []
+        for P in range(lo, hi + 1):
+            B = seg[P:P + W]; cs.append(float(np.dot(A, B)) / np.sqrt(ea * (float(np.dot(B, B)) + 1e-12)))
+        k = int(np.argmax(cs))
+        if cs[k] < 0.8 or k == 0 or k == len(cs) - 1: continue
+        d = cs[k - 1] - 2 * cs[k] + cs[k + 1]; off = 0.5 * (cs[k - 1] - cs[k + 1]) / d if d < 0 else 0.0
+        out.append(69 + 12 * np.log2(SR / (lo + k + off) / 440))
+    if len(out) < 3: return None
+    out = np.array(out); med = float(np.median(out))
+    if np.mean(np.abs(out - med) < 0.15) < 0.6: return None
+    return med
+
+def longest_voiced(x, below_db=24, bridge=0.15):
+    """a recording cut from a long take can hold two notes with a silence between them, or seconds of room noise before its one note: keep
+    the longest stretch that sounds (frames
+    within below_db of the take's level, gaps shorter than `bridge` s bridged), from just before it starts to just after it ends"""
+    m = x if x.ndim == 1 else x[:, 0]; W = int(0.03 * SR); n = len(m) // W
+    if n < 8: return x, False
+    e = 20 * np.log10(np.sqrt(np.mean(m[:n * W].reshape(n, W) ** 2, axis=1)) + 1e-9)
+    on = e > np.percentile(e, 90) - below_db; gap = int(bridge * SR / W)
+    runs, st, off = [], None, 0
+    for i in range(n):
+        if on[i]:
+            if st is None: st = i
+            off = 0
+        elif st is not None:
+            off += 1
+            if off > gap: runs.append((st, i - off + 1)); st, off = None, 0
+    if st is not None: runs.append((st, n - off))
+    if not runs: return x, False
+    a, b = max(runs, key=lambda r: r[1] - r[0])
+    if len(runs) < 2 and a * W < 0.3 * SR and (n - b) * W < 0.6 * SR: return x, False      # one take filling the file: nothing to cut
+    y = x[max(0, a * W - int(0.01 * SR)):min(len(m), b * W + int(0.12 * SR))].copy()
+    f = int(0.02 * SR)
+    if y.ndim == 1: y[-f:] *= np.linspace(1, 0, f)
+    else: y[-f:] *= np.linspace(1, 0, f)[:, None]
+    return y, True
+
+def loop_gap(x, ls, le):
+    """how far the quietest 30 ms of a loop falls under the loop's median level (dB): a broken take with a dropout in its sustain"""
+    m = x if x.ndim == 1 else x[:, 0]; seg = m[ls:le]; W = int(0.03 * SR); n = len(seg) // W
+    if n < 4: return 0.0
+    e = 20 * np.log10(np.sqrt(np.mean(seg[:n * W].reshape(n, W) ** 2, axis=1)) + 1e-9)
+    return float(np.median(e) - e.min())
+
+def find_loop_steady(x, lmin_floor=0.6, lmax_cap=4.0, win=8192):
+    """a loop inside the note's steady stretch, as long as the stretch allows (at least 70% of it): fewer wraps, and no swell or decay
+    inside the loop for the wrap to repeat. Falls back to None when the note has no steady stretch."""
+    sp = steady_span(x)
+    if not sp: return None
+    a, b = sp; L = min(b - a, lmax_cap)
+    best = None
+    for off in (0.0, 0.05, 0.1, 0.15):
+        if a + off + lmin_floor > b: break
+        r = find_loop_at(x, a + off, max(lmin_floor, 0.7 * (L - off)), L - off - win / SR, win)
+        if r and (best is None or r[2] > best[2]): best = r
+    return best
 
 def find_start(x, le, lo_len, hi_len, win=8192):
     """best loop start for a fixed loop end: the window just before `le` is matched against windows ending in [le-hi_len, le-lo_len]."""
@@ -212,6 +317,40 @@ SPECS = {
     'tenorLo':  dict(src='VSCO 1 Percussion/drums/tenor/tenor_lower', re=r'tenor_(?P<dyn>p{1,3}|mp|mf|f{1,3})_(?P<rr>\d)', dyn=['f', 'fff'], rr=2, step=0, kind='short', attack=0.001, release=0.3, pitched=False, keep=1.5, stereo=False, pan=0.2),
     'organ':    dict(src='Keys/Organ/Loud', re=r'Rode_Man3Open_(?P<key>\d\d)', dyn=['*'], rr=1, step=6, kind='sustain', attack=0.03, release=0.25, ls=1.0, lmin=1.4, lmax=2.6, pitch='detect', range=(30.0, 2500.0), stereo=False, pan=0, xf_sec=0.4),
 }
+# ---- the University of Iowa solo instruments (tools/samples/iowa.py lays them out one note per file: <Inst>_<Note>_v<dyn>.wav, pp mf ff
+# as v1 v2 v3; the 2012 strings stereo, the older winds and brass mono) and the FreePats bagpipe (CC0; its chanter and drones): built with
+# --vsco pointed at the staging folder, e.g. --vsco STAGING --only vlnSolo,vlaSolo,vcSolo,cbSolo,bassClar,hornIowa,tbnSolo,altoFluteIowa,pipes,pipesDrone
+R_IOWA = r'_(?P<note>[A-G]#?\d)_v(?P<dyn>\d)\.wav$'
+IOWA_SOLO = dict(re=R_IOWA, octave=0, dyn=[1, 2, 3], rr=1, step=2, kind='sustain', norm='zone', loop='steady', swing_max=4.0, attack=0.08, release=0.5, ls=0.9, lmin=1.4, lmax=3.2, xf=True, xf_sec=0.6)
+IOWA_WIND = dict(re=R_IOWA, octave=0, dyn=[1, 2, 3], rr=1, step=2, kind='sustain', norm='zone', loop='steady', swing_max=4.0, attack=0.06, release=0.35, ls=0.8, lmin=1.1, lmax=2.4, xf=True, xf_sec=0.5, stereo=False)
+SPECS.update({
+    'vlnSolo':   dict(IOWA_SOLO, src='Violin', stereo=True, pan=-0.12),
+    'vlaSolo':   dict(IOWA_SOLO, src='Viola', stereo=True, pan=0.08),
+    'vcSolo':    dict(IOWA_SOLO, src='Cello', stereo=True, pan=0.12, release=0.6),
+    'cbSolo':    dict(IOWA_SOLO, src='Bass', stereo=True, pan=0.2, release=0.7),
+    'hornIowa':  dict(IOWA_WIND, src='Horn', pan=-0.15),
+    'tbnSolo':   dict(IOWA_WIND, src='Trombone', pan=0.25),
+    'bassTbn':   dict(IOWA_WIND, src='Basstrombone', pan=0.3),
+    'tubaIowa':  dict(IOWA_WIND, src='Tuba', pan=0.2),
+    'bassClar':  dict(IOWA_WIND, src='Bassclarinet', pan=0.1),
+    'clarIowa':  dict(IOWA_WIND, src='Clarinet', pan=0.05),
+    'altoFluteIowa': dict(IOWA_WIND, src='Altoflute', pan=-0.1),
+    'fluteIowa': dict(IOWA_WIND, src='Flute', pan=-0.15),
+    'oboeIowa':  dict(IOWA_WIND, src='Oboe', pan=0.05),
+    'bassoonIowa': dict(IOWA_WIND, src='Bassoon', pan=0.25),
+    'tptIowa':   dict(IOWA_WIND, src='Trumpet', pan=0.3),
+    # FreePats bagpipe (a pipe in G): the chanter's notes (file names A4_31.wav: the note and its cents sharp, measured again at decode) and the drones
+    # St. Helen's Cantores (Pianobook, Ash Verjee: a school choir, a stereo pair): 18-second takes, about 12 s of singing each, the
+    # choir's own breathing (±3 dB) kept: a long loop from 3.5 s, so most held notes never reach it, each note levelled and tuned alone
+    'choirHum':  dict(src='HelensMms', re=R_IOWA, octave=0, dyn=[1], rr=1, step=2, kind='sustain', norm='zone', attack=0.35, release=1.2, ls=3.5, lmin=5.0, lmax=8.0, xf_sec=1.0, stereo=True),
+    'choirOoh':  dict(src='HelensOohs', re=R_IOWA, octave=0, dyn=[1], rr=1, step=2, kind='sustain', norm='zone', attack=0.3, release=1.2, ls=3.5, lmin=5.0, lmax=8.0, xf_sec=1.0, stereo=True),
+    # Micah's Choir (Pianobook, Cordaro Rodriguez): one cantor, mono, four layers whose vowels open with the dynamic (oo, oh, uh, ah);
+    # the preset's roots name the notes (its file names are an octave high)
+    'cantor':    dict(IOWA_SOLO, src='Cantor', dyn=[1, 2, 3, 4], stereo=False, pan=-0.05, attack=0.12, release=0.7),
+    'pipes':      dict(src='Pipes', re=r'^(?P<note>[A-G]#?\d)_\d+\.wav$', octave=0, norm='zone', dyn=['*'], rr=1, step=1, kind='sustain', attack=0.05, release=0.25, ls=0.6, lmin=0.8, lmax=2.4, stereo=False, pan=0.1),
+    'pipesDrone': dict(src='Pipes', re=r'^drone_(?P<note>[A-G]#?\d)_\d+\.wav$', octave=0, norm='zone', dyn=['*'], rr=1, step=1, kind='sustain', attack=0.3, release=0.8, ls=0.8, lmin=1.2, lmax=4.0, stereo=False, pan=-0.1),
+})
+
 SYNTH = {   # name -> (kind, attack, release); zones come from synth.py (stereo)
     'padSerrie': dict(kind='sustain', attack=0.3, release=0.9, cutK=0, ls=0.9, lmin=1.2, lmax=1.8, stereo=True),
     'padGlass': dict(kind='sustain', attack=0.3, release=0.9, cutK=0, ls=0.9, lmin=1.2, lmax=1.8, stereo=True),
@@ -545,19 +684,59 @@ def build_recorded(vsco, name, spec, out, log):
             for ri, f in enumerate(cands[:spec['rr']]):
                 x = decode(f['path'], spec.get('stereo', False), 'R' if spec.get('pan', 0) > 0 else 'L')
                 x = trim_head(x)
+                if spec.get('norm') == 'zone':
+                    x, cut = longest_voiced(x)
+                    if cut: log(f'  .. {name} {midi_name(root)} l{li}: cut to the take that sounds ({len(x) / SR:.2f} s)'); x = trim_head(x)
                 if spec.get('bright', 0) and pitched: x = brighten(x)
                 keep = spec.get('keep')
                 if spec['kind'] == 'sustain':
-                    lp = find_loop(x, spec['ls'], spec['lmin'], spec['lmax'])
+                    lp = find_loop_steady(x, lmax_cap=spec['lmax']) if spec.get('loop') == 'steady' else None
+                    if lp and lp[2] < 0.6: lp = None                  # a poor seam inside the steady stretch: the fixed placement may do better
+                    if not lp: lp = find_loop(x, spec['ls'], spec['lmin'], spec['lmax'])
+                    if not lp and spec.get('short_ok', True):     # a short recording: a shorter loop later in the note rather than no zone
+                        for ls2, lmin2, lmax2 in ((0.45, 0.55, 1.5), (0.3, 0.35, 1.0)):
+                            lp = find_loop(x, ls2, lmin2, min(lmax2, spec['lmax']))
+                            if lp: log(f'  .. {name} {midi_name(root)}: short loop {lp[1] / SR - lp[0] / SR:.2f} s (ncc {lp[2]:.2f})'); break
                     if not lp: log(f'  !! {name} {midi_name(root)}: no loop found'); continue
-                    ls, le, q = lp; x = bake_loop(x, ls, le, xf_sec=spec.get('xf_sec', 0.25)); loop = [ls / SR, le / SR]
+                    ls, le, q = lp
+                    if spec.get('swing_max') and loop_swing(x, ls, le) > spec['swing_max'] and len(roots) > 2:
+                        log(f'  -- {name} {midi_name(root)} l{li}: dropped, the note swells {loop_swing(x, ls, le):.1f} dB inside its loop'); continue
+                    if spec.get('swing_max') and loop_gap(x, ls, le) > 12 and len(roots) > 2:
+                        log(f'  -- {name} {midi_name(root)} l{li}: dropped, a gap {loop_gap(x, ls, le):.1f} dB deep inside its loop'); continue
+                    tune = 0.0
+                    if spec.get('norm') == 'zone' and pitched:                     # a note played sharp or flat, or cut under the wrong name
+                        mr = measure_root(x, root, ls, le)
+                        if mr is not None and abs(mr - root) > 0.12: tune = mr - root; log(f'  ~~ {name} {midi_name(root)} l{li}: sounds {tune * 100:+.0f} cents from its name, played from where it is')
+                    x = bake_loop(x, ls, le, xf_sec=spec.get('xf_sec', 0.25)); loop = [ls / SR, le / SR]
                 else:
                     x = trim_tail(x); loop = None
                     if keep and len(x) > keep * SR: x = x[:int(keep * SR)]; x[-int(0.05 * SR):] *= np.linspace(1, 0, int(0.05 * SR))
                 vel = [li / nL, (li + 1) / nL] if nL > 1 else [0, 1]
-                zones.append(dict(root=root, dyn=f['dyn'], li=li, rr=ri, loop=loop, vel=vel, q=(lp[2] if spec['kind'] == 'sustain' else None)))
+                zones.append(dict(root=root, dyn=f['dyn'], li=li, rr=ri, loop=loop, vel=vel, q=(lp[2] if spec['kind'] == 'sustain' else None), tune=(tune if spec['kind'] == 'sustain' else 0.0)))
                 buffers.append(x)
     if not zones: return None
+    if spec['kind'] == 'sustain' and spec.get('norm') == 'zone':
+        # recordings made note by note at varying distances and gains (the Iowa sets): one gain per recorded note rather than per
+        # instrument. The loud layer's loop RMS at each root goes to the target (a median over the neighbouring roots, so one
+        # mis-cut note does not make a step), the softer layers at the same root are scaled with it (their recorded ratio kept;
+        # the sampler's layer alignment seats them). A click does not set the level: the clamp reads the 99.9th-percentile
+        # peak, and finish() soft-limits what is left above 0.98.
+        # The layer spacing is baked per note as well: 8 dB per unit of layer-centre distance under the loud layer (what the
+        # sampler's alignLayers aims for, so it then has nothing left to do), because a player's pp is 20 dB under the ff on one
+        # note and 7 dB on the next, and a solo line hears every such step. The timbres of the layers stay; their levels agree.
+        byrl = {}
+        for i, z in enumerate(zones): byrl.setdefault((z['root'], z['li']), []).append(i)
+        raw = {k: np.mean([rms(buffers[i], int(zones[i]['loop'][0] * SR), int(zones[i]['loop'][1] * SR)) for i in v]) for k, v in byrl.items()}
+        for (r, li), idx in byrl.items():
+            rs = sorted(rr for (rr, l) in byrl if l == li); k = rs.index(r)
+            nb = [raw[(rs[j], li)] for j in range(max(0, k - 1), min(len(rs), k + 2))]
+            want = TARGET_RMS_DB - 8 * ((nL - 0.5) / nL - (li + 0.5) / nL)
+            g = 10 ** (want / 20) / max(float(np.median(nb)), 1e-9)
+            for i in idx:
+                a = np.abs(buffers[i] if buffers[i].ndim == 1 else buffers[i].max(axis=1))
+                pk = float(np.percentile(a, 99.9)) * g
+                buffers[i] = buffers[i] * (g * (0.98 / pk if pk > 0.98 else 1.0))
+        return finish(name, spec, zones, buffers, 1.0, out, log, stereo=spec.get('stereo', False))
     # level: one gain per instrument from the loudest layer (sustain: loop RMS; short: peak)
     loud = [i for i, z in enumerate(zones) if z['li'] == nL - 1]
     if spec['kind'] == 'sustain':
@@ -568,6 +747,15 @@ def build_recorded(vsco, name, spec, out, log):
     pk = max(np.abs(b).max() for b in buffers) * gain
     if pk > 0.98: gain *= 0.98 / pk
     return finish(name, spec, zones, buffers, gain, out, log, stereo=spec.get('stereo', False))
+
+def soft_limit(y, knee=0.9):
+    """peaks above the knee bend towards 1.0 (tanh), the rest untouched: a click in a recording cannot clip the file"""
+    a = np.abs(y)
+    if a.max() <= knee: return y
+    over = a > knee
+    out = y.copy()
+    out[over] = np.sign(y[over]) * (knee + (1 - knee) * np.tanh((a[over] - knee) / (1 - knee)))
+    return out
 
 def finish(name, spec, zones, buffers, gain, out, log, stereo):
     roots = sorted({z['root'] for z in zones}); step = spec.get('step', 5) or 4
@@ -581,12 +769,12 @@ def finish(name, spec, zones, buffers, gain, out, log, stereo):
     if spec.get('pan'): inst['pan'] = spec['pan']
     total = 0
     for z, b in zip(zones, buffers):
-        y = b * gain
+        y = soft_limit(b * gain)
         tag = midi_name(z['root']) if spec.get('pitched', True) else 'x'
         f = f"{name}-{tag}-l{z['li']}-r{z['rr']}.mp3"
         encode_mp3(y, os.path.join(out, f), stereo)
         total += os.path.getsize(os.path.join(out, f))
-        zz = dict(file=f, root=z['root'], lo=lohi[z['root']][0], hi=lohi[z['root']][1], vel=[round(z['vel'][0], 3), round(z['vel'][1], 3)], rr=z['rr'])
+        zz = dict(file=f, root=round(z['root'] + z.get('tune', 0.0), 3), lo=lohi[z['root']][0], hi=lohi[z['root']][1], vel=[round(z['vel'][0], 3), round(z['vel'][1], 3)], rr=z['rr'])
         if z['loop']: zz['loop'] = [round(z['loop'][0], 4), round(z['loop'][1], 4)]
         inst['zones'].append(zz)
     qs = sorted(z['q'] for z in zones if z.get('q') is not None)
@@ -627,7 +815,7 @@ def main():
     a = ap.parse_args()
     os.makedirs(a.out, exist_ok=True)
     only = set(a.only.split(',')) if a.only else None
-    manifest = dict(version=3, license='Orchestra and percussion: VSCO 2 Community Edition (CC0 1.0). Chorus, celeste, crotales, chimes, bell tree, small percussion, timpani, soft organ: Sonatina Symphonic Orchestra 2.0 (CC Sampling Plus 1.0). Pads, sub: synthesized for this game (tools/samples/synth.py).',
+    manifest = dict(version=3, license='Orchestra and percussion: VSCO 2 Community Edition (CC0 1.0). Chorus, celeste, crotales, chimes, bell tree, small percussion, timpani, soft organ: Sonatina Symphonic Orchestra 2.0 (CC Sampling Plus 1.0). Pads, sub: synthesized for this game (tools/samples/synth.py). Solo strings, winds and brass with the Iowa suffix or the Solo names (vlnSolo, vlaSolo, vcSolo, cbSolo, tbnSolo, bassTbn, bassClar): University of Iowa Electronic Music Studios Musical Instrument Samples (free for any use, no restrictions), cut from the long takes by tools/samples/iowa.py. Pipes and drones: FreePats Great Highland Bagpipe (CC0 1.0). Choir hum and ooh (choirHum, choirOoh): St. Helen\'s Cantores by Ash Verjee, Pianobook. Cantor: Micah\'s Choir by Cordaro Rodriguez, Pianobook (both free from pianobook.co.uk for use in music; not to be redistributed as a sample library).',
                     calib=dict(file='calib.mp3', at=0.1), instruments={})
     mpath = os.path.join(a.out, 'instruments.json')
     if os.path.exists(mpath) and only:

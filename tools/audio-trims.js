@@ -1,7 +1,7 @@
 // Per-cue loudness pass: read a report JSON (node tools/audio-report.js --json FILE) and print the `trim:` each track needs to land on
 // its target (integrated LUFS of the loop window). Targets by role: underscore -16.5, battle / war variants / ground -14.5, title, council,
-// victory, GNN -15, event cues -16. With --apply the trims are written into js/audio/music.js (war variants derive from their base theme
-// and are left alone). Keeps a track within +-0.3 dB of target; changes under 0.3 dB are skipped.
+// victory, GNN -15, event cues -16. With --apply the trims are written into the score file that holds the piece (js/audio/score/*.js; war
+// variants derive from their base theme and are left alone). Keeps a track within +-0.3 dB of target; changes under 0.3 dB are skipped.
 const fs = require('fs');
 const args = process.argv.slice(2), file = args.find(a => !a.startsWith('--')), apply = args.includes('--apply');
 const onlyRe = (args.find(a => a.startsWith('--only=')) || '').slice(7), skipRe = (args.find(a => a.startsWith('--skip=')) || '').slice(7);
@@ -10,8 +10,10 @@ if (!file) { console.error('usage: node tools/audio-trims.js report.json [--appl
 const rep = JSON.parse(fs.readFileSync(file, 'utf8'));
 const music = rep.music || {};
 const target = id => /^combat|^ground|:war$/.test(id) ? -14.5 : /^(title|council|victory|gnn)$/.test(id) ? -15 : /^(orion|antarans|defeat)$/.test(id) ? -16 : -16.5;
-const src = fs.readFileSync('js/audio/music.js', 'utf8');
-const trimOf = id => { const i = src.indexOf("Track('" + id + "'"); if (i < 0) return null; const m = src.slice(i, i + 600).match(/trim: ([0-9.]+)/); return m ? +m[1] : 1; };
+const FILES = ['js/audio/score/cues.js', 'js/audio/score/map.js', 'js/audio/score/races.js'];
+const srcs = Object.fromEntries(FILES.map(p => [p, fs.readFileSync(p, 'utf8')]));
+const fileOf = id => FILES.find(p => srcs[p].indexOf("Track('" + id + "'") >= 0) || null;
+const trimOf = id => { const p = fileOf(id); if (!p) return null; const src = srcs[p], i = src.indexOf("Track('" + id + "'"); const m = src.slice(i, i + 600).match(/trim: ([0-9.]+)/); return m ? +m[1] : 1; };
 const rows = [];
 for (const key of Object.keys(music)) {
   const [id, part] = key.split(':').length > 2 ? [key.slice(0, key.lastIndexOf(':')), key.slice(key.lastIndexOf(':') + 1)] : key.split(':');
@@ -27,13 +29,16 @@ for (const key of Object.keys(music)) {
 rows.sort((a, b) => Math.abs(b.delta) - Math.abs(a.delta));
 for (const r of rows) console.log(`${r.id.padEnd(20)} ${r.lufs.toFixed(1).padStart(6)} LUFS  target ${r.target}  trim ${r.cur} -> ${r.next}  (${r.delta >= 0 ? '+' : ''}${r.delta.toFixed(1)} dB)${Math.abs(r.delta) < 0.3 ? '  keep' : ''}`);
 if (apply) {
-  let out = src, n = 0;
+  let n = 0; const outs = Object.assign({}, srcs);
   for (const r of rows) {
     if (Math.abs(r.delta) < 0.3 || /:war$/.test(r.id)) continue;
+    const p = fileOf(r.id); if (!p) continue; let out = outs[p];
     const i = out.indexOf("Track('" + r.id + "'"); const head = out.slice(i, i + 600);
     const m = head.match(/trim: ([0-9.]+)/);
     if (m) { out = out.slice(0, i) + head.replace(m[0], 'trim: ' + r.next) + out.slice(i + 600); n++; }
     else { const k = out.indexOf('{', i); out = out.slice(0, k + 1) + ' trim: ' + r.next + ',' + out.slice(k + 1); n++; }
+    outs[p] = out;
   }
-  fs.writeFileSync('js/audio/music.js', out); console.log('applied', n, 'trims');
+  for (const p of FILES) if (outs[p] !== srcs[p]) fs.writeFileSync(p, outs[p]);
+  console.log('applied', n, 'trims');
 }

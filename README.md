@@ -43,6 +43,12 @@ node tools/check.js            # syntax-check every module in js/manifest.js
 node tools/rules-test.js       # formula/rules tests (tools/rules/*.test.js)
 node tools/soak.js --games 48  # multi-threaded AI-vs-AI soak / balance runs (see tools/SOAK.md)
 node tools/audio-report.js     # renders every music track + sound effect headlessly: LUFS, limiter use, voices (--wav DIR --mp3 to listen)
+node tools/score-lint.js       # the score against its schema and the engine's own analysis (js/audio/score/*.js); --strict for a release
+node tools/qa/music.js         # the music engine's seams in real time: directed programme, soft changes, bridges, motifs, snapshot / restore
+node tools/qa/loops.js         # every looped sustain held through the bus: one note per recorded zone, flags a pulse or a click at the loop rate
+node tools/audio-hour.js       # captures a scripted hour of the map's music (alone, first contact, a war, peace, the late years) as raw PCM
+node tools/audio-seams.js      # captures four seam examples (one piece changing softly into another through the interlude built for them) as MP3
+node tools/score-review.js     # a review card for every piece: arc, harmony, melody fit, notes outside the instrument's range, texture, the loop seam (--json FILE)
 http://localhost:8765/tools/index.html   # test pages for every module
 http://localhost:8765/index.html?dev=1&screen=galaxy&race=psilon&size=large&opp=4&turns=25&seed=abc
 ```

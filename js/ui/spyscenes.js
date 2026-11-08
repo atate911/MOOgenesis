@@ -34,7 +34,7 @@
   function spyMusicEnd(snap) {
     try {
       const Mu = M.Audio && M.Audio.Music; if (!Mu || !snap || !Mu.current || Mu.current() !== 'spy') return;
-      if (Mu.restore) Mu.restore(snap, { fade: 1.2 }); else if (snap.id) Mu.play(snap.id, { fade: 1.2 }); else if (Mu.stop) Mu.stop({ fade: 1.2 });
+      if (Mu.restore) Mu.restore(snap, { fade: 1.2, resume: true }); else if (snap.id) Mu.play(snap.id, { fade: 1.2 }); else if (Mu.stop) Mu.stop({ fade: 1.2 });
     } catch (e) { /* audio is optional */ }
   }
 
