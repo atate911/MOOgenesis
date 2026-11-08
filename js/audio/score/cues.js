@@ -486,9 +486,14 @@
   (function () {
     const d = JSON.parse(JSON.stringify(Music._tracks.procession)); delete d._p; delete d.id;
     d.desc = 'Galactic Council: the procession in state — the same march, abbreviated and ceremonial: tam-tam and timpani under a brass fanfare on the call, the organ of the chamber, horns and brass doubling the theme, the big phrase within the first quarter minute, the hymn while the votes are cast, the full chamber for the result';
-    d.bpm = 100; d.tone = { lo: 1.0 };   // a ceremonial march with the film march's forward drive (the throne room's breadth, the Sousa march's step): the Grand Council sits once in fifty or a hundred turns, and it should sound like an occasion d.fx = { stage: 0.9, verb: 0.85 }; d.sends = { drums: { stage: 0.15, verb: 0.08, dly: 0 } };   // a drier, nearer room than the map's
+    d.bpm = 92; d.tone = { lo: 1.0 };   // a broad ceremonial march (the throne room's breadth, the Sousa march's step), unhurried: the Grand Council sits once in fifty or a hundred turns, and it should sound like an occasion d.fx = { stage: 0.9, verb: 0.85 }; d.sends = { drums: { stage: 0.15, verb: 0.08, dly: 0 } };   // a drier, nearer room than the map's
     d.mix = Object.assign({}, d.mix, { choir: 1.3, lead: 1.1, drums: 1.0, pad: 1.1 });
-    d.forms = [['B', 'A1', 'R', 'D', 'E'], ['B', 'A2', 'D', 'R', 'E'], ['A1', 'B', 'R', 'T', 'E'], ['B', 'T', 'A2', 'R', 'E']];
+    d.forms = [['B', 'A1', 'R', 'D', 'E'], ['B', 'A2', 'D', 'R', 'E'], ['A1', 'B', 'R', 'T', 'E'], ['B', 'T', 'A2', 'R', 'E']];   // (the drums and the fanfare open every performance, before the loop)
+    // the fanfare: after the drums, before the march, four bars of strong chords (I, IV, I, V7): the whole orchestra's chord at full, every
+    // instrument from the sub-bass to the piccolo, with the crash and the tam-tam; then the trumpets' triplet calls over the last two and the
+    // timpani's roll leading into the tune
+    // (dressed in js/audio/score/refresh.js)
+    d.sec.splice(d.sec.findIndex(x => x.n === 'intro') + 1, 0, { n: 'F', bars: 4, lv: 1.15, prog: 'I:1 IV:1 I:1 V7:1', hit: 'tam', cr: true });
     for (const s of d.sec) {
       if (s.n === 'A1' || s.n === 'A2' || s.n === 'B' || s.n === 'T') s.bars = 8;
       if (s.pad && s.pad.inst === 'strings') s.pad = { p: 'sus', inst: 'organ', n: 4, reg: [50, 76], vel: 0.8, width: 1.3 };      // the chamber's organ carries the harmony, spread wide
