@@ -5,6 +5,11 @@ Versions follow `MAJOR.MINOR.PATCH`; the live version is the `VERSION` file.
 
 ## Unreleased
 
+- Small speakers: Options -> Sound has a Small speakers setting (Auto, On, Off; Auto turns it on in the phone layout, and it
+  applies at once). For a phone's or tablet's speaker it takes out the sub-bass the driver cannot play (it only drove the limiter), keeps
+  the bass line heard through its overtones, narrows the stereo image toward what close drivers keep, lifts the melody's presence and holds
+  the dynamics a little firmer. Through a simulated phone speaker the music plays up to 3.5 dB louder with the bass line's overtones up to
+  3.7 dB stronger; with the setting off the sound is unchanged.
 - The old men's choir more present, set piece by piece: 3 dB up across the score, then more again in the dark, solemn and nocturnal
   pieces (the Vigil, the Long Night, the Abyss, the Embers, the Watch, Deep Field, the Frontier, Defeat, Orion; the Tide a little), and
   back to its old level in the bright ones (Wonder, the Survey, the Cradle, the Commonwealth); now beneath Wonder's and Patience's choirs

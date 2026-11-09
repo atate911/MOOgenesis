@@ -97,10 +97,15 @@
       label: 'Effects', color: 'var(--cyan)', min: 0, max: 100, step: 5, value: Math.round(getVol('sfx') * 100), fmt: v => v + '%', lockable: false,
       onChange: v => { setVol('sfx', v / 100); const now = performance.now(); if (now - lastPing > 150) { lastPing = now; UI.sfx('click'); } },
     });
+    const small = ctl.segmented([{ id: 'auto', label: 'Auto' }, { id: 'on', label: 'On' }, { id: 'off', label: 'Off' }], S.get('smallSpeakers') || 'auto', v => { S.set('smallSpeakers', v); smallNote(); });
+    const smallRow = row('Small speakers', ' ', small, 'stack');
+    function smallNote() { const d = smallRow.querySelector('.op-hint'); const on = M.Audio && M.Audio.smallActive ? M.Audio.smallActive() : false; if (d) d.textContent = 'Shapes the sound for a phone\'s or tablet\'s speaker: the deep bass you can\'t hear taken out, the bass line kept through its overtones, a narrower image. Auto turns it on in the phone layout; turn it off for headphones or good speakers. Now: ' + (on ? 'on' : 'off') + '.'; }
     const sound = section('Sound', 'speaker', [
       row('Mute all sound', 'Silences music and effects. Your volumes are kept.', mute),
-      h('div.op-row.slr', music), h('div.op-row.slr', sfx)], 'op-snd');
+      h('div.op-row.slr', music), h('div.op-row.slr', sfx), smallRow], 'op-snd');
+    smallNote();
     function paintMute() { sound.classList.toggle('muted', mute.get()); }
+    sync.push(() => { small.set(S.get('smallSpeakers') || 'auto'); smallNote(); });
     sync.push(() => { mute.set(getMuted()); music.api.set(Math.round(getVol('music') * 100)); sfx.api.set(Math.round(getVol('sfx') * 100)); paintMute(); });
 
     // ---- gameplay

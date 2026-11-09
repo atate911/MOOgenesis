@@ -2157,7 +2157,7 @@
     const def = TRACKS[id];
     if (!def) return Promise.reject(new Error('unknown track ' + id));
     let pl = null, stats = null, first = null;
-    return A.renderWindowed(seconds, { sampleRate: opts.sampleRate || 44100, window: 1.5, seed: opts.seed || 1, teardown: eng => { stats = eng.stats; } }, function (eng, t0, t1) {
+    return A.renderWindowed(seconds, { sampleRate: opts.sampleRate || 44100, window: 1.5, seed: opts.seed || 1, small: !!opts.small, teardown: eng => { stats = eng.stats; } }, function (eng, t0, t1) {
       if (!pl) {
         pl = new Player(eng, def, { loop: opts.loop !== false, intensity: num(opts.intensity, S.intensity), era: opts.era });
         pl.trim = num(def.trim, DEFAULT_TRIM) * MIX_TRIM * num(opts.gain, 1);

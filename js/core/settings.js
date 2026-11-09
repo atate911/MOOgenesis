@@ -29,6 +29,7 @@
     phoneVisits: 0,         // phones: page loads in a browser tab (not the installed app), counted for the install hint
     installHint: false,     // phones: the "add to home screen" card has been shown (once, from the second visit; js/ui/phone-galaxy.js)
     haptics: true,          // phones: short vibrations on Next turn, slider steps, switches, sheet snaps and errors (UI.Phone.haptic)
+    smallSpeakers: 'auto',  // the music and effects shaped for a phone's or tablet's speaker: 'auto' (on in the phone layout) | 'on' | 'off' (Audio.smallActive)
     phoneMode: 'auto',      // the phone layout: 'auto' (a coarse-pointer device 600px or narrower) | 'on' | 'off' — read by index.html's gate at load; a change needs a reload
     lastSetup: null,        // remembered new-game choices
   };
