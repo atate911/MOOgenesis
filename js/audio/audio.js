@@ -294,8 +294,34 @@
     if (!cache.clip) cache.clip = softClipCurve();
     shaper.curve = cache.clip; try { shaper.oversample = '2x'; } catch (e) { /* ignore */ }
     const outGain = mk(ctx.createGain());
-    master.connect(hp); hp.connect(comp); comp.connect(pre); pre.connect(shaper); shaper.connect(outGain); outGain.connect(ctx.destination);
-    eng.master = master; eng.outGain = outGain;
+    // small speakers (a phone's or a tablet's: little below 150-300 Hz, the two drivers close together): eng.setSmall(true) takes out
+    // the sub the driver cannot play (it only drives the limiter), keeps the bass line heard through its overtones (the ear fills in a
+    // low note from its harmonics: the band under 160 Hz rectified, its octaves and twelfths from 150 to 500 Hz mixed back), narrows the
+    // stereo image toward what close drivers keep, lifts the melody's presence a little and holds the dynamics a little firmer. Off, every
+    // stage is transparent (the filters at their bypass settings, the harmonic and crossfeed paths at zero).
+    const ssHp = mk(ctx.createBiquadFilter()); ssHp.type = 'highpass'; ssHp.frequency.value = 10; ssHp.Q.value = 0.7;
+    const ssPres = mk(ctx.createBiquadFilter()); ssPres.type = 'peaking'; ssPres.frequency.value = 2600; ssPres.Q.value = 0.8; ssPres.gain.value = 0;
+    const ssLo = mk(ctx.createBiquadFilter()), ssLo2 = mk(ctx.createBiquadFilter()); for (const n of [ssLo, ssLo2]) { n.type = 'lowpass'; n.frequency.value = 160; n.Q.value = Math.SQRT1_2; }
+    const ssGen = mk(ctx.createWaveShaper());
+    (function () { const n = 2048, c = new Float32Array(n); for (let i = 0; i < n; i++) { const x = (i / (n - 1)) * 2 - 1; c[i] = Math.abs(x); } ssGen.curve = c; try { ssGen.oversample = '2x'; } catch (e) { /* ignore */ } })();
+    const ssBh = mk(ctx.createBiquadFilter()), ssBh2 = mk(ctx.createBiquadFilter()), ssBl = mk(ctx.createBiquadFilter());
+    ssBh.type = ssBh2.type = 'highpass'; ssBh.frequency.value = ssBh2.frequency.value = 150; ssBh.Q.value = ssBh2.Q.value = Math.SQRT1_2; ssBl.type = 'lowpass'; ssBl.frequency.value = 500; ssBl.Q.value = 0.7;
+    const ssHarm = mk(ctx.createGain()); ssHarm.gain.value = 0;
+    master.connect(ssLo); ssLo.connect(ssLo2); ssLo2.connect(ssGen); ssGen.connect(ssBh); ssBh.connect(ssBh2); ssBh2.connect(ssBl); ssBl.connect(ssHarm);
+    const ssSplit = mk(ctx.createChannelSplitter(2)), ssMerge = mk(ctx.createChannelMerger(2)), ssDirect = [mk(ctx.createGain()), mk(ctx.createGain())], ssCross = [mk(ctx.createGain()), mk(ctx.createGain())];
+    for (let c = 0; c < 2; c++) { ssDirect[c].gain.value = 1; ssCross[c].gain.value = 0; ssSplit.connect(ssDirect[c], c); ssSplit.connect(ssCross[c], c); ssDirect[c].connect(ssMerge, 0, c); ssCross[c].connect(ssMerge, 0, 1 - c); }
+    const ssOut = mk(ctx.createGain()); ssOut.gain.value = 1;   // the level the sub and the firmer glue took, given back (the limiter has the room the sub left)
+    master.connect(ssHp); ssHp.connect(ssPres); ssPres.connect(ssSplit); ssHarm.connect(ssSplit); ssMerge.connect(ssOut); ssOut.connect(hp);
+    hp.connect(comp); comp.connect(pre); pre.connect(shaper); shaper.connect(outGain); outGain.connect(ctx.destination);
+    const SS = A.SMALL;
+    eng.master = master; eng.outGain = outGain; eng.small = false;
+    eng.setSmall = function (on) {
+      on = !!on; eng.small = on; const t = ctx.currentTime || 0, set = (prm, v) => { try { prm.cancelScheduledValues(t); prm.setTargetAtTime(v, t, 0.05); } catch (e) { prm.value = v; } };
+      set(ssHp.frequency, on ? 95 : 10); set(ssPres.gain, on ? 2.0 : 0); set(ssHarm.gain, on ? SS.harm : 0); set(ssOut.gain, on ? dbtoa(SS.make) : 1);
+      for (let c = 0; c < 2; c++) { set(ssDirect[c].gain, on ? 0.78 : 1); set(ssCross[c].gain, on ? 0.22 : 0); }   // the image at about half its width
+      if (eng.glue) { set(eng.glue.threshold, on ? -30 : -24); set(eng.glue.ratio, on ? 2.2 : 1.6); }
+      if (!t) { ssHp.frequency.value = on ? 95 : 10; ssPres.gain.value = on ? 2.0 : 0; ssHarm.gain.value = on ? SS.harm : 0; ssOut.gain.value = on ? dbtoa(SS.make) : 1; for (let c = 0; c < 2; c++) { ssDirect[c].gain.value = on ? 0.78 : 1; ssCross[c].gain.value = on ? 0.22 : 0; } if (eng.glue) { eng.glue.threshold.value = on ? -30 : -24; eng.glue.ratio.value = on ? 2.2 : 1.6; } }
+    };
     eng.musicBus = mk(ctx.createGain());
     // music-only tone stage, left flat on purpose (the shelves are kept as hooks for a listening pass)
     const eqL = mk(ctx.createBiquadFilter()), eqH = mk(ctx.createBiquadFilter());
@@ -918,6 +944,7 @@
       try { ctx = new AC({ latencyHint: 'interactive' }); } catch (e) { ctx = new AC(); }
       A.ctx = ctx;
       A.engine = createEngine(ctx, {});
+      A.engine.setSmall(A.smallActive());
       ctx.addEventListener('statechange', () => { if (ctx.state === 'running') fireReady(); });
       try { const p = ctx.resume(); if (p && p.then) p.then(() => { if (ctx.state === 'running') fireReady(); }, noop); } catch (e) { /* ignore */ }
       if (ctx.state === 'running') fireReady();
@@ -940,6 +967,14 @@
     saveSettings();
     if (A.engine) A.engine.setBusGains(false);
   };
+  // Small speakers: 'auto' (on in the phone layout) | 'on' | 'off', in MOO.Settings ('smallSpeakers'); applied live, no reload
+  A.SMALL = { harm: 1.2, make: 2.0 };   // the small-speaker stage's overtone level and level make-up (dB); tuned by tools on a phone simulation
+  A.smallActive = function () {
+    const v = M.Settings && M.Settings.get ? (M.Settings.get('smallSpeakers') || 'auto') : 'auto';
+    return v === 'on' || (v === 'auto' && !!(M.Phone && M.Phone.active && M.Phone.active()));
+  };
+  A.applySmall = function () { if (A.engine && A.engine.setSmall) A.engine.setSmall(A.smallActive()); };
+  if (M.Bus && M.Bus.on) M.Bus.on('settings', k => { if (k === 'smallSpeakers' || k === null) A.applySmall(); });
   A.setMuted = function (b) {
     settings.muted = !!b;
     saveSettings();
@@ -957,7 +992,7 @@
     o = o || {};
     const OAC = window.OfflineAudioContext || window.webkitOfflineAudioContext, sr = o.sampleRate || 44100;
     const ctx = new OAC(2, Math.max(1, Math.ceil(seconds * sr)), sr);
-    const eng = createEngine(ctx, { offline: true, unity: true, seed: o.seed });
+    const eng = createEngine(ctx, { offline: true, unity: true, seed: o.seed }); if (o.small) eng.setSmall(true);
     build(eng, ctx);
     return ctx.startRendering();
   };
@@ -968,7 +1003,7 @@
     o = o || {};
     const OAC = window.OfflineAudioContext || window.webkitOfflineAudioContext, sr = o.sampleRate || 44100;
     const len = Math.max(128, Math.ceil(seconds * sr)), ctx = new OAC(2, len, sr);
-    const eng = createEngine(ctx, { offline: true, unity: true, seed: o.seed, maxVoices: o.maxVoices });
+    const eng = createEngine(ctx, { offline: true, unity: true, seed: o.seed, maxVoices: o.maxVoices }); if (o.small) eng.setSmall(true);
     const winS = 128 * Math.max(1, Math.round((o.window || 1.5) * sr / 128)), win = winS / sr;
     if (o.setup) o.setup(eng, ctx);
     eng.vnow = 0; build(eng, 0, Math.min(win, seconds));

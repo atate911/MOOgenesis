@@ -304,8 +304,9 @@
   // replaces (matched in the men's register: ooh x0.88, aah x1.50). A voice may still split to another recording (o.split) where one is wanted.
   // the old men's choir (the Sonatina men) kept by name for the pieces that layer it gently under the new choir (its darker, modulated
   // colour): never swapped by the refresh; played as a held bed (choir3, voice-led like strings) with long entries and releases
-  INST.choirMenOldLine = smp('chorusMen', 0.23, { att: 0.12, rel: 1.3, hp: 100, hum: 1.5, alt: true, eq: [[5000, 2.5, 'hs']] }, 'uuh');   // the old men singing a line (their own articulation)
-  INST.choirMenOld = smp('chorusMen', 0.23, { att: 1.8, rel: 2.5, hp: 90, hum: 1.5, eq: [[5000, 2, 'hs']] }, 'uuh');
+  const OLD_MEN = 0.33;   // the old men's choir a little more present throughout (the user), 3 dB over its first level
+  INST.choirMenOldLine = smp('chorusMen', OLD_MEN, { att: 0.12, rel: 1.3, hp: 100, hum: 1.5, alt: true, eq: [[5000, 2.5, 'hs']] }, 'uuh');   // the old men singing a line (their own articulation)
+  INST.choirMenOld = smp('chorusMen', OLD_MEN, { att: 1.8, rel: 2.5, hp: 90, hum: 1.5, eq: [[5000, 2, 'hs']] }, 'uuh');
   INST.choirMenNew = smp('choirOoh', 0.144, { att: 0.3, rel: 1.4, hp: 70, eq: [[6000, 1.5, 'hs']], range: [38, 78], stretch: 9 }, 'uuh');
   INST.choirMenAhNew = smp('choirOoh', 0.246, { att: 0.3, rel: 1.4, hp: 70, eq: [[6000, 1.5, 'hs']], range: [38, 78], stretch: 9 }, 'aah');
   const inRange = (inst, reg) => { const r = inst.range; if (!r || !reg) return reg; const lo = Math.max(reg[0], r[0]), hi = Math.min(reg[1], r[1]); return hi - lo >= 7 ? [lo, hi] : reg; };
@@ -1266,6 +1267,7 @@
     markLegato(C.ev);
     if (perf && !Music._dbg.noPerform) { perform(C, Emove, pseed); C.ev.sort((a, b) => a.t - b.t); }   // the ensemble: after the legato is known, so a line's overlaps stay
     if (!Music._dbg.noLayerFlow && (def.orch || def.refreshed)) layerFlow(C.ev);   // the refreshed pieces and the orchestral profile
+    if (def.smpK) for (const e of C.ev) { const k = e.o && def.smpK[e.o.smp]; if (k) e.o = Object.assign({}, e.o, { lvl: num(e.o.lvl, 1) * k }); }   // a recording up or down in this piece (the refresh's oldMenK: the old men's choir)
     return { events: C.ev, beats: C.totalBeats, len: tAcc, wraps, pass, snaps: C.snaps, snapLog: C.snapLog || [], bars, beatsT, move: Emove };
   }
   // Which recording (soft, middle or loud, where an instrument has them) a note is played from follows the music, not the note: a player's
@@ -2155,7 +2157,7 @@
     const def = TRACKS[id];
     if (!def) return Promise.reject(new Error('unknown track ' + id));
     let pl = null, stats = null, first = null;
-    return A.renderWindowed(seconds, { sampleRate: opts.sampleRate || 44100, window: 1.5, seed: opts.seed || 1, teardown: eng => { stats = eng.stats; } }, function (eng, t0, t1) {
+    return A.renderWindowed(seconds, { sampleRate: opts.sampleRate || 44100, window: 1.5, seed: opts.seed || 1, small: !!opts.small, teardown: eng => { stats = eng.stats; } }, function (eng, t0, t1) {
       if (!pl) {
         pl = new Player(eng, def, { loop: opts.loop !== false, intensity: num(opts.intensity, S.intensity), era: opts.era });
         pl.trim = num(def.trim, DEFAULT_TRIM) * MIX_TRIM * num(opts.gain, 1);

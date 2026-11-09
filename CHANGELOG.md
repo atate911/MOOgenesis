@@ -5,6 +5,15 @@ Versions follow `MAJOR.MINOR.PATCH`; the live version is the `VERSION` file.
 
 ## Unreleased
 
+- Small speakers: Options -> Sound has a Small speakers setting (Auto, On, Off; Auto turns it on in the phone layout, and it
+  applies at once). For a phone's or tablet's speaker it takes out the sub-bass the driver cannot play (it only drove the limiter), keeps
+  the bass line heard through its overtones, narrows the stereo image toward what close drivers keep, lifts the melody's presence and holds
+  the dynamics a little firmer. Through a simulated phone speaker the music plays up to 3.5 dB louder with the bass line's overtones up to
+  3.7 dB stronger; with the setting off the sound is unchanged.
+- The old men's choir more present, set piece by piece: 3 dB up across the score, then more again in the dark, solemn and nocturnal
+  pieces (the Vigil, the Long Night, the Abyss, the Embers, the Watch, Deep Field, the Frontier, Defeat, Orion; the Tide a little), and
+  back to its old level in the bright ones (Wonder, the Survey, the Cradle, the Commonwealth); now beneath Wonder's and Patience's choirs
+  too. The engine: a recording's level set per piece (def.smpK; the refresh's oldMenK).
 - One more pass over every piece to the current standard. Wherever a melody met a chord a semitone off it (so that the engine bent the
   note to fit), the chord beneath now holds the note as written: sixteen map pieces, Victory, Defeat, the news, Ground assault, the
   Human and Bulrathi themes and both battle pieces (a sus4 or a seventh where the line leans, the epic flat-third for the battle's
