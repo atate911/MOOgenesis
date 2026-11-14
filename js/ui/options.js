@@ -78,6 +78,7 @@
   }
 
   // ------------------------------------------------------------------ the options form (shared by screen + modal)
+  let lastTab = 'sound';                                                   // the tab shown last, kept for the session
   function buildOptions() {
     const ctl = C(), S = St();
     const row = (name, hint, control, cls) => h('div.op-row' + (cls ? '.' + cls : ''),
@@ -164,11 +165,20 @@
       bool('mapGrid', 'Star-chart grid', 'Draw the graticule behind the galaxy map.', S.DEFAULTS.mapGrid),
       M.Phone && M.Phone.active() ? bool('haptics', 'Haptics', 'A short vibration on Next turn, slider steps, switches and errors (Android; iPhones with iOS 18 or later tick).', true) : null,
       M.Phone && M.Phone.active() ? bool('perfOverlay', 'Performance overlay', 'Frame rate, graphics tier and worker load in the top corner.', false) : null,
-      row('Interface scale', 'Resizes the whole interface. Applied when you let go of the slider.', null, 'stack'),
-      h('div.op-row.slr', scale)]);
+      row('Interface scale', 'Resizes the whole interface. Applied when you let go of the slider.', scale, 'stack.slr2')]);
 
-    const el = h('div.op-body', h('div.op-col', sound, gameplay), h('div.op-col', iface));
-    return { el, sync: () => sync.forEach(fn => fn()) };
+    const done = { sync: () => sync.forEach(fn => fn()) };
+    // phones: one scrolling list of the three sections (css/phone-skin.css styles it as native grouped lists)
+    if (M.Phone && M.Phone.active()) return Object.assign(done, { el: h('div.op-body', h('div.op-col', sound, gameplay), h('div.op-col', iface)) });
+    // desktop: a tab per section, its settings in two columns, so the page never scrolls (the tab bar is the section's heading)
+    const tabs = UI.tabs([
+      { id: 'sound', label: 'Sound', icon: null, render: () => sound },
+      { id: 'gameplay', label: 'Gameplay', render: () => gameplay },
+      { id: 'display', label: 'Display', render: () => iface },
+    ], { initial: lastTab, bodyCls: 'op-tabbody', onChange: id => { lastTab = id; } });
+    tabs.el.classList.add('op-tabs');
+    Array.from(tabs.el.querySelectorAll('.tabs button')).forEach((b, i) => { b.setAttribute('data-k', String(i + 1)); UI.setTip(b, 'Key ' + (i + 1)); });
+    return Object.assign(done, { el: h('div.op-body.op-tabbed', tabs.el), tabs });
   }
 
   function resetFlow(view) {
@@ -193,11 +203,26 @@
     const doneBtn = ctl.hotkey(UI.button('Done', () => pm && pm.close(true), { primary: true, kbd: 'Esc' }), 'd');
     const body = h('div.op-modal-body', view.el, h('div.op-foot', resetBtn, h('span.grow'), doneBtn));
     pm = UI.modal({ title: 'Options', body, buttons: [], width: 'min(94vw, 58rem)', cls: 'op-modal' });
-    const off = ctl.hotkeys(pm.el, { r: resetBtn, d: doneBtn }), off2 = ctl.trapFocus(pm.el);
+    evenTabs(view);
+    const off = ctl.hotkeys(pm.el, { r: resetBtn, d: doneBtn }), off2 = ctl.trapFocus(pm.el), off3 = tabKeys(pm.el, () => view);
     ctl.rightClick(pm.el.parentNode, () => pm.close(null));
-    pm.then(() => { off(); off2(); });
+    pm.then(() => { off(); off2(); off3(); });
     return pm;
   };
+  // every tab as tall as the tallest, so switching tabs never resizes the dialog (measured once the view is in the page)
+  function evenTabs(v) {
+    if (!v || !v.tabs) return;
+    const body = v.tabs.body, keep = v.tabs.current(); let hMax = 0;
+    body.style.minHeight = '';
+    ['sound', 'gameplay', 'display'].forEach(id => { v.tabs.show(id); hMax = Math.max(hMax, body.offsetHeight); });
+    v.tabs.show(keep); lastTab = keep;
+    if (hMax) body.style.minHeight = hMax + 'px';
+  }
+  // 1 / 2 / 3 switch the tabs (desktop)
+  function tabKeys(el, getView) {
+    const pick = k => () => { const v = getView(); if (!v || !v.tabs) return false; v.tabs.show(['sound', 'gameplay', 'display'][k]); UI.sfx('click'); return true; };
+    return C().keyScope(el, { 1: pick(0), 2: pick(1), 3: pick(2) });
+  }
 
   // ------------------------------------------------------------------ full-screen variant
   let bg = null, holder = null, view = null, from = 'menu', resetBtn = null;
@@ -219,12 +244,14 @@
           h('footer.op-foot', resetBtn, h('span.op-foot-hint', 'Esc or right-click to go back'), h('span.grow'), doneBtn)))));
       ctl.rightClick(el, goBack);
       ctl.hotkeys(el, { r: resetBtn, d: doneBtn });
+      tabKeys(el, () => view);
     },
     enter(params) {
       from = (params && params.from) || 'menu';
       if (bg) bg.paint();
       view = buildOptions();
       UI.mount(holder, view.el);
+      evenTabs(view);
     },
     resize() { if (bg) bg.paint(); },
   });
@@ -261,5 +288,17 @@
     .op-snd .slider { transition:opacity .2s; }
     .op-snd.muted .slider { opacity:.4; }
     @media (max-width: 760px) { .op-body { grid-template-columns:minmax(0,1fr); } }
+    .op-row.slr2 .slider { margin:.15rem 0; }
+    /* desktop: tabs, each section's rows in two balanced columns */
+    .op-body.op-tabbed { display:block; }
+    .op-tabs .tabs { margin-bottom:.8rem; }
+    .op-tabs .tabs button { min-width:8.5rem; }
+    .op-tabbody > .panel > .panel-h { display:none; }
+    .op-tabbody { display:flex; flex-direction:column; }
+    .op-tabbody > .panel { padding-top:.35rem; flex:1 1 auto; }
+    .op-tabbed .op-rows { display:block; column-count:2; column-gap:2.2rem; column-rule:1px solid rgba(255,255,255,.06); }
+    .op-tabbed .op-row { break-inside:avoid; }
+    .op-tabbed .op-row:last-child { border-bottom:1px solid rgba(255,255,255,.055); }
+    @media (max-width: 820px) { .op-tabbed .op-rows { column-count:1; } }
   `);
 })(window.MOO);

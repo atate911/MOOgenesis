@@ -5,6 +5,12 @@ Versions follow `MAJOR.MINOR.PATCH`; the live version is the `VERSION` file.
 
 ## Unreleased
 
+- Options on a PC never scroll: Sound, Gameplay and Display are tabs (keys 1, 2, 3), each with its settings in two columns, and every
+  tab the height of the tallest so the dialog keeps its size. The page fits from 1024x640 up, and at 130% interface scale on 1280x720.
+  Phones keep the single scrolling list.
+- A sound on / off button on the galaxy map, under the map controls and the declutter toggles (on phones it unfolds with them under
+  More). It mutes everything and keeps your volumes; it follows Options' Mute all sound and the other way round (Audio emits
+  'audio:muted').
 - Score player in the game: Game menu -> Score player (M) lists every piece of the score (the main theme and its readings, the map
   pieces, the scenes, the race themes and their war readings, the interludes) by name, key and length, and plays any of them through
   the game's own engine: play / pause, previous / next, a seek bar (the same performance, the mark where the piece repeats), Repeat or
