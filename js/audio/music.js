@@ -1407,7 +1407,7 @@
       this.alt0 = pf.alt0 !== undefined ? pf.alt0 : def.alts && def.alts.length ? Math.floor(rnd() * def.alts.length) : 0;        // and which instrumentation
       this.take = pf.take !== undefined ? pf.take : Math.floor(rnd() * 8);                                                        // and which reading of the small variations
       this.era = pf.era !== undefined ? pf.era : eraOf(def, this.o.era !== undefined ? this.o.era : S.era);                       // how contentious the game is, read once per performance
-      this.stretch = (def.rubato ? 1 + (rnd() * 2 - 1) * def.rubato : 1) * (1 + 0.045 * this.era); // a performance is never at exactly the written tempo; tenser eras lift it a little
+      this.stretch = def.rubato ? 1 + (rnd() * 2 - 1) * def.rubato : 1;   // a performance is never at exactly the written tempo (the era no longer changes it: the user)
       this.schedDone = false; this.endAt = Infinity;
     }
     now() { return this.eng.now(); }

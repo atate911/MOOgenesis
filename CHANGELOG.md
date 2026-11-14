@@ -5,6 +5,8 @@ Versions follow `MAJOR.MINOR.PATCH`; the live version is the `VERSION` file.
 
 ## Unreleased
 
+- The music no longer changes speed with the game's era (it played up to 4.5% slower as the galaxy grew tense). The era still
+  chooses the pieces and colours their chords and instruments; each performance keeps its small rubato.
 - Options on a PC never scroll: Sound, Gameplay and Display are tabs (keys 1, 2, 3), each with its settings in two columns, and every
   tab the height of the tallest so the dialog keeps its size. The page fits from 1024x640 up, and at 130% interface scale on 1280x720.
   Phones keep the single scrolling list.
