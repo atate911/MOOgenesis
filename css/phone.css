@@ -321,6 +321,44 @@ html[data-phone] .ph-dz .ph-pc-c { display: flex; flex-wrap: wrap; gap: .25rem; 
 html[data-phone] .ph-dz .ph-pc-c .chip { padding: .1rem .45rem; font-size: .8rem; color: var(--mist); background: rgba(255, 255, 255, .06); clip-path: none; }
 html[data-phone] .ph-dz .ph-pc-c .chip b { color: var(--ivory); font-weight: 600; }
 html[data-phone] .ph-dz .dz-pop.ph-pop .dz-pfoot { flex-wrap: wrap; gap: .2rem .8rem; padding-bottom: calc(.3rem + env(safe-area-inset-bottom)); }
+/* the picker is a sheet from the bottom, as tall as its cards: a three-engine choice leaves the design in view above it (a tap there closes it) */
+html[data-phone] .dz.ph-dz .dz-pop.ph-pop { top: auto; bottom: 0; max-height: calc(100% - var(--ph-head, 0px)); box-shadow: 0 -2px 0 #000, 0 -10px 30px rgba(0, 0, 0, .75); }
+html[data-phone] .ph-dz .ph-dz-head .dz-clegend { display: none; }                         /* the pinned budget keeps its height; the cost breakdown is in Compare */
+/* the two body panes: one column in portrait (the panes take no box) */
+html[data-phone] .ph-dz .ph-dz-side, html[data-phone] .ph-dz .ph-dz-parts { display: contents; }
+/* sideways (a phone ~390px tall): the pinned header and footer took over half the height. Header in one row, Clear / Build in a right-hand
+   column, ship | parts as two panes that scroll on their own; the picker and library cover the panes under the header, not the whole screen */
+@media (orientation: landscape) {
+  html[data-phone] .dz.ph-dz { display: grid; grid-template-columns: minmax(0, .9fr) minmax(0, 1.1fr) calc(7.5rem + env(safe-area-inset-right)); grid-template-rows: auto minmax(0, 1fr); }
+  html[data-phone] .ph-dz .ph-dz-head { grid-column: 1 / -1; grid-row: 1; flex-direction: row; align-items: center; gap: .5rem; padding: .3rem calc(.45rem + env(safe-area-inset-right)) .3rem .45rem; }
+  html[data-phone] .ph-dz .ph-dz-hrow { flex: 1 1 0; min-width: 0; }
+  html[data-phone] .ph-dz .ph-dz-head .dz-spc { flex: 1 1 0; min-width: 0; padding: .2rem .5rem .25rem; }
+  html[data-phone] .ph-dz .ph-dz-head .dz-spc .row { margin-bottom: .1rem; }
+  html[data-phone] .ph-dz .ph-dz-head .dz-spc :is(.dz-legend, .dz-sbar.cost) { display: none; }      /* the numbers stay; the full breakdown is under Compare */
+  html[data-phone] .ph-dz .ph-dz-head .dz-sbar { height: .6rem; }
+  html[data-phone] .ph-dz .ph-dz-body { display: contents; }
+  html[data-phone] .ph-dz :is(.ph-dz-side, .ph-dz-parts) {
+    grid-row: 2; min-height: 0; overflow-x: hidden; overflow-y: auto; overscroll-behavior: contain; -webkit-overflow-scrolling: touch;
+    display: flex; flex-direction: column; gap: .5rem; padding: .5rem .45rem calc(1rem + env(safe-area-inset-bottom));
+  }
+  html[data-phone] .ph-dz .ph-dz-side { grid-column: 1; border-right: 1px solid #2a2a2a; }
+  html[data-phone] .ph-dz .ph-dz-parts { grid-column: 2; }
+  html[data-phone] .ph-dz .ph-dz-side .dz-pv { height: 11.5rem; }
+  html[data-phone] .ph-dz .ph-dz-side .dz-hulls { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  html[data-phone] .ph-dz .ph-dz-side .dz-hull { min-height: var(--tap); padding: .15rem 0; min-width: 0; }
+  html[data-phone] .ph-dz .ph-dz-side .dz-hull .sil { display: none; }
+  html[data-phone] .ph-dz .ph-dz-side .dz-hull .nm { letter-spacing: 0; }
+  html[data-phone] .ph-dz .ph-dz-side .dz-hull .sub { white-space: nowrap; letter-spacing: -.01em; font-size: 12px; }
+  html[data-phone] .ph-dz .ph-dz-foot {
+    grid-column: 3; grid-row: 2; grid-template-columns: minmax(0, 1fr); grid-template-rows: auto auto; align-content: end; gap: .45rem;
+    padding: .5rem calc(.45rem + env(safe-area-inset-right)) calc(.5rem + env(safe-area-inset-bottom)) .45rem; box-shadow: -2px 0 0 #000, -6px 0 14px rgba(0, 0, 0, .5);
+  }
+  html[data-phone] .dz.ph-dz { padding-right: 0; }
+  html[data-phone] .ph-dz .ph-dz-foot .btn.primary { min-height: 4.5rem; }
+  html[data-phone] .dz.ph-dz .dz-pop.ph-pop { inset: auto 0 0 0; max-height: 100%; grid-column: 2 / -1; grid-row: 2; }
+  html[data-phone] .dz.ph-dz .ph-lib .dz-cards { grid-template-columns: repeat(auto-fill, minmax(17rem, 1fr)); }
+  html[data-phone] .dz.ph-dz .dz-lib.ph-lib { inset: 0; grid-column: 1 / -1; grid-row: 2; }
+}
 /* the library sheet */
 html[data-phone] .ph-dz .dz-lib.ph-lib { display: none; position: absolute; left: 0; right: 0; bottom: 0; top: var(--ph-head, 12%); z-index: 9; max-height: none; box-shadow: 0 -10px 30px rgba(0, 0, 0, .7); }
 html[data-phone] .ph-dz .dz-lib.ph-lib.on { display: flex; animation: ph-up .2s var(--ease) both; }

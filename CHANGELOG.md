@@ -15,6 +15,24 @@ Versions follow `MAJOR.MINOR.PATCH`; the live version is the `VERSION` file.
 - The score player lists only what the game plays (the main theme's five study readings are gone) and has a button on the title menu.
 - With track names on, a note button on the galaxy map (beside the mute button) keeps the playing piece's name in the corner of the
   map, changing with the music.
+- Ship design screen fixed: the score player's stylesheet styled a bare `.sp` class, which the design editor (and the combat scanner
+  and the fleet ledger footer) also use, so the editor was pushed down the screen with its component rows collapsed. The player's
+  root is now `.sp-root`.
+- Ship design, easier to use:
+  - The part pickers are as tall as their rows and open just under the slot you clicked (above it when there is no room), instead of
+    covering the whole panel for a two-row choice. A click on the design around a picker closes it; the preview and numbers stay live.
+    A weapon's tooltip sits on its name, no longer over the description column.
+  - Phones: the picker is a bottom sheet as tall as its cards, with the slot you tapped kept in view above it; a tap outside closes
+    it. On its side the editor is laid out for the short screen: the header is one row, Clear / Build are a column on the right, and
+    the ship (hull, preview, stats) and its parts are two panes that scroll on their own, so the preview stays in view while
+    choosing; the library is a grid.
+  - Small print never goes under 12px (it was ~10px at 1280x720 and ~8px at 1024); between 1000 and 1180px the stat labels wrap
+    and the headers switch to mixed case so nothing is cut.
+  - The cost bar has a legend (hull, engines, weapons…); Compare says what Saved and Best are measured against, and each row has a
+    tooltip (Firepower: average damage per round if every shot hits, before shields).
+  - Scrap shows on the selected design and on hover instead of a red button on every card; the slot Build writes into is lit;
+    the weapon count arrows are bigger; the "drag to turn" hint fades after a few seconds (the preview keeps it as a tooltip).
+
 - The music no longer changes speed with the game's era (it played up to 4.5% slower as the galaxy grew tense). The era still
   chooses the pieces and colours their chords and instruments; each performance keeps its small rubato.
 - Options on a PC never scroll: Sound, Gameplay and Display are tabs (keys 1, 2, 3), each with its settings in two columns, and every
