@@ -1,4 +1,6 @@
 // Loads css + js from MOO_MANIFEST in order (works from file:// — no ES modules), then calls MOO.boot().
+// Two phases: everything in `js` except the `defer` list, then MOO.boot() (the title menu appears), then the `defer` list in the
+// background, in manifest order. MOO.Late tracks phase 2: Late.ready, Late.failed, Late.wait(fn) runs fn once it has loaded.
 (function () {
   'use strict';
   var man = window.MOO_MANIFEST;
@@ -43,7 +45,9 @@
     window.MOO_BOOT_TIP = T[i];
     tipEl.innerHTML = '<b>Tip</b>'; tipEl.appendChild(document.createTextNode(T[i])); tipEl.className = 'boot-tip on';
   }
-  var total = man.js.length, done = 0;
+  var deferSet = {}; (man.defer || []).forEach(function (f) { deferSet[f] = true; });
+  var first = man.js.filter(function (f) { return !deferSet[f]; }), late = man.js.filter(function (f) { return deferSet[f]; });
+  var total = first.length, done = 0;
   function step() {
     done++;
     if (fill) fill.style.width = Math.round(done / total * 100) + '%';
@@ -61,6 +65,7 @@
       return;
     }
     try { sessionStorage.removeItem(RETRY_KEY); } catch (e) { /* ignore */ }
+    installLate();
     try {
       if (window.MOO && typeof window.MOO.boot === 'function') window.MOO.boot();
       else throw new Error('MOO.boot is not defined (js/main.js missing?)');
@@ -68,17 +73,58 @@
       errBox.textContent += '\n' + (e && e.stack || e);
       console.error(e);
     }
+    // phase 2 once the menu has had a frame to paint
+    var go = function () { setTimeout(loadLate, 30); };
+    if (typeof requestAnimationFrame === 'function') requestAnimationFrame(go); else go();
+  }
+
+  // ---- phase 2: the deferred files ----
+  var Late = null, lateDone = 0, lateFailed = false;
+  function installLate() {
+    var M = window.MOO; if (!M) return;
+    var cbs = [];
+    Late = M.Late = {
+      ready: late.length === 0, failed: false, errors: [], total: late.length, loaded: 0,
+      wait: function (fn) { if (Late.ready || Late.failed) fn(Late); else cbs.push(fn); },
+      _flush: function () { var l = cbs.splice(0); l.forEach(function (fn) { try { fn(Late); } catch (e) { console.error(e); } }); },
+    };
+  }
+  function lateStep() {
+    lateDone++;
+    if (Late) Late.loaded = lateDone;
+    if (lateDone < late.length) return;
+    window.removeEventListener('error', onLateError);
+    if (!Late) return;
+    if (lateFailed) { Late.failed = true; console.warn('Deferred files failed:', Late.errors); }
+    else Late.ready = true;
+    Late._flush();
+  }
+  function onLateError(ev) {
+    var f = ev && ev.filename || '', cur = late[lateDone];
+    if (cur && f.indexOf(cur + bust) >= 0) { lateFailed = true; if (Late) Late.errors.push('js (error): ' + cur + ': ' + (ev.message || 'script error')); }
+  }
+  function loadLate() {
+    if (!late.length) return;
+    window.addEventListener('error', onLateError);
+    late.forEach(function (src) {
+      var s = document.createElement('script');
+      s.src = src + bust;
+      s.async = false;
+      s.onload = lateStep;
+      s.onerror = function () { lateFailed = true; if (Late) Late.errors.push('js: ' + src); lateStep(); };
+      document.head.appendChild(s);
+    });
   }
   // A script that loads but throws while running (or does not parse) only shows up as a window error whose filename is that
-  // script's URL. Scripts run in manifest order (async=false), so the one executing is man.js[done]: only ITS errors count —
+  // script's URL. Scripts run in manifest order (async=false), so the one executing is first[done]: only ITS errors count —
   // a callback of an earlier script firing in between (a timer, an event) is that script's bug, not a failed load.
   var jsFailed = false;
   function onScriptError(ev) {
-    var f = ev && ev.filename || '', cur = man.js[done];
+    var f = ev && ev.filename || '', cur = first[done];
     if (cur && f.indexOf(cur + bust) >= 0) { jsFailed = true; errors.push('js (error): ' + cur + ': ' + (ev.message || 'script error')); }
   }
   window.addEventListener('error', onScriptError);
-  man.js.forEach(function (src) {
+  first.forEach(function (src) {
     var s = document.createElement('script');
     s.src = src + bust;
     s.async = false;                       // preserves execution order

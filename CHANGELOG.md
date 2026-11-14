@@ -16,7 +16,11 @@ Versions follow `MAJOR.MINOR.PATCH`; the live version is the `VERSION` file.
   length. Notes in `js/ui/scoreplayer-notes.js`; the catalogue now carries each piece's section times.
 - Track names during play (off by default; switched in the score player): when the game moves on to a new piece, its name shows for a
   few seconds. Interludes are not announced.
-
+- Faster start-up: the title menu appears in about 1.9 s instead of about 4.5 s (measured on a simulated 20 Mbit/s line). The in-game
+  screens and the scene painter (about a third of the code) now load in the background once the menu is up (js/manifest.js `defer`,
+  loader.js phase 2); starting or continuing a game before they arrive waits for them behind the usual loading card. The shared sky
+  behind Options, Load and New game is painted in idle time after the menu appears, not before it (and no longer twice), and the menu
+  builds its procedural fallback sky only when the photo galaxy cannot be had.
 - Small speakers: Options -> Sound has a Small speakers setting (Auto, On, Off; Auto turns it on in the phone layout, and it
   applies at once). For a phone's or tablet's speaker it takes out the sub-bass the driver cannot play (it only drove the limiter), keeps
   the bass line heard through its overtones, narrows the stereo image toward what close drivers keep, lifts the melody's presence and holds
