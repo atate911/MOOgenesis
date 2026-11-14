@@ -137,6 +137,8 @@ window.MOO_MANIFEST = {
     'js/ui/setup.js',
     'js/ui/options.js',
     'js/ui/saveload.js',
+    'js/ui/scoreplayer-notes.js', // the score player's notes for listeners
+    'js/ui/scoreplayer.js',       // the score player (Game menu → Score player)
     'js/ui/gamemenu.js',
     'js/ui/soundscape.js',
 
@@ -153,6 +155,6 @@ window.MOO_MANIFEST = {
     'js/ui/turnlog.js', 'js/ui/gnn.js', 'js/ui/ledger-planets.js', 'js/ui/ledger-fleets.js', 'js/ui/overview.js', 'js/ui/system.js',
     'js/ui/design.js', 'js/ui/phone-design.js', 'js/ui/tech.js', 'js/ui/phone-research.js', 'js/ui/techtree.js', 'js/ui/races.js',
     'js/ui/audience.js', 'js/ui/council.js', 'js/ui/spyscenes.js', 'js/ui/endings.js', 'js/ui/combat.js', 'js/ui/combat-fx.js',
-    'js/ui/landing.js', 'js/ui/gamemenu.js', 'js/ui/soundscape.js',
+    'js/ui/landing.js', 'js/ui/scoreplayer-notes.js', 'js/ui/scoreplayer.js', 'js/ui/gamemenu.js', 'js/ui/soundscape.js',
   ],
 };

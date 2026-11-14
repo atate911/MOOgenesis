@@ -5,6 +5,7 @@
   const KEY = 'moo.settings.v1';
   const DEFAULTS = {
     music: true,            // background music on/off (volume lives in MOO.Audio.settings)
+    trackNames: false,      // show each piece's name as the game starts it (switched in the score player)
     sfx: true,
     animSpeed: 1,           // 0 = instant, 1 = normal, 2 = fast (fleet moves, combat playback)
     autosave: true,         // autosave at the start of every turn

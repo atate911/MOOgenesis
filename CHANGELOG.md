@@ -5,6 +5,18 @@ Versions follow `MAJOR.MINOR.PATCH`; the live version is the `VERSION` file.
 
 ## Unreleased
 
+- Score player in the game: Game menu -> Score player (M) lists every piece of the score (the main theme and its readings, the map
+  pieces, the scenes, the race themes and their war readings, the interludes) by name, key and length, and plays any of them through
+  the game's own engine: play / pause, previous / next, a seek bar (the same performance, the mark where the piece repeats), Repeat or
+  Play on through the list shown, and the music volume. The game's music resumes where it was when the player closes. The engine:
+  `Music.catalogue()` and `Music.position()`. Check: `node tools/qa/scoreplayer.js [--phone]`.
+- The score player for listeners: each piece now has a plain-language description, and the (i) button (key I) opens a card that says
+  where the game plays it, what to listen for (each moment with a button that plays from it), the tunes it shares with other pieces (a
+  chip lists them all), its other versions (a race theme's peaceful and hostile readings switch at the same point) and its key, tempo and
+  length. Notes in `js/ui/scoreplayer-notes.js`; the catalogue now carries each piece's section times.
+- Track names during play (off by default; switched in the score player): when the game moves on to a new piece, its name fades in
+  as a quiet caption low on the map's left (under the top bar on phones), holds about five seconds and fades out. Interludes are not
+  announced.
 - Faster start-up: the title menu appears in about 1.9 s instead of about 4.5 s (measured on a simulated 20 Mbit/s line). The in-game
   screens and the scene painter (about a third of the code) now load in the background once the menu is up (js/manifest.js `defer`,
   loader.js phase 2); starting or continuing a game before they arrive waits for them behind the usual loading card. The shared sky
