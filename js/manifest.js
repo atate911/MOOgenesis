@@ -137,6 +137,7 @@ window.MOO_MANIFEST = {
     'js/ui/setup.js',
     'js/ui/options.js',
     'js/ui/saveload.js',
+    'js/ui/scoreplayer-notes.js', // the score player's notes for listeners
     'js/ui/scoreplayer.js',       // the score player (Game menu → Score player)
     'js/ui/gamemenu.js',
     'js/ui/soundscape.js',

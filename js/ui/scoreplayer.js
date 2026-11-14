@@ -4,6 +4,9 @@
 // GNN broadcast does it). Pieces come from Music.catalogue() (the readings and interludes included, the bridges left out); the transport
 // drives Music.play with { from, perf } so a seek or a resume keeps the same performance. 'Repeat' loops one piece as the game does;
 // 'Play on' runs on through the list shown. Music volume is the game's own setting (Audio.setVolume). Esc / right-click close it.
+// The (i) button (key I) opens a card from UI.ScoreNotes (scoreplayer-notes.js): where the game plays the piece, moments to listen for (each
+// with a jump), the shared tunes (a chip filters the list to the pieces that share it), its other versions and the facts. The player also
+// switches the track-name announcements (Settings 'trackNames', off by default): see the poller at the end.
 (function (M) {
   'use strict';
   const UI = M.UI, h = UI.h;
@@ -57,14 +60,24 @@
     if (cat) return cat;
     const m = Mu(); if (!m || typeof m.catalogue !== 'function') return null;
     try {
-      cat = m.catalogue(['title:grand', 'title:classic']).map(e => Object.assign(e, { name: nameOf(e), group: groupOf(e) }));
+      const ix = typeof m.themeIndex === 'function' ? m.themeIndex() : {}, N = UI.ScoreNotes;
+      const themesOf = id => Object.keys(ix).filter(t => ix[t].indexOf(id) >= 0);
+      cat = m.catalogue(['title:grand', 'title:classic']).map(e => Object.assign(e, {
+        name: nameOf(e), group: groupOf(e), notes: (N && N.get(e.id)) || null,
+        themes: themesOf(e.variantOf || (/^title/.test(e.id) ? 'title' : e.id)),           // a reading shares its piece's tunes
+      }));
       cat.sort((a, b) => ORDER[a.group] - ORDER[b.group] || (a.group === 'map' ? num(a.id) - num(b.id) : 0) || (a.variantOf ? 1 : 0) - (b.variantOf ? 1 : 0) || a.name.localeCompare(b.name));
     } catch (e) { console.warn('[scoreplayer] catalogue failed', e); cat = null; }
     return cat;
   }
 
   const fmt = s => { s = Math.max(0, Math.floor(s || 0)); return Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0'); };
-  const keyOf = e => (e.root ? e.root + (e.mode ? ' ' + e.mode : '') : '');
+  const MODES = { major: 'major', minor: 'minor', dorian: 'Dorian', lydian: 'Lydian', mixolydian: 'Mixolydian', phrygian: 'Phrygian', harmonic: 'harmonic minor',
+    phrygDom: 'Phrygian dominant', dblHarm: 'double harmonic', octaH: 'octatonic', wholetone: 'whole-tone' };
+  const keyOf = e => (e.interlude || !e.root ? '' : e.root.replace('b', '\u266d').replace('#', '\u266f') + ' ' + (MODES[e.mode] || e.mode || ''));   // an interlude takes the next piece's key
+  const GROUP_LABEL = { theme: 'Main theme', map: 'The map', cue: 'Scene', race: 'Race theme', drift: 'Interlude' };
+  const blurbOf = e => (e.notes && e.notes.blurb) || '';
+  const trackNames = () => { try { return !!(M.Settings && M.Settings.get('trackNames')); } catch (e) { return false; } };
 
   UI.scorePlayer = function () {
     if (open) return open;
@@ -74,12 +87,14 @@
       return open;
     }
     const snap = (() => { try { return m.snapshot(); } catch (e) { return null; } })();
-    const st = { group: 'all', sel: null, mode: 'repeat', paused: null, playing: null, seeking: false, raf: 0 };
+    const st = { group: 'all', theme: null, sel: null, mode: 'repeat', paused: null, playing: null, seeking: false, raf: 0, info: false };
     const byId = {}; list.forEach(e => { byId[e.id] = e; });
-    const shown = () => list.filter(e => st.group === 'all' || e.group === st.group);
+    const shown = () => list.filter(e => (st.group === 'all' || e.group === st.group) && (!st.theme || e.themes.indexOf(st.theme) >= 0));
+    const TH = (UI.ScoreNotes && UI.ScoreNotes.themes) || {};
 
     // ---- now playing
-    const nTitle = h('div.sp-title', '—'), nSub = h('div.sp-sub'), nDesc = h('div.sp-desc');
+    const nTitle = h('div.sp-title', '—'), nSub = h('div.sp-sub'), nDesc = h('div.sp-desc'), infoBox = h('div.sp-info', { hidden: true });
+    const infoBtn = h('button.sp-ibtn', { type: 'button', 'aria-label': 'About this piece', 'aria-expanded': 'false', tip: 'About this piece (I)', onclick: () => { UI.sfx('click'); st.info = !st.info; paint(); } }, 'i');
     const fill = h('i.sp-fill'), loopMark = h('b.sp-loop', { tip: 'Where the piece repeats from' }), knob = h('b.sp-knob');
     const seek = h('div.sp-seek', { tabindex: 0, role: 'slider', 'aria-label': 'Position' }, fill, loopMark, knob);
     const tNow = h('span.sp-t', '0:00'), tLen = h('span.sp-t', '0:00'), passTxt = h('span.sp-pass');
@@ -94,19 +109,24 @@
       const a = A(), s = a && a.settings;
       note.textContent = s && s.muted ? 'Sound is muted (Options → Sound).' : s && s.music <= 0 ? 'The music volume is at zero.' : '';
     }
-    const now = h('div.sp-now', nTitle, nSub, nDesc,
+    const tnToggle = ctl.toggle(trackNames(), v => { try { M.Settings.set('trackNames', v); } catch (e) { /* settings unavailable */ } }, { label: 'Show track names during play' });
+    const now = h('div.sp-now', h('div.sp-head', nTitle, infoBtn), nSub, nDesc, infoBox,
       h('div.sp-bar', tNow, seek, tLen),
       h('div.sp-ctl', prevBtn, playBtn, nextBtn, h('span.sp-gap'), passTxt, modeSeg),
-      h('div.sp-vol', vol), note);
+      h('div.sp-vol', vol),
+      h('label.sp-opt', { tip: 'When the game moves on to a new piece, its name appears for a few seconds' }, h('span', 'Show track names during play'), tnToggle), note);
 
     // ---- the list
     const rows = h('div.sp-rows', { role: 'listbox' });
-    const tabs = h('div.sp-chips', { role: 'tablist', 'aria-label': 'Show' }, GROUPS.map(g => h('button.sp-chip', { type: 'button', role: 'tab', 'data-g': g.id, onclick: () => { UI.sfx('click'); st.group = g.id; renderRows(); } }, g.label)));
+    const tabs = h('div.sp-chips', { role: 'tablist', 'aria-label': 'Show' }, GROUPS.map(g => h('button.sp-chip', { type: 'button', role: 'tab', 'data-g': g.id, onclick: () => { UI.sfx('click'); st.group = g.id; st.theme = null; renderRows(); } }, g.label)));
+    const themeBar = h('div.sp-thbar', { hidden: true });
     function renderRows() {
       UI.clear(rows);
-      tabs.querySelectorAll('.sp-chip').forEach(b => { const on = b.getAttribute('data-g') === st.group; b.classList.toggle('on', on); b.setAttribute('aria-selected', on ? 'true' : 'false'); });
+      tabs.querySelectorAll('.sp-chip').forEach(b => { const on = !st.theme && b.getAttribute('data-g') === st.group; b.classList.toggle('on', on); b.setAttribute('aria-selected', on ? 'true' : 'false'); });
+      UI.clear(themeBar); themeBar.hidden = !st.theme;
+      if (st.theme) themeBar.append(h('span', 'Pieces that share ', h('b', (TH[st.theme] || {}).name || st.theme)), h('button.sp-x', { type: 'button', 'aria-label': 'Show all pieces', tip: 'Show all pieces', onclick: () => { UI.sfx('click'); st.theme = null; renderRows(); } }, '\u2715'));
       shown().forEach(e => {
-        const row = h('button.sp-row', { type: 'button', role: 'option', 'data-id': e.id, tip: e.desc || null, onclick: () => pick(e.id) },
+        const row = h('button.sp-row', { type: 'button', role: 'option', 'data-id': e.id, tip: blurbOf(e) || null, onclick: () => pick(e.id) },
           h('span.sp-r-n', e.name), h('span.sp-r-k', keyOf(e)), h('span.sp-r-t', fmt(e.seconds)));
         rows.appendChild(row);
       });
@@ -151,12 +171,39 @@
       restart(id, { t: f * e.seconds, perf });
     }
 
+    // ---- the (i) card: where the game plays it, moments to listen for (a jump to each), the tunes it shares, its other readings, the facts
+    function jump(id, t) { const p = pos(); restart(id, { t, perf: p && p.id === id ? p.perf : undefined }); }
+    function card(e) {
+      const n = e.notes || {}, out = h('div.sp-card');
+      const secT = name => { const x = (e.sections || []).find(s => s.n === name); return x ? x.t : null; };
+      const head = t => h('div.sp-i-h', t);
+      if (n.where) out.appendChild(h('div.sp-i-s', head('Where you hear it'), h('p', n.where)));
+      const L = n.listen || [];
+      if (L.length) out.appendChild(h('div.sp-i-s', head('Listen for'), h('ul.sp-i-l', L.map(it => {
+        const t = it[0] ? secT(it[0]) : null;
+        return h('li', t !== null ? h('button.sp-jump', { type: 'button', tip: 'Play from ' + fmt(t), onclick: () => { UI.sfx('click'); jump(e.id, t); } }, ctl.icon('play'), fmt(t)) : h('span.sp-dot'), h('span', it[1]));
+      }))));
+      if (e.themes.length) out.appendChild(h('div.sp-i-s', head('Shares a tune'), h('div.sp-i-th', e.themes.map(t => {
+        const T = TH[t] || { name: t, about: '' }, k = list.filter(x => x.themes.indexOf(t) >= 0).length;
+        return h('button.sp-chip', { type: 'button', tip: (T.about ? T.about + ' ' : '') + 'Show the pieces that share it.', onclick: () => { UI.sfx('click'); st.theme = t; st.group = 'all'; renderRows(); } }, T.name + ' \u00b7 ' + k);
+      }))));
+      const kin = list.filter(x => x !== e && ((e.variantOf && (x.id === e.variantOf || x.variantOf === e.variantOf)) || x.variantOf === e.id));   // its other readings
+      if (kin.length) out.appendChild(h('div.sp-i-s', head(e.group === 'race' ? (e.variantOf ? 'The peaceful version' : 'The hostile version') : 'Other versions'),
+        h('div.sp-i-th', kin.map(x => h('button.sp-chip', { type: 'button', onclick: () => { UI.sfx('click'); const p = pos(); if (p && p.id === e.id && e.group === 'race') jump(x.id, Math.min(p.t * x.seconds / e.seconds, x.seconds - 2)); else pick(x.id); } }, x.name)))));
+      const facts = [keyOf(e) && ['Key', keyOf(e)], e.interlude && ['Key', 'Changes to lead into the next piece'], e.bpm && ['Tempo', e.bpm + ' beats a minute'], ['Length', fmt(e.seconds)], e.loopAt > 1 && ['Repeats from', fmt(e.loopAt)]].filter(Boolean);
+      out.appendChild(h('dl.sp-facts', facts.map(f => [h('dt', f[0]), h('dd', f[1])])));
+      return out;
+    }
+
     // ---- painting (the position is read every frame while open)
     function paint() {
       const id = st.playing || (st.paused && st.paused.id) || st.sel, e = byId[id];
       nTitle.textContent = e ? e.name : 'Choose a piece';
-      nSub.textContent = e ? [{ theme: 'Main theme', map: 'The map', cue: 'Scene', race: 'Race theme', drift: 'Interlude' }[e.group], keyOf(e), e.bpm ? e.bpm + ' bpm' : ''].filter(Boolean).join(' · ') : '';
-      nDesc.textContent = e ? e.desc : 'Every piece of the score, played by the game’s own engine. The game’s music returns when you close the player.';
+      nSub.textContent = e ? [GROUP_LABEL[e.group], keyOf(e)].filter(Boolean).join(' · ') : '';
+      nDesc.textContent = e ? blurbOf(e) : 'Every piece of the score, played by the game\u2019s own engine. The game\u2019s music returns when you close the player.';
+      infoBtn.classList.toggle('on', st.info); infoBtn.setAttribute('aria-expanded', st.info ? 'true' : 'false'); infoBtn.hidden = !e;
+      infoBox.hidden = !(st.info && e);
+      if (st.info && e) { UI.clear(infoBox); infoBox.appendChild(card(e)); }
       tLen.textContent = e ? fmt(e.seconds) : '0:00';
       loopMark.style.left = e && e.loopAt > 0 ? (100 * e.loopAt / e.seconds) + '%' : '';
       loopMark.style.display = e && e.loopAt > 0 ? '' : 'none';
@@ -197,10 +244,11 @@
     const cur = (() => { try { return m.current(); } catch (e) { return null; } })();
     st.sel = byId[cur] ? cur : (byId[snap && snap.resume && snap.resume.id] ? snap.resume.id : list[0].id);   // open on what the game is playing
     renderRows(); muteNote(); paint();
-    const body = h('div.sp', now, h('div.sp-list', h('div.sp-tabs', tabs), rows));
+    const body = h('div.sp', now, h('div.sp-list', h('div.sp-tabs', tabs), themeBar, rows));
     const pm = UI.modal({ title: 'Score player', body, buttons: [{ label: 'Close', value: null, primary: true }], width: '52rem', cls: 'sp-modal', autofocus: false });
     const inCtl = ev => !!(ev && ev.target && ev.target.closest && ev.target.closest('.s-track, .sp-seek'));   // the volume slider and the seek bar keep their arrows
     const keys = {
+      i: () => { st.info = !st.info; paint(); return true; }, I: () => { st.info = !st.info; paint(); return true; },
       ' ': () => { toggle(); return true; }, ArrowDown: ev => { if (inCtl(ev)) return false; step(1); return true; }, ArrowUp: ev => { if (inCtl(ev)) return false; step(-1); return true; },
       ArrowRight: ev => { const e = byId[st.playing]; if (!e || inCtl(ev)) return false; seekTo(Math.min(1, (here().t + 10) / e.seconds)); return true; },
       ArrowLeft: ev => { const e = byId[st.playing]; if (!e || inCtl(ev)) return false; seekTo(Math.max(0, (here().t - 10) / e.seconds)); return true; },
@@ -211,17 +259,66 @@
     open = pm.then(() => {
       off(); off2(); cancelAnimationFrame(st.raf); open = null;
       try { m.restore(snap, { resume: true, fade: 1.5 }); } catch (e) { /* audio is optional */ }    // the game's music comes back where it was
+      ann.last = nowId();                                                                             // ... without announcing it
     });
     return open;
   };
+
+  // ---- track names during play (Settings 'trackNames', off by default; switched in the player): when the game moves on to a new piece its
+  // name shows for a few seconds. Polled once a second (the engine has no event for it); interludes, bridges and the player's own choices are left out.
+  const ann = { last: null };
+  function nowId() { const m = Mu(); try { const p = m && m.position ? m.position() : null; return p ? p.id : null; } catch (e) { return null; } }
+  function announce(e) {
+    const ctl = C();
+    UI.toast(h('div.sp-np', ctl ? ctl.icon('music') : null, h('div.sp-np-t', h('b', e.name), h('span', GROUP_LABEL[e.group] || ''))), 'sp-toast', 5000);
+  }
+  setInterval(() => {
+    if (open || !UI.toast) return;
+    const id = nowId();
+    if (id === ann.last) return;
+    ann.last = id;
+    if (!id || !trackNames()) return;
+    const list = catalogue(), e = list && list.find(x => x.id === id);
+    if (e && !e.interlude) announce(e);
+  }, 1000);
 
   UI.css('scoreplayer', `
     .sp-modal { max-width:calc(100vw - 2rem); }
     .sp { display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); gap:1.1rem; min-height:24rem; }
     .sp-now { display:flex; flex-direction:column; gap:.55rem; min-width:0; }
-    .sp-title { font:400 1.55rem/1.15 var(--font-display); color:var(--brass-hi); }
+    .sp-thbar[hidden], .sp-info[hidden], .sp-ibtn[hidden] { display:none; }
+    .sp-head { display:flex; align-items:flex-start; gap:.6rem; }
+    .sp-title { flex:1; min-width:0; font:400 1.55rem/1.15 var(--font-display); color:var(--brass-hi); }
+    .sp-ibtn { flex:none; width:1.7rem; height:1.7rem; margin-top:.1rem; border-radius:50%; border:1px solid var(--brass); background:transparent; color:var(--brass-hi);
+      font:italic 600 1rem/1 Georgia, 'Times New Roman', serif; cursor:pointer; display:inline-flex; align-items:center; justify-content:center; }
+    .sp-ibtn:hover, .sp-ibtn:focus-visible { background:rgba(214,179,106,.14); outline:none; }
+    .sp-ibtn.on { background:var(--brass); color:#10131f; }
+    .sp-info { border:1px solid rgba(214,179,106,.25); background:rgba(10,12,28,.5); padding:.6rem .75rem; max-height:15.5rem; overflow:auto; }
+    .sp-card { display:flex; flex-direction:column; gap:.65rem; font-size:.9rem; }
+    .sp-i-h { font:400 .78rem/1 var(--font-display); letter-spacing:.08em; text-transform:uppercase; color:var(--brass); margin-bottom:.3rem; }
+    .sp-i-s p { margin:0; color:var(--ivory); }
+    .sp-i-l { list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:.3rem; }
+    .sp-i-l li { display:flex; align-items:baseline; gap:.55rem; color:var(--ivory); }
+    .sp-jump { flex:none; display:inline-flex; align-items:center; gap:.25em; min-width:3.6em; padding:.1rem .4rem; border:1px solid rgba(150,120,255,.5); background:rgba(150,120,255,.12);
+      color:var(--ivory); font:inherit; font-size:.8rem; font-variant-numeric:tabular-nums; cursor:pointer; }
+    .sp-jump:hover, .sp-jump:focus-visible { background:rgba(150,120,255,.3); outline:none; }
+    .sp-jump .ico { width:.8em; height:.8em; }
+    .sp-dot { flex:none; min-width:3.6em; text-align:center; color:var(--brass); }
+    .sp-dot::before { content:'\u2022'; }
+    .sp-i-th { display:flex; flex-wrap:wrap; gap:.3rem; }
+    .sp-facts { display:grid; grid-template-columns:auto 1fr; gap:.15rem .8rem; margin:0; padding-top:.45rem; border-top:1px solid rgba(214,179,106,.15); font-size:.84rem; }
+    .sp-facts dt { color:var(--mist); } .sp-facts dd { margin:0; color:var(--ivory); }
+    .sp-opt { display:flex; align-items:center; justify-content:space-between; gap:.8rem; color:var(--ivory); font-size:.9rem; cursor:pointer; }
+    .sp-thbar { display:flex; align-items:center; justify-content:space-between; gap:.5rem; padding:.3rem .55rem; background:rgba(150,120,255,.12); color:var(--ivory); font-size:.88rem; }
+    .sp-thbar b { color:var(--brass-hi); font-weight:600; }
+    .sp-x { background:none; border:0; color:var(--mist); cursor:pointer; font-size:1rem; padding:0 .2rem; } .sp-x:hover { color:var(--ivory); }
+    .toast.sp-toast { padding:.55rem .8rem; }
+    .sp-np { display:flex; align-items:center; gap:.65rem; }
+    .sp-np .ico { width:1.3rem; height:1.3rem; color:var(--violet); flex:none; }
+    .sp-np-t b { display:block; font:400 1.05rem/1.15 var(--font-display); color:var(--brass-hi); }
+    .sp-np-t span { color:var(--mist); font-size:.82rem; }
     .sp-sub { color:var(--cyan); font-size:.9rem; letter-spacing:.02em; }
-    .sp-desc { color:var(--mist); font-size:.92rem; line-height:1.4; max-height:9.8em; overflow:auto; padding-right:.3rem; }
+    .sp-desc { color:var(--ivory); font-size:.98rem; line-height:1.45; }
     .sp-bar { display:flex; align-items:center; gap:.6rem; margin-top:auto; }
     .sp-t { font-variant-numeric:tabular-nums; color:var(--ivory); font-size:.9rem; min-width:2.6em; text-align:center; }
     .sp-seek { position:relative; flex:1; height:1.4rem; cursor:pointer; touch-action:none; }
@@ -255,5 +352,8 @@
     html[data-phone] .sp-row { min-height:var(--row); }
     html:root:root[data-phone] .sp-rows { max-height:none; overflow:visible; }   /* the sheet scrolls, not a list inside it */
     html[data-phone] .sp-ctl .btn { min-height:var(--tap); }
+    html[data-phone] .sp-ibtn { width:var(--tap); height:var(--tap); margin-top:0; }
+    html[data-phone] .sp-jump { min-height:2.2rem; }
+    html:root:root[data-phone] .sp-info { max-height:none; }
   `);
 })(window.MOO);

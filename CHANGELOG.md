@@ -10,6 +10,12 @@ Versions follow `MAJOR.MINOR.PATCH`; the live version is the `VERSION` file.
   the game's own engine: play / pause, previous / next, a seek bar (the same performance, the mark where the piece repeats), Repeat or
   Play on through the list shown, and the music volume. The game's music resumes where it was when the player closes. The engine:
   `Music.catalogue()` and `Music.position()`. Check: `node tools/qa/scoreplayer.js [--phone]`.
+- The score player for listeners: each piece now has a plain-language description, and the (i) button (key I) opens a card that says
+  where the game plays it, what to listen for (each moment with a button that plays from it), the tunes it shares with other pieces (a
+  chip lists them all), its other versions (a race theme's peaceful and hostile readings switch at the same point) and its key, tempo and
+  length. Notes in `js/ui/scoreplayer-notes.js`; the catalogue now carries each piece's section times.
+- Track names during play (off by default; switched in the score player): when the game moves on to a new piece, its name shows for a
+  few seconds. Interludes are not announced.
 
 - Small speakers: Options -> Sound has a Small speakers setting (Auto, On, Off; Auto turns it on in the phone layout, and it
   applies at once). For a phone's or tablet's speaker it takes out the sub-bass the driver cannot play (it only drove the limiter), keeps
