@@ -116,7 +116,14 @@
   }
 
   // ---------------------------------------------------------------- screen
-  let canvas, ctx, vortex, bg = null, bgKey = '', t0 = 0, listEl, metaEl, scratch = null;
+  let canvas, ctx, vortex, bg = null, bgKey = '', t0 = 0, listEl, metaEl, scratch = null, enteredAt = 0;
+  // the painted sky is only the fallback for the photoreal galaxy: build it (a slow procedural render) only when that photo cannot be had,
+  // or is still not here a few seconds in (a slow connection), never in the first frames while it is on its way
+  function wantBackdrop(WA) {
+    if (!(WA && WA.enabled)) return true;
+    const st = WA._state && WA._state.state && WA._state.state[WA.scene('galaxy')];
+    return st === 'bad' || !st || performance.now() - enteredAt > 3000;
+  }
   function shipScratch(w, hh) {
     if (!scratch) scratch = document.createElement('canvas');
     if (scratch.width !== w || scratch.height !== hh) { scratch.width = w; scratch.height = hh; }
@@ -176,7 +183,7 @@
     },
     enter() {
       try { const WA = M.Gfx.WorldArt; if (WA) WA.get(WA.scene('galaxy')); } catch (e) { /* optional */ }
-      t0 = performance.now() / 1000;
+      t0 = performance.now() / 1000; enteredAt = performance.now();
       buildMenu();
       // the opening and the setup: the main theme's grand reading (the main theme itself leads the new game)
       try { if (M.Audio && M.Audio.Music) M.Audio.Music.play('title:grand', { fade: 2.5 }); } catch (e) { /* audio optional */ }
@@ -186,9 +193,9 @@
     update(dt, t) {
       const f = UI.fitCanvas(canvas, { maxDpr: 1.5 }); ctx = f.ctx;
       const w = f.w, hh = f.h;
-      rebuildBackdrop(w, hh);
       ctx.globalCompositeOperation = 'source-over';
       const WA = M.Gfx && M.Gfx.WorldArt, art = WA && WA.draw(ctx, WA.scene('galaxy'), 0, 0, w, hh, { fx: 0.62, fy: 0.46, zoom: 1.04 + 0.03 * Math.sin(t * 0.05) });   // photoreal galaxy replaces the painted sky + vortex
+      if (!art && wantBackdrop(WA)) rebuildBackdrop(w, hh);
       if (art) { ctx.fillStyle = 'rgba(2,4,14,.28)'; ctx.fillRect(0, 0, w, hh); }
       else if (bg) ctx.drawImage(bg, 0, 0, w, hh); else { ctx.fillStyle = '#04061a'; ctx.fillRect(0, 0, w, hh); }
       const R = Math.min(w, hh) * 0.62, rot = -0.35 + Math.sin(t * .05) * .04;

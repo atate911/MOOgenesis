@@ -2,16 +2,41 @@
 (function (M) {
   'use strict';
 
+  // The in-game screens load in the background after the menu appears (js/manifest.js `defer`, loader.js phase 2). A game must not start
+  // before they are here: they listen for 'game:new' / 'game:loaded' and register the galaxy screen. Both entry points wait for them.
+  function lateReady() { return !M.Late || M.Late.ready; }
+  function whenLate(UI) {
+    return new Promise((res, rej) => {
+      if (lateReady()) { res(); return; }
+      if (M.Late.failed) { rej(new Error('Part of the game could not be loaded. Check your connection and reload the page.')); return; }
+      M.Late.wait(L => (L.ready ? res() : rej(new Error('Part of the game could not be loaded (' + L.errors.join(', ') + '). Check your connection and reload the page.'))));
+    });
+  }
+  function gateGame(UI) {
+    const G = M.Game; if (!G || G._gated) return; G._gated = true;
+    const newGame = G.newGame, loadState = G.loadState;
+    G.newGame = function () { const a = arguments; return whenLate(UI).then(() => newGame.apply(G, a)); };
+    // loadState is synchronous (its callers read true / false); the save is already read and parsed, so while the rest loads it answers
+    // true and finishes the load when the files are here
+    G.loadState = function (S) {
+      if (lateReady()) return loadState.call(G, S);
+      if (UI.toast) UI.toast('Loading the rest of the game…', 'info', 2500);
+      whenLate(UI).then(() => loadState.call(G, S), err => UI.alert(err.message, { title: 'Cannot continue' }));
+      return true;
+    };
+  }
+
   M.boot = function () {
     const UI = M.UI;
+    gateGame(UI);
     UI.init();
     UI.startLoop();
-    try { if (UI.Sky && UI.Sky.install) UI.Sky.install(); } catch (e) { console.warn('sky install failed', e); }          // the one sky under every screen
+    // adaptive quality first: it settles the tier the sky and the menu paint at (started after the sky, its tier change painted the sky twice)
+    try { M.Perf.start(); } catch (e) { console.warn('perf start failed', e); }
+    try { if (UI.Sky && UI.Sky.install) UI.Sky.install(); } catch (e) { console.warn('sky install failed', e); }          // the one sky under every screen (painted once the menu is up)
     try { if (UI.Help && UI.Help.install) UI.Help.install(); } catch (e) { console.warn('help install failed', e); }      // F1 context help overlay + tutor tips
 
-    // Web Audio needs a user gesture; unlock on the first one.
-    // adaptive quality + worker pool (both optional accelerators; the game runs without them)
-    try { M.Perf.start(); } catch (e) { console.warn('perf start failed', e); }
+    // worker pool (an optional accelerator; the game runs without it)
     setTimeout(() => { try { M.Workers.init(); } catch (e) { console.warn('workers init failed', e); } }, 400);
     // pre-compile the WebGL2 shader programs in the background so the first use does not hitch (all optional; the Canvas2D paths work
     // without them). The three warm-ups are staggered over idle callbacks and each one only QUEUES work (GL.precompile / idle slices):
@@ -40,12 +65,17 @@
     window.addEventListener('unhandledrejection', e => { const r = e.reason, st = r && r.stack; if ((typeof st === 'string' ? ours(st) : true) && shown++ < 4) UI.toast('Error: ' + (r && r.message || r), 'bad', 9000); });   // no stack to judge by: show it
 
     const q = new URLSearchParams(location.search);
-    let first = q.get('screen');
-    if (!first || !UI.Screens.has(first)) first = UI.Screens.has('menu') ? 'menu' : 'styleguide';
-    try { if (M.Game && M.Game.devBoot && q.get('dev')) M.Game.devBoot(q); } catch (e) { console.error(e); }
-    UI.Screens.go(first, {});
-
-    const boot = document.getElementById('boot');
-    if (boot) { boot.classList.add('gone'); setTimeout(() => boot.remove(), 700); }
+    const start = () => {
+      let first = q.get('screen');
+      if (!first || !UI.Screens.has(first)) first = UI.Screens.has('menu') ? 'menu' : 'styleguide';
+      try { if (M.Game && M.Game.devBoot && q.get('dev')) M.Game.devBoot(q); } catch (e) { console.error(e); }
+      UI.Screens.go(first, {});
+      const boot = document.getElementById('boot');
+      if (boot) { boot.classList.add('gone'); setTimeout(() => boot.remove(), 700); }
+    };
+    // a dev boot or a deep link (?dev=…, ?screen=galaxy) needs the deferred screens: keep the loading screen up until they are here
+    const want = q.get('screen');
+    if (lateReady() || !(q.get('dev') || (want && !UI.Screens.has(want)))) start();
+    else M.Late.wait(start);
   };
 })(window.MOO);
