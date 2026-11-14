@@ -23,31 +23,6 @@
       where: 'On the title screen and while you set up a new game.',
       listen: [['A', 'The cor anglais’s first statement, the violins joining softly.'], ['M', 'The climax with the whole orchestra.'], ['L', 'The quiet, reflective close.']],
     },
-    'title:classic': {
-      blurb: 'An earlier main theme, “the undercurrent”: a solo horn sings the main tune slowly over deep strings and a humming men’s choir.',
-      where: 'A version you can only hear here.',
-      listen: [['men', 'The men’s choir begins to hum.'], ['horn', 'The solo horn enters with the main tune.'], ['A3', 'The crescendo: horns in canon, then the full brass.']],
-    },
-    'title:reed': {
-      blurb: 'The undercurrent with the cor anglais as the soloist, singing an octave above where the horn would.',
-      where: 'A version you can only hear here.',
-      listen: [['horn', 'The cor anglais enters with the main tune.'], ['A3', 'The crescendo: horns in canon, then the full brass.']],
-    },
-    'title:cello': {
-      blurb: 'The undercurrent with a single cello as the soloist, high in its singing register.',
-      where: 'A version you can only hear here.',
-      listen: [['horn', 'The solo cello enters with the main tune.'], ['A3', 'The crescendo: horns in canon, then the full brass.'], ['E', 'The cello returns for the fade.']],
-    },
-    'title:symphony': {
-      blurb: 'The undercurrent for orchestra alone, no choir: the violins take the tune and the woodwinds its variations.',
-      where: 'A version you can only hear here.',
-      listen: [['horn', 'The violins state the main tune, the cellos an octave below.'], ['A3', 'The full brass, snare and timpani over pulsing strings.']],
-    },
-    'title:chamber': {
-      blurb: 'The undercurrent for strings alone: nothing struck, nothing blown.',
-      where: 'A version you can only hear here.',
-      listen: [['horn', 'The violins state the main tune over plucked basses.'], ['A3', 'All the strings on the tune, three octaves deep.']],
-    },
 
     // ---- the galaxy map
     galaxy1: { blurb: 'Calm wonder at the stars: an airy flute, glassy bells and a running harp over floating strings.', where: MAP + ', from the first years on.',

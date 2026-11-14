@@ -20,7 +20,7 @@ const args = process.argv.slice(2), phone = args.includes('--phone'), shots = ar
   if (shots) await page.screenshot({ path: shots + '/sp-open' + (phone ? '-phone' : '') + '.png' });
   // the notes: every piece has a blurb and a 'where', and every moment's section is in the score (else its jump button is lost)
   const notes = await page.evaluate(() => {
-    const N = MOO.UI.ScoreNotes, bad = [], cat = MOO.Audio.Music.catalogue(['title:grand', 'title:classic']);
+    const N = MOO.UI.ScoreNotes, bad = [], cat = MOO.Audio.Music.catalogue(['title:grand']).filter(e => e.variantOf !== 'title');
     for (const e of cat) {
       const n = N.get(e.id); if (!n || !n.blurb || !n.where) { bad.push(e.id + ': no notes'); continue; }
       for (const [sec] of n.listen) if (sec && !e.sections.some(x => x.n === sec)) bad.push(e.id + ': no section ' + sec);
@@ -28,6 +28,8 @@ const args = process.argv.slice(2), phone = args.includes('--phone'), shots = ar
     return bad;
   });
   ok(!notes.length, 'every piece has notes and every moment its section' + (notes.length ? ': ' + notes.join(', ') : ''));
+  const ids = await page.$$eval('.sp-row', r => r.map(x => x.getAttribute('data-id')));
+  ok(ids.indexOf('title:grand') >= 0 && !ids.some(id => /^title:(classic|reed|cello|symphony|chamber|organ)$/.test(id)), 'only what the game plays: the grand reading listed, the studies left out');
   await page.click('.sp-row[data-id="galaxy14"]'); await sleep(2500);
   let p = await page.evaluate(() => MOO.Audio.Music.position());
   ok(p && p.id === 'galaxy14' && p.t > 1, 'a click plays the piece (' + JSON.stringify(p && { id: p.id, t: +p.t.toFixed(1) }) + ')');
@@ -84,6 +86,27 @@ const args = process.argv.slice(2), phone = args.includes('--phone'), shots = ar
   await sleep(7000);                                                           // 1.1 s in, 5 s held, 1.6 s out, counted from the change
   const gone = await page.evaluate(() => { const t = document.querySelector('.sp-cap'); return t ? +getComputedStyle(t).opacity : 0; });
   ok(gone < 0.05, 'and fades it out about five seconds later (opacity ' + gone.toFixed(2) + ')');
+  // the pinned name: the map's note button (shown only while track names are on) keeps the caption on the galaxy map
+  await page.evaluate(() => { MOO.UI.Screens.go('galaxy'); }); await sleep(800);
+  ok(await page.evaluate(() => { const b = document.querySelector('.gmap-ctrl .gmap-btn:last-child'); return !!b && b.style.display !== 'none' && /name in the corner/.test(b.getAttribute('aria-label')); }), 'the map shows the pin button while track names are on');
+  if (phone) { await page.click('.gmap-more'); await sleep(300); }
+  await page.click('.gmap-ctrl .gmap-btn:last-child'); await sleep(9000);
+  const pinned = await page.evaluate(() => { const c = document.querySelector('.sp-cap'); return c ? { on: c.classList.contains('pinned') && c.classList.contains('on'), op: +getComputedStyle(c).opacity, text: c.textContent } : null; });
+  ok(pinned && pinned.on && pinned.op > 0.5, 'pinned, the name stays on long after the fade would have ended (' + JSON.stringify(pinned) + ')');
+  if (shots) await page.screenshot({ path: shots + '/sp-pin' + (phone ? '-phone' : '') + '.png' });
+  await page.evaluate(() => MOO.Audio.Music.play('galaxy3', { quantize: false, fade: 0.5 })); await sleep(3000);
+  ok(await page.evaluate(() => /Determination/.test(document.querySelector('.sp-cap').textContent) && document.querySelector('.sp-cap').classList.contains('on')), 'pinned, it changes with the music');
+  await page.evaluate(() => { MOO.UI.Screens.go('planets'); }); await sleep(2000);
+  ok(await page.evaluate(() => +getComputedStyle(document.querySelector('.sp-cap')).opacity < 0.05), 'the pinned name stays on the galaxy map, not over other screens');
+  await page.evaluate(() => { MOO.UI.Screens.go('galaxy'); }); await sleep(1800);
+  ok(await page.evaluate(() => document.querySelector('.sp-cap').classList.contains('on')), 'and comes back with the map');
+  await page.evaluate(() => MOO.Settings.set('trackNames', false)); await sleep(1800);
+  ok(await page.evaluate(() => { const b = document.querySelector('.gmap-ctrl .gmap-btn:last-child'); return b.style.display === 'none' && !document.querySelector('.sp-cap').classList.contains('on'); }), 'with track names off, the pin button and the pinned name are gone');
+  // the title menu: a Score player button
+  await page.evaluate(() => { MOO.UI.Screens.go('menu'); }); await sleep(1200);
+  const mb = await page.$('.menu-list button:has-text("Score player")');
+  ok(!!mb, 'the title menu offers the score player');
+  if (mb) { await mb.click(); await sleep(800); ok(!!(await page.$('.sp-modal')), 'and it opens from there'); await page.keyboard.press('Escape'); await sleep(500); }
   const errs = errors.filter(e => !/favicon|AudioContext was not allowed|GL Driver Message/.test(e));
   ok(!errs.length, 'no console errors' + (errs.length ? ': ' + errs.slice(0, 5).join(' | ') : ''));
   await browser.close(); srv.close();

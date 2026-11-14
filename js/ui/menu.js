@@ -164,6 +164,12 @@
     listEl.appendChild(UI.button('Load game', () => UI.Screens.has('saveload') ? UI.Screens.go('saveload', { mode: 'load', from: 'menu' }) : UI.toast('Load screen is not available yet', 'warn')));
     listEl.appendChild(UI.button('Options', () => UI.Screens.has('options') ? UI.Screens.go('options', { from: 'menu' }) : UI.toast('Options are not available yet', 'warn')));
     listEl.appendChild(UI.button('Almanac', () => UI.Screens.has('help') ? UI.Screens.go('help', { from: 'menu' }) : UI.toast('The almanac is not available yet', 'warn')));
+    // the score player loads with the in-game screens, just after this menu appears: a click before then waits for it
+    listEl.appendChild(UI.button('Score player', () => {
+      if (UI.scorePlayer) { UI.scorePlayer(); return; }
+      if (M.Late && M.Late.wait) M.Late.wait(L => (L.ready && UI.scorePlayer ? UI.scorePlayer() : UI.toast('The score player could not be loaded', 'warn')));
+      else UI.toast('The score player is not available yet', 'warn');
+    }));
     metaEl.textContent = latest && latest.meta ? `Last played: ${M.Util.cap(latest.meta.race || '')} · year ${latest.meta.year >= 1000 ? latest.meta.year : M.Data.Config.displayYear({ year: latest.meta.year })} · ${latest.meta.planets} ${M.Util.plural(latest.meta.planets | 0, 'colony', 'colonies')}` : '';
   }
 
