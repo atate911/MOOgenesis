@@ -155,6 +155,7 @@ html:root:root[data-phone] .gx.ph-ctl-tight .gmap-ctrl { display: grid; grid-tem
    double-tap zoom. With three buttons the column never reaches the HUD, so the HUD uses the map's whole width in portrait. */
 html:root:root[data-phone] .gmap-ctrl .gmap-zoom, html:root:root[data-phone] .gmap-ctrl:not(.open) .gmap-extra { display: none; }
 html:root:root[data-phone] .gmap-ctrl .gmap-btn.gmap-more { display: grid; }
+html:root:root[data-phone] .gmap-ctrl > .gmap-snd { margin-top: 0; }                  /* the sound toggle unfolds with the others under More */
 html[data-phone] .gmap canvas { -webkit-touch-callout: none; -webkit-user-select: none; user-select: none; }   /* a long press on the map is its tooltip, not iOS's callout */
 /* bottom bar: fixed tabs (phone-galaxy.js tags galaxy.js's own buttons) — Planets · Fleet · Tech · Races · More, then a wide Next turn.
    Game, Design and Map live in More (the game menu as a bottom sheet, gamemenu.js). Icon over label. */

@@ -500,6 +500,7 @@
     .gmap-btn.off { opacity:.5; } .gmap-btn.off svg { stroke-dasharray:none; }
     .gmap-btn.gmap-more { display:none; }                                                  /* phones only (css/phone.css) */
     .gmap-ctrl > .gmap-more + .gmap-extra { margin-top:.5rem; }                              /* a breath between the view buttons and the layer toggles */
+    .gmap-ctrl > .gmap-snd { margin-top:.5rem; }                                             /* and before the sound button */
     .gmap-btn:hover { filter:brightness(1.15); } .gmap-btn:hover::before { background:linear-gradient(180deg,#34448c,#1c2760); } .gmap-btn:active { transform:translateY(1px); }
     .gmap-btn svg { width:1.05rem; height:1.05rem; fill:none; stroke:currentColor; stroke-width:2; stroke-linecap:square; stroke-linejoin:miter; }
     .gmap-mini { --ch:.55rem; position:absolute; z-index:3; padding:1px; background:linear-gradient(135deg,var(--brass),var(--brass-lo) 50%,var(--brass)); }
@@ -568,6 +569,21 @@
       () => { if (M.Settings) M.Settings.set('mapRoutes', !routesOn()); syncRoutesBtn(); });
     const syncRoutesBtn = () => routesBtn.classList.toggle('off', !routesOn());
     syncRoutesBtn();
+    // sound on / off (Audio.setMuted: the volumes are kept); hidden when the page has no audio engine
+    const SPK = '<path d="M4 9v6h4l5 4V5L8 9z"/>';
+    const isMuted = () => !!(M.Audio && M.Audio.settings && M.Audio.settings.muted);
+    const muteBtn = svgBtn(SPK, 'Sound on / off', () => { if (M.Audio && M.Audio.setMuted) { M.Audio.setMuted(!isMuted()); if (!isMuted() && UI.sfx) UI.sfx('click'); } syncMuteBtn(); });
+    const syncMuteBtn = () => {
+      const m = isMuted();
+      muteBtn.querySelector('svg').innerHTML = SPK + (m ? '<path d="M16 9.5l5 5M21 9.5l-5 5"/>' : '<path d="M16.5 9a4.5 4.5 0 0 1 0 6M19 6.5a8 8 0 0 1 0 11"/>');
+      muteBtn.classList.toggle('off', m); muteBtn.setAttribute('aria-pressed', String(m));
+      muteBtn.setAttribute('aria-label', m ? 'Sound is off: turn it on' : 'Sound is on: mute it');
+      if (UI.setTip) UI.setTip(muteBtn, m ? 'Sound is muted: <b>click to unmute</b>' : 'Mute all sound (your volumes are kept)');
+    };
+    syncMuteBtn();
+    muteBtn.classList.add('gmap-snd');
+    if (!M.Audio) muteBtn.style.display = 'none';
+    const offMute = M.Bus && M.Bus.on ? M.Bus.on('audio:muted', syncMuteBtn) : null;
     const legendBtn = svgBtn('<circle cx="7" cy="7" r="2.6"/><path d="M13 7h8M13 17h8M4.4 14.4l5 5M9.4 14.4l-5 5"/>', 'Map key and planet icons <b>K</b>', () => api.showLegend(!legendShown()));
     // phones (css/phone.css): pinch and double-tap zoom, so + / − are hidden, and the key / routes / declutter toggles fold behind one button —
     // seven stacked buttons took a column of the map's width in portrait and forced a two-wide grid in landscape
@@ -575,13 +591,13 @@
       const on = !ctrlEl.classList.contains('open'); ctrlEl.classList.toggle('open', on); moreBtn.classList.toggle('lit', on); moreBtn.setAttribute('aria-expanded', String(on)); emit('controls', on);
     });
     moreBtn.classList.add('gmap-more'); moreBtn.setAttribute('aria-expanded', 'false');
-    [legendBtn, routesBtn, dcBtn].forEach(b => b.classList.add('gmap-extra'));
+    [legendBtn, routesBtn, dcBtn, muteBtn].forEach(b => b.classList.add('gmap-extra'));
     const zoomIn = svgBtn('<path d="M12 5v14M5 12h14"/>', 'Zoom in <b>+</b>', () => zoomStep(1.45)), zoomOut = svgBtn('<path d="M5 12h14"/>', 'Zoom out <b>−</b>', () => zoomStep(1 / 1.45));
     zoomIn.classList.add('gmap-zoom'); zoomOut.classList.add('gmap-zoom');
     const ctrlEl = h('div.gmap-ctrl', zoomIn, zoomOut,
       svgBtn('<path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/>', 'Show the whole galaxy', () => api.fit()),
       svgBtn('<path d="M12 3l9 9-9 9-9-9z"/><circle cx="12" cy="12" r="2.2"/>', 'Centre on your capital <b>Home</b>', () => api.home()),
-      moreBtn, legendBtn, routesBtn, dcBtn);
+      moreBtn, legendBtn, routesBtn, dcBtn, muteBtn);
     const root = h('div.gmap', { tabindex: 0, role: 'application', 'aria-label': 'Galaxy map' }, canvas, miniEl, ctrlEl, legendEl, hintEl, tipEl);
     if (opts.controls === false) ctrlEl.style.display = 'none';
     container.appendChild(root);
@@ -2200,7 +2216,7 @@
       on, off,
       destroy() {
         if (destroyed) return; destroyed = true;
-        try { if (stopFrame) stopFrame(); if (stopWatch) stopWatch(); if (stopBus) stopBus(); } catch (e) { /* ignore */ }
+        try { if (stopFrame) stopFrame(); if (stopWatch) stopWatch(); if (stopBus) stopBus(); if (offMute) offMute(); } catch (e) { /* ignore */ }
         window.removeEventListener('keydown', onKeyDown, true); window.removeEventListener('keyup', onKeyUp, true); window.removeEventListener('blur', onBlur); window.removeEventListener('pointerdown', dropHeldTip, true);
         if (root.parentNode) root.parentNode.removeChild(root);
         for (const k in handlers) delete handlers[k];

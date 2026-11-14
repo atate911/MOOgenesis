@@ -979,6 +979,7 @@
     settings.muted = !!b;
     saveSettings();
     if (A.engine) A.engine.setBusGains(false);
+    if (M.Bus && M.Bus.emit) M.Bus.emit('audio:muted', settings.muted);   // the map's mute button and Options follow it
   };
 
   A.stats = function () {
