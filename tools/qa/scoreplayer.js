@@ -71,16 +71,19 @@ const args = process.argv.slice(2), phone = args.includes('--phone'), shots = ar
   ok(await page.evaluate(() => MOO.Settings.get('trackNames') === false), 'track names are off by default');
   await page.keyboard.press('Escape'); await sleep(400);                       // close the game menu
   await page.evaluate(() => MOO.Audio.Music.play('galaxy19', { quantize: false, fade: 0.5 })); await sleep(2500);
-  ok(!(await page.$('.toast.sp-toast')), 'no name is shown while the setting is off');
+  ok(!(await page.$('.sp-cap.on')), 'no name is shown while the setting is off');
   await page.evaluate(() => { MOO.UI.scorePlayer(); }); await sleep(600);
   await page.click('.sp-opt .ctl-sw'); await sleep(200);
   await page.keyboard.press('Escape'); await sleep(2500);
   ok(await page.evaluate(() => MOO.Settings.get('trackNames') === true), 'the player\u2019s switch turns track names on');
-  ok(!(await page.$('.toast.sp-toast')), 'closing the player does not announce the piece the game resumes');
+  ok(!(await page.$('.sp-cap.on')), 'closing the player does not announce the piece the game resumes');
   await page.evaluate(() => MOO.Audio.Music.play('galaxy12', { quantize: false, fade: 0.5 })); await sleep(2500);
-  const toast = await page.evaluate(() => { const t = document.querySelector('.toast.sp-toast'); return t ? t.textContent : null; });
-  ok(toast && /The Long Night/.test(toast), 'a new piece shows its name (' + toast + ')');
+  const cap = await page.evaluate(() => { const t = document.querySelector('.sp-cap.on'); return t ? { text: t.textContent, op: +getComputedStyle(t).opacity } : null; });
+  ok(cap && /The Long Night/.test(cap.text) && cap.op > 0.6, 'a new piece fades its name in (' + JSON.stringify(cap) + ')');
   if (shots) await page.screenshot({ path: shots + '/sp-toast' + (phone ? '-phone' : '') + '.png' });
+  await sleep(7000);                                                           // 1.1 s in, 5 s held, 1.6 s out, counted from the change
+  const gone = await page.evaluate(() => { const t = document.querySelector('.sp-cap'); return t ? +getComputedStyle(t).opacity : 0; });
+  ok(gone < 0.05, 'and fades it out about five seconds later (opacity ' + gone.toFixed(2) + ')');
   const errs = errors.filter(e => !/favicon|AudioContext was not allowed|GL Driver Message/.test(e));
   ok(!errs.length, 'no console errors' + (errs.length ? ': ' + errs.slice(0, 5).join(' | ') : ''));
   await browser.close(); srv.close();

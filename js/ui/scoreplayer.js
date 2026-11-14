@@ -265,12 +265,22 @@
   };
 
   // ---- track names during play (Settings 'trackNames', off by default; switched in the player): when the game moves on to a new piece its
-  // name shows for a few seconds. Polled once a second (the engine has no event for it); interludes, bridges and the player's own choices are left out.
+  // name fades in as a quiet caption low on the map's left, holds about five seconds and fades out. Polled once a second (the engine has no event for it); interludes, bridges and the player's own choices are left out.
   const ann = { last: null };
   function nowId() { const m = Mu(); try { const p = m && m.position ? m.position() : null; return p ? p.id : null; } catch (e) { return null; } }
+  // a caption, not a notice: no panel, low on the left over the map, fading in over a second, held five, fading out over a second and a half
+  const NP_IN = 1100, NP_HOLD = 5000, NP_OUT = 1600;
+  let np = null, npTimers = [];
   function announce(e) {
     const ctl = C();
-    UI.toast(h('div.sp-np', ctl ? ctl.icon('music') : null, h('div.sp-np-t', h('b', e.name), h('span', GROUP_LABEL[e.group] || ''))), 'sp-toast', 5000);
+    if (!np) { np = h('div.sp-cap', { 'aria-live': 'polite', role: 'status' }); document.body.appendChild(np); }
+    npTimers.forEach(clearTimeout); npTimers = [];
+    np.classList.remove('on');
+    UI.clear(np);
+    np.append(ctl ? ctl.icon('music') : '', h('span.sp-cap-n', e.name), h('span.sp-cap-g', GROUP_LABEL[e.group] || ''));
+    void np.offsetWidth;                                                   // restart the fade from transparent
+    npTimers.push(setTimeout(() => np.classList.add('on'), 20));
+    npTimers.push(setTimeout(() => np.classList.remove('on'), 20 + NP_IN + NP_HOLD));
   }
   setInterval(() => {
     if (open || !UI.toast) return;
@@ -312,11 +322,16 @@
     .sp-thbar { display:flex; align-items:center; justify-content:space-between; gap:.5rem; padding:.3rem .55rem; background:rgba(150,120,255,.12); color:var(--ivory); font-size:.88rem; }
     .sp-thbar b { color:var(--brass-hi); font-weight:600; }
     .sp-x { background:none; border:0; color:var(--mist); cursor:pointer; font-size:1rem; padding:0 .2rem; } .sp-x:hover { color:var(--ivory); }
-    .toast.sp-toast { padding:.55rem .8rem; }
-    .sp-np { display:flex; align-items:center; gap:.65rem; }
-    .sp-np .ico { width:1.3rem; height:1.3rem; color:var(--violet); flex:none; }
-    .sp-np-t b { display:block; font:400 1.05rem/1.15 var(--font-display); color:var(--brass-hi); }
-    .sp-np-t span { color:var(--mist); font-size:.82rem; }
+    .sp-cap { position:fixed; z-index:140; left:1.4rem; bottom:5.6rem; display:flex; align-items:baseline; gap:.5rem; max-width:min(26rem, 60vw);
+      pointer-events:none; opacity:0; transform:translateY(.3rem); transition:opacity ${NP_OUT}ms ease-in-out, transform ${NP_OUT}ms ease-in-out;
+      color:var(--ivory); text-shadow:0 1px 3px rgba(0,0,0,.9), 0 0 12px rgba(0,0,0,.7); }
+    .sp-cap.on { opacity:.82; transform:none; transition-duration:${NP_IN}ms; }
+    .sp-cap .ico { align-self:center; width:.95rem; height:.95rem; flex:none; color:var(--brass); filter:drop-shadow(0 1px 2px rgba(0,0,0,.9)); }
+    .sp-cap-n { font:italic 400 1rem/1.2 var(--font-display); letter-spacing:.02em; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .sp-cap-g { font-size:.78rem; color:var(--mist); white-space:nowrap; }
+    @media (prefers-reduced-motion: reduce) { .sp-cap, .sp-cap.on { transform:none; } }
+    html[data-phone] .sp-cap { left:.9rem; bottom:auto; top:calc(4.9rem + env(safe-area-inset-top)); max-width:75vw; transform:translateY(-.3rem); }   /* under the top bar: the bottom belongs to the sheet */
+    html[data-phone] .sp-cap.on { transform:none; }
     .sp-sub { color:var(--cyan); font-size:.9rem; letter-spacing:.02em; }
     .sp-desc { color:var(--ivory); font-size:.98rem; line-height:1.45; }
     .sp-bar { display:flex; align-items:center; gap:.6rem; margin-top:auto; }
