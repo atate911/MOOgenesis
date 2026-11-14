@@ -2005,6 +2005,25 @@
       return { id, desc: d.desc, bpm: d.bpm, seconds: Math.round(r1.len), introSeconds: Math.round(introW ? introW.t0 : 0) };
     });
   };
+  // The score player's catalogue: every piece a listener may pick, hidden readings (variantOf) and the interludes included, bridges left out.
+  // seconds = the first pass (the piece heard once, its opening included); loopAt = where its repeats begin in that pass.
+  // include: further hidden pieces to list by id (the title's grand reading, which the title screen plays, has no variantOf).
+  Music.catalogue = function (include) {
+    const extra = [].concat(include || []);
+    // a re-rooted interlude (template:next...) is made at run time: only the templates are listed
+    return Object.keys(TRACKS).filter(id => { const d = TRACKS[id]; return !d.bridge && (!d.hidden || d.variantOf || extra.indexOf(id) >= 0 || (d.interlude && id.indexOf(':') < 0)); }).map(id => {
+      const d = TRACKS[id], P = prepare(d), r0 = compilePass(d, 0), w = r0.wraps[P.loopIdx];
+      return { id, desc: d.desc || '', hidden: !!d.hidden, variantOf: d.variantOf || null, interlude: !!d.interlude, bpm: d.bpm, root: d.root, mode: d.mode, seconds: r0.len, loopAt: w ? w.t0 : 0 };
+    });
+  };
+  // Where the running piece is: { id, t, len, pass, loop, perf } (t seconds into the pass that is playing), or null when nothing plays.
+  // perf is the performance's draw (form, instrumentation, take): hand it back to play(id, { from, perf }) to seek within the same performance.
+  Music.position = function () {
+    const p = S.cur, eng = A.engine;
+    if (!p || p.stopped || !p.pass || !eng) return null;
+    const t = eng.ctx.currentTime - (p.pass.start - (p.shift || 0));
+    return { id: p.id, t: clamp(t, 0, p.pass.len), len: p.pass.len, pass: p.passNo, loop: p.loop, perf: { form0: p.form0, alt0: p.alt0, take: p.take, era: p.era } };
+  };
   function makePlaylist(ids, opts) {
       ids = (ids || Object.keys(TRACKS)).filter(id => TRACKS[id]);
       if (!ids.length) return null;

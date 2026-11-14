@@ -1,4 +1,4 @@
-// In-game menu (modal): Resume · Save · Load · Options · Almanac · Quit to title.
+// In-game menu (modal): Resume · Save · Load · Options · GNN archive · Spies caught · Score player · Almanac · Quit to title.
 //   MOO.UI.gameMenu() -> Promise resolving to the chosen action ('resume' | 'quit' | 'help' | 'saved' | 'loaded' ...) or null (Esc / click-away).
 // Open it from the galaxy screen's bottom-bar "Game" button and on Esc. First letters are hotkeys (underlined); Esc or right-click closes.
 // On a phone it is the galaxy tab bar's More: a bottom sheet (css/phone.css .gm-sheet) that also offers Ship design and Galaxy map.
@@ -29,6 +29,7 @@
     { id: 'options', label: 'Options', icon: 'sliders', kbd: 'O', ok: () => (UI.openOptions ? true : 'Options are not available.') },
     { id: 'news', label: 'GNN archive', icon: 'news', kbd: 'G', ok: () => (UI.GNN && UI.GNN.archive ? (hasGame() ? true : 'There is no game in progress.') : 'The news archive is not available.') },
     { id: 'spies', label: 'Spies caught', icon: 'spy', kbd: 'C', ok: () => (UI.Spy && UI.Spy.caught ? (hasGame() ? true : 'There is no game in progress.') : 'Not available.') },
+    { id: 'music', label: 'Score player', icon: 'music', kbd: 'M', ok: () => (UI.scorePlayer && M.Audio && M.Audio.Music ? true : 'The music engine is not available.') },
     { id: 'help', label: 'Almanac', icon: 'book', kbd: 'A', ok: () => (UI.Screens.has('help') ? true : 'The almanac is not available yet.') },
     { id: 'quit', label: 'Quit to title', icon: 'quit', kbd: 'Q', sep: true, danger: true, ok: () => (midTurn() ? MID_TURN : hasGame() ? true : 'There is no game in progress.') },
   ];
@@ -56,6 +57,7 @@
       case 'options': return UI.openOptions().then(() => UI.gameMenu());
       case 'news': return UI.GNN.archive(game().S).then(() => UI.gameMenu());
       case 'spies': return UI.Spy.caught().then(() => UI.gameMenu());
+      case 'music': return UI.scorePlayer().then(() => UI.gameMenu());
       case 'help': { const cur = UI.Screens.current; UI.Screens.go('help', { from: cur && cur.id }); return 'help'; }
       case 'quit': return confirmQuit();
       default: return null;

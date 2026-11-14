@@ -41,6 +41,10 @@
     flag: '<path d="M6 21V4"/><path d="M6 5h12l-2.5 4 2.5 4H6"/>',
     plus: '<path d="M12 5v14M5 12h14"/>',
     news: '<path d="M4 5h13v14H4z"/><path d="M17 9h3v8a2 2 0 0 1-2 2"/><path d="M7 9h7M7 12h7M7 15h4"/>',
+    music: '<path d="M9 18V5.5l11-2V16"/><circle cx="6.5" cy="18" r="2.5"/><circle cx="17.5" cy="16" r="2.5"/>',
+    pause: '<path d="M7 5h3.5v14H7zM13.5 5H17v14h-3.5z" fill="currentColor"/>',
+    prev: '<path d="M6 5v14"/><path d="M18 5l-9 7 9 7z" fill="currentColor"/>',
+    next: '<path d="M18 5v14"/><path d="M6 5l9 7-9 7z" fill="currentColor"/>',
     spy: '<path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12z"/><circle cx="12" cy="12" r="3"/>',
   };
   function icon(name, cls) {

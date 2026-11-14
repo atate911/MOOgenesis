@@ -5,6 +5,12 @@ Versions follow `MAJOR.MINOR.PATCH`; the live version is the `VERSION` file.
 
 ## Unreleased
 
+- Score player in the game: Game menu -> Score player (M) lists every piece of the score (the main theme and its readings, the map
+  pieces, the scenes, the race themes and their war readings, the interludes) by name, key and length, and plays any of them through
+  the game's own engine: play / pause, previous / next, a seek bar (the same performance, the mark where the piece repeats), Repeat or
+  Play on through the list shown, and the music volume. The game's music resumes where it was when the player closes. The engine:
+  `Music.catalogue()` and `Music.position()`. Check: `node tools/qa/scoreplayer.js [--phone]`.
+
 - Small speakers: Options -> Sound has a Small speakers setting (Auto, On, Off; Auto turns it on in the phone layout, and it
   applies at once). For a phone's or tablet's speaker it takes out the sub-bass the driver cannot play (it only drove the limiter), keeps
   the bass line heard through its overtones, narrows the stereo image toward what close drivers keep, lifts the melody's presence and holds
