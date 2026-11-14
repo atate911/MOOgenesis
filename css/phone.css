@@ -195,7 +195,7 @@ html:root:root[data-phone] .sc-btns { flex-direction: row; } html:root:root[data
 /* half height = the controls (portrait): the picture, the stats, the build box, the rally line and the star's planet card wait for full */
 @media (orientation: portrait) {
   html:root:root[data-phone] .gx-side:not(.gx-float)[data-sheet="half"] :is(.sc-card, .sc-stats, .sc-bbox, .sc-rally, .sm-card) { display: none; }
-  html:root:root[data-phone] .gx-side:not(.gx-float) .sc-card.wide { aspect-ratio: 16 / 4.5; }   /* full: the colony plate shorter, so the whole panel fits */
+  html:root:root[data-phone] .gx-side:not(.gx-float) :is(.sc-card, .sm-card).wide { aspect-ratio: 16 / 4.5; }   /* full: the colony / planet plate shorter, so the whole panel fits */
   html:root:root[data-phone] .gx-side:not(.gx-float)[data-sheet="full"] .ph-sum { display: none; }   /* full: the stats block shows the same figures */
   html:root:root[data-phone] .gx-side:not(.gx-float) .sc-bbox { min-height: 3.4rem; }
 }

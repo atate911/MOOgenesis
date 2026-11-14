@@ -30,6 +30,7 @@
   // Restyle: black picture tiles with name plates, framed portrait, green hint text, bevelled steel steppers.
   UI.css('side-misc-orig', bump(`
     .sm-card { gap:.6rem; padding:.3rem; border:0; background:linear-gradient(180deg, #0b0e13, #05070a); box-shadow:0 0 0 1px #d04030, inset 0 0 0 1px rgba(0,0,0,.9); }
+    .sm-card.wide { padding:0; }                                                      /* the plate fills its frame (the line above pads the small card) */
     .sm-card.unexp { box-shadow:0 0 0 1px #d04030, inset 0 0 18px rgba(208,64,48,.18); } .sm-card .un { font:600 1.05rem var(--font-display); color:#50e050; letter-spacing:.14em; }
     .sm-desc { color:#e4e8ee; font-size:.85rem; }
     .sm-range { border-left:0; background:#12161b; color:#40e060; font:600 .8rem var(--font-display); letter-spacing:.1em; text-transform:uppercase; text-align:center; box-shadow:inset 1px 1px 2px rgba(0,0,0,.9), 0 1px 0 rgba(255,255,255,.12); }
@@ -101,7 +102,8 @@
         parts.push(h('div.sm-desc', STAR_TEXT[s.color]));
       } else {
         const c = q.planet;
-        parts.push(h('div.sm-card', planetPic(c, 44, q.owner), h('div.sc-info', h('div', h('span.cls.disp', { style: { fontSize: '1.25rem', color: 'var(--brass-hi)' } }, c.typeLabel), c.growthLabel ? h('span.chip' + (c.growth === 'hostile' ? '.warn' : '.ok'), { style: { marginLeft: '.4rem' } }, c.growthLabel) : null),
+        const WA = M.Gfx && M.Gfx.WorldArt, art = WA && WA.enabled ? WA.orbit(c, S) : null;     // the wide orbit plate, as on a colony and a discovery card; else the sprite
+        parts.push(h('div.sm-card' + (art ? '.wide' : ''), art ? h('div.sm-pic', WA.image(art, { fx: 0.5, fy: 0.5 })) : planetPic(c, 44, q.owner), h('div.sc-info', h('div', h('span.cls.disp', { style: { fontSize: '1.25rem', color: 'var(--brass-hi)' } }, c.typeLabel), c.growthLabel ? h('span.chip' + (c.growth === 'hostile' ? '.warn' : '.ok'), { style: { marginLeft: '.4rem' } }, c.growthLabel) : null),
           c.type === 'none' ? h('div.dim', 'No habitable planet') : h('div', 'POP ', h('b.t-leaf', c.maxPop), ' max'), c.specialLabel ? h('div.t-cyan.small', c.specialLabel + (c.specialNote ? ' — ' + c.specialNote : '')) : null)));
         if (c.id === S.orion && S.guardian && S.guardian.alive) parts.push(h('div.sm-card.unexp', h('span.t-rose', 'The Guardian of Orion stands watch over this world.')));
         if (owner) {

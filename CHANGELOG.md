@@ -5,6 +5,9 @@ Versions follow `MAJOR.MINOR.PATCH`; the live version is the `VERSION` file.
 
 ## Unreleased
 
+- The planet card of an explored star (not your colony) shows the planet's wide orbit plate, as your colonies and the discovery cards
+  do, instead of a small sprite in a black square beside empty space; with art off (`?art=0`) it keeps the sprite. The wide plates
+  also lost a stray dark frame (the planet card's padding applied to them).
 - A new game keeps the title screen's main theme: the grand reading carries on into the game and finishes before the map's programme
   begins (nothing playing: the main theme starts from the top), so the whole theme is heard once. An end-of-turn change of programme,
   a visit to the research screen, the news or the score player never cut it. A loaded game starts the map's music at once.
