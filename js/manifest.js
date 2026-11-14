@@ -143,4 +143,16 @@ window.MOO_MANIFEST = {
     // ---- boot ----
     'js/main.js',
   ],
+  // Loaded in the background once the title menu is up (loader.js, phase 2), in the order they appear in `js` above: the in-game
+  // screens and the scene painter, about a third of the code, none of which the title, New game, Load, Options or the Almanac need.
+  // Game.newGame / Game.loadState wait for them (main.js), so a game never starts without them. Tools that read `js` load everything.
+  // A file listed here must not be needed at load time by any file that is NOT listed here.
+  defer: [
+    'js/gfx/scenes.js',
+    'js/ui/galaxymap.js', 'js/ui/galaxy.js', 'js/ui/side-colony.js', 'js/ui/side-misc.js', 'js/ui/phone-galaxy.js', 'js/ui/flow.js',
+    'js/ui/turnlog.js', 'js/ui/gnn.js', 'js/ui/ledger-planets.js', 'js/ui/ledger-fleets.js', 'js/ui/overview.js', 'js/ui/system.js',
+    'js/ui/design.js', 'js/ui/phone-design.js', 'js/ui/tech.js', 'js/ui/phone-research.js', 'js/ui/techtree.js', 'js/ui/races.js',
+    'js/ui/audience.js', 'js/ui/council.js', 'js/ui/spyscenes.js', 'js/ui/endings.js', 'js/ui/combat.js', 'js/ui/combat-fx.js',
+    'js/ui/landing.js', 'js/ui/gamemenu.js', 'js/ui/soundscape.js',
+  ],
 };

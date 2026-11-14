@@ -19,6 +19,9 @@ text are original — never imitate or reproduce original assets.**
   **gfx/ and audio/ modules must be self-contained** (carry their own tiny helpers) so they work in isolated test pages.
 - Load order = `js/manifest.js` (single source of truth). **Only the lead edits manifest.js, kit.js, css/base.css, css/kit.css, ns.js.**
   Create only the files you own. If you need something changed in a shared file, say so in your final report.
+- `MOO_MANIFEST.defer` lists files (in-game screens, scenes) that load in the background after the title menu appears (loader.js phase 2;
+  `MOO.Late.ready` / `MOO.Late.wait(fn)`). Game.newGame / Game.loadState wait for them. A file NOT on that list must never need one that is at
+  load time; anything the title, New game, Load, Options or the Almanac use stays off it.
 - **Headless rule:** files under `js/core`, `js/data`, `js/sim`, `js/ai` must not touch the DOM/`window` beyond `window.MOO` — they are also
   executed by Node (`tools/headless.js`) for simulation tests.
 - Sim code is **functional over plain data**: game state `S` is a JSON-serialisable object (no class instances, no functions, no cycles — reference

@@ -6,7 +6,7 @@
 //   (CSS transform) on the high tiers only, never under reduceMotion / data-fx="off", never on phones. After each paint the picture is
 //   also published as the CSS custom property --sky-img (a data URL) so a well can show the sky *behind it* with
 //   `background: var(--sky-img) 50% 50% / cover fixed` — the ledgers' empty tables are windows on the same sky.
-//   UI.Sky.install()   once at boot (main.js)      UI.Sky.repaint()   after a tier change      <html class="has-sky"> while installed
+//   UI.Sky.install()   once at boot (main.js; paints after the menu is up)    UI.Sky.repaint()   after a tier change      <html class="has-sky"> while installed
 (function (M) {
   'use strict';
   const UI = M.UI;
@@ -74,12 +74,15 @@
     app.insertBefore(el, app.firstChild);
     Sky.el = el;
     document.documentElement.classList.add('has-sky');
-    paint();
+    // Not painted at boot: the title screen is opaque and covers it, and the paint is the heaviest single step of start-up. It is painted
+    // in idle time once the menu is up, or at once when a screen that shows it opens first (paint() is a no-op once done for this size).
+    if (typeof requestIdleCallback === 'function') requestIdleCallback(() => paint(), { timeout: 2500 }); else setTimeout(paint, 1200);
     const later = M.Util && M.Util.debounce ? M.Util.debounce(paint, 220) : paint;
     window.addEventListener('resize', later);
     if (M.Bus && M.Bus.on) {
       M.Bus.on('perf:tier', () => { Sky.key = ''; paint(); });      // a tier change can switch the painter (GPU / CPU) and the resolution
       M.Bus.on('settings', drift);
+      M.Bus.on('screen', id => { if (!Sky.key && id !== 'menu') paint(); });
     }
   };
   Sky.repaint = function () { Sky.key = ''; paint(); };
