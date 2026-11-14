@@ -244,7 +244,7 @@
     const cur = (() => { try { return m.current(); } catch (e) { return null; } })();
     st.sel = byId[cur] ? cur : (byId[snap && snap.resume && snap.resume.id] ? snap.resume.id : list[0].id);   // open on what the game is playing
     renderRows(); muteNote(); paint();
-    const body = h('div.sp', now, h('div.sp-list', h('div.sp-tabs', tabs), themeBar, rows));
+    const body = h('div.sp-root', now, h('div.sp-list', h('div.sp-tabs', tabs), themeBar, rows));
     const pm = UI.modal({ title: 'Score player', body, buttons: [{ label: 'Close', value: null, primary: true }], width: '52rem', cls: 'sp-modal', autofocus: false });
     const inCtl = ev => !!(ev && ev.target && ev.target.closest && ev.target.closest('.s-track, .sp-seek'));   // the volume slider and the seek bar keep their arrows
     const keys = {
@@ -294,7 +294,7 @@
 
   UI.css('scoreplayer', `
     .sp-modal { max-width:calc(100vw - 2rem); }
-    .sp { display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); gap:1.1rem; min-height:24rem; }
+    .sp-root { display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); gap:1.1rem; min-height:24rem; }
     .sp-now { display:flex; flex-direction:column; gap:.55rem; min-width:0; }
     .sp-thbar[hidden], .sp-info[hidden], .sp-ibtn[hidden] { display:none; }
     .sp-head { display:flex; align-items:flex-start; gap:.6rem; }
@@ -363,7 +363,7 @@
     .sp-r-n { flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
     .sp-r-k { color:var(--mist); font-size:.8rem; white-space:nowrap; }
     .sp-r-t { color:var(--mist); font-size:.85rem; font-variant-numeric:tabular-nums; min-width:2.8em; text-align:right; }
-    @media (max-width: 760px) { .sp { grid-template-columns:1fr; } .sp-rows { max-height:40vh; } }
+    @media (max-width: 760px) { .sp-root { grid-template-columns:1fr; } .sp-rows { max-height:40vh; } }
     html[data-phone] .sp-row { min-height:var(--row); }
     html:root:root[data-phone] .sp-rows { max-height:none; overflow:visible; }   /* the sheet scrolls, not a list inside it */
     html[data-phone] .sp-ctl .btn { min-height:var(--tap); }
