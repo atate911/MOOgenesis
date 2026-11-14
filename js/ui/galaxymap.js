@@ -584,6 +584,17 @@
     muteBtn.classList.add('gmap-snd');
     if (!M.Audio) muteBtn.style.display = 'none';
     const offMute = M.Bus && M.Bus.on ? M.Bus.on('audio:muted', syncMuteBtn) : null;
+    // the music's name kept in the corner (UI.TrackPin, scoreplayer.js): shown only while track names are on
+    const TP = () => UI.TrackPin || null;
+    const pinBtn = svgBtn('<path d="M9 18V5.5l11-2V16"/><circle cx="6.5" cy="18" r="2.5"/><circle cx="17.5" cy="16" r="2.5"/>', 'Keep the music\u2019s name in the corner', () => { const t = TP(); if (t) t.toggle(); syncPinBtn(); });
+    const syncPinBtn = () => {
+      const t = TP(), avail = !!(t && t.available()), on = !!(t && t.on());
+      pinBtn.style.display = avail ? '' : 'none';
+      pinBtn.classList.toggle('lit', on); pinBtn.setAttribute('aria-pressed', String(on));
+      if (UI.setTip) UI.setTip(pinBtn, on ? 'The music\u2019s name stays in the corner: <b>click to hide it</b>' : 'Keep the music\u2019s name in the corner');
+    };
+    syncPinBtn();
+    const offPin = M.Bus && M.Bus.on ? M.Bus.on('settings', k => { if (!k || k === 'trackNames' || k === 'trackNamePin') syncPinBtn(); }) : null;
     const legendBtn = svgBtn('<circle cx="7" cy="7" r="2.6"/><path d="M13 7h8M13 17h8M4.4 14.4l5 5M9.4 14.4l-5 5"/>', 'Map key and planet icons <b>K</b>', () => api.showLegend(!legendShown()));
     // phones (css/phone.css): pinch and double-tap zoom, so + / − are hidden, and the key / routes / declutter toggles fold behind one button —
     // seven stacked buttons took a column of the map's width in portrait and forced a two-wide grid in landscape
@@ -591,13 +602,13 @@
       const on = !ctrlEl.classList.contains('open'); ctrlEl.classList.toggle('open', on); moreBtn.classList.toggle('lit', on); moreBtn.setAttribute('aria-expanded', String(on)); emit('controls', on);
     });
     moreBtn.classList.add('gmap-more'); moreBtn.setAttribute('aria-expanded', 'false');
-    [legendBtn, routesBtn, dcBtn, muteBtn].forEach(b => b.classList.add('gmap-extra'));
+    [legendBtn, routesBtn, dcBtn, muteBtn, pinBtn].forEach(b => b.classList.add('gmap-extra'));
     const zoomIn = svgBtn('<path d="M12 5v14M5 12h14"/>', 'Zoom in <b>+</b>', () => zoomStep(1.45)), zoomOut = svgBtn('<path d="M5 12h14"/>', 'Zoom out <b>−</b>', () => zoomStep(1 / 1.45));
     zoomIn.classList.add('gmap-zoom'); zoomOut.classList.add('gmap-zoom');
     const ctrlEl = h('div.gmap-ctrl', zoomIn, zoomOut,
       svgBtn('<path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/>', 'Show the whole galaxy', () => api.fit()),
       svgBtn('<path d="M12 3l9 9-9 9-9-9z"/><circle cx="12" cy="12" r="2.2"/>', 'Centre on your capital <b>Home</b>', () => api.home()),
-      moreBtn, legendBtn, routesBtn, dcBtn, muteBtn);
+      moreBtn, legendBtn, routesBtn, dcBtn, muteBtn, pinBtn);
     const root = h('div.gmap', { tabindex: 0, role: 'application', 'aria-label': 'Galaxy map' }, canvas, miniEl, ctrlEl, legendEl, hintEl, tipEl);
     if (opts.controls === false) ctrlEl.style.display = 'none';
     container.appendChild(root);
@@ -2216,7 +2227,7 @@
       on, off,
       destroy() {
         if (destroyed) return; destroyed = true;
-        try { if (stopFrame) stopFrame(); if (stopWatch) stopWatch(); if (stopBus) stopBus(); if (offMute) offMute(); } catch (e) { /* ignore */ }
+        try { if (stopFrame) stopFrame(); if (stopWatch) stopWatch(); if (stopBus) stopBus(); if (offMute) offMute(); if (offPin) offPin(); } catch (e) { /* ignore */ }
         window.removeEventListener('keydown', onKeyDown, true); window.removeEventListener('keyup', onKeyUp, true); window.removeEventListener('blur', onBlur); window.removeEventListener('pointerdown', dropHeldTip, true);
         if (root.parentNode) root.parentNode.removeChild(root);
         for (const k in handlers) delete handlers[k];

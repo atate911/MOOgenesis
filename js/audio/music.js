@@ -1320,6 +1320,7 @@
 
   // ================================================================== player
   const smooth = x => { x = clamp(x, 0, 1); return x * x * (3 - 2 * x); };
+  const PLAYERS_LIVE = new Set();                                   // every Player made on the live engine and not yet disposed
   const S = { cur: null, old: [], timer: null, intensity: 0, era: 0, pending: null, playlist: null, ticks: 0, plWait: null };
   // The era (Music.setEra, 0..1): how contentious the game has become. It is read only when a new performance of an exploration piece
   // (def.gentle) is compiled, never mid-piece, and every step it takes is a few percent — the arc is felt in hindsight, not heard happening:
@@ -1343,6 +1344,7 @@
     constructor(eng, def, o) {
       this.eng = eng; this.def = def; this.id = def.id; this.o = o || {};
       this.P = prepare(def); this.nodes = []; this.live = new Set(); this.disposed = false; this.stopped = false; this.finished = false;
+      if (!this.o.offline) PLAYERS_LIVE.add(this);                          // every live performance is known, so none can be orphaned (tickAll's guard)
       this.loop = this.o.loop !== false; this.intensity = num(this.o.intensity, 0);
       const ctx = eng.ctx, mk = n => { this.nodes.push(n); eng.nodeCount++; return n; };
       this.bus = mk(ctx.createGain());
@@ -1541,6 +1543,7 @@
     dispose() {
       if (this.disposed) return;
       this.disposed = true;
+      PLAYERS_LIVE.delete(this);
       for (const v of Array.from(this.live)) v.dispose();
       this.live.clear();
       for (const n of this.nodes) { try { n.disconnect(); } catch (e) { /* ignore */ } }
@@ -1574,6 +1577,13 @@
         if (S.cur && S.cur.finished && !S.playlist) { const p = S.cur; S.cur = null; p.dispose(); }
       }
       for (let i = S.old.length - 1; i >= 0; i--) { const p = S.old[i]; p.tick(now, look); if (p.finished) { p.dispose(); S.old.splice(i, 1); } }
+      // the guard: one piece at a time. A performance that is neither the current one nor fading out (an orphan from a race between two
+      // switches) is faded out here, so two pieces can never keep playing together
+      if (PLAYERS_LIVE.size > S.old.length + (S.cur ? 1 : 0)) for (const p of PLAYERS_LIVE) {
+        if (p === S.cur || p.disposed || S.old.indexOf(p) >= 0) continue;
+        console.warn('[music] a second piece was still playing (' + p.id + '): faded out');
+        p.fadeOut(1.5); S.old.push(p);
+      }
       if (S.ticks % 40 === 0) eng.sweep(now);
       if (S.plWait && now >= S.plWait.at) { const w = S.plWait; S.plWait = null; startTrack(w.id, { fade: w.fade, loop: false, keepPlaylist: true, quantize: false }); }
       if (S.switchAt && now >= S.switchAt.at - 0.03) { const w = S.switchAt; S.switchAt = null; startTrack(w.id, w.opts); if (w.then) S.switchAt = w.then; }   // a bridge carries the cue behind it
@@ -1998,6 +2008,8 @@
       return true;
     } catch (e) { console.warn('[music] stop failed', e); return false; }
   };
+  // true while a programme's lead piece (the main theme opening a new game) is playing: scenes that would borrow the music leave it be
+  Music.leading = () => !!(S.playlist && S.playlist.lead && S.cur && !S.cur.stopped && S.cur.id === S.playlist.lead);
   Music.current = () => (S.switchAt ? S.switchAt.id : S.cur && !S.cur.stopped ? S.cur.id : (S.pending ? S.pending.id : null));
   Music.list = function () {
     return Object.keys(TRACKS).filter(id => !TRACKS[id].hidden).map(id => {
@@ -2050,14 +2062,18 @@
       if (!pl) return false;
       // lead: one piece heard whole before the programme (the main theme as a new game begins); if it is already playing, from near its
       // start, it simply carries on and the programme follows it, otherwise it starts from the top
-      if (opts.lead && TRACKS[opts.lead]) {
-        const c = S.cur, eng = A.engine;
-        if (c && !c.stopped && c.id === opts.lead && eng && c.pass && c.passNo === 0 && eng.ctx.currentTime - c.pass.start < 40) {   // its first pass, near the start: carry on
-          c.loop = false; S.switchAt = null; S.plWait = null; S.playlist = pl; pl.advancing = false;
-          pl.order = pl.order.filter(id => id !== opts.lead); pl.i = -1; DIR.lastPiece = opts.lead;
-          ensureTimer(); return opts.lead;
+      // lead may name several readings (the title screen's grand reading carries on into a new game, else the main theme starts): the
+      // one already playing is let finish the pass it is in, whatever its point, and the programme follows it; none playing: the first
+      const leads = [].concat(opts.lead || []).filter(id => TRACKS[id]);
+      if (leads.length) {
+        const c = S.cur;
+        if (c && !c.stopped && c.pass && leads.indexOf(c.id) >= 0 && !(S.switchAt && S.switchAt.id !== c.id)) {   // playing (and not about to give way): carry on to its end
+          c.loop = false; S.switchAt = null; S.plWait = null; S.playlist = pl; pl.advancing = false; pl.lead = c.id;
+          pl.order = pl.order.filter(id => id !== c.id); pl.i = -1; DIR.lastPiece = c.id;
+          ensureTimer(); return c.id;
         }
-        pl.order = [opts.lead].concat(pl.order.filter(id => id !== opts.lead));
+        pl.lead = leads[0];
+        pl.order = [leads[0]].concat(pl.order.filter(id => id !== leads[0]));
       }
       let first = pl.order[0];
       // interlude: the programme is entered through one of its interludes (back on the map from a cue): it opens in the key, meter and pulse
@@ -2085,7 +2101,8 @@
   Music.onSamplesReady = function () {
     const p = S.cur; if (!p || p.stopped || !A.engine || p.def.bridge) return;   // a bridge is five seconds long: not worth restarting
     const elapsed = A.engine.ctx.currentTime - p.t0;
-    if (elapsed >= 0 && elapsed < 14) { const keep = S.switchAt; startTrack(p.id, { fade: 2.5, loop: p.loop, keepPlaylist: true, quantize: false }); if (keep) S.switchAt = keep; }   // a switch already armed (a bar line, a bridge's cue) stays armed
+    // restarted where it began (a piece resumed part-way through starts there again, not at its top) and as the same performance
+    if (elapsed >= 0 && elapsed < 14) { const keep = S.switchAt; startTrack(p.id, { fade: 2.5, loop: p.loop, keepPlaylist: true, quantize: false, from: p.shift > 0 ? p.shift : undefined, perf: { form0: p.form0, alt0: p.alt0, take: p.take, era: p.era } }); if (keep) S.switchAt = keep; }   // a switch already armed (a bar line, a bridge's cue) stays armed
   };
 
   // A scene that borrows the music (GNN, lab, spy panels) takes a snapshot first and restores it afterwards: a running playlist
@@ -2111,6 +2128,7 @@
       if (r) {
         const from = Math.max(0, r.at - 2);
         if (snap.playlist && (snap.playlist.ids.indexOf(r.id) >= 0 || (snap.playlist.rare && snap.playlist.rare.ids.indexOf(r.id) >= 0))) { const pl = snap.playlist; return Music.playlist(pl.ids, { shuffle: pl.shuffle, gap: pl.gap, gapIn: pl.gapIn, fade: pl.fade, between: pl.between, betweenP: pl.betweenP, rare: pl.rare, director: pl.director, start: r.id, firstFade: fade, from, perf: r.perf, quantize: false }); }
+        if (snap.playlist) { const pl = snap.playlist; return Music.playlist(pl.ids, { shuffle: pl.shuffle, gap: pl.gap, gapIn: pl.gapIn, fade: pl.fade, between: pl.between, betweenP: pl.betweenP, rare: pl.rare, director: pl.director, lead: r.id, firstFade: fade, from, perf: r.perf, quantize: false }); }   // the opening theme: it resumes and the programme follows
         return startTrack(r.id, { fade, from, perf: r.perf, quantize: false });
       }
       if (snap.playlist) { const pl = snap.playlist; return Music.playlist(pl.ids, { shuffle: pl.shuffle, gap: pl.gap, gapIn: pl.gapIn, fade: pl.fade, between: pl.between, betweenP: pl.betweenP, rare: pl.rare, director: pl.director, start: pl.start, firstFade: fade, bridge: opts.bridge, quiet: opts.quiet }); }
@@ -2130,6 +2148,11 @@
     if (!S.playlist || !p || p.stopped || S.plWait || !A.isReady()) return false;
     const pl = makePlaylist(ids, Object.assign({}, rot, { shuffle: true, last: DIR.lastPiece || p.id }));
     if (!pl) return false;
+    if (Music.leading()) {                                          // the opening theme is never cut: the new programme simply follows it
+      pl.lead = p.id; pl.i = -1; pl.order = pl.order.filter(id => id !== p.id); pl.advancing = false;
+      S.playlist = pl; S.switchAt = null; ensureTimer();
+      return p.id;
+    }
     const fade = Math.max(4, num(opts.fade, num(rot.fade, 6)));
     let id = pl.order[0];
     const first = id;
@@ -2179,7 +2202,7 @@
     let pl = null, stats = null, first = null;
     return A.renderWindowed(seconds, { sampleRate: opts.sampleRate || 44100, window: 1.5, seed: opts.seed || 1, small: !!opts.small, teardown: eng => { stats = eng.stats; } }, function (eng, t0, t1) {
       if (!pl) {
-        pl = new Player(eng, def, { loop: opts.loop !== false, intensity: num(opts.intensity, S.intensity), era: opts.era });
+        pl = new Player(eng, def, { loop: opts.loop !== false, intensity: num(opts.intensity, S.intensity), era: opts.era, offline: true });
         pl.trim = num(def.trim, DEFAULT_TRIM) * MIX_TRIM * num(opts.gain, 1);
         pl.bus.gain.value = pl.trim; pl.verb.gain.value = 1;
         pl.shift = num(opts.from, 0); pl.skipBefore = 0;

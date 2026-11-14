@@ -6,6 +6,7 @@
   const DEFAULTS = {
     music: true,            // background music on/off (volume lives in MOO.Audio.settings)
     trackNames: false,      // show each piece's name as the game starts it (switched in the score player)
+    trackNamePin: false,    // keep the playing piece's name in the galaxy map's corner (the map's note button, while track names are on)
     sfx: true,
     animSpeed: 1,           // 0 = instant, 1 = normal, 2 = fast (fleet moves, combat playback)
     autosave: true,         // autosave at the start of every turn

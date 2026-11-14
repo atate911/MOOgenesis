@@ -155,6 +155,7 @@
   let labTimer = null, labSnap = null;
   function labEnter(m, pickMood) {
     clearTimeout(labTimer);
+    if (m.leading && m.leading()) return;                     // the main theme opening a new game plays on through a visit to the laboratory
     labTimer = setTimeout(() => {
       labTimer = null; if (group !== 'lab') return;
       try { labSnap = m.snapshot ? m.snapshot() : null; m.setMood(pickMood, { fade: 3, quantize: 'bar' }); } catch (e) { /* audio optional */ }
@@ -162,6 +163,7 @@
   }
   // leaving the laboratory: true when the leaving is handled here (a quick visit that changed nothing, or the map put back as it was)
   function labLeave(m, toGroup) {
+    if (!labSnap && m.leading && m.leading()) { clearTimeout(labTimer); labTimer = null; return toGroup === 'galaxy'; }   // the opening theme played on through the visit
     if (labTimer) { clearTimeout(labTimer); labTimer = null; labSnap = null; return toGroup === 'galaxy'; }
     const snap = labSnap; labSnap = null;
     if (toGroup !== 'galaxy' || !snap || !m.restore) return false;
@@ -174,10 +176,11 @@
     if (pick[0] === group) return;
     const from = group; group = pick[0];
     if (group === 'lab') { labEnter(m, pick[1]); return; }
-    // a new game: the main theme is heard whole first (carrying on if the menu's is playing), then the map's programme
+    // a new game: the main theme is heard whole first — the title screen's grand reading carries on to its end if it is playing, else the
+    // main theme starts — then the map's programme (a loaded game goes straight to the programme)
     if (group === 'galaxy' && themeFirst) {
       themeFirst = false;
-      try { m.setMood(pick[1], { fade: 2, quantize: 'beat', lead: 'title' }); return; } catch (e) { /* audio optional */ }
+      try { m.setMood(pick[1], { fade: 2, quantize: 'beat', lead: ['title:grand', 'title'] }); return; } catch (e) { /* audio optional */ }
     }
     if (from === 'lab' && labLeave(m, group)) return;
     // a cue that cannot wait is led into by a two-bar bridge that starts in the key of what is playing and lands on the cue's dominant: a tense

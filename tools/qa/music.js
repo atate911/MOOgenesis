@@ -84,12 +84,17 @@ const { serve, open } = require('./lib');
     M.restore(snapshot, { fade: 1 }); await run(3);
     check('restore brings the programme back', S.playlist && S.playlist.director && S.cur && /^qa[ABCD]$|^drift/.test(S.cur.id), S.cur && S.cur.id);
     check('never a silence', silent === 0, silent + ' silent polls');
+    // 7. one piece at a time: a performance orphaned by a race (neither current nor fading) is faded out by the tick's guard
+    M.play('qaA', { fade: 0.3, quantize: false, restart: true }); await run(1);
+    const orphan = S.cur; S.cur = null;                     // lose it, as a race between two switches could
+    M.play('qaB', { fade: 0.3, quantize: false }); await run(2);
+    check('an orphaned piece is faded out, never left playing', orphan.stopped && S.old.indexOf(orphan) >= 0 || orphan.disposed, orphan.id + (orphan.stopped ? ' stopped' : ' still playing'));
     M.stop({ fade: 0.3 }); M.setSituation(null); M.setMotif(null);
     return out;
   });
   let fail = 0;
   for (const r of res) { console.log((r.ok ? 'PASS  ' : 'FAIL  ') + r.name + (r.note ? '   (' + r.note + ')' : '')); if (!r.ok) fail++; }
-  const errs = errors.filter(e => !/favicon|ScriptProcessor/.test(e)); if (errs.length) { console.log('console:'); errs.forEach(e => console.log('  ' + e)); fail++; }
+  const errs = errors.filter(e => !/favicon|ScriptProcessor|a second piece was still playing \(qaA\)/.test(e)); if (errs.length) { console.log('console:'); errs.forEach(e => console.log('  ' + e)); fail++; }
   console.log(fail ? fail + ' FAILED' : 'all passed');
   await browser.close(); srv.close(); process.exit(fail ? 1 : 0);
 })().catch(e => { console.error(e); process.exit(1); });

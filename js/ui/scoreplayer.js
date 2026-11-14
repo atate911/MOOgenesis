@@ -17,8 +17,7 @@
 
   // names the listener knows the pieces by (MUSIC-REVIEW.md); anything unlisted falls back to the head of its description
   const NAMES = {
-    title: 'Main theme', 'title:grand': 'Main theme — grand', 'title:classic': 'Main theme — the undercurrent', 'title:reed': 'Main theme — cor anglais',
-    'title:cello': 'Main theme — cello', 'title:symphony': 'Main theme — symphony', 'title:chamber': 'Main theme — chamber', 'title:organ': 'Main theme — organ',
+    title: 'Main theme', 'title:grand': 'Main theme — grand',
     galaxy1: 'Wonder', galaxy2: 'Patience', galaxy3: 'Determination', galaxy4: 'Deep Field', galaxy5: 'The Veil', galaxy6: 'The Abyss', galaxy7: 'The Cradle',
     galaxy8: 'The Beacon', galaxy9: 'The Tide', galaxy10: 'The Chorale', galaxy11: 'The Nebula', galaxy12: 'The Long Night', galaxy13: 'The Watch',
     galaxy14: 'First Light', galaxy15: 'The Lantern', galaxy16: 'The Survey', galaxy17: 'The Commonwealth', galaxy18: 'The Lanes', galaxy19: 'Noon',
@@ -62,7 +61,9 @@
     try {
       const ix = typeof m.themeIndex === 'function' ? m.themeIndex() : {}, N = UI.ScoreNotes;
       const themesOf = id => Object.keys(ix).filter(t => ix[t].indexOf(id) >= 0);
-      cat = m.catalogue(['title:grand', 'title:classic']).map(e => Object.assign(e, {
+      // only what the game plays: the title screen's grand reading is listed; the main theme's other readings (cello, chamber, reed, symphony,
+      // the undercurrent) were studies and are left out
+      cat = m.catalogue(['title:grand']).filter(e => e.variantOf !== 'title').map(e => Object.assign(e, {
         name: nameOf(e), group: groupOf(e), notes: (N && N.get(e.id)) || null,
         themes: themesOf(e.variantOf || (/^title/.test(e.id) ? 'title' : e.id)),           // a reading shares its piece's tunes
       }));
@@ -258,9 +259,11 @@
     st.raf = requestAnimationFrame(tick);
     open = pm.then(() => {
       off(); off2(); cancelAnimationFrame(st.raf); open = null;
+      applyPin();
       try { m.restore(snap, { resume: true, fade: 1.5 }); } catch (e) { /* audio is optional */ }    // the game's music comes back where it was
       ann.last = nowId();                                                                             // ... without announcing it
     });
+    applyPin();                                                        // the pinned caption steps aside while the player is open
     return open;
   };
 
@@ -268,20 +271,52 @@
   // name fades in as a quiet caption low on the map's left, holds about five seconds and fades out. Polled once a second (the engine has no event for it); interludes, bridges and the player's own choices are left out.
   const ann = { last: null };
   function nowId() { const m = Mu(); try { const p = m && m.position ? m.position() : null; return p ? p.id : null; } catch (e) { return null; } }
-  // a caption, not a notice: no panel, low on the left over the map, fading in over a second, held five, fading out over a second and a half
-  const NP_IN = 1100, NP_HOLD = 5000, NP_OUT = 1600;
-  let np = null, npTimers = [];
-  function announce(e) {
+  // a caption, not a notice: no panel, low on the left over the map, fading in over a second, held five, fading out over a second and a half.
+  // Pinned (Settings 'trackNamePin', the map's note button, only while track names are on): it stays on the galaxy map and changes with the music.
+  const NP_IN = 1100, NP_HOLD = 5000, NP_OUT = 1600, NP_SWAP = 500;
+  let np = null, npTimers = [], lastNamed = null, curScreen = null;
+  const pinOn = () => trackNames() && !!(M.Settings && M.Settings.get('trackNamePin'));
+  const pinShown = () => pinOn() && curScreen === 'galaxy' && !open;
+  function capFill(e) {
     const ctl = C();
     if (!np) { np = h('div.sp-cap', { 'aria-live': 'polite', role: 'status' }); document.body.appendChild(np); }
-    npTimers.forEach(clearTimeout); npTimers = [];
-    np.classList.remove('on');
     UI.clear(np);
     np.append(ctl ? ctl.icon('music') : '', h('span.sp-cap-n', e.name), h('span.sp-cap-g', GROUP_LABEL[e.group] || ''));
+  }
+  const clearTimers = () => { npTimers.forEach(clearTimeout); npTimers = []; };
+  function announce(e) {
+    lastNamed = e;
+    clearTimers();
+    if (pinShown() && np && np.classList.contains('on')) {            // pinned and showing: a short fade to the new name
+      np.classList.add('swap');
+      npTimers.push(setTimeout(() => { capFill(e); np.classList.add('on', 'pinned'); np.classList.remove('swap'); }, NP_SWAP));
+      return;
+    }
+    capFill(e);
+    np.classList.remove('on', 'swap'); np.classList.toggle('pinned', pinShown());
     void np.offsetWidth;                                                   // restart the fade from transparent
     npTimers.push(setTimeout(() => np.classList.add('on'), 20));
-    npTimers.push(setTimeout(() => np.classList.remove('on'), 20 + NP_IN + NP_HOLD));
+    if (!pinShown()) npTimers.push(setTimeout(() => np.classList.remove('on'), 20 + NP_IN + NP_HOLD));
   }
+  // the pin switched, the screen changed, the player opened or closed: show or put away the pinned caption
+  function applyPin() {
+    if (pinShown()) {
+      if (!lastNamed) { const id = nowId(), list = id && catalogue(), e = list && list.find(x => x.id === id && !x.interlude); if (e) lastNamed = e; }
+      if (!lastNamed) return;
+      clearTimers(); capFill(lastNamed); np.classList.add('pinned'); np.classList.remove('swap');
+      npTimers.push(setTimeout(() => np.classList.add('on'), 20));
+    } else if (np && np.classList.contains('pinned')) { clearTimers(); np.classList.remove('on', 'pinned', 'swap'); }
+  }
+  UI.TrackPin = {
+    available: trackNames,
+    on: () => !!(M.Settings && M.Settings.get('trackNamePin')),
+    toggle() { try { M.Settings.set('trackNamePin', !UI.TrackPin.on()); } catch (e) { /* settings unavailable */ } },
+  };
+  if (M.Bus) {
+    M.Bus.on('screen', id => { curScreen = id; applyPin(); });
+    M.Bus.on('settings', k => { if (!k || k === 'trackNames' || k === 'trackNamePin') applyPin(); });
+  }
+  curScreen = UI.Screens && UI.Screens.current ? UI.Screens.current.id : null;
   setInterval(() => {
     if (open || !UI.toast) return;
     const id = nowId();
@@ -326,6 +361,8 @@
       pointer-events:none; opacity:0; transform:translateY(.3rem); transition:opacity ${NP_OUT}ms ease-in-out, transform ${NP_OUT}ms ease-in-out;
       color:var(--ivory); text-shadow:0 1px 3px rgba(0,0,0,.9), 0 0 12px rgba(0,0,0,.7); }
     .sp-cap.on { opacity:.82; transform:none; transition-duration:${NP_IN}ms; }
+    .sp-cap.pinned.on { opacity:.7; }
+    .sp-cap.pinned.swap { opacity:0; transition-duration:${NP_SWAP}ms; }
     .sp-cap .ico { align-self:center; width:.95rem; height:.95rem; flex:none; color:var(--brass); filter:drop-shadow(0 1px 2px rgba(0,0,0,.9)); }
     .sp-cap-n { font:italic 400 1rem/1.2 var(--font-display); letter-spacing:.02em; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
     .sp-cap-g { font-size:.78rem; color:var(--mist); white-space:nowrap; }

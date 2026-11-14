@@ -5,6 +5,16 @@ Versions follow `MAJOR.MINOR.PATCH`; the live version is the `VERSION` file.
 
 ## Unreleased
 
+- A new game keeps the title screen's main theme: the grand reading carries on into the game and finishes before the map's programme
+  begins (nothing playing: the main theme starts from the top), so the whole theme is heard once. An end-of-turn change of programme,
+  a visit to the research screen, the news or the score player never cut it. A loaded game starts the map's music at once.
+- Two pieces can no longer play at once: the engine keeps track of every performance and fades out any that is neither the current
+  piece nor already fading (warned in the console). Also fixed: when the samples finished loading, a piece that had been started
+  part-way through (resumed after the news or the score player) restarted from its top; and a borrowed scene giving back a piece that
+  was not in the map's programme left it looping with the programme gone.
+- The score player lists only what the game plays (the main theme's five study readings are gone) and has a button on the title menu.
+- With track names on, a note button on the galaxy map (beside the mute button) keeps the playing piece's name in the corner of the
+  map, changing with the music.
 - Ship design screen fixed: the score player's stylesheet styled a bare `.sp` class, which the design editor (and the combat scanner
   and the fleet ledger footer) also use, so the editor was pushed down the screen with its component rows collapsed. The player's
   root is now `.sp-root`.
