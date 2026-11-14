@@ -6,6 +6,8 @@
 //                    −10 −1 n +1 +10 Fill stepper, UI.Design.phoneRow) · special devices · the build message · ship look + readouts ·
 //                    a fold holding the treasury line, Compare and the advice
 //   pinned footer    Clear · Build
+// Sideways the header is one row, Clear / Build move to a column on the right, and the body splits into two panes (ship | parts) that
+// scroll on their own; the picker then covers only the parts pane, so the preview stays visible while choosing.
 // The component pop-up table becomes a sheet of cards under the pinned header (UI.Design.phonePicker, called from design.js renderPopup:
 // tap = fit it; what does not fit says how much more space it needs) and the design library a sheet opened from the header.
 // design.js exposes what this needs as UI.Design._phone.
@@ -33,7 +35,10 @@
     headEl = h('div.ph-dz-head', h('div.ph-dz-hrow', ui.cancelBtn, nameWrap, libBtn), ui.spc);
     const fold = h('div.ph-fold', h('button.ph-fold-h', { type: 'button', onclick: () => fold.classList.toggle('open') }, h('span', 'Compare & advice'), h('span.ph-fold-ch', '›')),
       h('div.ph-fold-b', ui.fin, ui.cmp, ui.hints));
-    const body = h('div.ph-dz-body', h('div.ph-dz-hulls', ui.hulls, auto), pv, ui.strip, wrapOf(ui.slots), wrapOf(ui.weap), wrapOf(ui.spec), ui.msg, h('div.ph-dz-id', id, ui.read), fold);
+    // two panes: the ship (hull, preview, stats) and its parts. Portrait shows them as one scrolling column (the panes are display:contents);
+    // sideways they sit side by side and scroll on their own, so the preview stays in view while parts change (css/phone.css)
+    const body = h('div.ph-dz-body', h('div.ph-dz-side', h('div.ph-dz-hulls', ui.hulls, auto), pv, ui.strip),
+      h('div.ph-dz-parts', wrapOf(ui.slots), wrapOf(ui.weap), wrapOf(ui.spec), ui.msg, h('div.ph-dz-id', id, ui.read), fold));
     const foot = h('div.ph-dz-foot', ui.clearBtn, ui.build);
     ['.dz-head', '.dz-main', '.dz-right'].forEach(s => { const e = q(s); if (e) e.remove(); });       // the old frames are empty now
     dz.classList.add('ph-dz');
@@ -101,6 +106,13 @@
       h('div.dz-pfoot', h('span', isMan ? 'Each rating step adds engines and raises defense and combat speed.' : 'Cost, size and power are per unit on this hull.'),
         isMan ? null : h('span', { style: { marginLeft: 'auto' } }, nOwned + ' of ' + nAll + ' researched')));
     x.ui.pop.classList.add('on', 'ph-pop');
+    // the slot that was tapped stays in view just above the sheet (the editor scrolls under it)
+    const a = pop.anchor, sc = a && a.isConnected ? a.closest('.ph-dz-parts, .ph-dz-body') : null;
+    if (sc) {
+      const scr = getComputedStyle(sc).overflowY === 'auto' ? sc : a.closest('.ph-dz-body');
+      const gap = a.getBoundingClientRect().bottom - (x.ui.pop.getBoundingClientRect().top - 8);
+      if (scr && gap > 0) scr.scrollTop += gap;
+    }
     const cur = pop.rows.findIndex(r => r.cur);
     if (cur > 0 && cards[cur]) setTimeout(() => { try { cards[cur].scrollIntoView({ block: 'center' }); } catch (e) { /* ignore */ } }, 0);
   };

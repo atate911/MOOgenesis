@@ -202,7 +202,7 @@
     }
 
     /* pop-up tables */
-    .dz-pop { position:absolute; inset:.3rem; z-index:6; display:none; flex-direction:column; border:1px solid var(--brass);
+    .dz-pop { position:absolute; left:.3rem; right:.3rem; top:.3rem; z-index:6; display:none; flex-direction:column; border:1px solid var(--brass);
       background:linear-gradient(180deg, rgba(12,18,48,.985), rgba(6,9,25,.992)); box-shadow:0 0 0 1px rgba(0,0,0,.6), var(--shadow-3); }
     .dz-pop.on { display:flex; animation:dz-pop-in .18s var(--ease) both; }
     @keyframes dz-pop-in { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:none; } }
@@ -216,7 +216,7 @@
     .dz-kf button:hover { color:var(--ivory); border-color:var(--brass); }
     .dz-kf button.on { color:#241a05; background:var(--brass); border-color:var(--brass-hi); }
     .dz-kf button .ico { width:.9rem; height:.9rem; margin-right:.25rem; vertical-align:-.15rem; }
-    .dz-pop-b { flex:1; min-height:0; overflow:auto; padding:.25rem .5rem .5rem; }
+    .dz-pop-b { flex:1 1 auto; min-height:0; overflow:auto; padding:.25rem .5rem .5rem; }
     .dz-pt { width:100%; border-collapse:collapse; font-variant-numeric:tabular-nums; }
     .dz-pt th { position:sticky; top:0; z-index:1; padding:.28rem .5rem; text-align:left; background:#0c1440; color:var(--brass); font:400 .9rem var(--font-display); letter-spacing:.04em; border-bottom:1px solid var(--brass-line-3); white-space:nowrap; }
     .dz-pt th.r, .dz-pt td.r { text-align:right; } .dz-pt th.c, .dz-pt td.c { text-align:center; }
@@ -355,6 +355,39 @@
     .dz-cmp th { font-size:.8rem; letter-spacing:.04em; color:#f0b868; } .dz-cmp td { color:#e6e6e6; }
     .dz-sel.none .nm { opacity:1; text-transform:none; } .dz-sel .nm { font-size:.95rem; } .dz-sel .sp { font-size:.8rem; }
     .dz-wr .note { color:#d2d2d2; }
+    /* readability floor: at the 1280×720 design size a rem is ~12px, so .8rem fell to ~10px — the small print never goes under 12px */
+    .dz-ci .co, .dz-ci .mt, .dz-ci .ft, .dz-ci .ft .btn, .dz-libfoot, .dz-tile .k, .dz-tile .d, .dz-tile .d .bs, .dz-tile .v .rb, .dz-sec .hint, .dz-wh, .dz-wr .note, .dz-sp .desc,
+      .dz-sel .sp, .dz-hull .sub, .dz-read .l, .dz-read .sm, .dz-legend, .dz-cmp table, .dz-cmp th, .dz-cmpkey, .dz-hint, .dz-pt td.ds, .dz-pt .req, .dz-pfoot, .dz-pop-h .s, .dz-pop-h label,
+      .dz-kf button, .dz-cvw .tag, .dz-card .no, .dz-card.tgt::after, .dz-auto .btn, .dz-name label, .dz-auto .lb, .dz-spc .sec { font-size:max(12px, .85rem); }
+    .dz-msg, .dz-head .sub, .dz-head .fin { font-size:max(12px, .95rem); }
+    .dz-cmp th { color:#f0b868; } .dz-tile .d .bs { color:#c8c8c8; } .dz-tile .d .bs.star { color:var(--gold); }
+    .dz-cmpkey { display:flex; flex-wrap:wrap; gap:.1rem 1rem; margin-top:.3rem; padding-top:.25rem; border-top:1px solid #2a2a2a; color:#c8c8c8; line-height:1.3; }
+    .dz-cmpkey b { color:#f0b868; font-weight:600; }
+    .dz-cmp td:first-child { cursor:help; }
+    .dz-cmp th { letter-spacing:0; } .dz-cmp th:first-child { width:30%; }
+    /* the turn hint fades after a few seconds (the canvas keeps it as a tooltip): a shorter preview put the part labels under it */
+    .dz-cvw .tag { animation:dz-tag 6s ease-in forwards; } @keyframes dz-tag { 0%, 70% { opacity:1; } 100% { opacity:0; } }
+    .dz-clegend { margin:.3rem 0 0; }
+    /* Scrap: a rare, destructive action — shown on the selected card and on hover/focus, not as a red button on every card */
+    html:not([data-phone]) .dz-card:not(.sel):not(:hover):not(:focus-within) .dz-ci .ft .btn { visibility:hidden; }
+    /* the slot Build writes into: lit, not just a caption */
+    .dz-card.tgt { box-shadow:0 0 0 1px #000, inset 0 0 0 2px var(--o-teal); }
+    .dz-card.sel.tgt { box-shadow:0 0 0 1px #000, inset 0 0 0 1px var(--sel-line, #ffc860), inset 0 0 0 3px var(--o-teal); }
+    .dz-card.empty.tgt { background:linear-gradient(180deg, #0c2a24, #04120f); color:var(--o-teal); }
+    .dz-card.tgt::after { color:var(--o-teal); font-weight:600; }
+    /* a part's name keeps priority over its spec line (the spec shortens first, its tooltip has the full text) */
+    .dz-sel .nm { flex:0 1 auto; } .dz-sel .sp { flex:0 1 auto; min-width:0; overflow:hidden; text-overflow:ellipsis; margin-left:auto; } .dz-sel .nm + :is(.chev, .x) { margin-left:auto; }
+    /* 1000–1180 px windows: with the 12px floor the labels need their room — two-line tile labels, wrapped card stats, mixed-case headers */
+    @media (max-width: 1180px) {
+      .dz-tile .k { white-space:normal; line-height:1.1; text-overflow:clip; }
+      .dz-ci .mt { white-space:normal; } .dz-card { grid-template-columns:3.8rem minmax(0,1fr); }
+      .dz-cmp th { text-transform:none; } .dz-cmp th .cw { display:none; }
+      .dz-read .l { text-transform:none; letter-spacing:.02em; }
+      .dz-hull .sub { white-space:nowrap; letter-spacing:0; } .dz-hull .sw { display:none; }   /* the button's tooltip still says space */
+      .dz-sel .sp { font-size:max(11px, .8rem); }
+    }
+    /* weapon counts: arrows big enough to hit */
+    .dz-count .ud { width:1.9rem; } .dz-count .ud svg { width:.8rem; height:.8rem; }
   `);
 
   // ===================================================================================================================================================
@@ -807,7 +840,7 @@
           if (!avail(def.kind).has(idx)) name += ' (not researched)';
         }
       }
-      const btn = h('button.dz-sel' + (none ? '.none' : ''), { type: 'button', onclick: () => openPopup(def.key), tip: slotTip(def, s) },
+      const btn = h('button.dz-sel' + (none ? '.none' : ''), { type: 'button', onclick: ev => openPopup(def.key, undefined, ev.currentTarget), tip: slotTip(def, s) },
         h('span.nm', name), spec ? h('span.sp', spec) : null,
         clearable ? h('span.x', { tip: 'Remove', onclick: ev => { ev.stopPropagation(); clearField(def.key); } }, UI.icon('close')) : UI.icon('chevron', 'chev'));
       rows.push(h('div.dz-slot', h('div.dz-lb', UI.icon(def.icon), def.label), btn));
@@ -835,7 +868,7 @@
       const dn = h('button', { type: 'button', tip: 'Fewer (Ctrl −10 · Alt zero)', onclick: ev => { UI.sfx('slider'); setCount(i, ev.altKey ? 0 : b.count - (ev.ctrlKey ? 10 : 1), cnt); } });
       dn.innerHTML = '<svg viewBox="0 0 10 6"><path d="M5 6L0 0h10z"/></svg>';
       const dis = !w;
-      const sel = h('button.dz-sel' + (w ? '' : '.none'), { type: 'button', onclick: () => openPopup('weapon', i), tip: w ? weaponTip(w, sw, s) : '<b>Weapon bank ' + (i + 1) + '</b><br>Empty — click to choose a weapon.' },
+      const sel = h('button.dz-sel' + (w ? '' : '.none'), { type: 'button', onclick: ev => openPopup('weapon', i, ev.currentTarget), tip: w ? weaponTip(w, sw, s) : '<b>Weapon bank ' + (i + 1) + '</b><br>Empty — click to choose a weapon.' },
         w ? UI.icon(KIND_ICON[w.kind] || 'weapons') : null, h('span.nm', w ? w.name : '— weapon ' + (i + 1) + ' —'),
         w ? h('span.x', { tip: 'Remove', onclick: ev => { ev.stopPropagation(); clearField('weapon', i); } }, UI.icon('close')) : UI.icon('chevron', 'chev'));
       const rowEl = h('div.dz-wr' + (w ? '' : '.empty'),
@@ -866,7 +899,7 @@
     const d = st.draft, rows = [];
     for (let i = 0; i < NSPEC; i++) {
       const si = d.specials[i], sp = si >= 0 ? K.SPECIALS[si] : null;
-      const sel = h('button.dz-sel' + (sp ? '' : '.none'), { type: 'button', onclick: () => openPopup('special', i), tip: sp ? '<b>' + esc(sp.name) + '</b><br>' + esc(sp.desc) : '<b>Special device ' + (i + 1) + '</b><br>Empty — click to choose.' },
+      const sel = h('button.dz-sel' + (sp ? '' : '.none'), { type: 'button', onclick: ev => openPopup('special', i, ev.currentTarget), tip: sp ? '<b>' + esc(sp.name) + '</b><br>' + esc(sp.desc) : '<b>Special device ' + (i + 1) + '</b><br>Empty — click to choose.' },
         sp ? UI.icon('special') : null, h('span.nm', sp ? sp.name : '— none —'),
         sp ? h('span.x', { tip: 'Remove', onclick: ev => { ev.stopPropagation(); clearField('special', i); } }, UI.icon('close')) : UI.icon('chevron', 'chev'));
       const desc = h('div.desc', sp ? sp.desc : '');
@@ -896,7 +929,7 @@
     UI.mount(ui.hulls, [0, 1, 2, 3].map(i => {
       const hl = K.HULLS[i], sp = D.hullSpace(E, i);
       return h('button.dz-hull' + (d.hull === i ? '.on' : ''), { type: 'button', onclick: () => setHull(i), tip: '<b>' + HULL_LABEL[i] + ' hull</b> <span style="opacity:.7">[' + (i + 1) + ']</span><br>Space ' + fmt(sp) + ' · hits ' + hl.hits + ' · hull cost ' + (hl.cost / 10) + ' BC<br>Defense ' + (hl.defense >= 0 ? '+' : '') + hl.defense + ' · ' + hl.power + ' maneuver power per rating step<br>Bigger hulls carry more but are easier to hit; space grows 2% per Construction level.' },
-        h('span.sil', h('i', { style: { width: (0.55 + i * 0.4) + 'rem' } })), h('span.nm', HULL_LABEL[i]), h('span.sub', fmt(sp) + ' space'));
+        h('span.sil', h('i', { style: { width: (0.55 + i * 0.4) + 'rem' } })), h('span.nm', HULL_LABEL[i]), h('span.sub', fmt(sp), h('span.sw', ' space')));
     }));
     // look picker
     const cur = d.icon | 0;
@@ -930,12 +963,25 @@
     const legend = h('div.dz-legend', SEGS.filter(g => bd.space[g[0]] > 0).map(g => h('span', h('i', { style: { '--c': g[2] } }), g[1] + ' ', h('b', fmt(bd.space[g[0]])))), over ? h('span.t-rose', h('b', '−' + fmt(-s.free)), ' over') : h('span', h('i', { style: { '--c': 'rgba(255,255,255,.12)' } }), 'Free ', h('b', fmt(s.free))));
     const cb = h('div.dz-sbar.cost', { tip: costTip(d, s) });
     const ctot = Math.max(s.costTenths, 1);
-    [['hull', 'var(--brass)'], ['engine', 'var(--ember)'], ['weapon', 'var(--rose)'], ['armor', 'var(--azure)'], ['systems', 'var(--cyan)'], ['special', 'var(--violet)']].forEach(([k, c]) => { const v2 = bd.cost[k]; if (v2 > 0) cb.appendChild(h('i', { style: { flexBasis: (100 * v2 / ctot).toFixed(2) + '%', flexGrow: 0, flexShrink: 1, '--c': c } })); });
+    COST_SEGS.forEach(([k, c]) => { const v2 = bd.cost[k]; if (v2 > 0) cb.appendChild(h('i', { style: { flexBasis: (100 * v2 / ctot).toFixed(2) + '%', flexGrow: 0, flexShrink: 1, '--c': c } })); });
+    const costLegend = h('div.dz-legend.dz-clegend', COST_SEGS.filter(([k]) => bd.cost[k] > 0).map(([k, c, label]) => h('span', h('i', { style: { '--c': c } }), label + ' ', h('b', (bd.cost[k] / 10).toFixed(bd.cost[k] % 10 ? 1 : 0)))));
     UI.mount(ui.spc, h('div.row.between', h('span.sec', 'Hull space'), h('span.num', h('b', fmt(s.spaceUsed)), ' / ' + fmt(s.space))), sb, legend,
-      h('div.row.between', h('span.sec', 'Cost'), h('span.num', h('b.t-gold', fmt(s.cost)), ' BC · upkeep ', h('b', (s.cost / 50).toFixed(2)), ' / turn')), cb);
+      h('div.row.between', h('span.sec', 'Cost'), h('span.num', h('b.t-gold', fmt(s.cost)), ' BC · upkeep ', h('b', (s.cost / 50).toFixed(2)), ' / turn')), cb, costLegend);
     renderCompare(s); renderHints(d, s);
   }
 
+  const COST_SEGS = [['hull', 'var(--brass)', 'Hull'], ['engine', 'var(--ember)', 'Engines'], ['weapon', 'var(--rose)', 'Weapons'], ['armor', 'var(--azure)', 'Armor'], ['systems', 'var(--cyan)', 'Systems'], ['special', 'var(--violet)', 'Specials']];
+  const CMP_TIP = {
+    'Cost': 'Build cost of one ship in BC. Upkeep is 2% of it every turn.',
+    'Hit points': 'Damage the ship takes before it is destroyed: hull hits × armor strength.',
+    'Attack': 'Battle computer level. Each point above the target\'s defense adds 10% to the chance to hit.',
+    'Defense': 'Beam defense. Each point takes 10% off an attacker\'s chance to hit.',
+    'Missile def': 'Defense against missiles, torpedoes and bombs: beam defense plus the ECM level.',
+    'Shield': 'Damage the deflector shield removes from every hit.',
+    'Warp': 'Speed on the star map in parsecs per turn.',
+    'Speed': 'Squares moved per round in tactical combat.',
+    'Firepower': 'Average damage per combat round if every beam, missile and torpedo shot hits, before shields. Bombs do not count.',
+  };
   const CMP = [['Cost', s => s.cost, 'low', ' BC'], ['Hit points', s => s.hp, 'high'], ['Attack', s => s.attack, 'high'], ['Defense', s => s.beamDef, 'high'], ['Missile def', s => s.missDef, 'high'],
     ['Shield', s => s.absorb, 'high'], ['Warp', s => s.warp, 'high'], ['Speed', s => s.combatSpeed, 'high'], ['Firepower', s => firepower(s), 'high']];
   function renderCompare(s) {
@@ -946,12 +992,13 @@
     const rowFor = ([label, fn, better, suf]) => {
       const me = fn(s), a = base ? fn(base) : null, b = bestStats ? fn(bestStats) : null;
       const cell = ref => (ref === null ? h('td.na', '—') : h('td', deltaChip(me - ref, better)));
-      return h('tr', h('td', label), h('td.me', num(me) + (suf || '')), cell(a), cell(b));
+      return h('tr', h('td', { tip: '<b>' + label + '</b><br>' + CMP_TIP[label] }, label), h('td.me', num(me) + (suf || '')), cell(a), cell(b));
     };
-    const tbl = (rows, first) => h('table', h('thead', h('tr', h('th', first ? 'Compare' : ''), h('th', 'This'),
+    const tbl = (rows, first) => h('table', h('thead', h('tr', h('th', first ? h('span.cw', 'Compare') : ''), h('th', 'This'),
       h('th', { tip: base ? 'Change against the saved design <b>«' + esc(baseName) + '»</b>' : 'No saved design is loaded as the template' }, 'Saved'),
       h('th', { tip: bestDesign ? 'Change against your strongest warship <b>«' + esc(bestDesign.name) + '»</b> (damage × hit points × shield)' : 'You own no armed design yet' }, 'Best'))), h('tbody', rows.map(rowFor)));
-    UI.mount(ui.cmp, h('div.dz-cmpg', tbl(CMP.slice(0, 5), true), tbl(CMP.slice(5), false)));
+    const key = h('div.dz-cmpkey', h('span', h('b', 'Saved'), ' = ' + (base ? '«' + baseName + '»' : 'no saved design loaded')), h('span', h('b', 'Best'), ' = ' + (bestDesign ? 'your strongest warship, «' + bestDesign.name + '»' : 'no armed design yet')));
+    UI.mount(ui.cmp, h('div.dz-cmpg', tbl(CMP.slice(0, 5), true), tbl(CMP.slice(5), false)), key);
   }
   function renderHints(d, s) {
     const list = hintsFor(d, s);
@@ -961,8 +1008,8 @@
 
   // ===================================================================================================================================================
   // pop-up tables
-  function openPopup(kind, ref) {
-    const p = { kind, ref: ref === undefined ? -1 : ref, hi: -1, rows: [], showLocked: !!st.prefLocked[kind] };
+  function openPopup(kind, ref, anchor) {
+    const p = { kind, ref: ref === undefined ? -1 : ref, hi: -1, rows: [], showLocked: !!st.prefLocked[kind], anchor: anchor || null };
     st.popup = p; availCache = null; UI.sfx('open', { vol: .6 });
     renderPopup();
   }
@@ -1079,7 +1126,7 @@
         tds.push(h('td.r', i.cost ? String(i.cost) : '—'), h('td.r', String(i.space)), h('td.r', i.power ? String(i.power) : '—'), h('td.r.sp', row.over && row.owned && !row.conf ? h('span', { tip: 'Does not fit into the remaining space' }, String(row.space) + ' ⚠') : String(row.space)));
         tr = h('tr', { class: cls }, tds);
       }
-      if (isW && row.it) UI.setTip(tr, weaponTip(row.it, null, st.stats));
+      if (isW && row.it && tr.children[1]) UI.setTip(tr.children[1], weaponTip(row.it, null, st.stats));   // on the name only: a row-wide tip sat over the description
       tr.addEventListener('click', () => pickRow(ri));
       tr.addEventListener('mouseenter', () => hoverRow(ri));
       trs.push(tr); tbody.appendChild(tr);
@@ -1096,10 +1143,25 @@
     const nOwned = pop.rows.filter(r => r.owned && !r.none).length, nAll = (LIST[kind] || []).filter(x => !(x.flags && x.flags.monster)).length;
     UI.mount(ui.pop, head2, filter, h('div.dz-pop-b', h('table.dz-pt', h('thead', head), tbody)), h('div.dz-pfoot', h('span', hint), h('span', { style: { marginLeft: 'auto' } }, isMan ? '' : nOwned + ' of ' + nAll + ' researched')));
     ui.pop.classList.add('on');
+    placePop();
     const cur = pop.rows.findIndex(r => r.cur), first = cur >= 0 ? cur : pop.rows.findIndex(r => selectable(r));
     setHi(first);
     const tr = pop.trs[first], pb = ui.pop.querySelector('.dz-pop-b');       // bring the current choice into view, roughly centred
     if (tr && pb && tr.offsetTop > pb.clientHeight * 0.7) pb.scrollTop = tr.offsetTop - pb.clientHeight * 0.4;
+  }
+  // desktop: the table is as tall as its rows (up to the panel) and opens just under the slot that was clicked — above it when there
+  // is no room below, the panel's foot when neither fits — so a two-row choice no longer covers the whole design
+  function placePop() {
+    const p = ui.pop, main = p.parentElement, pop = st.popup; if (!main || !pop) return;
+    const pad = 5, H = main.clientHeight;
+    p.style.top = pad + 'px'; p.style.bottom = 'auto'; p.style.maxHeight = (H - 2 * pad) + 'px';
+    const ph = p.offsetHeight, a = pop.anchor && main.contains(pop.anchor) ? pop.anchor : null;
+    let top = pad;
+    if (a) {
+      const mr = main.getBoundingClientRect(), ar = a.getBoundingClientRect(), below = ar.bottom - mr.top + 4, above = ar.top - mr.top - 4;
+      top = below + ph <= H - pad ? below : above - ph >= pad ? above - ph : Math.max(pad, H - pad - ph);
+    }
+    p.style.top = Math.round(top) + 'px';
   }
   function selectable(row) { return row && row.owned && !row.conf; }
   function setHi(i) {
@@ -1318,7 +1380,7 @@
     ui.cancelBtn = UI.button('Cancel', () => cancel(), { kbd: 'Esc', tip: 'Leave the design screen' });
     ui.clearBtn = UI.button('Clear', () => doClear(), { kbd: 'C', tip: 'Start over with an empty hull of the same size' });
     ui.pop = h('div.dz-pop');
-    ui.pvh = h('div.dz-pvh'); ui.cvw = h('div.dz-cvw', PV.cv = h('canvas'), h('div.tag', 'drag to turn · double-click resets'));
+    ui.pvh = h('div.dz-pvh'); ui.cvw = h('div.dz-cvw', { tip: 'Drag to turn the ship · double-click resets the view' }, PV.cv = h('canvas'), ui.pvTag = h('div.tag', 'drag to turn · double-click resets'));
     ui.spc = h('div.panel.tight.dz-spc'); ui.cmp = h('div.panel.tight.dz-cmp'); ui.hints = h('div.panel.tight.dz-hints');
     const auto = h('div.dz-auto', h('span.lb', 'Autofill'), UI.button('Best parts', () => autoBest(), { small: true, tip: 'Install the best researched engine, armor, shield, computer and ECM that fit' }),
       UI.button('Max armor', () => autoArmor(), { small: true, tip: 'Swap to the strongest armor that still fits' }), UI.button('Max weapons', () => autoWeapons(), { small: true, tip: 'Fill the next empty bank with the weapon that does the most damage in the space left' }));
@@ -1350,6 +1412,13 @@
     cv.addEventListener('dblclick', () => { PV.manual = null; });
     UI.watchSize(ui.cvw, () => { PV.refit = true; });
 
+    // now that the picker no longer fills the panel, a click on the design around it closes it (another slot just opens its own picker;
+    // the preview and the numbers on the right stay live, so looking there does not close it)
+    root.addEventListener('click', ev => {                           // a click, not a press: on phones a drag that scrolls the editor keeps the sheet
+      if (!st.popup || !ev.target.closest || !ev.target.isConnected) return;
+      if (ui.pop.contains(ev.target) || ev.target.closest('.dz-sel, .dz-right, .ph-dz-side, .ph-dz-head, .ph-lib, .modal, #tip')) return;
+      closePopup();
+    });
     root.addEventListener('contextmenu', ev => { if (ev.target && ev.target.tagName === 'INPUT') return; ev.preventDefault(); if (st.popup) closePopup(); else cancel(); });
   }
   function renderPvHead() { const E = E_(); UI.mount(ui.pvh, h('span.nm', (st.draft.name || '').trim() || D.defaultName(E, st.draft.hull)), h('span.cl', HULL_LABEL[st.draft.hull] + ' hull · ' + E.plural)); }
@@ -1382,6 +1451,7 @@
       if (!G.S) { UI.Screens.go('menu'); return; }
       const E = E_(); availCache = null;
       st.from = params.from || (UI.Screens.current && UI.Screens.current.prev) || 'galaxy';
+      if (ui.pvTag) { ui.pvTag.style.animation = 'none'; void ui.pvTag.offsetWidth; ui.pvTag.style.animation = ''; }   // the hint shows again for a few seconds
       PV.color = bannerColor(E); PV.refit = true; PV.manual = null; PV.fx.length = 0; PV.lastHull = -1; PV.scale = 1;
       if (!E.designs) E.designs = [];
       if (params.slot !== undefined && E.designs[params.slot]) selectDesign(params.slot);
