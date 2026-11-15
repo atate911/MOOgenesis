@@ -30,6 +30,9 @@
   const FX = ['rock-1', 'rock-2', 'rock-3', 'rock-4', 'rock-5', 'rock-6', 'rock-7', 'rock-8', 'base-platform'];
   for (let i = 1; i <= 24; i++) FX.push('debris-' + i);   // wreckage cutouts (fx-sheet.png rows 3-4, fx-sheet-2.png)
   const STILLS = [];
+  // the bulletin's opening shot (one per bulletin, under the GNN titles): photos of the studio with the presenter in each wardrobe
+  const GNN_OPEN_DRESS = ['ready', 'script', 'handoff', 'wide', 'backstage-script', 'backstage-rear', 'backstage-window', 'backstage-notes'];
+  const GNN_OPEN_JACKET = ['cue', 'desk-wide', 'desk-notes', 'behind', 'stool', 'desk-cue', 'window'];
   const GNN_ANCHOR = ['neutral', 'serious', 'encouraging', 'urgent', 'breaking', 'presenting', 'wry'];   // the GNN presenter's poses (docs/IMAGE-GEN-GNN-ANCHOR.md): cut-outs on one shared 1760x1536 canvas, face size and place matched
   const has = (a, k) => a.indexOf(k) >= 0;
 
@@ -204,6 +207,8 @@
   M.Gfx.WorldArt = {
     get: get, ready: ready, whenReady: whenReady, draw: draw, canvas: canvas, image: image, preload: preload,
     orbit: orbitPath, surface: surfacePath, system: systemPath, event: eventPath, scene: scenePath, race: racePath, colony: colonyPath, gnn: GNN,
+    gnnOpen: k => (has(GNN_OPEN_DRESS, k) || has(GNN_OPEN_JACKET, k) ? 'gnn/gnn-open-' + k : null), gnnOpens: { dress: GNN_OPEN_DRESS, jacket: GNN_OPEN_JACKET },
+    gnnDeskDress: 'gnn/gnn-desk-dress',
     gnnAnchor: pose => 'gnn/gnn-anchor-' + (has(GNN_ANCHOR, pose) ? pose : 'neutral'),
     systemSky: systemSkyPath, battle: battlePath, fx: fxPath, still: stillPath, raceExposure: raceExposure, raceTone: raceTone, tonePass: tonePass,
     get enabled() { return W.enabled; }, set enabled(v) { W.enabled = !!v; },

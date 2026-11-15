@@ -368,6 +368,15 @@
     /* ---- title card (opening stinger) ---- */
     .gnn-title { position:absolute; inset:0; z-index:7; display:none; place-items:center; pointer-events:none; background:radial-gradient(ellipse at 50% 46%, rgba(8,14,46,.7), rgba(2,4,14,.95) 76%); }
     .gnn[data-mode=title] .gnn-title { display:grid; }
+    /* the bumper: a compact title block low on the left over the opening shot; its parts are animated by bumperAnim (not keyframes) */
+    .gnn-title { place-items:end start; padding:0 0 calc(var(--u)*7.5) calc(var(--u)*6); background:linear-gradient(20deg, rgba(2,4,14,.85) 0%, rgba(2,4,14,.5) 26%, rgba(2,4,14,0) 48%); }
+    .gnn-title .gnn-title-in { align-items:flex-start; text-align:left; gap:calc(var(--u)*1.1); }
+    .gnn-title .gnn-title-in > * { justify-content:flex-start; }
+    .gnn.gnn[data-mode=title] :is(.gnn-title-logo, .gnn-title-name, .gnn-title-year, .gnn-title-meta) { animation:none; will-change:transform, opacity; }
+    .gnn-title .gnn-title-logo svg { width:calc(var(--u)*6.5); }
+    .gnn-title .gnn-title-name { font-size:calc(var(--u)*3); padding-left:0; background:none; -webkit-background-clip:border-box; background-clip:border-box; }   /* each word carries its own gold (.gnn-bw): the words move apart */
+    .gnn-bw { display:inline-block; transform-origin:50% 60%; color:#ecd193; text-shadow:0 1px 0 #fff3cf, 0 calc(var(--u)*.25) 0 rgba(90,64,24,.9), 0 0 calc(var(--u)*1.6) rgba(214,179,106,.35); }
+    @media (orientation: portrait) { html[data-phone] .gnn-title { place-items:center; padding:0; background:radial-gradient(ellipse at 50% 46%, rgba(8,14,46,.7), rgba(2,4,14,.95) 76%); } html[data-phone] .gnn-title .gnn-title-in { align-items:center; text-align:center; } html[data-phone] .gnn-title .gnn-title-name { font-size:calc(var(--u)*4.6); } html[data-phone] .gnn-title .gnn-title-logo svg { width:calc(var(--u)*14); } }
     .gnn-title-in { display:flex; flex-direction:column; align-items:center; gap:calc(var(--u)*2.4); text-align:center; }
     .gnn-title-logo svg { width:calc(var(--u)*14); height:auto; display:block; filter:drop-shadow(0 0 calc(var(--u)*2) rgba(120,170,255,.45)); }
     .gnn[data-mode=title] .gnn-title-logo { animation:gnn-zoom 1s var(--ease) both; }
@@ -778,6 +787,105 @@
 
   // ---- photoreal studio (Gfx.WorldArt 'gnn' backdrop): empty set with a curved desk (top ~y .54) and a blank video wall. The anchor is painted
   //      between the photo and a re-draw of its desk strip, so the desk occludes the anchor's lower body. Rects map from image-normalised coords.
+  // ================================================================== the bulletin: wardrobe, opening shot, bumper, monitor close-up
+  // A bulletin is three kinds of shot at most: the opening (a photo of the presenter in the studio, under the animated GNN titles, with
+  // a slow pan and pull-back), the desk for every story, and — for charts and rankings only — a cut to the studio monitor so the data
+  // can be read. Wardrobe per bulletin: the off-shoulder dress by default (her desk shot with folded hands), the high-collar jacket
+  // (the seven story poses) when the lead story is sombre. The opening shot comes from that wardrobe's set, picked by the turn, so
+  // consecutive bulletins open differently; the behind-the-scenes shots need not match the story.
+  const BUL = { ward: 'dress', open: null, monT: null, hlT: null, idx: -1, deskSG: null, baseS: 1, monZ: 1, words: null };
+  const SOMBRE_POSE = { serious: 1, breaking: 1, urgent: 1 };
+  function chooseWard(intr) {
+    const lead = (intr.items || []).filter(it => it && it.headline).map(it => normalizeItem(it))[0];
+    return lead && SOMBRE_POSE[poseFor(lead)] ? 'jacket' : 'dress';
+  }
+  function chooseOpen(intr, ward) {
+    const WA = M.Gfx && M.Gfx.WorldArt, list = WA && WA.gnnOpens && WA.gnnOpens[ward];
+    return list && list.length ? list[(((intr.turn | 0) * 7 + (intr.year | 0)) % list.length + list.length) % list.length] : null;
+  }
+  const portraitPhone = () => !!(R && R.L && R.L.phone && R.L.phone.port);
+  // the opening shot under the titles: a slow pull-back and drift across the photo (kept small: the photos are 1672 px wide)
+  function drawOpener(g, w, hh, t) {
+    const WA = M.Gfx && M.Gfx.WorldArt, path = BUL.open && WA && WA.gnnOpen ? WA.gnnOpen(BUL.open) : null, im = path && WA.enabled ? WA.get(path) : null;
+    if (!im || portraitPhone()) return false;
+    const e = R.rm ? 0.5 : sstep(0, 1, clamp(R.segT / max(1, R.titleDur), 0, 1)), z = 1.09 - 0.07 * e;
+    const sc = max(w / im.naturalWidth, hh / im.naturalHeight) * z, dw = im.naturalWidth * sc, dh = im.naturalHeight * sc;
+    g.imageSmoothingEnabled = true; g.imageSmoothingQuality = 'high';
+    g.drawImage(im, (w - dw) / 2 + (e - 0.5) * (dw - w) * 0.7, (hh - dh) / 2 - (dh - hh) * 0.15 * e, dw, dh);
+    g.fillStyle = rgr(g, w / 2, hh * 0.48, min(w, hh) * 0.4, hypot(w, hh) * 0.62, [0, 'rgba(2,3,12,0)', 1, 'rgba(2,3,12,.35)']); g.fillRect(0, 0, w, hh);
+    return true;
+  }
+  // the bumper titles, on the broadcast clock (pause and speed apply): the globe spins in, the three words drop out of the camera
+  // one by one, the year sweeps in, the turn fades up, a light glints along the words; at the end the globe zooms past the camera
+  // and the words slide away. Reduced motion: the titles fade in and out in place.
+  const eob = x => { x = clamp(x, 0, 1); const c = 1.6; return 1 + (c + 1) * pow(x - 1, 3) + c * pow(x - 1, 2); };   // ease out with a small overshoot
+  function bumperAnim() {
+    const seg = R && R.segs[R.idx];
+    if (!seg || seg.kind !== 'title' || !ttl) return;
+    const logo = ttl.querySelector('.gnn-title-logo'), name = ttl.querySelector('.gnn-title-name');
+    if (!logo || !name) return;
+    if (!BUL.words) { const txt = name.textContent; name.textContent = ''; BUL.words = txt.split(' ').map((wd, i, a) => { const sp = h('span.gnn-bw', wd); name.appendChild(sp); if (i < a.length - 1) name.appendChild(doc.createTextNode(' ')); return sp; }); }
+    const t = R.segT, D = R.titleDur, out = sstep(D - 1.1, D - 0.15, t), rm = R.rm;
+    const li = rm ? 1 : eob((t - 0.15) / 0.95);
+    logo.style.transform = rm ? '' : 'translateX(' + ((1 - li) * -55).toFixed(2) + 'vw) rotate(' + ((1 - li) * -300).toFixed(1) + 'deg) scale(' + (0.35 + 0.65 * li + out * 2.6).toFixed(3) + ')';
+    logo.style.opacity = (clamp((t - 0.15) / 0.3, 0, 1) * (1 - out)).toFixed(3);
+    BUL.words.forEach((sp, i) => {
+      const k = sstep(0, 1, (t - 0.75 - i * 0.32) / 0.55);
+      sp.style.transform = rm ? '' : 'translate(' + (-out * 40 * (3 - i)).toFixed(1) + 'px,' + ((1 - k) * -26).toFixed(1) + 'px) scale(' + (1 + (1 - k) * 0.55).toFixed(3) + ')';
+      sp.style.opacity = (k * (1 - out)).toFixed(3);
+      sp.style.filter = rm ? '' : 'blur(' + ((1 - k) * 10).toFixed(1) + 'px) brightness(' + (1 + 0.9 * max(0, 1 - abs(t - (2.7 + i * 0.16)) / 0.22)).toFixed(2) + ')';
+    });
+    const y = sstep(0, 1, (t - 1.9) / 0.7), m = sstep(0, 1, (t - 2.5) / 0.6);
+    ttlYear.style.transform = rm ? '' : 'translateX(' + ((1 - y) * 30 - out * 60).toFixed(1) + 'vw)'; ttlYear.style.opacity = (y * (1 - out)).toFixed(3);
+    ttlMeta.style.transform = rm ? '' : 'translateY(' + ((1 - m) * 14).toFixed(1) + 'px)'; ttlMeta.style.opacity = (m * (1 - out)).toFixed(3);
+  }
+  // charts and rankings: once the headline has been read, a cut to the studio monitor (a closer look, with a slow push)
+  function monShot(seg, w, hh) {
+    if (!seg || !BUL.deskSG || portraitPhone()) return null;
+    if (BUL.idx !== R.idx) { BUL.idx = R.idx; BUL.hlT = null; BUL.monT = null; }
+    const t = R.segT;
+    if (BUL.hlT === null && R.hl && !R.hl.busy && t > 0.3) BUL.hlT = t;
+    const want = seg.kind === 'rank' ? t >= 2.2 : seg.kind === 'item' && seg.item.graphic === 'chart' && t >= max(3.6, (BUL.hlT === null ? 99 : BUL.hlT) + 0.8);
+    if (!want) return null;
+    if (BUL.monT === null) BUL.monT = t;
+    const SG = BUL.deskSG, vis = hh * 0.72;
+    const z = min(w * 0.72 / (SG.xr - SG.xl), vis * 0.8 / ((SG.hl + SG.hr) / 2)) * (1 + (R.rm ? 0 : 0.006 * (t - BUL.monT)));
+    const c = { sx: SG.cx, sy: SG.cy, px: w / 2, py: vis * 0.47, z: z };
+    c.sx = clamp(c.sx, c.px / z, w - (w - c.px) / z); c.sy = clamp(c.sy, c.py / z, hh - (hh - c.py) / z);
+    return c;
+  }
+  // the graphics canvas at the resolution the monitor is seen at (the close-up's zoom included), so the data stays sharp
+  function fitMon(cv) {
+    const w = cv.clientWidth, hh = cv.clientHeight; if (w < 2 || hh < 2) return null;
+    const k = min(4, min(window.devicePixelRatio || 1, 2) * max(1, BUL.monZ)), pw = round(w * k), ph = round(hh * k);
+    if (cv.width !== pw || cv.height !== ph) { cv.width = pw; cv.height = ph; }
+    const ctx = cv.getContext('2d'); ctx.setTransform(pw / w, 0, 0, ph / hh, 0, 0); ctx.globalAlpha = 1; ctx.globalCompositeOperation = 'source-over';
+    return { ctx: ctx, w: w, h: hh, S: pw / w };
+  }
+  // the dress bulletin's desk shot: her folded-hands cut-out at the desk, lit like the poses and shadowed, cached per size
+  const _fh = {};
+  function drawDeskDress(g, ox, dw, dh, deskY, a, S) {
+    const WA = M.Gfx && M.Gfx.WorldArt, im = WA && WA.enabled && WA.gnnDeskDress ? WA.get(WA.gnnDeskDress) : null; if (!im) return false;
+    const top = a.y + dh * 0.02, k = (deskY - dh * 0.004 - top) / (1249 - 30), cx = ox + dw * 0.37;   // the cut-out's figure spans rows 30-1249 of 1280
+    const id = k.toFixed(4) + '|' + S;
+    let F = _fh[id];
+    if (!F) {
+      for (const key in _fh) delete _fh[key];
+      const pad = 40, cw = round((im.naturalWidth * k + 2 * pad) * S), ch = round((im.naturalHeight * k + 2 * pad) * S);
+      const c = mkCanvas(cw, ch), q = c.getContext('2d'); q.imageSmoothingQuality = 'high';
+      const put = () => q.drawImage(im, pad * S, pad * S, im.naturalWidth * k * S, im.naturalHeight * k * S);
+      q.save(); q.shadowColor = 'rgba(0,0,0,.7)'; q.shadowBlur = 40 * S; q.shadowOffsetX = 12 * S; q.shadowOffsetY = 10 * S;
+      try { q.filter = 'brightness(1.05) contrast(1.04) saturate(1.1)'; } catch (e) { /* no canvas filters */ }
+      put(); q.restore();
+      try { q.filter = 'brightness(1.05) contrast(1.04) saturate(1.1)'; } catch (e) { /* no canvas filters */ }
+      put(); try { q.filter = 'none'; } catch (e) { /* ignore */ }
+      q.globalCompositeOperation = 'source-atop'; q.fillStyle = 'rgba(255,226,192,.08)'; q.fillRect(0, 0, cw, ch);   // her slightly warmer light
+      F = _fh[id] = { c, pad };
+    }
+    g.drawImage(F.c, 0, 0, F.c.width, F.c.height, cx - 640 * k - F.pad, top - 30 * k - F.pad, F.c.width / S, F.c.height / S);
+    return true;
+  }
+
   // ================================================================== the studio's video wall (photo plate)
   // The story is drawn into the off-screen graphics canvas (monCv, its own captions included), then painted INTO the photo's screen:
   // fitted to the bezel's inner edge (a perspective quad, right side taller, cut corners), with a gentle cylindrical curve, lifted
@@ -830,7 +938,7 @@
     const W = G.xr - G.xl;
     // once per frame: the picture at ~60% of its on-screen size (scaling back up softens it, as the camera's focus on the presenter
     // would) and graded toward the photo — a little less saturated, its blacks lifted toward the panel's blue
-    const bw = max(8, round(W * S * 0.6)), bh = max(8, round(((G.hl + G.hr) / 2) * S * 0.6));
+    const soft = BUL.monZ > 1.01 ? BUL.monZ : 0.6, bw = max(8, round(W * S * soft)), bh = max(8, round(((G.hl + G.hr) / 2) * S * soft));   // full detail in the monitor close-up
     if (!_scr) _scr = mkCanvas(bw, bh);
     if (_scr.width !== bw || _scr.height !== bh) { _scr.width = bw; _scr.height = bh; }
     const b = _scr.getContext('2d');
@@ -869,12 +977,11 @@
     g.fillStyle = live ? 'rgba(150,24,44,.75)' : 'rgba(10,16,48,.75)'; g.fillRect(lx, u * 1.5, lw, u * 2.4);
     g.fillStyle = live ? (sin(t * 4.5) > -0.3 ? '#ff5566' : '#7a2230') : '#98a5cf'; g.fillRect(lx + u * 0.9, u * 2.35, u * 0.75, u * 0.75);
     text(g, live ? 'LIVE' : 'FEED', lx + u * 2.2, u * 3.15, u * 1.2, live ? '#ffd9dc' : '#c3cdf2', 'left', FONT_U, 600, u * 0.25);
-    const cr = u * 2.6;                                                  // the headline crawl along the bottom; the caption sits above it
+    const cr = 0;                                                         // no crawl on the studio screen: the viewer's GNN Wire ticker carries it
     g.fillStyle = lgr(g, 0, hh * 0.55, 0, hh - cr, [0, 'rgba(3,5,20,0)', 1, 'rgba(3,5,20,.9)']); g.fillRect(0, hh * 0.55, w, hh * 0.45 - cr);
     text(g, String(monCapB.textContent || '').toUpperCase(), u * 2, hh - cr - u * 3.7, u * 2.8, '#fff5dd', 'left', FONT_D, 400, u * 0.4);
     text(g, monCapS.textContent || '', u * 2, hh - cr - u * 1.4, u * 1.45, '#b9c3e6', 'left', FONT_U, 500, u * 0.06);
     text(g, String(monCapE.textContent || '').toUpperCase(), w - u * 2, hh - cr - u * 1.4, u * 1.3, '#8e98bd', 'right', FONT_U, 500, u * 0.25);
-    drawCrawl(g, w, hh, t, cr, u, col);
   }
   // the standings on the studio screen: the same rows as the overlay panel (rank, portrait, name, Leader / You, value, a growing bar),
   // drawn into the screen canvas so the studio fits, softens and lights them like any story
@@ -915,7 +1022,6 @@
       g.fillStyle = 'rgba(255,255,255,.08)'; g.fillRect(bx, by, bw, bh2);
       g.fillStyle = lgr(g, bx, 0, bx + bw, 0, [0, dark(r.col, 0.3), 1, r.col]); g.fillRect(bx, by, bw * r.frac * p, bh2);
     });
-    const cr = u * 2.6; drawCrawl(g, w, hh, t, cr, u, col);
   }
   // a cable-news crawl: this bulletin's headlines, then the latest from the archive, scrolling right to left under the picture
   const _crawl = { key: '', items: [], widths: [], total: 0, font: '' };
@@ -982,7 +1088,7 @@
       ax = (P && P.port ? w / 2 : ox + dw * 0.37) - aw / 2;           // her left sleeve clear of the dark seam beside the brass pillar
     }
     R.anchor = { x: ax, y: ay, w: aw, h: ah };
-    let S = 1; try { S = g.getTransform().a || 1; } catch (e) { /* old browser */ }
+    const S = BUL.baseS || 1;
     const C = studioCache(im, w, hh, S, ox, oy, dw, dh, R.anchor, deskY);
     g.drawImage(C.back, 0, 0, C.back.width, C.back.height, 0, 0, w, hh);
     const mode = root.dataset.mode, wl = R.wall, SG = R.screen, run = RUN(), onAir = SG && run && ((run.gfx && mode === 'item') || (run.rk && mode === 'rank'));
@@ -1003,11 +1109,13 @@
     const run2 = RUN(), kf = run2 && run2.rm ? 1 : sstep(0, 1, AP.k);
     const sh = P && P.port ? 0 : dw * 0.11, fc = figCache(AP.cur, a, deskY, dh, S, sh) || figCache('neutral', a, deskY, dh, S, sh), fp = AP.prev && kf < 1 ? figCache(AP.prev, a, deskY, dh, S, sh) : null;
     const layer = (F, al) => { if (!F || al <= 0) return; g.globalAlpha = al; g.drawImage(F.fig, 0, 0, F.fig.width, F.fig.height, F.fx, F.fy + bob, F.fw, F.fh); g.globalAlpha = 1; if (curScreen && _spill.a > 0) anchorRimCached(g, F, bob, al); };
-    if (fc) { if (fp) { layer(fp, 1); layer(fc, kf); } else layer(fc, 1); }                // the presenter: cached with her shadow, under her own light
+    const dressDesk = BUL.ward === 'dress' && drawDeskDress(g, ox, dw, dh, deskY, a, S);
+    if (dressDesk) { /* the dress bulletin: folded hands at the desk */ }
+    else if (fc) { if (fp) { layer(fp, 1); layer(fc, kf); } else layer(fc, 1); }                // the presenter: cached with her shadow, under her own light
     else drawAnchor(g, o.anchorRace, a.x, a.y, a.w, a.h, t, o.talking, o.mood);
     const dy = deskY;                                                                        // the desk strip over her lower body, from the graded cache
     g.drawImage(C.back, 0, round(dy * S), C.back.width, C.back.height - round(dy * S), 0, round(dy * S) / S, w, hh - round(dy * S) / S);
-    if (fc) { if (fp) { drawDeskCached(g, fp, dy, dh * 0.07, 1 - kf); drawDeskCached(g, fc, dy, dh * 0.07, kf); } else drawDeskCached(g, fc, dy, dh * 0.07, 1); }   // her shadow and reflection on the glass desk top
+    if (fc && !dressDesk) { if (fp) { drawDeskCached(g, fp, dy, dh * 0.07, 1 - kf); drawDeskCached(g, fc, dy, dh * 0.07, kf); } else drawDeskCached(g, fc, dy, dh * 0.07, 1); }   // her shadow and reflection on the glass desk top
     if (!(P && !P.port)) {                                                                   // sideways phones: the screen fills that corner (the lower third carries the logo)
       drawLogo(g, w * 0.925, hh * 0.075, hh * 0.026, t, 0.95);
       text(g, 'GNN', w * 0.925 - hh * 0.1, hh * 0.087, hh * 0.04, rgba('#ece6d3', 0.92), 'right', FONT_D, 400, 1.5);
@@ -1095,7 +1203,13 @@
   let sceneBroken = false;
   function paintBackdrop(g, w, hh, t, o, S) {
     try {
+      const segK = R && R.segs[R.idx];
+      if (segK && segK.kind === 'title' && drawOpener(g, w, hh, t)) {
+        const GR = M.Gfx && M.Gfx.Grade; if (GR) { try { GR.apply(g, w, hh, t, { preset: 'plate', tone: null, sat: 0, cool: 0, dark: 0, vig: 0 }); } catch (e) { /* optional */ } }
+        return { L: R.L || defaultRects(w, hh), scene: false, cam: { z: 1, dx: 0, dy: 0 } };
+      }
       const PL = photoStudio(g, w, hh, t, o);
+      if (curScreen) BUL.deskSG = curScreen;
       if (PL) { const GR = M.Gfx && M.Gfx.Grade; if (GR) { try { GR.apply(g, w, hh, t, { preset: 'plate', tone: null, sat: 0, cool: 0, dark: 0, vig: 0 }); } catch (e) { /* optional */ } } return { L: sanitizeRects(PL, w, hh), scene: false, cam: { z: 1, dx: 0, dy: 0 } }; }   // graded like every plate
     } catch (e) { warnOnce('WorldArt.gnn', e); }
     const SC = M.Gfx && M.Gfx.Scenes, ns = SC && SC.newsroom;
@@ -1844,7 +1958,7 @@
     const y = R.intr.year;
     ttlYear.textContent = y !== undefined && y !== null ? 'Year ' + y : '';
     ttlMeta.textContent = R.intr.turn !== undefined && R.intr.turn !== null ? 'Turn ' + R.intr.turn : '';
-    R.titleDur = [0.9, 2.7, 1.9][R.speed];
+    R.titleDur = [7, 10, 9][R.speed];                                     // the bumper: 10 s at normal speed
     R.mood = 'neutral'; R.gfx = null; R.rk = null; setPose('neutral');
     R.hl.set('', 0); R.sub.set('', 0);
     srLive.textContent = 'Galactic News Network' + (y !== undefined && y !== null ? ', year ' + y : '');
@@ -2095,10 +2209,15 @@
     if (!f) return;
     const g = f.ctx, w = f.w, hh = f.h, t = R.t, seg = R.segs[R.idx], talking = R.hl.busy || R.sub.busy || R.talkTail > 0;
     const o = { anchorRace: R.anchor, graphic: R.gfx ? R.gfx.kind : 'ticker', headline: '', ticker: '', cut: R.cut ? clamp(R.cut.t / R.cut.dur, 0, 1) : 0, talking: talking, mood: R.mood, t: t, color: steel('#d6b36a'), newsPlanet: R.curPlanet };
+    BUL.baseS = f.S; try { bumperAnim(); } catch (e) { warnOnce('bumper', e); }
+    const MC = monShot(seg, w, hh); BUL.monZ = MC ? MC.z : 1;
     if (R.gfx && root.dataset.mode === 'item') drawMon(t, gdt);            // the story first: the studio paints it into its screen
-    else if (R.rk && root.dataset.mode === 'rank' && root.classList.contains('gnn-warp')) { const mf = fit(monCv, 2); if (mf) { try { drawRankScreen(mf.ctx, mf.w, mf.h, t); } catch (e) { warnOnce('rank screen', e); } } }
+    else if (R.rk && root.dataset.mode === 'rank' && root.classList.contains('gnn-warp')) { const mf = fitMon(monCv); if (mf) { try { drawRankScreen(mf.ctx, mf.w, mf.h, t); } catch (e) { warnOnce('rank screen', e); } } }
     curScreen = null;
+    if (MC) { g.save(); g.translate(MC.px, MC.py); g.scale(MC.z, MC.z); g.translate(-MC.sx, -MC.sy); }   // the monitor close-up
     const res = paintBackdrop(g, w, hh, t, o, f.S), L = res.L, cam = res.cam;
+    if (MC) g.restore();
+    if (seg && seg.kind === 'title' && !curScreen && BUL.deskSG) curScreen = BUL.deskSG;   // under the opener: keep the screen layout
     root.classList.toggle('gnn-warp', !!curScreen);
     R.L = L;
     applyLayout(L, w, hh);
@@ -2120,7 +2239,7 @@
     titleFx(g, w, hh, t, R.titleK);
   }
   function drawMon(t, gdt) {
-    const mf = fit(monCv, 2); if (!mf) return;
+    const mf = fitMon(monCv); if (!mf) return;
     try { drawGfx(mf.ctx, mf.w, mf.h, t, gdt, R.gfx, mf.S, R.tkLines); if (root.classList.contains('gnn-warp')) drawScreenText(mf.ctx, mf.w, mf.h, t, R.gfx.item); }
     catch (e) { if (!R.gfx.failed) { R.gfx.failed = true; console.error('[gnn] graphic failed:', e); } }
   }
@@ -2134,6 +2253,8 @@
       if (WA) { WA.get(WA.gnn); if (WA.gnnAnchor) { WA.get(WA.gnnAnchor('neutral')); (intr.items || []).forEach(it => it && WA.get(WA.gnnAnchor(poseFor(normalizeItem(Object.assign({ headline: '-' }, it)))))); if (RANK_ORDER.some(k => intr.rankings && intr.rankings[k])) WA.get(WA.gnnAnchor('presenting')); } }
     } catch (e) { /* optional */ }
     AP.cur = 'neutral'; AP.prev = null; AP.k = 1; AP.lastT = -1;
+    BUL.ward = chooseWard(intr); BUL.open = chooseOpen(intr, BUL.ward); BUL.idx = -1; BUL.monT = null; BUL.hlT = null;
+    try { const WA = M.Gfx && M.Gfx.WorldArt; if (WA && WA.gnnOpen) { if (BUL.open) WA.get(WA.gnnOpen(BUL.open)); if (BUL.ward === 'dress') WA.get(WA.gnnDeskDress); } } catch (e) { /* optional */ }
     root.classList.remove('out');
     root.classList.toggle('rm', reduced());
     stopWipe();
