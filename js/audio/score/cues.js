@@ -424,6 +424,7 @@
   const N_STR = { p: 'strings', att: 0.04, rel: 0.35, width: 0.7, pre: 0.028 }, N_TREM = { p: 'strTrem', att: 0.04, rel: 0.35, width: 0.7, pre: 0.022 }, N_VC = { p: 'cellos', att: 0.05, rel: 0.4, width: 0.6, pre: 0.03 };
   const N_PIZZ = { p: 'moog', ring: false, hold: 0.06, rel: 0.1, pre: 0.006 }, N_BRASS = { p: 'brass', att: 0.03, rel: 0.15, width: 0.75, pre: 0.021 };
   const N_HORN = { p: 'hornIowa', pre: 0.019 }, N_TBN = { p: 'tbnSolo', pre: 0.031 };
+  const N_HORN_FF = { p: 'horn', layer: 1, att: 0.03, width: 0.75, pre: 0.018 }, N_TBN_FF = { p: 'tbnSolo', layer: 1, pre: 0.026 };   // the ident: the horn section's fortissimo recording (its loud, brassy sound), the trombone's loudest
   const OST = { inst: N_OST, pat: '0101020101010201', res: 4, vel: 0.42, reg: [57, 72], gate: 0.7 };   // the spiccato ostinato in sixteenths
   const OSTHI = { inst: N_OST, pat: '2.1.2.1.2.1.3.1.', res: 4, vel: 0.3, reg: [67, 81], gate: 0.6 };  // the violins an octave over it
   const STAB = { p: 'stab', inst: N_STAB, pat: 'x.........x.....', n: 3, reg: [53, 72], vel: 0.62 };
@@ -453,7 +454,7 @@
     },
     sec: [
       { n: 'intro', bars: 4, lv: 0.85, hit: 'tam', cr: true, prog: 'i i bVI V', pad: { p: 'sus', inst: N_STR, n: 4, reg: [50, 74], vel: 0.8 }, bass: { pat: '1---', pedal: true },
-        lead: { ph: 'ID ID2', inst: N_BRASS, vel: 1.0 }, lead2: { ph: 'ID ID2', inst: N_TBN, oct: -1, vel: 0.8 }, timp: { p: 'hits', roll: 1 }, drums: { t5: 'X...............' } },
+        lead: { ph: 'ID ID2', inst: N_HORN_FF, vel: 1.0 }, lead2: { ph: 'ID ID2', inst: N_TBN_FF, oct: -1, vel: 0.8 }, timp: { p: 'hits', roll: 1 }, drums: { t5: 'X...............' } },
       { n: 'A1', bars: 8, lv: 0.78, prog: 'i i bVI bVI | bIII bIII bVII V', pad: { p: 'sus', inst: N_STR, n: 3, reg: [53, 72], vel: 0.65 }, bass: 'pulse8', arp: OST, drums: drums(TICK, LOW) },
       { n: 'A2', bars: 8, lv: 0.84, prog: 'i i bVI bVI | bIII bIII bVII V', pad: { p: 'sus', inst: N_STR, n: 3, reg: [53, 72], vel: 0.7 }, pad2: { p: 'sus', inst: N_VC, n: 2, reg: [38, 52], vel: 0.55 }, bass: 'pulse8', arp: OST, arp2: OSTHI, drums: drums(TICK, LOW), timp: 'two' },
       { n: 'B', bars: 8, lv: 0.88, cr: true, prog: 'i bVI bVII i | i bVI bVII V', pad: { p: 'sus', inst: N_STR, n: 3, reg: [53, 72], vel: 0.65 }, pad2: STAB, bass: 'pulse8', arp: OST, lead: 'H1 H2', drums: drums(TICK, LOW), timp: 'two' },

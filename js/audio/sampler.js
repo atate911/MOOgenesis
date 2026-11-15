@@ -570,6 +570,7 @@
       const l = flowLayer(inst, midi, o.smp + '|' + o.part, clamp(o.ldyn, 0, 1), !!o.lnew); ld0 = l; ld1 = clamp(l + (dyn1 - dyn), 0, 1);
       if (o.lto !== undefined) ld1 = flowLayer(inst, midi, o.smp + '|' + o.part, clamp(o.lto, 0, 1), false, true);   // into the other colour through the note
     }
+    if (o.layer !== undefined) ld0 = ld1 = clamp(num(o.layer, 1), 0, 1);   // a part pinned to one recording (1: the loudest, the brass's ff), whatever its written dynamic
     const picks = pickZones(inst, midi, ld0, ld1, !!o.alt); if (!picks.length) return null;
     const z0 = picks[0].z;
     const pan = o.pan !== undefined ? o.pan : (z0.pan !== undefined ? z0.pan : inst.pan);

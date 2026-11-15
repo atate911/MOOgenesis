@@ -18,6 +18,8 @@ Versions follow `MAJOR.MINOR.PATCH`; the live version is the `VERSION` file.
   and the beds' small offsets are off, and the slower instruments start a measured few milliseconds early: isolated notes of every part
   now land within a few milliseconds of the drums (medians 30 to 38 ms after the scheduled time, the drums 25 to 36, against 33 to 80
   ms with the ostinato scattering over 40 ms before). Other pieces are unchanged.
+  The opening ident is on the horn section's fortissimo recording (its loud, brassy sound) over the trombone's loudest (an instrument may
+  now be pinned to one of its recordings with `layer`).
 - First loads behind the password gate no longer stall. The web server asks the save server once per file before serving it, about
   150 times at once on a page load, and the save server could queue only 5 new connections (Python's default): the rest were dropped
   and retried after TCP's 1 / 3 / 7 / 15 / 31 s back-off, so a few files of every first load after an update arrived seconds late and
