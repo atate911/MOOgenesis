@@ -17,6 +17,12 @@ Versions follow `MAJOR.MINOR.PATCH`; the live version is the `VERSION` file.
 - Galactic Council: deeper, more cinematic grade. The value curve crushes the blacks harder and steepens the mids; a fan of slowly
   drifting volumetric shafts falls from the oculus onto the dais; the hottest lights get anamorphic horizontal streaks (from their own
   luminance key); the warm vignette is heavier and the floor at the bottom of the frame is grounded darker.
+- Galactic Council: lit like a castle hall in a period drama. The grade is muted (lower saturation curve), the shadows go steel
+  blue-green, the stone's highlights take cold daylight and only the bronze stays warm (an aged, coppery tone). Two light sources
+  replace the studio lights: cold grey daylight from the oculus (shafts and a pool on the dais) and warm, flickering firelight from
+  braziers just out of frame in both foreground corners, which also keys each delegate from the outer side (muted colour, cool fill,
+  steel-blue shadow side). Smoke drifts through the hall, thicker in the daylight shafts; embers rise from the braziers; the vignette
+  is cold slate; the lens streaks and brass sheen are toned down. Flicker, drift and embers stop with Reduce motion.
 - GNN: everything on the video wall is part of the studio screen: the rankings too are painted into it (they were a panel laid over
   the studio), with the presenter standing further left in the presenting pose so her hand points at the screen without covering it.
   Every graphic shows real data: the map is the real galaxy (its stars and lanes, the systems you have explored in their owners'
