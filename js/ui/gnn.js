@@ -604,32 +604,47 @@
 
   // portrait drawn into a feathered buffer so the frame edges melt into the set
   let _fb = null;
-  // ---- the GNN presenter (assets/art/gnn/gnn-anchor-*.webp, docs/IMAGE-GEN-GNN-ANCHOR.md): one cut-out per expression, aligned pixel
-  // for pixel, so a change of mood is a short cross-fade. The story's mood picks it: worried -> grave, pleased -> pleased, else neutral.
-  const ANCHOR_FACE = { worried: 'grave', pleased: 'pleased' };
-  const AF = { cur: 'neutral', prev: null, k: 1, lastT: 0 };
-  const anchorImg = face => { const WA = M.Gfx && M.Gfx.WorldArt; return WA && WA.enabled && WA.gnnAnchor ? WA.get(WA.gnnAnchor(face)) : null; };
-  function anchorArtReady() { return !!anchorImg('neutral'); }
-  function drawAnchorArt(g, x, y, w, hh, t, mood) {
-    const face = ANCHOR_FACE[mood] || 'neutral', want = anchorImg(face) ? face : 'neutral';
-    if (want !== AF.cur) { AF.prev = AF.cur; AF.cur = want; AF.k = 0; }
-    const dt = clamp(t - AF.lastT, 0, 0.1); AF.lastT = t;
-    AF.k = min(1, AF.k + dt / 0.35);
-    const rm = R && R.rm, bob = rm ? 0 : sin(t * 1.15) * hh * 0.0022;            // a breath, so the still photo is alive
-    const put = (im, a) => { if (!im || a <= 0) return; const ih = hh, iw = ih * im.naturalWidth / im.naturalHeight; g.globalAlpha = a; g.drawImage(im, x + (w - iw) / 2, y + bob, iw, ih); };
-    const cur = anchorImg(AF.cur), prev = AF.prev ? anchorImg(AF.prev) : null, k = rm ? 1 : sstep(0, 1, AF.k);
-    if (cur) {                                           // a soft shadow round the figure, a little down and right (the key light is upper left), so she sits in the set
-      let S = 1; try { S = g.getTransform().a || 1; } catch (e) { /* old browser */ }
-      g.save(); g.shadowColor = 'rgba(0,0,0,.78)'; g.shadowBlur = hh * 0.05 * S; g.shadowOffsetX = hh * 0.012 * S; g.shadowOffsetY = hh * 0.01 * S;
-      put(cur, 1); g.restore();
-    }
-    if (prev && k < 1) put(prev, 1);
-    put(cur, prev && k < 1 ? k : 1);
-    g.globalAlpha = 1;
-    return !!cur;
+  // ---- the GNN presenter (assets/art/gnn/gnn-anchor.webp, docs/IMAGE-GEN-GNN-ANCHOR.md): one cut-out on a transparent background,
+  // drawn to the hem of the image (the desk's edge hides its straight bottom cut), with a soft shadow; photoStudio adds the desk-top shadow
+  // and her reflection in the glass. A slow breath keeps the still alive (none under reduced motion).
+  const anchorImg = () => { const WA = M.Gfx && M.Gfx.WorldArt; return WA && WA.enabled && WA.gnnAnchor ? WA.get(WA.gnnAnchor) : null; };
+  const anchorArtReady = () => !!anchorImg();
+  const anchorBob = (t, hh) => (R && R.rm ? 0 : sin(t * 1.15) * hh * 0.0022);
+  function anchorBox(im, x, y, w, hh, t) { const iw = hh * im.naturalWidth / im.naturalHeight; return { x: x + (w - iw) / 2, y: y + anchorBob(t, hh), w: iw, h: hh }; }
+  function drawAnchorArt(g, x, y, w, hh, t) {
+    const im = anchorImg(); if (!im) return false;
+    const b = anchorBox(im, x, y, w, hh, t);
+    let S = 1; try { S = g.getTransform().a || 1; } catch (e) { /* old browser */ }
+    g.save(); g.shadowColor = 'rgba(0,0,0,.78)'; g.shadowBlur = hh * 0.05 * S; g.shadowOffsetX = hh * 0.012 * S; g.shadowOffsetY = hh * 0.01 * S;   // key light upper left
+    g.drawImage(im, b.x, b.y, b.w, b.h); g.restore();
+    g.drawImage(im, b.x, b.y, b.w, b.h);
+    return true;
+  }
+  // on the glass desk top just in front of her: a soft contact shadow, then her mirror image, faint and fading with distance from the edge
+  let _refl = null;
+  function drawAnchorDesk(g, x, y, w, hh, t, deskY, depth) {
+    const im = anchorImg(); if (!im) return;
+    const b = anchorBox(im, x, y, w, hh, t), cx = b.x + b.w / 2;
+    g.save(); g.translate(cx, deskY + depth * 0.12); g.scale(1, 0.16);                    // a flat ellipse of shade on the glass
+    g.fillStyle = rgr(g, 0, 0, 0, b.w * 0.55, [0, 'rgba(0,0,0,.45)', 1, 'rgba(0,0,0,0)']); g.fillRect(-b.w * 0.6, -b.w * 0.6, b.w * 1.2, b.w * 1.2);
+    g.restore();
+    let S = 1; try { S = g.getTransform().a || 1; } catch (e) { /* old browser */ }
+    const rw = ceil(b.w * S), rh = ceil(depth * S); if (rw < 2 || rh < 2) return;
+    if (!_refl) _refl = mkCanvas(rw, rh);
+    if (_refl.width !== rw || _refl.height !== rh) { _refl.width = rw; _refl.height = rh; }
+    const r = _refl.getContext('2d');
+    r.setTransform(1, 0, 0, 1, 0, 0); r.globalCompositeOperation = 'source-over'; r.clearRect(0, 0, rw, rh);
+    const k = rw / b.w, top = (deskY - b.y) * k;            // the mirror line is the desk edge: the rows just above it reflect first
+    r.setTransform(1, 0, 0, -1, 0, top); r.drawImage(im, 0, 0, rw, b.h * k);
+    r.setTransform(1, 0, 0, 1, 0, 0); r.globalCompositeOperation = 'destination-in';
+    r.fillStyle = lgr(r, 0, 0, 0, rh, [0, 'rgba(0,0,0,1)', 0.5, 'rgba(0,0,0,.4)', 1, 'rgba(0,0,0,0)']); r.fillRect(0, 0, rw, rh);
+    g.save(); g.globalAlpha = 0.75; g.drawImage(_refl, 0, 0, rw, rh, b.x, deskY, b.w, depth);
+    g.globalAlpha = 1; g.globalCompositeOperation = 'screen';                              // the studio key light skimming the desk edge in front of her
+    g.fillStyle = lgr(g, b.x - b.w * 0.1, 0, b.x + b.w * 1.1, 0, [0, 'rgba(255,236,200,0)', 0.35, 'rgba(255,236,200,.28)', 0.65, 'rgba(255,236,200,.28)', 1, 'rgba(255,236,200,0)']);
+    g.fillRect(b.x - b.w * 0.1, deskY - 1, b.w * 1.2, max(1.5, depth * 0.06)); g.restore();   // a dark figure reflects as a shape that blocks the glass's sheen, its brass trim catching the light
   }
   function drawAnchor(g, race, x, y, w, hh, t, talking, mood) {
-    if (drawAnchorArt(g, x, y, w, hh, t, mood)) return;
+    if (drawAnchorArt(g, x, y, w, hh, t)) return;
     const P = M.Gfx && M.Gfx.Portraits;
     if (portraitReady(race)) {
       try {
@@ -760,8 +775,8 @@
     let ax = (P && P.port ? w / 2 : ox + dw * 0.325) - aw / 2;
     if (anchorArtReady()) {                              // the presenter: head near the top, the desk across her jacket
       ay = P && P.port ? R.wall.y + R.wall.h + 4 : oy + dh * 0.04;
-      ah = (deskY - ay) / 0.985; aw = ah * 2 / 3;           // the whole cut-out shows: the desk's edge just hides its straight bottom cut
-      ax = (P && P.port ? w / 2 : ox + dw * 0.335) - aw / 2;          // head between the lit brass pillar and the dark panel seam
+      ah = (deskY - ay) / 0.99; aw = ah * 2 / 3;            // the whole cut-out shows: the desk's edge just hides its straight bottom cut
+      ax = (P && P.port ? w / 2 : ox + dw * 0.37) - aw / 2;           // her left sleeve clear of the dark seam beside the brass pillar
     }
     R.anchor = { x: ax, y: ay, w: aw, h: ah };
     g.drawImage(im, ox, oy, dw, dh);
@@ -777,6 +792,7 @@
     drawAnchor(g, o.anchorRace, a.x, a.y, a.w, a.h, t, o.talking, o.mood);
     const dy = deskY, sy = (dy - oy) / sc;                                                  // desk strip over the anchor's feet
     g.drawImage(im, 0, sy, im.naturalWidth, im.naturalHeight - sy, ox, dy, dw, oy + dh - dy);
+    drawAnchorDesk(g, a.x, a.y, a.w, a.h, t, dy, dh * 0.07);                                // her shadow and reflection on the glass desk top
     drawLogo(g, w * 0.925, hh * 0.075, hh * 0.026, t, 0.95);
     text(g, 'GNN', w * 0.925 - hh * 0.1, hh * 0.087, hh * 0.04, rgba('#ece6d3', 0.92), 'right', FONT_D, 400, 1.5);
     g.fillStyle = rgba('#ff5c6a', sin(t * 4) > -0.2 ? 0.95 : 0.2); g.beginPath(); g.arc(w * 0.925 + hh * 0.06, hh * 0.075, hh * 0.008, 0, TAU); g.fill();
@@ -1776,8 +1792,7 @@
   function startRun(pend) {
     const intr = pend.intr || {};
     layKey = '';
-    try { const WA = M.Gfx && M.Gfx.WorldArt; if (WA) { WA.get(WA.gnn); if (WA.gnnAnchor) ['neutral', 'pleased', 'grave'].forEach(f => WA.get(WA.gnnAnchor(f))); } } catch (e) { /* optional */ }
-    AF.cur = 'neutral'; AF.prev = null; AF.k = 1;
+    try { const WA = M.Gfx && M.Gfx.WorldArt; if (WA) { WA.get(WA.gnn); if (WA.gnnAnchor) WA.get(WA.gnnAnchor); } } catch (e) { /* optional */ }
     root.classList.remove('out');
     root.classList.toggle('rm', reduced());
     stopWipe();

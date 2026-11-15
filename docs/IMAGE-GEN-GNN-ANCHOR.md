@@ -1,5 +1,8 @@
 # Image-generation brief — the GNN news anchor
 
+> **Status:** delivered as one image (`assets/art/gnn/gnn-anchor.webp`, neutral expression, framed to the waist), used for every
+> broadcast. The grave / pleased variants below were tried but not kept; the game no longer switches expressions.
+
 One recurring presenter for the Galactic News Network screen (`js/ui/gnn.js`), in three expressions. The game composites the
 anchor into the existing studio photo (`assets/art/gnn/race-neutral-gnn-studio-background.webp`) between the starfield window and
 the video wall, and draws the studio desk in front of the anchor's lower body. So the anchor is delivered **on its own**, not in a

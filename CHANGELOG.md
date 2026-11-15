@@ -5,12 +5,12 @@ Versions follow `MAJOR.MINOR.PATCH`; the live version is the `VERSION` file.
 
 ## Unreleased
 
-- GNN has its own presenter: an original anchor of the non-playable Veyl (assets/art/gnn/gnn-anchor-*.webp, brief in
-  docs/IMAGE-GEN-GNN-ANCHOR.md) in three expressions that follow the story (grave for wars, disasters and deep-space threats,
-  pleased for colonies, science and the economy, neutral otherwise), cross-faded when the mood changes and breathing gently (still
-  under reduced motion). Shown down to the hem of her jacket at the desk, head between the lit brass pillar and the panel seam, with
-  a soft shadow and a cool back light so she sits in the set. Phones: in portrait she fills the space between the video screen and
-  the headline; on its side she stands left of the wall. The race portraits remain the fallback (art off, or before the images load).
+- GNN has its own presenter: an original anchor of the non-playable Veyl (assets/art/gnn/gnn-anchor.webp, brief in
+  docs/IMAGE-GEN-GNN-ANCHOR.md), one image for every broadcast. She is shown to the hem of her jacket at the desk, her sleeve
+  clear of the dark seam beside the brass pillar, with a soft shadow and a cool back light so she sits in the set, and her shadow, mirror
+  image and a skim of light on the glass desk top. A slow breath keeps the still alive (none under reduced motion). Phones: in
+  portrait she fills the space between the video screen and the headline; on its side she stands left of the wall. The race
+  portraits remain the fallback (art off, or before the image loads).
 - GNN news, content: the economy / science / council charts show the real standings of the empires in the game (their actual
   output, bars scaled to the leader) instead of six made-up bars that could name races not in the game (bulletins carry rankings
   only on a rankings filler turn, so the chart reads the live standings). A count of one reads "1 ship" / "1 Alkari ship" / "1 vote"

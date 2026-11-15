@@ -30,7 +30,7 @@
   const FX = ['rock-1', 'rock-2', 'rock-3', 'rock-4', 'rock-5', 'rock-6', 'rock-7', 'rock-8', 'base-platform'];
   for (let i = 1; i <= 24; i++) FX.push('debris-' + i);   // wreckage cutouts (fx-sheet.png rows 3-4, fx-sheet-2.png)
   const STILLS = [];
-  const GNN_ANCHOR = ['neutral', 'pleased', 'grave'];    // the GNN presenter (docs/IMAGE-GEN-GNN-ANCHOR.md): one cut-out per expression, aligned pixel for pixel
+  const GNN_ANCHOR = 'gnn/gnn-anchor';                    // the GNN presenter (docs/IMAGE-GEN-GNN-ANCHOR.md): one cut-out on a transparent background
   const has = (a, k) => a.indexOf(k) >= 0;
 
   function budget() { const gb = (M.HW && M.HW.memoryGB) || 4; return Math.max(160, Math.min(480, gb * 48)) * 1048576; }
@@ -204,7 +204,7 @@
   M.Gfx.WorldArt = {
     get: get, ready: ready, whenReady: whenReady, draw: draw, canvas: canvas, image: image, preload: preload,
     orbit: orbitPath, surface: surfacePath, system: systemPath, event: eventPath, scene: scenePath, race: racePath, colony: colonyPath, gnn: GNN,
-    gnnAnchor: m => 'gnn/gnn-anchor-' + (has(GNN_ANCHOR, m) ? m : 'neutral'),
+    gnnAnchor: GNN_ANCHOR,
     systemSky: systemSkyPath, battle: battlePath, fx: fxPath, still: stillPath, raceExposure: raceExposure, raceTone: raceTone, tonePass: tonePass,
     get enabled() { return W.enabled; }, set enabled(v) { W.enabled = !!v; },
     lists: { orbit: ORBIT, surface: SURFACE, system: SYSTEM, events: EVENTS, colony: COLONY, scenes: SCENES, races: RACES, purposes: PURPOSES, battle: BATTLE, fx: FX, stills: STILLS },

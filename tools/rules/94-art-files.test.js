@@ -10,7 +10,7 @@ module.exports = function (M, t) {
     const sys = list('SYSTEM'), paths = [].concat(
       list('ORBIT').map(k => 'orbit/orbit-' + k), list('SURFACE').map(k => 'surface/surface-' + k), sys.map(k => 'system/system-' + k), sys.map(k => 'system-sky/system-sky-' + k),
       list('BATTLE').map(k => 'battle/battle-' + k), fx.map(k => 'fx/' + k), list('STILLS').map(k => 'still/' + k), list('EVENTS').map(k => 'event/event-' + k),
-      list('SCENES').map(k => 'scene/scene-' + k), list('COLONY').map(k => 'colony/colony-' + k), ['gnn/race-neutral-gnn-studio-background'], list('GNN_ANCHOR').map(k => 'gnn/gnn-anchor-' + k));
+      list('SCENES').map(k => 'scene/scene-' + k), list('COLONY').map(k => 'colony/colony-' + k), ['gnn/race-neutral-gnn-studio-background', (src.match(/const GNN_ANCHOR = '([^']+)'/) || [])[1]]);
     for (const r of list('RACES')) for (const p of list('PURPOSES')) paths.push('races/race-' + r + '-' + p);
     t.ok(paths.length > 100, 'parsed only ' + paths.length + ' paths');
     const missing = paths.filter(p => !fs.existsSync(path.join(ROOT, 'assets/art', p + '.webp')));
