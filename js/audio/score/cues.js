@@ -416,25 +416,43 @@
     ],
   });
 
+  // the news package's shared parts
+  const OST = { inst: 'strOst', pat: '0101020101010201', res: 4, vel: 0.42, reg: [57, 72], gate: 0.7 };   // the spiccato ostinato in sixteenths
+  const OSTHI = { inst: 'strOst', pat: '2.1.2.1.2.1.3.1.', res: 4, vel: 0.3, reg: [67, 81], gate: 0.6 };  // the violins an octave over it
+  const STAB = { p: 'stab', inst: 'brassStab', pat: 'x.........x.....', n: 3, reg: [53, 72], vel: 0.62 };
+  const TICK = { click3: 'x.o.x.o.x.o.x.o.', hiss: '..o...o...o...o.' };                          // the clock
+  const LOW = { t5: 'X.....x...x.....', t4: '........x.....o.' };
+  const LOWB = { t5: 'X.....x...x.....', t4: '........x.....o.', t3: '..o.......o...o.', sn: '....x.......x...' };
+  const drums = (...p) => Object.assign({}, ...p);
+  // The Galactic News Network: a cable-news package for a breaking story, played by the game's orchestra. A ticking clock (claves and a
+  // shaker in eighths), the strings' spiccato ostinato driving in sixteenths, a pizzicato pulse in the basses, low drums and the timpani
+  // on the strong beats; the brass ident (a struck call and its answer over the tam-tam) opens, the horns carry the headline theme over
+  // the brass stabs, and a tremolo breakdown (the developing story) rises back into the full package. D minor, no drum kit.
   Track('gnn', {
-    desc: 'Galactic News Network: a confident, upbeat broadcast bed with brass stabs and a bright ident theme',
-    bpm: 120, trim: 0.95, root: 'C', mode: 'major', loopFrom: 'A1',
-    forms: [['A1', 'A2', 'B', 'C', 'A3', 'B2', 'D', 'E', 'A1', 'B', 'C', 'A2', 'D', 'B2', 'E', 'A3', 'C', 'A1', 'B', 'E'], ['A1', 'B', 'A2', 'D', 'C', 'A3', 'B2', 'E', 'A1', 'C', 'B', 'A2', 'E', 'D', 'B2', 'A3', 'A1', 'C', 'B', 'E']],
-    inst: { pad: 'organ', bass: 'pulse', lead: 'synth', lead2: 'bell', arp: 'seq', bell: 'vibes' },
+    desc: 'Galactic News Network: a breaking-story package: a ticking clock, the strings driving in sixteenths over a pulse in the basses, low drums and timpani, the brass ident and the horns’ headline theme',
+    bpm: 126, trim: 0.95, root: 'D', mode: 'minor', loopFrom: 'A1',
+    mix: { lead: 2.2, bass: 0.4, arp: 2.6, drums: 0.75, pad: 1.1 },
+    forms: [['A1', 'B', 'A2', 'C', 'D', 'E', 'A1', 'B2', 'C', 'A2', 'D', 'E', 'A1', 'B', 'C', 'D', 'A2', 'B2', 'E', 'D'],
+      ['A1', 'A2', 'B', 'C', 'D', 'E', 'A2', 'B2', 'A1', 'C', 'D', 'E', 'A1', 'B', 'A2', 'C', 'B2', 'D', 'E', 'D']],
+    inst: { pad: 'strings', pad2: 'cellos', bass: 'moog', lead: 'horn', lead2: 'trombones', arp: 'strOst', arp2: 'strOst', bell: 'bell' },
     ph: {
-      G1: '5:.5 5:.5 8:1.5 5:.5 8:1 | 7:.5 7:.5 9:1.5 7:.5 9:1 | 8:.5 8:.5 10:1.5 8:.5 10:1 | 6:.5 6:.5 8:1 9:.5 10:.5 11:1',
-      G2: '9:1 11:.5 9:.5 6:1 9:1 | 9:1 7:.5 9:.5 12:1 9:1 | 12:2 10:1 8:1 | 8:3 r:1',
+      ID: '8:.75 8:.25 5:1 7:.5 8:1.5 | r:4',                       // the ident: the call
+      ID2: '6:.75 6:.25 3:1 4:.5 6:1.5 | 5:2 7#:2',                 // and its answer, onto the dominant
+      H1: '5:1.5 8:.5 8:2 | 10:1.5 8:.5 6:2 | 7:1.5 9:.5 11:2 | 8:3 r:1',   // the headline theme
+      H2: '5:1.5 8:.5 8:2 | 10:1.5 8:.5 6:2 | 7:1 9:1 11:1 9:1 | 7#:3 r:1',
     },
     sec: [
-      { n: 'intro', bars: 4, lv: 0.7, prog: 'I V vi IV', hit: true, pad: { p: 'stab', pat: 'x..x..x.x..x.x..', inst: 'brassStab', n: 3, reg: [55, 76], vel: 0.9 }, bass: 'sync', drums: 'news', fill: 'snare' },
-      { n: 'A1', bars: 8, lv: 0.78, prog: 'I V vi IV | I V vi IV', pad: { p: 'stab', pat: 'x..x..x.x..x.x..', inst: 'brassStab', n: 3, reg: [55, 76], vel: 0.7 }, bass: 'sync', lead: 'G1 G1', drums: 'news', arp: { pat: '0.2.1.3.', res: 2, vel: 0.3, reg: [64, 88] } },
-      { n: 'A2', bars: 8, lv: 0.88, prog: 'I V vi IV | I V vi IV', pad: { p: 'stab', pat: 'x..x..x.x..x.x..', inst: 'brassStab', n: 3, reg: [55, 76], vel: 0.7 }, bass: 'oct8', lead: { ph: 'G1 G1', harm: -2 }, drums: 'news', arp: { p: 'up', vel: 0.32, reg: [64, 88] }, bell: { dens: 0.3, res: 2, reg: [76, 95], vel: 0.5 } },
-      { n: 'B', bars: 8, lv: 0.9, prog: 'ii V I I | vi IV V V', pad: { p: 'stab', pat: 'x.x.x.x.x.x.x.x.', inst: 'brassStab', n: 3, reg: [55, 76], vel: 0.55, gate: 0.5 }, bass: 'oct8', lead: 'G2 G2', drums: 'news', arp: { p: 'up', vel: 0.32, reg: [64, 88] } },
-      { n: 'C', bars: 8, lv: 0.6, prog: 'I V vi IV | I V vi V', pad: { p: 'sus', inst: 'warm' }, bass: 'half', lead: false, arp: { pat: '0.2.1.3.', res: 2, vel: 0.34, reg: [64, 88] }, drums: { kick: 'x.......x.......', hat: 'x.x.x.x.x.x.x.x.', rim: '....x.......x...' }, bell: { dens: 0.35, res: 2, reg: [72, 95], vel: 0.55 } },
-      { n: 'A3', bars: 8, lv: 0.95, prog: 'I V vi IV | I V vi IV', pad: { p: 'stab', pat: 'x..x..x.x..x.x..', inst: 'brassStab', n: 3, reg: [55, 76], vel: 0.75 }, bass: 'oct8', lead: { ph: 'G1 G1+2', harm: -2 }, drums: 'news', arp: { p: 'up', vel: 0.34, reg: [64, 90], jump: 0.08 }, bell: { dens: 0.3, res: 2, reg: [76, 95], vel: 0.5 }, fill: 'snare' },
-      { n: 'B2', bars: 8, lv: 1.0, prog: 'ii V I I | vi IV V V', pad: { p: 'stab', pat: 'x.x.x.x.x.x.x.x.', inst: 'brassStab', n: 3, reg: [55, 76], vel: 0.6, gate: 0.5 }, bass: 'oct8', lead: { ph: 'G2 G2', harm: -2 }, drums: 'news', arp: { p: 'up', vel: 0.34, reg: [64, 90], jump: 0.08 }, timp: 'two', fill: 'snare' },
-      { n: 'D', bars: 8, lv: 0.82, prog: 'ii V I I | ii V I V', pad: { p: 'sus', inst: 'warm' }, bass: 'oct8', lead: { ph: 'G2 G2', inst: 'vibes', vel: 0.8 }, drums: { kick: 'x.....x.x.......', hat: 'x.x.x.x.x.x.x.x.', rim: '....x.......x...' }, arp: { p: 'up', vel: 0.3, reg: [64, 88] }, bell: { dens: 0.3, res: 2, reg: [76, 95], vel: 0.5 } },
-      { n: 'E', bars: 8, lv: 0.8, prog: 'I V vi IV | I V vi IV', pad: { p: 'stab', pat: 'x..x..x.x..x.x..', inst: 'brassStab', n: 3, reg: [55, 76], vel: 0.65 }, bass: 'sync', lead: 'G1 G2', drums: 'news', arp: { pat: '0.2.1.3.', res: 2, vel: 0.3, reg: [64, 88] } },
+      { n: 'intro', bars: 4, lv: 0.85, hit: 'tam', cr: true, prog: 'i i bVI V', pad: { p: 'sus', inst: 'strings', n: 4, reg: [50, 74], vel: 0.8 }, bass: { pat: '1---', pedal: true },
+        lead: { ph: 'ID ID2', inst: 'brass', vel: 1.0 }, lead2: { ph: 'ID ID2', inst: 'trombones', oct: -1, vel: 0.8 }, timp: { p: 'hits', roll: 1 }, drums: { t5: 'X...............' } },
+      { n: 'A1', bars: 8, lv: 0.78, prog: 'i i bVI bVI | bIII bIII bVII V', pad: { p: 'sus', inst: 'strings', n: 3, reg: [53, 72], vel: 0.65 }, bass: 'pulse8', arp: OST, drums: drums(TICK, LOW) },
+      { n: 'A2', bars: 8, lv: 0.84, prog: 'i i bVI bVI | bIII bIII bVII V', pad: { p: 'sus', inst: 'strings', n: 3, reg: [53, 72], vel: 0.7 }, pad2: { p: 'sus', inst: 'cellos', n: 2, reg: [38, 52], vel: 0.55 }, bass: 'pulse8', arp: OST, arp2: OSTHI, drums: drums(TICK, LOW), timp: 'two' },
+      { n: 'B', bars: 8, lv: 0.88, cr: true, prog: 'i bVI bVII i | i bVI bVII V', pad: { p: 'sus', inst: 'strings', n: 3, reg: [53, 72], vel: 0.65 }, pad2: STAB, bass: 'pulse8', arp: OST, lead: 'H1 H2', drums: drums(TICK, LOW), timp: 'two' },
+      { n: 'B2', bars: 8, lv: 0.92, cr: true, prog: 'i bVI bVII i | i bVI bVII V', pad: { p: 'sus', inst: 'strings', n: 4, reg: [53, 76], vel: 0.7 }, pad2: STAB, bass: 'pulse8', arp: OST, arp2: OSTHI, lead: { ph: 'H1 H2', harm: -2 }, lead2: { ph: 'H1 H2', inst: 'trombones', oct: -1, vel: 0.7 }, drums: drums(TICK, LOWB), timp: 'two', fill: 'snS' },
+      { n: 'C', bars: 8, lv: 0.72, prog: 'i i bVI bVI | iv iv V V', rise: 2, pad: { p: 'sus', inst: 'strTrem', n: 3, reg: [55, 74], vel: 0.85 }, pad2: { p: 'sus', inst: 'cellos', n: 2, reg: [38, 52], vel: 0.7 }, bass: { pat: '1---', pedal: true },
+        arp: { inst: 'strOst', pat: '0.0.0.0.0.0.0.0.', res: 4, vel: 0.36, reg: [55, 67], gate: 0.6 }, drums: { click3: 'x.o.x.o.x.o.x.o.', t5: 'X...............' }, bell: { dens: 0.15, res: 1, reg: [79, 96], vel: 0.45 } },
+      { n: 'D', bars: 8, lv: 1.0, hit: true, cr: true, prog: 'i bVI bVII i | i bVI bVII V', pad: { p: 'sus', inst: 'strings', n: 4, reg: [55, 79], vel: 0.75 }, pad2: { p: 'stab', inst: 'brassStab', pat: 'x..x..x...x..x..', n: 3, reg: [53, 72], vel: 0.7 }, bass: 'pulse8', arp: OST, arp2: OSTHI,
+        lead: { ph: 'H1 H2', inst: 'brass', harm: -2 }, lead2: { ph: 'H1 H2', inst: 'trombones', oct: -1, vel: 0.8 }, drums: drums(TICK, LOWB), timp: 'beats', fill: 'bigS' },
+      { n: 'E', bars: 8, lv: 0.8, prog: 'i i bVI bVI | bIII bIII bVII V', pad: { p: 'sus', inst: 'strings', n: 3, reg: [53, 72], vel: 0.65 }, bass: 'pulse8', arp: OST, lead: { ph: 'ID ID2 ID ID2', inst: 'horn', vel: 0.8 }, drums: drums(TICK, LOW), bell: { dens: 0.12, res: 1, reg: [79, 96], vel: 0.4 } },
     ],
   });
 
