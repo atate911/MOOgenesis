@@ -9,7 +9,9 @@ Versions follow `MAJOR.MINOR.PATCH`; the live version is the `VERSION` file.
   hokey; the new one is written like a cable network's breaking-story package and played by the game's orchestra in its hall: a
   ticking clock, the strings' spiccato ostinato driving in sixteenths over a pizzicato pulse in the basses, low drums and timpani, a
   struck brass ident over the tam-tam to open, the horns' headline theme over brass stabs, and a tremolo breakdown that rises back
-  into the full package. D minor, 126 bpm, no drum kit; as loud as the old bed.
+  into the full package. D minor, 126 bpm, no drum kit; as loud as the old bed. Mixed close and dry, like television rather than
+  the concert hall: little hall reverb, the short notes cut before the recordings' own room rings out, the sections a little narrower,
+  the horn and trombone lines on the close-miked solo recordings.
 - First loads behind the password gate no longer stall. The web server asks the save server once per file before serving it, about
   150 times at once on a page load, and the save server could queue only 5 new connections (Python's default): the rest were dropped
   and retried after TCP's 1 / 3 / 7 / 15 / 31 s back-off, so a few files of every first load after an update arrived seconds late and
