@@ -18,6 +18,7 @@
   const sin = Math.sin, cos = Math.cos, abs = Math.abs, min = Math.min, max = Math.max, floor = Math.floor, ceil = Math.ceil;
   const sqrt = Math.sqrt, pow = Math.pow, atan2 = Math.atan2, round = Math.round, hypot = Math.hypot;
   const GNN = (UI.GNN = {});
+  GNN._pinStageDpr = v => { stageCap = v; stageLock = true; };      // QA renders: full resolution even on a software-rendered machine
 
   // ================================================================== small helpers
   const clamp = (v, a, b) => (v < a ? a : v > b ? b : v);
@@ -90,6 +91,18 @@
   const reduced = () => !!setting('reduceMotion', false) || !!(window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches);
   const PQ = () => (M.Perf && M.Perf.q) || { dpr: 1.5, particles: 0.7, animFps: 60 };
   const dprFor = cap => min(window.devicePixelRatio || 1, PQ().dpr || 1.5, cap || 2);
+  // the studio stage: a photo with a presenter and type on it, mostly still, so it gets the screen's own sharpness (up to 2x) on every
+  // tier (the low tier's 1x was upscaled by the browser and blurred the photo), within a 4K pixel budget
+  // a machine that cannot keep up steps the stage down (stageCap, learned once per session by drawFrame's timing) instead of stuttering
+  let stageCap = 2, stageLock = false;
+  const stageDpr = (w, hh) => { const d = min(window.devicePixelRatio || 1, 2, stageCap); return max(1, min(d, sqrt(8.3e6 / max(1, w * hh)))); };
+  const _ft = { sum: 0, n: 0 };
+  function stageTiming(ms) {
+    _ft.sum += ms; _ft.n++;
+    if (_ft.n < 24) return;
+    const avg = _ft.sum / _ft.n; _ft.sum = 0; _ft.n = 0;
+    if (avg > 45 && stageCap > 1 && !stageLock) { stageCap = max(1, round((stageCap - 0.25) * 4) / 4); if (R) R.redraw = true; }
+  }
   let _sfxList = null;
   function sfx(id, fb) {
     try {
@@ -236,6 +249,9 @@
     /* ---- graphics window (sits exactly on the studio's video wall) ---- */
     .gnn-mon { position:absolute; z-index:3; pointer-events:none; display:none; transform-origin:0 0; background:#02040f; }
     .gnn[data-mode=item] .gnn-mon { display:block; }
+    .gnn.gnn-warp .gnn-mon { opacity:0; }
+    .gnn.gnn-warp[data-mode=rank] .gnn-mon { display:block; }     /* the standings are painted into the studio screen too */
+    .gnn.gnn-warp[data-mode=rank] .gnn-rank { display:none; }                       /* the studio photo paints the story into its own screen (drawScreen) */
     .gnn-mon-cv { position:absolute; inset:0; width:100%; height:100%; display:block; }
     .gnn-mon.in .gnn-mon-cv { animation:gnn-pop .5s var(--ease) both; }
     .gnn-mon-tag { position:absolute; left:calc(var(--u)*1.3); top:calc(var(--u)*1.2); display:flex; align-items:center; gap:calc(var(--u)*.7); padding:calc(var(--u)*.45) calc(var(--u)*1.3) calc(var(--u)*.4) calc(var(--u)*1);
@@ -302,13 +318,17 @@
     .gnn-tk.static .gnn-tk-i { animation:gnn-fade .6s ease both; }
 
     /* ---- controls strip (below the ticker) ---- */
-    .gnn-hud { position:absolute; z-index:8; display:flex; align-items:center; justify-content:space-between; gap:calc(var(--u)*1.2); padding:0 calc(var(--u)*1); }
-    .gnn-hint { color:var(--fog); font:500 max(.7rem, calc(var(--u)*1.05))/1 var(--font-ui); letter-spacing:.06em; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .gnn-hud { position:absolute; z-index:8; display:flex; align-items:center; justify-content:flex-end; gap:calc(var(--u)*1.2); padding:0 calc(var(--u)*1); }
+    .gnn-hint { display:none; color:var(--fog); font:500 max(.7rem, calc(var(--u)*1.05))/1 var(--font-ui); letter-spacing:.06em; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
     .gnn-hint b { color:var(--mist); font-weight:600; }
     .gnn-hud-r { display:flex; align-items:center; gap:calc(var(--u)*.9); flex:none; }
     .gnn-hud .btn.small { padding:.18em .75em; font-size:max(.8rem, calc(var(--u)*1.12)); }
     .gnn-pips { display:flex; align-items:center; gap:calc(var(--u)*.55); margin-right:calc(var(--u)*.8); color:var(--mist); font:500 max(.7rem, calc(var(--u)*1.05))/1 var(--font-ui); letter-spacing:.1em; }
     .gnn-pip { width:calc(var(--u)*.72); height:calc(var(--u)*.72); transform:rotate(45deg); background:rgba(214,179,106,.2); box-shadow:inset 0 0 0 1px var(--brass-line-3); }
+    html[data-phone] .gnn-hud { padding:0; }
+    html[data-phone] .gnn-hud-r { flex:1 1 auto; min-width:0; gap:6px; }
+    html[data-phone] .gnn-hud-r .btn { flex:1 1 0; min-width:0; padding:0 .4em; white-space:nowrap; }
+    @media (orientation: portrait) { html[data-phone] .gnn-pips { display:none; } }
     .gnn-pip.done { background:var(--brass); } .gnn-pip.cur { background:var(--brass-hi); box-shadow:0 0 calc(var(--u)*.9) var(--brass-hi); transform:rotate(45deg) scale(1.4); }
     /* ---- ranking panel ---- */
     .gnn-rank { position:absolute; z-index:4; display:none; filter:drop-shadow(0 calc(var(--u)*.6) calc(var(--u)*1.6) rgba(0,0,0,.65)); }
@@ -410,6 +430,13 @@
     .gnn-arch-y small { margin-left:auto; font:500 .8rem var(--font-ui); color:var(--mist); letter-spacing:.04em; }
     .gnn-arow { display:grid; grid-template-columns:11rem 1fr auto; align-items:center; gap:.7rem; padding:.34rem .6rem; border-bottom:1px solid rgba(255,255,255,.05); }
     .gnn-arow:hover { background:rgba(98,216,255,.06); }
+    /* narrow (phones, small windows): the category and races on one line, the headline the full width under them */
+    @media (max-width: 640px) {
+      .gnn-arch { min-width:0; height:auto; max-height:none; flex:1; }
+      .gnn-arow { grid-template-columns:minmax(0, 1fr) auto; grid-template-areas:"chip races" "hl hl"; gap:.2rem .6rem; padding:.45rem .5rem; }
+      .gnn-arow .gnn-achip { grid-area:chip; } .gnn-arow .gnn-ahl { grid-area:hl; } .gnn-arow .gnn-araces { grid-area:races; }
+      .gnn-arace:first-child { margin-left:0; }
+    }
     .gnn-achip { display:inline-flex; align-items:center; gap:.4rem; color:var(--c, var(--mist)); font:400 .85rem var(--font-display); letter-spacing:.06em; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; min-width:0; }
     .gnn-achip .ico { width:1.05rem; height:1.05rem; }
     .gnn-ahl { color:var(--ivory); line-height:1.3; }
@@ -443,7 +470,7 @@
   function fit(cv, cap) {
     const w = cv.clientWidth, hh = cv.clientHeight;
     if (w < 2 || hh < 2) return null;
-    const dpr = dprFor(cap), pw = round(w * dpr), ph = round(hh * dpr);
+    const dpr = cap === 'stage' ? stageDpr(w, hh) : dprFor(cap), pw = round(w * dpr), ph = round(hh * dpr);
     if (cv.width !== pw || cv.height !== ph) { cv.width = pw; cv.height = ph; }
     const ctx = cv.getContext('2d');
     ctx.setTransform(pw / w, 0, 0, ph / hh, 0, 0);
@@ -531,7 +558,23 @@
   }
 
   // ================================================================== studio backdrop (Scenes.newsroom, or the built-in set)
+  // phones: the bottom stack is built up from fixed pixel heights (the controls are touch-sized and the type has rem floors, so shares of a
+  // ~340px-tall sideways screen overflowed it): controls, ticker, then the lower third; PH.ltTop is where the stack starts
+  const isPhone = () => !!(M.Phone && M.Phone.active());
+  function phoneStack(w, hh) {
+    const port = hh > w, hudH = 50, tkH = port ? 30 : 26, ltH = port ? 104 : 62, mx = port ? 8 : max(10, w * 0.02);
+    const hudY = hh - hudH - 2, tkY = hudY - tkH - 2, ltB = tkY - 6;
+    return { port, mx, hudY, hudH, tkY, tkH, ltB, ltH, ltTop: ltB - ltH };
+  }
   function defaultRects(w, hh) {
+    if (isPhone()) {
+      const P = phoneStack(w, hh), lw = w - 2 * P.mx;
+      return {
+        wall: P.port ? { x: w * 0.03, y: hh * 0.1, w: w * 0.94, h: w * 0.94 / 2.12 } : { x: w * 0.455, y: 6, w: w * 0.485, h: max(60, P.ltTop - 12) },
+        lowerThird: { x: P.mx, y: P.ltB - P.ltH, w: lw, h: P.ltH }, ticker: { x: P.mx, y: P.tkY, w: lw, h: P.tkH },
+        logo: { x: w * 0.9, y: hh * 0.04, w: w * 0.06, h: hh * 0.07 }, anchor: { x: w * 0.16, y: hh * 0.095, w: hh * 0.512, h: hh * 0.64 }, phone: P,
+      };
+    }
     return {
       wall: { x: w * 0.455, y: hh * 0.135, w: w * 0.485, h: hh * 0.43 },
       lowerThird: { x: w * 0.055, y: hh * 0.8, w: w * 0.89, h: hh * 0.092 },
@@ -577,7 +620,55 @@
 
   // portrait drawn into a feathered buffer so the frame edges melt into the set
   let _fb = null;
+  // ---- the GNN presenter (assets/art/gnn/gnn-anchor.webp, docs/IMAGE-GEN-GNN-ANCHOR.md): one cut-out on a transparent background,
+  // drawn to the hem of the image (the desk's edge hides its straight bottom cut), with a soft shadow; photoStudio adds the desk-top shadow
+  // and her reflection in the glass. A slow breath keeps the still alive (none under reduced motion).
+  const anchorImg = pose => { const WA = M.Gfx && M.Gfx.WorldArt; return WA && WA.enabled && WA.gnnAnchor ? WA.get(WA.gnnAnchor(pose || 'neutral')) : null; };
+  const anchorArtReady = () => !!anchorImg('neutral');
+  const BODY_K = 1024 / 1760;                                        // the poses share a wide canvas (room for a gesture): her body is the middle 58%
+  // the pose for a story: breaking news -> leaning in to the camera, alerts (monsters, raids, novas, the Guardian) -> urgent, a chart ->
+  // presenting the wall, losses and war -> serious, good news -> encouraging, the lighter items -> wry; the title and everything else neutral
+  const LOSS_CATS = { colonyLost: 1, planetDestroyed: 1, planetStarving: 1, planetRebels: 1, plague: 1, fleetDestroyed: 1, battleLost: 1, empireDestroyed: 1, invasionSuccess: 1, bombardment: 1, systemNova: 1, coup: 1 };
+  function poseFor(it) {
+    if (!it) return 'neutral';
+    if (it.importance >= 2) return 'breaking';
+    if (it.grp === 'space') return 'urgent';
+    if (LOSS_CATS[it.cat]) return 'serious';                          // a loss is serious whatever its section (a colony lost is filed under colonies)
+    if (it.graphic === 'chart') return 'presenting';
+    if (it.grp === 'war' || it.grp === 'disaster') return 'serious';
+    if (it.grp === 'colony' || it.grp === 'economy' || it.grp === 'science') return 'encouraging';
+    if (it.grp === 'life' || it.grp === 'spy') return 'wry';
+    return 'neutral';
+  }
+  const AP = { cur: 'neutral', prev: null, k: 1, lastT: -1 };       // the pose on screen and the cross-fade from the last one
+  function setPose(p) { if (p !== AP.cur) { AP.prev = AP.cur; AP.cur = p; AP.k = 0; } }
+  const anchorBob = (t, hh) => (R && R.rm ? 0 : sin(t * 1.15) * hh * 0.0022);
+  function anchorBox(im, x, y, w, hh, t) { const iw = hh * im.naturalWidth / im.naturalHeight; return { x: x + (w - iw) / 2, y: y + anchorBob(t, hh), w: iw, h: hh }; }
+  function drawAnchorArt(g, x, y, w, hh, t) {
+    const im = anchorImg(); if (!im) return false;
+    const b = anchorBox(im, x, y, w, hh, t);
+    let S = 1; try { S = g.getTransform().a || 1; } catch (e) { /* old browser */ }
+    g.imageSmoothingEnabled = true; g.imageSmoothingQuality = 'high';
+    g.save(); g.shadowColor = 'rgba(0,0,0,.78)'; g.shadowBlur = hh * 0.05 * S; g.shadowOffsetX = hh * 0.012 * S; g.shadowOffsetY = hh * 0.01 * S;   // key light upper left
+    g.drawImage(im, b.x, b.y, b.w, b.h); g.restore();
+    g.drawImage(im, b.x, b.y, b.w, b.h);
+    if (curScreen && _spill.a > 0) anchorRim(g, im, b, S);
+    return true;
+  }
+  // the video wall's light catching her right side (the wall is to her left as we look): her own silhouette, lit from that edge
+  let _rim = null;
+  function anchorRim(g, im, b, S) {
+    const rw = ceil(b.w * S), rh = ceil(b.h * S); if (rw < 2 || rh < 2) return;
+    if (!_rim) _rim = mkCanvas(rw, rh);
+    if (_rim.width !== rw || _rim.height !== rh) { _rim.width = rw; _rim.height = rh; }
+    const r = _rim.getContext('2d');
+    r.setTransform(1, 0, 0, 1, 0, 0); r.globalCompositeOperation = 'source-over'; r.clearRect(0, 0, rw, rh); r.drawImage(im, 0, 0, rw, rh);
+    r.globalCompositeOperation = 'source-in';
+    r.fillStyle = lgr(r, rw * 0.62, 0, rw, 0, [0, spillCol(0), 0.75, spillCol(0.22 * _spill.a), 1, spillCol(0.4 * _spill.a)]); r.fillRect(0, 0, rw, rh);
+    g.save(); g.globalCompositeOperation = 'screen'; g.drawImage(_rim, 0, 0, rw, rh, b.x, b.y, b.w, b.h); g.restore();
+  }
   function drawAnchor(g, race, x, y, w, hh, t, talking, mood) {
+    if (drawAnchorArt(g, x, y, w, hh, t)) return;
     const P = M.Gfx && M.Gfx.Portraits;
     if (portraitReady(race)) {
       try {
@@ -687,31 +778,317 @@
 
   // ---- photoreal studio (Gfx.WorldArt 'gnn' backdrop): empty set with a curved desk (top ~y .54) and a blank video wall. The anchor is painted
   //      between the photo and a re-draw of its desk strip, so the desk occludes the anchor's lower body. Rects map from image-normalised coords.
+  // ================================================================== the studio's video wall (photo plate)
+  // The story is drawn into the off-screen graphics canvas (monCv, its own captions included), then painted INTO the photo's screen:
+  // fitted to the bezel's inner edge (a perspective quad, right side taller, cut corners), with a gentle cylindrical curve, lifted
+  // blacks and a softened, graded picture behind glass (glare, edge falloff, the bezel's inner shadow), and the light it throws onto
+  // the set (a glow round the frame, a pool on the floor, a rim on the presenter's shoulder). Fractions of the studio image:
+  const BEZEL = { xl: 0.4663, xr: 0.9349, ytl: 0.137, ytr: 0.0972, ybl: 0.4984, ybr: 0.501, ch: 0.0127, chy: 0.0229, inset: 0.0022 };
+  let _spill = { r: 120, g: 150, b: 255, a: 0, at: -1 }, _spillCv = null, curScreen = null, _scr = null;
+  const RUN = () => R;                                       // the broadcast state (photoStudio's own R is its layout rects)
+  function screenGeom(ox, oy, dw, dh) {
+    const B = BEZEL, ix = B.inset * dw, iy = B.inset * dh * 1.6;
+    const xl = ox + B.xl * dw + ix, xr = ox + B.xr * dw - ix;
+    const tl = oy + B.ytl * dh + iy, tr = oy + B.ytr * dh + iy, bl = oy + B.ybl * dh - iy, br = oy + B.ybr * dh - iy;
+    const cx = B.ch * dw, cy = B.chy * dh;
+    const topAt = u => tl + (tr - tl) * u, botAt = u => bl + (br - bl) * u, xAt = u => xl + (xr - xl) * u;
+    const pts = [[xl + cx, topAt(cx / (xr - xl))], [xr - cx, topAt(1 - cx / (xr - xl))], [xr, tr + cy], [xr, br - cy], [xr - cx, botAt(1 - cx / (xr - xl))], [xl + cx, botAt(cx / (xr - xl))], [xl, bl - cy], [xl, tl + cy]];
+    return { xl, xr, tl, tr, bl, br, topAt, botAt, xAt, pts, hl: bl - tl, hr: br - tr, cx: (xl + xr) / 2, cy: (tl + tr + bl + br) / 4 };
+  }
+  const polyPath = (g, pts) => { g.beginPath(); pts.forEach((p, i) => (i ? g.lineTo(p[0], p[1]) : g.moveTo(p[0], p[1]))); g.closePath(); };
+  // destination column u (0..1 across the screen) -> source column: the far (left, shorter) side compressed by perspective, then a mild curve
+  function srcU(u, hl, hr) { const p = u * hr / (hl + u * (hr - hl)); const k = 0.5; return 0.5 + Math.asin(k * (2 * p - 1)) / (2 * Math.asin(k)); }
+  // the screen's average colour and brightness, sampled a few times a second (drives the light it throws)
+  function sampleSpill(src, t) {
+    if (t - _spill.at < 0.25 && _spill.at >= 0) return _spill;
+    _spill.at = t;
+    try {
+      if (!_spillCv) _spillCv = mkCanvas(8, 4);
+      const c = _spillCv.getContext('2d', { willReadFrequently: true }); c.clearRect(0, 0, 8, 4); c.drawImage(src, 0, 0, 8, 4);
+      const d = c.getImageData(0, 0, 8, 4).data; let r = 0, gg = 0, b = 0, n = 0;
+      for (let i = 0; i < d.length; i += 4) { r += d[i]; gg += d[i + 1]; b += d[i + 2]; n++; }
+      r /= n; gg /= n; b /= n; const lum = (0.3 * r + 0.59 * gg + 0.11 * b) / 255, mx = max(r, gg, b, 1), k = 255 / mx;
+      const ease = x => _spill.a === 0 ? x : 0.5;                       // settle smoothly between samples
+      _spill.r = lerp(_spill.r, r * k, ease(1)); _spill.g = lerp(_spill.g, gg * k, ease(1)); _spill.b = lerp(_spill.b, b * k, ease(1));
+      _spill.a = lerp(_spill.a || clamp(lum * 2.2, 0.2, 1), clamp(lum * 2.2, 0.2, 1), 0.5);
+    } catch (e) { /* tainted or unsupported: keep the last colour */ }
+    return _spill;
+  }
+  const spillCol = a => 'rgba(' + round(_spill.r) + ',' + round(_spill.g) + ',' + round(_spill.b) + ',' + a.toFixed(3) + ')';
+  // light thrown on the set: drawn after the plate, before the screen and the presenter
+  function drawSpill(g, G, w, hh, dh) {
+    const a = _spill.a; if (!(a > 0)) return;
+    g.save(); g.globalCompositeOperation = 'screen';
+    const W = G.xr - G.xl, H = (G.hl + G.hr) / 2;
+    g.fillStyle = rgr(g, G.cx, G.cy, H * 0.45, W * 0.72, [0, spillCol(0.2 * a), 0.55, spillCol(0.08 * a), 1, spillCol(0)]); g.fillRect(G.xl - W * 0.3, G.tr - H * 0.6, W * 1.6, H * 2.2);
+    g.translate(G.cx + W * 0.08, G.bl + H * 0.62); g.scale(1, 0.16);                         // a pool on the glossy floor in front of the wall
+    g.fillStyle = rgr(g, 0, 0, 0, W * 0.55, [0, spillCol(0.22 * a), 1, spillCol(0)]); g.fillRect(-W * 0.6, -W * 0.6, W * 1.2, W * 1.2);
+    g.restore();
+  }
+  function drawScreen(g, G, src, t, S, fadeIn) {
+    if (!src || src.width < 4) return;
+    const W = G.xr - G.xl;
+    // once per frame: the picture at ~60% of its on-screen size (scaling back up softens it, as the camera's focus on the presenter
+    // would) and graded toward the photo — a little less saturated, its blacks lifted toward the panel's blue
+    const bw = max(8, round(W * S * 0.6)), bh = max(8, round(((G.hl + G.hr) / 2) * S * 0.6));
+    if (!_scr) _scr = mkCanvas(bw, bh);
+    if (_scr.width !== bw || _scr.height !== bh) { _scr.width = bw; _scr.height = bh; }
+    const b = _scr.getContext('2d');
+    b.globalCompositeOperation = 'source-over'; b.globalAlpha = 1; b.imageSmoothingQuality = 'high'; b.drawImage(src, 0, 0, bw, bh);
+    b.globalCompositeOperation = 'saturation'; b.fillStyle = 'rgba(128,128,128,.12)'; b.fillRect(0, 0, bw, bh);
+    b.globalCompositeOperation = 'lighten'; b.fillStyle = '#0d1530'; b.fillRect(0, 0, bw, bh);   // a lit screen is never black: its darks sit at the panel's blue
+    b.globalCompositeOperation = 'source-over';
+    const sw = bw, sh = bh;
+    g.save(); polyPath(g, G.pts); g.clip();
+    // the picture, column by column (perspective + curve), added to the panel's own dark glass
+    const n = max(40, min(140, round(W * S / 12)));
+    g.globalCompositeOperation = 'source-over'; g.globalAlpha = fadeIn;
+    for (let i = 0; i < n; i++) {
+      const u0 = i / n, u1 = (i + 1) / n, um = (u0 + u1) / 2, s0 = srcU(u0, G.hl, G.hr), s1 = srcU(u1, G.hl, G.hr);
+      const x0 = G.xAt(u0), x1 = G.xAt(u1), yt = G.topAt(um), yb = G.botAt(um);
+      g.drawImage(_scr, s0 * sw, 0, max(0.5, (s1 - s0) * sw), sh, x0, yt, x1 - x0 + 0.7, yb - yt);
+    }
+    g.globalAlpha = 1; g.globalCompositeOperation = 'source-over';
+    // a curved screen catches the light across its middle and falls off toward the ends
+    g.fillStyle = lgr(g, G.xl, 0, G.xr, 0, [0, 'rgba(0,0,0,.34)', 0.18, 'rgba(0,0,0,.08)', 0.5, 'rgba(0,0,0,0)', 0.82, 'rgba(0,0,0,.06)', 1, 'rgba(0,0,0,.26)']); g.fillRect(G.xl, G.tr, W, max(G.hl, G.hr) + 2);
+    g.globalCompositeOperation = 'screen';                               // glass: a soft diagonal glare from the studio lights
+    const gx = G.xl + W * (0.3 + 0.03 * sin(t * 0.05));
+    g.fillStyle = lgr(g, gx, G.tr, gx + W * 0.35, G.bl, [0, 'rgba(200,215,255,0)', 0.45, 'rgba(200,215,255,.055)', 0.55, 'rgba(200,215,255,.075)', 1, 'rgba(200,215,255,0)']); g.fillRect(G.xl, G.tr, W, max(G.hl, G.hr) + 2);
+    g.globalCompositeOperation = 'source-over';
+    g.lineJoin = 'round'; for (const [lw, a] of [[14, 0.12], [8, 0.2], [3, 0.4]]) { g.lineWidth = lw; g.strokeStyle = 'rgba(0,0,0,' + a + ')'; polyPath(g, G.pts); g.stroke(); }   // the bezel's inner shadow (stacked strokes: no blur cost)
+    g.restore();
+  }
+  // the screen's own captions, drawn into the graphics canvas so they sit on the glass with the picture (desktop / sideways phones)
+  function drawScreenText(g, w, hh, t, it) {
+    const grp = GROUPS[it.grp], col = cssHex(grp.css), live = it.importance >= 1, u = hh / 30;
+    g.font = '400 ' + (u * 1.45) + 'px ' + FONT_D; const tw = g.measureText(String(grp.label).toUpperCase()).width + String(grp.label).length * u * 0.3;
+    g.fillStyle = 'rgba(4,7,24,.82)'; g.fillRect(u * 1.6, u * 1.5, tw + u * 2.6, u * 2.6);
+    g.fillStyle = col; g.fillRect(u * 1.6, u * 1.5, u * 0.35, u * 2.6);
+    text(g, String(grp.label).toUpperCase(), u * 2.9, u * 3.45, u * 1.45, col, 'left', FONT_D, 400, u * 0.3);
+    const lw = u * 6.4, lx = w - u * 1.6 - lw;
+    g.fillStyle = live ? 'rgba(150,24,44,.75)' : 'rgba(10,16,48,.75)'; g.fillRect(lx, u * 1.5, lw, u * 2.4);
+    g.fillStyle = live ? (sin(t * 4.5) > -0.3 ? '#ff5566' : '#7a2230') : '#98a5cf'; g.fillRect(lx + u * 0.9, u * 2.35, u * 0.75, u * 0.75);
+    text(g, live ? 'LIVE' : 'FEED', lx + u * 2.2, u * 3.15, u * 1.2, live ? '#ffd9dc' : '#c3cdf2', 'left', FONT_U, 600, u * 0.25);
+    const cr = u * 2.6;                                                  // the headline crawl along the bottom; the caption sits above it
+    g.fillStyle = lgr(g, 0, hh * 0.55, 0, hh - cr, [0, 'rgba(3,5,20,0)', 1, 'rgba(3,5,20,.9)']); g.fillRect(0, hh * 0.55, w, hh * 0.45 - cr);
+    text(g, String(monCapB.textContent || '').toUpperCase(), u * 2, hh - cr - u * 3.7, u * 2.8, '#fff5dd', 'left', FONT_D, 400, u * 0.4);
+    text(g, monCapS.textContent || '', u * 2, hh - cr - u * 1.4, u * 1.45, '#b9c3e6', 'left', FONT_U, 500, u * 0.06);
+    text(g, String(monCapE.textContent || '').toUpperCase(), w - u * 2, hh - cr - u * 1.4, u * 1.3, '#8e98bd', 'right', FONT_U, 500, u * 0.25);
+    drawCrawl(g, w, hh, t, cr, u, col);
+  }
+  // the standings on the studio screen: the same rows as the overlay panel (rank, portrait, name, Leader / You, value, a growing bar),
+  // drawn into the screen canvas so the studio fits, softens and lights them like any story
+  const _rkBadge = {};
+  function rankBadge(race, px, col) {
+    const k = race + '|' + px + '|' + col; if (_rkBadge[k]) return _rkBadge[k];
+    const c = mkCanvas(px, px), g = c.getContext('2d'); try { paintBadge(g, race, px / 2, px / 2, px / 2 - 1, col); } catch (e) { /* empty */ }
+    return (_rkBadge[k] = c);
+  }
+  function drawRankScreen(g, w, hh, t) {
+    const rk = R.rk, meta = rk.meta, col = cssHex(meta.css), u = hh / 30, L = u * 2.6;
+    g.drawImage(gfxBg(w, hh, 1, 4242, [dark(col, 0.7), NEB_BASE[1], NEB_BASE[2], mix(col, '#3b1d86', 0.55)]), 0, 0, w, hh);
+    g.fillStyle = 'rgba(3,6,22,.55)'; g.fillRect(0, 0, w, hh);
+    // header: the category tag (as on a story), the title and subtitle, the four ranking tabs
+    g.font = '400 ' + (u * 1.45) + 'px ' + FONT_D; const tw = g.measureText('RANKINGS').width + 8 * u * 0.3;
+    g.fillStyle = 'rgba(4,7,24,.82)'; g.fillRect(u * 1.6, u * 1.5, tw + u * 2.6, u * 2.6); g.fillStyle = col; g.fillRect(u * 1.6, u * 1.5, u * 0.35, u * 2.6);
+    text(g, 'RANKINGS', u * 2.9, u * 3.45, u * 1.45, col, 'left', FONT_D, 400, u * 0.3);
+    text(g, meta.title, L, u * 7.6, u * 3.1, '#f3dca0', 'left', FONT_D, 400, u * 0.15);
+    text(g, meta.sub, L, u * 9.6, u * 1.4, '#b9c3e6', 'left', FONT_U, 500, u * 0.05);
+    rk.keys.forEach((k, i) => { const on = k === rk.key, x = w - u * 2 - (rk.keys.length - 1 - i) * u * 3.6; g.globalAlpha = on ? 1 : 0.45;
+      g.fillStyle = on ? cssHex(RANK_META[k].css) : '#98a5cf'; g.beginPath(); g.arc(x - u * 1.2, u * 7, u * 0.9, 0, TAU); g.fill(); g.globalAlpha = 1; });
+    g.fillStyle = rgba(col, 0.5); g.fillRect(L, u * 10.8, w - u * 2 - L, max(1, u * 0.08));
+    // rows (the crawl takes the bottom 2.6u)
+    const n = rk.rows.length, top = u * 11.8, bot = hh - u * 3.4, rh = (bot - top) / max(4, n), bp = min(rh * 0.78, u * 3.6);
+    rk.rows.forEach((r, i) => {
+      const p = easeOut((rk.t - r.delay) / rk.dur), y = top + rh * i, cy = y + rh / 2;
+      if (r.lead) { g.fillStyle = rgba(r.col, 0.12); g.fillRect(L - u * 0.6, y + rh * 0.06, w - u * 1.4 - L, rh * 0.88); g.fillStyle = r.col; g.fillRect(L - u * 0.6, y + rh * 0.06, u * 0.25, rh * 0.88); }
+      text(g, String(i + 1), L + u * 1.1, cy + u * 0.6, u * 1.9, r.lead ? '#f3dca0' : '#98a5cf', 'center', FONT_D, 400, 0);
+      g.drawImage(rankBadge(r.race, round(bp * 2), r.col), L + u * 2.7, cy - bp / 2, bp, bp);
+      const nx = L + u * 2.7 + bp + u * 1.2;
+      text(g, r.name, nx, cy - u * 0.15, u * 1.75, '#fff5dd', 'left', FONT_U, 600, 0);
+      g.font = '600 ' + (u * 1.75) + 'px ' + FONT_U; let tx = nx + g.measureText(r.name).width + u * 0.9;
+      for (const [lbl, bg] of [[r.lead && 'LEADER', '#f3dca0'], [r.me && 'YOU', '#62d8ff']]) { if (!lbl) continue;
+        g.font = '700 ' + (u * 1.0) + 'px ' + FONT_U; const lw = g.measureText(lbl).width + lbl.length * u * 0.2 + u * 1.2;
+        g.fillStyle = bg; g.fillRect(tx, cy - u * 1.55, lw, u * 1.65); text(g, lbl, tx + u * 0.6, cy - u * 0.38, u * 1.0, '#10131f', 'left', FONT_U, 700, u * 0.2); tx += lw + u * 0.6; }
+      text(g, U.fmt(round(r.value * p)) + (meta.unit ? ' ' + meta.unit : ''), w - u * 2.4, cy - u * 0.15, u * 1.75, '#fff5dd', 'right', FONT_U, 600, 0);
+      const bx = nx, bw = w - u * 2.4 - nx, by = cy + u * 0.55, bh2 = max(2, u * 0.55);
+      g.fillStyle = 'rgba(255,255,255,.08)'; g.fillRect(bx, by, bw, bh2);
+      g.fillStyle = lgr(g, bx, 0, bx + bw, 0, [0, dark(r.col, 0.3), 1, r.col]); g.fillRect(bx, by, bw * r.frac * p, bh2);
+    });
+    const cr = u * 2.6; drawCrawl(g, w, hh, t, cr, u, col);
+  }
+  // a cable-news crawl: this bulletin's headlines, then the latest from the archive, scrolling right to left under the picture
+  const _crawl = { key: '', items: [], widths: [], total: 0, font: '' };
+  function crawlItems() {
+    const out = [], seen = new Set(), add = s2 => { s2 = String(s2 || '').trim(); if (s2 && !seen.has(s2)) { seen.add(s2); out.push(s2); } };
+    (R && R.segs || []).forEach(sg => sg && sg.item && add(sg.item.headline));
+    const log = M.Game && M.Game.S && M.Game.S.newsLog;
+    if (Array.isArray(log)) for (let i = log.length - 1; i >= 0 && out.length < 9; i--) add(log[i].headline);
+    return out;
+  }
+  function drawCrawl(g, w, hh, t, cr, u, col) {
+    const y0 = hh - cr, fs = u * 1.3, font = '500 ' + fs.toFixed(2) + 'px ' + FONT_U, key = (R && R.runId) + '|' + font;
+    if (_crawl.key !== key) {
+      _crawl.key = key; _crawl.items = crawlItems(); g.font = font; if (_hasLS) g.letterSpacing = '0px';
+      _crawl.widths = _crawl.items.map(s2 => g.measureText(s2).width); _crawl.gap = u * 3.2;
+      _crawl.total = _crawl.widths.reduce((a2, b2) => a2 + b2 + _crawl.gap, 0);
+    }
+    g.fillStyle = 'rgba(6,10,32,.94)'; g.fillRect(0, y0, w, cr);
+    g.fillStyle = col; g.fillRect(0, y0, w, max(1, u * 0.14));
+    const tx = u * 1.6, tagW = tx + u * 5.2;                              // a fixed tag at the left (clear of the bezel's cut corner), the headlines sliding under it
+    if (_crawl.total > 0) {
+      g.save(); g.beginPath(); g.rect(tagW, y0, w - tagW, cr); g.clip();
+      const speed = u * 4.2, base = y0 + cr * 0.68, gap = _crawl.gap;
+      let x = w - t * speed;                                              // enters from the right, then repeats seamlessly
+      while (x + _crawl.total < tagW) x += _crawl.total;
+      g.font = font; g.textAlign = 'left'; g.textBaseline = 'alphabetic'; if (_hasLS) g.letterSpacing = '0px';
+      for (let guard = 0; x < w && guard < 60; guard++) {
+        const i2 = guard % _crawl.items.length, iw = _crawl.widths[i2];
+        if (x + iw > tagW) { g.fillStyle = '#e4e9ff'; g.fillText(_crawl.items[i2], x, base); }
+        const dx = x + iw + gap * 0.5;
+        if (dx > tagW && dx < w) { g.fillStyle = col; g.save(); g.translate(dx, y0 + cr * 0.5); g.rotate(PI / 4); g.fillRect(-u * 0.3, -u * 0.3, u * 0.6, u * 0.6); g.restore(); }
+        x += iw + gap;
+      }
+      g.restore();
+    }
+    g.fillStyle = 'rgba(6,10,32,.94)'; g.fillRect(0, y0, tagW, cr);
+    g.fillStyle = col; g.fillRect(tx, y0 + u * 0.35, tagW - tx - u * 0.4, cr - u * 0.7);
+    text(g, 'GNN', tx + (tagW - tx - u * 0.4) / 2, y0 + cr * 0.69, u * 1.4, '#10131f', 'center', FONT_D, 400, u * 0.3);
+  }
   function photoStudio(g, w, hh, t, o) {
     const WA = M.Gfx && M.Gfx.WorldArt; if (!WA || !WA.enabled) return null;
     const im = WA.get(WA.gnn); if (!im) return null;
-    const sc = max(w / im.naturalWidth, hh / im.naturalHeight), dw = im.naturalWidth * sc, dh = im.naturalHeight * sc, ox = (w - dw) / 2, oy = (hh - dh) / 2;
-    const R = defaultRects(w, hh);
-    R.wall = { x: ox + dw * 0.47, y: oy + dh * 0.108, w: dw * 0.46, h: dh * 0.385 };
-    const ah = dh * 0.52, aw = ah * 0.8;
-    R.anchor = { x: ox + dw * 0.325 - aw / 2, y: oy + dh * 0.09, w: aw, h: ah };
-    g.drawImage(im, ox, oy, dw, dh);
-    const wl = R.wall;
-    g.save(); g.beginPath(); g.rect(wl.x, wl.y, wl.w, wl.h); g.clip();                  // faint scan-lines + a slow sweep across the blank wall
-    g.fillStyle = scanPattern(g); g.globalAlpha = 0.18; g.fillRect(wl.x, wl.y, wl.w, wl.h); g.globalAlpha = 1;
-    const sweep = fract(t * 0.12);
-    g.fillStyle = lgr(g, 0, wl.y + sweep * wl.h * 1.4 - wl.h * 0.2, 0, wl.y + sweep * wl.h * 1.4, [0, 'rgba(160,200,255,0)', 1, 'rgba(160,200,255,.06)']); g.fillRect(wl.x, wl.y, wl.w, wl.h);
-    g.restore();
-    const a = R.anchor;
-    glow(g, '#6e96ff', a.x + a.w / 2, a.y + a.h * 0.4, a.w * 0.8, 0.2);
-    drawAnchor(g, o.anchorRace, a.x, a.y, a.w, a.h, t, o.talking, o.mood);
-    const dy = oy + dh * 0.545, sy = (dy - oy) / sc;                                      // desk strip over the anchor's feet
-    g.drawImage(im, 0, sy, im.naturalWidth, im.naturalHeight - sy, ox, dy, dw, oy + dh - dy);
-    drawLogo(g, w * 0.925, hh * 0.075, hh * 0.026, t, 0.95);
-    text(g, 'GNN', w * 0.925 - hh * 0.1, hh * 0.087, hh * 0.04, rgba('#ece6d3', 0.92), 'right', FONT_D, 400, 1.5);
-    g.fillStyle = rgba('#ff5c6a', sin(t * 4) > -0.2 ? 0.95 : 0.2); g.beginPath(); g.arc(w * 0.925 + hh * 0.06, hh * 0.075, hh * 0.008, 0, TAU); g.fill();
-    g.fillStyle = rgr(g, w / 2, hh * 0.48, min(w, hh) * 0.38, hypot(w, hh) * 0.62, [0, 'rgba(2,3,12,0)', 1, 'rgba(2,3,12,.4)']); g.fillRect(0, 0, w, hh);
+    const R = defaultRects(w, hh), P = R.phone;
+    R.screen = null;
+    let sc = max(w / im.naturalWidth, hh / im.naturalHeight), dw, dh, ox, oy, deskK = 0.545;
+    if (P && P.port) {                                   // portrait: the photo framed on the anchor, its desk just above the lower third; the wall is a screen across the top
+      const deskY = anchorArtReady() ? P.ltTop - 14 : min(hh * 0.6, P.ltTop - 24);   // the presenter takes the room down to the headline
+      sc = max(sc, deskY / deskK / im.naturalHeight); dw = im.naturalWidth * sc; dh = im.naturalHeight * sc;
+      ox = clamp(w / 2 - dw * 0.325, w - dw, 0); oy = 0;
+    } else {
+      dw = im.naturalWidth * sc; dh = im.naturalHeight * sc; ox = (w - dw) / 2; oy = (hh - dh) / 2;
+      if (P) oy = clamp(6 - dh * 0.09, hh - dh, 0);        // sideways: the screen's top edge in view (the cover crop cut it under the app bar)
+      const SG = screenGeom(ox, oy, dw, dh);
+      R.screen = SG;                                       // the story is painted into this quad (drawScreen); the DOM window is only its render target
+      R.wall = { x: SG.xl, y: min(SG.tl, SG.tr), w: SG.xr - SG.xl, h: (SG.hl + SG.hr) / 2 };
+    }
+    const deskY = oy + dh * deskK;
+    let ah = dh * 0.52, aw = ah * 0.8, ay = oy + dh * 0.09;
+    if (P && P.port) { ay = R.wall.y + R.wall.h + 6; ah = (deskY - ay) / 0.875; aw = ah * 0.8; }   // the bust between the screen and the desk
+    let ax = (P && P.port ? w / 2 : ox + dw * 0.325) - aw / 2;
+    if (anchorArtReady()) {                              // the presenter: head near the top, the desk across her jacket
+      ay = P && P.port ? R.wall.y + R.wall.h + 4 : oy + dh * 0.04;
+      ah = (deskY - ay) / 0.99; aw = ah * 1760 / 1536;      // the whole cut-out shows: the desk's edge just hides its straight bottom cut
+      ax = (P && P.port ? w / 2 : ox + dw * 0.37) - aw / 2;           // her left sleeve clear of the dark seam beside the brass pillar
+    }
+    R.anchor = { x: ax, y: ay, w: aw, h: ah };
+    let S = 1; try { S = g.getTransform().a || 1; } catch (e) { /* old browser */ }
+    const C = studioCache(im, w, hh, S, ox, oy, dw, dh, R.anchor, deskY);
+    g.drawImage(C.back, 0, 0, C.back.width, C.back.height, 0, 0, w, hh);
+    const mode = root.dataset.mode, wl = R.wall, SG = R.screen, run = RUN(), onAir = SG && run && ((run.gfx && mode === 'item') || (run.rk && mode === 'rank'));
+    curScreen = SG;
+    if (onAir) {
+      sampleSpill(monCv, t); drawSpill(g, SG, w, hh, dh);
+      drawScreen(g, SG, monCv, t, S, run.rm ? 1 : mode === 'rank' ? sstep(0, 0.45, run.rk.t) : sstep(0, 0.45, t - run.gfx.t0));
+    } else {
+      if (SG) _spill.a *= 0.9;
+      g.save(); if (SG) { polyPath(g, SG.pts); g.clip(); } else { g.beginPath(); g.rect(wl.x, wl.y, wl.w, wl.h); g.clip(); }   // faint scan-lines + a slow sweep across the blank screen
+      g.fillStyle = scanPattern(g); g.globalAlpha = 0.18; g.fillRect(wl.x, wl.y - wl.h * 0.1, wl.w, wl.h * 1.2); g.globalAlpha = 1;
+      const sweep = fract(t * 0.12);
+      g.fillStyle = lgr(g, 0, wl.y + sweep * wl.h * 1.4 - wl.h * 0.2, 0, wl.y + sweep * wl.h * 1.4, [0, 'rgba(160,200,255,0)', 1, 'rgba(160,200,255,.06)']); g.fillRect(wl.x, wl.y - wl.h * 0.1, wl.w, wl.h * 1.2);
+      g.restore();
+    }
+    const a = R.anchor, bob = anchorBob(t, a.h);
+    const dtp = AP.lastT < 0 ? 0 : clamp(t - AP.lastT, 0, 0.1); AP.lastT = t; AP.k = min(1, AP.k + dtp / 0.4);
+    const run2 = RUN(), kf = run2 && run2.rm ? 1 : sstep(0, 1, AP.k);
+    const sh = P && P.port ? 0 : dw * 0.11, fc = figCache(AP.cur, a, deskY, dh, S, sh) || figCache('neutral', a, deskY, dh, S, sh), fp = AP.prev && kf < 1 ? figCache(AP.prev, a, deskY, dh, S, sh) : null;
+    const layer = (F, al) => { if (!F || al <= 0) return; g.globalAlpha = al; g.drawImage(F.fig, 0, 0, F.fig.width, F.fig.height, F.fx, F.fy + bob, F.fw, F.fh); g.globalAlpha = 1; if (curScreen && _spill.a > 0) anchorRimCached(g, F, bob, al); };
+    if (fc) { if (fp) { layer(fp, 1); layer(fc, kf); } else layer(fc, 1); }                // the presenter: cached with her shadow, under her own light
+    else drawAnchor(g, o.anchorRace, a.x, a.y, a.w, a.h, t, o.talking, o.mood);
+    const dy = deskY;                                                                        // the desk strip over her lower body, from the graded cache
+    g.drawImage(C.back, 0, round(dy * S), C.back.width, C.back.height - round(dy * S), 0, round(dy * S) / S, w, hh - round(dy * S) / S);
+    if (fc) { if (fp) { drawDeskCached(g, fp, dy, dh * 0.07, 1 - kf); drawDeskCached(g, fc, dy, dh * 0.07, kf); } else drawDeskCached(g, fc, dy, dh * 0.07, 1); }   // her shadow and reflection on the glass desk top
+    if (!(P && !P.port)) {                                                                   // sideways phones: the screen fills that corner (the lower third carries the logo)
+      drawLogo(g, w * 0.925, hh * 0.075, hh * 0.026, t, 0.95);
+      text(g, 'GNN', w * 0.925 - hh * 0.1, hh * 0.087, hh * 0.04, rgba('#ece6d3', 0.92), 'right', FONT_D, 400, 1.5);
+      g.fillStyle = rgba('#ff5c6a', sin(t * 4) > -0.2 ? 0.95 : 0.2); g.beginPath(); g.arc(w * 0.925 + hh * 0.06, hh * 0.075, hh * 0.008, 0, TAU); g.fill();
+    }
     return R;
+  }
+  // What never moves is drawn once per size (a 2x 4K frame made every full-screen pass four times dearer): the studio photo with the
+  // glow behind the presenter, its grade (Gfx.Grade 'plate') and the vignette; the presenter with her soft shadow, graded the same way;
+  // her reflection on the desk glass. Each frame then copies these and adds what moves (the screen and its light, her breath, the logo).
+  const _sc = { key: '', back: null, figs: {} };
+  function studioCache(im, w, hh, S, ox, oy, dw, dh, a, deskY) {
+    const fim = anchorImg('neutral'), key = [w, hh, S, ox, oy, dw, a.x, a.y, a.w, a.h, deskY, !!fim, M.Perf && M.Perf.tier].map(v => (typeof v === 'number' ? round(v * 10) : String(v))).join(',');
+    if (_sc.key === key) return _sc;
+    _sc.key = key;
+    const bw = max(1, round(w * S)), bh = max(1, round(hh * S));
+    const back = _sc.back && _sc.back.width === bw && _sc.back.height === bh ? _sc.back : mkCanvas(bw, bh);
+    const b = back.getContext('2d'); b.setTransform(1, 0, 0, 1, 0, 0); b.globalCompositeOperation = 'source-over'; b.globalAlpha = 1; b.clearRect(0, 0, bw, bh); b.setTransform(S, 0, 0, S, 0, 0);
+    b.imageSmoothingQuality = 'high'; b.drawImage(im, ox, oy, dw, dh);
+    glow(b, '#6e96ff', a.x + a.w / 2, a.y + a.h * 0.4, a.w * 0.8, 0.2);
+    if (fim) glow(b, '#7fa6ff', a.x + a.w / 2, a.y + a.h * 0.58, a.w * 0.62, 0.3);       // a soft back light behind her shoulders: the dark jacket stands off the dark panel
+    const GR = M.Gfx && M.Gfx.Grade;
+    if (GR) { try { GR.apply(b, w, hh, 0, { preset: 'plate', grain: 0 }); } catch (e) { /* optional */ } }
+    b.fillStyle = rgr(b, w / 2, hh * 0.48, min(w, hh) * 0.38, hypot(w, hh) * 0.62, [0, 'rgba(2,3,12,0)', 1, 'rgba(2,3,12,.4)']); b.fillRect(0, 0, w, hh);
+    _sc.back = back; _sc.figs = {};
+    return _sc;
+  }
+  // one pose, lit and cached on first use (her own key light, her shadow, her reflection in the desk glass); null until its image loads
+  const POSE_SHIFT = { presenting: -1 };                             // presenting stands back to the left so her open hand stays clear of the screen
+  function figCache(pose, a, deskY, dh, S, shift) {
+    const hit = _sc.figs[pose]; if (hit) return hit;
+    const fim = anchorImg(pose); if (!fim) return null;
+    const iw = a.h * fim.naturalWidth / fim.naturalHeight, ix = a.x + (a.w - iw) / 2 + (POSE_SHIFT[pose] || 0) * (shift || 0), pad = a.h * 0.08;
+    const fw = round((iw + 2 * pad) * S), fh = round((a.h + 2 * pad) * S);
+    // her figure under its own key light: she is the subject, so a touch brighter and more vivid than the graded set, with a warm
+    // soft light from the upper left (the studio's key) on her face and shoulders; her own alpha kept
+    const gr = mkCanvas(fw, fh), q = gr.getContext('2d'), fx0 = pad * S, fy0 = pad * S, fiw = iw * S, fih = a.h * S, bx = fx0 + fiw * (1 - BODY_K) / 2, bw = fiw * BODY_K;
+    q.imageSmoothingQuality = 'high';
+    let filtered = false;                                            // lifted, not blown: her highlights stay at the source's level
+    try { if ('filter' in q) { q.filter = 'brightness(1.05) contrast(1.04) saturate(1.14)'; q.drawImage(fim, fx0, fy0, fiw, fih); q.filter = 'none'; filtered = true; } } catch (e) { filtered = false; }
+    if (!filtered) q.drawImage(fim, fx0, fy0, fiw, fih);
+    q.globalCompositeOperation = 'soft-light';
+    q.fillStyle = rgr(q, bx + bw * 0.28, fy0 + fih * 0.16, 0, fih * 0.62, [0, 'rgba(255,238,210,.5)', 0.5, 'rgba(255,230,200,.2)', 1, 'rgba(128,128,128,0)']); q.fillRect(0, 0, fw, fh);
+    q.fillStyle = 'rgba(255,226,192,.42)'; q.fillRect(0, 0, fw, fh);                  // a slightly warmer, more neutral light than the cool set, so she stands off it
+    if (!filtered) { q.globalCompositeOperation = 'screen'; q.fillStyle = 'rgba(40,40,46,1)'; q.fillRect(0, 0, fw, fh); }   // no canvas filters (Safari): a gentle lift instead
+    q.globalCompositeOperation = 'destination-in'; q.drawImage(fim, fx0, fy0, fiw, fih); q.globalCompositeOperation = 'source-over';
+    const fig = mkCanvas(fw, fh), f = fig.getContext('2d');
+    f.save(); f.shadowColor = 'rgba(0,0,0,.78)'; f.shadowBlur = a.h * 0.05 * S; f.shadowOffsetX = a.h * 0.012 * S; f.shadowOffsetY = a.h * 0.01 * S; f.drawImage(gr, 0, 0); f.restore();   // key light upper left
+    f.drawImage(gr, 0, 0);
+    const depth = dh * 0.07, rw = max(2, round(iw * S)), rh = max(2, round(depth * S));        // her mirror image in the glass, fading with distance from the edge
+    const refl = mkCanvas(rw, rh), r = refl.getContext('2d'), top = (deskY - a.y) * S;
+    r.setTransform(1, 0, 0, -1, 0, top); r.drawImage(gr, pad * S, pad * S, rw, round(a.h * S), 0, 0, rw, round(a.h * S));
+    r.setTransform(1, 0, 0, 1, 0, 0); r.globalCompositeOperation = 'destination-in';
+    r.fillStyle = lgr(r, 0, 0, 0, rh, [0, 'rgba(0,0,0,1)', 0.5, 'rgba(0,0,0,.4)', 1, 'rgba(0,0,0,0)']); r.fillRect(0, 0, rw, rh);
+    return (_sc.figs[pose] = { fig, figGraded: gr, refl, fx: ix - pad, fy: a.y - pad, fw: fw / S, fh: fh / S, pad, iw, ix, S, rim: null, rimAt: -2 });
+  }
+  function drawDeskCached(g, C, deskY, depth, al) {
+    if (!(al > 0)) return;
+    const W = C.iw * BODY_K, bx = C.ix + (C.iw - W) / 2, cx = bx + W / 2;
+    g.save(); g.globalAlpha = al;
+    g.save(); g.translate(cx, deskY + depth * 0.12); g.scale(1, 0.16);                    // a flat ellipse of shade on the glass
+    g.fillStyle = rgr(g, 0, 0, 0, W * 0.55, [0, 'rgba(0,0,0,.45)', 1, 'rgba(0,0,0,0)']); g.fillRect(-W * 0.6, -W * 0.6, W * 1.2, W * 1.2);
+    g.restore();
+    if (C.refl) { g.globalAlpha = 0.75 * al; g.drawImage(C.refl, 0, 0, C.refl.width, C.refl.height, C.ix, deskY, C.iw, depth); g.globalAlpha = al; }
+    g.globalCompositeOperation = 'screen';                                                 // the studio key light skimming the desk edge in front of her
+    g.fillStyle = lgr(g, bx - W * 0.1, 0, bx + W * 1.1, 0, [0, 'rgba(255,236,200,0)', 0.35, 'rgba(255,236,200,.28)', 0.65, 'rgba(255,236,200,.28)', 1, 'rgba(255,236,200,0)']);
+    g.fillRect(bx - W * 0.1, deskY - 1, W * 1.2, max(1.5, depth * 0.06)); g.restore();
+  }
+  // the screen's light on her right side, re-tinted only when the screen's colour is sampled (a few times a second)
+  function anchorRimCached(g, C, bob, al) {
+    const src = C.figGraded; if (!src) return;
+    if (C.rimAt !== _spill.at) {
+      C.rimAt = _spill.at;
+      if (!C.rim || C.rim.width !== src.width || C.rim.height !== src.height) C.rim = mkCanvas(src.width, src.height);
+      const r = C.rim.getContext('2d'), rw = src.width, x0 = C.pad * C.S + C.iw * C.S * (1 - BODY_K) / 2, iw = C.iw * C.S * BODY_K;
+      r.globalCompositeOperation = 'copy'; r.drawImage(src, 0, 0);
+      r.globalCompositeOperation = 'source-in';
+      r.fillStyle = lgr(r, x0 + iw * 0.62, 0, x0 + iw, 0, [0, spillCol(0), 0.75, spillCol(0.22 * _spill.a), 1, spillCol(0.4 * _spill.a)]); r.fillRect(0, 0, rw, src.height);
+      r.globalCompositeOperation = 'source-over';
+    }
+    g.save(); g.globalAlpha = al === undefined ? 1 : al; g.globalCompositeOperation = 'screen'; g.drawImage(C.rim, 0, 0, C.rim.width, C.rim.height, C.fx, C.fy + bob, C.fw, C.fh); g.restore();
   }
 
   // Scenes.newsroom when present (its layout rects drive every DOM overlay), otherwise the built-in set. Returns {L, scene, cam}.
@@ -719,7 +1096,7 @@
   function paintBackdrop(g, w, hh, t, o, S) {
     try {
       const PL = photoStudio(g, w, hh, t, o);
-      if (PL) { const GR = M.Gfx && M.Gfx.Grade; if (GR) { try { GR.apply(g, w, hh, t, 'plate'); } catch (e) { /* optional */ } } return { L: sanitizeRects(PL, w, hh), scene: false, cam: { z: 1, dx: 0, dy: 0 } }; }   // graded like every plate
+      if (PL) { const GR = M.Gfx && M.Gfx.Grade; if (GR) { try { GR.apply(g, w, hh, t, { preset: 'plate', tone: null, sat: 0, cool: 0, dark: 0, vig: 0 }); } catch (e) { /* optional */ } } return { L: sanitizeRects(PL, w, hh), scene: false, cam: { z: 1, dx: 0, dy: 0 } }; }   // graded like every plate
     } catch (e) { warnOnce('WorldArt.gnn', e); }
     const SC = M.Gfx && M.Gfx.Scenes, ns = SC && SC.newsroom;
     if (!sceneBroken && ns && typeof ns.draw === 'function') {
@@ -1061,7 +1438,41 @@
   }
 
   // ---- MAP (mini star chart with a pulsing marker; slow push-in)
+  // the map is the real galaxy: every star where it is, the ones you have explored in their owners' colours, the story's system (or
+  // the two empires' known territories) marked. Ownership you have not seen is not shown. Falls back to an illustration without a game.
+  function initMapReal(s) {
+    const G2 = M.Game, S = G2 && G2.S, E = G2 && G2.player && G2.player(); if (!S || !E || !Array.isArray(S.stars) || !S.stars.length) return false;
+    const it = s.item, A = 2.1;                                          // the studio screen's shape (width / height)
+    let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
+    for (const st of S.stars) { x0 = min(x0, st.x); y0 = min(y0, st.y); x1 = max(x1, st.x); y1 = max(y1, st.y); }
+    const cx = (x0 + x1) / 2, cy = (y0 + y1) / 2, k = min(0.9 / max(1, x1 - x0), 0.62 / (max(1, y1 - y0) * A));
+    const nx = x => 0.5 + (x - cx) * k, ny = y => 0.42 + (y - cy) * k * A;
+    const known = i => { const p = S.planets[i]; return p && (p.owner === E.id || E.explored[i]) ? p.owner : -1; };
+    s.pts = S.stars.map((st, i) => { const o = known(i); return { x: nx(st.x), y: ny(st.y), k: 0, sz: o >= 0 ? 2.6 : 1.1, col: o >= 0 ? empHex(S.empires[o].color) : null }; });
+    s.lanes = [];
+    for (let i = 0; i < s.pts.length && s.lanes.length < 220; i++) for (let j = i + 1; j < s.pts.length; j++) { const dx = s.pts[i].x - s.pts[j].x, dy = (s.pts[i].y - s.pts[j].y) / A; if (dx * dx + dy * dy < 0.0045) s.lanes.push([i, j]); }
+    const empOf = race => S.empires.find(e => e.race === race && e.alive !== false) || S.empires.find(e => e.race === race);
+    const terrOf = race => {                                             // the centroid and spread of the colonies you know of
+      const e = race && empOf(race); if (!e) return null;
+      const pts = []; S.planets.forEach((p, i) => { if (known(i) === e.id) pts.push(s.pts[i]); });
+      const D = M.Sim.Diplo, met = e.id === E.id || (D && D.rec && D.rec(S, E.id, e.id).contact);
+      if (!pts.length && met && e.capital >= 0 && s.pts[e.capital]) pts.push(s.pts[e.capital]);   // met but none of their worlds explored: their home system
+      if (!pts.length) return null;
+      const mx = pts.reduce((a2, p) => a2 + p.x, 0) / pts.length, my = pts.reduce((a2, p) => a2 + p.y, 0) / pts.length;
+      const r = max(0.08, min(0.3, sqrt(pts.reduce((a2, p) => a2 + (p.x - mx) ** 2 + ((p.y - my) / A) ** 2, 0) / pts.length) * 2.2));
+      return { x: mx, y: my, r: r, col: empHex(e.color) };
+    };
+    s.terr = [terrOf(it.race), terrOf(it.race2)].filter(Boolean);
+    const si = s.star && s.star.name ? S.stars.findIndex(st => st.name === s.star.name) : -1;
+    if (si >= 0) s.mark = { x: s.pts[si].x, y: s.pts[si].y, star: si };
+    else if (s.terr.length >= 2) s.mark = { x: (s.terr[0].x + s.terr[1].x) / 2, y: (s.terr[0].y + s.terr[1].y) / 2 };
+    else if (s.terr.length) s.mark = { x: s.terr[0].x, y: s.terr[0].y };
+    else s.mark = { x: 0.5, y: 0.42 };
+    s.real = true; s.cap = si >= 0 ? (S.planets[si].owner >= 0 && known(si) >= 0 ? S.empires[S.planets[si].owner].plural : STAR_TXT[S.stars[si].color] || 'Star system') : null;
+    return true;
+  }
   function initMap(s) {
+    if (initMapReal(s)) return;
     const rnd = s.rnd, it = s.item, name = (s.star && s.star.name) || it.headline;
     const mx = 0.34 + 0.32 * h2(hashStr(name), 1), my = 0.32 + 0.36 * h2(hashStr(name), 2);
     s.mark = { x: mx, y: my };
@@ -1077,7 +1488,7 @@
   }
   function gMap(g, w, hh, t, lt, dt, s, S) {
     if (!s.pts) initMap(s);
-    const it = s.item, mk = s.mark, k = easeOut(lt / 7), z = 1 + 0.5 * k, alarm = s.fx === 'alarm';
+    const it = s.item, mk = s.mark, k = easeOut(lt / 7), z = 1 + (s.real ? 0.2 : 0.5) * k, alarm = s.fx === 'alarm';   // the real galaxy: a gentle push-in, the whole map stays readable
     g.save();
     g.translate(w * mk.x, hh * mk.y); g.scale(z, z); g.translate(-w * mk.x, -hh * mk.y);
     // chart grid
@@ -1092,7 +1503,7 @@
     const cols = [empHex(0), empHex(1), empHex(2), empHex(3), empHex(4), empHex(5)];
     for (let i = 0; i < s.pts.length; i++) {
       const p = s.pts[i], tw = 0.55 + 0.45 * sin(t * 1.6 + i * 1.7), r = p.sz * (0.8 + 0.2 * tw);
-      g.fillStyle = i % 4 === 0 ? cols[p.k] : rgba('#dbe8ff', 0.5 + 0.4 * tw);
+      g.fillStyle = s.real ? (p.col || rgba('#dbe8ff', 0.35 + 0.3 * tw)) : i % 4 === 0 ? cols[p.k] : rgba('#dbe8ff', 0.5 + 0.4 * tw);
       g.fillRect(p.x * w - r, p.y * hh - r, r * 2, r * 2);
     }
     // marker
@@ -1104,6 +1515,8 @@
     g.beginPath(); g.moveTo(x - b, y - b + q); g.lineTo(x - b, y - b); g.lineTo(x - b + q, y - b); g.moveTo(x + b - q, y - b); g.lineTo(x + b, y - b); g.lineTo(x + b, y - b + q);
     g.moveTo(x + b, y + b - q); g.lineTo(x + b, y + b); g.lineTo(x + b - q, y + b); g.moveTo(x - b + q, y + b); g.lineTo(x - b, y + b); g.lineTo(x - b, y + b - q); g.stroke();
     g.restore();
+    // two-party stories (a war, a treaty, first contact): both territories are named in their colours and joined through the marker
+    if (it.race && it.race2 && s.terr.length >= 2) { gMapPair(g, w, hh, t, lt, s, z, alarm); return; }
     // callout (not scaled)
     const sx = w * mk.x + (w * mk.x - w * mk.x) * z, sy = hh * mk.y;
     const lbl = String((s.star && s.star.name) || (it.race && raceName(it.race)) || GROUPS[it.grp].label).toUpperCase();
@@ -1112,12 +1525,47 @@
     g.strokeStyle = rgba(col, 0.9 * reveal); g.lineWidth = 1.4; g.beginPath(); g.moveTo(sx + (flip ? -1 : 1) * 12, sy - 10); g.lineTo(lx, ly); g.lineTo(lx + (ex - lx) * reveal, ly); g.stroke();
     g.globalAlpha = reveal;
     text(g, lbl, flip ? ex : lx + 4, ly - 6, max(11, hh * 0.058), '#fff5dd', flip ? 'right' : 'left', FONT_D, 400, 1.5);
-    text(g, (alarm ? 'HOSTILITIES' : 'SECTOR ' + (10 + (s.seed % 80)) + '-' + (10 + ((s.seed >> 7) % 80))), flip ? ex : lx + 4, ly + hh * 0.07, max(9, hh * 0.04), rgba(col, 0.95), flip ? 'right' : 'left', FONT_U, 600, 2);
+    text(g, (alarm ? 'HOSTILITIES' : String(s.cap || GROUPS[it.grp].label).toUpperCase()), flip ? ex : lx + 4, ly + hh * 0.07, max(9, hh * 0.04), rgba(col, 0.95), flip ? 'right' : 'left', FONT_U, 600, 2);
     g.globalAlpha = 1;
   }
 
+  function gMapPair(g, w, hh, t, lt, s, z, alarm) {
+    const it = s.item, mk = s.mark, reveal = easeOut((lt - 0.4) / 0.8);
+    const scr = T => ({ x: clamp(w * (mk.x + (T.x - mk.x) * z), w * 0.16, w * 0.84), y: clamp(hh * (mk.y + (T.y - mk.y) * z), hh * 0.3, hh * 0.62) });
+    const a = scr(s.terr[0]), b = scr(s.terr[1]), ca = raceColor(it.race), cb = raceColor(it.race2), mx = w * mk.x, my = hh * mk.y;
+    g.save(); g.globalAlpha = reveal; g.lineWidth = 2; g.setLineDash([7, 6]); g.lineDashOffset = -t * 18;
+    g.strokeStyle = rgba(alarm ? '#ff5c6a' : '#dbe8ff', 0.75); g.beginPath(); g.moveTo(a.x, a.y); g.quadraticCurveTo(mx, my, b.x, b.y); g.stroke(); g.setLineDash([]);
+    // the labels: over their territories when those are far apart; neighbours get their names spread to either side, with a leader line
+    const left = a.x <= b.x, mid = (a.x + b.x) / 2, gap = w * 0.14;
+    const lab = (P, isLeft) => { let x = P.x; if (abs(a.x - b.x) < gap * 2) x = isLeft ? min(P.x, mid - gap) : max(P.x, mid + gap); return { x: clamp(x, w * 0.14, w * 0.86), y: P.y - hh * 0.1 }; };
+    for (const [P, col, race, isL] of [[a, ca, it.race, left], [b, cb, it.race2, !left]]) {
+      const L = lab(P, isL);
+      g.fillStyle = col; g.beginPath(); g.arc(P.x, P.y, 5, 0, TAU); g.fill(); glow(g, col, P.x, P.y, hh * 0.08, 0.6);
+      g.strokeStyle = rgba(col, 0.8); g.lineWidth = 1.2; g.beginPath(); g.moveTo(P.x, P.y - 6); g.lineTo(L.x, L.y + hh * 0.015); g.stroke();
+      text(g, racePlural(race).toUpperCase(), L.x, L.y, max(11, hh * 0.056), '#fff5dd', 'center', FONT_D, 400, 1.5);
+    }
+    text(g, alarm ? 'HOSTILITIES' : it.cat === 'firstContact' ? 'FIRST CONTACT' : String(GROUPS[it.grp].label).toUpperCase(), mx, my + hh * 0.13, max(9, hh * 0.04), rgba(alarm ? '#ff5c6a' : '#62d8ff', 0.95), 'center', FONT_U, 600, 2);
+    g.restore();
+  }
+
   // ---- CHART (animated bars + trend line)
+  // the real standings when the bulletin carries them (economy: production, science: research, council: population — the vote weight);
+  // values are shown as they are, bars scaled to the leader. Only a demo bulletin without rankings falls back to an illustrative chart.
+  const CHART_KEY = { economy: 'production', science: 'research', council: 'population' };
   function initChart(s) {
+    const it = s.item, N = M.Sim && M.Sim.News, GS = M.Game && M.Game.S;
+    let rk = R && R.intr && R.intr.rankings;                       // a bulletin carries them only on a rankings filler turn: otherwise read the live standings
+    if (!rk && N && N.rankings && GS) { try { rk = N.rankings(GS); } catch (e) { rk = null; } }
+    const rows = rk && rk[CHART_KEY[it.grp] || 'production'];
+    if (Array.isArray(rows) && rows.length) {
+      const top = rows.slice(0, 6), mx = max(1, ...top.map(r => r.value | 0)), want = [it.race, it.race2].filter(Boolean);
+      s.bars = top.map(r => ({ race: r.race, v: max(0.03, (r.value | 0) / mx), val: r.value | 0, hl: want.indexOf(r.race) >= 0, col: raceColor(r.race) }));
+      s.title = { science: 'RESEARCH OUTPUT', economy: 'INDUSTRIAL OUTPUT', council: 'POPULATION (VOTES)' }[it.grp] || 'STANDINGS';
+      return;
+    }
+    initChartDemo(s);
+  }
+  function initChartDemo(s) {
     const rnd = s.rnd, it = s.item, n = 6, bars = [], used = {};
     const want = [it.race, it.race2].filter(Boolean);
     const pool = raceIds().filter(r => want.indexOf(r) < 0);
@@ -1133,9 +1581,9 @@
   }
   function gChart(g, w, hh, t, lt, dt, s, S) {
     if (!s.bars) initChart(s);
-    const gc = cssHex(GROUPS[s.item.grp].css), px = w * 0.1, pw = w * 0.82, py = hh * 0.25, ph = hh * 0.44, n = s.bars.length, bw = pw / n;
+    const gc = cssHex(GROUPS[s.item.grp].css), px = w * 0.1, pw = w * 0.82, py = hh * 0.31, ph = hh * 0.32, n = s.bars.length, bw = pw / n;   // the axis labels end above the caption (~0.75)
     g.fillStyle = 'rgba(3,6,22,.55)'; g.fillRect(0, 0, w, hh);
-    text(g, s.title, w * 0.5, hh * 0.17, max(11, hh * 0.058), rgba(gc, 0.95), 'center', FONT_D, 400, 3);
+    text(g, s.title, w * 0.5, hh * 0.2, max(11, hh * 0.058), rgba(gc, 0.95), 'center', FONT_D, 400, 3);
     g.strokeStyle = rgba('#98a5cf', 0.16); g.lineWidth = 1; g.beginPath();
     for (let i = 0; i <= 4; i++) { const y = py + ph * i / 4; g.moveTo(px, y); g.lineTo(px + pw, y); }
     g.stroke();
@@ -1146,9 +1594,10 @@
       g.fillStyle = 'rgba(255,255,255,.4)'; g.fillRect(bx, by, bwid, 2);
       if (b.hl && k > 0.2) glow(g, b.col, bx + bwid / 2, by, bwid * 1.2, 0.45 * k * (0.75 + 0.25 * sin(t * 4)));
       text(g, (b.race ? raceName(b.race) : '').slice(0, 3).toUpperCase(), bx + bwid / 2, py + ph + hh * 0.065, max(9, hh * 0.045), b.hl ? '#fff5dd' : '#98a5cf', 'center', FONT_D, 400, 1);
-      if (k > 0.3) text(g, String(round(b.v * 100 * k)), bx + bwid / 2, by - 6, max(9, hh * 0.05), '#ece6d3', 'center', FONT_U, 600);
+      if (k > 0.3) text(g, b.val !== undefined ? U.fmt(round(b.val * k)) : String(round(b.v * 100 * k)), bx + bwid / 2, by - 6, max(9, hh * 0.05), '#ece6d3', 'center', FONT_U, 600);
       pts.push(bx + bwid / 2, by - hh * 0.035);
     }
+    if (s.bars[0] && s.bars[0].val !== undefined) return;            // real standings: bars only (a line joining different empires is no trend)
     const draw = easeOut((lt - 0.5) / 1.6), nd = max(2, floor(draw * n * 2));
     g.strokeStyle = rgba(gc, 0.95); g.lineWidth = 2; g.beginPath();
     for (let i = 0; i < nd && i < pts.length / 2; i++) { if (i) g.lineTo(pts[2 * i], pts[2 * i + 1]); else g.moveTo(pts[0], pts[1]); }
@@ -1163,12 +1612,12 @@
     text(g, redact ? 'CLASSIFIED DOSSIER' : 'GNN WIRE - LIVE FEED', w * 0.05, hh * 0.31, max(11, hh * 0.058), rgba(gc, 0.95), 'left', FONT_D, 400, 3);
     g.strokeStyle = rgba(gc, 0.5); g.lineWidth = 1; g.beginPath(); g.moveTo(w * 0.05, hh * 0.335); g.lineTo(w * 0.95, hh * 0.335); g.stroke();
     const sc = (t * rowH * 0.45) % rowH, base = floor(t * 0.45);
-    g.save(); g.beginPath(); g.rect(0, hh * 0.345, w, hh * 0.44); g.clip();
+    g.save(); g.beginPath(); g.rect(0, hh * 0.345, w, hh * 0.31); g.clip();               // the list ends above the screen's caption
     for (let i = -1; i < n; i++) {
-      const idx = base + i, y = top + i * rowH - sc + rowH * 0.7, a = clamp(min((y - top) / rowH + 0.4, (hh * 0.8 - y) / rowH + 0.3), 0, 1);
+      const idx = base + i, y = top + i * rowH - sc + rowH * 0.7, a = clamp(min((y - top) / rowH + 0.4, (hh * 0.64 - y) / rowH + 0.3), 0, 1);
       const ln = lines.length ? lines[((idx % lines.length) + lines.length) % lines.length] : '';
       g.globalAlpha = a;
-      text(g, String(1000 + ((idx * 37) % 9000)), w * 0.05, y, max(9, hh * 0.05), rgba('#62d8ff', 0.8), 'left', FONT_U, 600);
+      text(g, R && R.intr && R.intr.year !== undefined ? String(R.intr.year) : '', w * 0.05, y, max(9, hh * 0.05), rgba('#62d8ff', 0.8), 'left', FONT_U, 600);
       if (redact) {
         let x = w * 0.15; const R = rng32(hashStr(ln) + idx);
         while (x < w * 0.92) { const ww = w * (0.04 + R() * 0.12); g.fillStyle = R() < 0.55 ? '#05081c' : rgba('#98a5cf', 0.35); g.fillRect(x, y - hh * 0.045, ww, hh * 0.055); x += ww + w * 0.015; }
@@ -1256,7 +1705,7 @@
 
   let root, stage, mon, monCv, monTag, monLive, monCapB, monCapS, monCapE, lt, ltBar, ltFlag, ltFlagTxt, ltKick, hlBox, hlT, hlR, subBox, subT, subR, ltBadges, srLive;
   let tk, tkWin, tkTrack, hud, pips, btnPause, btnArch, btnNext, ttl, ttlYear, ttlMeta, rank, rkIco, rkTitle, rkSub, rkTabs, rkList, cutEl, cutP, cutE, flashEl, fadeEl;
-  let R = null, curU = 12.8, layKey = '';
+  let R = null, curU = 12.8, layKey = '', _runSeq = 0;
 
   function build(el) {
     stage = h('canvas.gnn-stage');
@@ -1304,8 +1753,10 @@
     mon.style.transformOrigin = px(w / 2 - W.x) + ' ' + px(hh / 2 - W.y);
     lt.style.left = px(T.x); lt.style.width = px(T.w); lt.style.bottom = px(hh - (T.y + T.h)); ltBar.style.minHeight = px(T.h);
     tk.style.left = px(K.x); tk.style.top = px(K.y); tk.style.width = px(K.w); tk.style.height = px(K.h);
-    hud.style.left = px(K.x); hud.style.width = px(K.w); hud.style.top = px(K.y + K.h + hh * 0.004); hud.style.height = px(max(hh - (K.y + K.h) - hh * 0.006, 22));
-    rank.style.left = px(W.x - w * 0.012); rank.style.top = px(hh * 0.118); rank.style.width = px(W.w + w * 0.032); rank.style.height = px(hh * 0.628);
+    if (L.phone) { hud.style.left = px(K.x); hud.style.width = px(K.w); hud.style.top = px(L.phone.hudY); hud.style.height = px(L.phone.hudH); }
+    else { hud.style.left = px(K.x); hud.style.width = px(K.w); hud.style.top = px(K.y + K.h + hh * 0.004); hud.style.height = px(max(hh - (K.y + K.h) - hh * 0.006, 22)); }
+    if (L.phone) { const P = L.phone, x0 = P.port ? P.mx : W.x - w * 0.012, top = P.port ? W.y : 6; rank.style.left = px(x0); rank.style.top = px(top); rank.style.width = px(P.port ? w - 2 * P.mx : min(W.w + w * 0.032, w - x0 - 6)); rank.style.height = px(P.ltTop - 8 - top); }
+    else { rank.style.left = px(W.x - w * 0.012); rank.style.top = px(hh * 0.118); rank.style.width = px(W.w + w * 0.032); rank.style.height = px(hh * 0.628); }
     if (R && R.tkU && abs(R.tkU - u) > 0.4) buildTicker();
   }
   function layoutNow() {
@@ -1394,7 +1845,7 @@
     ttlYear.textContent = y !== undefined && y !== null ? 'Year ' + y : '';
     ttlMeta.textContent = R.intr.turn !== undefined && R.intr.turn !== null ? 'Turn ' + R.intr.turn : '';
     R.titleDur = [0.9, 2.7, 1.9][R.speed];
-    R.mood = 'neutral'; R.gfx = null; R.rk = null;
+    R.mood = 'neutral'; R.gfx = null; R.rk = null; setPose('neutral');
     R.hl.set('', 0); R.sub.set('', 0);
     srLive.textContent = 'Galactic News Network' + (y !== undefined && y !== null ? ', year ' + y : '');
     sfx('gnn_ident', 'news');
@@ -1402,7 +1853,7 @@
   function applyItem(seg) {
     const it = seg.item, g = GROUPS[it.grp];
     root.dataset.mode = 'item'; root.dataset.grp = it.grp; setTone(it.importance);
-    R.mood = it.importance >= 2 ? 'worried' : g.mood; R.rk = null;
+    R.mood = it.importance >= 2 ? 'worried' : g.mood; R.rk = null; setPose(poseFor(it));
     ltFlagTxt.textContent = it.importance >= 2 ? 'Breaking news' : 'Top story';
     UI.clear(ltKick);
     ltKick.appendChild(iconNode(g.icon)); ltKick.appendChild(h('span', g.label));
@@ -1417,6 +1868,7 @@
     if (star && star.name) { monCapB.textContent = star.name; monCapS.textContent = (STAR_TXT[star.kind] || 'Star') + (pl ? ' · ' + humanize(pl.look) + ' world' : ''); }
     else if (pl) { monCapB.textContent = humanize(pl.look) + ' world'; monCapS.textContent = pl.inhabited ? 'Inhabited' : 'Uninhabited'; }
     else if (it.race) { monCapB.textContent = raceName(it.race) + (it.race2 ? (it.grp === 'war' ? ' vs ' : ' & ') + raceName(it.race2) : ''); monCapS.textContent = humanize(it.cat); }
+    else if (it.cat === 'flavor' || it.cat === 'rumor') { monCapB.textContent = 'GNN Wire'; monCapS.textContent = 'Around the galaxy'; }
     else { monCapB.textContent = humanize(it.cat); monCapS.textContent = g.label; }
     monCapE.textContent = R.intr.year !== undefined ? 'GNN · ' + R.intr.year : 'GNN';
     // text
@@ -1435,7 +1887,7 @@
   }
   function applyRank(seg) {
     const meta = RANK_META[seg.key], list = seg.list.slice().sort((a, b) => b.value - a.value).slice(0, 6);
-    root.dataset.mode = 'rank'; root.dataset.grp = meta.cat; setTone(0); R.mood = 'pleased'; R.gfx = null;
+    root.dataset.mode = 'rank'; root.dataset.grp = meta.cat; setTone(0); R.mood = 'pleased'; R.gfx = null; setPose('presenting');
     UI.clear(rkIco); rkIco.appendChild(iconNode(meta.icon)); rkTitle.textContent = meta.title; rkSub.textContent = meta.sub;
     UI.clear(rkTabs);
     RANK_ORDER.forEach(k => { if (R.segs.some(s => s.kind === 'rank' && s.key === k)) rkTabs.appendChild(h('span.gnn-rank-tab' + (k === seg.key ? '.on' : ''), { tip: RANK_META[k].title }, iconNode(RANK_META[k].icon))); });
@@ -1450,9 +1902,9 @@
         h('div.gnn-rk-n', String(i + 1)), badge(e.race, round(curU * 3.7), col),
         h('div.gnn-rk-main', h('div.gnn-rk-top', h('div.gnn-rk-name', nm, showRace ? h('em', raceName(e.race)) : null, i === 0 ? h('u', 'Leader') : null, me ? h('u', { style: { background: 'var(--cyan)' } }, 'You') : null), val), h('div.gnn-rk-bar', bar)));
       rkList.appendChild(row);
-      rows.push({ bar: bar, val: val, frac: clamp(e.value / mx, 0, 1), value: e.value, delay: 0.25 + i * 0.14 });
+      rows.push({ bar: bar, val: val, frac: clamp(e.value / mx, 0, 1), value: e.value, delay: 0.25 + i * 0.14, name: nm, race: e.race, col: col, me: me, lead: i === 0 });
     });
-    R.rk = { rows: rows, t: instant ? 99 : 0, dur: 1.1, done: false };
+    R.rk = { rows: rows, t: instant ? 99 : 0, dur: 1.1, done: false, meta: meta, key: seg.key, keys: RANK_ORDER.filter(k => R.segs.some(s2 => s2.kind === 'rank' && s2.key === k)) };
     const lead = list[0], c = cps();
     UI.clear(ltKick); ltKick.appendChild(iconNode(meta.icon)); ltKick.appendChild(h('span', 'Rankings')); ltKick.appendChild(h('b', '· ' + meta.title));
     ltFlagTxt.textContent = '';
@@ -1636,14 +2088,18 @@
     const fps = PQ().animFps || 60;
     if (!UI.pace(R.pace, fps, dt) && !R.redraw) return;
     R.redraw = false; const gdt = R.accDt; R.accDt = 0;
-    drawFrame(gdt);
+    const t0 = performance.now(); drawFrame(gdt); stageTiming(performance.now() - t0);
   }
   function drawFrame(gdt) {
-    const f = fit(stage, 1.5);
+    const f = fit(stage, 'stage');
     if (!f) return;
     const g = f.ctx, w = f.w, hh = f.h, t = R.t, seg = R.segs[R.idx], talking = R.hl.busy || R.sub.busy || R.talkTail > 0;
     const o = { anchorRace: R.anchor, graphic: R.gfx ? R.gfx.kind : 'ticker', headline: '', ticker: '', cut: R.cut ? clamp(R.cut.t / R.cut.dur, 0, 1) : 0, talking: talking, mood: R.mood, t: t, color: steel('#d6b36a'), newsPlanet: R.curPlanet };
+    if (R.gfx && root.dataset.mode === 'item') drawMon(t, gdt);            // the story first: the studio paints it into its screen
+    else if (R.rk && root.dataset.mode === 'rank' && root.classList.contains('gnn-warp')) { const mf = fit(monCv, 2); if (mf) { try { drawRankScreen(mf.ctx, mf.w, mf.h, t); } catch (e) { warnOnce('rank screen', e); } } }
+    curScreen = null;
     const res = paintBackdrop(g, w, hh, t, o, f.S), L = res.L, cam = res.cam;
+    root.classList.toggle('gnn-warp', !!curScreen);
     R.L = L;
     applyLayout(L, w, hh);
     mon.style.transform = 'translate(' + cam.dx.toFixed(2) + 'px,' + cam.dy.toFixed(2) + 'px) scale(' + cam.z.toFixed(4) + ')';
@@ -1662,17 +2118,22 @@
     const tk0 = seg && seg.kind === 'title' && !R.cut && !R.finishing ? 1 : 0;
     R.titleK += (tk0 - R.titleK) * min(1, gdt * 5);
     titleFx(g, w, hh, t, R.titleK);
-    if (R.gfx && root.dataset.mode === 'item') {
-      const mf = fit(monCv, 2);
-      if (mf) { try { drawGfx(mf.ctx, mf.w, mf.h, t, gdt, R.gfx, mf.S, R.tkLines); } catch (e) { if (!R.gfx.failed) { R.gfx.failed = true; console.error('[gnn] graphic failed:', e); } } }
-    }
+  }
+  function drawMon(t, gdt) {
+    const mf = fit(monCv, 2); if (!mf) return;
+    try { drawGfx(mf.ctx, mf.w, mf.h, t, gdt, R.gfx, mf.S, R.tkLines); if (root.classList.contains('gnn-warp')) drawScreenText(mf.ctx, mf.w, mf.h, t, R.gfx.item); }
+    catch (e) { if (!R.gfx.failed) { R.gfx.failed = true; console.error('[gnn] graphic failed:', e); } }
   }
 
   // ---- starting a broadcast
   function startRun(pend) {
     const intr = pend.intr || {};
     layKey = '';
-    try { const WA = M.Gfx && M.Gfx.WorldArt; if (WA) WA.get(WA.gnn); } catch (e) { /* optional */ }
+    try {                                                                // the studio, the neutral presenter, then the poses this bulletin will use
+      const WA = M.Gfx && M.Gfx.WorldArt;
+      if (WA) { WA.get(WA.gnn); if (WA.gnnAnchor) { WA.get(WA.gnnAnchor('neutral')); (intr.items || []).forEach(it => it && WA.get(WA.gnnAnchor(poseFor(normalizeItem(Object.assign({ headline: '-' }, it)))))); if (RANK_ORDER.some(k => intr.rankings && intr.rankings[k])) WA.get(WA.gnnAnchor('presenting')); } }
+    } catch (e) { /* optional */ }
+    AP.cur = 'neutral'; AP.prev = null; AP.k = 1; AP.lastT = -1;
     root.classList.remove('out');
     root.classList.toggle('rm', reduced());
     stopWipe();
@@ -1680,7 +2141,7 @@
       pending: pend, intr: intr, segs: buildSegments(intr), idx: -1, t: 0, accDt: 0, pace: {}, redraw: false, segT: 0, phase: 'play', cut: null, paused: false, finishing: false, fadeT: 0, fadeDur: 0.5,
       speed: animSpeed(), rm: reduced(), anchor: pickAnchor(intr), mood: 'neutral', tone: 'normal', talkTail: 0, wasTyping: false, hold: 0, holdSet: false, titleDur: 2.5, titleK: 0,
       hl: new Typer(hlT, hlR, hlBox), sub: new Typer(subT, subR, subBox), gfx: null, rk: null, curPlanet: null, L: null, shown: 0, skipped: false, leaving: false,
-      tkLines: tickerLines(intr), tkIdx: 0, tkT: 0, tkU: 0, anims: null, prevTrack: musicCur(), prevSnap: musicSnap(), musicStarted: false,
+      runId: (_runSeq = (_runSeq || 0) + 1), tkLines: tickerLines(intr), tkIdx: 0, tkT: 0, tkU: 0, anims: null, prevTrack: musicCur(), prevSnap: musicSnap(), musicStarted: false,
     };
     R.rm = root.classList.contains('rm');
     btnArch.style.display = M.Game && M.Game.S && Array.isArray(M.Game.S.newsLog) ? '' : 'none';
@@ -1769,7 +2230,7 @@
     const row = e => {
       const g = GROUPS[e.grp];
       return h('div.gnn-arow', h('span.gnn-achip', { style: { '--c': cssHex(g.css) } }, iconNode(g.icon), humanize(e.cat)), h('span.gnn-ahl', e.headline),
-        h('span', [e.race, e.race2].filter(Boolean).map(r => h('span.gnn-arace', { style: { '--c': raceColor(r) } }, h('i'), raceName(r)))));
+        h('span.gnn-araces', [e.race, e.race2].filter(Boolean).map(r => h('span.gnn-arace', { style: { '--c': raceColor(r) } }, h('i'), raceName(r)))));
     };
     function render() {
       const keep = listEl.scrollTop;

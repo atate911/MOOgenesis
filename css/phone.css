@@ -195,10 +195,11 @@ html:root:root[data-phone] .sc-btns { flex-direction: row; } html:root:root[data
 /* half height = the controls (portrait): the picture, the stats, the build box, the rally line and the star's planet card wait for full */
 @media (orientation: portrait) {
   html:root:root[data-phone] .gx-side:not(.gx-float)[data-sheet="half"] :is(.sc-card, .sc-stats, .sc-bbox, .sc-rally, .sm-card) { display: none; }
-  html:root:root[data-phone] .gx-side:not(.gx-float) .sc-card.wide { aspect-ratio: 16 / 4.5; }   /* full: the colony plate shorter, so the whole panel fits */
+  html:root:root[data-phone] .gx-side:not(.gx-float) :is(.sc-card, .sm-card).wide { aspect-ratio: 16 / 4.5; }   /* full: the colony / planet plate shorter, so the whole panel fits */
   html:root:root[data-phone] .gx-side:not(.gx-float)[data-sheet="full"] .ph-sum { display: none; }   /* full: the stats block shows the same figures */
   html:root:root[data-phone] .gx-side:not(.gx-float) .sc-bbox { min-height: 3.4rem; }
 }
+@media (orientation: landscape) { html:root:root[data-phone] .gx-side .sm-card.wide { aspect-ratio: 16 / 5; } }   /* sideways: a star's planet plate leaves its range line in view (the colony panel scrolls anyway) */
 /* a pick-a-star panel taller than its sheet keeps Cancel / Accept in reach */
 html[data-phone] .gx-side .gx-sidebody > .sm-actions:last-child { position: sticky; bottom: -.6rem; z-index: 3; margin: .3rem -.5rem 0; padding: .45rem .5rem .5rem; background: rgba(58, 66, 76, .97); box-shadow: 0 -6px 12px rgba(0, 0, 0, .45); }
 html[data-phone] .gx-side.gx-float .gx-sidebody > .sm-actions:last-child { bottom: 0; }   /* the floating card too (fleet deployment after the first pick): Accept stays in reach on a card taller than its 58% */
