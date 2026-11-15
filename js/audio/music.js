@@ -5,7 +5,7 @@
 // (25 ms timer, ~160 ms ahead) or an offline window renderer plays the events through the voice factories in audio.js.
 //
 // Public API (MOO.Audio.Music):
-//   play(id,{fade,loop, oldFade, inFade, delay, keepOld, quantize, bridge}) stop({fade, keep}) current() has(id) list() setIntensity(0..1)
+//   play(id,{fade,loop, oldFade, inFade, delay, keepOld, quantize, bridge, riser}) stop({fade, keep}) current() has(id) list() setIntensity(0..1)
 //   playlist(ids,{shuffle, gap: s | [lo,hi], fade, start, between: templateId | [ids], betweenP, gapIn}) (a programme: pieces crossfade into
 //     interludes re-rooted to the next piece's key and those into the next piece; reshuffles never repeat the last piece or put same-key pieces together)
 //   setMood(name,{fade, soft, bridge}) snapshot() / restore(snap,{fade}) (hand the music back after a scene: track OR running playlist)
@@ -1250,6 +1250,10 @@
           if (key === 'lead' && orchOf(C.def)) for (let i = n0; i < C.ev.length; i++) { const e = C.ev[i]; if (e.m && e.bt) C.solo.push([e.b, e.b + e.bt, e.m]); }
         }
       }
+      if (w.R.raw && w.R.raw.swell) {   // swell (bars): the suspended cymbal swelling up to the section's last bar line, its crest on the next downbeat
+        C.key = 'trans'; const nb = Math.min(w.bars, Math.max(0.25, num(w.R.raw.swell, 1))), st = w.start + (w.bars - nb) * w.R.meter, dur = C.tAt(w.start + w.beats) - C.tAt(st);
+        emitDrum(C, 'fx', { v: 'sample', smp: 'cymSwell', fb: 'swell', fbo: { dur }, alignEnd: true, dur, dyn: 0.9 }, st, 0.75);
+      }
       C.key = 'tens';
       if (w.R.tens !== false) genTension(C, s);
       if (E > 0.65 && w.bars >= 4) { C.key = 'eerie'; genEerie(C, s, erng); }
@@ -1485,6 +1489,10 @@
       const e0 = this.eng; if (e0.mbMid) { const dy = this.def.dyn || {}; try { e0.mbMid.ratio.setTargetAtTime(clamp(num(dy.ratio, 3), 1, 20), Math.max(0, t0), 0.5); e0.mbMid.threshold.setTargetAtTime(clamp(num(dy.thresh, -30), -60, 0), Math.max(0, t0), 0.5); } catch (err) { /* ignore */ } }
       const e = this.eng; if (e.mbLow && e.mbLowDb !== undefined) { try { e.mbLow.gain.setTargetAtTime(Math.pow(10, (e.mbLowDb + clamp(num(this.def.lowBand, 0), -6, 6)) / 20), Math.max(0, t0), 0.8); } catch (err) { /* ignore */ } }
       this.nextPass();
+      if (this.o.impact && this.pass) {   // the impact a riser lands on: the bass drum, a low boom and the crash, on the cue's first downbeat
+        const hit = (o, vel) => ({ t: 0, v: o.v, ly: 'fx', o: Object.assign({}, o, { vel, dyn: clamp(vel, 0, 1) }), m: 0, b: 0, bt: 0, k: 'trans' });
+        this.pass.events.unshift(hit({ v: 'boom' }, 0.32), hit({ v: 'sample', smp: 'bassDrum', fb: 'kick', fbo: { f: 40, f0: 110, dur: 0.5 } }, 0.95), hit({ v: 'sample', smp: 'crash', fb: 'crash', fbo: { dur: 2.8 } }, 0.62));
+      }
     }
     nextPass() {
       this.passNo++;
@@ -1867,6 +1875,7 @@
     return 0;
   }
   const BRIDGE_SECS = 2.2;                               // a bridge's length: under three seconds from the request to the cue, with the beat it waits for
+  const RISER_SECS = 3.8;                                // a riser's: long enough to build from the music that is ending to the cue's first hit
   function interludeFor(template, nextId, o) {
     const T = TRACKS[template], N = TRACKS[nextId], long = !!(o && o.long);
     if (!T || !N || N.interlude) return null;
@@ -1899,8 +1908,8 @@
       if (path && B) B.prog = path[0] + ' ' + path[path.length - 1];
     }
     if (T.bridge) {                                       // and quick: a change of scene is heard within about two seconds, whatever the bridge's own tempo
-      const beats = d.sec.reduce((a, x) => a + num(x.bars, 1) * (x.meter || d.meter || 4), 0), bpm = beats * 60 / BRIDGE_SECS;
-      if (bpm > d.bpm) d.bpm = bpm;
+      const beats = d.sec.reduce((a, x) => a + num(x.bars, 1) * (x.meter || d.meter || 4), 0), bpm = beats * 60 / (T.riser ? RISER_SECS : BRIDGE_SECS);
+      if (T.riser || bpm > d.bpm) d.bpm = bpm;
     } else if (from) {
       const inS = d.sec.find(x => x.n === 'in'), path = pivotPath(from, N), k = pulseK(from, N.bpm);
       if (inS) {
@@ -1962,8 +1971,25 @@
 
   // Switches happen on the bar (opts.quantize 'bar', the default; 'beat' for urgent cues; false = now) with long crossfades, so a
   // change of scene reads as a phrase ending rather than a jump cut.
+  // The risers (js/audio/score/map.js, 'riser:*'): a build of about four seconds into a cue that arrives suddenly (a battle, a landing, the
+  // Antarans): the music that was playing goes on under it as it fades, the riser climbs in the cue's key from that music's tonic to the
+  // cue's dominant, and the cue starts at full on its last beat, on an impact. Several, in turn and never the same twice running.
+  const RISERS = ['riser:roll', 'riser:brass', 'riser:pulse', 'riser:dark'];
+  let lastRiser = null;
+  function pickRiser() { const c = RISERS.filter(r => TRACKS[r] && r !== lastRiser); if (!c.length) return null; lastRiser = c[Math.floor(Math.random() * c.length)]; return lastRiser; }
+  Music._risers = { RISERS, pickRiser, get last() { return lastRiser; } };
   function startTrack(id, opts) {
     const def = TRACKS[id], eng = A.engine, fade = num(opts.fade, 3.5);
+    if (opts.riser && S.cur && !S.cur.stopped && S.cur.id !== id && !S.cur.def.bridge) {
+      const tpl = typeof opts.riser === 'string' && TRACKS[opts.riser] ? opts.riser : pickRiser(), b = tpl && interludeFor(tpl, id, { from: outgoing(S.cur) });
+      if (b) {
+        const len = compilePass(TRACKS[b], 0).len, at = S.cur.nextBoundary('beat');
+        const then = { id, opts: Object.assign({}, opts, { riser: undefined, bridge: undefined, quantize: false, inFade: 0.03, oldFade: 1.2, keepOld: true, impact: true }), at: at + len };
+        S.switchAt = { id: b, opts: { inFade: 0.4, oldFade: Math.max(1.5, len * 0.95), keepOld: true, loop: false, keepPlaylist: !!opts.keepPlaylist, quantize: false }, at, then };
+        if (!opts.keepPlaylist) { S.playlist = null; S.plWait = null; }
+        ensureTimer(); return true;
+      }
+    }
     if (opts.bridge === 'auto' && S.cur && !S.cur.stopped && S.cur.id !== id) opts = Object.assign({}, opts, { bridge: chooseBridge(outgoing(S.cur), def) });   // the bridge chosen from both sides
     if (opts.bridge && S.cur && !S.cur.stopped && S.cur.id !== id && !S.cur.def.bridge && TRACKS['bridge:' + opts.bridge]) {
       // a cue that cannot wait still gets a way in: a two-bar bridge in its key starts on the next beat, the old piece fades under it, and the
@@ -1983,7 +2009,7 @@
     }
     S.switchAt = null;
     if (!opts.keepPlaylist) { S.playlist = null; S.plWait = null; }
-    const p = new Player(eng, def, { loop: opts.loop !== false, intensity: S.intensity, perf: opts.perf });
+    const p = new Player(eng, def, { loop: opts.loop !== false, intensity: S.intensity, perf: opts.perf, impact: !!opts.impact && !(def.sec && def.sec[0] && def.sec[0].hit && !orchOf(def)) && !(opts.from > 0) });
     if (opts.from > 0) { p.shift = num(opts.from, 0); p.skipBefore = 0; }   // start part-way through the first pass (a demo, a test)
     else if (opts.quiet) { const q = quietStart(def); if (q > 0) { p.shift = q; p.skipBefore = 0; } }   // land on the piece's quiet half (back from a fight)
     if (!def.hidden || def.variantOf) { const pid = def.variantOf || id; heard(pid); DIR.lastPiece = pid; }   // a war-time reading counts as its piece
@@ -2194,7 +2220,7 @@
         const cur = list.indexOf(Music.current()), next = list[cur >= 0 ? (cur + 1) % list.length : (moodTick++) % list.length];
         if (rot) {
           if (opts.soft) { const r = softSwitch(pick, rot, opts); if (r) return r; }
-          const r = Music.playlist(pick, Object.assign({}, rot, { shuffle: true, start: rot.director ? undefined : next, firstFade: num(opts.fade, 2), bridge: opts.bridge, quiet: opts.quiet, quantize: opts.quantize, lead: opts.lead, interlude: opts.interlude })); return r === false ? false : (rot.director ? (S.playlist && S.playlist.order[0]) || next : next);
+          const r = Music.playlist(pick, Object.assign({}, rot, { shuffle: true, start: rot.director ? undefined : next, firstFade: num(opts.fade, 2), bridge: opts.bridge, quiet: opts.quiet, quantize: opts.quantize, lead: opts.lead, interlude: opts.interlude, keepOld: opts.keepOld })); return r === false ? false : (rot.director ? (S.playlist && S.playlist.order[0]) || next : next);
         }
         pick = next;
       }

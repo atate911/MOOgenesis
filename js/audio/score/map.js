@@ -393,6 +393,49 @@
     sec: [{ n: 'B', bars: 2, cres: [0.45, 0.8], prog: 'I:2', pad: { p: 'swell', n: 4, reg: [50, 76], vel: 0.7 }, pad2: { p: 'swell', n: 3, reg: [45, 69], vel: 0.5 }, bass: { pat: '1---', pedal: true, inst: { p: 'deep', att: 1.0, rel: 2.0, sub: 0.5 } }, bell: { dens: 0.3, res: 1, reg: [72, 96], vel: 0.5 } }],
   });
 
+  // The risers: a build of about four seconds into a cue that arrives suddenly (a battle, a landing, the Antarans), taken in turn so it
+  // never becomes a formula. startTrack builds one with interludeFor when asked for `riser: true`: transposed to the cue's key, its first
+  // bar on the tonic of the music that is ending (which plays on under it as it fades), its second on the cue's dominant, everything
+  // climbing to the cymbal's crest, and the cue enters at full on the next downbeat, on an impact.
+  Track('riser:roll', {
+    desc: 'A riser into a sudden cue: the timpani roll, the strings\u2019 tremolo and the cellos swelling, a snare roll and the cymbal into the downbeat',
+    tags: { dark: 0.5, energy: 0.85, tension: 0.9, grandeur: 0.5 },
+    bpm: 126, trim: 2.6, root: 'C', mode: 'minor', hidden: true, interlude: true, bridge: true, riser: true, tens: false, rubato: 0,
+    inst: { pad: 'strTrem', pad2: 'cellos', bass: 'deep' },
+    sec: [{ n: 'B', bars: 2, cres: [0.35, 1.0], swell: 2, fill: 'rollS', prog: 'i:2', pad: { p: 'swell', n: 4, reg: [55, 76], vel: 1.0 }, pad2: { p: 'swell', n: 2, reg: [40, 52], vel: 0.9 },
+      timp: { kick: '................', roll: 2, vel: 1.3 }, drums: { sn: ['................', '................'] } }],
+  });
+
+  Track('riser:brass', {
+    desc: 'A riser into a sudden cue: the horns and trombones swelling on the chord, a string run climbing faster to the top, the timpani rolling in the last bar, the cymbal into the downbeat',
+    tags: { dark: 0.3, energy: 0.8, tension: 0.7, grandeur: 0.9 },
+    bpm: 126, trim: 2.4, root: 'C', mode: 'minor', hidden: true, interlude: true, bridge: true, riser: true, tens: false, rubato: 0,
+    inst: { pad: 'horn', pad2: 'trombones', bass: 'deep', arp: 'strOst' },
+    sec: [{ n: 'B', bars: 2, cres: [0.35, 1.0], swell: 2, prog: 'i:2', pad: { p: 'swell', n: 4, reg: [53, 72], vel: 0.95 }, pad2: { p: 'swell', n: 3, reg: [40, 58], vel: 0.85 },
+      bass: { pat: '1---', pedal: true, inst: { p: 'deep', att: 0.8, sub: 0.5 } }, arp: { pat: ['0...1...2...3...', '0.1.2.3.4.5.6789'], res: 4, vel: 0.55, reg: [50, 88], gate: 0.7 },
+      timp: { kick: ['................', '................'], roll: 1, vel: 1.2 } }],
+  });
+
+  Track('riser:pulse', {
+    desc: 'A riser into a sudden cue: the low drums quickening from quarters to sixteenths over the low strings driving, the strings swelling above, the cymbal into the downbeat',
+    tags: { dark: 0.55, energy: 1, tension: 0.85, grandeur: 0.5 },
+    bpm: 126, trim: 2.5, root: 'C', mode: 'minor', hidden: true, interlude: true, bridge: true, riser: true, tens: false, rubato: 0,
+    inst: { pad: 'strings', bass: 'deep', arp: 'strOst' },
+    sec: [{ n: 'B', bars: 2, cres: [0.35, 1.0], swell: 2, prog: 'i:2', pad: { p: 'swell', n: 4, reg: [55, 79], vel: 0.9 },
+      arp: { pat: '0000000000000000', res: 4, vel: 0.5, reg: [40, 52], gate: 0.6 },
+      drums: { t5: ['X...X...X...X...', 'X.X.X.X.XxXxXxXx'], t4: ['................', '..o...o...o.oooo'], t3: ['................', '............xxxx'] } }],
+  });
+
+  Track('riser:dark', {
+    desc: 'A riser into a sudden cue: a tam-tam stroke, the low strings\u2019 tremolo and the men\u2019s voices rising, the bass drum quickening like a heartbeat, the timpani in the last bar, the cymbal into the downbeat',
+    tags: { dark: 0.95, energy: 0.6, tension: 0.9, grandeur: 0.6 },
+    bpm: 126, trim: 2.9, root: 'C', mode: 'minor', hidden: true, interlude: true, bridge: true, riser: true, tens: false, rubato: 0,
+    inst: { pad: 'tremLo', bass: 'deep', choir: 'choirMenAh' },
+    sec: [{ n: 'B', bars: 2, cres: [0.35, 1.0], swell: 2, prog: 'i:2', pad: { p: 'swell', n: 3, reg: [40, 62], vel: 0.95 }, choir: { n: 3, reg: [43, 60], vel: 0.85, att: 1.5 },
+      bass: { pat: 'c---', pedal: true, inst: { p: 'deep', att: 0.6, sub: 0.65 } },
+      drums: { tam: ['x...............', '................'], bd: ['X.......x.......', 'X...x...X.x.XxXx'] }, timp: { kick: ['................', '................'], roll: 1, vel: 1.1 } }],
+  });
+
   // ---------------------------------------------------------------- the rare pieces (the Crimson Tide manner): once a cycle or so, with impact
   Track('galaxy9', {
     desc: 'The tide — deep bass swells rising out of the dark, the analogue sky and cellos over them, low brass and the men entering, the hymn in the horns at the crest; rare on the map, and felt when it comes',

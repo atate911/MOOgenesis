@@ -5,6 +5,14 @@ Versions follow `MAJOR.MINOR.PATCH`; the live version is the `VERSION` file.
 
 ## Unreleased
 
+- Battles, landings and ground combat, and the Antaran and Orion encounters are led into by a riser: about four seconds of build in the
+  cue's key, from the tonic of what was playing (which plays on under it as it fades) to the cue's dominant, the cymbal swelling to the
+  crest, and the cue enters at full on the next downbeat, on an impact (the bass drum, a boom and the crash, where the cue does not open
+  on a hit of its own). Four risers, taken in turn and never the same twice running: the timpani roll with the strings' tremolo and a
+  snare roll; the horns and trombones swelling with a string run climbing faster; the low drums quickening over the low strings; a
+  tam-tam, the low tremolo and the men's voices over a quickening heartbeat. The way back to the map from a fight or a landing is a slow
+  crossfade (four seconds, the fight's music playing on as it fades under the map's interlude). The council and the endings keep their
+  bridges. `play` takes `riser` (true, or a riser's id); a section may set `swell` (bars: the cymbal swelling to its last bar line).
 - New music for the Galactic News Network. The old bed (an organ, a pop drum kit and a synth lead in a bright major key) sounded
   hokey; the new one is written like a cable network's breaking-story package and played by the game's orchestra in its hall: a
   ticking clock, the strings' spiccato ostinato driving in sixteenths over a pizzicato pulse in the basses, low drums and timpani, a
