@@ -18,6 +18,7 @@
   const sin = Math.sin, cos = Math.cos, abs = Math.abs, min = Math.min, max = Math.max, floor = Math.floor, ceil = Math.ceil;
   const sqrt = Math.sqrt, pow = Math.pow, atan2 = Math.atan2, round = Math.round, hypot = Math.hypot;
   const GNN = (UI.GNN = {});
+  GNN._pinStageDpr = v => { stageCap = v; stageLock = true; };      // QA renders: full resolution even on a software-rendered machine
 
   // ================================================================== small helpers
   const clamp = (v, a, b) => (v < a ? a : v > b ? b : v);
@@ -92,7 +93,16 @@
   const dprFor = cap => min(window.devicePixelRatio || 1, PQ().dpr || 1.5, cap || 2);
   // the studio stage: a photo with a presenter and type on it, mostly still, so it gets the screen's own sharpness (up to 2x) on every
   // tier (the low tier's 1x was upscaled by the browser and blurred the photo), within a 4K pixel budget
-  const stageDpr = (w, hh) => { const d = min(window.devicePixelRatio || 1, 2); return max(1, min(d, sqrt(8.3e6 / max(1, w * hh)))); };
+  // a machine that cannot keep up steps the stage down (stageCap, learned once per session by drawFrame's timing) instead of stuttering
+  let stageCap = 2, stageLock = false;
+  const stageDpr = (w, hh) => { const d = min(window.devicePixelRatio || 1, 2, stageCap); return max(1, min(d, sqrt(8.3e6 / max(1, w * hh)))); };
+  const _ft = { sum: 0, n: 0 };
+  function stageTiming(ms) {
+    _ft.sum += ms; _ft.n++;
+    if (_ft.n < 24) return;
+    const avg = _ft.sum / _ft.n; _ft.sum = 0; _ft.n = 0;
+    if (avg > 45 && stageCap > 1 && !stageLock) { stageCap = max(1, round((stageCap - 0.25) * 4) / 4); if (R) R.redraw = true; }
+  }
   let _sfxList = null;
   function sfx(id, fb) {
     try {
@@ -239,6 +249,7 @@
     /* ---- graphics window (sits exactly on the studio's video wall) ---- */
     .gnn-mon { position:absolute; z-index:3; pointer-events:none; display:none; transform-origin:0 0; background:#02040f; }
     .gnn[data-mode=item] .gnn-mon { display:block; }
+    .gnn.gnn-warp .gnn-mon { opacity:0; }                       /* the studio photo paints the story into its own screen (drawScreen) */
     .gnn-mon-cv { position:absolute; inset:0; width:100%; height:100%; display:block; }
     .gnn-mon.in .gnn-mon-cv { animation:gnn-pop .5s var(--ease) both; }
     .gnn-mon-tag { position:absolute; left:calc(var(--u)*1.3); top:calc(var(--u)*1.2); display:flex; align-items:center; gap:calc(var(--u)*.7); padding:calc(var(--u)*.45) calc(var(--u)*1.3) calc(var(--u)*.4) calc(var(--u)*1);
@@ -622,7 +633,20 @@
     g.save(); g.shadowColor = 'rgba(0,0,0,.78)'; g.shadowBlur = hh * 0.05 * S; g.shadowOffsetX = hh * 0.012 * S; g.shadowOffsetY = hh * 0.01 * S;   // key light upper left
     g.drawImage(im, b.x, b.y, b.w, b.h); g.restore();
     g.drawImage(im, b.x, b.y, b.w, b.h);
+    if (curScreen && _spill.a > 0) anchorRim(g, im, b, S);
     return true;
+  }
+  // the video wall's light catching her right side (the wall is to her left as we look): her own silhouette, lit from that edge
+  let _rim = null;
+  function anchorRim(g, im, b, S) {
+    const rw = ceil(b.w * S), rh = ceil(b.h * S); if (rw < 2 || rh < 2) return;
+    if (!_rim) _rim = mkCanvas(rw, rh);
+    if (_rim.width !== rw || _rim.height !== rh) { _rim.width = rw; _rim.height = rh; }
+    const r = _rim.getContext('2d');
+    r.setTransform(1, 0, 0, 1, 0, 0); r.globalCompositeOperation = 'source-over'; r.clearRect(0, 0, rw, rh); r.drawImage(im, 0, 0, rw, rh);
+    r.globalCompositeOperation = 'source-in';
+    r.fillStyle = lgr(r, rw * 0.62, 0, rw, 0, [0, spillCol(0), 0.75, spillCol(0.22 * _spill.a), 1, spillCol(0.4 * _spill.a)]); r.fillRect(0, 0, rw, rh);
+    g.save(); g.globalCompositeOperation = 'screen'; g.drawImage(_rim, 0, 0, rw, rh, b.x, b.y, b.w, b.h); g.restore();
   }
   // on the glass desk top just in front of her: a soft contact shadow, then her mirror image, faint and fading with distance from the edge
   let _refl = null;
@@ -758,10 +782,107 @@
 
   // ---- photoreal studio (Gfx.WorldArt 'gnn' backdrop): empty set with a curved desk (top ~y .54) and a blank video wall. The anchor is painted
   //      between the photo and a re-draw of its desk strip, so the desk occludes the anchor's lower body. Rects map from image-normalised coords.
+  // ================================================================== the studio's video wall (photo plate)
+  // The story is drawn into the off-screen graphics canvas (monCv, its own captions included), then painted INTO the photo's screen:
+  // fitted to the bezel's inner edge (a perspective quad, right side taller, cut corners), with a gentle cylindrical curve, lifted
+  // blacks and a softened, graded picture behind glass (glare, edge falloff, the bezel's inner shadow), and the light it throws onto
+  // the set (a glow round the frame, a pool on the floor, a rim on the presenter's shoulder). Fractions of the studio image:
+  const BEZEL = { xl: 0.4663, xr: 0.9349, ytl: 0.137, ytr: 0.0972, ybl: 0.4984, ybr: 0.501, ch: 0.0127, chy: 0.0229, inset: 0.0022 };
+  let _spill = { r: 120, g: 150, b: 255, a: 0, at: -1 }, _spillCv = null, curScreen = null, _scr = null;
+  const RUN = () => R;                                       // the broadcast state (photoStudio's own R is its layout rects)
+  function screenGeom(ox, oy, dw, dh) {
+    const B = BEZEL, ix = B.inset * dw, iy = B.inset * dh * 1.6;
+    const xl = ox + B.xl * dw + ix, xr = ox + B.xr * dw - ix;
+    const tl = oy + B.ytl * dh + iy, tr = oy + B.ytr * dh + iy, bl = oy + B.ybl * dh - iy, br = oy + B.ybr * dh - iy;
+    const cx = B.ch * dw, cy = B.chy * dh;
+    const topAt = u => tl + (tr - tl) * u, botAt = u => bl + (br - bl) * u, xAt = u => xl + (xr - xl) * u;
+    const pts = [[xl + cx, topAt(cx / (xr - xl))], [xr - cx, topAt(1 - cx / (xr - xl))], [xr, tr + cy], [xr, br - cy], [xr - cx, botAt(1 - cx / (xr - xl))], [xl + cx, botAt(cx / (xr - xl))], [xl, bl - cy], [xl, tl + cy]];
+    return { xl, xr, tl, tr, bl, br, topAt, botAt, xAt, pts, hl: bl - tl, hr: br - tr, cx: (xl + xr) / 2, cy: (tl + tr + bl + br) / 4 };
+  }
+  const polyPath = (g, pts) => { g.beginPath(); pts.forEach((p, i) => (i ? g.lineTo(p[0], p[1]) : g.moveTo(p[0], p[1]))); g.closePath(); };
+  // destination column u (0..1 across the screen) -> source column: the far (left, shorter) side compressed by perspective, then a mild curve
+  function srcU(u, hl, hr) { const p = u * hr / (hl + u * (hr - hl)); const k = 0.5; return 0.5 + Math.asin(k * (2 * p - 1)) / (2 * Math.asin(k)); }
+  // the screen's average colour and brightness, sampled a few times a second (drives the light it throws)
+  function sampleSpill(src, t) {
+    if (t - _spill.at < 0.25 && _spill.at >= 0) return _spill;
+    _spill.at = t;
+    try {
+      if (!_spillCv) _spillCv = mkCanvas(8, 4);
+      const c = _spillCv.getContext('2d', { willReadFrequently: true }); c.clearRect(0, 0, 8, 4); c.drawImage(src, 0, 0, 8, 4);
+      const d = c.getImageData(0, 0, 8, 4).data; let r = 0, gg = 0, b = 0, n = 0;
+      for (let i = 0; i < d.length; i += 4) { r += d[i]; gg += d[i + 1]; b += d[i + 2]; n++; }
+      r /= n; gg /= n; b /= n; const lum = (0.3 * r + 0.59 * gg + 0.11 * b) / 255, mx = max(r, gg, b, 1), k = 255 / mx;
+      const ease = x => _spill.a === 0 ? x : 0.5;                       // settle smoothly between samples
+      _spill.r = lerp(_spill.r, r * k, ease(1)); _spill.g = lerp(_spill.g, gg * k, ease(1)); _spill.b = lerp(_spill.b, b * k, ease(1));
+      _spill.a = lerp(_spill.a || clamp(lum * 2.2, 0.2, 1), clamp(lum * 2.2, 0.2, 1), 0.5);
+    } catch (e) { /* tainted or unsupported: keep the last colour */ }
+    return _spill;
+  }
+  const spillCol = a => 'rgba(' + round(_spill.r) + ',' + round(_spill.g) + ',' + round(_spill.b) + ',' + a.toFixed(3) + ')';
+  // light thrown on the set: drawn after the plate, before the screen and the presenter
+  function drawSpill(g, G, w, hh, dh) {
+    const a = _spill.a; if (!(a > 0)) return;
+    g.save(); g.globalCompositeOperation = 'screen';
+    const W = G.xr - G.xl, H = (G.hl + G.hr) / 2;
+    g.fillStyle = rgr(g, G.cx, G.cy, H * 0.45, W * 0.72, [0, spillCol(0.2 * a), 0.55, spillCol(0.08 * a), 1, spillCol(0)]); g.fillRect(G.xl - W * 0.3, G.tr - H * 0.6, W * 1.6, H * 2.2);
+    g.translate(G.cx + W * 0.08, G.bl + H * 0.62); g.scale(1, 0.16);                         // a pool on the glossy floor in front of the wall
+    g.fillStyle = rgr(g, 0, 0, 0, W * 0.55, [0, spillCol(0.22 * a), 1, spillCol(0)]); g.fillRect(-W * 0.6, -W * 0.6, W * 1.2, W * 1.2);
+    g.restore();
+  }
+  function drawScreen(g, G, src, t, S, fadeIn) {
+    if (!src || src.width < 4) return;
+    const W = G.xr - G.xl;
+    // once per frame: the picture at ~60% of its on-screen size (scaling back up softens it, as the camera's focus on the presenter
+    // would) and graded toward the photo — a little less saturated, its blacks lifted toward the panel's blue
+    const bw = max(8, round(W * S * 0.6)), bh = max(8, round(((G.hl + G.hr) / 2) * S * 0.6));
+    if (!_scr) _scr = mkCanvas(bw, bh);
+    if (_scr.width !== bw || _scr.height !== bh) { _scr.width = bw; _scr.height = bh; }
+    const b = _scr.getContext('2d');
+    b.globalCompositeOperation = 'source-over'; b.globalAlpha = 1; b.imageSmoothingQuality = 'high'; b.drawImage(src, 0, 0, bw, bh);
+    b.globalCompositeOperation = 'saturation'; b.fillStyle = 'rgba(128,128,128,.12)'; b.fillRect(0, 0, bw, bh);
+    b.globalCompositeOperation = 'lighten'; b.fillStyle = '#0d1530'; b.fillRect(0, 0, bw, bh);   // a lit screen is never black: its darks sit at the panel's blue
+    b.globalCompositeOperation = 'source-over';
+    const sw = bw, sh = bh;
+    g.save(); polyPath(g, G.pts); g.clip();
+    // the picture, column by column (perspective + curve), added to the panel's own dark glass
+    const n = max(40, min(140, round(W * S / 12)));
+    g.globalCompositeOperation = 'source-over'; g.globalAlpha = fadeIn;
+    for (let i = 0; i < n; i++) {
+      const u0 = i / n, u1 = (i + 1) / n, um = (u0 + u1) / 2, s0 = srcU(u0, G.hl, G.hr), s1 = srcU(u1, G.hl, G.hr);
+      const x0 = G.xAt(u0), x1 = G.xAt(u1), yt = G.topAt(um), yb = G.botAt(um);
+      g.drawImage(_scr, s0 * sw, 0, max(0.5, (s1 - s0) * sw), sh, x0, yt, x1 - x0 + 0.7, yb - yt);
+    }
+    g.globalAlpha = 1; g.globalCompositeOperation = 'source-over';
+    // a curved screen catches the light across its middle and falls off toward the ends
+    g.fillStyle = lgr(g, G.xl, 0, G.xr, 0, [0, 'rgba(0,0,0,.34)', 0.18, 'rgba(0,0,0,.08)', 0.5, 'rgba(0,0,0,0)', 0.82, 'rgba(0,0,0,.06)', 1, 'rgba(0,0,0,.26)']); g.fillRect(G.xl, G.tr, W, max(G.hl, G.hr) + 2);
+    g.globalCompositeOperation = 'screen';                               // glass: a soft diagonal glare from the studio lights
+    const gx = G.xl + W * (0.3 + 0.03 * sin(t * 0.05));
+    g.fillStyle = lgr(g, gx, G.tr, gx + W * 0.35, G.bl, [0, 'rgba(200,215,255,0)', 0.45, 'rgba(200,215,255,.055)', 0.55, 'rgba(200,215,255,.075)', 1, 'rgba(200,215,255,0)']); g.fillRect(G.xl, G.tr, W, max(G.hl, G.hr) + 2);
+    g.globalCompositeOperation = 'source-over';
+    g.lineJoin = 'round'; for (const [lw, a] of [[14, 0.12], [8, 0.2], [3, 0.4]]) { g.lineWidth = lw; g.strokeStyle = 'rgba(0,0,0,' + a + ')'; polyPath(g, G.pts); g.stroke(); }   // the bezel's inner shadow (stacked strokes: no blur cost)
+    g.restore();
+  }
+  // the screen's own captions, drawn into the graphics canvas so they sit on the glass with the picture (desktop / sideways phones)
+  function drawScreenText(g, w, hh, t, it) {
+    const grp = GROUPS[it.grp], col = cssHex(grp.css), live = it.importance >= 1, u = hh / 30;
+    g.font = '400 ' + (u * 1.45) + 'px ' + FONT_D; const tw = g.measureText(String(grp.label).toUpperCase()).width + String(grp.label).length * u * 0.3;
+    g.fillStyle = 'rgba(4,7,24,.82)'; g.fillRect(u * 1.6, u * 1.5, tw + u * 2.6, u * 2.6);
+    g.fillStyle = col; g.fillRect(u * 1.6, u * 1.5, u * 0.35, u * 2.6);
+    text(g, String(grp.label).toUpperCase(), u * 2.9, u * 3.45, u * 1.45, col, 'left', FONT_D, 400, u * 0.3);
+    const lw = u * 6.4, lx = w - u * 1.6 - lw;
+    g.fillStyle = live ? 'rgba(150,24,44,.75)' : 'rgba(10,16,48,.75)'; g.fillRect(lx, u * 1.5, lw, u * 2.4);
+    g.fillStyle = live ? (sin(t * 4.5) > -0.3 ? '#ff5566' : '#7a2230') : '#98a5cf'; g.fillRect(lx + u * 0.9, u * 2.35, u * 0.75, u * 0.75);
+    text(g, live ? 'LIVE' : 'FEED', lx + u * 2.2, u * 3.15, u * 1.2, live ? '#ffd9dc' : '#c3cdf2', 'left', FONT_U, 600, u * 0.25);
+    g.fillStyle = lgr(g, 0, hh * 0.62, 0, hh, [0, 'rgba(3,5,20,0)', 1, 'rgba(3,5,20,.9)']); g.fillRect(0, hh * 0.62, w, hh * 0.38);
+    text(g, String(monCapB.textContent || '').toUpperCase(), u * 2, hh - u * 4.4, u * 2.8, '#fff5dd', 'left', FONT_D, 400, u * 0.4);
+    text(g, monCapS.textContent || '', u * 2, hh - u * 2.1, u * 1.45, '#b9c3e6', 'left', FONT_U, 500, u * 0.06);
+    text(g, String(monCapE.textContent || '').toUpperCase(), w - u * 2, hh - u * 2.1, u * 1.3, '#8e98bd', 'right', FONT_U, 500, u * 0.25);
+  }
   function photoStudio(g, w, hh, t, o) {
     const WA = M.Gfx && M.Gfx.WorldArt; if (!WA || !WA.enabled) return null;
     const im = WA.get(WA.gnn); if (!im) return null;
     const R = defaultRects(w, hh), P = R.phone;
+    R.screen = null;
     let sc = max(w / im.naturalWidth, hh / im.naturalHeight), dw, dh, ox, oy, deskK = 0.545;
     if (P && P.port) {                                   // portrait: the photo framed on the anchor, its desk just above the lower third; the wall is a screen across the top
       const deskY = anchorArtReady() ? P.ltTop - 14 : min(hh * 0.6, P.ltTop - 24);   // the presenter takes the room down to the headline
@@ -769,9 +890,10 @@
       ox = clamp(w / 2 - dw * 0.325, w - dw, 0); oy = 0;
     } else {
       dw = im.naturalWidth * sc; dh = im.naturalHeight * sc; ox = (w - dw) / 2; oy = (hh - dh) / 2;
-      if (P) oy = clamp(6 - dh * 0.108, hh - dh, 0);       // sideways: the wall's top edge in view (the cover crop cut it under the app bar)
-      R.wall = { x: ox + dw * 0.47, y: oy + dh * 0.108, w: dw * 0.46, h: dh * 0.385 };
-      if (P) R.wall.h = clamp(P.ltTop - 8 - R.wall.y, 60, R.wall.h);  // and it ends above the lower third
+      if (P) oy = clamp(6 - dh * 0.09, hh - dh, 0);        // sideways: the screen's top edge in view (the cover crop cut it under the app bar)
+      const SG = screenGeom(ox, oy, dw, dh);
+      R.screen = SG;                                       // the story is painted into this quad (drawScreen); the DOM window is only its render target
+      R.wall = { x: SG.xl, y: min(SG.tl, SG.tr), w: SG.xr - SG.xl, h: (SG.hl + SG.hr) / 2 };
     }
     const deskY = oy + dh * deskK;
     let ah = dh * 0.52, aw = ah * 0.8, ay = oy + dh * 0.09;
@@ -783,25 +905,98 @@
       ax = (P && P.port ? w / 2 : ox + dw * 0.37) - aw / 2;           // her left sleeve clear of the dark seam beside the brass pillar
     }
     R.anchor = { x: ax, y: ay, w: aw, h: ah };
-    g.drawImage(im, ox, oy, dw, dh);
-    const wl = R.wall;
-    g.save(); g.beginPath(); g.rect(wl.x, wl.y, wl.w, wl.h); g.clip();                  // faint scan-lines + a slow sweep across the blank wall
-    g.fillStyle = scanPattern(g); g.globalAlpha = 0.18; g.fillRect(wl.x, wl.y, wl.w, wl.h); g.globalAlpha = 1;
-    const sweep = fract(t * 0.12);
-    g.fillStyle = lgr(g, 0, wl.y + sweep * wl.h * 1.4 - wl.h * 0.2, 0, wl.y + sweep * wl.h * 1.4, [0, 'rgba(160,200,255,0)', 1, 'rgba(160,200,255,.06)']); g.fillRect(wl.x, wl.y, wl.w, wl.h);
-    g.restore();
-    const a = R.anchor;
-    glow(g, '#6e96ff', a.x + a.w / 2, a.y + a.h * 0.4, a.w * 0.8, 0.2);
-    if (anchorArtReady()) glow(g, '#7fa6ff', a.x + a.w / 2, a.y + a.h * 0.58, a.w * 0.62, 0.3);   // a soft back light behind her shoulders: the dark jacket stands off the dark panel
-    drawAnchor(g, o.anchorRace, a.x, a.y, a.w, a.h, t, o.talking, o.mood);
-    const dy = deskY, sy = (dy - oy) / sc;                                                  // desk strip over the anchor's feet
-    g.drawImage(im, 0, sy, im.naturalWidth, im.naturalHeight - sy, ox, dy, dw, oy + dh - dy);
-    drawAnchorDesk(g, a.x, a.y, a.w, a.h, t, dy, dh * 0.07);                                // her shadow and reflection on the glass desk top
-    drawLogo(g, w * 0.925, hh * 0.075, hh * 0.026, t, 0.95);
-    text(g, 'GNN', w * 0.925 - hh * 0.1, hh * 0.087, hh * 0.04, rgba('#ece6d3', 0.92), 'right', FONT_D, 400, 1.5);
-    g.fillStyle = rgba('#ff5c6a', sin(t * 4) > -0.2 ? 0.95 : 0.2); g.beginPath(); g.arc(w * 0.925 + hh * 0.06, hh * 0.075, hh * 0.008, 0, TAU); g.fill();
-    g.fillStyle = rgr(g, w / 2, hh * 0.48, min(w, hh) * 0.38, hypot(w, hh) * 0.62, [0, 'rgba(2,3,12,0)', 1, 'rgba(2,3,12,.4)']); g.fillRect(0, 0, w, hh);
+    let S = 1; try { S = g.getTransform().a || 1; } catch (e) { /* old browser */ }
+    const C = studioCache(im, w, hh, S, ox, oy, dw, dh, R.anchor, deskY);
+    g.drawImage(C.back, 0, 0, C.back.width, C.back.height, 0, 0, w, hh);
+    const wl = R.wall, SG = R.screen, run = RUN(), onAir = SG && run && run.gfx && root.dataset.mode === 'item';
+    curScreen = SG;
+    if (onAir) {
+      sampleSpill(monCv, t); drawSpill(g, SG, w, hh, dh);
+      drawScreen(g, SG, monCv, t, S, run.rm ? 1 : sstep(0, 0.45, t - run.gfx.t0));
+    } else {
+      if (SG) _spill.a *= 0.9;
+      g.save(); if (SG) { polyPath(g, SG.pts); g.clip(); } else { g.beginPath(); g.rect(wl.x, wl.y, wl.w, wl.h); g.clip(); }   // faint scan-lines + a slow sweep across the blank screen
+      g.fillStyle = scanPattern(g); g.globalAlpha = 0.18; g.fillRect(wl.x, wl.y - wl.h * 0.1, wl.w, wl.h * 1.2); g.globalAlpha = 1;
+      const sweep = fract(t * 0.12);
+      g.fillStyle = lgr(g, 0, wl.y + sweep * wl.h * 1.4 - wl.h * 0.2, 0, wl.y + sweep * wl.h * 1.4, [0, 'rgba(160,200,255,0)', 1, 'rgba(160,200,255,.06)']); g.fillRect(wl.x, wl.y - wl.h * 0.1, wl.w, wl.h * 1.2);
+      g.restore();
+    }
+    const a = R.anchor, bob = anchorBob(t, a.h);
+    if (C.fig) {                                                                             // the presenter: cached with her shadow, graded with the set
+      g.drawImage(C.fig, 0, 0, C.fig.width, C.fig.height, C.fx, C.fy + bob, C.fw, C.fh);
+      if (curScreen && _spill.a > 0) anchorRimCached(g, C, bob);
+    } else drawAnchor(g, o.anchorRace, a.x, a.y, a.w, a.h, t, o.talking, o.mood);
+    const dy = deskY;                                                                        // the desk strip over her lower body, from the graded cache
+    g.drawImage(C.back, 0, round(dy * S), C.back.width, C.back.height - round(dy * S), 0, round(dy * S) / S, w, hh - round(dy * S) / S);
+    if (C.fig) drawDeskCached(g, C, dy, dh * 0.07);                                          // her shadow and reflection on the glass desk top
+    if (!(P && !P.port)) {                                                                   // sideways phones: the screen fills that corner (the lower third carries the logo)
+      drawLogo(g, w * 0.925, hh * 0.075, hh * 0.026, t, 0.95);
+      text(g, 'GNN', w * 0.925 - hh * 0.1, hh * 0.087, hh * 0.04, rgba('#ece6d3', 0.92), 'right', FONT_D, 400, 1.5);
+      g.fillStyle = rgba('#ff5c6a', sin(t * 4) > -0.2 ? 0.95 : 0.2); g.beginPath(); g.arc(w * 0.925 + hh * 0.06, hh * 0.075, hh * 0.008, 0, TAU); g.fill();
+    }
     return R;
+  }
+  // What never moves is drawn once per size (a 2x 4K frame made every full-screen pass four times dearer): the studio photo with the
+  // glow behind the presenter, its grade (Gfx.Grade 'plate') and the vignette; the presenter with her soft shadow, graded the same way;
+  // her reflection on the desk glass. Each frame then copies these and adds what moves (the screen and its light, her breath, the logo).
+  const _sc = { key: '', back: null, fig: null, refl: null, rim: null, rimAt: -2 };
+  function studioCache(im, w, hh, S, ox, oy, dw, dh, a, deskY) {
+    const fim = anchorImg(), key = [w, hh, S, ox, oy, dw, a.x, a.y, a.w, a.h, deskY, !!fim, M.Perf && M.Perf.tier].map(v => (typeof v === 'number' ? round(v * 10) : String(v))).join(',');
+    if (_sc.key === key) return _sc;
+    _sc.key = key; _sc.rimAt = -2;
+    const bw = max(1, round(w * S)), bh = max(1, round(hh * S));
+    const back = _sc.back && _sc.back.width === bw && _sc.back.height === bh ? _sc.back : mkCanvas(bw, bh);
+    const b = back.getContext('2d'); b.setTransform(1, 0, 0, 1, 0, 0); b.globalCompositeOperation = 'source-over'; b.globalAlpha = 1; b.clearRect(0, 0, bw, bh); b.setTransform(S, 0, 0, S, 0, 0);
+    b.imageSmoothingQuality = 'high'; b.drawImage(im, ox, oy, dw, dh);
+    glow(b, '#6e96ff', a.x + a.w / 2, a.y + a.h * 0.4, a.w * 0.8, 0.2);
+    if (fim) glow(b, '#7fa6ff', a.x + a.w / 2, a.y + a.h * 0.58, a.w * 0.62, 0.3);       // a soft back light behind her shoulders: the dark jacket stands off the dark panel
+    const GR = M.Gfx && M.Gfx.Grade;
+    if (GR) { try { GR.apply(b, w, hh, 0, { preset: 'plate', grain: 0 }); } catch (e) { /* optional */ } }
+    b.fillStyle = rgr(b, w / 2, hh * 0.48, min(w, hh) * 0.38, hypot(w, hh) * 0.62, [0, 'rgba(2,3,12,0)', 1, 'rgba(2,3,12,.4)']); b.fillRect(0, 0, w, hh);
+    _sc.back = back; _sc.fig = null; _sc.refl = null;
+    if (fim) {
+      const iw = a.h * fim.naturalWidth / fim.naturalHeight, ix = a.x + (a.w - iw) / 2, pad = a.h * 0.08;
+      const fw = round((iw + 2 * pad) * S), fh = round((a.h + 2 * pad) * S);
+      const gr = mkCanvas(fw, fh), q = gr.getContext('2d');                                // her figure graded like the plate, its own alpha kept
+      q.imageSmoothingQuality = 'high'; q.drawImage(fim, pad * S, pad * S, iw * S, a.h * S);
+      if (GR) { try { q.save(); q.setTransform(S, 0, 0, S, 0, 0); GR.apply(q, fw / S, fh / S, 0, { preset: 'plate', grain: 0, vig: 0 }); q.restore(); } catch (e) { /* optional */ } }
+      q.globalCompositeOperation = 'destination-in'; q.drawImage(fim, pad * S, pad * S, iw * S, a.h * S); q.globalCompositeOperation = 'source-over';
+      const fig = mkCanvas(fw, fh), f = fig.getContext('2d');
+      f.save(); f.shadowColor = 'rgba(0,0,0,.78)'; f.shadowBlur = a.h * 0.05 * S; f.shadowOffsetX = a.h * 0.012 * S; f.shadowOffsetY = a.h * 0.01 * S; f.drawImage(gr, 0, 0); f.restore();   // key light upper left
+      f.drawImage(gr, 0, 0);
+      Object.assign(_sc, { fig, figGraded: gr, fx: ix - pad, fy: a.y - pad, fw: fw / S, fh: fh / S, pad, iw, ix, S });
+      const depth = dh * 0.07, rw = max(2, round(iw * S)), rh = max(2, round(depth * S));      // her mirror image in the glass, fading with distance from the edge
+      const refl = mkCanvas(rw, rh), r = refl.getContext('2d'), top = (deskY - a.y) * S;
+      r.setTransform(1, 0, 0, -1, 0, top); r.drawImage(gr, pad * S, pad * S, rw, round(a.h * S), 0, 0, rw, round(a.h * S));
+      r.setTransform(1, 0, 0, 1, 0, 0); r.globalCompositeOperation = 'destination-in';
+      r.fillStyle = lgr(r, 0, 0, 0, rh, [0, 'rgba(0,0,0,1)', 0.5, 'rgba(0,0,0,.4)', 1, 'rgba(0,0,0,0)']); r.fillRect(0, 0, rw, rh);
+      _sc.refl = refl;
+    }
+    return _sc;
+  }
+  function drawDeskCached(g, C, deskY, depth) {
+    const cx = C.ix + C.iw / 2, W = C.iw;
+    g.save(); g.translate(cx, deskY + depth * 0.12); g.scale(1, 0.16);                    // a flat ellipse of shade on the glass
+    g.fillStyle = rgr(g, 0, 0, 0, W * 0.55, [0, 'rgba(0,0,0,.45)', 1, 'rgba(0,0,0,0)']); g.fillRect(-W * 0.6, -W * 0.6, W * 1.2, W * 1.2);
+    g.restore();
+    if (C.refl) { g.save(); g.globalAlpha = 0.75; g.drawImage(C.refl, 0, 0, C.refl.width, C.refl.height, C.ix, deskY, W, depth); g.restore(); }
+    g.save(); g.globalCompositeOperation = 'screen';                                       // the studio key light skimming the desk edge in front of her
+    g.fillStyle = lgr(g, C.ix - W * 0.1, 0, C.ix + W * 1.1, 0, [0, 'rgba(255,236,200,0)', 0.35, 'rgba(255,236,200,.28)', 0.65, 'rgba(255,236,200,.28)', 1, 'rgba(255,236,200,0)']);
+    g.fillRect(C.ix - W * 0.1, deskY - 1, W * 1.2, max(1.5, depth * 0.06)); g.restore();
+  }
+  // the screen's light on her right side, re-tinted only when the screen's colour is sampled (a few times a second)
+  function anchorRimCached(g, C, bob) {
+    const src = C.figGraded; if (!src) return;
+    if (C.rimAt !== _spill.at) {
+      C.rimAt = _spill.at;
+      if (!C.rim || C.rim.width !== src.width || C.rim.height !== src.height) C.rim = mkCanvas(src.width, src.height);
+      const r = C.rim.getContext('2d'), rw = src.width, x0 = C.pad * C.S, iw = C.iw * C.S;
+      r.globalCompositeOperation = 'copy'; r.drawImage(src, 0, 0);
+      r.globalCompositeOperation = 'source-in';
+      r.fillStyle = lgr(r, x0 + iw * 0.62, 0, x0 + iw, 0, [0, spillCol(0), 0.75, spillCol(0.22 * _spill.a), 1, spillCol(0.4 * _spill.a)]); r.fillRect(0, 0, rw, src.height);
+      r.globalCompositeOperation = 'source-over';
+    }
+    g.save(); g.globalCompositeOperation = 'screen'; g.drawImage(C.rim, 0, 0, C.rim.width, C.rim.height, C.fx, C.fy + bob, C.fw, C.fh); g.restore();
   }
 
   // Scenes.newsroom when present (its layout rects drive every DOM overlay), otherwise the built-in set. Returns {L, scene, cam}.
@@ -809,7 +1004,7 @@
   function paintBackdrop(g, w, hh, t, o, S) {
     try {
       const PL = photoStudio(g, w, hh, t, o);
-      if (PL) { const GR = M.Gfx && M.Gfx.Grade; if (GR) { try { GR.apply(g, w, hh, t, 'plate'); } catch (e) { /* optional */ } } return { L: sanitizeRects(PL, w, hh), scene: false, cam: { z: 1, dx: 0, dy: 0 } }; }   // graded like every plate
+      if (PL) { const GR = M.Gfx && M.Gfx.Grade; if (GR) { try { GR.apply(g, w, hh, t, { preset: 'plate', tone: null, sat: 0, cool: 0, dark: 0, vig: 0 }); } catch (e) { /* optional */ } } return { L: sanitizeRects(PL, w, hh), scene: false, cam: { z: 1, dx: 0, dy: 0 } }; }   // graded like every plate
     } catch (e) { warnOnce('WorldArt.gnn', e); }
     const SC = M.Gfx && M.Gfx.Scenes, ns = SC && SC.newsroom;
     if (!sceneBroken && ns && typeof ns.draw === 'function') {
@@ -1760,14 +1955,17 @@
     const fps = PQ().animFps || 60;
     if (!UI.pace(R.pace, fps, dt) && !R.redraw) return;
     R.redraw = false; const gdt = R.accDt; R.accDt = 0;
-    drawFrame(gdt);
+    const t0 = performance.now(); drawFrame(gdt); stageTiming(performance.now() - t0);
   }
   function drawFrame(gdt) {
     const f = fit(stage, 'stage');
     if (!f) return;
     const g = f.ctx, w = f.w, hh = f.h, t = R.t, seg = R.segs[R.idx], talking = R.hl.busy || R.sub.busy || R.talkTail > 0;
     const o = { anchorRace: R.anchor, graphic: R.gfx ? R.gfx.kind : 'ticker', headline: '', ticker: '', cut: R.cut ? clamp(R.cut.t / R.cut.dur, 0, 1) : 0, talking: talking, mood: R.mood, t: t, color: steel('#d6b36a'), newsPlanet: R.curPlanet };
+    if (R.gfx && root.dataset.mode === 'item') drawMon(t, gdt);            // the story first: the studio paints it into its screen
+    curScreen = null;
     const res = paintBackdrop(g, w, hh, t, o, f.S), L = res.L, cam = res.cam;
+    root.classList.toggle('gnn-warp', !!curScreen);
     R.L = L;
     applyLayout(L, w, hh);
     mon.style.transform = 'translate(' + cam.dx.toFixed(2) + 'px,' + cam.dy.toFixed(2) + 'px) scale(' + cam.z.toFixed(4) + ')';
@@ -1786,10 +1984,11 @@
     const tk0 = seg && seg.kind === 'title' && !R.cut && !R.finishing ? 1 : 0;
     R.titleK += (tk0 - R.titleK) * min(1, gdt * 5);
     titleFx(g, w, hh, t, R.titleK);
-    if (R.gfx && root.dataset.mode === 'item') {
-      const mf = fit(monCv, 2);
-      if (mf) { try { drawGfx(mf.ctx, mf.w, mf.h, t, gdt, R.gfx, mf.S, R.tkLines); } catch (e) { if (!R.gfx.failed) { R.gfx.failed = true; console.error('[gnn] graphic failed:', e); } } }
-    }
+  }
+  function drawMon(t, gdt) {
+    const mf = fit(monCv, 2); if (!mf) return;
+    try { drawGfx(mf.ctx, mf.w, mf.h, t, gdt, R.gfx, mf.S, R.tkLines); if (root.classList.contains('gnn-warp')) drawScreenText(mf.ctx, mf.w, mf.h, t, R.gfx.item); }
+    catch (e) { if (!R.gfx.failed) { R.gfx.failed = true; console.error('[gnn] graphic failed:', e); } }
   }
 
   // ---- starting a broadcast

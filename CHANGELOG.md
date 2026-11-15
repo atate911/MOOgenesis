@@ -5,6 +5,15 @@ Versions follow `MAJOR.MINOR.PATCH`; the live version is the `VERSION` file.
 
 ## Unreleased
 
+- GNN's video wall is part of the studio: the story is painted into the photo's own screen, fitted to the inner edge of its
+  bezel (a perspective shape, taller on the right, with cut corners) with a gentle curve, instead of a rectangle laid over the
+  frame. It reads as a lit display behind glass (darks at the panel's blue, slightly softer and less saturated than the presenter,
+  a diagonal glare, darker toward the curved ends, the bezel's inner shadow), its category, Live and caption are on the screen
+  itself, and it lights the set: a glow round the frame, a pool on the floor, and its colour on the presenter's nearer shoulder.
+  Desktop and phones on their side (portrait keeps its own screen across the top).
+- GNN draws faster: what never moves (the studio photo with its grade and vignette, the presenter with her shadow, her reflection)
+  is drawn once per size instead of every frame; a machine that still cannot keep up steps the studio's resolution down a notch
+  for the session rather than stutter.
 - GNN has its own presenter: an original anchor of the non-playable Veyl (assets/art/gnn/gnn-anchor.webp, brief in
   docs/IMAGE-GEN-GNN-ANCHOR.md), one image for every broadcast. She is shown to the hem of her jacket at the desk, her sleeve
   clear of the dark seam beside the brass pillar, with a soft shadow and a cool back light so she sits in the set, and her shadow, mirror
