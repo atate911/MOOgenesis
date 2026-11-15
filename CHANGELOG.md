@@ -5,6 +5,29 @@ Versions follow `MAJOR.MINOR.PATCH`; the live version is the `VERSION` file.
 
 ## Unreleased
 
+- New music for the Galactic News Network. The old bed (an organ, a pop drum kit and a synth lead in a bright major key) sounded
+  hokey; the new one is written like a cable network's breaking-story package and played by the game's orchestra in its hall: a
+  ticking clock, the strings' spiccato ostinato driving in sixteenths over a pizzicato pulse in the basses, low drums and timpani, a
+  struck brass ident over the tam-tam to open, the horns' headline theme over brass stabs, and a tremolo breakdown that rises back
+  into the full package. D minor, 126 bpm, no drum kit; as loud as the old bed. Mixed close and dry, like television rather than
+  the concert hall: little hall reverb, the short notes cut before the recordings' own room rings out, the sections a little narrower,
+  the horn and trombone lines on the close-miked solo recordings.
+  Every part plays on the beat together (a piece's new `tight` mode): the recordings take from 1 to over 300 ms to reach their attack,
+  each its own (the spiccato strings 3 to 54 ms from note to note, the solo trombone up to 216), which the hall had blurred and the dry
+  mix laid bare as flams against the drums. In tight mode each note starts at its recording's heard attack, the sampler's random start
+  and the beds' small offsets are off, and the slower instruments start a measured few milliseconds early: isolated notes of every part
+  now land within a few milliseconds of the drums (medians 30 to 38 ms after the scheduled time, the drums 25 to 36, against 33 to 80
+  ms with the ostinato scattering over 40 ms before). Other pieces are unchanged.
+  The opening ident is on the horn section's fortissimo recording (its loud, brassy sound) over the trombone's loudest (an instrument may
+  now be pinned to one of its recordings with `layer`).
+  The news builds in from the game's music: the package opens with a two-bar pickup (about 3.8 s on the dominant: a timpani roll, a
+  cymbal swell, the strings' tremolo rising, the clock quickening, a snare roll) that climbs from -40 to -21 dB while the map's music
+  fades out beneath it over 3.5 s, and the ident's opening hit lands as that fade ends (no bridge, no waiting for the bar; `play` also
+  takes a new `delay`). The way back is slow: the news
+  fades out over four seconds while the map's music comes back in beneath it, from a little before where it stopped. Both fades are
+  real crossfades now (`play` / `restore` take `keepOld`, `stop` takes `keep`): a fading piece used to stop playing new notes at once,
+  so only the notes already sounding faded and every crossfade was heard as a cut whatever its length (the news fell 10 dB in a
+  quarter of a second at the old return). Only the news uses it; the game's other transitions are unchanged.
 - Galactic Council: the chamber is studio-lit instead of dim. The hall plate is exposed brighter with a touch more contrast, a key light
   washes the alcove wall and pools on the dais, each occupied alcove has its own spotlight, and the delegates' photos are lit from above
   rather than darkened. The vignette stays but now falls off in the hall's own warm bronze shadow instead of cold black (new `studio`

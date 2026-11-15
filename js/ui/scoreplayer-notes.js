@@ -79,7 +79,7 @@
     combat1: { blurb: 'A galloping bass, timpani and a brass riff.', where: 'Space battles.', listen: [] },
     combat2: { blurb: 'A heavy half-time assault: syncopated stabs, a creeping bass and metal hits.', where: 'Space battles.', listen: [] },
     ground: { blurb: 'Low toms, a menacing plucked pattern and swelling brass.', where: 'Ground invasions, and on the galaxy map during a war.', listen: [] },
-    gnn: { blurb: 'Confident and upbeat, with brass stabs and a bright station ident.', where: 'Galactic News Network broadcasts.', listen: [] },
+    gnn: { blurb: 'A breaking-story package: a ticking clock, strings driving in sixteenths, timpani and low drums, a brass ident and the horns\u2019 headline theme.', where: 'Galactic News Network broadcasts.', listen: [] },
     procession: { blurb: 'A stately march: a solo horn carries a long tune over the trombones and tuba, with the snare keeping time. Its tune runs through the whole score.',
       where: 'Now and then on the galaxy map once you live among other empires, and more often during a war.',
       listen: [['A1', 'The horn’s long tune.'], ['T', 'A lyrical trio.'], ['D', 'The drums fall away for a hymn; the whole chamber answers it.']] },

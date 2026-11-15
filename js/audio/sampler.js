@@ -323,6 +323,20 @@
     }).catch(() => 0);
   }
 
+  // where a recording's attack begins, as heard: the first moment within its first 0.3 s that it reaches 35% of its peak there, less 12 ms
+  // of the rise before it (so the transient keeps its shape); the recordings rise from a tenth to half their level in 15 to 80 ms, each
+  // its own, so aligning on the heard attack rather than the first trace of sound is what puts them together (cached on the zone)
+  function zoneOnset(z) {
+    if (z.onset !== undefined) return z.onset;
+    const b = z.buf, sr = b.sampleRate, N = Math.min(b.length, Math.round(0.3 * sr)), ch = [];
+    for (let c = 0; c < b.numberOfChannels; c++) ch.push(b.getChannelData(c));
+    const lev = i => { let a = 0; for (const d of ch) a += Math.abs(d[i]); return a; };
+    let pk = 0; for (let i = 0; i < N; i++) pk = Math.max(pk, lev(i));
+    let at = 0; while (at < N && lev(at) < pk * 0.35) at++;
+    return (z.onset = Math.max(0, at / sr - 0.012));
+  }
+  S._zoneOnset = zoneOnset;
+
   function loadInstrument(name, def) {
     const inst = { name, kind: def.kind || 'sustain', pitched: def.pitched !== false, attack: num(def.attack, 0.01), release: num(def.release, 0.3), gain: dbtoa(num(def.gain, 0)),
       loop: def.kind === 'sustain', vib: num(def.vib, 0), cutK: num(def.cutK, 0), xf: !!def.xf, pan: def.pan !== undefined ? num(def.pan, 0) : undefined, legOff: num(def.legOff, 0.22), zones: [], ready: false, failed: 0 };
@@ -556,6 +570,7 @@
       const l = flowLayer(inst, midi, o.smp + '|' + o.part, clamp(o.ldyn, 0, 1), !!o.lnew); ld0 = l; ld1 = clamp(l + (dyn1 - dyn), 0, 1);
       if (o.lto !== undefined) ld1 = flowLayer(inst, midi, o.smp + '|' + o.part, clamp(o.lto, 0, 1), false, true);   // into the other colour through the note
     }
+    if (o.layer !== undefined) ld0 = ld1 = clamp(num(o.layer, 1), 0, 1);   // a part pinned to one recording (1: the loudest, the brass's ff), whatever its written dynamic
     const picks = pickZones(inst, midi, ld0, ld1, !!o.alt); if (!picks.length) return null;
     const z0 = picks[0].z;
     const pan = o.pan !== undefined ? o.pan : (z0.pan !== undefined ? z0.pan : inst.pan);
@@ -618,7 +633,10 @@
       // legato: skip the bow / breath attack already heard on the previous note (but stay well before the loop)
       // (o.legOff 'loop': a held bed's or bass's moving voice comes in at the steady part of its note, just before the loop, past every
       //  trace of the bow's bite)
-      const off = leg ? (o.legOff === 'loop' && z.loop ? Math.max(0, z.loop[0] - 0.05) : Math.min(num(inst.legOff, 0.22), z.loop ? Math.max(0, z.loop[0] - 0.4) : 0.2)) : 0;
+      // tight (a piece's `tight`): the note starts at the recording's attack rather than at the top of the file, so every part speaks on
+      // the beat together (the recordings take 1 to 300 ms to reach their attack, each its own); never past the loop
+      const off = leg ? (o.legOff === 'loop' && z.loop ? Math.max(0, z.loop[0] - 0.05) : Math.min(num(inst.legOff, 0.22), z.loop ? Math.max(0, z.loop[0] - 0.4) : 0.2))
+        : o.tight ? Math.max(0, Math.min(zoneOnset(z), z.loop ? z.loop[0] - 0.05 : z.buf.duration * 0.5)) : 0;
       src.start(t0, off); src.stop(end); v.srcs.push(src);
       if (end > v.t1) v.t1 = end;
       if (vib > 0 && !oneShot) { const vr = o.vibRate > 0 ? o.vibRate * (0.99 + eng.rand() * 0.02) : 4.6 + eng.rand() * 1.1, lf = v.osc('sine', vr, t0, end), lg = v.gain(0.0001), vd = num(o.vibDelay, 0.1); lg.gain.setValueAtTime(0.0001, t0 + vd); lg.gain.linearRampToValueAtTime(vib, t0 + vd + 0.5); lf.connect(lg); lg.connect(src.detune); }

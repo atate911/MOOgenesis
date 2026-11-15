@@ -2049,8 +2049,9 @@
     run.musicStarted = false;
     if (musicCur() !== 'gnn') return;
     const m = Mu();
-    if (run.prevSnap && run.prevSnap.id !== 'gnn' && m && typeof m.restore === 'function') { try { m.restore(run.prevSnap, { fade: 1.4, bridge: 'calm', resume: true }); return; } catch (e) { /* fall back to the plain track */ } }
-    if (run.prevTrack && run.prevTrack !== 'gnn') musicPlay(run.prevTrack, { fade: 1.4, bridge: 'auto' }); else musicStop({ fade: 1.4 });
+    // the way back is slow: the bumper fades out over 4 s while the game's music comes back in beneath it, from a little before where it stopped
+    if (run.prevSnap && run.prevSnap.id !== 'gnn' && m && typeof m.restore === 'function') { try { m.restore(run.prevSnap, { fade: 4, bridge: 'calm', resume: true, keepOld: true }); return; } catch (e) { /* fall back to the plain track */ } }
+    if (run.prevTrack && run.prevTrack !== 'gnn') musicPlay(run.prevTrack, { fade: 4, bridge: 'auto', keepOld: true }); else musicStop({ fade: 4, keep: true });
   }
   function finish(skipped) {
     if (!R || R.finishing) return;
@@ -2149,7 +2150,10 @@
     buildTicker();
     applySegment(0);
     try { root.focus({ preventScroll: true }); } catch (e) { /* not focusable yet */ }
-    musicPlay('gnn', { fade: 0.8, bridge: 'auto' }); R.musicStarted = true;   // the news bed is led into by the calm bridge, and the map back out of it
+    // the bumper builds in: its two-bar pickup (about 3.8 s: a timpani roll, a cymbal swell, the strings rising, a snare roll) starts at
+    // once while the game's music fades out beneath it over 3.5 s, and the ident's opening hit lands just after that fade ends (no bridge,
+    // no waiting for the bar). keepOld: the map's music plays on through its fade rather than stopping with only its last notes fading
+    musicPlay('gnn', { quantize: false, oldFade: 3.5, keepOld: true, inFade: 0.3 }); R.musicStarted = true;
   }
 
   // ================================================================== screen + public API
