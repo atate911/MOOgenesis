@@ -5,6 +5,13 @@ Versions follow `MAJOR.MINOR.PATCH`; the live version is the `VERSION` file.
 
 ## Unreleased
 
+- GNN: everything on the video wall is part of the studio screen: the rankings too are painted into it (they were a panel laid over
+  the studio), with the presenter standing further left in the presenting pose so her hand points at the screen without covering it.
+  Every graphic shows real data: the map is the real galaxy (its stars and lanes, the systems you have explored in their owners'
+  colours, the story's system or the two empires' known territories marked; an empire you have met but whose worlds you have not
+  explored is placed at its home system; ownership you have not seen is not shown), the map callout names the system's owner or star
+  type instead of an invented sector number, and the wire screen dates its lines by year instead of invented item numbers. The wire
+  screen's caption reads "GNN Wire · Around the galaxy" and no longer runs into its list.
 - First loads behind the password gate no longer stall. The web server asks the save server once per file before serving it, about
   150 times at once on a page load, and the save server could queue only 5 new connections (Python's default): the rest were dropped
   and retried after TCP's 1 / 3 / 7 / 15 / 31 s back-off, so a few files of every first load after an update arrived seconds late and

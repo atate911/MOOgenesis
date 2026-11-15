@@ -249,7 +249,9 @@
     /* ---- graphics window (sits exactly on the studio's video wall) ---- */
     .gnn-mon { position:absolute; z-index:3; pointer-events:none; display:none; transform-origin:0 0; background:#02040f; }
     .gnn[data-mode=item] .gnn-mon { display:block; }
-    .gnn.gnn-warp .gnn-mon { opacity:0; }                       /* the studio photo paints the story into its own screen (drawScreen) */
+    .gnn.gnn-warp .gnn-mon { opacity:0; }
+    .gnn.gnn-warp[data-mode=rank] .gnn-mon { display:block; }     /* the standings are painted into the studio screen too */
+    .gnn.gnn-warp[data-mode=rank] .gnn-rank { display:none; }                       /* the studio photo paints the story into its own screen (drawScreen) */
     .gnn-mon-cv { position:absolute; inset:0; width:100%; height:100%; display:block; }
     .gnn-mon.in .gnn-mon-cv { animation:gnn-pop .5s var(--ease) both; }
     .gnn-mon-tag { position:absolute; left:calc(var(--u)*1.3); top:calc(var(--u)*1.2); display:flex; align-items:center; gap:calc(var(--u)*.7); padding:calc(var(--u)*.45) calc(var(--u)*1.3) calc(var(--u)*.4) calc(var(--u)*1);
@@ -874,6 +876,47 @@
     text(g, String(monCapE.textContent || '').toUpperCase(), w - u * 2, hh - cr - u * 1.4, u * 1.3, '#8e98bd', 'right', FONT_U, 500, u * 0.25);
     drawCrawl(g, w, hh, t, cr, u, col);
   }
+  // the standings on the studio screen: the same rows as the overlay panel (rank, portrait, name, Leader / You, value, a growing bar),
+  // drawn into the screen canvas so the studio fits, softens and lights them like any story
+  const _rkBadge = {};
+  function rankBadge(race, px, col) {
+    const k = race + '|' + px + '|' + col; if (_rkBadge[k]) return _rkBadge[k];
+    const c = mkCanvas(px, px), g = c.getContext('2d'); try { paintBadge(g, race, px / 2, px / 2, px / 2 - 1, col); } catch (e) { /* empty */ }
+    return (_rkBadge[k] = c);
+  }
+  function drawRankScreen(g, w, hh, t) {
+    const rk = R.rk, meta = rk.meta, col = cssHex(meta.css), u = hh / 30, L = u * 2.6;
+    g.drawImage(gfxBg(w, hh, 1, 4242, [dark(col, 0.7), NEB_BASE[1], NEB_BASE[2], mix(col, '#3b1d86', 0.55)]), 0, 0, w, hh);
+    g.fillStyle = 'rgba(3,6,22,.55)'; g.fillRect(0, 0, w, hh);
+    // header: the category tag (as on a story), the title and subtitle, the four ranking tabs
+    g.font = '400 ' + (u * 1.45) + 'px ' + FONT_D; const tw = g.measureText('RANKINGS').width + 8 * u * 0.3;
+    g.fillStyle = 'rgba(4,7,24,.82)'; g.fillRect(u * 1.6, u * 1.5, tw + u * 2.6, u * 2.6); g.fillStyle = col; g.fillRect(u * 1.6, u * 1.5, u * 0.35, u * 2.6);
+    text(g, 'RANKINGS', u * 2.9, u * 3.45, u * 1.45, col, 'left', FONT_D, 400, u * 0.3);
+    text(g, meta.title, L, u * 7.6, u * 3.1, '#f3dca0', 'left', FONT_D, 400, u * 0.15);
+    text(g, meta.sub, L, u * 9.6, u * 1.4, '#b9c3e6', 'left', FONT_U, 500, u * 0.05);
+    rk.keys.forEach((k, i) => { const on = k === rk.key, x = w - u * 2 - (rk.keys.length - 1 - i) * u * 3.6; g.globalAlpha = on ? 1 : 0.45;
+      g.fillStyle = on ? cssHex(RANK_META[k].css) : '#98a5cf'; g.beginPath(); g.arc(x - u * 1.2, u * 7, u * 0.9, 0, TAU); g.fill(); g.globalAlpha = 1; });
+    g.fillStyle = rgba(col, 0.5); g.fillRect(L, u * 10.8, w - u * 2 - L, max(1, u * 0.08));
+    // rows (the crawl takes the bottom 2.6u)
+    const n = rk.rows.length, top = u * 11.8, bot = hh - u * 3.4, rh = (bot - top) / max(4, n), bp = min(rh * 0.78, u * 3.6);
+    rk.rows.forEach((r, i) => {
+      const p = easeOut((rk.t - r.delay) / rk.dur), y = top + rh * i, cy = y + rh / 2;
+      if (r.lead) { g.fillStyle = rgba(r.col, 0.12); g.fillRect(L - u * 0.6, y + rh * 0.06, w - u * 1.4 - L, rh * 0.88); g.fillStyle = r.col; g.fillRect(L - u * 0.6, y + rh * 0.06, u * 0.25, rh * 0.88); }
+      text(g, String(i + 1), L + u * 1.1, cy + u * 0.6, u * 1.9, r.lead ? '#f3dca0' : '#98a5cf', 'center', FONT_D, 400, 0);
+      g.drawImage(rankBadge(r.race, round(bp * 2), r.col), L + u * 2.7, cy - bp / 2, bp, bp);
+      const nx = L + u * 2.7 + bp + u * 1.2;
+      text(g, r.name, nx, cy - u * 0.15, u * 1.75, '#fff5dd', 'left', FONT_U, 600, 0);
+      g.font = '600 ' + (u * 1.75) + 'px ' + FONT_U; let tx = nx + g.measureText(r.name).width + u * 0.9;
+      for (const [lbl, bg] of [[r.lead && 'LEADER', '#f3dca0'], [r.me && 'YOU', '#62d8ff']]) { if (!lbl) continue;
+        g.font = '700 ' + (u * 1.0) + 'px ' + FONT_U; const lw = g.measureText(lbl).width + lbl.length * u * 0.2 + u * 1.2;
+        g.fillStyle = bg; g.fillRect(tx, cy - u * 1.55, lw, u * 1.65); text(g, lbl, tx + u * 0.6, cy - u * 0.38, u * 1.0, '#10131f', 'left', FONT_U, 700, u * 0.2); tx += lw + u * 0.6; }
+      text(g, U.fmt(round(r.value * p)) + (meta.unit ? ' ' + meta.unit : ''), w - u * 2.4, cy - u * 0.15, u * 1.75, '#fff5dd', 'right', FONT_U, 600, 0);
+      const bx = nx, bw = w - u * 2.4 - nx, by = cy + u * 0.55, bh2 = max(2, u * 0.55);
+      g.fillStyle = 'rgba(255,255,255,.08)'; g.fillRect(bx, by, bw, bh2);
+      g.fillStyle = lgr(g, bx, 0, bx + bw, 0, [0, dark(r.col, 0.3), 1, r.col]); g.fillRect(bx, by, bw * r.frac * p, bh2);
+    });
+    const cr = u * 2.6; drawCrawl(g, w, hh, t, cr, u, col);
+  }
   // a cable-news crawl: this bulletin's headlines, then the latest from the archive, scrolling right to left under the picture
   const _crawl = { key: '', items: [], widths: [], total: 0, font: '' };
   function crawlItems() {
@@ -942,11 +985,11 @@
     let S = 1; try { S = g.getTransform().a || 1; } catch (e) { /* old browser */ }
     const C = studioCache(im, w, hh, S, ox, oy, dw, dh, R.anchor, deskY);
     g.drawImage(C.back, 0, 0, C.back.width, C.back.height, 0, 0, w, hh);
-    const wl = R.wall, SG = R.screen, run = RUN(), onAir = SG && run && run.gfx && root.dataset.mode === 'item';
+    const mode = root.dataset.mode, wl = R.wall, SG = R.screen, run = RUN(), onAir = SG && run && ((run.gfx && mode === 'item') || (run.rk && mode === 'rank'));
     curScreen = SG;
     if (onAir) {
       sampleSpill(monCv, t); drawSpill(g, SG, w, hh, dh);
-      drawScreen(g, SG, monCv, t, S, run.rm ? 1 : sstep(0, 0.45, t - run.gfx.t0));
+      drawScreen(g, SG, monCv, t, S, run.rm ? 1 : mode === 'rank' ? sstep(0, 0.45, run.rk.t) : sstep(0, 0.45, t - run.gfx.t0));
     } else {
       if (SG) _spill.a *= 0.9;
       g.save(); if (SG) { polyPath(g, SG.pts); g.clip(); } else { g.beginPath(); g.rect(wl.x, wl.y, wl.w, wl.h); g.clip(); }   // faint scan-lines + a slow sweep across the blank screen
@@ -958,7 +1001,7 @@
     const a = R.anchor, bob = anchorBob(t, a.h);
     const dtp = AP.lastT < 0 ? 0 : clamp(t - AP.lastT, 0, 0.1); AP.lastT = t; AP.k = min(1, AP.k + dtp / 0.4);
     const run2 = RUN(), kf = run2 && run2.rm ? 1 : sstep(0, 1, AP.k);
-    const fc = figCache(AP.cur, a, deskY, dh, S) || figCache('neutral', a, deskY, dh, S), fp = AP.prev && kf < 1 ? figCache(AP.prev, a, deskY, dh, S) : null;
+    const sh = P && P.port ? 0 : dw * 0.11, fc = figCache(AP.cur, a, deskY, dh, S, sh) || figCache('neutral', a, deskY, dh, S, sh), fp = AP.prev && kf < 1 ? figCache(AP.prev, a, deskY, dh, S, sh) : null;
     const layer = (F, al) => { if (!F || al <= 0) return; g.globalAlpha = al; g.drawImage(F.fig, 0, 0, F.fig.width, F.fig.height, F.fx, F.fy + bob, F.fw, F.fh); g.globalAlpha = 1; if (curScreen && _spill.a > 0) anchorRimCached(g, F, bob, al); };
     if (fc) { if (fp) { layer(fp, 1); layer(fc, kf); } else layer(fc, 1); }                // the presenter: cached with her shadow, under her own light
     else drawAnchor(g, o.anchorRace, a.x, a.y, a.w, a.h, t, o.talking, o.mood);
@@ -993,10 +1036,11 @@
     return _sc;
   }
   // one pose, lit and cached on first use (her own key light, her shadow, her reflection in the desk glass); null until its image loads
-  function figCache(pose, a, deskY, dh, S) {
+  const POSE_SHIFT = { presenting: -1 };                             // presenting stands back to the left so her open hand stays clear of the screen
+  function figCache(pose, a, deskY, dh, S, shift) {
     const hit = _sc.figs[pose]; if (hit) return hit;
     const fim = anchorImg(pose); if (!fim) return null;
-    const iw = a.h * fim.naturalWidth / fim.naturalHeight, ix = a.x + (a.w - iw) / 2, pad = a.h * 0.08;
+    const iw = a.h * fim.naturalWidth / fim.naturalHeight, ix = a.x + (a.w - iw) / 2 + (POSE_SHIFT[pose] || 0) * (shift || 0), pad = a.h * 0.08;
     const fw = round((iw + 2 * pad) * S), fh = round((a.h + 2 * pad) * S);
     // her figure under its own key light: she is the subject, so a touch brighter and more vivid than the graded set, with a warm
     // soft light from the upper left (the studio's key) on her face and shoulders; her own alpha kept
@@ -1394,7 +1438,41 @@
   }
 
   // ---- MAP (mini star chart with a pulsing marker; slow push-in)
+  // the map is the real galaxy: every star where it is, the ones you have explored in their owners' colours, the story's system (or
+  // the two empires' known territories) marked. Ownership you have not seen is not shown. Falls back to an illustration without a game.
+  function initMapReal(s) {
+    const G2 = M.Game, S = G2 && G2.S, E = G2 && G2.player && G2.player(); if (!S || !E || !Array.isArray(S.stars) || !S.stars.length) return false;
+    const it = s.item, A = 2.1;                                          // the studio screen's shape (width / height)
+    let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
+    for (const st of S.stars) { x0 = min(x0, st.x); y0 = min(y0, st.y); x1 = max(x1, st.x); y1 = max(y1, st.y); }
+    const cx = (x0 + x1) / 2, cy = (y0 + y1) / 2, k = min(0.9 / max(1, x1 - x0), 0.62 / (max(1, y1 - y0) * A));
+    const nx = x => 0.5 + (x - cx) * k, ny = y => 0.42 + (y - cy) * k * A;
+    const known = i => { const p = S.planets[i]; return p && (p.owner === E.id || E.explored[i]) ? p.owner : -1; };
+    s.pts = S.stars.map((st, i) => { const o = known(i); return { x: nx(st.x), y: ny(st.y), k: 0, sz: o >= 0 ? 2.6 : 1.1, col: o >= 0 ? empHex(S.empires[o].color) : null }; });
+    s.lanes = [];
+    for (let i = 0; i < s.pts.length && s.lanes.length < 220; i++) for (let j = i + 1; j < s.pts.length; j++) { const dx = s.pts[i].x - s.pts[j].x, dy = (s.pts[i].y - s.pts[j].y) / A; if (dx * dx + dy * dy < 0.0045) s.lanes.push([i, j]); }
+    const empOf = race => S.empires.find(e => e.race === race && e.alive !== false) || S.empires.find(e => e.race === race);
+    const terrOf = race => {                                             // the centroid and spread of the colonies you know of
+      const e = race && empOf(race); if (!e) return null;
+      const pts = []; S.planets.forEach((p, i) => { if (known(i) === e.id) pts.push(s.pts[i]); });
+      const D = M.Sim.Diplo, met = e.id === E.id || (D && D.rec && D.rec(S, E.id, e.id).contact);
+      if (!pts.length && met && e.capital >= 0 && s.pts[e.capital]) pts.push(s.pts[e.capital]);   // met but none of their worlds explored: their home system
+      if (!pts.length) return null;
+      const mx = pts.reduce((a2, p) => a2 + p.x, 0) / pts.length, my = pts.reduce((a2, p) => a2 + p.y, 0) / pts.length;
+      const r = max(0.08, min(0.3, sqrt(pts.reduce((a2, p) => a2 + (p.x - mx) ** 2 + ((p.y - my) / A) ** 2, 0) / pts.length) * 2.2));
+      return { x: mx, y: my, r: r, col: empHex(e.color) };
+    };
+    s.terr = [terrOf(it.race), terrOf(it.race2)].filter(Boolean);
+    const si = s.star && s.star.name ? S.stars.findIndex(st => st.name === s.star.name) : -1;
+    if (si >= 0) s.mark = { x: s.pts[si].x, y: s.pts[si].y, star: si };
+    else if (s.terr.length >= 2) s.mark = { x: (s.terr[0].x + s.terr[1].x) / 2, y: (s.terr[0].y + s.terr[1].y) / 2 };
+    else if (s.terr.length) s.mark = { x: s.terr[0].x, y: s.terr[0].y };
+    else s.mark = { x: 0.5, y: 0.42 };
+    s.real = true; s.cap = si >= 0 ? (S.planets[si].owner >= 0 && known(si) >= 0 ? S.empires[S.planets[si].owner].plural : STAR_TXT[S.stars[si].color] || 'Star system') : null;
+    return true;
+  }
   function initMap(s) {
+    if (initMapReal(s)) return;
     const rnd = s.rnd, it = s.item, name = (s.star && s.star.name) || it.headline;
     const mx = 0.34 + 0.32 * h2(hashStr(name), 1), my = 0.32 + 0.36 * h2(hashStr(name), 2);
     s.mark = { x: mx, y: my };
@@ -1410,7 +1488,7 @@
   }
   function gMap(g, w, hh, t, lt, dt, s, S) {
     if (!s.pts) initMap(s);
-    const it = s.item, mk = s.mark, k = easeOut(lt / 7), z = 1 + 0.5 * k, alarm = s.fx === 'alarm';
+    const it = s.item, mk = s.mark, k = easeOut(lt / 7), z = 1 + (s.real ? 0.2 : 0.5) * k, alarm = s.fx === 'alarm';   // the real galaxy: a gentle push-in, the whole map stays readable
     g.save();
     g.translate(w * mk.x, hh * mk.y); g.scale(z, z); g.translate(-w * mk.x, -hh * mk.y);
     // chart grid
@@ -1425,7 +1503,7 @@
     const cols = [empHex(0), empHex(1), empHex(2), empHex(3), empHex(4), empHex(5)];
     for (let i = 0; i < s.pts.length; i++) {
       const p = s.pts[i], tw = 0.55 + 0.45 * sin(t * 1.6 + i * 1.7), r = p.sz * (0.8 + 0.2 * tw);
-      g.fillStyle = i % 4 === 0 ? cols[p.k] : rgba('#dbe8ff', 0.5 + 0.4 * tw);
+      g.fillStyle = s.real ? (p.col || rgba('#dbe8ff', 0.35 + 0.3 * tw)) : i % 4 === 0 ? cols[p.k] : rgba('#dbe8ff', 0.5 + 0.4 * tw);
       g.fillRect(p.x * w - r, p.y * hh - r, r * 2, r * 2);
     }
     // marker
@@ -1447,7 +1525,7 @@
     g.strokeStyle = rgba(col, 0.9 * reveal); g.lineWidth = 1.4; g.beginPath(); g.moveTo(sx + (flip ? -1 : 1) * 12, sy - 10); g.lineTo(lx, ly); g.lineTo(lx + (ex - lx) * reveal, ly); g.stroke();
     g.globalAlpha = reveal;
     text(g, lbl, flip ? ex : lx + 4, ly - 6, max(11, hh * 0.058), '#fff5dd', flip ? 'right' : 'left', FONT_D, 400, 1.5);
-    text(g, (alarm ? 'HOSTILITIES' : 'SECTOR ' + (10 + (s.seed % 80)) + '-' + (10 + ((s.seed >> 7) % 80))), flip ? ex : lx + 4, ly + hh * 0.07, max(9, hh * 0.04), rgba(col, 0.95), flip ? 'right' : 'left', FONT_U, 600, 2);
+    text(g, (alarm ? 'HOSTILITIES' : String(s.cap || GROUPS[it.grp].label).toUpperCase()), flip ? ex : lx + 4, ly + hh * 0.07, max(9, hh * 0.04), rgba(col, 0.95), flip ? 'right' : 'left', FONT_U, 600, 2);
     g.globalAlpha = 1;
   }
 
@@ -1457,11 +1535,16 @@
     const a = scr(s.terr[0]), b = scr(s.terr[1]), ca = raceColor(it.race), cb = raceColor(it.race2), mx = w * mk.x, my = hh * mk.y;
     g.save(); g.globalAlpha = reveal; g.lineWidth = 2; g.setLineDash([7, 6]); g.lineDashOffset = -t * 18;
     g.strokeStyle = rgba(alarm ? '#ff5c6a' : '#dbe8ff', 0.75); g.beginPath(); g.moveTo(a.x, a.y); g.quadraticCurveTo(mx, my, b.x, b.y); g.stroke(); g.setLineDash([]);
-    for (const [P, col, race] of [[a, ca, it.race], [b, cb, it.race2]]) {
+    // the labels: over their territories when those are far apart; neighbours get their names spread to either side, with a leader line
+    const left = a.x <= b.x, mid = (a.x + b.x) / 2, gap = w * 0.14;
+    const lab = (P, isLeft) => { let x = P.x; if (abs(a.x - b.x) < gap * 2) x = isLeft ? min(P.x, mid - gap) : max(P.x, mid + gap); return { x: clamp(x, w * 0.14, w * 0.86), y: P.y - hh * 0.1 }; };
+    for (const [P, col, race, isL] of [[a, ca, it.race, left], [b, cb, it.race2, !left]]) {
+      const L = lab(P, isL);
       g.fillStyle = col; g.beginPath(); g.arc(P.x, P.y, 5, 0, TAU); g.fill(); glow(g, col, P.x, P.y, hh * 0.08, 0.6);
-      text(g, racePlural(race).toUpperCase(), P.x, P.y - hh * 0.06, max(11, hh * 0.056), '#fff5dd', 'center', FONT_D, 400, 1.5);
+      g.strokeStyle = rgba(col, 0.8); g.lineWidth = 1.2; g.beginPath(); g.moveTo(P.x, P.y - 6); g.lineTo(L.x, L.y + hh * 0.015); g.stroke();
+      text(g, racePlural(race).toUpperCase(), L.x, L.y, max(11, hh * 0.056), '#fff5dd', 'center', FONT_D, 400, 1.5);
     }
-    text(g, alarm ? 'HOSTILITIES' : it.cat === 'firstContact' ? 'FIRST CONTACT' : String(GROUPS[it.grp].label).toUpperCase(), mx, my + hh * 0.09, max(9, hh * 0.04), rgba(alarm ? '#ff5c6a' : '#62d8ff', 0.95), 'center', FONT_U, 600, 2);
+    text(g, alarm ? 'HOSTILITIES' : it.cat === 'firstContact' ? 'FIRST CONTACT' : String(GROUPS[it.grp].label).toUpperCase(), mx, my + hh * 0.13, max(9, hh * 0.04), rgba(alarm ? '#ff5c6a' : '#62d8ff', 0.95), 'center', FONT_U, 600, 2);
     g.restore();
   }
 
@@ -1529,12 +1612,12 @@
     text(g, redact ? 'CLASSIFIED DOSSIER' : 'GNN WIRE - LIVE FEED', w * 0.05, hh * 0.31, max(11, hh * 0.058), rgba(gc, 0.95), 'left', FONT_D, 400, 3);
     g.strokeStyle = rgba(gc, 0.5); g.lineWidth = 1; g.beginPath(); g.moveTo(w * 0.05, hh * 0.335); g.lineTo(w * 0.95, hh * 0.335); g.stroke();
     const sc = (t * rowH * 0.45) % rowH, base = floor(t * 0.45);
-    g.save(); g.beginPath(); g.rect(0, hh * 0.345, w, hh * 0.44); g.clip();
+    g.save(); g.beginPath(); g.rect(0, hh * 0.345, w, hh * 0.31); g.clip();               // the list ends above the screen's caption
     for (let i = -1; i < n; i++) {
-      const idx = base + i, y = top + i * rowH - sc + rowH * 0.7, a = clamp(min((y - top) / rowH + 0.4, (hh * 0.8 - y) / rowH + 0.3), 0, 1);
+      const idx = base + i, y = top + i * rowH - sc + rowH * 0.7, a = clamp(min((y - top) / rowH + 0.4, (hh * 0.64 - y) / rowH + 0.3), 0, 1);
       const ln = lines.length ? lines[((idx % lines.length) + lines.length) % lines.length] : '';
       g.globalAlpha = a;
-      text(g, String(1000 + ((idx * 37) % 9000)), w * 0.05, y, max(9, hh * 0.05), rgba('#62d8ff', 0.8), 'left', FONT_U, 600);
+      text(g, R && R.intr && R.intr.year !== undefined ? String(R.intr.year) : '', w * 0.05, y, max(9, hh * 0.05), rgba('#62d8ff', 0.8), 'left', FONT_U, 600);
       if (redact) {
         let x = w * 0.15; const R = rng32(hashStr(ln) + idx);
         while (x < w * 0.92) { const ww = w * (0.04 + R() * 0.12); g.fillStyle = R() < 0.55 ? '#05081c' : rgba('#98a5cf', 0.35); g.fillRect(x, y - hh * 0.045, ww, hh * 0.055); x += ww + w * 0.015; }
@@ -1785,6 +1868,7 @@
     if (star && star.name) { monCapB.textContent = star.name; monCapS.textContent = (STAR_TXT[star.kind] || 'Star') + (pl ? ' · ' + humanize(pl.look) + ' world' : ''); }
     else if (pl) { monCapB.textContent = humanize(pl.look) + ' world'; monCapS.textContent = pl.inhabited ? 'Inhabited' : 'Uninhabited'; }
     else if (it.race) { monCapB.textContent = raceName(it.race) + (it.race2 ? (it.grp === 'war' ? ' vs ' : ' & ') + raceName(it.race2) : ''); monCapS.textContent = humanize(it.cat); }
+    else if (it.cat === 'flavor' || it.cat === 'rumor') { monCapB.textContent = 'GNN Wire'; monCapS.textContent = 'Around the galaxy'; }
     else { monCapB.textContent = humanize(it.cat); monCapS.textContent = g.label; }
     monCapE.textContent = R.intr.year !== undefined ? 'GNN · ' + R.intr.year : 'GNN';
     // text
@@ -1818,9 +1902,9 @@
         h('div.gnn-rk-n', String(i + 1)), badge(e.race, round(curU * 3.7), col),
         h('div.gnn-rk-main', h('div.gnn-rk-top', h('div.gnn-rk-name', nm, showRace ? h('em', raceName(e.race)) : null, i === 0 ? h('u', 'Leader') : null, me ? h('u', { style: { background: 'var(--cyan)' } }, 'You') : null), val), h('div.gnn-rk-bar', bar)));
       rkList.appendChild(row);
-      rows.push({ bar: bar, val: val, frac: clamp(e.value / mx, 0, 1), value: e.value, delay: 0.25 + i * 0.14 });
+      rows.push({ bar: bar, val: val, frac: clamp(e.value / mx, 0, 1), value: e.value, delay: 0.25 + i * 0.14, name: nm, race: e.race, col: col, me: me, lead: i === 0 });
     });
-    R.rk = { rows: rows, t: instant ? 99 : 0, dur: 1.1, done: false };
+    R.rk = { rows: rows, t: instant ? 99 : 0, dur: 1.1, done: false, meta: meta, key: seg.key, keys: RANK_ORDER.filter(k => R.segs.some(s2 => s2.kind === 'rank' && s2.key === k)) };
     const lead = list[0], c = cps();
     UI.clear(ltKick); ltKick.appendChild(iconNode(meta.icon)); ltKick.appendChild(h('span', 'Rankings')); ltKick.appendChild(h('b', '· ' + meta.title));
     ltFlagTxt.textContent = '';
@@ -2011,6 +2095,7 @@
     const g = f.ctx, w = f.w, hh = f.h, t = R.t, seg = R.segs[R.idx], talking = R.hl.busy || R.sub.busy || R.talkTail > 0;
     const o = { anchorRace: R.anchor, graphic: R.gfx ? R.gfx.kind : 'ticker', headline: '', ticker: '', cut: R.cut ? clamp(R.cut.t / R.cut.dur, 0, 1) : 0, talking: talking, mood: R.mood, t: t, color: steel('#d6b36a'), newsPlanet: R.curPlanet };
     if (R.gfx && root.dataset.mode === 'item') drawMon(t, gdt);            // the story first: the studio paints it into its screen
+    else if (R.rk && root.dataset.mode === 'rank' && root.classList.contains('gnn-warp')) { const mf = fit(monCv, 2); if (mf) { try { drawRankScreen(mf.ctx, mf.w, mf.h, t); } catch (e) { warnOnce('rank screen', e); } } }
     curScreen = null;
     const res = paintBackdrop(g, w, hh, t, o, f.S), L = res.L, cam = res.cam;
     root.classList.toggle('gnn-warp', !!curScreen);
