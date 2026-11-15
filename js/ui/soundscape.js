@@ -193,12 +193,8 @@
       if (group !== 'combat' && m.setIntensity) m.setIntensity(0);           // before the new track is built: its players copy the current level
       // a new scene is a new scenario: the change is heard within about three seconds — on the next beat, through a quick bridge in the new
       // key where the two differ (or a two-second crossfade), however far apart the pieces are
-      // a fight or a landing arrives suddenly: led in by a riser (one of several, in turn) that builds over about four seconds from what was
-      // playing, which plays on under it as it fades, into the cue's first downbeat; and on the way back from one, the fight's music plays
-      // on as it fades slowly under the map's interlude (keepOld) rather than stopping at once
-      const riser = (group === 'combat' || group === 'ground') && bridge ? true : undefined, fight = from === 'combat' || from === 'ground';
-      if (group === 'galaxy' && from && from !== 'title') m.setMood(pick[1], { fade: fight ? 4 : 2.5, quantize: 'beat', interlude: true, keepOld: fight || undefined });   // back on the map: through an interlude that walks from the cue's key and pulse to the map's
-      else m.setMood(pick[1], group === 'combat' ? { fade: 1.5, quantize: 'beat', bridge, riser } : { fade: 2, quantize: 'beat', bridge, riser, quiet });
+      if (group === 'galaxy' && from && from !== 'title') m.setMood(pick[1], { fade: 2.5, quantize: 'beat', interlude: true });   // back on the map: through an interlude that walks from the cue's key and pulse to the map's
+      else m.setMood(pick[1], group === 'combat' ? { fade: 1.5, quantize: 'beat', bridge } : { fade: 2, quantize: 'beat', bridge, quiet });
     } catch (e) { /* audio optional */ }
   }
   function calm() { const m = music(); if (m && m.setIntensity) { try { m.setIntensity(0); } catch (e) { /* audio optional */ } } }
