@@ -376,6 +376,7 @@
     .gnn-title .gnn-title-logo svg { width:calc(var(--u)*6.5); }
     .gnn-title .gnn-title-name { font-size:calc(var(--u)*3); padding-left:0; background:none; -webkit-background-clip:border-box; background-clip:border-box; }   /* each word carries its own gold (.gnn-bw): the words move apart */
     .gnn-bw { display:inline-block; transform-origin:50% 60%; color:#ecd193; text-shadow:0 1px 0 #fff3cf, 0 calc(var(--u)*.25) 0 rgba(90,64,24,.9), 0 0 calc(var(--u)*1.6) rgba(214,179,106,.35); }
+    @media (orientation: landscape) { html[data-phone] .gnn-title { padding-bottom:6.4rem; } }   /* sideways phones: clear of the ticker and the touch-sized buttons */
     @media (orientation: portrait) { html[data-phone] .gnn-title { place-items:center; padding:0; background:radial-gradient(ellipse at 50% 46%, rgba(8,14,46,.7), rgba(2,4,14,.95) 76%); } html[data-phone] .gnn-title .gnn-title-in { align-items:center; text-align:center; } html[data-phone] .gnn-title .gnn-title-name { font-size:calc(var(--u)*4.6); } html[data-phone] .gnn-title .gnn-title-logo svg { width:calc(var(--u)*14); } }
     .gnn-title-in { display:flex; flex-direction:column; align-items:center; gap:calc(var(--u)*2.4); text-align:center; }
     .gnn-title-logo svg { width:calc(var(--u)*14); height:auto; display:block; filter:drop-shadow(0 0 calc(var(--u)*2) rgba(120,170,255,.45)); }
@@ -823,11 +824,13 @@
   function drawIdgaf(g, w, hh, t, R2) {
     const WA = M.Gfx && M.Gfx.WorldArt, im = BUL.decided && WA && WA.enabled && WA.gnnIdgaf ? WA.get(WA.gnnIdgaf) : null;
     if (!im || (R2.phone && R2.phone.port)) return false;
+    // (sideways phones are so short that a strict fit left a thumbnail: there the photo is a third larger and her legs run a little
+    // under the headline)
     // the whole photo is shown, and all of her stays above the headline: it is fitted to the top ~78% of the screen (above the lower
     // third), centred, with a soft, darkened, enlarged copy of itself filling the margins. Under the titles (no headline yet) a slow
     // pull-back from a closer, right-anchored framing on her ends on that same full frame.
     const title = R && R.segs[R.idx] && R.segs[R.idx].kind === 'title', e = title && !R.rm ? sstep(0, 1, clamp(R.segT / max(1, R.titleDur), 0, 1)) : 1;
-    const room = R2.phone ? max(60, R2.phone.ltTop - 6) : hh * 0.78, fitS = min(w / im.naturalWidth, room / im.naturalHeight);
+    const room = R2.phone ? max(60, (R2.phone.ltTop - 6) * 1.36) : hh * 0.78, fitS = min(w / im.naturalWidth, room / im.naturalHeight);
     const z = title ? 1.12 - 0.12 * e : 1, sc = fitS * z, dw = im.naturalWidth * sc, dh = im.naturalHeight * sc;
     const ox = title ? lerp(w - dw - w * 0.02, (w - dw) / 2, e) : (w - dw) / 2, oy = title ? lerp(0, 0, e) : 0;
     g.imageSmoothingEnabled = true; g.imageSmoothingQuality = 'high';

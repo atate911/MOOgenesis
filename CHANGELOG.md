@@ -5,6 +5,14 @@ Versions follow `MAJOR.MINOR.PATCH`; the live version is the `VERSION` file.
 
 ## Unreleased
 
+- GNN airs a little more often: about one bulletin in 18 turns instead of one in 27 (six AI-played games, 1,119 turns), and the
+  long silences (40 to 136 turns) are capped. The broadcast filter is unchanged; a quiet-spell rule is added: when nothing has aired
+  for 15 turns and nothing airs this turn, the desk takes one story off the wire, the weightiest archived item of the turn (an
+  AI-vs-AI conquest, alliance, peace, fleet lost, battle, bombardment, plague, a rival's new colony...) that is not the player's own
+  and only involves empires they have met; never a war declaration or a Council outcome. No random numbers are drawn, so the
+  simulation is unchanged (`News.POLICY.QUIET`, `S.newsAir`).
+- GNN on phones held sideways: the bumper's titles clear the ticker and buttons; the settled-galaxy shot is a usable size (her legs
+  run a little under the headline there, the screen being so short).
 - GNN, off air: about one regular bulletin in a hundred opens on a rare easter egg instead of the usual bumper, the presenter caught
   between takes with her feet up on the desk, in leather (`gnn-open-offair.webp` and `gnn-open-offair-leather.webp`, in turn); the
   bulletin then runs as normal. Three more regular-news openers: the presenter bent over the desk marking up her script, from the

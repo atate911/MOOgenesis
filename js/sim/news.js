@@ -62,7 +62,22 @@ MOO.def(function (M) {
   const SEEN_BY_HUMAN = { emperorElected: 1, councilRefused: 1 };
   const EVENT_KEEP = { systemNova: 1, planetDestroyed: 1, orionColonised: 1 };
   const WAR_COOLDOWN = 20, WAR_MAX = 2;
-  N.POLICY = { WAR_COOLDOWN, WAR_MAX };
+  // A quiet spell: the filter above left about one newscast in 27 turns, with silences of 40-130 turns. When nothing has aired for QUIET
+  // turns and nothing airs this turn either, the desk takes ONE story off the wire: the weightiest archived item of the turn that the
+  // player has not already been shown (no event of their own) and that only involves empires they have met. No random numbers are
+  // drawn, so the simulation does not depend on it. Never a war declaration (the filter has ruled on those) or a Council outcome.
+  const QUIET = 15;
+  const WIRE = { invasionSuccess: 6, empireDestroyed: 6, allianceFormed: 5, peaceTreaty: 5, allianceBroken: 5, coup: 5, fleetDestroyed: 4, monsterAttack: 4, monsterKilled: 4, antaranRaid: 4,
+    plague: 3, planetRebels: 3, piracy: 3, economicBoom: 3, battleWon: 3, battleLost: 3, bombardment: 3, invasionRepelled: 3, colonyFounded: 2, colonyLost: 2, terraform: 2 };
+  const NO_WIRE = { warDeclared: 1, emperorElected: 1, councilRefused: 1, treatyBroken: 1 };
+  function wireWorth(S, ev) {
+    if (NO_WIRE[ev.cat] || isHuman(S, ev.empire) || isHuman(S, ev.empire2)) return 0;
+    const D = M.Sim.Diplo, me = S.playerId, met = id => id === undefined || id < 0 || id === me || !!(D && D.rec && me >= 0 && D.rec(S, me, id).contact);
+    if (!met(ev.empire) || !met(ev.empire2)) return 0;
+    if (ev.cat === 'peaceTreaty' && D && D.rec && D.T && ev.empire >= 0 && ev.empire2 >= 0 && D.rec(S, ev.empire, ev.empire2).treaty >= D.T.WAR) return 0;   // at war again already
+    return WIRE[ev.cat] || 0;                                             // only the listed kinds: no minor finds, no Council notices
+  }
+  N.POLICY = { WAR_COOLDOWN, WAR_MAX, QUIET };
   function broadcastFilter(S, ev, imp, st) {
     if (!(imp >= 1)) return imp;
     if (SEEN_BY_HUMAN[ev.cat] || ev.cat === 'invasionSuccess') return 0;
@@ -102,7 +117,7 @@ MOO.def(function (M) {
       const key = ev.cat + '|' + line; if (seen.has(key)) continue; seen.add(key);
       items.push({ cat: ev.cat, headline: line, sub: ev.sub || null, graphic: ev.graphic || GRAPHIC[ev.cat] || 'ticker', planet: ev.planet !== undefined ? planetArt(S, ev.planet) : (ev.star !== undefined ? planetArt(S, ev.star) : null),
         star: ev.star !== undefined && ev.star >= 0 ? { name: S.stars[ev.star].name, kind: S.stars[ev.star].color } : null, race: ev.empire !== undefined && ev.empire >= 0 ? S.empires[ev.empire].race : null,
-        race2: ev.empire2 !== undefined && ev.empire2 >= 0 ? S.empires[ev.empire2].race : null, importance: broadcastFilter(S, ev, importanceOf(S, ev), st) });
+        race2: ev.empire2 !== undefined && ev.empire2 >= 0 ? S.empires[ev.empire2].race : null, importance: broadcastFilter(S, ev, importanceOf(S, ev), st), wire: wireWorth(S, ev) });
     }
     // empires destroyed this turn (event from Turn.checkDeaths)
     for (const ev of M.Sim.Ev.take(S, e => e.type === 'empireDestroyed')) {
@@ -132,8 +147,13 @@ MOO.def(function (M) {
     if (S.newsLog.length > 600) S.newsLog.splice(0, S.newsLog.length - 600);
     // minor items (importance 0) are archived but never broadcast — not even as "also in the news" riders of a real bulletin (AI breakthroughs,
     // skirmishes and the like would otherwise pad every newscast)
-    const bulletin = items.filter(it => it.importance >= 1);
+    let bulletin = items.filter(it => it.importance >= 1);
+    if (!bulletin.length && S.turn - (S.newsAir | 0) >= QUIET) {         // a quiet spell: one story off the wire
+      let best = null; for (const it of items) if (it.wire > 0 && (!best || it.wire > best.wire)) best = it;
+      if (best) { best.importance = 1; bulletin = [best]; }
+    }
     if (!bulletin.length) return null;
+    S.newsAir = S.turn;
     // ticker lines come from their own stream (seed + turn): drawing them from the game's RNG only when a bulletin airs made the simulation
     // depend on what the GNN chooses to broadcast (every later combat / event / AI roll shifted when the broadcast filter changed)
     const tick = (M.Data.text && M.Data.text.tickers) || [], ticker = [], TR = M.RNG.create(String(S.seed) + ':gnn-ticker:' + S.turn);

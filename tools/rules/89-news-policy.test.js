@@ -64,4 +64,17 @@ module.exports = function (M, t) {
     Ev.push(S, { type: 'news', cat: 'planetDestroyed', kind: 'comet', stage: 'end', empire: 3, planet: S.empires[3].capital, importance: 2, headline: 'The comet strikes.' });
     t.eq(cats(N.compile(S, R(S))).join(','), 'planetDestroyed', 'the comet strike airs');
   });
+
+  t.test('a quiet spell: after POLICY.QUIET silent turns one archived story airs; never the player\'s own, an unmet empire\'s, or twice in a row', () => {
+    const S = game('np-quiet'); meetAll(S);
+    const colony = e => Ev.push(S, { type: 'news', cat: 'colonyFounded', empire: e, star: S.empires[e].capital, planet: S.empires[e].capital });
+    colony(1); t.eq(N.compile(S, R(S)), null, 'early in the game it stays in the archive');
+    S.turn += N.POLICY.QUIET;
+    colony(0); t.eq(N.compile(S, R(S)), null, 'the player\'s own colony is never promoted');
+    D.rec(S, 0, 2).contact = false; colony(2); t.eq(N.compile(S, R(S)), null, 'nor one of an empire they have not met');
+    colony(1); Ev.push(S, { type: 'news', cat: 'allianceFormed', empire: 1, empire2: 3 });
+    t.eq(cats(N.compile(S, R(S))).join(','), 'allianceFormed', 'one story, the weightiest');
+    S.turn += 1; colony(1); t.eq(N.compile(S, R(S)), null, 'the spell is over: back to the archive');
+    S.turn += N.POLICY.QUIET; colony(1); t.eq(cats(N.compile(S, R(S))).join(','), 'colonyFounded', 'and after another quiet spell, again');
+  });
 };
