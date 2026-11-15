@@ -6,7 +6,8 @@ Versions follow `MAJOR.MINOR.PATCH`; the live version is the `VERSION` file.
 ## Unreleased
 
 - GNN: the presenter is under her own key light, a touch brighter and more vivid than the graded set, in a slightly warmer, more
-  neutral light than the cool studio, with a warm soft light from the upper left (she read flat and dark). The studio screen carries a cable-news crawl along its bottom: this bulletin's headlines,
+  neutral light than the cool studio, with a warm soft light from the upper left (she read flat and dark); her
+  highlights stay at the source image's level (none blown out). The studio screen carries a cable-news crawl along its bottom: this bulletin's headlines,
   then the latest from the archive, scrolling under a GNN tag.
 - GNN's video wall is part of the studio: the story is painted into the photo's own screen, fitted to the inner edge of its
   bezel (a perspective shape, taller on the right, with cut corners) with a gentle curve, instead of a rectangle laid over the
