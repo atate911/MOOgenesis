@@ -1689,9 +1689,10 @@
     buildTicker();
     applySegment(0);
     try { root.focus({ preventScroll: true }); } catch (e) { /* not focusable yet */ }
-    // the bumper cuts in: the game's music fades out over 2 s and the news package starts at full volume 1.5 s into that fade, on its
-    // opening hit, with no bridge and no waiting for the bar (it is a different world from the map's music, and announces an event)
-    musicPlay('gnn', { quantize: false, oldFade: 2.0, keepOld: true, inFade: 0, delay: 1.4 }); R.musicStarted = true;   // 1.4 + the engine's 0.1 s start margin = 1.5 s; keepOld: the map's music plays on through its fade
+    // the bumper builds in: its two-bar pickup (about 3.8 s: a timpani roll, a cymbal swell, the strings rising, a snare roll) starts at
+    // once while the game's music fades out beneath it over 3.5 s, and the ident's opening hit lands just after that fade ends (no bridge,
+    // no waiting for the bar). keepOld: the map's music plays on through its fade rather than stopping with only its last notes fading
+    musicPlay('gnn', { quantize: false, oldFade: 3.5, keepOld: true, inFade: 0.3 }); R.musicStarted = true;
   }
 
   // ================================================================== screen + public API

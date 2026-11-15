@@ -453,6 +453,11 @@
       H2: '5:1.5 8:.5 8:2 | 10:1.5 8:.5 6:2 | 7:1 9:1 11:1 9:1 | 7#:3 r:1',
     },
     sec: [
+      // the pickup (the first pass only): two bars on the dominant that build into the ident while the game's music fades under them,
+      // everything climbing to the hit: the strings' tremolo and the cellos swelling, the timpani rolling, the cymbal swelling, the
+      // clock quickening and a snare roll into the downbeat
+      { n: 'pickup', bars: 2, cres: [0.35, 1.0], rise: 2, fill: 'rollS', prog: 'V', pad: { p: 'swell', inst: N_TREM, n: 4, reg: [55, 76], vel: 1.0 }, pad2: { p: 'swell', inst: N_VC, n: 2, reg: [40, 52], vel: 0.9 },
+        timp: { kick: '................', roll: 2, vel: 1.3 }, drums: { click3: ['..o...o...o...o.', 'x.o.x.o.xoxoxxxx'] } },
       { n: 'intro', bars: 4, lv: 0.85, hit: 'tam', cr: true, prog: 'i i bVI V', pad: { p: 'sus', inst: N_STR, n: 4, reg: [50, 74], vel: 0.8 }, bass: { pat: '1---', pedal: true },
         lead: { ph: 'ID ID2', inst: N_HORN_FF, vel: 1.0 }, lead2: { ph: 'ID ID2', inst: N_TBN_FF, oct: -1, vel: 0.8 }, timp: { p: 'hits', roll: 1 }, drums: { t5: 'X...............' } },
       { n: 'A1', bars: 8, lv: 0.78, prog: 'i i bVI bVI | bIII bIII bVII V', pad: { p: 'sus', inst: N_STR, n: 3, reg: [53, 72], vel: 0.65 }, bass: 'pulse8', arp: OST, drums: drums(TICK, LOW) },

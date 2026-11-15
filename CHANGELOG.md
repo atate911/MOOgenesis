@@ -20,8 +20,10 @@ Versions follow `MAJOR.MINOR.PATCH`; the live version is the `VERSION` file.
   ms with the ostinato scattering over 40 ms before). Other pieces are unchanged.
   The opening ident is on the horn section's fortissimo recording (its loud, brassy sound) over the trombone's loudest (an instrument may
   now be pinned to one of its recordings with `layer`).
-  The news cuts in from the game's music: the map's music fades out over two seconds and the news package starts at full volume 1.5 s
-  into that fade, on its opening hit (no bridge, no waiting for the bar; `play` takes a new `delay`). The way back is slow: the news
+  The news builds in from the game's music: the package opens with a two-bar pickup (about 3.8 s on the dominant: a timpani roll, a
+  cymbal swell, the strings' tremolo rising, the clock quickening, a snare roll) that climbs from -40 to -21 dB while the map's music
+  fades out beneath it over 3.5 s, and the ident's opening hit lands as that fade ends (no bridge, no waiting for the bar; `play` also
+  takes a new `delay`). The way back is slow: the news
   fades out over four seconds while the map's music comes back in beneath it, from a little before where it stopped. Both fades are
   real crossfades now (`play` / `restore` take `keepOld`, `stop` takes `keep`): a fading piece used to stop playing new notes at once,
   so only the notes already sounding faded and every crossfade was heard as a cut whatever its length (the news fell 10 dB in a
