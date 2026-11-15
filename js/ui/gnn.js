@@ -1006,6 +1006,7 @@
       if (!filtered) q.drawImage(fim, fx0, fy0, fiw, fih);
       q.globalCompositeOperation = 'soft-light';
       q.fillStyle = rgr(q, fx0 + fiw * 0.28, fy0 + fih * 0.16, 0, fih * 0.62, [0, 'rgba(255,238,210,.75)', 0.5, 'rgba(255,230,200,.3)', 1, 'rgba(128,128,128,0)']); q.fillRect(0, 0, fw, fh);
+      q.fillStyle = 'rgba(255,226,192,.42)'; q.fillRect(0, 0, fw, fh);                  // a slightly warmer, more neutral light than the cool set, so she stands off it
       if (!filtered) { q.globalCompositeOperation = 'screen'; q.fillStyle = 'rgba(40,40,46,1)'; q.fillRect(0, 0, fw, fh); }   // no canvas filters (Safari): a gentle lift instead
       q.globalCompositeOperation = 'destination-in'; q.drawImage(fim, fx0, fy0, fiw, fih); q.globalCompositeOperation = 'source-over';
       const fig = mkCanvas(fw, fh), f = fig.getContext('2d');
