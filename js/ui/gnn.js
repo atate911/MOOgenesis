@@ -1688,7 +1688,9 @@
     buildTicker();
     applySegment(0);
     try { root.focus({ preventScroll: true }); } catch (e) { /* not focusable yet */ }
-    musicPlay('gnn', { fade: 0.8, bridge: 'auto' }); R.musicStarted = true;   // the news bed is led into by the calm bridge, and the map back out of it
+    // the bumper cuts in: the game's music fades out quickly (1 s) and the news package starts at full volume halfway through that fade,
+    // on its opening hit, with no bridge and no waiting for the bar (it is a different world from the map's music, and announces an event)
+    musicPlay('gnn', { quantize: false, oldFade: 1.0, inFade: 0, delay: 0.5 }); R.musicStarted = true;
   }
 
   // ================================================================== screen + public API

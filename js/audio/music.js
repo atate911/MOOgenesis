@@ -5,7 +5,7 @@
 // (25 ms timer, ~160 ms ahead) or an offline window renderer plays the events through the voice factories in audio.js.
 //
 // Public API (MOO.Audio.Music):
-//   play(id,{fade,loop}) stop({fade}) current() has(id) list() setIntensity(0..1)
+//   play(id,{fade,loop, oldFade, inFade, delay, quantize, bridge}) stop({fade}) current() has(id) list() setIntensity(0..1)
 //   playlist(ids,{shuffle, gap: s | [lo,hi], fade, start, between: templateId | [ids], betweenP, gapIn}) (a programme: pieces crossfade into
 //     interludes re-rooted to the next piece's key and those into the next piece; reshuffles never repeat the last piece or put same-key pieces together)
 //   setMood(name,{fade, soft, bridge}) snapshot() / restore(snap,{fade}) (hand the music back after a scene: track OR running playlist)
@@ -1987,7 +1987,7 @@
     if (S.cur) { S.cur.fadeOut(num(opts.oldFade, fade)); S.old.push(S.cur); }    // oldFade: let a piece that is ending ring out under the next one
     S.cur = p;
     p.fadeIn(num(opts.inFade, fade));
-    p.begin(eng.ctx.currentTime + 0.1);
+    p.begin(eng.ctx.currentTime + 0.1 + Math.max(0, num(opts.delay, 0)));   // delay: the new piece starts this many seconds into the old one's fade (a cue that cuts in at full)
     if (S.playlist) S.playlist.advancing = false;
     ensureTimer();
     return true;
