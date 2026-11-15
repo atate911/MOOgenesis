@@ -5,6 +5,23 @@ Versions follow `MAJOR.MINOR.PATCH`; the live version is the `VERSION` file.
 
 ## Unreleased
 
+- GNN airs a little more often: about one bulletin in 18 turns instead of one in 27 (six AI-played games, 1,119 turns), and the
+  long silences (40 to 136 turns) are capped. The broadcast filter is unchanged; a quiet-spell rule is added: when nothing has aired
+  for 15 turns and nothing airs this turn, the desk takes one story off the wire, the weightiest archived item of the turn (an
+  AI-vs-AI conquest, alliance, peace, fleet lost, battle, bombardment, plague, a rival's new colony...) that is not the player's own
+  and only involves empires they have met; never a war declaration or a Council outcome. No random numbers are drawn, so the
+  simulation is unchanged (`News.POLICY.QUIET`, `S.newsAir`).
+- GNN on phones held sideways: the bumper's titles clear the ticker and buttons; the settled-galaxy shot is a usable size (her legs
+  run a little under the headline there, the screen being so short).
+- GNN, off air: about one regular bulletin in a hundred opens on a rare easter egg instead of the usual bumper, the presenter caught
+  between takes with her feet up on the desk, in leather (`gnn-open-offair.webp` and `gnn-open-offair-leather.webp`, in turn); the
+  bulletin then runs as normal. Three more regular-news openers: the presenter bent over the desk marking up her script, from the
+  front, the side (past a studio camera) and behind (`gnn-open-bend-*.webp`).
+- GNN, the settled galaxy: once the game looks decided (from turn 60: you hold two thirds of the galaxy's colonies and industry, or
+  almost none, or you play on after winning) the whole bulletin is one shot of the presenter lounging at the desk with her feet up
+  (`gnn-idgaf.webp`), the stories, charts and rankings playing on the big studio screen behind her, her hand, pen and shoe tips in
+  front of it (`gnn-idgaf-front.webp`), and all of her above the headline. She adds a weary aside under each headline ("We could
+  report the rest of the galaxy, but why bother?").
 - GNN bulletins are produced like television: a 10-second bumper (7 / 9 s at the fast / slow speeds) opens on a photo of the presenter
   in the studio, slowly pulling back and drifting, under animated titles (the globe spins in, "Galactic News Network" drops in word
   by word, the year sweeps in, a glint runs along the title, and at the end the globe zooms past the camera as the words slide away;
