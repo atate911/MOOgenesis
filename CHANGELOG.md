@@ -5,6 +5,15 @@ Versions follow `MAJOR.MINOR.PATCH`; the live version is the `VERSION` file.
 
 ## Unreleased
 
+- GNN bulletins are produced like television: a 10-second bumper (7 / 9 s at the fast / slow speeds) opens on a photo of the presenter
+  in the studio, slowly pulling back and drifting, under animated titles (the globe spins in, "Galactic News Network" drops in word
+  by word, the year sweeps in, a glint runs along the title, and at the end the globe zooms past the camera as the words slide away;
+  driven by the broadcast clock, so pause and speed apply; reduced motion fades them in place). Then the desk for every story, and for
+  charts and rankings only, a cut to the studio monitor so the data can be read (rendered at the size it is seen, so it stays sharp).
+  Wardrobe per bulletin: the off-shoulder dress by default, with folded hands at the desk; the high-collar jacket and its story poses
+  when the lead story is sombre (war, losses, disasters, breaking news, alerts). The opening shot comes from that wardrobe's set (8 and
+  7 photos, `assets/art/gnn/gnn-open-*.webp`, including behind-the-scenes shots for the regular news), picked by the turn, so
+  consecutive bulletins open differently. The studio monitor no longer carries its own headline crawl (the viewer's GNN Wire does).
 - New music for the Galactic News Network. The old bed (an organ, a pop drum kit and a synth lead in a bright major key) sounded
   hokey; the new one is written like a cable network's breaking-story package and played by the game's orchestra in its hall: a
   ticking clock, the strings' spiccato ostinato driving in sixteenths over a pizzicato pulse in the basses, low drums and timpani, a
