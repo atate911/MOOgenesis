@@ -1752,8 +1752,8 @@
     }
     return lut;
   }
-  const PG_V = monoCurve([[0, 0], [0.05, 0.008], [0.11, 0.07], [0.22, 0.27], [0.4, 0.56], [0.64, 0.84], [1, 0.98]], 1024);
-  const PG_S = monoCurve([[0, 0.35], [0.12, 0.55], [0.35, 0.78], [0.6, 0.82], [0.85, 0.68], [1, 0.5]], 256);   // saturation gain by graded value: a muted, period-drama palette
+  const PG_V = monoCurve([[0, 0], [0.05, 0.006], [0.11, 0.07], [0.22, 0.3], [0.4, 0.62], [0.64, 0.88], [1, 0.99]], 1024);
+  const PG_S = monoCurve([[0, 0.45], [0.12, 0.7], [0.35, 1.08], [0.6, 1.16], [0.85, 0.95], [1, 0.7]], 256);   // saturation gain by graded value (y x 1.25 below)
   function gradePlate(im) {
     let r = PLATE_GRADE.get(im); if (r !== undefined) return r;
     r = null;
@@ -1770,17 +1770,16 @@
         let sat = mx > 0 ? dl / mx : 0, val = PG_V[(mx * 1023) | 0];
         // H vs H / S keys
         const brass = sat > 0.22 && val > 0.12 ? sstep(14, 24, hue) * (1 - sstep(52, 62, hue)) * sstep(0.22, 0.4, sat) : 0;
-        if (brass > 0) { hue += (31 - hue) * 0.5 * brass; sat = min(1, sat * (1 + 0.04 * brass)); }   // one aged, coppery bronze
+        if (brass > 0) { hue += (35 - hue) * 0.5 * brass; sat = min(1, sat * (1 + 0.06 * brass)); }
         const stone = 1 - sstep(0.12, 0.3, sat);
-        sat = min(1, sat * PG_S[(val * 255) | 0] * (1 + 0.08 * brass));
+        sat = min(1, sat * PG_S[(val * 255) | 0] * (1.02 - 0.12 * brass));
         // HSV -> RGB
         const C = val * sat, hp6 = hue / 60, X = C * (1 - Math.abs((hp6 % 2) - 1)), m0 = val - C; let r1 = 0, g1 = 0, b1 = 0;
         if (hp6 < 1) { r1 = C; g1 = X; } else if (hp6 < 2) { r1 = X; g1 = C; } else if (hp6 < 3) { g1 = C; b1 = X; } else if (hp6 < 4) { g1 = X; b1 = C; } else if (hp6 < 5) { r1 = X; b1 = C; } else { r1 = C; b1 = X; }
         R = r1 + m0; Gc = g1 + m0; B = b1 + m0;
-        // split tone: steel blue-green into the shadows (cold stone, cold air), cold daylight on the stone's highlights,
-        // and warmth only where the bronze catches the firelight
-        const sh = (1 - val) * (0.3 + 0.7 * stone) * (1 - 0.6 * brass) * 0.24, hc = val * val * stone * 0.05, hw = val * brass * 0.07;
-        R += -0.5 * sh - 0.25 * hc + 0.9 * hw; Gc += 0.1 * sh + 0.05 * hc + 0.45 * hw; B += 0.36 * sh + 0.3 * hc - 0.5 * hw;
+        // split tone: teal-slate into the stone's shadows, warm amber into everything's highlights
+        const sh = (1 - val) * (0.2 + 0.8 * stone) * (1 - brass) * 0.2, hl = val * val * (0.45 + 0.55 * stone) * 0.06;
+        R += -0.5 * sh + 0.9 * hl; Gc += 0.06 * sh + 0.42 * hl; B += 0.42 * sh - 0.55 * hl;
         px[o] = clamp(R, 0, 1) * 255; px[o + 1] = clamp(Gc, 0, 1) * 255; px[o + 2] = clamp(B, 0, 1) * 255;
         if (!(x & 1) && !(y & 1) && (x >> 1) < kw && (y >> 1) < kh) {
           const L = 0.2126 * R + 0.7152 * Gc + 0.0722 * B, hk = sstep(0.7, 0.95, L), q = ((y >> 1) * kw + (x >> 1)) * 4;
@@ -1811,56 +1810,154 @@
     PLATE_GRADE.set(im, r);
     return r;
   }
-  /* a brazier's flicker: 1 +- a few tenths, from incommensurate sines (stateless, so every redraw agrees); steady with Reduce motion */
-  function fireFl(t, s, still) { return still ? 1 : 0.86 + 0.08 * sin(t * 7.3 + s) + 0.05 * sin(t * 12.7 + s * 2.1) + 0.04 * sin(t * 23.9 + s * 3.7); }
-  /* smoke hanging in the hall: two layers of soft noise drifting at different speeds, thin everywhere and thicker in the daylight shafts.
-     Drawn into a half-resolution buffer (tiles placed on whole pixels, so their seams never double up), then masked by a soft matte that
-     is thin across the hall and dense inside the fan of shafts (built once per size, blurred: no hard edge), then screened over the scene. */
-  const SMOKE = { buf: null, mask: null, key: '' };
-  function smokeHaze(ctx, w, h, t, still, cx, by) {
-    if (plateLow()) return;
-    const bw = max(1, (w / 2) | 0), bh = max(1, (h / 2) | 0), key = bw + 'x' + bh + ':' + (cx | 0) + ':' + (by | 0);
-    if (SMOKE.key !== key) {
-      SMOKE.key = key;
-      SMOKE.buf = SMOKE.buf || document.createElement('canvas'); SMOKE.buf.width = bw; SMOKE.buf.height = bh;
-      const m = SMOKE.mask = document.createElement('canvas'); m.width = bw; m.height = bh; const mg = m.getContext('2d');
-      mg.fillStyle = 'rgba(0,0,0,0.28)'; mg.fillRect(0, 0, bw, bh);
-      try { mg.filter = 'blur(' + Math.round(bw * 0.035) + 'px)'; } catch (e) { /* no filters: a harder fan edge */ }
-      const c2 = cx / 2, b2 = by / 2;
-      mg.fillStyle = 'rgba(0,0,0,1)'; mg.beginPath(); mg.moveTo(c2 - bw * 0.08, -bh * 0.1); mg.lineTo(c2 + bw * 0.08, -bh * 0.1); mg.lineTo(c2 + bw * 0.42, b2); mg.lineTo(c2 - bw * 0.42, b2); mg.closePath(); mg.fill();
-      mg.filter = 'none';
-    }
-    const B = SMOKE.buf, g = B.getContext('2d'), dt = still ? 0 : t;
-    const T = fogTile(911, 256, '#c4ccd4', 0.5, 0.78, 1, 5, 2), T2 = fogTile(377, 256, '#d8dee4', 0.55, 0.82, 1, 4, 3);
-    g.globalCompositeOperation = 'copy'; g.globalAlpha = 1; g.clearRect(0, 0, bw, bh);
-    g.globalCompositeOperation = 'source-over';
-    const lay = (tile, sz, vx, vy, a) => {
-      sz = Math.round(sz);
-      const ox = Math.round(((dt * vx / 2) % sz + sz) % sz), oy = Math.round(((dt * vy / 2) % sz + sz) % sz);
-      g.globalAlpha = a;
-      for (let y = -oy; y < bh; y += sz) for (let x = -ox; x < bw; x += sz) g.drawImage(tile, x, y, sz, sz);
-    };
-    const sz = max(bw, bh) * 0.55;
-    lay(T, sz, 9, -2.5, 0.42); lay(T2, sz * 0.7, -6, -1.5, 0.3);
-    g.globalAlpha = 1; g.globalCompositeOperation = 'destination-in'; g.drawImage(SMOKE.mask, 0, 0);
-    g.globalCompositeOperation = 'source-over';
-    ctx.save(); ctx.globalCompositeOperation = 'screen'; ctx.globalAlpha = 0.6; ctx.drawImage(B, 0, 0, w, h); ctx.restore();
+  function plateLow() { return !!((M.Perf && M.Perf.tier === 'low')); }
+  function plateStill() { try { return !!(M.Settings && M.Settings.get && M.Settings.get('reduceMotion')); } catch (e) { return false; } }
+
+  /* ---- the council pedestal's hologram, as projected light rather than wireframe: a lens of light on the emitter, a soft column with
+     bright edges (fresnel), and solid translucent forms (ballot box with falling ballots / the galaxy / the winner's crown) drawn into a buffer,
+     then composited as a wide blurred glow + the sharp form with fine interference bands, a faint chromatic fringe and a rare glitch. */
+  const CH = { buf: null, blur: null };
+  function chProj(yaw, pit, pf, cx, cy, sc) {
+    const cy1 = cos(yaw), sy1 = sin(yaw), cp = cos(pit), sp = sin(pit);
+    return (x, y, z) => { const x1 = x * cy1 + z * sy1, z1 = -x * sy1 + z * cy1, y2 = y * cp - z1 * sp, z2 = y * sp + z1 * cp, k = 1 / (1 - z2 * pf); return [cx + x1 * sc * k, cy - y2 * sc * k, z2]; };
   }
-  /* sparks lifting from the two braziers just out of frame */
-  function embers(ctx, w, h, t, still, fl, fr) {
-    if (plateLow() || still) return;
+  // a solid translucent box: back faces faint, front faces brighter, every face a vertical gradient, edges glowing
+  function chBox(g, P, x0, x1, y0, y1, z0, z1, col, a, lw, faces) {
+    const V = [P(x0, y0, z0), P(x1, y0, z0), P(x1, y1, z0), P(x0, y1, z0), P(x0, y0, z1), P(x1, y0, z1), P(x1, y1, z1), P(x0, y1, z1)];
+    const F = [[0, 1, 2, 3], [5, 4, 7, 6], [4, 0, 3, 7], [1, 5, 6, 2], [3, 2, 6, 7], [4, 5, 1, 0]];
+    const list = F.map((f) => { const z = (V[f[0]][2] + V[f[1]][2] + V[f[2]][2] + V[f[3]][2]) / 4;
+      const ax = V[f[1]][0] - V[f[0]][0], ay = V[f[1]][1] - V[f[0]][1], bx = V[f[3]][0] - V[f[0]][0], by = V[f[3]][1] - V[f[0]][1];
+      return { f: f, z: z, front: ax * by - ay * bx < 0 }; }).sort((p, q) => p.z - q.z);
+    let ymin = 1e9, ymax = -1e9; for (const v of V) { ymin = min(ymin, v[1]); ymax = max(ymax, v[1]); }
+    for (const L of list) {
+      const f = L.f, fa = (L.front ? 0.2 : 0.07) * a;
+      g.beginPath(); g.moveTo(V[f[0]][0], V[f[0]][1]); for (let i = 1; i < 4; i++) g.lineTo(V[f[i]][0], V[f[i]][1]); g.closePath();
+      g.fillStyle = lgr(g, 0, ymin, 0, ymax, [0, rgba(lite(col, 0.4), fa * 1.3), 1, rgba(col, fa * 0.55)]); g.fill();
+      g.strokeStyle = L.front ? lite(col, 0.55) : col; g.globalAlpha = (L.front ? 0.95 : 0.35) * a; g.lineWidth = lw * (L.front ? 1 : 0.7); g.stroke(); g.globalAlpha = 1;
+      if (faces && L.front) faces(f, V);
+    }
+    return V;
+  }
+  function chBallot(g, cx, cy, sc, t, a, col, lw) {
+    const P = chProj(t * 0.45, -0.3, 0.16, cx, cy, sc), land = max(0, 1 - fract(t * 0.32) * 8);
+    // ballots falling into the slot behind the box's front faces: drawn first, the box glass over them
+    for (let i = 0; i < 3; i++) {
+      const u = fract(t * 0.32 + i / 3), y = 1.35 - u * 1.2; if (y < 0.06) continue;
+      const yw = 0.7 + i * 1.3 + u * 2.4, c = cos(yw), s2 = sin(yw), hw = 0.34, hd = 0.22;
+      const Q = [[-hw, -hd], [hw, -hd], [hw, hd], [-hw, hd]].map((q) => P(q[0] * c + q[1] * s2, y, -q[0] * s2 + q[1] * c));
+      const fa = a * min(1, (y - 0.06) * 4) * sin(min(1, u * 3) * PI / 2);
+      g.beginPath(); g.moveTo(Q[0][0], Q[0][1]); for (let k = 1; k < 4; k++) g.lineTo(Q[k][0], Q[k][1]); g.closePath();
+      g.fillStyle = rgba('#e8fff8', 0.32 * fa); g.fill(); g.strokeStyle = rgba('#e8fff8', 0.9 * fa); g.lineWidth = lw * 0.8; g.stroke();
+    }
+    chBox(g, P, -0.72, 0.72, -0.82, 0.02, -0.72, 0.72, col, a * (0.9 + 0.25 * land), lw, (f, V) => {
+      if (f[0] !== 4) return;                                      // the face toward +z carries the emblem: a ticked panel
+      const m = (u, v) => { const top = [V[7][0] + (V[6][0] - V[7][0]) * u, V[7][1] + (V[6][1] - V[7][1]) * u], bot = [V[4][0] + (V[5][0] - V[4][0]) * u, V[4][1] + (V[5][1] - V[4][1]) * u]; return [top[0] + (bot[0] - top[0]) * v, top[1] + (bot[1] - top[1]) * v]; };
+      const c0 = m(0.18, 0.25), c1 = m(0.82, 0.25), c2 = m(0.82, 0.78), c3 = m(0.18, 0.78);
+      g.beginPath(); g.moveTo(c0[0], c0[1]); g.lineTo(c1[0], c1[1]); g.lineTo(c2[0], c2[1]); g.lineTo(c3[0], c3[1]); g.closePath();
+      g.fillStyle = rgba(col, 0.16 * a); g.fill();
+      const k0 = m(0.33, 0.52), k1 = m(0.45, 0.66), k2 = m(0.68, 0.36);
+      g.beginPath(); g.moveTo(k0[0], k0[1]); g.lineTo(k1[0], k1[1]); g.lineTo(k2[0], k2[1]);
+      g.strokeStyle = lite(col, 0.7); g.globalAlpha = a; g.lineWidth = lw * 2.2; g.stroke(); g.globalAlpha = 1;
+    });
+    chBox(g, P, -0.78, 0.78, 0.015, 0.105, -0.78, 0.78, col, a * 0.8, lw * 0.8);
+    // the slot, glowing brighter as a ballot lands
+    const s0 = P(-0.38, 0.11, 0), s1 = P(0.38, 0.11, 0);
+    g.strokeStyle = '#ffffff'; g.globalAlpha = (0.5 + 0.5 * land) * a; g.lineWidth = lw * 2; g.beginPath(); g.moveTo(s0[0], s0[1]); g.lineTo(s1[0], s1[1]); g.stroke(); g.globalAlpha = 1;
+  }
+  function chCrown(g, cx, cy, sc, t, a, lw) {
+    // a solid gold crown turning slowly on its axis (a flat silhouette foreshortened by the turn, with a back band seen through it)
+    const yw = t * 0.5, k = cos(yw), wd = sc * 1.5, hh = sc * 0.95, by = cy + sc * 0.45;
+    const pts = [[-0.5, 0], [-0.5, -0.58], [-0.27, -0.3], [-0.12, -0.78], [0, -0.42], [0.12, -0.78], [0.27, -0.3], [0.5, -0.58], [0.5, 0]];
+    const draw = (kk, fa) => {
+      g.beginPath(); pts.forEach((p, i) => { const x = cx + p[0] * wd * kk, y = by + p[1] * hh; i ? g.lineTo(x, y) : g.moveTo(x, y); }); g.closePath();
+      g.fillStyle = lgr(g, 0, by - hh, 0, by, [0, rgba('#fff0b0', 0.42 * fa), 1, rgba('#d89a2a', 0.22 * fa)]); g.fill();
+      g.strokeStyle = '#ffe9a0'; g.globalAlpha = fa; g.lineWidth = lw * 1.2; g.stroke(); g.globalAlpha = 1;
+    };
+    draw(-k, 0.35 * a); draw(k, a);
+    g.fillStyle = rgba('#fff4c8', 0.5 * a); g.fillRect(cx - wd * 0.5 * Math.abs(k), by - hh * 0.12, wd * Math.abs(k), hh * 0.1);
+    for (let i = 0; i < 3; i++) { const x = cx + (i - 1) * 0.27 * wd * k, y = by - hh * 0.07; glowL(g, i === 1 ? '#ff6a78' : '#7fe8ff', x, y, sc * 0.12, 0.8 * a); }
+  }
+  function councilHolo(ctx, ped, hcy, hsc, holo, col, t, fl, seats, still, low) {
+    const cx = ped.cx, base = ped.top;
+    /* the emitter: a lens of light, its halo on the pedestal top, one soft ring */
     ctx.save(); ctx.globalCompositeOperation = 'lighter';
-    for (let i = 0; i < 26; i++) {
-      const side = i & 1, q = fract(t * (0.11 + 0.07 * h2(i, 3)) + h2(i, 7)), bx = side ? w * (0.94 + 0.08 * h2(i, 1)) : w * (-0.02 + 0.08 * h2(i, 1));
-      const x = bx + (side ? -1 : 1) * q * w * 0.05 + sin(t * 1.7 + i) * w * 0.006, y = h * (1.02 - q * (0.45 + 0.25 * h2(i, 5)));
-      const a = (1 - q) * (side ? fr : fl), r = h * (0.0016 + 0.0024 * h2(i, 9)) * (1 - 0.6 * q);
-      ctx.globalAlpha = a; ctx.fillStyle = q < 0.3 ? '#ffd27a' : '#ff8a3a'; ctx.beginPath(); ctx.arc(x, y, r, 0, TAU); ctx.fill();
-      ctx.globalAlpha = a * 0.25; ctx.beginPath(); ctx.arc(x, y, r * 3, 0, TAU); ctx.fill();
+    ctx.save(); ctx.translate(cx, base); ctx.scale(1, 0.16);
+    ctx.fillStyle = rgr(ctx, 0, 0, 0, ped.rx * 1.6, [0, rgba('#ffffff', 0.55 * fl), 0.18, rgba(lite(col, 0.5), 0.42 * fl), 0.55, rgba(col, 0.14 * fl), 1, rgba(col, 0)]); ctx.fillRect(-ped.rx * 1.7, -ped.rx * 1.7, ped.rx * 3.4, ped.rx * 3.4);
+    ctx.strokeStyle = rgba(lite(col, 0.4), 0.35 * fl); ctx.lineWidth = ped.rx * 0.09; ctx.beginPath(); ctx.arc(0, 0, ped.rx * 0.86, 0, TAU); ctx.stroke();
+    ctx.restore();
+    /* the column: widens slightly as it rises, bright at its edges and thin in the middle (a lit volume, not a flat cone), fading upward,
+       with slow soft interference bands drifting up through it */
+    const top = hcy - hsc * 1.5, wb = ped.rx * 0.78, wt = hsc * 1.05;
+    const cw = max(8, Math.ceil(wt * 2)), chh = max(8, Math.ceil(base - top));
+    const Cc = CH.col || (CH.col = document.createElement('canvas')); if (Cc.width !== cw || Cc.height !== chh) { Cc.width = cw; Cc.height = chh; }
+    const cg = Cc.getContext('2d'), mx = cw / 2;
+    cg.globalCompositeOperation = 'copy'; cg.globalAlpha = 1;
+    // the volume's silhouette (narrow at the emitter, opening upward), filled edge-bright / centre-thin
+    cg.beginPath(); cg.moveTo(mx - wb, chh); cg.lineTo(0, 0); cg.lineTo(cw, 0); cg.lineTo(mx + wb, chh); cg.closePath();
+    cg.fillStyle = lgr(cg, 0, 0, cw, 0, [0, rgba(col, 0), 0.1, rgba(col, 0.1), 0.2, rgba(col, 0.13), 0.36, rgba(col, 0.06), 0.5, rgba(col, 0.05), 0.64, rgba(col, 0.06), 0.8, rgba(col, 0.13), 0.9, rgba(col, 0.1), 1, rgba(col, 0)]);
+    cg.fill();
+    cg.globalCompositeOperation = 'source-atop';
+    for (let i = 0; i < 4; i++) {
+      const u = fract((still ? 0.2 : t * 0.16) + i / 4), y = chh - u * chh, bb = hsc * 0.2;
+      cg.globalAlpha = 0.14 * sin(u * PI);
+      cg.fillStyle = lgr(cg, 0, y - bb, 0, y + bb, [0, rgba(col, 0), 0.5, rgba(lite(col, 0.4), 1), 1, rgba(col, 0)]); cg.fillRect(0, y - bb, cw, bb * 2);
+    }
+    // fade it out as it rises, and soften where it meets the emitter
+    cg.globalAlpha = 1; cg.globalCompositeOperation = 'destination-in';
+    cg.fillStyle = lgr(cg, 0, 0, 0, chh, [0, 'rgba(0,0,0,0)', 0.35, 'rgba(0,0,0,0.55)', 0.85, 'rgba(0,0,0,1)', 1, 'rgba(0,0,0,0.7)']); cg.fillRect(0, 0, cw, chh);
+    ctx.globalAlpha = fl; ctx.drawImage(Cc, cx - mx, top);
+    ctx.restore();
+
+    /* the form, into a buffer */
+    const bw = max(8, Math.round(hsc * 3.6)), bh = max(8, Math.round(hsc * 3.4)), lx = bw / 2, ly = bh * 0.55;
+    const B = CH.buf || (CH.buf = document.createElement('canvas')); if (B.width !== bw || B.height !== bh) { B.width = bw; B.height = bh; }
+    const g = B.getContext('2d'); g.setTransform(1, 0, 0, 1, 0, 0); g.globalCompositeOperation = 'source-over'; g.globalAlpha = 1; g.clearRect(0, 0, bw, bh);
+    const lw = max(1.5, hsc * 0.028);
+    if (holo === 'galaxy') {
+      const spr = galaxySprite(), sp = sin(0.95) * 0.9, rot = t * 0.26, R = hsc * 1.1;
+      g.globalCompositeOperation = 'lighter';
+      g.save(); g.translate(lx, ly); g.scale(1, sp); glowL(g, '#4a6aff', 0, 0, hsc * 1.3, 0.25); g.rotate(rot); g.drawImage(spr, -R, -R, R * 2, R * 2); g.restore();
+      glow(g, '#ffe0a0', lx, ly, hsc * 0.42, 0.6);
+      for (let i = 0; i < (seats ? seats.length : 0); i++) {
+        const st = seats[i], r = 0.32 + 0.55 * h2(i, 31), th = h2(i, 32) * TAU + rot, sx = lx + cos(th) * r * hsc, sy = ly + sin(th) * r * sp * hsc, c2 = st.color || C.gold;
+        glowL(g, c2, sx, sy, hsc * 0.22, 0.95); g.fillStyle = '#fff'; g.beginPath(); g.arc(sx, sy, max(1.2, hsc * 0.025), 0, TAU); g.fill();
+      }
+    } else if (holo === 'crown') chCrown(g, lx, ly, hsc * 0.9, t, 1, lw);
+    else chBallot(g, lx, ly, hsc * 0.9, t, 1, col, lw);
+    // fine interference bands through the form (a projection, not an object), drifting
+    g.globalCompositeOperation = 'destination-out'; g.fillStyle = 'rgba(0,0,0,0.18)';
+    const step = max(3, Math.round(bh / 60)), off = still ? 0 : Math.round((t * 18) % step);
+    for (let y = off; y < bh; y += step) g.fillRect(0, y, bw, 1);
+    g.globalCompositeOperation = 'source-over';
+
+    /* composite: wide glow, then the form with a faint chromatic fringe; a rare horizontal glitch slice */
+    const dx = cx - lx, dy = hcy - ly;
+    ctx.save(); ctx.globalCompositeOperation = 'lighter';
+    if (!low) {
+      const Bl = CH.blur || (CH.blur = document.createElement('canvas')); if (Bl.width !== bw || Bl.height !== bh) { Bl.width = bw; Bl.height = bh; }
+      const bg = Bl.getContext('2d'); bg.globalCompositeOperation = 'copy';
+      try { bg.filter = 'blur(' + max(2, Math.round(hsc * 0.07)) + 'px)'; } catch (e) { /* no filters */ }
+      bg.drawImage(B, 0, 0); bg.filter = 'none';
+      ctx.globalAlpha = 0.95 * fl; ctx.drawImage(Bl, dx, dy); ctx.globalAlpha = 0.5 * fl; ctx.drawImage(Bl, dx, dy);
+      ctx.globalAlpha = 0.22 * fl; ctx.filter = 'hue-rotate(-28deg)'; ctx.drawImage(B, dx - lw * 0.9, dy); ctx.filter = 'hue-rotate(28deg)'; ctx.drawImage(B, dx + lw * 0.9, dy); ctx.filter = 'none';
+    }
+    const gl = still ? 0 : fract(t * 0.23), glitch = gl > 0.965;
+    ctx.globalAlpha = 0.9 * fl;
+    if (glitch) {
+      const sy = Math.round(bh * (0.2 + 0.6 * h2(Math.floor(t * 0.23), 3))), sh = Math.round(bh * 0.07);
+      ctx.drawImage(B, 0, 0, bw, sy, dx, dy, bw, sy);
+      ctx.drawImage(B, 0, sy, bw, sh, dx + hsc * 0.08, dy + sy, bw, sh);
+      ctx.drawImage(B, 0, sy + sh, bw, bh - sy - sh, dx, dy + sy + sh, bw, bh - sy - sh);
+    } else ctx.drawImage(B, dx, dy);
+    ctx.restore();
+    // motes rising through the column
+    ctx.save(); ctx.globalCompositeOperation = 'lighter'; ctx.fillStyle = lite(col, 0.6);
+    for (let i = 0; i < 16; i++) {
+      const u = fract((still ? 0 : t) * (0.06 + h2(i, 3) * 0.08) + h2(i, 5)), x = cx + (h2(i, 7) - 0.5) * (wb + (wt - wb) * u) * 1.6, y = base - u * (base - top);
+      ctx.globalAlpha = 0.7 * sin(u * PI) * fl; ctx.beginPath(); ctx.arc(x, y, max(0.8, hsc * 0.012), 0, TAU); ctx.fill();
     }
     ctx.restore();
   }
-  function plateLow() { return !!((M.Perf && M.Perf.tier === 'low')); }
-  function plateStill() { try { return !!(M.Settings && M.Settings.get && M.Settings.get('reduceMotion')); } catch (e) { return false; } }
   function councilPlate(ctx, im, w, h, t, o, seats) {
     const iw = im.naturalWidth, ih = im.naturalHeight, sc = max(w / iw, h / ih), sx0 = (iw - w / sc) / 2, sy0 = (ih - h / sc) / 2;
     const X = (u) => (u * iw - sx0) * sc, Y = (v) => (v * ih - sy0) * sc;
@@ -1885,37 +1982,33 @@
       const sgr = sg.createLinearGradient(bx - kw * 0.22, 0, bx + kw * 0.22, kh * 0.35);
       sgr.addColorStop(0, 'rgba(255,226,170,0)'); sgr.addColorStop(0.5, 'rgba(255,236,196,0.55)'); sgr.addColorStop(1, 'rgba(255,226,170,0)');
       sg.fillStyle = sgr; sg.fillRect(0, 0, kw, kh);
-      ctx.globalAlpha = 0.3; ctx.drawImage(PG.sheen, sx0 / 2, sy0 / 2, cw / 2, ch / 2, 0, 0, w, h);
-      if (PG.streak) { ctx.globalAlpha = 0.35; ctx.drawImage(PG.streak, sx0 / 2, sy0 / 2, cw / 2, ch / 2, 0, 0, w, h); }
+      ctx.globalAlpha = 0.5; ctx.drawImage(PG.sheen, sx0 / 2, sy0 / 2, cw / 2, ch / 2, 0, 0, w, h);
+      if (PG.streak) { ctx.globalAlpha = 0.9; ctx.drawImage(PG.streak, sx0 / 2, sy0 / 2, cw / 2, ch / 2, 0, 0, w, h); }
       ctx.restore();
     }
-    /* two kinds of light, as in a castle hall: cold grey daylight falling from the oculus, and warm firelight from braziers burning just
-       out of frame in the foreground, flickering. The fire is the key on the delegates; the daylight is the fill and the shafts. */
-    const still = plateStill(), fireL = fireFl(t, 1.3, still), fireR = fireFl(t, 4.1, still);
+    // key lights: a broad overhead wash on the alcove wall and a hot pool on the dais, like a lit stage
     ctx.save(); ctx.globalCompositeOperation = 'screen';
+    ctx.fillStyle = rgr(ctx, w * 0.5, h * 0.38, 0, w * 0.62, [0, 'rgba(255,238,212,0.14)', 0.55, 'rgba(255,226,190,0.05)', 1, 'rgba(255,220,180,0)']); ctx.fillRect(0, 0, w, h);
     ctx.save(); ctx.translate(X(0.5), Y(0.69)); ctx.scale(1, 0.22);
-    ctx.fillStyle = rgr(ctx, 0, 0, 0, w * 0.32, [0, 'rgba(206,222,236,0.3)', 0.5, 'rgba(190,208,226,0.1)', 1, 'rgba(180,200,220,0)']); ctx.fillRect(-w * 0.4, -w * 0.4, w * 0.8, w * 0.8);
-    ctx.restore();
-    ctx.restore();
+    ctx.fillStyle = rgr(ctx, 0, 0, 0, w * 0.34, [0, 'rgba(255,240,215,0.34)', 0.5, 'rgba(255,230,196,0.12)', 1, 'rgba(255,224,186,0)']); ctx.fillRect(-w * 0.4, -w * 0.4, w * 0.8, w * 0.8);
+    ctx.restore(); ctx.restore();
     // the oculus is bright where the vote tally sits: settle the top band just enough for the panel
-    ctx.fillStyle = lgr(ctx, 0, 0, 0, h * 0.16, [0, 'rgba(10,12,16,0.32)', 1, 'rgba(10,12,16,0)']); ctx.fillRect(0, 0, w, h * 0.16);
+    ctx.fillStyle = lgr(ctx, 0, 0, 0, h * 0.16, [0, 'rgba(30,18,8,0.3)', 1, 'rgba(30,18,8,0)']); ctx.fillRect(0, 0, w, h * 0.16);
     const holo = o.hologram || 'galaxy', hcol = holo === 'crown' ? '#ffd54f' : holo === 'ballot' ? '#5fe0c0' : '#62d8ff';
     const fl = 0.92 + 0.08 * sin(t * 31) * sin(t * 9.7);
     const ped = { cx: X(CPLATE.ped.x), top: Y(CPLATE.ped.y), rx: CPLATE.ped.rx * iw * sc }; ped.ry = ped.rx * 0.12;
     const hsc = h * 0.086, hcy = ped.top - h * 0.14;
 
-    /* cold daylight from the oculus: a fan of shafts made visible by the smoke hanging in the hall, then the hologram */
-    beam(ctx, ped.cx, 0, ped.cx, ped.top, w * 0.08, ped.rx * 2.4, '#dbe6f0', 0.15 + 0.03 * sin(t * 0.6));
+    /* light from the oculus: a fan of volumetric shafts falling onto the dais (the grand, cathedral scale), then the hologram */
+    const still = plateStill();
+    beam(ctx, ped.cx, 0, ped.cx, ped.top, w * 0.08, ped.rx * 2.4, '#ffe9bd', 0.16 + 0.03 * sin(t * 0.6));
     for (let i = 0; i < 5; i++) {
-      const sp = (i - 2) / 2, dr = still ? 0 : sin(t * 0.11 + i * 1.7) * 0.012, a = (0.09 - 0.02 * Math.abs(sp)) * (0.75 + 0.25 * (still ? 1 : sin(t * 0.23 + i * 2.3)));
-      beam(ctx, ped.cx + sp * w * 0.035, 0, ped.cx + (sp * 0.42 + dr) * w, Y(0.8), w * 0.025, w * 0.09, '#d6e2ee', a);
+      const sp = (i - 2) / 2, dr = still ? 0 : sin(t * 0.11 + i * 1.7) * 0.012, a = (0.1 - 0.02 * Math.abs(sp)) * (0.75 + 0.25 * (still ? 1 : sin(t * 0.23 + i * 2.3)));
+      beam(ctx, ped.cx + sp * w * 0.035, 0, ped.cx + (sp * 0.42 + dr) * w, Y(0.8), w * 0.025, w * 0.09, '#ffeacc', a);
     }
-    smokeHaze(ctx, w, h, t, still, ped.cx, Y(0.8));
-    holoBase(ctx, ped.cx, ped.top, ped.rx * 0.9, ped.ry * 0.9, hcol, t, fl, h * 0.12);
-    ctx.fillStyle = rgr(ctx, ped.cx, hcy, hsc * 0.2, hsc * 1.5, [0, 'rgba(2,4,22,0.5)', 0.6, 'rgba(2,4,22,0.26)', 1, 'rgba(2,4,22,0)']); ctx.fillRect(ped.cx - hsc * 1.6, hcy - hsc * 1.6, hsc * 3.2, hsc * 3.2);
-    if (holo === 'galaxy') holoGalaxy(ctx, ped.cx, hcy, hsc * 1.05, t, fl, seats);
-    else holoBallotFx(ctx, ped.cx, hcy, hsc * 0.9, t, fl, hcol);
-    holoScan(ctx, ped.cx, hcy, hsc * 0.95, hsc * 1.0, hcol, t, fl * 0.8);
+    // a soft dark backing so the projected light reads against the bright column behind it
+    ctx.fillStyle = rgr(ctx, ped.cx, hcy, hsc * 0.2, hsc * 1.5, [0, 'rgba(2,6,18,0.32)', 0.6, 'rgba(2,6,18,0.16)', 1, 'rgba(2,6,18,0)']); ctx.fillRect(ped.cx - hsc * 1.6, hcy - hsc * 1.6, hsc * 3.2, hsc * 3.2);
+    councilHolo(ctx, ped, hcy, hsc, holo, hcol, t, fl, seats, still, plateLow());
 
     /* the alcoves */
     const P = G.Portraits, map = CPLATE.map[seats.length] || CPLATE.map[6], used = {}, out = { seats: [] };
@@ -1930,29 +2023,22 @@
       const openH = lect - crown, pbh = openH * 0.84, pbw = pbh * 0.8, pbx = ox - pbw / 2, pby = lect - pbh;
       // every delegate turns towards the pedestal: mirror a photo whose leader looks away from the centre
       const face = P && P.facing ? P.facing(seat.race) : 1, flip = face !== 0 && face === (k < 3 ? -1 : 1);
-      const left = ox < w / 2, fk = left ? fireL : fireR;
-      glow(ctx, winner ? '#ffd54f' : speaking ? '#ffd9a0' : abst ? '#8a93b8' : voted ? mixc(col, '#ffffff', 0.3) : '#ffb070', ox, crown + openH * 0.55, R * (winner || speaking ? 1.5 : 1.15), winner ? 0.4 : speaking ? 0.32 : abst ? 0.05 : 0.12 * fk);
-      // a thin blade of cold daylight from the gallery above
-      beam(ctx, ox, crown - R * 1.6, ox, lect, R * 0.4, ow * 0.9, '#d4e0ec', abst ? 0.02 : 0.05);
+      glow(ctx, winner ? '#ffd54f' : speaking ? '#fff0c8' : abst ? '#8a93b8' : voted ? mixc(col, '#ffffff', 0.3) : '#ffe2b8', ox, crown + openH * 0.4, R * (winner || speaking ? 1.5 : 1.15), winner ? 0.4 : speaking ? 0.35 : abst ? 0.06 : 0.16);
+      // every occupied alcove has its own spotlight from the gallery above
+      beam(ctx, ox, crown - R * 1.6, ox, lect, R * 0.5, ow * 1.05, '#fff1da', abst ? 0.03 : 0.09);
       ctx.save();
       niche(); ctx.clip();
       drawPortrait(ctx, seat.race || 'human', pbx, pby, pbw, pbh, { t: t, mood: winner ? 'pleased' : abst ? 'worried' : 'neutral', talking: speaking, color: seat.color, bg: false, flip: flip, key: 'council' + k });
-      // light the photograph like the hall: muted colour, firelight as the key from the low outer side (it flickers with its brazier),
-      // cold daylight as a soft top fill, and steel-blue in the shadow side
-      ctx.globalCompositeOperation = 'saturation'; ctx.fillStyle = 'rgba(128,128,128,0.28)'; ctx.fillRect(x0, crown, ow, openH);
-      const kx = left ? x0 - ow * 0.1 : x1 + ow * 0.1, ky = crown + openH * 0.8;
-      ctx.globalCompositeOperation = 'screen';
-      ctx.fillStyle = rgr(ctx, kx, ky, 0, ow * 1.15, [0, 'rgba(255,160,80,' + (0.46 * fk).toFixed(3) + ')', 0.5, 'rgba(255,140,64,' + (0.2 * fk).toFixed(3) + ')', 1, 'rgba(255,130,60,0)']); ctx.fillRect(x0, crown, ow, openH);
-      ctx.fillStyle = rgr(ctx, ox, crown + openH * 0.3, 0, openH * 0.55, [0, 'rgba(214,228,240,0.16)', 1, 'rgba(214,228,240,0)']); ctx.fillRect(x0, crown, ow, openH);
-      ctx.globalCompositeOperation = 'soft-light';
-      ctx.fillStyle = lgr(ctx, left ? x1 : x0, 0, left ? x0 : x1, 0, [0, 'rgba(24,56,72,0.55)', 0.55, 'rgba(90,96,100,0.08)', 1, 'rgba(255,170,96,0.3)']); ctx.fillRect(x0, crown, ow, openH);
-      ctx.fillStyle = lgr(ctx, 0, crown, 0, lect, [0, 'rgba(120,120,120,0)', 1, 'rgba(16,36,50,0.45)']); ctx.fillRect(x0, crown, ow, openH);
+      // studio-light the photograph: a bright key from above, falling off gently toward the lectern, warmed to the hall's bronze
+      ctx.globalCompositeOperation = 'screen'; ctx.fillStyle = rgr(ctx, ox, crown + openH * 0.38, 0, openH * 0.6, [0, 'rgba(255,240,220,0.3)', 0.55, 'rgba(255,232,206,0.12)', 1, 'rgba(255,224,190,0)']); ctx.fillRect(x0, crown, ow, openH);
+      ctx.globalCompositeOperation = 'soft-light'; ctx.fillStyle = lgr(ctx, 0, crown, 0, lect, [0, 'rgba(255,214,160,0.32)', 0.6, 'rgba(120,110,100,0.1)', 1, 'rgba(20,50,70,0.5)']); ctx.fillRect(x0, crown, ow, openH);
+      ctx.globalCompositeOperation = 'multiply'; ctx.fillStyle = lgr(ctx, 0, crown, 0, lect, [0, 'rgb(255,252,246)', 0.6, 'rgb(252,240,226)', 1, 'rgb(226,204,182)']); ctx.fillRect(x0, crown, ow, openH);
       if (abst) { ctx.globalCompositeOperation = 'saturation'; ctx.fillStyle = 'rgba(128,128,128,0.8)'; ctx.fillRect(x0, crown, ow, openH); ctx.globalCompositeOperation = 'multiply'; ctx.fillStyle = 'rgb(176,166,156)'; ctx.fillRect(x0, crown, ow, openH); }
       else if (!speaking && !winner) { if (!voted) { ctx.globalCompositeOperation = 'multiply'; ctx.fillStyle = 'rgb(240,234,226)'; ctx.fillRect(x0, crown, ow, openH); } }
       else { ctx.globalCompositeOperation = 'screen'; ctx.fillStyle = winner ? 'rgba(255,206,110,0.14)' : 'rgba(255,244,214,0.12)'; ctx.fillRect(x0, crown, ow, openH); }
       // the niche's own falloff, in the room's warm shadow colour (not a cold black) and soft enough to keep the delegate in the light
       ctx.globalCompositeOperation = 'source-over';
-      ctx.fillStyle = rgr(ctx, ox, crown + openH * 0.42, R * 0.8, openH * 0.78, [0, 'rgba(10,14,18,0)', 1, 'rgba(10,14,18,0.4)']); ctx.fillRect(x0, crown, ow, openH);
+      ctx.fillStyle = rgr(ctx, ox, crown + openH * 0.42, R * 0.8, openH * 0.78, [0, 'rgba(40,24,12,0)', 1, 'rgba(40,24,12,0.32)']); ctx.fillRect(x0, crown, ow, openH);
       ctx.restore();
       if (speaking || winner) {
         const pulse = 0.55 + 0.45 * sin(t * (speaking ? 4.2 : 2.4));
@@ -1968,7 +2054,7 @@
       const py0 = Y(CPLATE.plaque[0]), py1 = Y(CPLATE.plaque[1]), ph = min(py1 - py0, ow * 0.2);
       const pl = { x: x0 - ow * 0.02, y: (py0 + py1 - ph) / 2, w: ow * 1.04, h: ph };
       // the brightened brass would swallow the lettering: an inset of dark enamel behind the text band
-      ctx.fillStyle = lgr(ctx, 0, pl.y, 0, pl.y + pl.h, [0, 'rgba(14,12,10,0.72)', 0.5, 'rgba(8,7,6,0.8)', 1, 'rgba(14,12,10,0.72)']); ctx.fillRect(pl.x + ow * 0.04, pl.y, pl.w - ow * 0.08, pl.h);
+      ctx.fillStyle = lgr(ctx, 0, pl.y, 0, pl.y + pl.h, [0, 'rgba(22,13,6,0.72)', 0.5, 'rgba(14,8,4,0.8)', 1, 'rgba(22,13,6,0.72)']); ctx.fillRect(pl.x + ow * 0.04, pl.y, pl.w - ow * 0.08, pl.h);
       ctx.fillStyle = 'rgba(255,226,160,0.35)'; ctx.fillRect(pl.x + ow * 0.04, pl.y + pl.h - 1, pl.w - ow * 0.08, 1);
       plaqueText(ctx, seat, pl, u, col, st);
       if (winner) {
@@ -1978,23 +2064,12 @@
       }
       out.seats[si] = { x: x0, y: crown, w: ow, h: pl.y + pl.h - crown, portrait: { x: x0, y: crown, w: ow, h: openH }, plaque: pl, cx: ox, cy: crown + openH * 0.5 };
     }
-    motes(ctx, w * 0.3, h * 0.05, w * 0.4, h * 0.6, 30, t, '#e4ecf4', 0.3, 3, 1.8);   // dust in the daylight
-    // the vignette in the hall's shadow tone: cold slate multiplied in (the fire is warm, the dark around it is not), heavy at the floor
+    motes(ctx, w * 0.3, h * 0.05, w * 0.4, h * 0.6, 30, t, '#ffeccc', 0.35, 3, 1.8);
+    // the vignette in the hall's own shadow tone: deep bronze multiplied in, so the edges fall off like a lit stage instead of going cold and grey
     ctx.save(); ctx.globalCompositeOperation = 'multiply';
-    ctx.fillStyle = rgr(ctx, w / 2, h * 0.48, min(w, h) * 0.4, hypot(w, h) * 0.6, [0, 'rgb(255,255,255)', 0.55, 'rgb(226,226,228)', 1, 'rgb(78,80,86)'], w / 2, h * 0.46); ctx.fillRect(0, 0, w, h);
-    ctx.fillStyle = lgr(ctx, 0, h * 0.7, 0, h, [0, 'rgb(255,255,255)', 1, 'rgb(104,100,98)']); ctx.fillRect(0, h * 0.7, w, h * 0.3);
+    ctx.fillStyle = rgr(ctx, w / 2, h * 0.48, min(w, h) * 0.42, hypot(w, h) * 0.6, [0, 'rgb(255,255,255)', 0.55, 'rgb(236,222,206)', 1, 'rgb(104,76,52)'], w / 2, h * 0.46); ctx.fillRect(0, 0, w, h);
+    ctx.fillStyle = lgr(ctx, 0, h * 0.72, 0, h, [0, 'rgb(255,255,255)', 1, 'rgb(120,98,82)']); ctx.fillRect(0, h * 0.72, w, h * 0.28);
     ctx.restore();
-    // firelight spilling in from braziers burning just out of frame in both foreground corners: drawn after the vignette, since it is the
-    // light source and not the room; it rakes across the floor and up the outer walls and flickers
-    ctx.save(); ctx.globalCompositeOperation = 'screen';
-    const fire = (fx, k) => {
-      ctx.save(); ctx.translate(fx, h * 1.0); ctx.scale(1.1, 1);
-      ctx.fillStyle = rgr(ctx, 0, 0, 0, w * 0.6, [0, 'rgba(255,150,60,' + (0.8 * k).toFixed(3) + ')', 0.25, 'rgba(255,124,44,' + (0.42 * k).toFixed(3) + ')', 0.6, 'rgba(240,100,36,' + (0.12 * k).toFixed(3) + ')', 1, 'rgba(230,90,30,0)']);
-      ctx.fillRect(-w * 0.6, -w * 0.6, w * 1.2, w * 1.2); ctx.restore();
-    };
-    fire(-w * 0.03, fireL); fire(w * 1.03, fireR);
-    ctx.restore();
-    embers(ctx, w, h, t, still, fireL, fireR);
     finish(ctx, w, h, 0, 0.03, t);
     out.pedestal = { cx: ped.cx, cy: ped.top, rx: ped.rx, ry: ped.ry };
     out.hologram = { x: ped.cx - hsc * 1.1, y: hcy - hsc * 1.2, w: hsc * 2.2, h: hsc * 2.4 };
