@@ -11,6 +11,8 @@ Versions follow `MAJOR.MINOR.PATCH`; the live version is the `VERSION` file.
   image and a skim of light on the glass desk top. A slow breath keeps the still alive (none under reduced motion). Phones: in
   portrait she fills the space between the video screen and the headline; on its side she stands left of the wall. The race
   portraits remain the fallback (art off, or before the image loads).
+- GNN is drawn at the screen's full sharpness (up to 2x, within a 4K pixel budget) on every graphics tier: on the low tier the
+  studio canvas stayed at 1x and a high-density screen stretched it, blurring the studio photo and the presenter.
 - GNN news, content: the economy / science / council charts show the real standings of the empires in the game (their actual
   output, bars scaled to the leader) instead of six made-up bars that could name races not in the game (bulletins carry rankings
   only on a rankings filler turn, so the chart reads the live standings). A count of one reads "1 ship" / "1 Alkari ship" / "1 vote"

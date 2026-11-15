@@ -90,6 +90,9 @@
   const reduced = () => !!setting('reduceMotion', false) || !!(window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches);
   const PQ = () => (M.Perf && M.Perf.q) || { dpr: 1.5, particles: 0.7, animFps: 60 };
   const dprFor = cap => min(window.devicePixelRatio || 1, PQ().dpr || 1.5, cap || 2);
+  // the studio stage: a photo with a presenter and type on it, mostly still, so it gets the screen's own sharpness (up to 2x) on every
+  // tier (the low tier's 1x was upscaled by the browser and blurred the photo), within a 4K pixel budget
+  const stageDpr = (w, hh) => { const d = min(window.devicePixelRatio || 1, 2); return max(1, min(d, sqrt(8.3e6 / max(1, w * hh)))); };
   let _sfxList = null;
   function sfx(id, fb) {
     try {
@@ -454,7 +457,7 @@
   function fit(cv, cap) {
     const w = cv.clientWidth, hh = cv.clientHeight;
     if (w < 2 || hh < 2) return null;
-    const dpr = dprFor(cap), pw = round(w * dpr), ph = round(hh * dpr);
+    const dpr = cap === 'stage' ? stageDpr(w, hh) : dprFor(cap), pw = round(w * dpr), ph = round(hh * dpr);
     if (cv.width !== pw || cv.height !== ph) { cv.width = pw; cv.height = ph; }
     const ctx = cv.getContext('2d');
     ctx.setTransform(pw / w, 0, 0, ph / hh, 0, 0);
@@ -615,6 +618,7 @@
     const im = anchorImg(); if (!im) return false;
     const b = anchorBox(im, x, y, w, hh, t);
     let S = 1; try { S = g.getTransform().a || 1; } catch (e) { /* old browser */ }
+    g.imageSmoothingEnabled = true; g.imageSmoothingQuality = 'high';
     g.save(); g.shadowColor = 'rgba(0,0,0,.78)'; g.shadowBlur = hh * 0.05 * S; g.shadowOffsetX = hh * 0.012 * S; g.shadowOffsetY = hh * 0.01 * S;   // key light upper left
     g.drawImage(im, b.x, b.y, b.w, b.h); g.restore();
     g.drawImage(im, b.x, b.y, b.w, b.h);
@@ -1759,7 +1763,7 @@
     drawFrame(gdt);
   }
   function drawFrame(gdt) {
-    const f = fit(stage, 1.5);
+    const f = fit(stage, 'stage');
     if (!f) return;
     const g = f.ctx, w = f.w, hh = f.h, t = R.t, seg = R.segs[R.idx], talking = R.hl.busy || R.sub.busy || R.talkTail > 0;
     const o = { anchorRace: R.anchor, graphic: R.gfx ? R.gfx.kind : 'ticker', headline: '', ticker: '', cut: R.cut ? clamp(R.cut.t / R.cut.dur, 0, 1) : 0, talking: talking, mood: R.mood, t: t, color: steel('#d6b36a'), newsPlanet: R.curPlanet };
