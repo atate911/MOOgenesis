@@ -1,7 +1,10 @@
 # Image-generation brief — the GNN news anchor
 
-> **Status:** delivered as one image (`assets/art/gnn/gnn-anchor.webp`, neutral expression, framed to the waist), used for every
-> broadcast. The grave / pleased variants below were tried but not kept; the game no longer switches expressions.
+> **Status:** six poses in use (`assets/art/gnn/gnn-anchor-<pose>.webp`, normalised onto one 1760x1536 canvas so her face keeps
+> its size and place; the wide canvas leaves room for the presenting gesture): neutral (title, diplomacy, council), serious (losses,
+> war, disasters, deep-space threats), encouraging (colonies, science, the economy), urgent (breaking news), presenting (charts and
+> the rankings, a hand toward the video wall) and wry (galaxy life, espionage). New poses: same framing, lighting and transparent
+> background, hands above the bottom 15%.
 
 One recurring presenter for the Galactic News Network screen (`js/ui/gnn.js`), in three expressions. The game composites the
 anchor into the existing studio photo (`assets/art/gnn/race-neutral-gnn-studio-background.webp`) between the starfield window and

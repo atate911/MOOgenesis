@@ -621,8 +621,24 @@
   // ---- the GNN presenter (assets/art/gnn/gnn-anchor.webp, docs/IMAGE-GEN-GNN-ANCHOR.md): one cut-out on a transparent background,
   // drawn to the hem of the image (the desk's edge hides its straight bottom cut), with a soft shadow; photoStudio adds the desk-top shadow
   // and her reflection in the glass. A slow breath keeps the still alive (none under reduced motion).
-  const anchorImg = () => { const WA = M.Gfx && M.Gfx.WorldArt; return WA && WA.enabled && WA.gnnAnchor ? WA.get(WA.gnnAnchor) : null; };
-  const anchorArtReady = () => !!anchorImg();
+  const anchorImg = pose => { const WA = M.Gfx && M.Gfx.WorldArt; return WA && WA.enabled && WA.gnnAnchor ? WA.get(WA.gnnAnchor(pose || 'neutral')) : null; };
+  const anchorArtReady = () => !!anchorImg('neutral');
+  const BODY_K = 1024 / 1760;                                        // the poses share a wide canvas (room for a gesture): her body is the middle 58%
+  // the pose for a story: breaking -> urgent, a chart -> presenting the wall, losses and threats -> serious, good news -> encouraging,
+  // the lighter items -> wry; the title and everything else neutral
+  const LOSS_CATS = { colonyLost: 1, planetDestroyed: 1, planetStarving: 1, planetRebels: 1, plague: 1, fleetDestroyed: 1, battleLost: 1, empireDestroyed: 1, invasionSuccess: 1, bombardment: 1, systemNova: 1, coup: 1 };
+  function poseFor(it) {
+    if (!it) return 'neutral';
+    if (it.importance >= 2) return 'urgent';
+    if (LOSS_CATS[it.cat]) return 'serious';                          // a loss is serious whatever its section (a colony lost is filed under colonies)
+    if (it.graphic === 'chart') return 'presenting';
+    if (it.grp === 'war' || it.grp === 'disaster' || it.grp === 'space') return 'serious';
+    if (it.grp === 'colony' || it.grp === 'economy' || it.grp === 'science') return 'encouraging';
+    if (it.grp === 'life' || it.grp === 'spy') return 'wry';
+    return 'neutral';
+  }
+  const AP = { cur: 'neutral', prev: null, k: 1, lastT: -1 };       // the pose on screen and the cross-fade from the last one
+  function setPose(p) { if (p !== AP.cur) { AP.prev = AP.cur; AP.cur = p; AP.k = 0; } }
   const anchorBob = (t, hh) => (R && R.rm ? 0 : sin(t * 1.15) * hh * 0.0022);
   function anchorBox(im, x, y, w, hh, t) { const iw = hh * im.naturalWidth / im.naturalHeight; return { x: x + (w - iw) / 2, y: y + anchorBob(t, hh), w: iw, h: hh }; }
   function drawAnchorArt(g, x, y, w, hh, t) {
@@ -647,29 +663,6 @@
     r.globalCompositeOperation = 'source-in';
     r.fillStyle = lgr(r, rw * 0.62, 0, rw, 0, [0, spillCol(0), 0.75, spillCol(0.22 * _spill.a), 1, spillCol(0.4 * _spill.a)]); r.fillRect(0, 0, rw, rh);
     g.save(); g.globalCompositeOperation = 'screen'; g.drawImage(_rim, 0, 0, rw, rh, b.x, b.y, b.w, b.h); g.restore();
-  }
-  // on the glass desk top just in front of her: a soft contact shadow, then her mirror image, faint and fading with distance from the edge
-  let _refl = null;
-  function drawAnchorDesk(g, x, y, w, hh, t, deskY, depth) {
-    const im = anchorImg(); if (!im) return;
-    const b = anchorBox(im, x, y, w, hh, t), cx = b.x + b.w / 2;
-    g.save(); g.translate(cx, deskY + depth * 0.12); g.scale(1, 0.16);                    // a flat ellipse of shade on the glass
-    g.fillStyle = rgr(g, 0, 0, 0, b.w * 0.55, [0, 'rgba(0,0,0,.45)', 1, 'rgba(0,0,0,0)']); g.fillRect(-b.w * 0.6, -b.w * 0.6, b.w * 1.2, b.w * 1.2);
-    g.restore();
-    let S = 1; try { S = g.getTransform().a || 1; } catch (e) { /* old browser */ }
-    const rw = ceil(b.w * S), rh = ceil(depth * S); if (rw < 2 || rh < 2) return;
-    if (!_refl) _refl = mkCanvas(rw, rh);
-    if (_refl.width !== rw || _refl.height !== rh) { _refl.width = rw; _refl.height = rh; }
-    const r = _refl.getContext('2d');
-    r.setTransform(1, 0, 0, 1, 0, 0); r.globalCompositeOperation = 'source-over'; r.clearRect(0, 0, rw, rh);
-    const k = rw / b.w, top = (deskY - b.y) * k;            // the mirror line is the desk edge: the rows just above it reflect first
-    r.setTransform(1, 0, 0, -1, 0, top); r.drawImage(im, 0, 0, rw, b.h * k);
-    r.setTransform(1, 0, 0, 1, 0, 0); r.globalCompositeOperation = 'destination-in';
-    r.fillStyle = lgr(r, 0, 0, 0, rh, [0, 'rgba(0,0,0,1)', 0.5, 'rgba(0,0,0,.4)', 1, 'rgba(0,0,0,0)']); r.fillRect(0, 0, rw, rh);
-    g.save(); g.globalAlpha = 0.75; g.drawImage(_refl, 0, 0, rw, rh, b.x, deskY, b.w, depth);
-    g.globalAlpha = 1; g.globalCompositeOperation = 'screen';                              // the studio key light skimming the desk edge in front of her
-    g.fillStyle = lgr(g, b.x - b.w * 0.1, 0, b.x + b.w * 1.1, 0, [0, 'rgba(255,236,200,0)', 0.35, 'rgba(255,236,200,.28)', 0.65, 'rgba(255,236,200,.28)', 1, 'rgba(255,236,200,0)']);
-    g.fillRect(b.x - b.w * 0.1, deskY - 1, b.w * 1.2, max(1.5, depth * 0.06)); g.restore();   // a dark figure reflects as a shape that blocks the glass's sheen, its brass trim catching the light
   }
   function drawAnchor(g, race, x, y, w, hh, t, talking, mood) {
     if (drawAnchorArt(g, x, y, w, hh, t)) return;
@@ -890,7 +883,7 @@
     return out;
   }
   function drawCrawl(g, w, hh, t, cr, u, col) {
-    const y0 = hh - cr, fs = u * 1.3, font = '500 ' + fs.toFixed(2) + 'px ' + FONT_U, key = (R && R.idx) + '|' + font + '|' + (R && R.segs ? R.segs.length : 0);
+    const y0 = hh - cr, fs = u * 1.3, font = '500 ' + fs.toFixed(2) + 'px ' + FONT_U, key = (R && R.runId) + '|' + font;
     if (_crawl.key !== key) {
       _crawl.key = key; _crawl.items = crawlItems(); g.font = font; if (_hasLS) g.letterSpacing = '0px';
       _crawl.widths = _crawl.items.map(s2 => g.measureText(s2).width); _crawl.gap = u * 3.2;
@@ -941,7 +934,7 @@
     let ax = (P && P.port ? w / 2 : ox + dw * 0.325) - aw / 2;
     if (anchorArtReady()) {                              // the presenter: head near the top, the desk across her jacket
       ay = P && P.port ? R.wall.y + R.wall.h + 4 : oy + dh * 0.04;
-      ah = (deskY - ay) / 0.99; aw = ah * 2 / 3;            // the whole cut-out shows: the desk's edge just hides its straight bottom cut
+      ah = (deskY - ay) / 0.99; aw = ah * 1760 / 1536;      // the whole cut-out shows: the desk's edge just hides its straight bottom cut
       ax = (P && P.port ? w / 2 : ox + dw * 0.37) - aw / 2;           // her left sleeve clear of the dark seam beside the brass pillar
     }
     R.anchor = { x: ax, y: ay, w: aw, h: ah };
@@ -962,13 +955,15 @@
       g.restore();
     }
     const a = R.anchor, bob = anchorBob(t, a.h);
-    if (C.fig) {                                                                             // the presenter: cached with her shadow, graded with the set
-      g.drawImage(C.fig, 0, 0, C.fig.width, C.fig.height, C.fx, C.fy + bob, C.fw, C.fh);
-      if (curScreen && _spill.a > 0) anchorRimCached(g, C, bob);
-    } else drawAnchor(g, o.anchorRace, a.x, a.y, a.w, a.h, t, o.talking, o.mood);
+    const dtp = AP.lastT < 0 ? 0 : clamp(t - AP.lastT, 0, 0.1); AP.lastT = t; AP.k = min(1, AP.k + dtp / 0.4);
+    const run2 = RUN(), kf = run2 && run2.rm ? 1 : sstep(0, 1, AP.k);
+    const fc = figCache(AP.cur, a, deskY, dh, S) || figCache('neutral', a, deskY, dh, S), fp = AP.prev && kf < 1 ? figCache(AP.prev, a, deskY, dh, S) : null;
+    const layer = (F, al) => { if (!F || al <= 0) return; g.globalAlpha = al; g.drawImage(F.fig, 0, 0, F.fig.width, F.fig.height, F.fx, F.fy + bob, F.fw, F.fh); g.globalAlpha = 1; if (curScreen && _spill.a > 0) anchorRimCached(g, F, bob, al); };
+    if (fc) { if (fp) { layer(fp, 1); layer(fc, kf); } else layer(fc, 1); }                // the presenter: cached with her shadow, under her own light
+    else drawAnchor(g, o.anchorRace, a.x, a.y, a.w, a.h, t, o.talking, o.mood);
     const dy = deskY;                                                                        // the desk strip over her lower body, from the graded cache
     g.drawImage(C.back, 0, round(dy * S), C.back.width, C.back.height - round(dy * S), 0, round(dy * S) / S, w, hh - round(dy * S) / S);
-    if (C.fig) drawDeskCached(g, C, dy, dh * 0.07);                                          // her shadow and reflection on the glass desk top
+    if (fc) { if (fp) { drawDeskCached(g, fp, dy, dh * 0.07, 1 - kf); drawDeskCached(g, fc, dy, dh * 0.07, kf); } else drawDeskCached(g, fc, dy, dh * 0.07, 1); }   // her shadow and reflection on the glass desk top
     if (!(P && !P.port)) {                                                                   // sideways phones: the screen fills that corner (the lower third carries the logo)
       drawLogo(g, w * 0.925, hh * 0.075, hh * 0.026, t, 0.95);
       text(g, 'GNN', w * 0.925 - hh * 0.1, hh * 0.087, hh * 0.04, rgba('#ece6d3', 0.92), 'right', FONT_D, 400, 1.5);
@@ -979,11 +974,11 @@
   // What never moves is drawn once per size (a 2x 4K frame made every full-screen pass four times dearer): the studio photo with the
   // glow behind the presenter, its grade (Gfx.Grade 'plate') and the vignette; the presenter with her soft shadow, graded the same way;
   // her reflection on the desk glass. Each frame then copies these and adds what moves (the screen and its light, her breath, the logo).
-  const _sc = { key: '', back: null, fig: null, refl: null, rim: null, rimAt: -2 };
+  const _sc = { key: '', back: null, figs: {} };
   function studioCache(im, w, hh, S, ox, oy, dw, dh, a, deskY) {
-    const fim = anchorImg(), key = [w, hh, S, ox, oy, dw, a.x, a.y, a.w, a.h, deskY, !!fim, M.Perf && M.Perf.tier].map(v => (typeof v === 'number' ? round(v * 10) : String(v))).join(',');
+    const fim = anchorImg('neutral'), key = [w, hh, S, ox, oy, dw, a.x, a.y, a.w, a.h, deskY, !!fim, M.Perf && M.Perf.tier].map(v => (typeof v === 'number' ? round(v * 10) : String(v))).join(',');
     if (_sc.key === key) return _sc;
-    _sc.key = key; _sc.rimAt = -2;
+    _sc.key = key;
     const bw = max(1, round(w * S)), bh = max(1, round(hh * S));
     const back = _sc.back && _sc.back.width === bw && _sc.back.height === bh ? _sc.back : mkCanvas(bw, bh);
     const b = back.getContext('2d'); b.setTransform(1, 0, 0, 1, 0, 0); b.globalCompositeOperation = 'source-over'; b.globalAlpha = 1; b.clearRect(0, 0, bw, bh); b.setTransform(S, 0, 0, S, 0, 0);
@@ -993,58 +988,62 @@
     const GR = M.Gfx && M.Gfx.Grade;
     if (GR) { try { GR.apply(b, w, hh, 0, { preset: 'plate', grain: 0 }); } catch (e) { /* optional */ } }
     b.fillStyle = rgr(b, w / 2, hh * 0.48, min(w, hh) * 0.38, hypot(w, hh) * 0.62, [0, 'rgba(2,3,12,0)', 1, 'rgba(2,3,12,.4)']); b.fillRect(0, 0, w, hh);
-    _sc.back = back; _sc.fig = null; _sc.refl = null;
-    if (fim) {
-      const iw = a.h * fim.naturalWidth / fim.naturalHeight, ix = a.x + (a.w - iw) / 2, pad = a.h * 0.08;
-      const fw = round((iw + 2 * pad) * S), fh = round((a.h + 2 * pad) * S);
-      // her figure under its own key light: she is the subject, so a touch brighter and more vivid than the graded set, with a warm
-      // soft light from the upper left (the studio's key) on her face and shoulders; her own alpha kept
-      const gr = mkCanvas(fw, fh), q = gr.getContext('2d'), fx0 = pad * S, fy0 = pad * S, fiw = iw * S, fih = a.h * S;
-      q.imageSmoothingQuality = 'high';
-      let filtered = false;                                            // lifted, not blown: her highlights stay at the source's level
-      try { if ('filter' in q) { q.filter = 'brightness(1.05) contrast(1.04) saturate(1.14)'; q.drawImage(fim, fx0, fy0, fiw, fih); q.filter = 'none'; filtered = true; } } catch (e) { filtered = false; }
-      if (!filtered) q.drawImage(fim, fx0, fy0, fiw, fih);
-      q.globalCompositeOperation = 'soft-light';
-      q.fillStyle = rgr(q, fx0 + fiw * 0.28, fy0 + fih * 0.16, 0, fih * 0.62, [0, 'rgba(255,238,210,.5)', 0.5, 'rgba(255,230,200,.2)', 1, 'rgba(128,128,128,0)']); q.fillRect(0, 0, fw, fh);
-      q.fillStyle = 'rgba(255,226,192,.42)'; q.fillRect(0, 0, fw, fh);                  // a slightly warmer, more neutral light than the cool set, so she stands off it
-      if (!filtered) { q.globalCompositeOperation = 'screen'; q.fillStyle = 'rgba(40,40,46,1)'; q.fillRect(0, 0, fw, fh); }   // no canvas filters (Safari): a gentle lift instead
-      q.globalCompositeOperation = 'destination-in'; q.drawImage(fim, fx0, fy0, fiw, fih); q.globalCompositeOperation = 'source-over';
-      const fig = mkCanvas(fw, fh), f = fig.getContext('2d');
-      f.save(); f.shadowColor = 'rgba(0,0,0,.78)'; f.shadowBlur = a.h * 0.05 * S; f.shadowOffsetX = a.h * 0.012 * S; f.shadowOffsetY = a.h * 0.01 * S; f.drawImage(gr, 0, 0); f.restore();   // key light upper left
-      f.drawImage(gr, 0, 0);
-      Object.assign(_sc, { fig, figGraded: gr, fx: ix - pad, fy: a.y - pad, fw: fw / S, fh: fh / S, pad, iw, ix, S });
-      const depth = dh * 0.07, rw = max(2, round(iw * S)), rh = max(2, round(depth * S));      // her mirror image in the glass, fading with distance from the edge
-      const refl = mkCanvas(rw, rh), r = refl.getContext('2d'), top = (deskY - a.y) * S;
-      r.setTransform(1, 0, 0, -1, 0, top); r.drawImage(gr, pad * S, pad * S, rw, round(a.h * S), 0, 0, rw, round(a.h * S));
-      r.setTransform(1, 0, 0, 1, 0, 0); r.globalCompositeOperation = 'destination-in';
-      r.fillStyle = lgr(r, 0, 0, 0, rh, [0, 'rgba(0,0,0,1)', 0.5, 'rgba(0,0,0,.4)', 1, 'rgba(0,0,0,0)']); r.fillRect(0, 0, rw, rh);
-      _sc.refl = refl;
-    }
+    _sc.back = back; _sc.figs = {};
     return _sc;
   }
-  function drawDeskCached(g, C, deskY, depth) {
-    const cx = C.ix + C.iw / 2, W = C.iw;
+  // one pose, lit and cached on first use (her own key light, her shadow, her reflection in the desk glass); null until its image loads
+  function figCache(pose, a, deskY, dh, S) {
+    const hit = _sc.figs[pose]; if (hit) return hit;
+    const fim = anchorImg(pose); if (!fim) return null;
+    const iw = a.h * fim.naturalWidth / fim.naturalHeight, ix = a.x + (a.w - iw) / 2, pad = a.h * 0.08;
+    const fw = round((iw + 2 * pad) * S), fh = round((a.h + 2 * pad) * S);
+    // her figure under its own key light: she is the subject, so a touch brighter and more vivid than the graded set, with a warm
+    // soft light from the upper left (the studio's key) on her face and shoulders; her own alpha kept
+    const gr = mkCanvas(fw, fh), q = gr.getContext('2d'), fx0 = pad * S, fy0 = pad * S, fiw = iw * S, fih = a.h * S, bx = fx0 + fiw * (1 - BODY_K) / 2, bw = fiw * BODY_K;
+    q.imageSmoothingQuality = 'high';
+    let filtered = false;                                            // lifted, not blown: her highlights stay at the source's level
+    try { if ('filter' in q) { q.filter = 'brightness(1.05) contrast(1.04) saturate(1.14)'; q.drawImage(fim, fx0, fy0, fiw, fih); q.filter = 'none'; filtered = true; } } catch (e) { filtered = false; }
+    if (!filtered) q.drawImage(fim, fx0, fy0, fiw, fih);
+    q.globalCompositeOperation = 'soft-light';
+    q.fillStyle = rgr(q, bx + bw * 0.28, fy0 + fih * 0.16, 0, fih * 0.62, [0, 'rgba(255,238,210,.5)', 0.5, 'rgba(255,230,200,.2)', 1, 'rgba(128,128,128,0)']); q.fillRect(0, 0, fw, fh);
+    q.fillStyle = 'rgba(255,226,192,.42)'; q.fillRect(0, 0, fw, fh);                  // a slightly warmer, more neutral light than the cool set, so she stands off it
+    if (!filtered) { q.globalCompositeOperation = 'screen'; q.fillStyle = 'rgba(40,40,46,1)'; q.fillRect(0, 0, fw, fh); }   // no canvas filters (Safari): a gentle lift instead
+    q.globalCompositeOperation = 'destination-in'; q.drawImage(fim, fx0, fy0, fiw, fih); q.globalCompositeOperation = 'source-over';
+    const fig = mkCanvas(fw, fh), f = fig.getContext('2d');
+    f.save(); f.shadowColor = 'rgba(0,0,0,.78)'; f.shadowBlur = a.h * 0.05 * S; f.shadowOffsetX = a.h * 0.012 * S; f.shadowOffsetY = a.h * 0.01 * S; f.drawImage(gr, 0, 0); f.restore();   // key light upper left
+    f.drawImage(gr, 0, 0);
+    const depth = dh * 0.07, rw = max(2, round(iw * S)), rh = max(2, round(depth * S));        // her mirror image in the glass, fading with distance from the edge
+    const refl = mkCanvas(rw, rh), r = refl.getContext('2d'), top = (deskY - a.y) * S;
+    r.setTransform(1, 0, 0, -1, 0, top); r.drawImage(gr, pad * S, pad * S, rw, round(a.h * S), 0, 0, rw, round(a.h * S));
+    r.setTransform(1, 0, 0, 1, 0, 0); r.globalCompositeOperation = 'destination-in';
+    r.fillStyle = lgr(r, 0, 0, 0, rh, [0, 'rgba(0,0,0,1)', 0.5, 'rgba(0,0,0,.4)', 1, 'rgba(0,0,0,0)']); r.fillRect(0, 0, rw, rh);
+    return (_sc.figs[pose] = { fig, figGraded: gr, refl, fx: ix - pad, fy: a.y - pad, fw: fw / S, fh: fh / S, pad, iw, ix, S, rim: null, rimAt: -2 });
+  }
+  function drawDeskCached(g, C, deskY, depth, al) {
+    if (!(al > 0)) return;
+    const W = C.iw * BODY_K, bx = C.ix + (C.iw - W) / 2, cx = bx + W / 2;
+    g.save(); g.globalAlpha = al;
     g.save(); g.translate(cx, deskY + depth * 0.12); g.scale(1, 0.16);                    // a flat ellipse of shade on the glass
     g.fillStyle = rgr(g, 0, 0, 0, W * 0.55, [0, 'rgba(0,0,0,.45)', 1, 'rgba(0,0,0,0)']); g.fillRect(-W * 0.6, -W * 0.6, W * 1.2, W * 1.2);
     g.restore();
-    if (C.refl) { g.save(); g.globalAlpha = 0.75; g.drawImage(C.refl, 0, 0, C.refl.width, C.refl.height, C.ix, deskY, W, depth); g.restore(); }
-    g.save(); g.globalCompositeOperation = 'screen';                                       // the studio key light skimming the desk edge in front of her
-    g.fillStyle = lgr(g, C.ix - W * 0.1, 0, C.ix + W * 1.1, 0, [0, 'rgba(255,236,200,0)', 0.35, 'rgba(255,236,200,.28)', 0.65, 'rgba(255,236,200,.28)', 1, 'rgba(255,236,200,0)']);
-    g.fillRect(C.ix - W * 0.1, deskY - 1, W * 1.2, max(1.5, depth * 0.06)); g.restore();
+    if (C.refl) { g.globalAlpha = 0.75 * al; g.drawImage(C.refl, 0, 0, C.refl.width, C.refl.height, C.ix, deskY, C.iw, depth); g.globalAlpha = al; }
+    g.globalCompositeOperation = 'screen';                                                 // the studio key light skimming the desk edge in front of her
+    g.fillStyle = lgr(g, bx - W * 0.1, 0, bx + W * 1.1, 0, [0, 'rgba(255,236,200,0)', 0.35, 'rgba(255,236,200,.28)', 0.65, 'rgba(255,236,200,.28)', 1, 'rgba(255,236,200,0)']);
+    g.fillRect(bx - W * 0.1, deskY - 1, W * 1.2, max(1.5, depth * 0.06)); g.restore();
   }
   // the screen's light on her right side, re-tinted only when the screen's colour is sampled (a few times a second)
-  function anchorRimCached(g, C, bob) {
+  function anchorRimCached(g, C, bob, al) {
     const src = C.figGraded; if (!src) return;
     if (C.rimAt !== _spill.at) {
       C.rimAt = _spill.at;
       if (!C.rim || C.rim.width !== src.width || C.rim.height !== src.height) C.rim = mkCanvas(src.width, src.height);
-      const r = C.rim.getContext('2d'), rw = src.width, x0 = C.pad * C.S, iw = C.iw * C.S;
+      const r = C.rim.getContext('2d'), rw = src.width, x0 = C.pad * C.S + C.iw * C.S * (1 - BODY_K) / 2, iw = C.iw * C.S * BODY_K;
       r.globalCompositeOperation = 'copy'; r.drawImage(src, 0, 0);
       r.globalCompositeOperation = 'source-in';
       r.fillStyle = lgr(r, x0 + iw * 0.62, 0, x0 + iw, 0, [0, spillCol(0), 0.75, spillCol(0.22 * _spill.a), 1, spillCol(0.4 * _spill.a)]); r.fillRect(0, 0, rw, src.height);
       r.globalCompositeOperation = 'source-over';
     }
-    g.save(); g.globalCompositeOperation = 'screen'; g.drawImage(C.rim, 0, 0, C.rim.width, C.rim.height, C.fx, C.fy + bob, C.fw, C.fh); g.restore();
+    g.save(); g.globalAlpha = al === undefined ? 1 : al; g.globalCompositeOperation = 'screen'; g.drawImage(C.rim, 0, 0, C.rim.width, C.rim.height, C.fx, C.fy + bob, C.fw, C.fh); g.restore();
   }
 
   // Scenes.newsroom when present (its layout rects drive every DOM overlay), otherwise the built-in set. Returns {L, scene, cam}.
@@ -1622,7 +1621,7 @@
 
   let root, stage, mon, monCv, monTag, monLive, monCapB, monCapS, monCapE, lt, ltBar, ltFlag, ltFlagTxt, ltKick, hlBox, hlT, hlR, subBox, subT, subR, ltBadges, srLive;
   let tk, tkWin, tkTrack, hud, pips, btnPause, btnArch, btnNext, ttl, ttlYear, ttlMeta, rank, rkIco, rkTitle, rkSub, rkTabs, rkList, cutEl, cutP, cutE, flashEl, fadeEl;
-  let R = null, curU = 12.8, layKey = '';
+  let R = null, curU = 12.8, layKey = '', _runSeq = 0;
 
   function build(el) {
     stage = h('canvas.gnn-stage');
@@ -1762,7 +1761,7 @@
     ttlYear.textContent = y !== undefined && y !== null ? 'Year ' + y : '';
     ttlMeta.textContent = R.intr.turn !== undefined && R.intr.turn !== null ? 'Turn ' + R.intr.turn : '';
     R.titleDur = [0.9, 2.7, 1.9][R.speed];
-    R.mood = 'neutral'; R.gfx = null; R.rk = null;
+    R.mood = 'neutral'; R.gfx = null; R.rk = null; setPose('neutral');
     R.hl.set('', 0); R.sub.set('', 0);
     srLive.textContent = 'Galactic News Network' + (y !== undefined && y !== null ? ', year ' + y : '');
     sfx('gnn_ident', 'news');
@@ -1770,7 +1769,7 @@
   function applyItem(seg) {
     const it = seg.item, g = GROUPS[it.grp];
     root.dataset.mode = 'item'; root.dataset.grp = it.grp; setTone(it.importance);
-    R.mood = it.importance >= 2 ? 'worried' : g.mood; R.rk = null;
+    R.mood = it.importance >= 2 ? 'worried' : g.mood; R.rk = null; setPose(poseFor(it));
     ltFlagTxt.textContent = it.importance >= 2 ? 'Breaking news' : 'Top story';
     UI.clear(ltKick);
     ltKick.appendChild(iconNode(g.icon)); ltKick.appendChild(h('span', g.label));
@@ -1803,7 +1802,7 @@
   }
   function applyRank(seg) {
     const meta = RANK_META[seg.key], list = seg.list.slice().sort((a, b) => b.value - a.value).slice(0, 6);
-    root.dataset.mode = 'rank'; root.dataset.grp = meta.cat; setTone(0); R.mood = 'pleased'; R.gfx = null;
+    root.dataset.mode = 'rank'; root.dataset.grp = meta.cat; setTone(0); R.mood = 'pleased'; R.gfx = null; setPose('presenting');
     UI.clear(rkIco); rkIco.appendChild(iconNode(meta.icon)); rkTitle.textContent = meta.title; rkSub.textContent = meta.sub;
     UI.clear(rkTabs);
     RANK_ORDER.forEach(k => { if (R.segs.some(s => s.kind === 'rank' && s.key === k)) rkTabs.appendChild(h('span.gnn-rank-tab' + (k === seg.key ? '.on' : ''), { tip: RANK_META[k].title }, iconNode(RANK_META[k].icon))); });
@@ -2043,7 +2042,11 @@
   function startRun(pend) {
     const intr = pend.intr || {};
     layKey = '';
-    try { const WA = M.Gfx && M.Gfx.WorldArt; if (WA) { WA.get(WA.gnn); if (WA.gnnAnchor) WA.get(WA.gnnAnchor); } } catch (e) { /* optional */ }
+    try {                                                                // the studio, the neutral presenter, then the poses this bulletin will use
+      const WA = M.Gfx && M.Gfx.WorldArt;
+      if (WA) { WA.get(WA.gnn); if (WA.gnnAnchor) { WA.get(WA.gnnAnchor('neutral')); (intr.items || []).forEach(it => it && WA.get(WA.gnnAnchor(poseFor(normalizeItem(Object.assign({ headline: '-' }, it)))))); if (RANK_ORDER.some(k => intr.rankings && intr.rankings[k])) WA.get(WA.gnnAnchor('presenting')); } }
+    } catch (e) { /* optional */ }
+    AP.cur = 'neutral'; AP.prev = null; AP.k = 1; AP.lastT = -1;
     root.classList.remove('out');
     root.classList.toggle('rm', reduced());
     stopWipe();
@@ -2051,7 +2054,7 @@
       pending: pend, intr: intr, segs: buildSegments(intr), idx: -1, t: 0, accDt: 0, pace: {}, redraw: false, segT: 0, phase: 'play', cut: null, paused: false, finishing: false, fadeT: 0, fadeDur: 0.5,
       speed: animSpeed(), rm: reduced(), anchor: pickAnchor(intr), mood: 'neutral', tone: 'normal', talkTail: 0, wasTyping: false, hold: 0, holdSet: false, titleDur: 2.5, titleK: 0,
       hl: new Typer(hlT, hlR, hlBox), sub: new Typer(subT, subR, subBox), gfx: null, rk: null, curPlanet: null, L: null, shown: 0, skipped: false, leaving: false,
-      tkLines: tickerLines(intr), tkIdx: 0, tkT: 0, tkU: 0, anims: null, prevTrack: musicCur(), prevSnap: musicSnap(), musicStarted: false,
+      runId: (_runSeq = (_runSeq || 0) + 1), tkLines: tickerLines(intr), tkIdx: 0, tkT: 0, tkU: 0, anims: null, prevTrack: musicCur(), prevSnap: musicSnap(), musicStarted: false,
     };
     R.rm = root.classList.contains('rm');
     btnArch.style.display = M.Game && M.Game.S && Array.isArray(M.Game.S.newsLog) ? '' : 'none';
