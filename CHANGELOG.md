@@ -5,6 +5,13 @@ Versions follow `MAJOR.MINOR.PATCH`; the live version is the `VERSION` file.
 
 ## Unreleased
 
+- GNN: everything on the video wall is part of the studio screen: the rankings too are painted into it (they were a panel laid over
+  the studio), with the presenter standing further left in the presenting pose so her hand points at the screen without covering it.
+  Every graphic shows real data: the map is the real galaxy (its stars and lanes, the systems you have explored in their owners'
+  colours, the story's system or the two empires' known territories marked; an empire you have met but whose worlds you have not
+  explored is placed at its home system; ownership you have not seen is not shown), the map callout names the system's owner or star
+  type instead of an invented sector number, and the wire screen dates its lines by year instead of invented item numbers. The wire
+  screen's caption reads "GNN Wire · Around the galaxy" and no longer runs into its list.
 - First loads behind the password gate no longer stall. The web server asks the save server once per file before serving it, about
   150 times at once on a page load, and the save server could queue only 5 new connections (Python's default): the rest were dropped
   and retried after TCP's 1 / 3 / 7 / 15 / 31 s back-off, so a few files of every first load after an update arrived seconds late and
@@ -12,6 +19,45 @@ Versions follow `MAJOR.MINOR.PATCH`; the live version is the `VERSION` file.
   1024, and the web server reuses its connections to the gate (HTTP/1.1 keep-alive). Locally 300 simultaneous checks went from a
   median of 1.2 s and a slowest of 31 to 61 s to a slowest of 0.2 s. `python3 tools/gate-burst.py` measures it. Takes effect when
   `upgrade.sh` restarts the save server.
+- GNN presenter poses: seven (neutral, serious, encouraging, urgent, breaking, presenting, wry), chosen from the story (breaking news
+  leaning in to the camera, alerts such as monsters and raids urgent, a chart presented with a hand toward the wall, losses serious whatever their section, good news encouraging, the lighter items wry)
+  and cross-faded between stories. The poses are matched in face size and position on one shared canvas; each is lit, shadowed
+  and reflected like the first and cached on first use. Fixed: the screen's crawl could keep the last broadcast's headlines.
+- GNN: the presenter is under her own key light, a touch brighter and more vivid than the graded set, in a slightly warmer, more
+  neutral light than the cool studio, with a warm soft light from the upper left (she read flat and dark); her
+  highlights stay at the source image's level (none blown out). The studio screen carries a cable-news crawl along its bottom: this bulletin's headlines,
+  then the latest from the archive, scrolling under a GNN tag.
+- GNN's video wall is part of the studio: the story is painted into the photo's own screen, fitted to the inner edge of its
+  bezel (a perspective shape, taller on the right, with cut corners) with a gentle curve, instead of a rectangle laid over the
+  frame. It reads as a lit display behind glass (darks at the panel's blue, slightly softer and less saturated than the presenter,
+  a diagonal glare, darker toward the curved ends, the bezel's inner shadow), its category, Live and caption are on the screen
+  itself, and it lights the set: a glow round the frame, a pool on the floor, and its colour on the presenter's nearer shoulder.
+  Desktop and phones on their side (portrait keeps its own screen across the top).
+- GNN draws faster: what never moves (the studio photo with its grade and vignette, the presenter with her shadow, her reflection)
+  is drawn once per size instead of every frame; a machine that still cannot keep up steps the studio's resolution down a notch
+  for the session rather than stutter.
+- GNN has its own presenter: an original anchor of the non-playable Veyl (assets/art/gnn/gnn-anchor.webp, brief in
+  docs/IMAGE-GEN-GNN-ANCHOR.md), one image for every broadcast. She is shown to the hem of her jacket at the desk, her sleeve
+  clear of the dark seam beside the brass pillar, with a soft shadow and a cool back light so she sits in the set, and her shadow, mirror
+  image and a skim of light on the glass desk top. A slow breath keeps the still alive (none under reduced motion). Phones: in
+  portrait she fills the space between the video screen and the headline; on its side she stands left of the wall. The race
+  portraits remain the fallback (art off, or before the image loads).
+- GNN is drawn at the screen's full sharpness (up to 2x, within a 4K pixel budget) on every graphics tier: on the low tier the
+  studio canvas stayed at 1x and a high-density screen stretched it, blurring the studio photo and the presenter.
+- GNN news, content: the economy / science / council charts show the real standings of the empires in the game (their actual
+  output, bars scaled to the leader) instead of six made-up bars that could name races not in the game (bulletins carry rankings
+  only on a rankings filler turn, so the chart reads the live standings). A count of one reads "1 ship" / "1 Alkari ship" / "1 vote"
+  (`News.singular`). The 21 headlines that named a planet and its star (always the same name) say it once. War, treaty and
+  first-contact maps name both empires in their colours, joined by a line through the marker.
+- GNN news, layout: the chart's labels clear the screen's caption; the key hint beside the buttons is gone (the buttons carry their
+  keys). Phones get their own framing: in portrait the anchor stands between a full-width video screen and the desk (it was cropped
+  out), with touch-sized buttons that all fit; on its side the video wall's top (category, Live) is no longer under the app bar and
+  the controls and ticker are no longer cut off at the bottom; the rankings panel fits above the headline. The archive on a narrow
+  screen puts the headline on its own full-width line (it was one word wide).
+- The planet card of an explored star (not your colony) shows the planet's wide orbit plate, as your colonies and the discovery cards
+  do, instead of a small sprite in a black square beside empty space; with art off (`?art=0`) it keeps the sprite. The wide plates
+  also lost a stray dark frame (the planet card's padding applied to them). On a phone held sideways the plate is a little shorter, so the
+  star's range line stays in view without scrolling.
 - A new game keeps the title screen's main theme: the grand reading carries on into the game and finishes before the map's programme
   begins (nothing playing: the main theme starts from the top), so the whole theme is heard once. An end-of-turn change of programme,
   a visit to the research screen, the news or the score player never cut it. A loaded game starts the map's music at once.
