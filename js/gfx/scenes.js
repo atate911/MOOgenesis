@@ -1730,19 +1730,136 @@
     // two inner alcoves (2, 3); with fewer than six empires the outer alcoves stay vacant
     map: [null, [2], [2, 3], [2, 1, 3], [1, 2, 3, 4], [1, 2, 0, 3, 4], [0, 1, 2, 3, 4, 5]],
   };
+
+  /* ---- the council plate's colour grade, baked once per image (the plate is a still, so per-pixel work is affordable once and free after).
+     Hue, saturation and value are curved independently in HSV, then the frame is split-toned, and two keys are pulled for effects:
+       V curve  : a monotone curve that crushes the deepest blacks (drama), lifts the low mids hard (studio exposure) and rolls the highlights off
+       S vs V   : greys the deep shadows, enriches the mids, eases the highlights so lamps bloom white instead of clipping orange
+       H vs H   : keys the brass (hue 18..58 deg) and pulls it to one rich gold; keys the stone (low saturation) and leans its shadows to teal-slate
+       split    : cool shadows / warm highlights, weighted against saturation so skin-like and brass colours keep their own hue
+       keys     : a soft luminance key of the highlights (-> bloom) and a brass hue key (-> a slow specular sheen) */
+  const PLATE_GRADE = new WeakMap();
+  function monoCurve(pts, n) {             // Fritsch-Carlson monotone cubic through [[x,y],...] sampled into an n-entry LUT (x,y in 0..1)
+    const k = pts.length, d = [], m = [], lut = new Float32Array(n);
+    for (let i = 0; i < k - 1; i++) d[i] = (pts[i + 1][1] - pts[i][1]) / (pts[i + 1][0] - pts[i][0]);
+    m[0] = d[0]; m[k - 1] = d[k - 2];
+    for (let i = 1; i < k - 1; i++) m[i] = d[i - 1] * d[i] <= 0 ? 0 : (d[i - 1] + d[i]) / 2;
+    for (let i = 0; i < k - 1; i++) { if (!d[i]) { m[i] = m[i + 1] = 0; continue; } const a = m[i] / d[i], b = m[i + 1] / d[i], q = a * a + b * b; if (q > 9) { const t = 3 / Math.sqrt(q); m[i] = t * a * d[i]; m[i + 1] = t * b * d[i]; } }
+    for (let j = 0, i = 0; j < n; j++) {
+      const x = j / (n - 1); while (i < k - 2 && x > pts[i + 1][0]) i++;
+      const x0 = pts[i][0], x1 = pts[i + 1][0], hh = x1 - x0, t = clamp((x - x0) / hh, 0, 1), t2 = t * t, t3 = t2 * t;
+      lut[j] = clamp((2 * t3 - 3 * t2 + 1) * pts[i][1] + (t3 - 2 * t2 + t) * hh * m[i] + (-2 * t3 + 3 * t2) * pts[i + 1][1] + (t3 - t2) * hh * m[i + 1], 0, 1);
+    }
+    return lut;
+  }
+  const PG_V = monoCurve([[0, 0], [0.05, 0.006], [0.11, 0.07], [0.22, 0.3], [0.4, 0.62], [0.64, 0.88], [1, 0.99]], 1024);
+  const PG_S = monoCurve([[0, 0.45], [0.12, 0.7], [0.35, 1.08], [0.6, 1.16], [0.85, 0.95], [1, 0.7]], 256);   // saturation gain by graded value (y x 1.25 below)
+  function gradePlate(im) {
+    let r = PLATE_GRADE.get(im); if (r !== undefined) return r;
+    r = null;
+    try {
+      const W = im.naturalWidth, H = im.naturalHeight, c = document.createElement('canvas'); c.width = W; c.height = H;
+      const g = c.getContext('2d', { willReadFrequently: true }); g.drawImage(im, 0, 0);
+      const id = g.getImageData(0, 0, W, H), px = id.data;
+      const kw = W >> 1, kh = H >> 1, hiC = document.createElement('canvas'), brC = document.createElement('canvas'); hiC.width = brC.width = kw; hiC.height = brC.height = kh;
+      const hiD = new ImageData(kw, kh), brD = new ImageData(kw, kh), stD = new ImageData(kw, kh), hp = hiD.data, bp = brD.data, sp = stD.data;
+      for (let y = 0, o = 0; y < H; y++) for (let x = 0; x < W; x++, o += 4) {
+        let R = px[o] / 255, Gc = px[o + 1] / 255, B = px[o + 2] / 255;
+        const mx = max(R, Gc, B), mn = min(R, Gc, B), dl = mx - mn;
+        let hue = 0; if (dl > 1e-6) { hue = mx === R ? ((Gc - B) / dl) % 6 : mx === Gc ? (B - R) / dl + 2 : (R - Gc) / dl + 4; hue *= 60; if (hue < 0) hue += 360; }
+        let sat = mx > 0 ? dl / mx : 0, val = PG_V[(mx * 1023) | 0];
+        // H vs H / S keys
+        const brass = sat > 0.22 && val > 0.12 ? sstep(14, 24, hue) * (1 - sstep(52, 62, hue)) * sstep(0.22, 0.4, sat) : 0;
+        if (brass > 0) { hue += (35 - hue) * 0.5 * brass; sat = min(1, sat * (1 + 0.06 * brass)); }
+        const stone = 1 - sstep(0.12, 0.3, sat);
+        sat = min(1, sat * PG_S[(val * 255) | 0] * (1.02 - 0.12 * brass));
+        // HSV -> RGB
+        const C = val * sat, hp6 = hue / 60, X = C * (1 - Math.abs((hp6 % 2) - 1)), m0 = val - C; let r1 = 0, g1 = 0, b1 = 0;
+        if (hp6 < 1) { r1 = C; g1 = X; } else if (hp6 < 2) { r1 = X; g1 = C; } else if (hp6 < 3) { g1 = C; b1 = X; } else if (hp6 < 4) { g1 = X; b1 = C; } else if (hp6 < 5) { r1 = X; b1 = C; } else { r1 = C; b1 = X; }
+        R = r1 + m0; Gc = g1 + m0; B = b1 + m0;
+        // split tone: teal-slate into the stone's shadows, warm amber into everything's highlights
+        const sh = (1 - val) * (0.2 + 0.8 * stone) * (1 - brass) * 0.2, hl = val * val * (0.45 + 0.55 * stone) * 0.06;
+        R += -0.5 * sh + 0.9 * hl; Gc += 0.06 * sh + 0.42 * hl; B += 0.42 * sh - 0.55 * hl;
+        px[o] = clamp(R, 0, 1) * 255; px[o + 1] = clamp(Gc, 0, 1) * 255; px[o + 2] = clamp(B, 0, 1) * 255;
+        if (!(x & 1) && !(y & 1) && (x >> 1) < kw && (y >> 1) < kh) {
+          const L = 0.2126 * R + 0.7152 * Gc + 0.0722 * B, hk = sstep(0.7, 0.95, L), q = ((y >> 1) * kw + (x >> 1)) * 4;
+          hp[q] = 255; hp[q + 1] = 236; hp[q + 2] = 200; hp[q + 3] = hk * 255;
+          bp[q] = bp[q + 1] = bp[q + 2] = 255; bp[q + 3] = brass * sstep(0.3, 0.6, val) * 255;
+          sp[q] = 255; sp[q + 1] = 222; sp[q + 2] = 170; sp[q + 3] = sstep(0.76, 0.97, L) * 255;
+        }
+      }
+      g.putImageData(id, 0, 0);
+      hiC.getContext('2d').putImageData(hiD, 0, 0); brC.getContext('2d').putImageData(brD, 0, 0);
+      // the bloom: the highlight key blurred wide (once); without canvas filters it is left sharp and drawn faint
+      const bl = document.createElement('canvas'); bl.width = kw; bl.height = kh; const bg = bl.getContext('2d');
+      let blurred = false; try { if ('filter' in bg) { bg.filter = 'blur(' + Math.round(kw * 0.012) + 'px)'; blurred = true; } } catch (e) { /* no filters */ }
+      bg.drawImage(hiC, 0, 0); bg.filter = 'none';
+      if (blurred) { bg.globalAlpha = 0.6; try { bg.filter = 'blur(' + Math.round(kw * 0.004) + 'px)'; } catch (e) { /* ignore */ } bg.drawImage(hiC, 0, 0); bg.filter = 'none'; }
+      const sheen = document.createElement('canvas'); sheen.width = kw; sheen.height = kh;
+      // anamorphic streaks: the hottest-light key squeezed 24x horizontally, blurred, and stretched back out -> long horizontal flares
+      let streak = null;
+      if (blurred) {
+        const stC = document.createElement('canvas'); stC.width = kw; stC.height = kh; stC.getContext('2d').putImageData(stD, 0, 0);
+        const nw = max(8, (kw / 24) | 0), sq = document.createElement('canvas'); sq.width = nw; sq.height = kh; const qg = sq.getContext('2d');
+        qg.filter = 'blur(2px)'; qg.drawImage(stC, 0, 0, nw, kh); qg.filter = 'none';
+        streak = document.createElement('canvas'); streak.width = kw; streak.height = kh; const sg2 = streak.getContext('2d');
+        sg2.filter = 'blur(' + max(1, Math.round(kh * 0.004)) + 'px)'; sg2.drawImage(sq, 0, 0, kw, kh); sg2.filter = 'none';
+      }
+      r = { c: c, bloom: bl, bloomA: blurred ? 1 : 0.35, brass: brC, sheen: sheen, streak: streak };
+    } catch (e) { r = null; }                // a tainted or unsupported canvas: the caller falls back to a filtered draw
+    PLATE_GRADE.set(im, r);
+    return r;
+  }
+  function plateLow() { return !!((M.Perf && M.Perf.tier === 'low')); }
+  function plateStill() { try { return !!(M.Settings && M.Settings.get && M.Settings.get('reduceMotion')); } catch (e) { return false; } }
   function councilPlate(ctx, im, w, h, t, o, seats) {
     const iw = im.naturalWidth, ih = im.naturalHeight, sc = max(w / iw, h / ih), sx0 = (iw - w / sc) / 2, sy0 = (ih - h / sc) / 2;
     const X = (u) => (u * iw - sx0) * sc, Y = (v) => (v * ih - sy0) * sc;
-    G.WorldArt.draw(ctx, im, 0, 0, w, h);
-    // the oculus is bright where the vote tally sits: settle the top band
-    ctx.fillStyle = lgr(ctx, 0, 0, 0, h * 0.2, [0, 'rgba(4,3,8,0.55)', 1, 'rgba(4,3,8,0)']); ctx.fillRect(0, 0, w, h * 0.2);
+    // studio exposure + the HSV grade (gradePlate); if the grade cannot be baked, a filtered draw stands in
+    const PG = gradePlate(im), cw = w / sc, ch = h / sc;
+    if (PG) ctx.drawImage(PG.c, sx0, sy0, cw, ch, 0, 0, w, h);
+    else {
+      const lit = 'filter' in ctx;
+      if (lit) { try { ctx.filter = 'brightness(1.75) contrast(1.12) saturate(1.06)'; } catch (e) { /* no canvas filters */ } }
+      G.WorldArt.draw(ctx, im, 0, 0, w, h);
+      if (lit) { try { ctx.filter = 'none'; } catch (e) { /* ignore */ } }
+      if (!lit) { ctx.save(); ctx.globalCompositeOperation = 'screen'; ctx.fillStyle = 'rgba(150,128,104,0.5)'; ctx.fillRect(0, 0, w, h); ctx.restore(); }
+    }
+    if (PG && !plateLow()) {
+      ctx.save(); ctx.globalCompositeOperation = 'screen';
+      // keyed bloom: only what the luminance key let through glows, breathing very slightly with the lamps
+      ctx.globalAlpha = PG.bloomA * (0.62 + 0.06 * sin(t * 0.7)); ctx.drawImage(PG.bloom, sx0 / 2, sy0 / 2, cw / 2, ch / 2, 0, 0, w, h);
+      // keyed sheen: a soft band of light travels across the brass only (the hue key is the matte), like a slow lamp sweep
+      const sg = PG.sheen.getContext('2d'), kw = PG.sheen.width, kh = PG.sheen.height, ph = plateStill() ? 0.32 : fract(t / 14), bx = (ph * 1.8 - 0.4) * kw;
+      sg.globalCompositeOperation = 'copy'; sg.drawImage(PG.brass, 0, 0);
+      sg.globalCompositeOperation = 'source-in';
+      const sgr = sg.createLinearGradient(bx - kw * 0.22, 0, bx + kw * 0.22, kh * 0.35);
+      sgr.addColorStop(0, 'rgba(255,226,170,0)'); sgr.addColorStop(0.5, 'rgba(255,236,196,0.55)'); sgr.addColorStop(1, 'rgba(255,226,170,0)');
+      sg.fillStyle = sgr; sg.fillRect(0, 0, kw, kh);
+      ctx.globalAlpha = 0.5; ctx.drawImage(PG.sheen, sx0 / 2, sy0 / 2, cw / 2, ch / 2, 0, 0, w, h);
+      if (PG.streak) { ctx.globalAlpha = 0.9; ctx.drawImage(PG.streak, sx0 / 2, sy0 / 2, cw / 2, ch / 2, 0, 0, w, h); }
+      ctx.restore();
+    }
+    // key lights: a broad overhead wash on the alcove wall and a hot pool on the dais, like a lit stage
+    ctx.save(); ctx.globalCompositeOperation = 'screen';
+    ctx.fillStyle = rgr(ctx, w * 0.5, h * 0.38, 0, w * 0.62, [0, 'rgba(255,238,212,0.14)', 0.55, 'rgba(255,226,190,0.05)', 1, 'rgba(255,220,180,0)']); ctx.fillRect(0, 0, w, h);
+    ctx.save(); ctx.translate(X(0.5), Y(0.69)); ctx.scale(1, 0.22);
+    ctx.fillStyle = rgr(ctx, 0, 0, 0, w * 0.34, [0, 'rgba(255,240,215,0.34)', 0.5, 'rgba(255,230,196,0.12)', 1, 'rgba(255,224,186,0)']); ctx.fillRect(-w * 0.4, -w * 0.4, w * 0.8, w * 0.8);
+    ctx.restore(); ctx.restore();
+    // the oculus is bright where the vote tally sits: settle the top band just enough for the panel
+    ctx.fillStyle = lgr(ctx, 0, 0, 0, h * 0.16, [0, 'rgba(30,18,8,0.3)', 1, 'rgba(30,18,8,0)']); ctx.fillRect(0, 0, w, h * 0.16);
     const holo = o.hologram || 'galaxy', hcol = holo === 'crown' ? '#ffd54f' : holo === 'ballot' ? '#5fe0c0' : '#62d8ff';
     const fl = 0.92 + 0.08 * sin(t * 31) * sin(t * 9.7);
     const ped = { cx: X(CPLATE.ped.x), top: Y(CPLATE.ped.y), rx: CPLATE.ped.rx * iw * sc }; ped.ry = ped.rx * 0.12;
     const hsc = h * 0.086, hcy = ped.top - h * 0.14;
 
-    /* light from the oculus onto the pedestal, then the hologram */
-    beam(ctx, ped.cx, 0, ped.cx, ped.top, w * 0.05, ped.rx * 1.6, '#ffe9bd', 0.07 + 0.02 * sin(t * 0.6));
+    /* light from the oculus: a fan of volumetric shafts falling onto the dais (the grand, cathedral scale), then the hologram */
+    const still = plateStill();
+    beam(ctx, ped.cx, 0, ped.cx, ped.top, w * 0.08, ped.rx * 2.4, '#ffe9bd', 0.16 + 0.03 * sin(t * 0.6));
+    for (let i = 0; i < 5; i++) {
+      const sp = (i - 2) / 2, dr = still ? 0 : sin(t * 0.11 + i * 1.7) * 0.012, a = (0.1 - 0.02 * Math.abs(sp)) * (0.75 + 0.25 * (still ? 1 : sin(t * 0.23 + i * 2.3)));
+      beam(ctx, ped.cx + sp * w * 0.035, 0, ped.cx + (sp * 0.42 + dr) * w, Y(0.8), w * 0.025, w * 0.09, '#ffeacc', a);
+    }
     holoBase(ctx, ped.cx, ped.top, ped.rx * 0.9, ped.ry * 0.9, hcol, t, fl, h * 0.12);
     ctx.fillStyle = rgr(ctx, ped.cx, hcy, hsc * 0.2, hsc * 1.5, [0, 'rgba(2,4,22,0.5)', 0.6, 'rgba(2,4,22,0.26)', 1, 'rgba(2,4,22,0)']); ctx.fillRect(ped.cx - hsc * 1.6, hcy - hsc * 1.6, hsc * 3.2, hsc * 3.2);
     if (holo === 'galaxy') holoGalaxy(ctx, ped.cx, hcy, hsc * 1.05, t, fl, seats);
@@ -1756,25 +1873,28 @@
       const A = CPLATE.al[k], x0 = X(A[0]), x1 = X(A[1]), crown = Y(A[2]), lect = Y(A[3]), ow = x1 - x0, R = ow / 2, ox = (x0 + x1) / 2, spring = crown + R;
       const niche = () => { ctx.beginPath(); ctx.moveTo(x0, lect); ctx.lineTo(x0, spring); ctx.arc(ox, spring, R, PI, TAU); ctx.lineTo(x1, lect); ctx.closePath(); };
       const si = used[k];
-      if (si === undefined) { ctx.save(); niche(); ctx.fillStyle = 'rgba(2,2,6,0.35)'; ctx.fill(); ctx.restore(); continue; }   // vacant seat
+      if (si === undefined) { ctx.save(); niche(); ctx.fillStyle = 'rgba(30,18,10,0.3)'; ctx.fill(); ctx.restore(); continue; }   // vacant seat: unlit
       const seat = seats[si], st = seat.state || 'idle', col = seat.color || C.brass, u = ow / BW;
       const speaking = st === 'speaking', winner = st === 'winner', abst = st === 'abstain', voted = st === 'voted';
       const openH = lect - crown, pbh = openH * 0.84, pbw = pbh * 0.8, pbx = ox - pbw / 2, pby = lect - pbh;
       // every delegate turns towards the pedestal: mirror a photo whose leader looks away from the centre
       const face = P && P.facing ? P.facing(seat.race) : 1, flip = face !== 0 && face === (k < 3 ? -1 : 1);
-      glow(ctx, winner ? '#ffd54f' : speaking ? '#fff0c8' : abst ? '#8a93b8' : voted ? mixc(col, '#ffffff', 0.3) : '#c8a070', ox, crown + openH * 0.4, R * (winner || speaking ? 1.5 : 1.0), winner ? 0.4 : speaking ? 0.35 : 0.08);
+      glow(ctx, winner ? '#ffd54f' : speaking ? '#fff0c8' : abst ? '#8a93b8' : voted ? mixc(col, '#ffffff', 0.3) : '#ffe2b8', ox, crown + openH * 0.4, R * (winner || speaking ? 1.5 : 1.15), winner ? 0.4 : speaking ? 0.35 : abst ? 0.06 : 0.16);
+      // every occupied alcove has its own spotlight from the gallery above
+      beam(ctx, ox, crown - R * 1.6, ox, lect, R * 0.5, ow * 1.05, '#fff1da', abst ? 0.03 : 0.09);
       ctx.save();
       niche(); ctx.clip();
       drawPortrait(ctx, seat.race || 'human', pbx, pby, pbw, pbh, { t: t, mood: winner ? 'pleased' : abst ? 'worried' : 'neutral', talking: speaking, color: seat.color, bg: false, flip: flip, key: 'council' + k });
-      // tie the photograph into the hall's warm lamplight (same grade as the drawn chamber's alcoves)
-      ctx.globalCompositeOperation = 'lighten'; ctx.fillStyle = 'rgb(30,22,19)'; ctx.fillRect(x0, crown, ow, openH);
-      ctx.globalCompositeOperation = 'multiply'; ctx.fillStyle = lgr(ctx, 0, crown, 0, lect, [0, 'rgb(255,240,218)', 0.55, 'rgb(246,218,188)', 1, 'rgb(186,148,120)']); ctx.fillRect(x0, crown, ow, openH);
-      ctx.globalCompositeOperation = 'soft-light'; ctx.fillStyle = 'rgba(255,172,104,0.3)'; ctx.fillRect(x0, crown, ow, openH);
-      if (abst) { ctx.globalCompositeOperation = 'saturation'; ctx.fillStyle = 'rgba(128,128,128,0.8)'; ctx.fillRect(x0, crown, ow, openH); ctx.globalCompositeOperation = 'multiply'; ctx.fillStyle = 'rgb(150,140,132)'; ctx.fillRect(x0, crown, ow, openH); }
-      else if (!speaking && !winner) { ctx.globalCompositeOperation = 'multiply'; ctx.fillStyle = voted ? 'rgb(240,232,224)' : 'rgb(214,202,190)'; ctx.fillRect(x0, crown, ow, openH); }
-      else { ctx.globalCompositeOperation = 'lighter'; ctx.fillStyle = winner ? 'rgba(255,200,80,0.09)' : 'rgba(255,240,200,0.06)'; ctx.fillRect(x0, crown, ow, openH); }
+      // studio-light the photograph: a bright key from above, falling off gently toward the lectern, warmed to the hall's bronze
+      ctx.globalCompositeOperation = 'screen'; ctx.fillStyle = rgr(ctx, ox, crown + openH * 0.38, 0, openH * 0.6, [0, 'rgba(255,240,220,0.3)', 0.55, 'rgba(255,232,206,0.12)', 1, 'rgba(255,224,190,0)']); ctx.fillRect(x0, crown, ow, openH);
+      ctx.globalCompositeOperation = 'soft-light'; ctx.fillStyle = lgr(ctx, 0, crown, 0, lect, [0, 'rgba(255,214,160,0.32)', 0.6, 'rgba(120,110,100,0.1)', 1, 'rgba(20,50,70,0.5)']); ctx.fillRect(x0, crown, ow, openH);
+      ctx.globalCompositeOperation = 'multiply'; ctx.fillStyle = lgr(ctx, 0, crown, 0, lect, [0, 'rgb(255,252,246)', 0.6, 'rgb(252,240,226)', 1, 'rgb(226,204,182)']); ctx.fillRect(x0, crown, ow, openH);
+      if (abst) { ctx.globalCompositeOperation = 'saturation'; ctx.fillStyle = 'rgba(128,128,128,0.8)'; ctx.fillRect(x0, crown, ow, openH); ctx.globalCompositeOperation = 'multiply'; ctx.fillStyle = 'rgb(176,166,156)'; ctx.fillRect(x0, crown, ow, openH); }
+      else if (!speaking && !winner) { if (!voted) { ctx.globalCompositeOperation = 'multiply'; ctx.fillStyle = 'rgb(240,234,226)'; ctx.fillRect(x0, crown, ow, openH); } }
+      else { ctx.globalCompositeOperation = 'screen'; ctx.fillStyle = winner ? 'rgba(255,206,110,0.14)' : 'rgba(255,244,214,0.12)'; ctx.fillRect(x0, crown, ow, openH); }
+      // the niche's own falloff, in the room's warm shadow colour (not a cold black) and soft enough to keep the delegate in the light
       ctx.globalCompositeOperation = 'source-over';
-      ctx.fillStyle = rgr(ctx, ox, crown + openH * 0.5, R * 0.6, openH * 0.75, [0, 'rgba(2,3,10,0)', 1, 'rgba(2,3,10,0.5)']); ctx.fillRect(x0, crown, ow, openH);
+      ctx.fillStyle = rgr(ctx, ox, crown + openH * 0.42, R * 0.8, openH * 0.78, [0, 'rgba(40,24,12,0)', 1, 'rgba(40,24,12,0.32)']); ctx.fillRect(x0, crown, ow, openH);
       ctx.restore();
       if (speaking || winner) {
         const pulse = 0.55 + 0.45 * sin(t * (speaking ? 4.2 : 2.4));
@@ -1789,6 +1909,9 @@
       // the text band across the brass panel: the full panel width, but only as tall as a drawn plaque (gem and number spacing scale with it)
       const py0 = Y(CPLATE.plaque[0]), py1 = Y(CPLATE.plaque[1]), ph = min(py1 - py0, ow * 0.2);
       const pl = { x: x0 - ow * 0.02, y: (py0 + py1 - ph) / 2, w: ow * 1.04, h: ph };
+      // the brightened brass would swallow the lettering: an inset of dark enamel behind the text band
+      ctx.fillStyle = lgr(ctx, 0, pl.y, 0, pl.y + pl.h, [0, 'rgba(22,13,6,0.72)', 0.5, 'rgba(14,8,4,0.8)', 1, 'rgba(22,13,6,0.72)']); ctx.fillRect(pl.x + ow * 0.04, pl.y, pl.w - ow * 0.08, pl.h);
+      ctx.fillStyle = 'rgba(255,226,160,0.35)'; ctx.fillRect(pl.x + ow * 0.04, pl.y + pl.h - 1, pl.w - ow * 0.08, 1);
       plaqueText(ctx, seat, pl, u, col, st);
       if (winner) {
         ctx.save(); ctx.globalCompositeOperation = 'lighter'; ctx.fillStyle = '#ffe08a';
@@ -1798,12 +1921,17 @@
       out.seats[si] = { x: x0, y: crown, w: ow, h: pl.y + pl.h - crown, portrait: { x: x0, y: crown, w: ow, h: openH }, plaque: pl, cx: ox, cy: crown + openH * 0.5 };
     }
     motes(ctx, w * 0.3, h * 0.05, w * 0.4, h * 0.6, 30, t, '#ffeccc', 0.35, 3, 1.8);
-    finish(ctx, w, h, 0.35, 0.03, t);
+    // the vignette in the hall's own shadow tone: deep bronze multiplied in, so the edges fall off like a lit stage instead of going cold and grey
+    ctx.save(); ctx.globalCompositeOperation = 'multiply';
+    ctx.fillStyle = rgr(ctx, w / 2, h * 0.48, min(w, h) * 0.42, hypot(w, h) * 0.6, [0, 'rgb(255,255,255)', 0.55, 'rgb(236,222,206)', 1, 'rgb(104,76,52)'], w / 2, h * 0.46); ctx.fillRect(0, 0, w, h);
+    ctx.fillStyle = lgr(ctx, 0, h * 0.72, 0, h, [0, 'rgb(255,255,255)', 1, 'rgb(120,98,82)']); ctx.fillRect(0, h * 0.72, w, h * 0.28);
+    ctx.restore();
+    finish(ctx, w, h, 0, 0.03, t);
     out.pedestal = { cx: ped.cx, cy: ped.top, rx: ped.rx, ry: ped.ry };
     out.hologram = { x: ped.cx - hsc * 1.1, y: hcy - hsc * 1.2, w: hsc * 2.2, h: hsc * 2.4 };
     out.top = { x: w * 0.1, y: 0, w: w * 0.8, h: h * 0.1 };
     out.bottom = { x: w * 0.12, y: h * 0.86, w: w * 0.76, h: h * 0.13 };
-    out.grade = 'plate';
+    out.grade = 'studio';
     return out;
   }
 

@@ -5,6 +5,20 @@ Versions follow `MAJOR.MINOR.PATCH`; the live version is the `VERSION` file.
 
 ## Unreleased
 
+- Galactic Council: the chamber is studio-lit instead of dim. The hall plate is exposed brighter with a touch more contrast, a key light
+  washes the alcove wall and pools on the dais, each occupied alcove has its own spotlight, and the delegates' photos are lit from above
+  rather than darkened. The vignette stays but now falls off in the hall's own warm bronze shadow instead of cold black (new `studio`
+  grade preset), and the name plaques get a dark enamel inset so the names stay readable on the brighter brass.
+- Galactic Council: the chamber plate is colour-graded once in HSV with independent curves: a value curve (crushed deepest blacks,
+  lifted low mids, rolled-off highlights), saturation by value (grey shadows, rich mids), and a hue key that unifies the brass to one
+  amber while the marble's shadows lean blue-slate, then a cool-shadow / warm-highlight split tone. A luminance key drives a soft bloom
+  and the brass key is the matte for a slow lamp sheen sweeping across the metal (static with Reduce motion, off on the low tier). The
+  delegates get a face-shaped key light and the same warm-top / cool-bottom tone instead of a flat lift.
+- Galactic Council: deeper, more cinematic grade. The value curve crushes the blacks harder and steepens the mids; a fan of slowly
+  drifting volumetric shafts falls from the oculus onto the dais; the hottest lights get anamorphic horizontal streaks (from their own
+  luminance key); the warm vignette is heavier and the floor at the bottom of the frame is grounded darker.
+- Galactic Council: the `studio` grade no longer inherits the default preset's contrast/desaturate filter, which washed the chamber
+  out on every machine above the low tier.
 - GNN: everything on the video wall is part of the studio screen: the rankings too are painted into it (they were a panel laid over
   the studio), with the presenter standing further left in the presenting pose so her hand points at the screen without covering it.
   Every graphic shows real data: the map is the real galaxy (its stars and lanes, the systems you have explored in their owners'
