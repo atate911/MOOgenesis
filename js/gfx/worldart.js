@@ -30,7 +30,7 @@
   const FX = ['rock-1', 'rock-2', 'rock-3', 'rock-4', 'rock-5', 'rock-6', 'rock-7', 'rock-8', 'base-platform'];
   for (let i = 1; i <= 24; i++) FX.push('debris-' + i);   // wreckage cutouts (fx-sheet.png rows 3-4, fx-sheet-2.png)
   const STILLS = [];
-  const GNN_ANCHOR = ['neutral', 'serious', 'encouraging', 'urgent', 'presenting', 'wry'];   // the GNN presenter's poses (docs/IMAGE-GEN-GNN-ANCHOR.md): cut-outs on one shared 1760x1536 canvas, face size and place matched
+  const GNN_ANCHOR = ['neutral', 'serious', 'encouraging', 'urgent', 'breaking', 'presenting', 'wry'];   // the GNN presenter's poses (docs/IMAGE-GEN-GNN-ANCHOR.md): cut-outs on one shared 1760x1536 canvas, face size and place matched
   const has = (a, k) => a.indexOf(k) >= 0;
 
   function budget() { const gb = (M.HW && M.HW.memoryGB) || 4; return Math.max(160, Math.min(480, gb * 48)) * 1048576; }

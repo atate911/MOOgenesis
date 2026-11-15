@@ -5,8 +5,8 @@ Versions follow `MAJOR.MINOR.PATCH`; the live version is the `VERSION` file.
 
 ## Unreleased
 
-- GNN presenter poses: six (neutral, serious, encouraging, urgent, presenting, wry), chosen from the story (breaking news urgent, a
-  chart presented with a hand toward the wall, losses serious whatever their section, good news encouraging, the lighter items wry)
+- GNN presenter poses: seven (neutral, serious, encouraging, urgent, breaking, presenting, wry), chosen from the story (breaking news
+  leaning in to the camera, alerts such as monsters and raids urgent, a chart presented with a hand toward the wall, losses serious whatever their section, good news encouraging, the lighter items wry)
   and cross-faded between stories. The poses are matched in face size and position on one shared canvas; each is lit, shadowed
   and reflected like the first and cached on first use. Fixed: the screen's crawl could keep the last broadcast's headlines.
 - GNN: the presenter is under her own key light, a touch brighter and more vivid than the graded set, in a slightly warmer, more

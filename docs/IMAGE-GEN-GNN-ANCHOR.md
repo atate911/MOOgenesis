@@ -1,8 +1,8 @@
 # Image-generation brief — the GNN news anchor
 
-> **Status:** six poses in use (`assets/art/gnn/gnn-anchor-<pose>.webp`, normalised onto one 1760x1536 canvas so her face keeps
+> **Status:** seven poses in use (`assets/art/gnn/gnn-anchor-<pose>.webp`, normalised onto one 1760x1536 canvas so her face keeps
 > its size and place; the wide canvas leaves room for the presenting gesture): neutral (title, diplomacy, council), serious (losses,
-> war, disasters, deep-space threats), encouraging (colonies, science, the economy), urgent (breaking news), presenting (charts and
+> war, disasters, deep-space threats), encouraging (colonies, science, the economy), breaking (breaking news, leaning in to the camera), urgent (alerts: monsters, raids, novas, the Guardian), presenting (charts and
 > the rankings, a hand toward the video wall) and wry (galaxy life, espionage). New poses: same framing, lighting and transparent
 > background, hands above the bottom 15%.
 

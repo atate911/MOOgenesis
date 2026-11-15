@@ -624,15 +624,16 @@
   const anchorImg = pose => { const WA = M.Gfx && M.Gfx.WorldArt; return WA && WA.enabled && WA.gnnAnchor ? WA.get(WA.gnnAnchor(pose || 'neutral')) : null; };
   const anchorArtReady = () => !!anchorImg('neutral');
   const BODY_K = 1024 / 1760;                                        // the poses share a wide canvas (room for a gesture): her body is the middle 58%
-  // the pose for a story: breaking -> urgent, a chart -> presenting the wall, losses and threats -> serious, good news -> encouraging,
-  // the lighter items -> wry; the title and everything else neutral
+  // the pose for a story: breaking news -> leaning in to the camera, alerts (monsters, raids, novas, the Guardian) -> urgent, a chart ->
+  // presenting the wall, losses and war -> serious, good news -> encouraging, the lighter items -> wry; the title and everything else neutral
   const LOSS_CATS = { colonyLost: 1, planetDestroyed: 1, planetStarving: 1, planetRebels: 1, plague: 1, fleetDestroyed: 1, battleLost: 1, empireDestroyed: 1, invasionSuccess: 1, bombardment: 1, systemNova: 1, coup: 1 };
   function poseFor(it) {
     if (!it) return 'neutral';
-    if (it.importance >= 2) return 'urgent';
+    if (it.importance >= 2) return 'breaking';
+    if (it.grp === 'space') return 'urgent';
     if (LOSS_CATS[it.cat]) return 'serious';                          // a loss is serious whatever its section (a colony lost is filed under colonies)
     if (it.graphic === 'chart') return 'presenting';
-    if (it.grp === 'war' || it.grp === 'disaster' || it.grp === 'space') return 'serious';
+    if (it.grp === 'war' || it.grp === 'disaster') return 'serious';
     if (it.grp === 'colony' || it.grp === 'economy' || it.grp === 'science') return 'encouraging';
     if (it.grp === 'life' || it.grp === 'spy') return 'wry';
     return 'neutral';
