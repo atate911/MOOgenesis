@@ -5,6 +5,10 @@ Versions follow `MAJOR.MINOR.PATCH`; the live version is the `VERSION` file.
 
 ## Unreleased
 
+- Galactic Council: the chamber is studio-lit instead of dim. The hall plate is exposed brighter with a touch more contrast, a key light
+  washes the alcove wall and pools on the dais, each occupied alcove has its own spotlight, and the delegates' photos are lit from above
+  rather than darkened. The vignette stays but now falls off in the hall's own warm bronze shadow instead of cold black (new `studio`
+  grade preset), and the name plaques get a dark enamel inset so the names stay readable on the brighter brass.
 - GNN: everything on the video wall is part of the studio screen: the rankings too are painted into it (they were a panel laid over
   the studio), with the presenter standing further left in the presenting pose so her hand points at the screen without covering it.
   Every graphic shows real data: the map is the real galaxy (its stars and lanes, the systems you have explored in their owners'

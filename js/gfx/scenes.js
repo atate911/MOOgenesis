@@ -1733,9 +1733,20 @@
   function councilPlate(ctx, im, w, h, t, o, seats) {
     const iw = im.naturalWidth, ih = im.naturalHeight, sc = max(w / iw, h / ih), sx0 = (iw - w / sc) / 2, sy0 = (ih - h / sc) / 2;
     const X = (u) => (u * iw - sx0) * sc, Y = (v) => (v * ih - sy0) * sc;
+    // studio exposure: the plate is painted low-key; lift it so the hall reads light and bright, with a little extra contrast to keep it dramatic
+    const lit = 'filter' in ctx;
+    if (lit) { try { ctx.filter = 'brightness(1.75) contrast(1.12) saturate(1.06)'; } catch (e) { /* no canvas filters */ } }
     G.WorldArt.draw(ctx, im, 0, 0, w, h);
-    // the oculus is bright where the vote tally sits: settle the top band
-    ctx.fillStyle = lgr(ctx, 0, 0, 0, h * 0.2, [0, 'rgba(4,3,8,0.55)', 1, 'rgba(4,3,8,0)']); ctx.fillRect(0, 0, w, h * 0.2);
+    if (lit) { try { ctx.filter = 'none'; } catch (e) { /* ignore */ } }
+    if (!lit) { ctx.save(); ctx.globalCompositeOperation = 'screen'; ctx.fillStyle = 'rgba(150,128,104,0.5)'; ctx.fillRect(0, 0, w, h); ctx.restore(); }
+    // key lights: a broad overhead wash on the alcove wall and a hot pool on the dais, like a lit stage
+    ctx.save(); ctx.globalCompositeOperation = 'screen';
+    ctx.fillStyle = rgr(ctx, w * 0.5, h * 0.38, 0, w * 0.62, [0, 'rgba(255,238,212,0.22)', 0.55, 'rgba(255,226,190,0.08)', 1, 'rgba(255,220,180,0)']); ctx.fillRect(0, 0, w, h);
+    ctx.save(); ctx.translate(X(0.5), Y(0.69)); ctx.scale(1, 0.22);
+    ctx.fillStyle = rgr(ctx, 0, 0, 0, w * 0.34, [0, 'rgba(255,240,215,0.34)', 0.5, 'rgba(255,230,196,0.12)', 1, 'rgba(255,224,186,0)']); ctx.fillRect(-w * 0.4, -w * 0.4, w * 0.8, w * 0.8);
+    ctx.restore(); ctx.restore();
+    // the oculus is bright where the vote tally sits: settle the top band just enough for the panel
+    ctx.fillStyle = lgr(ctx, 0, 0, 0, h * 0.16, [0, 'rgba(30,18,8,0.3)', 1, 'rgba(30,18,8,0)']); ctx.fillRect(0, 0, w, h * 0.16);
     const holo = o.hologram || 'galaxy', hcol = holo === 'crown' ? '#ffd54f' : holo === 'ballot' ? '#5fe0c0' : '#62d8ff';
     const fl = 0.92 + 0.08 * sin(t * 31) * sin(t * 9.7);
     const ped = { cx: X(CPLATE.ped.x), top: Y(CPLATE.ped.y), rx: CPLATE.ped.rx * iw * sc }; ped.ry = ped.rx * 0.12;
@@ -1756,25 +1767,28 @@
       const A = CPLATE.al[k], x0 = X(A[0]), x1 = X(A[1]), crown = Y(A[2]), lect = Y(A[3]), ow = x1 - x0, R = ow / 2, ox = (x0 + x1) / 2, spring = crown + R;
       const niche = () => { ctx.beginPath(); ctx.moveTo(x0, lect); ctx.lineTo(x0, spring); ctx.arc(ox, spring, R, PI, TAU); ctx.lineTo(x1, lect); ctx.closePath(); };
       const si = used[k];
-      if (si === undefined) { ctx.save(); niche(); ctx.fillStyle = 'rgba(2,2,6,0.35)'; ctx.fill(); ctx.restore(); continue; }   // vacant seat
+      if (si === undefined) { ctx.save(); niche(); ctx.fillStyle = 'rgba(30,18,10,0.3)'; ctx.fill(); ctx.restore(); continue; }   // vacant seat: unlit
       const seat = seats[si], st = seat.state || 'idle', col = seat.color || C.brass, u = ow / BW;
       const speaking = st === 'speaking', winner = st === 'winner', abst = st === 'abstain', voted = st === 'voted';
       const openH = lect - crown, pbh = openH * 0.84, pbw = pbh * 0.8, pbx = ox - pbw / 2, pby = lect - pbh;
       // every delegate turns towards the pedestal: mirror a photo whose leader looks away from the centre
       const face = P && P.facing ? P.facing(seat.race) : 1, flip = face !== 0 && face === (k < 3 ? -1 : 1);
-      glow(ctx, winner ? '#ffd54f' : speaking ? '#fff0c8' : abst ? '#8a93b8' : voted ? mixc(col, '#ffffff', 0.3) : '#c8a070', ox, crown + openH * 0.4, R * (winner || speaking ? 1.5 : 1.0), winner ? 0.4 : speaking ? 0.35 : 0.08);
+      glow(ctx, winner ? '#ffd54f' : speaking ? '#fff0c8' : abst ? '#8a93b8' : voted ? mixc(col, '#ffffff', 0.3) : '#ffe2b8', ox, crown + openH * 0.4, R * (winner || speaking ? 1.5 : 1.15), winner ? 0.4 : speaking ? 0.35 : abst ? 0.06 : 0.16);
+      // every occupied alcove has its own spotlight from the gallery above
+      beam(ctx, ox, crown - R * 1.6, ox, lect, R * 0.5, ow * 1.05, '#fff1da', abst ? 0.03 : 0.09);
       ctx.save();
       niche(); ctx.clip();
       drawPortrait(ctx, seat.race || 'human', pbx, pby, pbw, pbh, { t: t, mood: winner ? 'pleased' : abst ? 'worried' : 'neutral', talking: speaking, color: seat.color, bg: false, flip: flip, key: 'council' + k });
-      // tie the photograph into the hall's warm lamplight (same grade as the drawn chamber's alcoves)
-      ctx.globalCompositeOperation = 'lighten'; ctx.fillStyle = 'rgb(30,22,19)'; ctx.fillRect(x0, crown, ow, openH);
-      ctx.globalCompositeOperation = 'multiply'; ctx.fillStyle = lgr(ctx, 0, crown, 0, lect, [0, 'rgb(255,240,218)', 0.55, 'rgb(246,218,188)', 1, 'rgb(186,148,120)']); ctx.fillRect(x0, crown, ow, openH);
-      ctx.globalCompositeOperation = 'soft-light'; ctx.fillStyle = 'rgba(255,172,104,0.3)'; ctx.fillRect(x0, crown, ow, openH);
-      if (abst) { ctx.globalCompositeOperation = 'saturation'; ctx.fillStyle = 'rgba(128,128,128,0.8)'; ctx.fillRect(x0, crown, ow, openH); ctx.globalCompositeOperation = 'multiply'; ctx.fillStyle = 'rgb(150,140,132)'; ctx.fillRect(x0, crown, ow, openH); }
-      else if (!speaking && !winner) { ctx.globalCompositeOperation = 'multiply'; ctx.fillStyle = voted ? 'rgb(240,232,224)' : 'rgb(214,202,190)'; ctx.fillRect(x0, crown, ow, openH); }
-      else { ctx.globalCompositeOperation = 'lighter'; ctx.fillStyle = winner ? 'rgba(255,200,80,0.09)' : 'rgba(255,240,200,0.06)'; ctx.fillRect(x0, crown, ow, openH); }
+      // studio-light the photograph: a bright key from above, falling off gently toward the lectern, warmed to the hall's bronze
+      ctx.globalCompositeOperation = 'screen'; ctx.fillStyle = lgr(ctx, 0, crown, 0, lect, [0, 'rgba(255,240,220,0.34)', 0.5, 'rgba(255,232,206,0.2)', 1, 'rgba(255,224,190,0.06)']); ctx.fillRect(x0, crown, ow, openH);
+      ctx.globalCompositeOperation = 'multiply'; ctx.fillStyle = lgr(ctx, 0, crown, 0, lect, [0, 'rgb(255,252,246)', 0.6, 'rgb(252,240,226)', 1, 'rgb(226,204,182)']); ctx.fillRect(x0, crown, ow, openH);
+      ctx.globalCompositeOperation = 'soft-light'; ctx.fillStyle = 'rgba(255,190,130,0.16)'; ctx.fillRect(x0, crown, ow, openH);
+      if (abst) { ctx.globalCompositeOperation = 'saturation'; ctx.fillStyle = 'rgba(128,128,128,0.8)'; ctx.fillRect(x0, crown, ow, openH); ctx.globalCompositeOperation = 'multiply'; ctx.fillStyle = 'rgb(176,166,156)'; ctx.fillRect(x0, crown, ow, openH); }
+      else if (!speaking && !winner) { if (!voted) { ctx.globalCompositeOperation = 'multiply'; ctx.fillStyle = 'rgb(240,234,226)'; ctx.fillRect(x0, crown, ow, openH); } }
+      else { ctx.globalCompositeOperation = 'screen'; ctx.fillStyle = winner ? 'rgba(255,206,110,0.14)' : 'rgba(255,244,214,0.12)'; ctx.fillRect(x0, crown, ow, openH); }
+      // the niche's own falloff, in the room's warm shadow colour (not a cold black) and soft enough to keep the delegate in the light
       ctx.globalCompositeOperation = 'source-over';
-      ctx.fillStyle = rgr(ctx, ox, crown + openH * 0.5, R * 0.6, openH * 0.75, [0, 'rgba(2,3,10,0)', 1, 'rgba(2,3,10,0.5)']); ctx.fillRect(x0, crown, ow, openH);
+      ctx.fillStyle = rgr(ctx, ox, crown + openH * 0.42, R * 0.8, openH * 0.78, [0, 'rgba(40,24,12,0)', 1, 'rgba(40,24,12,0.32)']); ctx.fillRect(x0, crown, ow, openH);
       ctx.restore();
       if (speaking || winner) {
         const pulse = 0.55 + 0.45 * sin(t * (speaking ? 4.2 : 2.4));
@@ -1789,6 +1803,9 @@
       // the text band across the brass panel: the full panel width, but only as tall as a drawn plaque (gem and number spacing scale with it)
       const py0 = Y(CPLATE.plaque[0]), py1 = Y(CPLATE.plaque[1]), ph = min(py1 - py0, ow * 0.2);
       const pl = { x: x0 - ow * 0.02, y: (py0 + py1 - ph) / 2, w: ow * 1.04, h: ph };
+      // the brightened brass would swallow the lettering: an inset of dark enamel behind the text band
+      ctx.fillStyle = lgr(ctx, 0, pl.y, 0, pl.y + pl.h, [0, 'rgba(22,13,6,0.72)', 0.5, 'rgba(14,8,4,0.8)', 1, 'rgba(22,13,6,0.72)']); ctx.fillRect(pl.x + ow * 0.04, pl.y, pl.w - ow * 0.08, pl.h);
+      ctx.fillStyle = 'rgba(255,226,160,0.35)'; ctx.fillRect(pl.x + ow * 0.04, pl.y + pl.h - 1, pl.w - ow * 0.08, 1);
       plaqueText(ctx, seat, pl, u, col, st);
       if (winner) {
         ctx.save(); ctx.globalCompositeOperation = 'lighter'; ctx.fillStyle = '#ffe08a';
@@ -1798,12 +1815,16 @@
       out.seats[si] = { x: x0, y: crown, w: ow, h: pl.y + pl.h - crown, portrait: { x: x0, y: crown, w: ow, h: openH }, plaque: pl, cx: ox, cy: crown + openH * 0.5 };
     }
     motes(ctx, w * 0.3, h * 0.05, w * 0.4, h * 0.6, 30, t, '#ffeccc', 0.35, 3, 1.8);
-    finish(ctx, w, h, 0.35, 0.03, t);
+    // the vignette in the hall's own shadow tone: deep bronze multiplied in, so the edges fall off like a lit stage instead of going cold and grey
+    ctx.save(); ctx.globalCompositeOperation = 'multiply';
+    ctx.fillStyle = rgr(ctx, w / 2, h * 0.48, min(w, h) * 0.42, hypot(w, h) * 0.6, [0, 'rgb(255,255,255)', 1, 'rgb(150,116,84)'], w / 2, h * 0.46); ctx.fillRect(0, 0, w, h);
+    ctx.restore();
+    finish(ctx, w, h, 0, 0.03, t);
     out.pedestal = { cx: ped.cx, cy: ped.top, rx: ped.rx, ry: ped.ry };
     out.hologram = { x: ped.cx - hsc * 1.1, y: hcy - hsc * 1.2, w: hsc * 2.2, h: hsc * 2.4 };
     out.top = { x: w * 0.1, y: 0, w: w * 0.8, h: h * 0.1 };
     out.bottom = { x: w * 0.12, y: h * 0.86, w: w * 0.76, h: h * 0.13 };
-    out.grade = 'plate';
+    out.grade = 'studio';
     return out;
   }
 
