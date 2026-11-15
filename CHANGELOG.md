@@ -5,6 +5,13 @@ Versions follow `MAJOR.MINOR.PATCH`; the live version is the `VERSION` file.
 
 ## Unreleased
 
+- First loads behind the password gate no longer stall. The web server asks the save server once per file before serving it, about
+  150 times at once on a page load, and the save server could queue only 5 new connections (Python's default): the rest were dropped
+  and retried after TCP's 1 / 3 / 7 / 15 / 31 s back-off, so a few files of every first load after an update arrived seconds late and
+  held the loading bar (seen on the live site: 101 simultaneous checks, most back in 0.3 s, the last after 8 to 50 s). The queue now holds
+  1024, and the web server reuses its connections to the gate (HTTP/1.1 keep-alive). Locally 300 simultaneous checks went from a
+  median of 1.2 s and a slowest of 31 to 61 s to a slowest of 0.2 s. `python3 tools/gate-burst.py` measures it. Takes effect when
+  `upgrade.sh` restarts the save server.
 - GNN presenter poses: seven (neutral, serious, encouraging, urgent, breaking, presenting, wry), chosen from the story (breaking news
   leaning in to the camera, alerts such as monsters and raids urgent, a chart presented with a hand toward the wall, losses serious whatever their section, good news encouraging, the lighter items wry)
   and cross-faded between stories. The poses are matched in face size and position on one shared canvas; each is lit, shadowed

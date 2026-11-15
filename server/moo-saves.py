@@ -144,9 +144,21 @@ LOGIN_PAGE = '''<!doctype html>
 '''
 
 
+class Server(ThreadingHTTPServer):
+    # A page load makes the web server ask /api/auth once per file, ~150 at once. Python's default listen backlog (5)
+    # overflowed: the kernel dropped the extra connections and the web server only retried them after TCP's 1 / 3 / 7 /
+    # 15 / 31 s back-off, so every first load waited seconds on a few files (tools/gate-burst.py measures it).
+    request_queue_size = 1024
+    daemon_threads = True
+
+
 class Handler(BaseHTTPRequestHandler):
     server_version = 'moo-saves'
     sys_version = ''
+    # keep-alive: the web server reuses its connections to the gate instead of opening one per file (every response
+    # carries a Content-Length; requests with a body close the connection, since an error may leave the body unread)
+    protocol_version = 'HTTP/1.1'
+    timeout = 30                                            # an idle kept-alive connection gives its thread back
     cfg = None
     static_root = None
     dev = False
@@ -165,6 +177,9 @@ class Handler(BaseHTTPRequestHandler):
         self.send_header('X-Content-Type-Options', 'nosniff')
         for k, v in (headers or {}).items():
             self.send_header(k, v)
+        if self.command not in ('GET', 'HEAD'):
+            self.send_header('Connection', 'close')
+            self.close_connection = True
         self.end_headers()
         if self.command != 'HEAD':
             self.wfile.write(body)
@@ -418,8 +433,7 @@ def main():
         return
 
     host, _, port = cfg['listen'].rpartition(':')
-    httpd = ThreadingHTTPServer((host.strip('[]') or '127.0.0.1', int(port)), Handler)
-    httpd.daemon_threads = True
+    httpd = Server((host.strip('[]') or '127.0.0.1', int(port)), Handler)
     httpd.secret = read_secret(cfg['data_dir'])
     log('listening on %s · data %s · password gate %s%s' % (cfg['listen'], cfg['data_dir'], 'on' if cfg['password'] else 'OFF',
                                                          ' · serving ' + Handler.static_root if Handler.static_root else ''))
