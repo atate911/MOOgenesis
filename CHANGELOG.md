@@ -23,6 +23,9 @@ Versions follow `MAJOR.MINOR.PATCH`; the live version is the `VERSION` file.
   braziers just out of frame in both foreground corners, which also keys each delegate from the outer side (muted colour, cool fill,
   steel-blue shadow side). Smoke drifts through the hall, thicker in the daylight shafts; embers rise from the braziers; the vignette
   is cold slate; the lens streaks and brass sheen are toned down. Flicker, drift and embers stop with Reduce motion.
+- Galactic Council fixes: the `studio` grade no longer inherits the default preset's contrast/desaturate filter (it washed out the
+  firelight on every machine above the low tier); the hall smoke is drawn through a half-res buffer with a soft, blurred matte (no tile
+  seams, no hard edge at the shafts) and is thinner across the room; embers scale with the screen and glow.
 - GNN: everything on the video wall is part of the studio screen: the rankings too are painted into it (they were a panel laid over
   the studio), with the presenter standing further left in the presenting pose so her hand points at the screen without covering it.
   Every graphic shows real data: the map is the real galaxy (its stars and lanes, the systems you have explored in their owners'

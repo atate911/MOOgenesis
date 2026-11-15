@@ -1813,22 +1813,38 @@
   }
   /* a brazier's flicker: 1 +- a few tenths, from incommensurate sines (stateless, so every redraw agrees); steady with Reduce motion */
   function fireFl(t, s, still) { return still ? 1 : 0.86 + 0.08 * sin(t * 7.3 + s) + 0.05 * sin(t * 12.7 + s * 2.1) + 0.04 * sin(t * 23.9 + s * 3.7); }
-  /* smoke hanging in the hall: two layers of soft noise drifting at different speeds, thin everywhere and thicker in the daylight shafts */
+  /* smoke hanging in the hall: two layers of soft noise drifting at different speeds, thin everywhere and thicker in the daylight shafts.
+     Drawn into a half-resolution buffer (tiles placed on whole pixels, so their seams never double up), then masked by a soft matte that
+     is thin across the hall and dense inside the fan of shafts (built once per size, blurred: no hard edge), then screened over the scene. */
+  const SMOKE = { buf: null, mask: null, key: '' };
   function smokeHaze(ctx, w, h, t, still, cx, by) {
     if (plateLow()) return;
-    const T = fogTile(911, 256, '#c4ccd4', 0.5, 0.78, 1, 5, 2), T2 = fogTile(377, 256, '#d8dee4', 0.55, 0.82, 1, 4, 3), dt = still ? 0 : t;
+    const bw = max(1, (w / 2) | 0), bh = max(1, (h / 2) | 0), key = bw + 'x' + bh + ':' + (cx | 0) + ':' + (by | 0);
+    if (SMOKE.key !== key) {
+      SMOKE.key = key;
+      SMOKE.buf = SMOKE.buf || document.createElement('canvas'); SMOKE.buf.width = bw; SMOKE.buf.height = bh;
+      const m = SMOKE.mask = document.createElement('canvas'); m.width = bw; m.height = bh; const mg = m.getContext('2d');
+      mg.fillStyle = 'rgba(0,0,0,0.28)'; mg.fillRect(0, 0, bw, bh);
+      try { mg.filter = 'blur(' + Math.round(bw * 0.035) + 'px)'; } catch (e) { /* no filters: a harder fan edge */ }
+      const c2 = cx / 2, b2 = by / 2;
+      mg.fillStyle = 'rgba(0,0,0,1)'; mg.beginPath(); mg.moveTo(c2 - bw * 0.08, -bh * 0.1); mg.lineTo(c2 + bw * 0.08, -bh * 0.1); mg.lineTo(c2 + bw * 0.42, b2); mg.lineTo(c2 - bw * 0.42, b2); mg.closePath(); mg.fill();
+      mg.filter = 'none';
+    }
+    const B = SMOKE.buf, g = B.getContext('2d'), dt = still ? 0 : t;
+    const T = fogTile(911, 256, '#c4ccd4', 0.5, 0.78, 1, 5, 2), T2 = fogTile(377, 256, '#d8dee4', 0.55, 0.82, 1, 4, 3);
+    g.globalCompositeOperation = 'copy'; g.globalAlpha = 1; g.clearRect(0, 0, bw, bh);
+    g.globalCompositeOperation = 'source-over';
     const lay = (tile, sz, vx, vy, a) => {
-      const ox = ((dt * vx) % sz + sz) % sz, oy = ((dt * vy) % sz + sz) % sz;
-      ctx.globalAlpha = a;
-      for (let y = -oy; y < h; y += sz) for (let x = -ox; x < w; x += sz) ctx.drawImage(tile, x, y, sz + 1, sz + 1);
+      sz = Math.round(sz);
+      const ox = Math.round(((dt * vx / 2) % sz + sz) % sz), oy = Math.round(((dt * vy / 2) % sz + sz) % sz);
+      g.globalAlpha = a;
+      for (let y = -oy; y < bh; y += sz) for (let x = -ox; x < bw; x += sz) g.drawImage(tile, x, y, sz, sz);
     };
-    ctx.save(); ctx.globalCompositeOperation = 'screen';
-    const sz = max(w, h) * 0.55;
-    lay(T, sz, 9, -2.5, 0.12); lay(T2, sz * 0.7, -6, -1.5, 0.08);
-    // denser in the light: the fan of shafts as a clip
-    ctx.beginPath(); ctx.moveTo(cx - w * 0.09, 0); ctx.lineTo(cx + w * 0.09, 0); ctx.lineTo(cx + w * 0.48, by); ctx.lineTo(cx - w * 0.48, by); ctx.closePath(); ctx.clip();
-    lay(T, sz, 9, -2.5, 0.2); lay(T2, sz * 0.7, -6, -1.5, 0.14);
-    ctx.restore();
+    const sz = max(bw, bh) * 0.55;
+    lay(T, sz, 9, -2.5, 0.42); lay(T2, sz * 0.7, -6, -1.5, 0.3);
+    g.globalAlpha = 1; g.globalCompositeOperation = 'destination-in'; g.drawImage(SMOKE.mask, 0, 0);
+    g.globalCompositeOperation = 'source-over';
+    ctx.save(); ctx.globalCompositeOperation = 'screen'; ctx.globalAlpha = 0.6; ctx.drawImage(B, 0, 0, w, h); ctx.restore();
   }
   /* sparks lifting from the two braziers just out of frame */
   function embers(ctx, w, h, t, still, fl, fr) {
@@ -1837,8 +1853,9 @@
     for (let i = 0; i < 26; i++) {
       const side = i & 1, q = fract(t * (0.11 + 0.07 * h2(i, 3)) + h2(i, 7)), bx = side ? w * (0.94 + 0.08 * h2(i, 1)) : w * (-0.02 + 0.08 * h2(i, 1));
       const x = bx + (side ? -1 : 1) * q * w * 0.05 + sin(t * 1.7 + i) * w * 0.006, y = h * (1.02 - q * (0.45 + 0.25 * h2(i, 5)));
-      const a = (1 - q) * (side ? fr : fl) * 0.85, r = 1 + 1.4 * h2(i, 9) * (1 - q);
-      ctx.globalAlpha = a; ctx.fillStyle = q < 0.3 ? '#ffd27a' : '#ff8a3a'; ctx.fillRect(x, y, r, r);
+      const a = (1 - q) * (side ? fr : fl), r = h * (0.0016 + 0.0024 * h2(i, 9)) * (1 - 0.6 * q);
+      ctx.globalAlpha = a; ctx.fillStyle = q < 0.3 ? '#ffd27a' : '#ff8a3a'; ctx.beginPath(); ctx.arc(x, y, r, 0, TAU); ctx.fill();
+      ctx.globalAlpha = a * 0.25; ctx.beginPath(); ctx.arc(x, y, r * 3, 0, TAU); ctx.fill();
     }
     ctx.restore();
   }
