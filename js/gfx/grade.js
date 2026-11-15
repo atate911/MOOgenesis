@@ -12,7 +12,7 @@
     space: { sat: 0.12, cool: 0.10, vig: 0.38, grain: 0.035, lift: 0.0, bloom: 0.0 },
     portrait: { sat: 0.26, cool: 0.2, dark: 0.1, vig: 0.34, grain: 0, lift: 0.0, bloom: 0.0 },
     plate: { sat: 0.1, cool: 0.08, vig: 0.3, grain: 0.02, lift: 0.0, bloom: 0.0 },   // an illustrated plate that carries its own grade (menu, endings)
-    studio: { sat: 0.04, cool: 0.0, vig: 0.22, vigRGB: '34,20,8', grain: 0.015, lift: 0.0, bloom: 0.0 },   // the studio-lit council chamber: a warm bronze vignette that belongs to the room, not a cold black one
+    studio: { sat: 0.04, cool: 0.0, vig: 0.3, vigRGB: '34,20,8', grain: 0.015, lift: 0.0, bloom: 0.0 },   // the studio-lit council chamber: a warm bronze vignette that belongs to the room, not a cold black one
   };
   let noise = null, tmp = null, pat = null;
   const VIG = new Map();                                   // (w,h,vig) -> radial gradient; rebuilding one every frame cost a few ms per pass

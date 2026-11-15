@@ -14,6 +14,9 @@ Versions follow `MAJOR.MINOR.PATCH`; the live version is the `VERSION` file.
   amber while the marble's shadows lean blue-slate, then a cool-shadow / warm-highlight split tone. A luminance key drives a soft bloom
   and the brass key is the matte for a slow lamp sheen sweeping across the metal (static with Reduce motion, off on the low tier). The
   delegates get a face-shaped key light and the same warm-top / cool-bottom tone instead of a flat lift.
+- Galactic Council: deeper, more cinematic grade. The value curve crushes the blacks harder and steepens the mids; a fan of slowly
+  drifting volumetric shafts falls from the oculus onto the dais; the hottest lights get anamorphic horizontal streaks (from their own
+  luminance key); the warm vignette is heavier and the floor at the bottom of the frame is grounded darker.
 - GNN: everything on the video wall is part of the studio screen: the rankings too are painted into it (they were a panel laid over
   the studio), with the presenter standing further left in the presenting pose so her hand points at the screen without covering it.
   Every graphic shows real data: the map is the real galaxy (its stars and lanes, the systems you have explored in their owners'
