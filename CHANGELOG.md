@@ -19,13 +19,6 @@ Versions follow `MAJOR.MINOR.PATCH`; the live version is the `VERSION` file.
   luminance key); the warm vignette is heavier and the floor at the bottom of the frame is grounded darker.
 - Galactic Council: the `studio` grade no longer inherits the default preset's contrast/desaturate filter, which washed the chamber
   out on every machine above the low tier.
-- Galactic Council: the pedestal hologram is projected light instead of a wireframe. A lens of light on the emitter replaces the thin
-  rings and ticks; a soft column rises from it, bright at its edges and fading upward, with slow interference bands drifting through it;
-  the ballot box is a solid translucent form (faces filled, edges glowing, a ticked panel, a slot that flares as each ballot lands), the
-  ballots are glowing cards, the crown is a solid gold form turning on its axis, and the galaxy keeps its sprite without the thin orbit
-  rings. Each form is drawn into a buffer and composited as a wide blurred glow plus the sharp form with fine bands, a faint chromatic
-  fringe and a rare glitch slice; motes rise through the column. Council-only: the shared hologram helpers used by other scenes are
-  unchanged. The glow and fringe are skipped on the low tier; drift and glitches stop with Reduce motion.
 - GNN: everything on the video wall is part of the studio screen: the rankings too are painted into it (they were a panel laid over
   the studio), with the presenter standing further left in the presenting pose so her hand points at the screen without covering it.
   Every graphic shows real data: the map is the real galaxy (its stars and lanes, the systems you have explored in their owners'
