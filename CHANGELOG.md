@@ -12,6 +12,12 @@ Versions follow `MAJOR.MINOR.PATCH`; the live version is the `VERSION` file.
   into the full package. D minor, 126 bpm, no drum kit; as loud as the old bed. Mixed close and dry, like television rather than
   the concert hall: little hall reverb, the short notes cut before the recordings' own room rings out, the sections a little narrower,
   the horn and trombone lines on the close-miked solo recordings.
+  Every part plays on the beat together (a piece's new `tight` mode): the recordings take from 1 to over 300 ms to reach their attack,
+  each its own (the spiccato strings 3 to 54 ms from note to note, the solo trombone up to 216), which the hall had blurred and the dry
+  mix laid bare as flams against the drums. In tight mode each note starts at its recording's heard attack, the sampler's random start
+  and the beds' small offsets are off, and the slower instruments start a measured few milliseconds early: isolated notes of every part
+  now land within a few milliseconds of the drums (medians 30 to 38 ms after the scheduled time, the drums 25 to 36, against 33 to 80
+  ms with the ostinato scattering over 40 ms before). Other pieces are unchanged.
 - First loads behind the password gate no longer stall. The web server asks the save server once per file before serving it, about
   150 times at once on a page load, and the save server could queue only 5 new connections (Python's default): the rest were dropped
   and retried after TCP's 1 / 3 / 7 / 15 / 31 s back-off, so a few files of every first load after an update arrived seconds late and
