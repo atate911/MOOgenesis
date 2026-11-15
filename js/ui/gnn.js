@@ -819,7 +819,7 @@
   function shrugLine(it) { const pool = SHRUG[BUL.decided]; return pool ? pool[hashStr('shrug|' + it.headline) % pool.length] : ''; }
   function chooseOpen(intr, ward) {
     const WA = M.Gfx && M.Gfx.WorldArt, list = WA && WA.gnnOpens && WA.gnnOpens[ward], rare = WA && WA.gnnOpens && WA.gnnOpens.rare;
-    if (ward === 'dress' && rare && rare.length && (BUL.decided || hashStr('gnn-rare|' + (intr.turn | 0)) % 20 === 0)) return rare[(intr.turn | 0) % rare.length];   // about one regular bulletin in twenty, and every one once the game is decided
+    if (ward === 'dress' && rare && rare.length && (BUL.decided || hashStr('gnn-rare|' + (intr.turn | 0)) % 100 === 0)) return rare[(intr.turn | 0) % rare.length];   // a rare easter egg (about one regular bulletin in a hundred); every one once the game is decided
     return list && list.length ? list[(((intr.turn | 0) * 7 + (intr.year | 0)) % list.length + list.length) % list.length] : null;
   }
   const portraitPhone = () => !!(R && R.L && R.L.phone && R.L.phone.port);

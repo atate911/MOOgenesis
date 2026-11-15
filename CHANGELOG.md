@@ -6,7 +6,7 @@ Versions follow `MAJOR.MINOR.PATCH`; the live version is the `VERSION` file.
 ## Unreleased
 
 - GNN, off air: the presenter caught between takes with her feet up on the desk (`gnn-open-offair.webp`) opens about one regular
-  bulletin in twenty, and every regular bulletin once the game looks decided (from turn 60: you hold two thirds of the galaxy's
+  bulletin in a hundred (a rare easter egg), and every regular bulletin once the game looks decided (from turn 60: you hold two thirds of the galaxy's
   colonies and industry, or almost none, or you play on after winning). In a decided game she also adds a weary aside under each
   headline ("We could report the rest of the galaxy, but why bother?").
 - GNN bulletins are produced like television: a 10-second bumper (7 / 9 s at the fast / slow speeds) opens on a photo of the presenter
