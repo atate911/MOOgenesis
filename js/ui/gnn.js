@@ -604,7 +604,32 @@
 
   // portrait drawn into a feathered buffer so the frame edges melt into the set
   let _fb = null;
+  // ---- the GNN presenter (assets/art/gnn/gnn-anchor-*.webp, docs/IMAGE-GEN-GNN-ANCHOR.md): one cut-out per expression, aligned pixel
+  // for pixel, so a change of mood is a short cross-fade. The story's mood picks it: worried -> grave, pleased -> pleased, else neutral.
+  const ANCHOR_FACE = { worried: 'grave', pleased: 'pleased' };
+  const AF = { cur: 'neutral', prev: null, k: 1, lastT: 0 };
+  const anchorImg = face => { const WA = M.Gfx && M.Gfx.WorldArt; return WA && WA.enabled && WA.gnnAnchor ? WA.get(WA.gnnAnchor(face)) : null; };
+  function anchorArtReady() { return !!anchorImg('neutral'); }
+  function drawAnchorArt(g, x, y, w, hh, t, mood) {
+    const face = ANCHOR_FACE[mood] || 'neutral', want = anchorImg(face) ? face : 'neutral';
+    if (want !== AF.cur) { AF.prev = AF.cur; AF.cur = want; AF.k = 0; }
+    const dt = clamp(t - AF.lastT, 0, 0.1); AF.lastT = t;
+    AF.k = min(1, AF.k + dt / 0.35);
+    const rm = R && R.rm, bob = rm ? 0 : sin(t * 1.15) * hh * 0.0022;            // a breath, so the still photo is alive
+    const put = (im, a) => { if (!im || a <= 0) return; const ih = hh, iw = ih * im.naturalWidth / im.naturalHeight; g.globalAlpha = a; g.drawImage(im, x + (w - iw) / 2, y + bob, iw, ih); };
+    const cur = anchorImg(AF.cur), prev = AF.prev ? anchorImg(AF.prev) : null, k = rm ? 1 : sstep(0, 1, AF.k);
+    if (cur) {                                           // a soft shadow round the figure, a little down and right (the key light is upper left), so she sits in the set
+      let S = 1; try { S = g.getTransform().a || 1; } catch (e) { /* old browser */ }
+      g.save(); g.shadowColor = 'rgba(0,0,0,.78)'; g.shadowBlur = hh * 0.05 * S; g.shadowOffsetX = hh * 0.012 * S; g.shadowOffsetY = hh * 0.01 * S;
+      put(cur, 1); g.restore();
+    }
+    if (prev && k < 1) put(prev, 1);
+    put(cur, prev && k < 1 ? k : 1);
+    g.globalAlpha = 1;
+    return !!cur;
+  }
   function drawAnchor(g, race, x, y, w, hh, t, talking, mood) {
+    if (drawAnchorArt(g, x, y, w, hh, t, mood)) return;
     const P = M.Gfx && M.Gfx.Portraits;
     if (portraitReady(race)) {
       try {
@@ -720,7 +745,7 @@
     const R = defaultRects(w, hh), P = R.phone;
     let sc = max(w / im.naturalWidth, hh / im.naturalHeight), dw, dh, ox, oy, deskK = 0.545;
     if (P && P.port) {                                   // portrait: the photo framed on the anchor, its desk just above the lower third; the wall is a screen across the top
-      const deskY = min(hh * 0.6, P.ltTop - 24);
+      const deskY = anchorArtReady() ? P.ltTop - 14 : min(hh * 0.6, P.ltTop - 24);   // the presenter takes the room down to the headline
       sc = max(sc, deskY / deskK / im.naturalHeight); dw = im.naturalWidth * sc; dh = im.naturalHeight * sc;
       ox = clamp(w / 2 - dw * 0.325, w - dw, 0); oy = 0;
     } else {
@@ -732,7 +757,13 @@
     const deskY = oy + dh * deskK;
     let ah = dh * 0.52, aw = ah * 0.8, ay = oy + dh * 0.09;
     if (P && P.port) { ay = R.wall.y + R.wall.h + 6; ah = (deskY - ay) / 0.875; aw = ah * 0.8; }   // the bust between the screen and the desk
-    R.anchor = { x: (P && P.port ? w / 2 : ox + dw * 0.325) - aw / 2, y: ay, w: aw, h: ah };
+    let ax = (P && P.port ? w / 2 : ox + dw * 0.325) - aw / 2;
+    if (anchorArtReady()) {                              // the presenter: head near the top, the desk across her jacket
+      ay = P && P.port ? R.wall.y + R.wall.h + 4 : oy + dh * 0.04;
+      ah = (deskY - ay) / 0.985; aw = ah * 2 / 3;           // the whole cut-out shows: the desk's edge just hides its straight bottom cut
+      ax = (P && P.port ? w / 2 : ox + dw * 0.335) - aw / 2;          // head between the lit brass pillar and the dark panel seam
+    }
+    R.anchor = { x: ax, y: ay, w: aw, h: ah };
     g.drawImage(im, ox, oy, dw, dh);
     const wl = R.wall;
     g.save(); g.beginPath(); g.rect(wl.x, wl.y, wl.w, wl.h); g.clip();                  // faint scan-lines + a slow sweep across the blank wall
@@ -742,6 +773,7 @@
     g.restore();
     const a = R.anchor;
     glow(g, '#6e96ff', a.x + a.w / 2, a.y + a.h * 0.4, a.w * 0.8, 0.2);
+    if (anchorArtReady()) glow(g, '#7fa6ff', a.x + a.w / 2, a.y + a.h * 0.58, a.w * 0.62, 0.3);   // a soft back light behind her shoulders: the dark jacket stands off the dark panel
     drawAnchor(g, o.anchorRace, a.x, a.y, a.w, a.h, t, o.talking, o.mood);
     const dy = deskY, sy = (dy - oy) / sc;                                                  // desk strip over the anchor's feet
     g.drawImage(im, 0, sy, im.naturalWidth, im.naturalHeight - sy, ox, dy, dw, oy + dh - dy);
@@ -1744,7 +1776,8 @@
   function startRun(pend) {
     const intr = pend.intr || {};
     layKey = '';
-    try { const WA = M.Gfx && M.Gfx.WorldArt; if (WA) WA.get(WA.gnn); } catch (e) { /* optional */ }
+    try { const WA = M.Gfx && M.Gfx.WorldArt; if (WA) { WA.get(WA.gnn); if (WA.gnnAnchor) ['neutral', 'pleased', 'grave'].forEach(f => WA.get(WA.gnnAnchor(f))); } } catch (e) { /* optional */ }
+    AF.cur = 'neutral'; AF.prev = null; AF.k = 1;
     root.classList.remove('out');
     root.classList.toggle('rm', reduced());
     stopWipe();
