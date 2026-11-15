@@ -5,7 +5,7 @@
 // (25 ms timer, ~160 ms ahead) or an offline window renderer plays the events through the voice factories in audio.js.
 //
 // Public API (MOO.Audio.Music):
-//   play(id,{fade,loop, oldFade, inFade, delay, quantize, bridge}) stop({fade}) current() has(id) list() setIntensity(0..1)
+//   play(id,{fade,loop, oldFade, inFade, delay, keepOld, quantize, bridge}) stop({fade, keep}) current() has(id) list() setIntensity(0..1)
 //   playlist(ids,{shuffle, gap: s | [lo,hi], fade, start, between: templateId | [ids], betweenP, gapIn}) (a programme: pieces crossfade into
 //     interludes re-rooted to the next piece's key and those into the next piece; reshuffles never repeat the last piece or put same-key pieces together)
 //   setMood(name,{fade, soft, bridge}) snapshot() / restore(snap,{fade}) (hand the music back after a scene: track OR running playlist)
@@ -1465,11 +1465,14 @@
       K.fadeParam(this.bus.gain, 0, this.trim, t, sec, 'in');
       K.fadeParam(this.verb.gain, 0, 1 - 0.33 * this.intensity, t, sec, 'in'); K.fadeParam(this.stage.gain, 0, 1, t, sec, 'in');
     }
-    fadeOut(sec) {
+    // keep: the piece goes on playing its notes through the fade (a real crossfade, heard as the music moving away) instead of
+    // stopping at once with only the notes already sounding fading out
+    fadeOut(sec, keep) {
       if (this.stopped) return;
       this.stopped = true;
       const t = this.eng.ctx.currentTime;
       sec = Math.max(0.03, sec);
+      if (keep) this.playOut = t + sec;
       K.fadeParam(this.bus.gain, this.bus.gain.value, 0, t, sec, 'out');
       K.fadeParam(this.verb.gain, this.verb.gain.value, 0, t, sec, 'out'); K.fadeParam(this.stage.gain, this.stage.gain.value, 0, t, sec, 'out');
       this.killAt = t + sec + 0.15;
@@ -1541,7 +1544,7 @@
     tick(now, look) {
       if (this.disposed) return;
       for (const v of this.live) if (v.dead) this.live.delete(v);
-      if (this.stopped) { if (now >= this.killAt) this.finished = true; return; }
+      if (this.stopped) { if (this.playOut && now < this.playOut && this.pass) this.scheduleUntil(Math.min(now + look, this.playOut)); if (now >= this.killAt) this.finished = true; return; }
       this.scheduleUntil(now + look);
       // a piece played once that reaches its last bar with nothing taking over (the programme normally crossfades before it): what still
       // sounds (a held drone, the last chord, the hall) rings down over six seconds, as at a seam, rather than being cut when it is disposed
@@ -1969,7 +1972,7 @@
       if (b) {
         const len = compilePass(TRACKS[b], 0).len, at = S.cur.nextBoundary('beat');
         const then = { id, opts: Object.assign({}, opts, { bridge: undefined, quantize: false, fade: num(opts.fade, 1.5), inFade: Math.min(1.6, num(opts.fade, 1.5)), oldFade: 1.2 }), at: at + len - 0.7 };
-        S.switchAt = { id: b, opts: { fade: 0.5, inFade: 0.5, oldFade: Math.max(1.5, len * 0.8), loop: false, keepPlaylist: !!opts.keepPlaylist, quantize: false }, at, then };
+        S.switchAt = { id: b, opts: { fade: 0.5, inFade: 0.5, oldFade: Math.max(1.5, len * 0.8), keepOld: !!opts.keepOld, loop: false, keepPlaylist: !!opts.keepPlaylist, quantize: false }, at, then };
         if (!opts.keepPlaylist) { S.playlist = null; S.plWait = null; }
         ensureTimer(); return true;
       }
@@ -1984,7 +1987,7 @@
     if (opts.from > 0) { p.shift = num(opts.from, 0); p.skipBefore = 0; }   // start part-way through the first pass (a demo, a test)
     else if (opts.quiet) { const q = quietStart(def); if (q > 0) { p.shift = q; p.skipBefore = 0; } }   // land on the piece's quiet half (back from a fight)
     if (!def.hidden || def.variantOf) { const pid = def.variantOf || id; heard(pid); DIR.lastPiece = pid; }   // a war-time reading counts as its piece
-    if (S.cur) { S.cur.fadeOut(num(opts.oldFade, fade)); S.old.push(S.cur); }    // oldFade: let a piece that is ending ring out under the next one
+    if (S.cur) { S.cur.fadeOut(num(opts.oldFade, fade), !!opts.keepOld); S.old.push(S.cur); }   // keepOld: the old piece plays on through its fade    // oldFade: let a piece that is ending ring out under the next one
     S.cur = p;
     p.fadeIn(num(opts.inFade, fade));
     p.begin(eng.ctx.currentTime + 0.1 + Math.max(0, num(opts.delay, 0)));   // delay: the new piece starts this many seconds into the old one's fade (a cue that cuts in at full)
@@ -2011,7 +2014,7 @@
     try {
       opts = opts || {};
       S.pending = null; S.playlist = null; S.plWait = null; S.switchAt = null;
-      if (S.cur) { S.cur.fadeOut(num(opts.fade, 3)); S.old.push(S.cur); S.cur = null; }
+      if (S.cur) { S.cur.fadeOut(num(opts.fade, 3), !!opts.keep); S.old.push(S.cur); S.cur = null; }
       return true;
     } catch (e) { console.warn('[music] stop failed', e); return false; }
   };
@@ -2091,7 +2094,7 @@
       }
       if (!A.isReady()) { S.pending = { id: first, opts: { loop: false } }; S.playlist = pl; A.onReady(() => { const p = S.pending; if (p) { S.pending = null; startTrack(p.id, { fade: 1, loop: false, keepPlaylist: true }); } }); return 'pending'; }
       S.playlist = pl;
-      return startTrack(first, { fade: num(opts.firstFade, 1.5), loop: false, keepPlaylist: true, bridge: opts.bridge, from: opts.from, quiet: opts.quiet, perf: opts.perf, quantize: opts.quantize });
+      return startTrack(first, { fade: num(opts.firstFade, 1.5), loop: false, keepPlaylist: true, bridge: opts.bridge, from: opts.from, quiet: opts.quiet, perf: opts.perf, quantize: opts.quantize, keepOld: opts.keepOld });
     } catch (e) { console.warn('[music] playlist failed', e); return false; }
   };
   Music.setIntensity = function (x) {
@@ -2128,19 +2131,19 @@
     try {
       opts = opts || {};
       const fade = num(opts.fade, 1.5);
-      if (!snap) return Music.stop({ fade });
+      if (!snap) return Music.stop({ fade, keep: opts.keepOld });
       // resume: the piece that was interrupted carries on a little before where it stopped, as the same performance, faded in; a programme
       // that was running continues after it (enough of the piece must be left to be worth resuming, else the programme simply goes on)
       const r = opts.resume && snap.resume && TRACKS[snap.resume.id] && snap.resume.left > 25 ? snap.resume : null;
       if (r) {
         const from = Math.max(0, r.at - 2);
-        if (snap.playlist && (snap.playlist.ids.indexOf(r.id) >= 0 || (snap.playlist.rare && snap.playlist.rare.ids.indexOf(r.id) >= 0))) { const pl = snap.playlist; return Music.playlist(pl.ids, { shuffle: pl.shuffle, gap: pl.gap, gapIn: pl.gapIn, fade: pl.fade, between: pl.between, betweenP: pl.betweenP, rare: pl.rare, director: pl.director, start: r.id, firstFade: fade, from, perf: r.perf, quantize: false }); }
-        if (snap.playlist) { const pl = snap.playlist; return Music.playlist(pl.ids, { shuffle: pl.shuffle, gap: pl.gap, gapIn: pl.gapIn, fade: pl.fade, between: pl.between, betweenP: pl.betweenP, rare: pl.rare, director: pl.director, lead: r.id, firstFade: fade, from, perf: r.perf, quantize: false }); }   // the opening theme: it resumes and the programme follows
-        return startTrack(r.id, { fade, from, perf: r.perf, quantize: false });
+        if (snap.playlist && (snap.playlist.ids.indexOf(r.id) >= 0 || (snap.playlist.rare && snap.playlist.rare.ids.indexOf(r.id) >= 0))) { const pl = snap.playlist; return Music.playlist(pl.ids, { shuffle: pl.shuffle, gap: pl.gap, gapIn: pl.gapIn, fade: pl.fade, between: pl.between, betweenP: pl.betweenP, rare: pl.rare, director: pl.director, start: r.id, firstFade: fade, from, perf: r.perf, quantize: false, keepOld: opts.keepOld }); }
+        if (snap.playlist) { const pl = snap.playlist; return Music.playlist(pl.ids, { shuffle: pl.shuffle, gap: pl.gap, gapIn: pl.gapIn, fade: pl.fade, between: pl.between, betweenP: pl.betweenP, rare: pl.rare, director: pl.director, lead: r.id, firstFade: fade, from, perf: r.perf, quantize: false, keepOld: opts.keepOld }); }   // the opening theme: it resumes and the programme follows
+        return startTrack(r.id, { fade, from, perf: r.perf, quantize: false, keepOld: opts.keepOld });
       }
-      if (snap.playlist) { const pl = snap.playlist; return Music.playlist(pl.ids, { shuffle: pl.shuffle, gap: pl.gap, gapIn: pl.gapIn, fade: pl.fade, between: pl.between, betweenP: pl.betweenP, rare: pl.rare, director: pl.director, start: pl.start, firstFade: fade, bridge: opts.bridge, quiet: opts.quiet }); }
-      if (snap.id) return Music.play(snap.id, { fade, bridge: opts.bridge });
-      return Music.stop({ fade });
+      if (snap.playlist) { const pl = snap.playlist; return Music.playlist(pl.ids, { shuffle: pl.shuffle, gap: pl.gap, gapIn: pl.gapIn, fade: pl.fade, between: pl.between, betweenP: pl.betweenP, rare: pl.rare, director: pl.director, start: pl.start, firstFade: fade, bridge: opts.bridge, quiet: opts.quiet, keepOld: opts.keepOld }); }
+      if (snap.id) return Music.play(snap.id, { fade, bridge: opts.bridge, keepOld: opts.keepOld });
+      return Music.stop({ fade, keep: opts.keepOld });
     } catch (e) { console.warn('[music] restore failed', e); return false; }
   };
 

@@ -1597,8 +1597,9 @@
     run.musicStarted = false;
     if (musicCur() !== 'gnn') return;
     const m = Mu();
-    if (run.prevSnap && run.prevSnap.id !== 'gnn' && m && typeof m.restore === 'function') { try { m.restore(run.prevSnap, { fade: 1.4, bridge: 'calm', resume: true }); return; } catch (e) { /* fall back to the plain track */ } }
-    if (run.prevTrack && run.prevTrack !== 'gnn') musicPlay(run.prevTrack, { fade: 1.4, bridge: 'auto' }); else musicStop({ fade: 1.4 });
+    // the way back is slow: the bumper fades out over 4 s while the game's music comes back in beneath it, from a little before where it stopped
+    if (run.prevSnap && run.prevSnap.id !== 'gnn' && m && typeof m.restore === 'function') { try { m.restore(run.prevSnap, { fade: 4, bridge: 'calm', resume: true, keepOld: true }); return; } catch (e) { /* fall back to the plain track */ } }
+    if (run.prevTrack && run.prevTrack !== 'gnn') musicPlay(run.prevTrack, { fade: 4, bridge: 'auto', keepOld: true }); else musicStop({ fade: 4, keep: true });
   }
   function finish(skipped) {
     if (!R || R.finishing) return;
@@ -1688,9 +1689,9 @@
     buildTicker();
     applySegment(0);
     try { root.focus({ preventScroll: true }); } catch (e) { /* not focusable yet */ }
-    // the bumper cuts in: the game's music fades out quickly (1 s) and the news package starts at full volume halfway through that fade,
-    // on its opening hit, with no bridge and no waiting for the bar (it is a different world from the map's music, and announces an event)
-    musicPlay('gnn', { quantize: false, oldFade: 1.0, inFade: 0, delay: 0.5 }); R.musicStarted = true;
+    // the bumper cuts in: the game's music fades out over 2 s and the news package starts at full volume 1.5 s into that fade, on its
+    // opening hit, with no bridge and no waiting for the bar (it is a different world from the map's music, and announces an event)
+    musicPlay('gnn', { quantize: false, oldFade: 2.0, keepOld: true, inFade: 0, delay: 1.4 }); R.musicStarted = true;   // 1.4 + the engine's 0.1 s start margin = 1.5 s; keepOld: the map's music plays on through its fade
   }
 
   // ================================================================== screen + public API
