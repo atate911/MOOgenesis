@@ -209,7 +209,7 @@
     get: get, ready: ready, whenReady: whenReady, draw: draw, canvas: canvas, image: image, preload: preload,
     orbit: orbitPath, surface: surfacePath, system: systemPath, event: eventPath, scene: scenePath, race: racePath, colony: colonyPath, gnn: GNN,
     gnnOpen: k => (has(GNN_OPEN_DRESS, k) || has(GNN_OPEN_JACKET, k) || has(GNN_OPEN_RARE, k) ? 'gnn/gnn-open-' + k : null), gnnOpens: { dress: GNN_OPEN_DRESS, jacket: GNN_OPEN_JACKET, rare: GNN_OPEN_RARE },
-    gnnDeskDress: 'gnn/gnn-desk-dress',
+    gnnDeskDress: 'gnn/gnn-desk-dress', gnnIdgaf: 'gnn/gnn-idgaf', gnnIdgafFront: 'gnn/gnn-idgaf-front',
     gnnAnchor: pose => 'gnn/gnn-anchor-' + (has(GNN_ANCHOR, pose) ? pose : 'neutral'),
     systemSky: systemSkyPath, battle: battlePath, fx: fxPath, still: stillPath, raceExposure: raceExposure, raceTone: raceTone, tonePass: tonePass,
     get enabled() { return W.enabled; }, set enabled(v) { W.enabled = !!v; },

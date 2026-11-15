@@ -800,7 +800,7 @@
     return lead && SOMBRE_POSE[poseFor(lead)] ? 'jacket' : 'dress';
   }
   // the game looks decided: the player holds two thirds of the galaxy's colonies and industry, or is down to a sliver of them, or plays on after
-  // winning. The news no longer changes anything, and the presenter knows it: she is off air with her feet up, and says so.
+  // winning. The news no longer changes anything, and the presenter knows it: feet up on the desk for the whole bulletin (drawIdgaf), and says so.
   function gameDecided() {
     const S = M.Game && M.Game.S; if (!S || !M.Sim || !M.Sim.stats) return 0;
     try {
@@ -817,9 +817,41 @@
     '-1': ['The end is near. I have already updated my resume.', 'Reports continue. Hope does not.', 'Will this matter tomorrow? Signs point to no.', 'Our thoughts are with the losing side. Briefly.'],
   };
   function shrugLine(it) { const pool = SHRUG[BUL.decided]; return pool ? pool[hashStr('shrug|' + it.headline) % pool.length] : ''; }
+  // the settled galaxy: one photo carries the whole bulletin. She lounges at the desk with her feet up, and the stories, charts and
+  // rankings play on the big studio screen behind her (fitted to its bezel like the desk shot's wall). Sideways phones and desktop.
+  const IDGAF_BEZEL = { xl: 0.179, xr: 0.738, ytl: 0.135, ytr: 0.135, ybl: 0.632, ybr: 0.632, ch: 0.013, chy: 0.027, inset: 0.002 };
+  function drawIdgaf(g, w, hh, t, R2) {
+    const WA = M.Gfx && M.Gfx.WorldArt, im = BUL.decided && WA && WA.enabled && WA.gnnIdgaf ? WA.get(WA.gnnIdgaf) : null;
+    if (!im || (R2.phone && R2.phone.port)) return false;
+    // the whole photo is shown, and all of her stays above the headline: it is fitted to the top ~78% of the screen (above the lower
+    // third), centred, with a soft, darkened, enlarged copy of itself filling the margins. Under the titles (no headline yet) a slow
+    // pull-back from a closer, right-anchored framing on her ends on that same full frame.
+    const title = R && R.segs[R.idx] && R.segs[R.idx].kind === 'title', e = title && !R.rm ? sstep(0, 1, clamp(R.segT / max(1, R.titleDur), 0, 1)) : 1;
+    const room = R2.phone ? max(60, R2.phone.ltTop - 6) : hh * 0.78, fitS = min(w / im.naturalWidth, room / im.naturalHeight);
+    const z = title ? 1.12 - 0.12 * e : 1, sc = fitS * z, dw = im.naturalWidth * sc, dh = im.naturalHeight * sc;
+    const ox = title ? lerp(w - dw - w * 0.02, (w - dw) / 2, e) : (w - dw) / 2, oy = title ? lerp(0, 0, e) : 0;
+    g.imageSmoothingEnabled = true; g.imageSmoothingQuality = 'high';
+    { const cs = max(w / im.naturalWidth, hh / im.naturalHeight) * 1.04;      // the margins: the photo itself, enlarged, blurred and darkened
+      g.save(); try { g.filter = 'blur(' + (14 * (BUL.baseS || 1)).toFixed(1) + 'px) brightness(.42) saturate(.8)'; } catch (e2) { /* no filters */ }
+      g.drawImage(im, (w - im.naturalWidth * cs) / 2, (hh - im.naturalHeight * cs) / 2, im.naturalWidth * cs, im.naturalHeight * cs); g.restore(); }
+    g.save(); g.shadowColor = 'rgba(0,0,0,.65)'; g.shadowBlur = 24 * (BUL.baseS || 1); g.drawImage(im, ox, oy, dw, dh); g.restore();
+    const SG = screenGeom(ox, oy, dw, dh, IDGAF_BEZEL);
+    R2.screen = SG; R2.wall = { x: SG.xl, y: SG.tl, w: SG.xr - SG.xl, h: SG.hl };
+    BUL.idgafOn = true;
+    R2.anchor = { x: ox + dw * 0.78, y: oy + dh * 0.2, w: dw * 0.2, h: dh * 0.75 };
+    curScreen = SG;
+    const mode = root.dataset.mode, run = RUN(), onAir = run && ((run.gfx && mode === 'item') || (run.rk && mode === 'rank'));
+    if (onAir) {
+      sampleSpill(monCv, t); drawSpill(g, SG, w, hh, dh); drawScreen(g, SG, monCv, t, BUL.baseS || 1, run.rm ? 1 : mode === 'rank' ? sstep(0, 0.45, run.rk.t) : sstep(0, 0.45, t - run.gfx.t0));
+      const fr = WA.gnnIdgafFront ? WA.get(WA.gnnIdgafFront) : null; if (fr) g.drawImage(fr, ox, oy, dw, dh);   // her hand, pen and shoe tips stay in front of the screen
+    }
+    g.fillStyle = rgr(g, w / 2, hh * 0.48, min(w, hh) * 0.4, hypot(w, hh) * 0.62, [0, 'rgba(2,3,12,0)', 1, 'rgba(2,3,12,.35)']); g.fillRect(0, 0, w, hh);
+    return true;
+  }
   function chooseOpen(intr, ward) {
     const WA = M.Gfx && M.Gfx.WorldArt, list = WA && WA.gnnOpens && WA.gnnOpens[ward], rare = WA && WA.gnnOpens && WA.gnnOpens.rare;
-    if (ward === 'dress' && rare && rare.length && (BUL.decided || hashStr('gnn-rare|' + (intr.turn | 0)) % 100 === 0)) return rare[(intr.turn | 0) % rare.length];   // a rare easter egg (about one regular bulletin in a hundred); every one once the game is decided
+    if (BUL.decided) return null;                                          // a decided game opens on the settled-galaxy shot (drawIdgaf)
+    if (ward === 'dress' && rare && rare.length && hashStr('gnn-rare|' + (intr.turn | 0)) % 100 === 0) return rare[(intr.turn | 0) % rare.length];   // a rare easter egg: about one regular bulletin in a hundred
     return list && list.length ? list[(((intr.turn | 0) * 7 + (intr.year | 0)) % list.length + list.length) % list.length] : null;
   }
   const portraitPhone = () => !!(R && R.L && R.L.phone && R.L.phone.port);
@@ -913,8 +945,8 @@
   const BEZEL = { xl: 0.4663, xr: 0.9349, ytl: 0.137, ytr: 0.0972, ybl: 0.4984, ybr: 0.501, ch: 0.0127, chy: 0.0229, inset: 0.0022 };
   let _spill = { r: 120, g: 150, b: 255, a: 0, at: -1 }, _spillCv = null, curScreen = null, _scr = null;
   const RUN = () => R;                                       // the broadcast state (photoStudio's own R is its layout rects)
-  function screenGeom(ox, oy, dw, dh) {
-    const B = BEZEL, ix = B.inset * dw, iy = B.inset * dh * 1.6;
+  function screenGeom(ox, oy, dw, dh, Bz) {
+    const B = Bz || BEZEL, ix = B.inset * dw, iy = B.inset * dh * 1.6;
     const xl = ox + B.xl * dw + ix, xr = ox + B.xr * dw - ix;
     const tl = oy + B.ytl * dh + iy, tr = oy + B.ytr * dh + iy, bl = oy + B.ybl * dh - iy, br = oy + B.ybr * dh - iy;
     const cx = B.ch * dw, cy = B.chy * dh;
@@ -1014,6 +1046,7 @@
     const rk = R.rk, meta = rk.meta, col = cssHex(meta.css), u = hh / 30, L = u * 2.6;
     g.drawImage(gfxBg(w, hh, 1, 4242, [dark(col, 0.7), NEB_BASE[1], NEB_BASE[2], mix(col, '#3b1d86', 0.55)]), 0, 0, w, hh);
     g.fillStyle = 'rgba(3,6,22,.55)'; g.fillRect(0, 0, w, hh);
+    if (BUL.decided && BUL.idgafOn) w -= w * 0.15;                       // the settled-galaxy shot: her hand covers the screen's right edge, so the table stops short of it
     // header: the category tag (as on a story), the title and subtitle, the four ranking tabs
     g.font = '400 ' + (u * 1.45) + 'px ' + FONT_D; const tw = g.measureText('RANKINGS').width + 8 * u * 0.3;
     g.fillStyle = 'rgba(4,7,24,.82)'; g.fillRect(u * 1.6, u * 1.5, tw + u * 2.6, u * 2.6); g.fillStyle = col; g.fillRect(u * 1.6, u * 1.5, u * 0.35, u * 2.6);
@@ -1084,7 +1117,8 @@
     const WA = M.Gfx && M.Gfx.WorldArt; if (!WA || !WA.enabled) return null;
     const im = WA.get(WA.gnn); if (!im) return null;
     const R = defaultRects(w, hh), P = R.phone;
-    R.screen = null;
+    R.screen = null; BUL.idgafOn = false;
+    if (drawIdgaf(g, w, hh, t, R)) return R;
     let sc = max(w / im.naturalWidth, hh / im.naturalHeight), dw, dh, ox, oy, deskK = 0.545;
     if (P && P.port) {                                   // portrait: the photo framed on the anchor, its desk just above the lower third; the wall is a screen across the top
       const deskY = anchorArtReady() ? P.ltTop - 14 : min(hh * 0.6, P.ltTop - 24);   // the presenter takes the room down to the headline
@@ -2272,7 +2306,8 @@
       if (WA) { WA.get(WA.gnn); if (WA.gnnAnchor) { WA.get(WA.gnnAnchor('neutral')); (intr.items || []).forEach(it => it && WA.get(WA.gnnAnchor(poseFor(normalizeItem(Object.assign({ headline: '-' }, it)))))); if (RANK_ORDER.some(k => intr.rankings && intr.rankings[k])) WA.get(WA.gnnAnchor('presenting')); } }
     } catch (e) { /* optional */ }
     AP.cur = 'neutral'; AP.prev = null; AP.k = 1; AP.lastT = -1;
-    BUL.decided = gameDecided(); BUL.ward = BUL.decided ? 'dress' : chooseWard(intr); BUL.open = chooseOpen(intr, BUL.ward); BUL.idx = -1; BUL.monT = null; BUL.hlT = null;
+    BUL.decided = gameDecided(); BUL.ward = BUL.decided ? 'dress' : chooseWard(intr);
+    try { const WA = M.Gfx && M.Gfx.WorldArt; if (BUL.decided && WA && WA.gnnIdgaf) { WA.get(WA.gnnIdgaf); WA.get(WA.gnnIdgafFront); } } catch (e) { /* optional */ } BUL.open = chooseOpen(intr, BUL.ward); BUL.idx = -1; BUL.monT = null; BUL.hlT = null;
     try { const WA = M.Gfx && M.Gfx.WorldArt; if (WA && WA.gnnOpen) { if (BUL.open) WA.get(WA.gnnOpen(BUL.open)); if (BUL.ward === 'dress') WA.get(WA.gnnDeskDress); } } catch (e) { /* optional */ }
     root.classList.remove('out');
     root.classList.toggle('rm', reduced());
