@@ -873,10 +873,50 @@
     g.fillStyle = live ? 'rgba(150,24,44,.75)' : 'rgba(10,16,48,.75)'; g.fillRect(lx, u * 1.5, lw, u * 2.4);
     g.fillStyle = live ? (sin(t * 4.5) > -0.3 ? '#ff5566' : '#7a2230') : '#98a5cf'; g.fillRect(lx + u * 0.9, u * 2.35, u * 0.75, u * 0.75);
     text(g, live ? 'LIVE' : 'FEED', lx + u * 2.2, u * 3.15, u * 1.2, live ? '#ffd9dc' : '#c3cdf2', 'left', FONT_U, 600, u * 0.25);
-    g.fillStyle = lgr(g, 0, hh * 0.62, 0, hh, [0, 'rgba(3,5,20,0)', 1, 'rgba(3,5,20,.9)']); g.fillRect(0, hh * 0.62, w, hh * 0.38);
-    text(g, String(monCapB.textContent || '').toUpperCase(), u * 2, hh - u * 4.4, u * 2.8, '#fff5dd', 'left', FONT_D, 400, u * 0.4);
-    text(g, monCapS.textContent || '', u * 2, hh - u * 2.1, u * 1.45, '#b9c3e6', 'left', FONT_U, 500, u * 0.06);
-    text(g, String(monCapE.textContent || '').toUpperCase(), w - u * 2, hh - u * 2.1, u * 1.3, '#8e98bd', 'right', FONT_U, 500, u * 0.25);
+    const cr = u * 2.6;                                                  // the headline crawl along the bottom; the caption sits above it
+    g.fillStyle = lgr(g, 0, hh * 0.55, 0, hh - cr, [0, 'rgba(3,5,20,0)', 1, 'rgba(3,5,20,.9)']); g.fillRect(0, hh * 0.55, w, hh * 0.45 - cr);
+    text(g, String(monCapB.textContent || '').toUpperCase(), u * 2, hh - cr - u * 3.7, u * 2.8, '#fff5dd', 'left', FONT_D, 400, u * 0.4);
+    text(g, monCapS.textContent || '', u * 2, hh - cr - u * 1.4, u * 1.45, '#b9c3e6', 'left', FONT_U, 500, u * 0.06);
+    text(g, String(monCapE.textContent || '').toUpperCase(), w - u * 2, hh - cr - u * 1.4, u * 1.3, '#8e98bd', 'right', FONT_U, 500, u * 0.25);
+    drawCrawl(g, w, hh, t, cr, u, col);
+  }
+  // a cable-news crawl: this bulletin's headlines, then the latest from the archive, scrolling right to left under the picture
+  const _crawl = { key: '', items: [], widths: [], total: 0, font: '' };
+  function crawlItems() {
+    const out = [], seen = new Set(), add = s2 => { s2 = String(s2 || '').trim(); if (s2 && !seen.has(s2)) { seen.add(s2); out.push(s2); } };
+    (R && R.segs || []).forEach(sg => sg && sg.item && add(sg.item.headline));
+    const log = M.Game && M.Game.S && M.Game.S.newsLog;
+    if (Array.isArray(log)) for (let i = log.length - 1; i >= 0 && out.length < 9; i--) add(log[i].headline);
+    return out;
+  }
+  function drawCrawl(g, w, hh, t, cr, u, col) {
+    const y0 = hh - cr, fs = u * 1.3, font = '500 ' + fs.toFixed(2) + 'px ' + FONT_U, key = (R && R.idx) + '|' + font + '|' + (R && R.segs ? R.segs.length : 0);
+    if (_crawl.key !== key) {
+      _crawl.key = key; _crawl.items = crawlItems(); g.font = font; if (_hasLS) g.letterSpacing = '0px';
+      _crawl.widths = _crawl.items.map(s2 => g.measureText(s2).width); _crawl.gap = u * 3.2;
+      _crawl.total = _crawl.widths.reduce((a2, b2) => a2 + b2 + _crawl.gap, 0);
+    }
+    g.fillStyle = 'rgba(6,10,32,.94)'; g.fillRect(0, y0, w, cr);
+    g.fillStyle = col; g.fillRect(0, y0, w, max(1, u * 0.14));
+    const tx = u * 1.6, tagW = tx + u * 5.2;                              // a fixed tag at the left (clear of the bezel's cut corner), the headlines sliding under it
+    if (_crawl.total > 0) {
+      g.save(); g.beginPath(); g.rect(tagW, y0, w - tagW, cr); g.clip();
+      const speed = u * 4.2, base = y0 + cr * 0.68, gap = _crawl.gap;
+      let x = w - t * speed;                                              // enters from the right, then repeats seamlessly
+      while (x + _crawl.total < tagW) x += _crawl.total;
+      g.font = font; g.textAlign = 'left'; g.textBaseline = 'alphabetic'; if (_hasLS) g.letterSpacing = '0px';
+      for (let guard = 0; x < w && guard < 60; guard++) {
+        const i2 = guard % _crawl.items.length, iw = _crawl.widths[i2];
+        if (x + iw > tagW) { g.fillStyle = '#e4e9ff'; g.fillText(_crawl.items[i2], x, base); }
+        const dx = x + iw + gap * 0.5;
+        if (dx > tagW && dx < w) { g.fillStyle = col; g.save(); g.translate(dx, y0 + cr * 0.5); g.rotate(PI / 4); g.fillRect(-u * 0.3, -u * 0.3, u * 0.6, u * 0.6); g.restore(); }
+        x += iw + gap;
+      }
+      g.restore();
+    }
+    g.fillStyle = 'rgba(6,10,32,.94)'; g.fillRect(0, y0, tagW, cr);
+    g.fillStyle = col; g.fillRect(tx, y0 + u * 0.35, tagW - tx - u * 0.4, cr - u * 0.7);
+    text(g, 'GNN', tx + (tagW - tx - u * 0.4) / 2, y0 + cr * 0.69, u * 1.4, '#10131f', 'center', FONT_D, 400, u * 0.3);
   }
   function photoStudio(g, w, hh, t, o) {
     const WA = M.Gfx && M.Gfx.WorldArt; if (!WA || !WA.enabled) return null;
@@ -957,10 +997,17 @@
     if (fim) {
       const iw = a.h * fim.naturalWidth / fim.naturalHeight, ix = a.x + (a.w - iw) / 2, pad = a.h * 0.08;
       const fw = round((iw + 2 * pad) * S), fh = round((a.h + 2 * pad) * S);
-      const gr = mkCanvas(fw, fh), q = gr.getContext('2d');                                // her figure graded like the plate, its own alpha kept
-      q.imageSmoothingQuality = 'high'; q.drawImage(fim, pad * S, pad * S, iw * S, a.h * S);
-      if (GR) { try { q.save(); q.setTransform(S, 0, 0, S, 0, 0); GR.apply(q, fw / S, fh / S, 0, { preset: 'plate', grain: 0, vig: 0 }); q.restore(); } catch (e) { /* optional */ } }
-      q.globalCompositeOperation = 'destination-in'; q.drawImage(fim, pad * S, pad * S, iw * S, a.h * S); q.globalCompositeOperation = 'source-over';
+      // her figure under its own key light: she is the subject, so a touch brighter and more vivid than the graded set, with a warm
+      // soft light from the upper left (the studio's key) on her face and shoulders; her own alpha kept
+      const gr = mkCanvas(fw, fh), q = gr.getContext('2d'), fx0 = pad * S, fy0 = pad * S, fiw = iw * S, fih = a.h * S;
+      q.imageSmoothingQuality = 'high';
+      let filtered = false;
+      try { if ('filter' in q) { q.filter = 'brightness(1.13) contrast(1.07) saturate(1.16)'; q.drawImage(fim, fx0, fy0, fiw, fih); q.filter = 'none'; filtered = true; } } catch (e) { filtered = false; }
+      if (!filtered) q.drawImage(fim, fx0, fy0, fiw, fih);
+      q.globalCompositeOperation = 'soft-light';
+      q.fillStyle = rgr(q, fx0 + fiw * 0.28, fy0 + fih * 0.16, 0, fih * 0.62, [0, 'rgba(255,238,210,.75)', 0.5, 'rgba(255,230,200,.3)', 1, 'rgba(128,128,128,0)']); q.fillRect(0, 0, fw, fh);
+      if (!filtered) { q.globalCompositeOperation = 'screen'; q.fillStyle = 'rgba(40,40,46,1)'; q.fillRect(0, 0, fw, fh); }   // no canvas filters (Safari): a gentle lift instead
+      q.globalCompositeOperation = 'destination-in'; q.drawImage(fim, fx0, fy0, fiw, fih); q.globalCompositeOperation = 'source-over';
       const fig = mkCanvas(fw, fh), f = fig.getContext('2d');
       f.save(); f.shadowColor = 'rgba(0,0,0,.78)'; f.shadowBlur = a.h * 0.05 * S; f.shadowOffsetX = a.h * 0.012 * S; f.shadowOffsetY = a.h * 0.01 * S; f.drawImage(gr, 0, 0); f.restore();   // key light upper left
       f.drawImage(gr, 0, 0);
