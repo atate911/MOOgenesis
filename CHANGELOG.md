@@ -5,8 +5,10 @@ Versions follow `MAJOR.MINOR.PATCH`; the live version is the `VERSION` file.
 
 ## Unreleased
 
-- GNN, off air: the presenter caught between takes with her feet up on the desk (`gnn-open-offair.webp`) opens about one regular
-  bulletin in a hundred, a rare easter egg.
+- GNN, off air: about one regular bulletin in a hundred opens on a rare easter egg instead of the usual bumper, the presenter caught
+  between takes with her feet up on the desk, in leather (`gnn-open-offair.webp` and `gnn-open-offair-leather.webp`, in turn); the
+  bulletin then runs as normal. Three more regular-news openers: the presenter bent over the desk marking up her script, from the
+  front, the side (past a studio camera) and behind (`gnn-open-bend-*.webp`).
 - GNN, the settled galaxy: once the game looks decided (from turn 60: you hold two thirds of the galaxy's colonies and industry, or
   almost none, or you play on after winning) the whole bulletin is one shot of the presenter lounging at the desk with her feet up
   (`gnn-idgaf.webp`), the stories, charts and rankings playing on the big studio screen behind her, her hand, pen and shoe tips in

@@ -851,7 +851,7 @@
   function chooseOpen(intr, ward) {
     const WA = M.Gfx && M.Gfx.WorldArt, list = WA && WA.gnnOpens && WA.gnnOpens[ward], rare = WA && WA.gnnOpens && WA.gnnOpens.rare;
     if (BUL.decided) return null;                                          // a decided game opens on the settled-galaxy shot (drawIdgaf)
-    if (ward === 'dress' && rare && rare.length && hashStr('gnn-rare|' + (intr.turn | 0)) % 100 === 0) return rare[(intr.turn | 0) % rare.length];   // a rare easter egg: about one regular bulletin in a hundred
+    if (ward === 'dress' && rare && rare.length && hashStr('gnn-rare|' + (intr.turn | 0)) % 100 === 0) return rare[(hashStr('egg:' + (intr.turn | 0)) >>> 9) % rare.length];   // a rare easter egg: about one regular bulletin in a hundred, the two shots in turn
     return list && list.length ? list[(((intr.turn | 0) * 7 + (intr.year | 0)) % list.length + list.length) % list.length] : null;
   }
   const portraitPhone = () => !!(R && R.L && R.L.phone && R.L.phone.port);
