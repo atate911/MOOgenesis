@@ -5,6 +5,16 @@ Versions follow `MAJOR.MINOR.PATCH`; the live version is the `VERSION` file.
 
 ## Unreleased
 
+- GNN news, content: the economy / science / council charts show the real standings of the empires in the game (their actual
+  output, bars scaled to the leader) instead of six made-up bars that could name races not in the game (bulletins carry rankings
+  only on a rankings filler turn, so the chart reads the live standings). A count of one reads "1 ship" / "1 Alkari ship" / "1 vote"
+  (`News.singular`). The 21 headlines that named a planet and its star (always the same name) say it once. War, treaty and
+  first-contact maps name both empires in their colours, joined by a line through the marker.
+- GNN news, layout: the chart's labels clear the screen's caption; the key hint beside the buttons is gone (the buttons carry their
+  keys). Phones get their own framing: in portrait the anchor stands between a full-width video screen and the desk (it was cropped
+  out), with touch-sized buttons that all fit; on its side the video wall's top (category, Live) is no longer under the app bar and
+  the controls and ticker are no longer cut off at the bottom; the rankings panel fits above the headline. The archive on a narrow
+  screen puts the headline on its own full-width line (it was one word wide).
 - The planet card of an explored star (not your colony) shows the planet's wide orbit plate, as your colonies and the discovery cards
   do, instead of a small sprite in a black square beside empty space; with art off (`?art=0`) it keeps the sprite. The wide plates
   also lost a stray dark frame (the planet card's padding applied to them). On a phone held sideways the plate is a little shorter, so the

@@ -302,13 +302,17 @@
     .gnn-tk.static .gnn-tk-i { animation:gnn-fade .6s ease both; }
 
     /* ---- controls strip (below the ticker) ---- */
-    .gnn-hud { position:absolute; z-index:8; display:flex; align-items:center; justify-content:space-between; gap:calc(var(--u)*1.2); padding:0 calc(var(--u)*1); }
-    .gnn-hint { color:var(--fog); font:500 max(.7rem, calc(var(--u)*1.05))/1 var(--font-ui); letter-spacing:.06em; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .gnn-hud { position:absolute; z-index:8; display:flex; align-items:center; justify-content:flex-end; gap:calc(var(--u)*1.2); padding:0 calc(var(--u)*1); }
+    .gnn-hint { display:none; color:var(--fog); font:500 max(.7rem, calc(var(--u)*1.05))/1 var(--font-ui); letter-spacing:.06em; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
     .gnn-hint b { color:var(--mist); font-weight:600; }
     .gnn-hud-r { display:flex; align-items:center; gap:calc(var(--u)*.9); flex:none; }
     .gnn-hud .btn.small { padding:.18em .75em; font-size:max(.8rem, calc(var(--u)*1.12)); }
     .gnn-pips { display:flex; align-items:center; gap:calc(var(--u)*.55); margin-right:calc(var(--u)*.8); color:var(--mist); font:500 max(.7rem, calc(var(--u)*1.05))/1 var(--font-ui); letter-spacing:.1em; }
     .gnn-pip { width:calc(var(--u)*.72); height:calc(var(--u)*.72); transform:rotate(45deg); background:rgba(214,179,106,.2); box-shadow:inset 0 0 0 1px var(--brass-line-3); }
+    html[data-phone] .gnn-hud { padding:0; }
+    html[data-phone] .gnn-hud-r { flex:1 1 auto; min-width:0; gap:6px; }
+    html[data-phone] .gnn-hud-r .btn { flex:1 1 0; min-width:0; padding:0 .4em; white-space:nowrap; }
+    @media (orientation: portrait) { html[data-phone] .gnn-pips { display:none; } }
     .gnn-pip.done { background:var(--brass); } .gnn-pip.cur { background:var(--brass-hi); box-shadow:0 0 calc(var(--u)*.9) var(--brass-hi); transform:rotate(45deg) scale(1.4); }
     /* ---- ranking panel ---- */
     .gnn-rank { position:absolute; z-index:4; display:none; filter:drop-shadow(0 calc(var(--u)*.6) calc(var(--u)*1.6) rgba(0,0,0,.65)); }
@@ -410,6 +414,13 @@
     .gnn-arch-y small { margin-left:auto; font:500 .8rem var(--font-ui); color:var(--mist); letter-spacing:.04em; }
     .gnn-arow { display:grid; grid-template-columns:11rem 1fr auto; align-items:center; gap:.7rem; padding:.34rem .6rem; border-bottom:1px solid rgba(255,255,255,.05); }
     .gnn-arow:hover { background:rgba(98,216,255,.06); }
+    /* narrow (phones, small windows): the category and races on one line, the headline the full width under them */
+    @media (max-width: 640px) {
+      .gnn-arch { min-width:0; height:auto; max-height:none; flex:1; }
+      .gnn-arow { grid-template-columns:minmax(0, 1fr) auto; grid-template-areas:"chip races" "hl hl"; gap:.2rem .6rem; padding:.45rem .5rem; }
+      .gnn-arow .gnn-achip { grid-area:chip; } .gnn-arow .gnn-ahl { grid-area:hl; } .gnn-arow .gnn-araces { grid-area:races; }
+      .gnn-arace:first-child { margin-left:0; }
+    }
     .gnn-achip { display:inline-flex; align-items:center; gap:.4rem; color:var(--c, var(--mist)); font:400 .85rem var(--font-display); letter-spacing:.06em; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; min-width:0; }
     .gnn-achip .ico { width:1.05rem; height:1.05rem; }
     .gnn-ahl { color:var(--ivory); line-height:1.3; }
@@ -531,7 +542,23 @@
   }
 
   // ================================================================== studio backdrop (Scenes.newsroom, or the built-in set)
+  // phones: the bottom stack is built up from fixed pixel heights (the controls are touch-sized and the type has rem floors, so shares of a
+  // ~340px-tall sideways screen overflowed it): controls, ticker, then the lower third; PH.ltTop is where the stack starts
+  const isPhone = () => !!(M.Phone && M.Phone.active());
+  function phoneStack(w, hh) {
+    const port = hh > w, hudH = 50, tkH = port ? 30 : 26, ltH = port ? 104 : 62, mx = port ? 8 : max(10, w * 0.02);
+    const hudY = hh - hudH - 2, tkY = hudY - tkH - 2, ltB = tkY - 6;
+    return { port, mx, hudY, hudH, tkY, tkH, ltB, ltH, ltTop: ltB - ltH };
+  }
   function defaultRects(w, hh) {
+    if (isPhone()) {
+      const P = phoneStack(w, hh), lw = w - 2 * P.mx;
+      return {
+        wall: P.port ? { x: w * 0.03, y: hh * 0.1, w: w * 0.94, h: w * 0.94 / 2.12 } : { x: w * 0.455, y: 6, w: w * 0.485, h: max(60, P.ltTop - 12) },
+        lowerThird: { x: P.mx, y: P.ltB - P.ltH, w: lw, h: P.ltH }, ticker: { x: P.mx, y: P.tkY, w: lw, h: P.tkH },
+        logo: { x: w * 0.9, y: hh * 0.04, w: w * 0.06, h: hh * 0.07 }, anchor: { x: w * 0.16, y: hh * 0.095, w: hh * 0.512, h: hh * 0.64 }, phone: P,
+      };
+    }
     return {
       wall: { x: w * 0.455, y: hh * 0.135, w: w * 0.485, h: hh * 0.43 },
       lowerThird: { x: w * 0.055, y: hh * 0.8, w: w * 0.89, h: hh * 0.092 },
@@ -690,11 +717,22 @@
   function photoStudio(g, w, hh, t, o) {
     const WA = M.Gfx && M.Gfx.WorldArt; if (!WA || !WA.enabled) return null;
     const im = WA.get(WA.gnn); if (!im) return null;
-    const sc = max(w / im.naturalWidth, hh / im.naturalHeight), dw = im.naturalWidth * sc, dh = im.naturalHeight * sc, ox = (w - dw) / 2, oy = (hh - dh) / 2;
-    const R = defaultRects(w, hh);
-    R.wall = { x: ox + dw * 0.47, y: oy + dh * 0.108, w: dw * 0.46, h: dh * 0.385 };
-    const ah = dh * 0.52, aw = ah * 0.8;
-    R.anchor = { x: ox + dw * 0.325 - aw / 2, y: oy + dh * 0.09, w: aw, h: ah };
+    const R = defaultRects(w, hh), P = R.phone;
+    let sc = max(w / im.naturalWidth, hh / im.naturalHeight), dw, dh, ox, oy, deskK = 0.545;
+    if (P && P.port) {                                   // portrait: the photo framed on the anchor, its desk just above the lower third; the wall is a screen across the top
+      const deskY = min(hh * 0.6, P.ltTop - 24);
+      sc = max(sc, deskY / deskK / im.naturalHeight); dw = im.naturalWidth * sc; dh = im.naturalHeight * sc;
+      ox = clamp(w / 2 - dw * 0.325, w - dw, 0); oy = 0;
+    } else {
+      dw = im.naturalWidth * sc; dh = im.naturalHeight * sc; ox = (w - dw) / 2; oy = (hh - dh) / 2;
+      if (P) oy = clamp(6 - dh * 0.108, hh - dh, 0);       // sideways: the wall's top edge in view (the cover crop cut it under the app bar)
+      R.wall = { x: ox + dw * 0.47, y: oy + dh * 0.108, w: dw * 0.46, h: dh * 0.385 };
+      if (P) R.wall.h = clamp(P.ltTop - 8 - R.wall.y, 60, R.wall.h);  // and it ends above the lower third
+    }
+    const deskY = oy + dh * deskK;
+    let ah = dh * 0.52, aw = ah * 0.8, ay = oy + dh * 0.09;
+    if (P && P.port) { ay = R.wall.y + R.wall.h + 6; ah = (deskY - ay) / 0.875; aw = ah * 0.8; }   // the bust between the screen and the desk
+    R.anchor = { x: (P && P.port ? w / 2 : ox + dw * 0.325) - aw / 2, y: ay, w: aw, h: ah };
     g.drawImage(im, ox, oy, dw, dh);
     const wl = R.wall;
     g.save(); g.beginPath(); g.rect(wl.x, wl.y, wl.w, wl.h); g.clip();                  // faint scan-lines + a slow sweep across the blank wall
@@ -705,7 +743,7 @@
     const a = R.anchor;
     glow(g, '#6e96ff', a.x + a.w / 2, a.y + a.h * 0.4, a.w * 0.8, 0.2);
     drawAnchor(g, o.anchorRace, a.x, a.y, a.w, a.h, t, o.talking, o.mood);
-    const dy = oy + dh * 0.545, sy = (dy - oy) / sc;                                      // desk strip over the anchor's feet
+    const dy = deskY, sy = (dy - oy) / sc;                                                  // desk strip over the anchor's feet
     g.drawImage(im, 0, sy, im.naturalWidth, im.naturalHeight - sy, ox, dy, dw, oy + dh - dy);
     drawLogo(g, w * 0.925, hh * 0.075, hh * 0.026, t, 0.95);
     text(g, 'GNN', w * 0.925 - hh * 0.1, hh * 0.087, hh * 0.04, rgba('#ece6d3', 0.92), 'right', FONT_D, 400, 1.5);
@@ -1104,6 +1142,8 @@
     g.beginPath(); g.moveTo(x - b, y - b + q); g.lineTo(x - b, y - b); g.lineTo(x - b + q, y - b); g.moveTo(x + b - q, y - b); g.lineTo(x + b, y - b); g.lineTo(x + b, y - b + q);
     g.moveTo(x + b, y + b - q); g.lineTo(x + b, y + b); g.lineTo(x + b - q, y + b); g.moveTo(x - b + q, y + b); g.lineTo(x - b, y + b); g.lineTo(x - b, y + b - q); g.stroke();
     g.restore();
+    // two-party stories (a war, a treaty, first contact): both territories are named in their colours and joined through the marker
+    if (it.race && it.race2 && s.terr.length >= 2) { gMapPair(g, w, hh, t, lt, s, z, alarm); return; }
     // callout (not scaled)
     const sx = w * mk.x + (w * mk.x - w * mk.x) * z, sy = hh * mk.y;
     const lbl = String((s.star && s.star.name) || (it.race && raceName(it.race)) || GROUPS[it.grp].label).toUpperCase();
@@ -1116,8 +1156,38 @@
     g.globalAlpha = 1;
   }
 
+  function gMapPair(g, w, hh, t, lt, s, z, alarm) {
+    const it = s.item, mk = s.mark, reveal = easeOut((lt - 0.4) / 0.8);
+    const scr = T => ({ x: clamp(w * (mk.x + (T.x - mk.x) * z), w * 0.16, w * 0.84), y: clamp(hh * (mk.y + (T.y - mk.y) * z), hh * 0.3, hh * 0.62) });
+    const a = scr(s.terr[0]), b = scr(s.terr[1]), ca = raceColor(it.race), cb = raceColor(it.race2), mx = w * mk.x, my = hh * mk.y;
+    g.save(); g.globalAlpha = reveal; g.lineWidth = 2; g.setLineDash([7, 6]); g.lineDashOffset = -t * 18;
+    g.strokeStyle = rgba(alarm ? '#ff5c6a' : '#dbe8ff', 0.75); g.beginPath(); g.moveTo(a.x, a.y); g.quadraticCurveTo(mx, my, b.x, b.y); g.stroke(); g.setLineDash([]);
+    for (const [P, col, race] of [[a, ca, it.race], [b, cb, it.race2]]) {
+      g.fillStyle = col; g.beginPath(); g.arc(P.x, P.y, 5, 0, TAU); g.fill(); glow(g, col, P.x, P.y, hh * 0.08, 0.6);
+      text(g, racePlural(race).toUpperCase(), P.x, P.y - hh * 0.06, max(11, hh * 0.056), '#fff5dd', 'center', FONT_D, 400, 1.5);
+    }
+    text(g, alarm ? 'HOSTILITIES' : it.cat === 'firstContact' ? 'FIRST CONTACT' : String(GROUPS[it.grp].label).toUpperCase(), mx, my + hh * 0.09, max(9, hh * 0.04), rgba(alarm ? '#ff5c6a' : '#62d8ff', 0.95), 'center', FONT_U, 600, 2);
+    g.restore();
+  }
+
   // ---- CHART (animated bars + trend line)
+  // the real standings when the bulletin carries them (economy: production, science: research, council: population — the vote weight);
+  // values are shown as they are, bars scaled to the leader. Only a demo bulletin without rankings falls back to an illustrative chart.
+  const CHART_KEY = { economy: 'production', science: 'research', council: 'population' };
   function initChart(s) {
+    const it = s.item, N = M.Sim && M.Sim.News, GS = M.Game && M.Game.S;
+    let rk = R && R.intr && R.intr.rankings;                       // a bulletin carries them only on a rankings filler turn: otherwise read the live standings
+    if (!rk && N && N.rankings && GS) { try { rk = N.rankings(GS); } catch (e) { rk = null; } }
+    const rows = rk && rk[CHART_KEY[it.grp] || 'production'];
+    if (Array.isArray(rows) && rows.length) {
+      const top = rows.slice(0, 6), mx = max(1, ...top.map(r => r.value | 0)), want = [it.race, it.race2].filter(Boolean);
+      s.bars = top.map(r => ({ race: r.race, v: max(0.03, (r.value | 0) / mx), val: r.value | 0, hl: want.indexOf(r.race) >= 0, col: raceColor(r.race) }));
+      s.title = { science: 'RESEARCH OUTPUT', economy: 'INDUSTRIAL OUTPUT', council: 'POPULATION (VOTES)' }[it.grp] || 'STANDINGS';
+      return;
+    }
+    initChartDemo(s);
+  }
+  function initChartDemo(s) {
     const rnd = s.rnd, it = s.item, n = 6, bars = [], used = {};
     const want = [it.race, it.race2].filter(Boolean);
     const pool = raceIds().filter(r => want.indexOf(r) < 0);
@@ -1133,9 +1203,9 @@
   }
   function gChart(g, w, hh, t, lt, dt, s, S) {
     if (!s.bars) initChart(s);
-    const gc = cssHex(GROUPS[s.item.grp].css), px = w * 0.1, pw = w * 0.82, py = hh * 0.25, ph = hh * 0.44, n = s.bars.length, bw = pw / n;
+    const gc = cssHex(GROUPS[s.item.grp].css), px = w * 0.1, pw = w * 0.82, py = hh * 0.31, ph = hh * 0.32, n = s.bars.length, bw = pw / n;   // the axis labels end above the caption (~0.75)
     g.fillStyle = 'rgba(3,6,22,.55)'; g.fillRect(0, 0, w, hh);
-    text(g, s.title, w * 0.5, hh * 0.17, max(11, hh * 0.058), rgba(gc, 0.95), 'center', FONT_D, 400, 3);
+    text(g, s.title, w * 0.5, hh * 0.2, max(11, hh * 0.058), rgba(gc, 0.95), 'center', FONT_D, 400, 3);
     g.strokeStyle = rgba('#98a5cf', 0.16); g.lineWidth = 1; g.beginPath();
     for (let i = 0; i <= 4; i++) { const y = py + ph * i / 4; g.moveTo(px, y); g.lineTo(px + pw, y); }
     g.stroke();
@@ -1146,9 +1216,10 @@
       g.fillStyle = 'rgba(255,255,255,.4)'; g.fillRect(bx, by, bwid, 2);
       if (b.hl && k > 0.2) glow(g, b.col, bx + bwid / 2, by, bwid * 1.2, 0.45 * k * (0.75 + 0.25 * sin(t * 4)));
       text(g, (b.race ? raceName(b.race) : '').slice(0, 3).toUpperCase(), bx + bwid / 2, py + ph + hh * 0.065, max(9, hh * 0.045), b.hl ? '#fff5dd' : '#98a5cf', 'center', FONT_D, 400, 1);
-      if (k > 0.3) text(g, String(round(b.v * 100 * k)), bx + bwid / 2, by - 6, max(9, hh * 0.05), '#ece6d3', 'center', FONT_U, 600);
+      if (k > 0.3) text(g, b.val !== undefined ? U.fmt(round(b.val * k)) : String(round(b.v * 100 * k)), bx + bwid / 2, by - 6, max(9, hh * 0.05), '#ece6d3', 'center', FONT_U, 600);
       pts.push(bx + bwid / 2, by - hh * 0.035);
     }
+    if (s.bars[0] && s.bars[0].val !== undefined) return;            // real standings: bars only (a line joining different empires is no trend)
     const draw = easeOut((lt - 0.5) / 1.6), nd = max(2, floor(draw * n * 2));
     g.strokeStyle = rgba(gc, 0.95); g.lineWidth = 2; g.beginPath();
     for (let i = 0; i < nd && i < pts.length / 2; i++) { if (i) g.lineTo(pts[2 * i], pts[2 * i + 1]); else g.moveTo(pts[0], pts[1]); }
@@ -1304,8 +1375,10 @@
     mon.style.transformOrigin = px(w / 2 - W.x) + ' ' + px(hh / 2 - W.y);
     lt.style.left = px(T.x); lt.style.width = px(T.w); lt.style.bottom = px(hh - (T.y + T.h)); ltBar.style.minHeight = px(T.h);
     tk.style.left = px(K.x); tk.style.top = px(K.y); tk.style.width = px(K.w); tk.style.height = px(K.h);
-    hud.style.left = px(K.x); hud.style.width = px(K.w); hud.style.top = px(K.y + K.h + hh * 0.004); hud.style.height = px(max(hh - (K.y + K.h) - hh * 0.006, 22));
-    rank.style.left = px(W.x - w * 0.012); rank.style.top = px(hh * 0.118); rank.style.width = px(W.w + w * 0.032); rank.style.height = px(hh * 0.628);
+    if (L.phone) { hud.style.left = px(K.x); hud.style.width = px(K.w); hud.style.top = px(L.phone.hudY); hud.style.height = px(L.phone.hudH); }
+    else { hud.style.left = px(K.x); hud.style.width = px(K.w); hud.style.top = px(K.y + K.h + hh * 0.004); hud.style.height = px(max(hh - (K.y + K.h) - hh * 0.006, 22)); }
+    if (L.phone) { const P = L.phone, x0 = P.port ? P.mx : W.x - w * 0.012, top = P.port ? W.y : 6; rank.style.left = px(x0); rank.style.top = px(top); rank.style.width = px(P.port ? w - 2 * P.mx : min(W.w + w * 0.032, w - x0 - 6)); rank.style.height = px(P.ltTop - 8 - top); }
+    else { rank.style.left = px(W.x - w * 0.012); rank.style.top = px(hh * 0.118); rank.style.width = px(W.w + w * 0.032); rank.style.height = px(hh * 0.628); }
     if (R && R.tkU && abs(R.tkU - u) > 0.4) buildTicker();
   }
   function layoutNow() {
@@ -1765,7 +1838,7 @@
     const row = e => {
       const g = GROUPS[e.grp];
       return h('div.gnn-arow', h('span.gnn-achip', { style: { '--c': cssHex(g.css) } }, iconNode(g.icon), humanize(e.cat)), h('span.gnn-ahl', e.headline),
-        h('span', [e.race, e.race2].filter(Boolean).map(r => h('span.gnn-arace', { style: { '--c': raceColor(r) } }, h('i'), raceName(r)))));
+        h('span.gnn-araces', [e.race, e.race2].filter(Boolean).map(r => h('span.gnn-arace', { style: { '--c': raceColor(r) } }, h('i'), raceName(r)))));
     };
     function render() {
       const keep = listEl.scrollTop;

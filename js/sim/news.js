@@ -36,8 +36,11 @@ MOO.def(function (M) {
   N.line = function (S, R, cat, ev) {
     const T = text()[cat];
     if (!T || !T.length) return ev && ev.headline ? String(ev.headline) : null;          // events carry ready-made English for categories without a template
-    return fmt(pick(R, T), vars(S, ev || {}));
+    return one(fmt(pick(R, T), vars(S, ev || {})));
   };
+  // the templates write "{ships} ships", "{n} votes": a count of one reads "1 ship", also with a race adjective between ("1 Alkari ship")
+  const one = line => line.replace(/\b1 ((?:[A-Z][\w'-]* |colonised )*)(warships|ships|votes|ballots|systems|stars|worlds)\b/g, (m, a, b) => '1 ' + a + b.slice(0, -1));
+  N.singular = one;
   const isHuman = (S, id) => id !== undefined && id >= 0 && !!(S.empires[id] && S.empires[id].human);
   function importanceOf(S, ev) {
     if (ev.importance !== undefined) return ev.importance;
