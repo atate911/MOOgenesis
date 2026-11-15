@@ -33,6 +33,7 @@
   // the bulletin's opening shot (one per bulletin, under the GNN titles): photos of the studio with the presenter in each wardrobe
   const GNN_OPEN_DRESS = ['ready', 'script', 'handoff', 'wide', 'backstage-script', 'backstage-rear', 'backstage-window', 'backstage-notes'];
   const GNN_OPEN_JACKET = ['cue', 'desk-wide', 'desk-notes', 'behind', 'stool', 'desk-cue', 'window'];
+  const GNN_OPEN_RARE = ['offair'];                       // a rare treat in the regular news: the presenter caught off air between takes
   const GNN_ANCHOR = ['neutral', 'serious', 'encouraging', 'urgent', 'breaking', 'presenting', 'wry'];   // the GNN presenter's poses (docs/IMAGE-GEN-GNN-ANCHOR.md): cut-outs on one shared 1760x1536 canvas, face size and place matched
   const has = (a, k) => a.indexOf(k) >= 0;
 
@@ -207,7 +208,7 @@
   M.Gfx.WorldArt = {
     get: get, ready: ready, whenReady: whenReady, draw: draw, canvas: canvas, image: image, preload: preload,
     orbit: orbitPath, surface: surfacePath, system: systemPath, event: eventPath, scene: scenePath, race: racePath, colony: colonyPath, gnn: GNN,
-    gnnOpen: k => (has(GNN_OPEN_DRESS, k) || has(GNN_OPEN_JACKET, k) ? 'gnn/gnn-open-' + k : null), gnnOpens: { dress: GNN_OPEN_DRESS, jacket: GNN_OPEN_JACKET },
+    gnnOpen: k => (has(GNN_OPEN_DRESS, k) || has(GNN_OPEN_JACKET, k) || has(GNN_OPEN_RARE, k) ? 'gnn/gnn-open-' + k : null), gnnOpens: { dress: GNN_OPEN_DRESS, jacket: GNN_OPEN_JACKET, rare: GNN_OPEN_RARE },
     gnnDeskDress: 'gnn/gnn-desk-dress',
     gnnAnchor: pose => 'gnn/gnn-anchor-' + (has(GNN_ANCHOR, pose) ? pose : 'neutral'),
     systemSky: systemSkyPath, battle: battlePath, fx: fxPath, still: stillPath, raceExposure: raceExposure, raceTone: raceTone, tonePass: tonePass,

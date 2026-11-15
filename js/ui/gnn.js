@@ -793,14 +793,33 @@
   // can be read. Wardrobe per bulletin: the off-shoulder dress by default (her desk shot with folded hands), the high-collar jacket
   // (the seven story poses) when the lead story is sombre. The opening shot comes from that wardrobe's set, picked by the turn, so
   // consecutive bulletins open differently; the behind-the-scenes shots need not match the story.
-  const BUL = { ward: 'dress', open: null, monT: null, hlT: null, idx: -1, deskSG: null, baseS: 1, monZ: 1, words: null };
+  const BUL = { decided: 0, ward: 'dress', open: null, monT: null, hlT: null, idx: -1, deskSG: null, baseS: 1, monZ: 1, words: null };
   const SOMBRE_POSE = { serious: 1, breaking: 1, urgent: 1 };
   function chooseWard(intr) {
     const lead = (intr.items || []).filter(it => it && it.headline).map(it => normalizeItem(it))[0];
     return lead && SOMBRE_POSE[poseFor(lead)] ? 'jacket' : 'dress';
   }
+  // the game looks decided: the player holds two thirds of the galaxy's colonies and industry, or is down to a sliver of them, or plays on after
+  // winning. The news no longer changes anything, and the presenter knows it: she is off air with her feet up, and says so.
+  function gameDecided() {
+    const S = M.Game && M.Game.S; if (!S || !M.Sim || !M.Sim.stats) return 0;
+    try {
+      if (S.settings && S.settings.options && S.settings.options.playOn) return 1;
+      const st = M.Sim.stats(S).filter(r => r.alive), me = st.find(r => r.id === S.playerId); if (!me || st.length < 2) return 0;
+      if (S.turn < 60) return 0;
+      const sh = k => { const tot = st.reduce((a, r) => a + max(0, r[k] || 0), 0); return tot > 0 ? max(0, me[k] || 0) / tot : 0; };
+      const share = (sh('colonies') + sh('production')) / 2;          // the galaxy's colonies and industry
+      return share >= 0.66 ? 1 : share <= 0.06 ? -1 : 0;
+    } catch (e) { return 0; }
+  }
+  const SHRUG = {
+    1: ['Another victory for the obvious favourite. Try to act surprised.', 'Breaking: the winner is still winning. More at eleven. Probably.', 'We could report the rest of the galaxy, but why bother?', 'The outcome was decided some time ago. I am mostly here for the snacks.'],
+    '-1': ['The end is near. I have already updated my resume.', 'Reports continue. Hope does not.', 'Will this matter tomorrow? Signs point to no.', 'Our thoughts are with the losing side. Briefly.'],
+  };
+  function shrugLine(it) { const pool = SHRUG[BUL.decided]; return pool ? pool[hashStr('shrug|' + it.headline) % pool.length] : ''; }
   function chooseOpen(intr, ward) {
-    const WA = M.Gfx && M.Gfx.WorldArt, list = WA && WA.gnnOpens && WA.gnnOpens[ward];
+    const WA = M.Gfx && M.Gfx.WorldArt, list = WA && WA.gnnOpens && WA.gnnOpens[ward], rare = WA && WA.gnnOpens && WA.gnnOpens.rare;
+    if (ward === 'dress' && rare && rare.length && (BUL.decided || hashStr('gnn-rare|' + (intr.turn | 0)) % 20 === 0)) return rare[(intr.turn | 0) % rare.length];   // about one regular bulletin in twenty, and every one once the game is decided
     return list && list.length ? list[(((intr.turn | 0) * 7 + (intr.year | 0)) % list.length + list.length) % list.length] : null;
   }
   const portraitPhone = () => !!(R && R.L && R.L.phone && R.L.phone.port);
@@ -1987,7 +2006,7 @@
     monCapE.textContent = R.intr.year !== undefined ? 'GNN · ' + R.intr.year : 'GNN';
     // text
     const c = cps();
-    R.hl.set(it.headline, c, 0.18); R.sub.set(it.sub, c * 1.7, 0.1, true);
+    R.hl.set(it.headline, c, 0.18); R.sub.set(BUL.decided ? shrugLine(it) : it.sub, c * 1.7, 0.1, true);   // a decided game: her aside under each headline
     srLive.textContent = (it.importance >= 2 ? 'Breaking news. ' : '') + g.label + '. ' + it.headline + (it.sub ? '. ' + it.sub : '');
     R.gfx = makeGfx(it, R.t); R.curPlanet = it.planet;
     restart(lt); restart(mon);
@@ -2253,7 +2272,7 @@
       if (WA) { WA.get(WA.gnn); if (WA.gnnAnchor) { WA.get(WA.gnnAnchor('neutral')); (intr.items || []).forEach(it => it && WA.get(WA.gnnAnchor(poseFor(normalizeItem(Object.assign({ headline: '-' }, it)))))); if (RANK_ORDER.some(k => intr.rankings && intr.rankings[k])) WA.get(WA.gnnAnchor('presenting')); } }
     } catch (e) { /* optional */ }
     AP.cur = 'neutral'; AP.prev = null; AP.k = 1; AP.lastT = -1;
-    BUL.ward = chooseWard(intr); BUL.open = chooseOpen(intr, BUL.ward); BUL.idx = -1; BUL.monT = null; BUL.hlT = null;
+    BUL.decided = gameDecided(); BUL.ward = BUL.decided ? 'dress' : chooseWard(intr); BUL.open = chooseOpen(intr, BUL.ward); BUL.idx = -1; BUL.monT = null; BUL.hlT = null;
     try { const WA = M.Gfx && M.Gfx.WorldArt; if (WA && WA.gnnOpen) { if (BUL.open) WA.get(WA.gnnOpen(BUL.open)); if (BUL.ward === 'dress') WA.get(WA.gnnDeskDress); } } catch (e) { /* optional */ }
     root.classList.remove('out');
     root.classList.toggle('rm', reduced());
