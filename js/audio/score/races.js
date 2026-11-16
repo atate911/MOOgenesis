@@ -25,20 +25,41 @@
     ],
   });
 
+  // The Bulrathi (rewritten from nothing): hulking bear-like warriors, slow to anger and slower to befriend, gardeners at heart ("Nobody
+  // hurries at our fire"). D minor, a mountain folk tune that lumbers (a long note and a short one, like a bear's heavy gait) on the solo horn
+  // with the bassoon under it, at the fire (the low strings' open fifth, the crackle of wood, slow heavy steps on the bass drum, a growl in the
+  // cellos' tremolo); the contrast is the garden, a tender pastoral on the cor anglais over the harp and the violas; the crest is the anger,
+  // slow to come: the tune in the trombones and the tuba with the horns, the stomp, the timpani.
   Track('race:bulrathi', {
-    desc: 'Bulrathi: deep stomping drums and low, heavy brass in D minor',
-    motif: '1:2 3:1 5:1 | 6:2 4:2', motifInst: 'horn',   // the first bars of the theme: the next interlude carries them when this race is met
-    bpm: 76, trim: 1.45, root: 'D', mode: 'minor', tonic: 50, tens: false,
-    forms: [['A', 'B', 'C', 'A', 'B', 'C', 'A', 'B', 'C', 'A', 'B', 'C', 'A', 'B', 'C'], ['A', 'C', 'B', 'A', 'C', 'B', 'A', 'C', 'B', 'A', 'C', 'B', 'A', 'C', 'B']],
-    inst: { pad: 'dark', bass: 'deep', lead: 'horn', lead2: 'brass', bell: 'chime', choir: 'uuh' },
+    desc: 'Bulrathi: a lumbering mountain folk tune on the solo horn at the fire, heavy steps and a growl; a tender garden on the cor anglais; the anger, slow to come, in the low brass with the stomp',
+    motif: '1:3 3:1 | 4:1.5 3:.5 2:2', motifInst: 'horn',   // the first bars of the theme: the next interlude carries them when this race is met
+    bpm: 72, trim: 1.6, root: 'D', mode: 'minor', oct: -1, tens: false, loopFrom: 'A',
+    forms: [['A', 'garden', 'anger', 'C', 'A2', 'garden', 'anger', 'C'], ['A', 'garden', 'anger', 'C', 'garden2', 'A2', 'anger', 'C']],
+    inst: { pad: 'cellos', pad2: 'tremLo', bass: 'deep', lead: 'hornIowa', lead2: 'bassoonIowa', lead3: 'reed', lead4: 'trombones', arp: 'harp', arp2: 'violas' },
     ph: {
-      B1: '1:2 3:1 5:1 | 6:2 4:2 | 5:2 7:2 | 1:4',
-      B2: '8:2 7:1 5:1 | 6:2 8:2 | 7:2 5:2 | 5:2 7#:2',
+      B1: '1:3 3:1 | 4:1.5 3:.5 2:2 | 3:3 1:1 | 5:4',                 // the fire song: heavy, long and short
+      B2: '1:3 3:1 | 4:1.5 5:.5 7:2 | 8:1.5 7:.5 6:1 4:1 | 1:4',
+      BC: '5:2 3:2 | 2:2 4:2 | 1:2 3:2 | 2:2 5:2',                     // the bassoon under it
+      TT: 'r:4 | 1:4',
+      G1: '10:2 12:1 10:1 | 9:3 7:1 | 8:2 6:2 | 7#:4', G2: '10:2 12:1 13:1 | 12:3 9:1 | 8:2 11:2 | 12:4',   // the garden
     },
     sec: [
-      { n: 'A', bars: 8, lv: 0.78, prog: 'i bVI bVII i | i bVI bVII V', pad: { p: 'sus', n: 3, reg: [38, 62] }, bass: 'half', lead: 'B1 B2', timp: 'two', drums: { t5: 'X.......x.......', t4: '....x.......x.x.', kick: 'x...............', shk: 'o.o.o.o.o.o.o.o.', rim: '..o.......o.....' }, bell: { dens: 0.2, res: 1, reg: [64, 90], vel: 0.7 } },
-      { n: 'B', bars: 8, lv: 0.95, prog: 'i bVI bVII i | i bVI bVII V', pad: { p: 'sus', n: 3, reg: [38, 62] }, bass: 'half', lead: { ph: 'B1 B2', harm: -2, shape: 0.35, swell: 0.35 }, lead2: { ph: 'B1 B2', inst: 'horn', oct: -1, vel: 0.6, shape: 0.35, swell: 0.35 }, timp: 'beats', choir: { v1: 'u', v2: 'o', vel: 0.55, reg: [50, 69] }, drums: { t5: 'X.....x.X.......', t4: '....x.......x.x.', t3: '..o.......o.....', kick: 'x.......x.......', clap: '....o.......o...', shk: 'x.x.x.x.x.x.x.x.', rim: '..o.......o.....' }, bell: { dens: 0.3, res: 1, reg: [64, 90], vel: 0.7 }, fill: 'tom' },
-      { n: 'C', bars: 4, lv: 0.85, prog: 'i bVI bVII V', pad: { p: 'sus', n: 3, reg: [38, 62] }, bass: 'half', lead: 'B1', timp: { p: 'hits', roll: 1 }, drums: { t5: 'X.......x.......', t4: '....x.......x.x.' } },
+      { n: 'fire', bars: 2, cres: [0.46, 0.56], prog: 'i | i', pad: { p: 'swell', n: 2, open: true, reg: [38, 52], vel: 0.55 }, bass: { pat: '1---', vel: 0.6 },
+        drums: { hat: ['..o....o...o..o.', '.o...o....o..o..'], bdSoft: ['x...............', 'x.......x.......'], vel: 0.5 } },
+      { n: 'A', bars: 8, lv: 0.62, prog: 'i | bVII | bVI | v | i | bVII | iv | i', pad: { p: 'sus', n: 2, open: true, reg: [38, 52], vel: 0.5 }, pad2: { p: 'swell', n: 2, open: true, reg: [43, 55], vel: 0.3 }, bass: { pat: '1---', vel: 0.7 },
+        lead: { ph: 'B1 B2', vel: 0.72, shape: 0.4, swell: 0.35 }, lead2: { ph: 'BC r4', oct: -1, vel: 0.5, shape: 0.35 },
+        drums: { bdSoft: 'x.......x.......', hat: '..o....o...o..o.', vel: 0.5 } },
+      { n: 'garden', bars: 4, lv: 0.54, prog: 'bIII | bVII | iv | V', pad: { p: 'sus', inst: 'strings', n: 3, reg: [55, 72], vel: 0.45 }, bass: { pat: '1---', vel: 0.55 },
+        lead3: { ph: 'G1', vel: 0.7, shape: 0.45, swell: 0.35 }, arp: { pat: '0.1.2.3.2.1.', res: 3, vel: 0.36, reg: [55, 79] }, arp2: { pat: '0.......1.......', res: 4, vel: 0.3, reg: [57, 69] } },
+      { n: 'garden2', bars: 8, lv: 0.52, prog: 'bIII | bVII | iv | V | bIII | bVII | iv | i', pad: { p: 'sus', inst: 'strings', n: 3, reg: [55, 72], vel: 0.45 }, bass: { pat: '1---', vel: 0.55 },
+        lead3: { ph: 'G1 G2', inst: 'oboeIowa', vel: 0.66, shape: 0.45, swell: 0.35 }, arp: { pat: '0.1.2.3.2.1.', res: 3, vel: 0.34, reg: [55, 79] } },
+      { n: 'anger', bars: 8, cres: [0.82, 0.98], prog: 'i | bVII | bVI | v | i | bVII | iv | i', pad: { p: 'sus', n: 3, open: true, reg: [38, 55], vel: 0.6 }, pad2: { p: 'sus', inst: 'strings', n: 4, reg: [50, 74], vel: 0.55 }, bass: { pat: '1-1-', vel: 0.85 },
+        lead4: { ph: 'B1 B2', vel: 0.85, shape: 0.35, swell: 0.35 }, lead: { ph: 'B1 B2', oct: 1, vel: 0.75, harm: -2, shape: 0.35, swell: 0.3 }, lead2: { ph: 'B1 B2', inst: 'tuba', oct: -1, vel: 0.6 },
+        drums: { bd: 'x.......x.......', t5: 'x...x...x...x...', t4: '......x.......x.', hat: '..o....o...o..o.', vel: 0.75 }, timp: 'beats', hit: true, fill: 'tom' },
+      { n: 'C', bars: 2, cres: [0.6, 0.44], prog: 'i | i', pad: { p: 'swell', n: 2, open: true, reg: [38, 52], vel: 0.5 }, bass: { pat: '1---', vel: 0.6 },
+        lead2: { ph: 'TT', inst: 'tuba', vel: 0.55 }, drums: { bdSoft: ['x.......x.......', 'x...............'], hat: '.o...o....o..o..', vel: 0.45 } },
+      { n: 'A2', bars: 8, lv: 0.66, prog: 'i | bVII | bVI | v | i | bVII | iv | i', pad: { p: 'sus', n: 2, open: true, reg: [38, 52], vel: 0.5 }, pad2: { p: 'sus', inst: 'violas', n: 3, reg: [55, 67], vel: 0.35 }, bass: { pat: '1---', vel: 0.7 },
+        lead: { ph: 'B1 B2', inst: 'vcSolo', oct: 1, vel: 0.7, shape: 0.4, swell: 0.35 }, lead2: { ph: 'BC r4', vel: 0.55, shape: 0.35 }, drums: { bdSoft: 'x.......x.......', hat: '..o....o...o..o.', vel: 0.5 } },
     ],
   });
 
@@ -183,20 +204,43 @@
     ],
   });
 
-  Track('race:psilon', { trim: 1.65,
-    desc: 'Psilon: crystalline FM bells and glass-harmonica overtones in a cool lydian shimmer',
-    motif: '8:.5 7:.5 5:.5 3:.5 5:1 1:1 | 9:.5 8:.5 6:.5 4:.5 6:1 2:1', motifInst: 'crystal',   // the first bars of the theme: the next interlude carries them when this race is met
-    bpm: 90, root: 'C', mode: 'lydian', oct: 1, tens: false,
-    forms: [['A', 'B', 'A2', 'A', 'B', 'A2', 'A', 'B', 'A2', 'A', 'B', 'A2', 'A', 'B', 'A2'], ['A', 'A2', 'B', 'A', 'A2', 'B', 'A', 'A2', 'B', 'A', 'A2', 'B', 'A', 'A2', 'B']],
-    inst: { pad: 'glassPad', bass: 'deep', lead: 'glass', lead2: 'harp', arp: 'glass', bell: 'crystal' },
+  // The Psilon (rewritten from nothing): hairless, enormous-brained scholars who see the galaxy as an unsolved problem, cool and a little
+  // smug. E lydian, the mode of the bright idea. A two-part invention in Bach's manner: the subject climbs the chord in a sequence (the
+  // clarinet), the countersubject answers in long notes (the bassoon); the laboratory ticks (the pizzicato, the claves) and its glassware rings
+  // (the celeste, the crotales); the contrast is the hypothesis, a cool slow line on the solo violin over the glass pad; the crest is the
+  // proof, the subject and its countersubject together in the full strings with the celeste above, landing on a eureka (the strike).
+  Track('race:psilon', {
+    desc: 'Psilon: a cool two-part invention in lydian — the subject climbing in sequence on the clarinet, the countersubject in the bassoon, the laboratory ticking and its glassware ringing; the hypothesis on the solo violin; the proof and a eureka at the crest',
+    motif: '1:.5 3:.5 5:.5 3:.5 8:1 7:.5 6:.5 | 2:.5 4:.5 6:.5 4:.5 9:1 8:.5 7:.5', motifInst: 'clarinet',   // the first bars of the theme: the next interlude carries them when this race is met
+    bpm: 92, trim: 1.6, root: 'E', mode: 'lydian', tens: false, loopFrom: 'A',
+    forms: [['A', 'hyp', 'proof', 'C', 'A2', 'hyp2', 'proof', 'C'], ['A', 'hyp', 'proof', 'C', 'hyp2', 'A2', 'proof', 'C']],
+    inst: { pad: 'glassPad', pad2: 'strings', bass: 'pizz', lead: 'clarIowa', lead2: 'bassoonIowa', lead3: 'vlnSolo', lead4: 'glass', arp: 'pizz', arp2: 'harp', bell: 'crystal' },
     ph: {
-      PS1: '8:.5 7:.5 5:.5 3:.5 5:1 1:1 | 9:.5 8:.5 6:.5 4:.5 6:1 2:1 | 8:.5 7:.5 5:.5 7:.5 8:1 5:1 | 7:1 5:1 2:1 5:1',
-      PS2: '6:2 8:2 | 8:2 6:2 | 7:2 5:2 | 5:2 2:2',
+      PS1: '1:.5 3:.5 5:.5 3:.5 8:1 7:.5 6:.5 | 2:.5 4:.5 6:.5 4:.5 9:1 8:.5 7:.5 | 6:.5 8:.5 10:.5 8:.5 13:1 12:.5 11:.5 | 12:1 7:1 5:2',   // the subject: up the chord, in sequence
+      PS2: '8:.5 6:.5 5:.5 3:.5 1:1 3:1 | 9:.5 7:.5 6:.5 4:.5 2:1 4:1 | 7:.5 5:.5 4:.5 2:.5 7:1 9:1 | 8:4',                               // and down again, home
+      CS: '5:2 3:2 | 4:2 6:2 | 3:2 1:2 | 2:2 5:2', CS2: '5:2 3:2 | 4:2 6:2 | 5:2 7:2 | 8:4',                                           // the countersubject, and its close
+      H1: '10:3 8:1 | 7:4 | 6:2 4:2 | 5:4', H2: '10:3 12:1 | 12:2 10:2 | 9:2 6:2 | 8:4',                                                // the hypothesis
     },
     sec: [
-      { n: 'A', bars: 8, lv: 0.72, prog: 'IM7 II IM7 V | IM7 II IM7 V', pad: 'sus', bass: 'whole', lead: 'PS1 PS1', arp: { p: 'up8', vel: 0.28, reg: [60, 88] }, drums: { click3: 'o...o...o...o...' } },
-      { n: 'B', bars: 8, lv: 0.85, prog: 'vi IV IM7 V | vi IV IM7 V', pad: { p: 'sus', inst: 'airPad' }, bass: 'half', lead: { ph: 'PS2 PS2', inst: 'harp', vel: 0.7 }, lead2: { ph: 'PS2 PS2', inst: 'crystal', oct: 1, vel: 0.45 }, arp: { p: 'up', vel: 0.28, reg: [60, 90] }, bell: { dens: 0.3, res: 2, reg: [84, 103], vel: 0.45 }, drums: { click3: 'o...o...o...o...' } },
-      { n: 'A2', bars: 8, lv: 0.95, prog: 'IM7 II IM7 V | vi IV IM7 V', pad: { p: 'sus', inst: 'strings' }, bass: 'half', lead: 'PS1 PS2', lead2: { ph: 'PS1 PS2', inst: 'harp', oct: 1, vel: 0.4 }, arp: { p: 'updown', vel: 0.3, reg: [60, 90], jump: 0.08 }, bell: { dens: 0.3, res: 2, reg: [84, 103], vel: 0.45 }, drums: { click3: 'o...o...o...o...', shk: 'o.o.o.o.o.o.o.o.' } },
+      { n: 'intro', bars: 2, cres: [0.46, 0.56], prog: 'IM7 | II', pad: { p: 'swell', n: 3, reg: [64, 80], vel: 0.45 },
+        arp: { pat: ['0...0...0...0...', '0.0.0.0.0.2.0.2.'], res: 4, vel: 0.4, reg: [52, 71] }, bell: { dens: 0.12, res: 2, reg: [84, 103], vel: 0.35 },
+        drums: { click3: ['o...o...o...o...', 'o.o.o.o.o.o.o.o.'], vel: 0.45 } },
+      { n: 'A', bars: 8, lv: 0.62, prog: 'IM7 | II | vi | V | IM7 | II | V | I', pad: { p: 'sus', n: 3, reg: [64, 80], vel: 0.42 }, bass: { pat: '1.5.1.5.', vel: 0.7 },
+        lead: { ph: 'PS1 PS2', vel: 0.72, shape: 0.3, swell: 0.2 }, lead2: { ph: 'CS r4', oct: -1, vel: 0.6, shape: 0.35 },
+        arp2: { pat: '0.......2.......', res: 4, vel: 0.3, reg: [64, 83] }, bell: { dens: 0.1, res: 2, reg: [84, 103], vel: 0.32 }, drums: { click3: 'o...o...o...o...', vel: 0.4 } },
+      { n: 'hyp', bars: 8, lv: 0.54, prog: 'vi | iii | II | V | vi | iii | II | IM7', pad: { p: 'sus', n: 3, reg: [64, 82], vel: 0.5 }, pad2: { p: 'sus', inst: 'tremHi', n: 2, reg: [76, 88], vel: 0.35 }, bass: { pat: '1---', inst: 'deep', vel: 0.55 },
+        lead3: { ph: 'H1 H2', vel: 0.7, shape: 0.45, swell: 0.4 }, arp2: { pat: '0.1.2.3.', res: 2, vel: 0.3, reg: [60, 84] }, bell: { dens: 0.14, res: 2, reg: [84, 103], vel: 0.32 } },
+      { n: 'hyp2', bars: 8, lv: 0.52, prog: 'vi | iii | II | V | vi | iii | II | IM7', pad: { p: 'sus', n: 3, reg: [64, 82], vel: 0.48 }, bass: { pat: '1---', inst: 'deep', vel: 0.55 },
+        lead3: { ph: 'H1 H2', inst: 'altoFluteIowa', vel: 0.66, shape: 0.45, swell: 0.4 }, lead4: { ph: 'r4 H2', oct: 1, vel: 0.36 }, arp2: { pat: '0.1.2.3.', res: 2, vel: 0.3, reg: [60, 84] } },
+      { n: 'proof', bars: 8, cres: [0.82, 0.96], prog: 'IM7 | II | vi | V | IM7 | II | V | I', pad: { p: 'sus', n: 3, reg: [64, 82], vel: 0.45 }, pad2: { p: 'sus', n: 4, reg: [52, 76], vel: 0.6 }, bass: { pat: '1.5.1.5.', inst: 'deep', vel: 0.8 },
+        lead: { ph: 'PS1 PS2', inst: 'violas', oct: 1, vel: 0.75, shape: 0.3, swell: 0.25 }, lead3: { ph: 'PS1 PS2', vel: 0.55, shape: 0.3 }, lead2: { ph: 'CS CS2', inst: 'cellos', oct: -1, vel: 0.72, shape: 0.35, swell: 0.3 }, lead4: { ph: 'PS1 PS2', oct: 1, vel: 0.36 },
+        arp: { pat: '0.1.2.1.0.1.2.1.', res: 4, vel: 0.4, reg: [52, 71] }, bell: { dens: 0.2, res: 2, reg: [84, 103], vel: 0.36 }, timp: 'two',
+        drums: { click3: 'o.o.o.o.o.o.o.o.', tri: ['x...............', '................', '................', '................'], vel: 0.55 }, hit: true },
+      { n: 'C', bars: 4, cres: [0.6, 0.44], prog: 'IM7 | II | V | I', pad: { p: 'swell', n: 3, reg: [64, 80], vel: 0.42 }, bass: { pat: '1---', inst: 'deep', vel: 0.6 },
+        lead: { ph: 'PS2', vel: 0.6, shape: 0.3 }, arp: { pat: ['0.0.0.0.0.2.0.2.', '0...0...0...0...', '0.......0.......', '0...............'], res: 4, vel: 0.36, reg: [52, 71] }, drums: { click3: ['o...o...o...o...', 'o.......o.......'], vel: 0.38 } },
+      { n: 'A2', bars: 8, lv: 0.66, prog: 'IM7 | II | vi | V | IM7 | II | V | I', pad: { p: 'sus', n: 3, reg: [64, 80], vel: 0.42 }, bass: { pat: '1.5.1.5.', vel: 0.72 },
+        lead: { ph: 'PS1 PS2', inst: 'vlnSolo', vel: 0.68, shape: 0.3, swell: 0.2 }, lead2: { ph: 'CS CS2', inst: 'clarIowa', vel: 0.5, shape: 0.35 }, arp2: { pat: '0.......2.......', res: 4, vel: 0.3, reg: [64, 83] }, bell: { dens: 0.12, res: 2, reg: [84, 103], vel: 0.32 },
+        drums: { click3: 'o...o...o...o...', vel: 0.4 } },
     ],
   });
 
@@ -268,11 +312,9 @@
   // the hostile readings (research/06 §12.5: "same motif, lower register, faster, harsher timbre")
   const WAR = {
     alkari: { tempo: 1.2, down: 15, mode: 'mixolydian', inst: { lead: 'synth' } },                                                            // screeching, rapid
-    bulrathi: { tempo: 1.1, down: 2, mode: 'minor' },                                                                           // pounding, lower still
     darlok: { tempo: 1.08, inst: { lead: 'horn' }, drums: { kick: 'x..x....x..x....', rim: '......o.......o.', hiss: '....x.......x...' } },   // heartbeat pulse
     human: {},                                                                                                   // the march in minor, snare + brass
     mrrshan: { tempo: 1.15, down: 5, mode: 'phrygDom' },                                                                           // growling low brass
-    psilon: { inst: { lead: 'crystal' }, drums: { t5: 'X.......x.......', click3: 'o.o.o.o.o.o.o.o.' } },         // cold clusters, tremolo bells
     silicoid: { tempo: 1.15, down: 2, inst: { lead: 'horn' }, drums: { t5: 'X.......X.......', metal: 'x.......x.......', hiss: '....x.......x...' } },   // grinding pulses
   };
   for (const r in WAR) Music._warVariant('race:' + r, WAR[r]);
@@ -335,6 +377,57 @@
         lead2: { ph: 'R1 R2', vel: 0.72 }, drums: { t5: ['x.......x.......', 'x.......x.......', 'x...............', 'x...............'], metal: ['x...............', 'x...............', 'x...............', 'x...............'], vel: 0.75 } },
     ],
   });
+  // The Psilon, hostile: the cold equation. The invention ticking in the strings' spiccato over a tritone pedal, the countersubject in the low
+  // brass; the calculation (no tune: the claves, the clusters trembling high, the pedal); the hypothesis turned to a verdict in the horns; the
+  // proof in the brass and the spiccato.
+  Music._warVariant('race:psilon', { written: true, down: 3, bpm: 104, loopFrom: 'A',
+    desc: 'Psilon, hostile: the cold equation — the invention ticking in the spiccato, the countersubject in the low brass, a calculation of clicks and trembling clusters, the verdict in the horns',
+    forms: [['A', 'calc', 'verdict', 'proof', 'C', 'A', 'verdict', 'calc', 'proof', 'C'], ['A', 'calc', 'verdict', 'proof', 'C', 'calc', 'A', 'proof', 'C']],
+    inst: { pad: 'strTrem', pad2: 'tremHi', bass: 'deep', lead: 'strOst', lead2: 'lowBrass', lead3: 'horn', lead4: 'glass', arp: 'pizz', bell: 'crystal' },
+    def: { trim: 1.8 },
+    sec: [
+      { n: 'tick', bars: 2, cres: [0.56, 0.7], prog: 'IM7 | II', pad: { p: 'swell', n: 3, reg: [60, 76], vel: 0.5 }, bass: { pat: '1---', vel: 0.7 },
+        drums: { click3: 'o.o.o.o.o.o.o.o.', click: ['................', '..x...x...x...x.'], vel: 0.6 } },
+      { n: 'A', bars: 8, lv: 0.8, prog: 'IM7 | II | vi | V | IM7 | II | V | I', pad: { p: 'sus', n: 3, reg: [60, 76], vel: 0.45 }, bass: { pat: '1...5...1...5...', vel: 0.8 },
+        lead: { ph: 'PS1 PS2', vel: 0.85 }, lead2: { ph: 'CS CS2', oct: -1, vel: 0.7, shape: 0.3 }, arp: { pat: '0.1.2.1.0.1.2.1.', res: 4, vel: 0.42, reg: [50, 69] },
+        drums: { click3: 'o.o.o.o.o.o.o.o.', click: '..x...x...x...x.', t5: 'x.......x.......', vel: 0.72 }, timp: 'two' },
+      { n: 'calc', bars: 4, cres: [0.72, 0.9], prog: 'Icl | IIcl | vicl | Vcl', pad2: { p: 'swell', n: 4, reg: [76, 91], vel: 0.6 }, bass: { pat: '1.......1.......', vel: 0.75 },
+        bell: { dens: 0.35, res: 4, reg: [84, 103], vel: 0.38 }, drums: { click3: 'xxxxxxxxxxxxxxxx', click: ['x...............', 'x.......x.......', 'x...x...x...x...', 'x.x.x.x.x.x.x.x.'], t5: ['x...............', 'x...............', 'x.......x.......', 'x...x...x...x...'], vel: 0.8 } },
+      { n: 'verdict', bars: 8, lv: 0.84, prog: 'vi | iii | II | V | vi | iii | II | IM7', pad: { p: 'sus', n: 4, reg: [60, 80], vel: 0.55 }, bass: { pat: '1.1.1.1.', vel: 0.75 },
+        lead3: { ph: 'H1 H2', vel: 0.85, shape: 0.35, swell: 0.3 }, arp: { pat: '0.1.2.1.', res: 2, vel: 0.4, reg: [50, 69] }, drums: { click3: 'o...o...o...o...', t5: 'x.......x.......', vel: 0.65 }, timp: 'two' },
+      { n: 'proof', bars: 8, cres: [0.9, 1.0], prog: 'IM7 | II | vi | V | IM7 | II | V | I', pad: { p: 'sus', n: 4, reg: [60, 80], vel: 0.6 }, bass: { pat: '1.5.1.5.', vel: 0.9 },
+        lead: { ph: 'PS1 PS2', vel: 0.88 }, lead3: { ph: 'PS1 PS2', vel: 0.82, harm: -2, shape: 0.3, swell: 0.3 }, lead2: { ph: 'CS CS2', oct: -1, vel: 0.8, shape: 0.3 }, lead4: { ph: 'PS1 PS2', oct: 1, vel: 0.35 },
+        drums: { click3: 'o.o.o.o.o.o.o.o.', click: '..x...x...x...x.', t5: 'x...x...x...x...', crash: ['x...............', '................', '................', '................'], vel: 0.85 }, timp: 'beats', hit: 'tam' },
+      { n: 'C', bars: 4, cres: [0.8, 0.6], prog: 'IM7 | II | V | I', pad: { p: 'sus', n: 3, reg: [60, 76], vel: 0.5 }, bass: { pat: '1---', vel: 0.75 },
+        lead2: { ph: 'CS2', oct: -1, vel: 0.7, shape: 0.3 }, drums: { click3: ['o.o.o.o.o.o.o.o.', 'o...o...o...o...', 'o.......o.......', 'o...............'], vel: 0.62 } },
+    ],
+  });
+
+  // The Bulrathi, hostile: roused. The fire song in the horns ripping in unison over war drums and the low brass; the roar (no tune: a drum
+  // fill driving forward, the low brass and the cellos' tremolo); the garden scorched (its line in the trombones); the anger at full.
+  Music._warVariant('race:bulrathi', { written: true, down: 2, bpm: 84, loopFrom: 'A',
+    desc: 'Bulrathi, hostile: roused — the fire song ripping in the horns over war drums and the low brass, a roar of drums, the garden scorched in the trombones, the anger at full',
+    forms: [['A', 'roar', 'scorched', 'anger', 'C', 'A', 'scorched', 'roar', 'anger', 'C'], ['A', 'roar', 'scorched', 'anger', 'C', 'roar', 'A', 'anger', 'C']],
+    inst: { pad: 'tremLo', pad2: 'strTrem', pad3: 'brassStab', bass: 'deep', lead: 'horn', lead2: 'lowBrass', lead3: 'trombones', lead4: 'tuba' },
+    def: { trim: 1.8 },
+    sec: [
+      { n: 'roused', bars: 2, cres: [0.6, 0.74], prog: 'i | i', pad: { p: 'swell', n: 2, open: true, reg: [38, 52], vel: 0.6 }, bass: { pat: '1---', vel: 0.75 },
+        drums: { t5: ['x.......x.......', 'x...x...x...x...'], t4: ['................', '......x.....x.x.'], vel: 0.75 } },
+      { n: 'A', bars: 8, lv: 0.82, prog: 'i | bVII | bVI | v | i | bVII | iv | i', pad: { p: 'sus', n: 2, open: true, reg: [38, 52], vel: 0.55 }, bass: { pat: '1-1-', vel: 0.85 },
+        lead: { ph: 'B1 B2', vel: 0.88, shape: 0.3, swell: 0.3 }, lead2: { ph: 'B1 B2', oct: -1, vel: 0.65, shape: 0.3 },
+        drums: { t5: 'x...x...x...x...', t4: '......x.......x.', bd: 'x.......x.......', vel: 0.8 }, timp: 'two' },
+      { n: 'roar', bars: 4, cres: [0.78, 0.94], prog: 'i | bVI | bVII | i', pad: { p: 'swell', n: 2, open: true, reg: [38, 52], vel: 0.7 }, pad3: { p: 'stab', pat: 'x.....x.....x...', n: 3, open: true, reg: [43, 58], vel: 0.75, gate: 0.4 }, bass: { pat: '1.1.1.1.', vel: 0.85 },
+        drums: { t5: 'x.x.x.x.x.x.x.x.', t4: 'x..x..x.x..x..x.', t3: '....x.......x.x.', bd: 'x...x...x...x...', vel: 0.85 }, timp: 'beats', fill: 'tom' },
+      { n: 'scorched', bars: 4, lv: 0.84, prog: 'bIII | bVII | iv | V', pad2: { p: 'sus', n: 4, reg: [52, 72], vel: 0.55 }, bass: { pat: '1-1-', vel: 0.8 },
+        lead3: { ph: 'G1', oct: -1, vel: 0.85, shape: 0.35, swell: 0.3 }, drums: { t5: 'x.......x.......', t4: '......x.......x.', vel: 0.7 }, timp: 'two' },
+      { n: 'anger', bars: 8, cres: [0.9, 1.0], prog: 'i | bVII | bVI | v | i | bVII | iv | i', pad: { p: 'sus', n: 2, open: true, reg: [38, 52], vel: 0.6 }, pad2: { p: 'sus', n: 4, reg: [52, 72], vel: 0.55 }, pad3: { p: 'stab', pat: 'x.......x.......', n: 3, open: true, reg: [43, 58], vel: 0.7, gate: 0.4 }, bass: { pat: '1-1-', vel: 0.9 },
+        lead: { ph: 'B1 B2', oct: 1, vel: 0.88, harm: -2, shape: 0.3, swell: 0.3 }, lead3: { ph: 'B1 B2', vel: 0.85, shape: 0.3 }, lead4: { ph: 'B1 B2', oct: -1, vel: 0.65 },
+        drums: { t5: 'x...x...x...x...', t4: '......x.......x.', bd: 'x.......x.......', crash: ['x...............', '................', '................', '................'], vel: 0.88 }, timp: 'beats', hit: 'tam' },
+      { n: 'C', bars: 2, cres: [0.8, 0.62], prog: 'i | i', pad: { p: 'sus', n: 2, open: true, reg: [38, 52], vel: 0.6 }, bass: { pat: '1---', vel: 0.8 },
+        lead4: { ph: 'TT', vel: 0.7 }, drums: { t5: ['x...x...x...x...', 'x...............'], vel: 0.75 } },
+    ],
+  });
+
   // The Sakkra, hostile: the hunt. The coil hammered in the strings' spiccato over the low brass, the toms driving the three-three-two the
   // marimba walked, the men's shouts; a passage of its own with no tune (drums and the low brass calling); the mist becomes the horns.
   Music._warVariant('race:sakkra', { written: true, down: 2, bpm: 112, loopFrom: 'A',
