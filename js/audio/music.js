@@ -288,6 +288,8 @@
     choirMen: smp('chorusMen', 0.23, { att: 0.12, rel: 1.3, hp: 100, hum: 1.5, alt: true, eq: [[5000, 2.5, 'hs']] }, 'uuh'), choirMenAh: smp('chorusMen', 0.19, { att: 0.12, rel: 1.3, hp: 100, hum: 1.5, alt: true, eq: [[5000, 2.5, 'hs']] }, 'aah'), choirWomen: smp('chorusWomen', 0.16, { att: 0.15, rel: 1.4, hp: 220, hum: 1.5, alt: true, eq: [[5000, 2, 'hs']] }, 'aah'),
     // the two machine races keep a little of their electronic character
     seqSyn: SYN.seq, arpSawSyn: SYN.arpSaw, moogSyn: SYN.moog, pulseSyn: SYN.pulse, synthSyn: SYN.synth,
+    // the theremin of the 1950s science-fiction film (the big-brained aliens): a pure sine sliding slowly into each note, a deep vibrato at once
+    theremin: { lvl: 0.34, v: 'flute', h2: 0.05, h3: 0.012, breath: 0, vib: 30, vibHz: 6.2, vibAt: 0.04, scoop: 0.9, scoopT: 0.22, att: 0.14, rel: 0.35, gain: 0.6 },
   });
   Music._SYN = SYN;
   // the sounding range of each recording (MIDI, C4 = 60): what the section or the player can give. A pad, choir, arpeggio or sparkle

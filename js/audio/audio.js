@@ -707,15 +707,15 @@
     const v = mkv(eng, dest, t, o, 2); if (!v) return null;
     const end = t + dur + rel + 0.08, env = v.gain(0.0001), oscs = [];
     const o1 = v.osc('sine', f, t, end), o2 = v.osc('sine', f * 2, t, end), o3 = v.osc('sine', f * 3, t, end);
-    o1.frequency.setValueAtTime(f * 0.985, t); o1.frequency.exponentialRampToValueAtTime(f, t + 0.06);
+    o1.frequency.setValueAtTime(f * num(o.scoop, 0.985), t); o1.frequency.exponentialRampToValueAtTime(f, t + num(o.scoopT, 0.06));   // scoop/scoopT: the slide into the note (the theremin's is slow and wide)
     const g2 = v.gain(num(o.h2, 0.2)), g3 = v.gain(num(o.h3, 0.06));
     o1.connect(env); o2.connect(g2); g2.connect(env); o3.connect(g3); g3.connect(env); oscs.push(o1, o2, o3);
     const nz = v.noise('pink', t, end), bp = v.filter('bandpass', clamp(f * 2.5, 1200, 7000), 2.2), ng = v.gain(0.0001), br = num(o.breath, 0.5);
     ng.gain.setValueAtTime(0.0001, t); ng.gain.linearRampToValueAtTime(br, t + 0.025); ng.gain.exponentialRampToValueAtTime(Math.max(0.0002, br * 0.22), t + 0.14);
     nz.connect(bp); bp.connect(ng); ng.connect(env);
     if (dur > 0.4 && num(o.vib, 7) > 0) {
-      const vl = v.osc('sine', 5.2 + eng.rand() * 0.6, t, end), vg = v.gain(0.0001);
-      vg.gain.setValueAtTime(0.0001, t + 0.2); vg.gain.linearRampToValueAtTime(num(o.vib, 7), t + 0.7);
+      const vl = v.osc('sine', num(o.vibHz, 5.2) + eng.rand() * 0.6, t, end), vg = v.gain(0.0001), va = num(o.vibAt, 0.2);   // vibAt: when the vibrato begins (the theremin's at once)
+      vg.gain.setValueAtTime(0.0001, t + va); vg.gain.linearRampToValueAtTime(num(o.vib, 7), t + va + 0.5);
       vl.connect(vg); for (const os of oscs) vg.connect(os.detune);
     }
     env.connect(v.out);
