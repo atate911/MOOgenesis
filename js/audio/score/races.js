@@ -346,28 +346,46 @@
     ],
   });
 
+  // The Silicoid (rewritten from nothing; the word: crystalline): living crystal and cooling lava, slow, ancient, speaking rarely. C minor
+  // pentatonic, its chords stacked fourths (the crystal's lattice: C F B-flat E-flat, G C F B-flat) and bare fifths. The gesture is the
+  // crystal growing: four notes climbing in fourths on the celeste with the crotales ringing an octave above, then held to ring; beneath, the
+  // lava (the cellos' tremolo swelling, a deep sub swell, slow stone strokes on the timpani). The contrast is the stone speaking, rarely and
+  // low (the solo double bass and the bass trombone) under the lattice's shimmer; the crest is the eruption, the crystal's climb in every
+  // bell and the horns far below, the strike.
   Track('race:silicoid', {
-    desc: 'Silicoid: vast resonant drones with slow metallic chimes and deep geologic pulses',
-    motif: '5:4 | 3:4', motifInst: 'chime',   // the first bars of the theme: the next interlude carries them when this race is met
-    bpm: 50, trim: 2.54, root: 'C#', mode: 'minor', tens: false,
-    forms: [['A', 'B', 'C', 'A', 'B', 'C', 'A', 'B', 'C', 'A', 'B', 'C', 'A', 'B', 'C', 'A', 'B', 'C'], ['A', 'C', 'B', 'A', 'C', 'B', 'A', 'C', 'B', 'A', 'C', 'B', 'A', 'C', 'B', 'A', 'C', 'B']],
-    inst: { pad: 'drone', bass: 'deep', lead: 'chime', lead2: 'chime', bell: 'chime', choir: 'uuh' },
+    desc: 'Silicoid: crystalline — crystals growing in fourths on the celeste and crotales over the lava’s slow rumble; the stone speaking rarely and low; an eruption of bells and horns at the crest',
+    motif: '6:1 8:1 10:1 12:1 | 12:4', motifInst: 'glass',   // the first bars of the theme: the next interlude carries them when this race is met
+    bpm: 48, trim: 1.6, root: 'C', mode: 'minPent', tens: false, loopFrom: 'A',
+    forms: [['A', 'stone', 'erupt', 'C', 'A2', 'stone2', 'erupt', 'C'], ['A', 'stone', 'erupt', 'C', 'stone2', 'A2', 'erupt', 'C']],
+    inst: { pad: 'glassPad', pad2: 'tremLo', bass: 'subSwell', lead: 'glass', lead2: 'crystal', lead3: 'cbSolo', lead4: 'bassTbn', arp: 'harp', bell: 'chime' },
     ph: {
-      SL1: '5:4 | 3:4 | 4:4 | 2:4',
-      SL2: '3:4 | 5:4 | 4:4 | 6:4',
-      SL3: '8:4 | 6:4 | 5:4 | 2:4',
+      CR1: '6:1 8:1 10:1 12:1 | 12:4 | 9:1 11:1 13:1 15:1 | 15:4',                  // the crystal grows: up in fourths, and rings
+      CR2: '15:1 13:1 11:1 9:1 | 9:4 | 12:1 10:1 8:1 6:1 | 6:4',
+      FIN: '11:4', ST1: '1:4 | 3:2 2:2 | 4:3 3:1 | 1:4', ST2: '5:4 | 3:2 1:2 | 5:2 4:2 | 1:4',      // the stone speaks
     },
     sec: [
-      { n: 'A', bars: 4, lv: 0.7, prog: 'i:2 bVII:2', pad: { p: 'sus', n: 3, reg: [48, 67], vel: 0.9 }, bass: 'whole', lead: { ph: 'SL1', oct: 0, vel: 0.8, echo: 0.3 }, timp: { p: 'hits', vel: 0.55, dur: 3 }, drums: { metal: 'x...............', whisper2: ['................', '........x.......', '................', '................'] } },
-      { n: 'B', bars: 4, lv: 0.85, prog: 'i:2 bII:2', pad: { p: 'sus', n: 3, reg: [48, 67], vel: 0.9 }, bass: 'whole', lead: { ph: 'SL2', oct: 0, vel: 0.8, echo: 0.3 }, choir: { v1: 'u', v2: 'o', vel: 0.45, reg: [49, 68] }, timp: { p: 'hits', vel: 0.55, dur: 3 }, drums: { metal: 'x...............', metal2: ['................', '........o.......', '................', '................'] } },
-      { n: 'C', bars: 4, lv: 0.8, prog: 'bVI:2 V:2', pad: { p: 'sus', n: 3, reg: [48, 67], vel: 0.9 }, bass: 'whole', lead: { ph: 'SL3', oct: 0, vel: 0.8, echo: 0.3 }, lead2: { ph: 'SL3', inst: 'glass', oct: 1, vel: 0.35 }, choir: { v1: 'o', v2: 'a', vel: 0.5, reg: [49, 68] }, timp: { p: 'hits', vel: 0.6, dur: 3 }, drums: { metal: 'x...............' } },
+      { n: 'lava', bars: 2, cres: [0.46, 0.56], prog: 'i5 | i5', pad2: { p: 'swell', n: 2, open: true, reg: [43, 55], vel: 0.5 }, bass: { pat: '1---', vel: 0.55 },
+        bell: { dens: 0.08, res: 1, reg: [60, 79], vel: 0.45 }, timp: { p: 'hits', vel: 0.45, dur: 3 } },
+      { n: 'A', bars: 4, lv: 0.62, prog: 'Iq | Iq | Vq | Vq', pad: { p: 'sus', n: 4, reg: [60, 79], vel: 0.42 }, pad2: { p: 'swell', n: 2, open: true, reg: [43, 55], vel: 0.42 }, bass: { pat: '1---', vel: 0.55 },
+        lead: { ph: 'CR1', vel: 0.72, echo: 0.35 }, lead2: { ph: 'CR1', oct: 1, vel: 0.4, echo: 0.3 }, arp: { pat: '0...1...2...3...', res: 4, vel: 0.28, reg: [60, 84] }, timp: { p: 'hits', vel: 0.45, dur: 3 } },
+      { n: 'stone', bars: 4, lv: 0.56, prog: 'bVII5 | iv5 | Vq | i5', pad: { p: 'sus', n: 3, reg: [64, 84], vel: 0.42 }, pad2: { p: 'sus', n: 2, open: true, reg: [43, 55], vel: 0.45 }, bass: { pat: '1---', vel: 0.55 },
+        lead3: { ph: 'ST2', oct: -1, vel: 0.75, shape: 0.5, swell: 0.4 }, lead4: { ph: 'ST2', vel: 0.45, shape: 0.5 }, bell: { dens: 0.1, res: 1, reg: [72, 96], vel: 0.35 } },
+      { n: 'stone2', bars: 4, lv: 0.54, prog: 'i5 | Iq | Vq | i5', pad: { p: 'sus', n: 3, reg: [64, 84], vel: 0.42 }, pad2: { p: 'sus', n: 2, open: true, reg: [43, 55], vel: 0.45 }, bass: { pat: '1---', vel: 0.55 },
+        lead3: { ph: 'ST1', oct: -1, vel: 0.72, shape: 0.5, swell: 0.4 }, lead: { ph: 'r1 CR1', vel: 0.4, echo: 0.35 } },
+      { n: 'erupt', bars: 4, cres: [0.82, 0.98], prog: 'Iq | Iq | Vq | Vq', pad: { p: 'sus', n: 4, reg: [60, 84], vel: 0.55 }, pad2: { p: 'sus', n: 2, open: true, reg: [43, 55], vel: 0.6 }, bass: { pat: '1---', vel: 0.8 },
+        lead: { ph: 'CR1', vel: 0.85, echo: 0.3 }, lead2: { ph: 'CR1', oct: 1, vel: 0.55, echo: 0.3 }, lead3: { ph: 'CR1', inst: 'bell', oct: 1, vel: 0.5 }, lead4: { ph: 'CR1', inst: 'horn', oct: -2, vel: 0.85, shape: 0.35, swell: 0.4 },
+        arp: { pat: '0123012301230123', res: 4, vel: 0.34, reg: [60, 88] }, bell: { dens: 0.18, res: 1, reg: [60, 79], vel: 0.5 }, timp: { p: 'two', roll: 1 },
+        drums: { tam: ['x...............', '................', '................', '................'], bd: 'x.......x.......', vel: 0.6 }, hit: 'tam' },
+      { n: 'C', bars: 2, cres: [0.6, 0.42], prog: 'i5 | i5', pad2: { p: 'swell', n: 2, open: true, reg: [43, 55], vel: 0.45 }, bass: { pat: '1---', vel: 0.5 },
+        lead: { ph: 'r1 FIN', vel: 0.5, echo: 0.35 }, bell: { dens: 0.08, res: 1, reg: [60, 79], vel: 0.4 } },
+      { n: 'A2', bars: 4, lv: 0.64, prog: 'Vq | Vq | Iq | i5', pad: { p: 'sus', n: 4, reg: [60, 79], vel: 0.42 }, pad2: { p: 'swell', n: 2, open: true, reg: [43, 55], vel: 0.42 }, bass: { pat: '1---', vel: 0.55 },
+        lead: { ph: 'CR2', inst: 'vibes', vel: 0.7, echo: 0.35 }, lead2: { ph: 'CR2', oct: 1, vel: 0.4, echo: 0.3 }, lead3: { ph: 'CR2', inst: 'harp', oct: -1, vel: 0.4 }, timp: { p: 'hits', vel: 0.45, dur: 3 } },
     ],
   });
 
   // the hostile readings (research/06 §12.5: "same motif, lower register, faster, harsher timbre")
   const WAR = {
     darlok: { tempo: 1.08, inst: { lead: 'horn' }, drums: { kick: 'x..x....x..x....', rim: '......o.......o.', hiss: '....x.......x...' } },   // heartbeat pulse
-    silicoid: { tempo: 1.15, down: 2, inst: { lead: 'horn' }, drums: { t5: 'X.......X.......', metal: 'x.......x.......', hiss: '....x.......x...' } },   // grinding pulses
   };
   for (const r in WAR) Music._warVariant('race:' + r, WAR[r]);
 
@@ -557,6 +575,31 @@
         drums: { t4: 'x.....x.....', t3: 'x...x...x...', t1: '..x.....x...', rim: '.x..x..x..x.', crash: ['x...........', '............', '............', '............'], vel: 0.88 }, timp: 'beats', hit: 'tam' },
       { n: 'C', bars: 4, cres: [0.8, 0.6], prog: 'i | iv | V | i', pad: { p: 'sus', n: 2, open: true, reg: [43, 55], vel: 0.6 }, bass: { pat: '1.....', inst: 'deep', vel: 0.8 },
         lead: { ph: 'MR1', vel: 0.75, shape: 0.3 }, drums: { t4: ['x.....x.....', 'x.....x.....', 'x...........', 'x...........'], vel: 0.72 } },
+    ],
+  });
+
+  // The Silicoid, hostile: the quake. The crystal's climb shattering in the glockenspiel and the spiccato over low-brass clusters and the
+  // cellos' tremolo; the quake itself (no tune: the timpani rolling up into the tam-tam, stone strokes); the stone speaking in the tuba and
+  // the low brass at full; the eruption.
+  Music._warVariant('race:silicoid', { written: true, down: 2, bpm: 54, loopFrom: 'A',
+    desc: 'Silicoid, hostile: the quake — the crystal’s climb shattering in the glockenspiel and spiccato over low-brass clusters, the timpani rolling into the tam-tam, the stone speaking in the tuba and low brass',
+    forms: [['A', 'quake', 'fault', 'erupt', 'C', 'A', 'fault', 'quake', 'erupt', 'C'], ['A', 'quake', 'fault', 'erupt', 'C', 'quake', 'A', 'erupt', 'C']],
+    inst: { pad: 'strTrem', pad2: 'tremLo', pad3: 'lowBrass', bass: 'subSwell', lead: 'bell', lead2: 'strOst', lead3: 'tuba', lead4: 'horn', bell: 'chime' },
+    def: { trim: 1.8 },
+    sec: [
+      { n: 'rumble', bars: 2, cres: [0.6, 0.74], prog: 'i5 | i5', pad2: { p: 'swell', n: 2, open: true, reg: [43, 55], vel: 0.65 }, bass: { pat: '1---', vel: 0.7 }, timp: { p: 'hits', roll: 1 },
+        drums: { bd: ['x...............', 'x.......x.......'], vel: 0.65 } },
+      { n: 'A', bars: 4, lv: 0.82, prog: 'Iq | Iq | Vq | Vq', pad: { p: 'sus', n: 4, reg: [58, 77], vel: 0.5 }, pad2: { p: 'sus', n: 2, open: true, reg: [43, 55], vel: 0.6 }, pad3: { p: 'stab', pat: 'x.......x.......', n: 3, reg: [43, 58], vel: 0.65, gate: 0.6 }, bass: { pat: '1---', vel: 0.75 },
+        lead: { ph: 'CR1', oct: 1, vel: 0.7 }, lead2: { ph: 'CR1', vel: 0.75 }, drums: { bd: 'x.......x.......', metal: 'x...............', vel: 0.72 }, timp: 'two' },
+      { n: 'quake', bars: 2, cres: [0.74, 0.95], prog: 'i5 | iv5', pad2: { p: 'swell', n: 2, open: true, reg: [43, 55], vel: 0.75 }, bass: { pat: '1---', vel: 0.8 }, timp: { p: 'hits', roll: 2 },
+        drums: { bd: ['x...x...x...x...', 'x.x.x.x.x.x.x.x.'], tam: ['................', '............x...'], vel: 0.82 } },
+      { n: 'fault', bars: 4, lv: 0.86, prog: 'bVII5 | iv5 | Vq | i5', pad: { p: 'sus', n: 4, reg: [58, 77], vel: 0.55 }, pad2: { p: 'sus', n: 2, open: true, reg: [43, 55], vel: 0.6 }, bass: { pat: '1---', vel: 0.75 },
+        lead3: { ph: 'ST2', vel: 0.85, shape: 0.4, swell: 0.4 }, lead4: { ph: 'ST2', oct: 1, vel: 0.75, shape: 0.4, swell: 0.4 }, drums: { bd: 'x.......x.......', vel: 0.7 }, timp: 'two' },
+      { n: 'erupt', bars: 4, cres: [0.9, 1.0], prog: 'Iq | Iq | Vq | Vq', pad: { p: 'sus', n: 4, reg: [58, 77], vel: 0.6 }, pad2: { p: 'sus', n: 2, open: true, reg: [43, 55], vel: 0.65 }, pad3: { p: 'stab', pat: 'x...x...x...x...', n: 3, reg: [43, 58], vel: 0.7, gate: 0.6 }, bass: { pat: '1---', vel: 0.85 },
+        lead: { ph: 'CR1', oct: 1, vel: 0.75 }, lead2: { ph: 'CR1', vel: 0.8 }, lead4: { ph: 'CR1', oct: -2, vel: 0.88, shape: 0.35, swell: 0.4 }, lead3: { ph: 'CR1', oct: -2, vel: 0.65 },
+        drums: { bd: 'x...x...x...x...', metal: 'x.......x.......', tam: ['x...............', '................', '................', '................'], vel: 0.88 }, timp: 'beats', hit: 'tam' },
+      { n: 'C', bars: 2, cres: [0.8, 0.6], prog: 'i5 | i5', pad2: { p: 'sus', n: 2, open: true, reg: [43, 55], vel: 0.65 }, bass: { pat: '1---', vel: 0.75 }, timp: { p: 'hits', vel: 0.6, dur: 3 },
+        lead3: { ph: 'r1 ST1', vel: 0.6 } },
     ],
   });
 
