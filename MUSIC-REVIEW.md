@@ -427,51 +427,154 @@ Their strengths, to keep: each is distinct from the rest of the score (uniquenes
 - **No leitmotif.** The races do not quote the hymn or the commonwealth's tune (the second is close to overused already). Coherence comes
   from the sound instead: the hall, the recorded palette, phrasing, dynamics. The theme bonus stays at zero, by choice.
 
-### The plan
+### The rewrite, in sequence
 
-**Shared work, first.**
+Eleven stages: the groundwork, then one race at a time, each race's theme and hostile reading written together, measured, rendered and
+listened to before the next begins. The order is the pilot first, then the two machine races (the lowest, and the test of the electronic
+branch), then the rest from the bottom of the table up: **Sakkra, Klackon, Meklar, Psilon, Bulrathi, Human, Alkari, Mrrshan, Silicoid,
+Darlok.** There are three listening stops where the plan waits for the user: after the Sakkra (the form and the sound, which every later
+race copies), after the Meklar (the electronic branch), and at the end.
 
-1. **The ninety-second form.** Every theme gets an introduction played once (`loopFrom`: two to four bars, the race's colour alone, from
-   about 0.4), a statement, a contrast (a new phrase, new chords, a thinner or different texture), and a crest between 45 and 75 seconds,
-   then a settle into the loop. Targets: at least four phrases, five chords (where the mode allows), a dynamic range of 0.35 or more, the
-   first crest inside 90 s, levels that move within sections (crescendos into the crest, hairpins in the lines).
-2. **The refresh.** The orchestral profile for every theme that is mostly recorded instruments; every sung or blown line phrased (`shape`,
-   `swell`); the soloists where a solo is written (solo flute, alto flute, solo horn, solo trumpet, cor anglais, bass clarinet, solo
-   strings), the real harp where the plucks are meant as a harp, the real choir or cantor where voices are the race's.
-3. **The written hostile reading.** `_warVariant` takes per-section overrides (`secs`), sections of its own (`add`) and its own forms, so
-   each reading keeps the theme's phrases (one shared `ph`, so the tune cannot drift) and is otherwise written for the race. No shared
-   default drums or brass: each race chooses its own. Target: no two hostile readings measure above 0.88 in likeness, and each reading sits
-   nearer its own theme than any other piece.
-4. **The checks.** The review tool, the lint, the QA and the seams after each race; strong beats on a chord tone at 0.8 or more, the
-   intended rubs marked to keep (`!`); a render of the first 90 s of each theme and reading for the loudness and for listening.
+#### Stage 0: the groundwork
 
-**A pilot, then the rest.** One race done whole (theme and reading) and listened to before the others, to settle the form and the sound.
-The Sakkra are suggested: mid-table, the most anonymous, and their direction is clear. Then the two machine races (the lowest, and the
-electronic question), then the rest in table order.
+1. **A baseline.** Save the review tool's numbers, the likeness of every race piece to its three nearest pieces, and the compile hash of each
+   of the twenty as they are now, so every stage reports before and after.
+2. **The hostile reading, written.** `_warVariant` gains `secs` (a section's settings merged over the theme's, per section), `add`
+   (sections of the reading's own), `forms` and `loopFrom` (the reading's own order and opening), and `defaults: false` (none of the shared
+   brass lead, brass stabs, dark pad, moog bass, men's choir or kick and snare: the reading names its own). The reading still copies the
+   theme's `ph`, so the tune is the theme's by construction; a QA check fails if a reading's phrases differ from its theme's. Until a race is
+   rewritten its reading takes the old defaults, so nothing changes before its turn.
+3. **The review tool, for races.** `node tools/score-review.js --races` reports, over the first 90 seconds of the first pass: the time of the
+   crest, the dynamic range, the phrases and chords heard, strong beats on a chord tone, the snaps; and for every race piece its nearest
+   neighbour and likeness, and for every reading its likeness to its own theme and to the nearest other reading.
+4. **The refresh.** The race entries in `js/audio/score/refresh.js` are reset race by race as each is rewritten: the orchestral profile
+   (`orch`) for every theme that is mostly recorded instruments; the hall and the mastering for all of them, the machine races included, so
+   the seam from the map never changes rooms; the mix measured again against the bed (the solo about 3 dB over it).
+5. **Levels.** The first 90 seconds of every theme render to about -17 LUFS (the map's level), every hostile reading to about -15 (the war
+   readings' level now); `tools/audio-report.js` measures them.
 
-**Race by race (directions, to be listened against).**
+#### Every race: the same procedure
 
-- **Sakkra.** Reptilian, jungle-warm. The plucks as the harp with the pizzicato under it (a kora's sound), a bass marimba-like pulse, the
-  hiss kept; a contrast section without the drums (alto flute over a dorian drone). Hostile: fast tribal toms and a low-brass chant, the
-  kora line hammered in the strings' spiccato.
-- **Klackon.** The hive, electronic: the sequencer and the clicks kept, with the marimba and the strings' col legno doubling them. The
-  harmony fixed: the whole-tone line over a pedal or over chords drawn from it, so its notes are not off the chord half the time; more than
-  one cell of tune, the cells growing in canon like a swarm. Hostile: the swarm itself, saw arpeggios faster and denser, the low brass in
-  clusters.
-- **Meklar.** The machine, electronic: four on the floor and the metal, but a real melody (not a one-bar cell moved down a step), chords
-  that move, the low strings' ostinato under the sequencer. Kept clear of the two older battle cues it now resembles. Hostile: an industrial
-  grind (anvils, the clock, low brass on the off-beats), not the battle's saw arpeggios.
-- **Mrrshan.** The snake's cor anglais and the toms kept; a contrast with the drums out (the reed alone over a drone), the percussion
-  building over the ninety seconds instead of starting full. Hostile: the growling low brass in the phrygian dominant, the toms faster.
-- **Alkari.** Air and flight: the solo flute, the real harp, high strings and the celeste; a second strain in the relative minor on the alto
-  flute. Hostile: shrieking flute runs diving down, the high strings' tremolo, the taiko.
-- **Bulrathi.** The stomp and the low brass kept; a second half to the tune, the bass trombone and the tuba as soloists, the men chanting.
-  Hostile: the war drums, the horns ripping in unison, the men's shouts as stabs.
-- **Darlok.** The harmonic-minor dark kept and widened (iv, V, ♭VI, ii°); the alto flute and a solo viola, the choir as a whisper. Hostile:
-  col legno ticking, the heartbeat, tremolo on the bridge, the tune in the bass clarinet.
-- **Human.** Noble and less generic: a tune of its own with a harmonic signature (a lydian lift or the flat seventh), the solo trumpet over
-  the snare; kept apart from the news bed. Hostile: a severe march in the minor.
-- **Psilon.** Cerebral and crystalline: a canon or fugato (precise counterpoint for the intellectual race), the celeste and the solo
-  violin's harmonics over the glass pad. Hostile: cold clusters and the tritone, the counterpoint ticking in the pizzicato.
-- **Silicoid.** Geologic: the drone and the chimes kept, slow harmonic motion, a tune for low soloists (the bass clarinet, the solo
-  double bass) under the chimes. Hostile: grinding low-brass clusters and tectonic hits.
+1. Write the theme: the phrases (the old opening phrase kept, so the race still sounds like itself, with new phrases after it), the
+   harmony, the sections, the 90-second first pass with its introduction (`loopFrom`), the longer loop after it (two `forms`, a still, three
+   to four minutes in all).
+2. Measure: the review tool against the targets below; the lint, the QA and the 840 seam pairings.
+3. Write the hostile reading with the new `_warVariant`: the theme's phrases and harmonic shape, its own orchestration, drums and tempo feel,
+   and one passage of its own. Measure it the same way.
+4. Render the first 90 seconds of both; set the trims; listen through the score player.
+5. Update the race's `motif` (the phrase the next interlude carries when the race is met) if the opening changed, the score player's notes
+   (`js/ui/scoreplayer-notes.js`), and this review's marks and lines for both pieces. Commit.
+
+**The targets, for every theme**: the crest between 45 and 75 seconds; a dynamic range of 0.35 or more inside the first 90 seconds; at least
+four phrases and five chords (the whole-tone Klackon excepted, by its scale); levels that move inside sections (a crescendo into the crest,
+every sung or blown line phrased with `shape` and `swell`); 0.8 or more of strong beats on a chord tone, the race's intended rubs marked to
+keep; no snaps that change the tune; likeness under 0.88 to every other piece. **For every reading**: nearer its own theme than any other
+piece, and under 0.88 to every other reading.
+
+#### The ten races
+
+Times are the first pass. Phrases named SK1, SK2 and so on are the existing ones, kept; the others are new.
+
+**1. Sakkra (pilot).** Reptilian and jungle-warm. A dorian, 100 bpm (2.4 s a bar).
+- *Form:* the introduction (4 bars: the hiss, the shaker and a low marimba pulse alone), A (8: the kora line SK1 SK2 as the harp doubled by
+  the pizzicato, over i IV), B (8: the alto flute on a new answer SK3 over ♭III ♭VII v), A2, the crest (8, at 48 to 67 s: the kora line and the
+  flute together on SK4, the line climbing, the tenor toms entering), C (4: settling onto i). In the loop: a still with no drums (the alto
+  flute alone over a dorian drone, the women humming far back).
+- *Sound:* the harp, the pizzicato, the alto flute, the strings' bed, the marimba low; the recorded hiss, shaker, toms and taps.
+- *Hostile, "the hunt":* 118 bpm, F♯ dorian. SK1 hammered in the strings' spiccato, SK2 chanted by the low brass, the men's "ha" as stabs,
+  the toms and the bass drum in 3+3+2. Its own passage: four bars of drums and low-brass calls with no tune.
+
+**2. Klackon.** The hive, electronic. C whole-tone, 132 bpm (1.8 s a bar).
+- *Harmony fixed:* the two augmented triads split the whole-tone scale exactly, so KL1 and KL2 are rewritten so that each bar's strong beats
+  land on that bar's triad (I+ or II+). A contrast section moves to the lydian dominant (C D E F♯ G A B♭), which keeps the whole-tone colour
+  and has real chords (I7, II, ♭VII, v).
+- *Form:* the introduction (4 bars: the clicks alone, then the sequencer opening its filter), A (8: KL1), B (8: KL2), C (8: the lydian-dominant
+  contrast, a new cell KL3 played as a canon, a second voice entering a beat behind, like a swarm gathering), A2, the crest (8, at 51 to
+  66 s), B2 (8), the end (4).
+- *Sound:* the sequencer, the pulse bass and the glass pad kept; the marimba (recorded) doubling the line, the strings' spiccato doubling the
+  sequencer softly as the acoustic layer; claves and wood block for the clicks.
+- *Hostile, "the swarm":* 145 bpm, A whole-tone. The saw arpeggios denser and faster, KL1 in the brass, the low brass in clusters on the
+  off-beats, the clicks doubled, the toms. Its own passage: eight bars where the arpeggios enter one at a time in canon, rising from half
+  level to full.
+
+**3. Meklar.** The machine, electronic, and kept clear of the two older battle cues. B minor, 120 bpm (2 s a bar, down from 128).
+- *A real tune:* MK3, a four-bar melody of long, even, cold notes over i ♭VI ♭III ♭VII, iv and V; MK1 stays as the machine's cell, MK2 as the
+  arpeggiated answer.
+- *Form:* the introduction (4 bars: the clock, the wood block and the anvil, the sequencer alone), A (8: MK1 and the bass), B (8: MK3 on the
+  celeste doubled by the synth lead), C (8: the pulse drops out, the strings held under the glass pad, MK3 in the solo cello: "the machine
+  thinking"), A2, the crest (8, at 48 to 64 s: MK3 in the horn section against the sequencer, every layer in), the end (4).
+- *Sound:* the four-on-the-floor kick, the anvil and the synth bass kept; a straight sixteenth-note sequencer in place of the saw arpeggios
+  and no galloping bass (those are what it shares with the battle cues); the strings' spiccato under it.
+- *Hostile, "the factory":* 132 bpm, phrygian. The anvils, the clock in sixteenths, the low brass on the off-beats, the men's "ah" as
+  mechanical stabs, MK3 in the brass. Its own passage: four bars of machinery alone, struck by low brass hits. No saw arpeggios.
+
+**Listening stop: the Sakkra, the Klackon and the Meklar.**
+
+**4. Psilon.** Cerebral and crystalline, built as a fugato for the race of scholars. C lydian, 90 bpm (2.7 s a bar).
+- *Form:* the introduction (2 bars: the glass pad and the crotales), A (8: PS1 as the subject on the celeste over the harp), B (8: the
+  answer at the fifth in the solo violin, the subject's continuation in the clarinet: two voices), C, the crest (8, at 48 to 69 s: three voices
+  in stretto over the strings' bed), D (4: PS2 in the violin's high register, settling).
+- *Harmony:* IM7, II, vi7, iii7, V.
+- *Sound:* the celeste, the solo violin, the clarinet, the harp, the glass pad, the crotales in range, the basses in pizzicato.
+- *Hostile, "the calculation":* 101 bpm, A phrygian. The counterpoint ticking in the pizzicato and the claves, clusters on the high strings'
+  tremolo, a tritone pedal in the bass, PS1 in the tremolo violins. Its own passage: four bars of clicks over the tritone tremolo.
+
+**5. Bulrathi.** The stomp and the low brass. D minor, 76 bpm (3.2 s a bar).
+- *Form:* the introduction (2 bars: the bass drum and the timpani alone), A (8: B1 B2 in the bass trombone and the tuba as soloists), B (6: a
+  new second half B3 B4 in the horns, the men chanting under them), A2, the crest (8, at 51 to 76 s: the full horns, the low brass, the men,
+  the drums), C (4: the tuba alone with the drum).
+- *Harmony:* i, ♭VI, ♭VII, V, iv, ♭III, and the Neapolitan ♭II at the crest for weight.
+- *Hostile, "the charge":* 84 bpm, C minor. The war drums (the toms, the bass drum, the tam-tam), the horns ripping in unison, the men's
+  shouts as stabs, the timpani on the beats. Its own passage: four bars of drum fill driving forward under horn rips.
+
+**6. Human.** Noble and frontier-hopeful, and no longer the news bed's cousin. F major, 108 bpm (2.2 s a bar).
+- *A signature:* the flat seventh and the lydian lift (II major) in the harmony; HM1's opening kept, the rest rewritten (HM5, HM6). The
+  ringing brass-staccato chords that make it sound like the news bed are gone.
+- *Form:* the introduction (2 bars: the snare and the low strings), A (8: the solo trumpet on HM1 and the new answer), B (8: the snare out, a
+  lyrical counter-tune in the strings over the relative minor, the horns answering), A2, the crest (8, at 40 to 58 s: the horns and trumpets in
+  harmony over the full strings, the timpani), C (8: a trio, the tune broadened in the cellos and horns over the II-major lift), the end (4).
+- *Hostile, "the muster":* 121 bpm, D minor. A severe march: the low brass, a snare roll, the strings' spiccato, the men; the trumpet tune in
+  the minor at the crest. Its own passage: four bars of drumline (snare, bass drum, timpani).
+
+**7. Alkari.** Air and flight. G major, 88 bpm (2.7 s a bar).
+- *Form:* the introduction (2 bars: the air and the harp sweeping up), A (8: the solo flute on AL1 AL2 over the real harp's arpeggios), B (8: E
+  minor, the alto flute on AL3 AL4 rewritten, the celeste), A2, the crest (8, at 49 to 71 s: the flute and the violins in octaves, the harp
+  running, the women humming, soft timpani), C (4: the flute alone, descending over the high strings).
+- *Harmony:* I, V, vi, IV, ii, iii, ♭VII for the lift into flight; the pentatonic tune kept.
+- *Hostile, "the dive":* 106 bpm, E mixolydian. Flute runs diving down in sixteenths (a new phrase), the high strings' tremolo, the toms,
+  short brass stabs. Its own passage: a four-bar sequence falling through the orchestra.
+
+**8. Mrrshan.** The snake. G phrygian dominant, 112 bpm (2.1 s a bar).
+- *Form:* the introduction (4 bars: a drone, one frame drum, the cor anglais's first phrase alone), A (8: MR1 MR2, one tom pattern only), B (8:
+  the flute takes MR2, the toms fill in, the harp arpeggios), C (8, a still: the cor anglais alone over the drone on a new free phrase MR3, no
+  drums), A2, the crest (8, at 60 to 77 s: every tom, the men, the reed and the flute in octaves), the end (4). The percussion builds across
+  the ninety seconds instead of starting full.
+- *Harmony:* I, ♭II, iv, and ♭VI and ♭vii in B; the flat second still marked as the snake's own.
+- *Hostile, "the pounce":* 129 bpm, D phrygian dominant. MR1 growled by the low brass (the bass trombone, the trombones), the toms faster and
+  crossed in threes, the men. Its own passage: a four-bar tom roll rising into a brass rip.
+
+**9. Silicoid.** Geologic. C♯ minor, 50 bpm (4.8 s a bar).
+- *Form:* the introduction (2 bars: the drone and one chime), A (4: the chimes on SL1 over a new low tune SL4 in the bass clarinet), B (4:
+  SL2 in the solo double bass, the harmony moving slowly through i ♭VII ♭VI V), C, the crest (4, at 48 to 67 s: the choir on "ah", the chimes,
+  the timpani, a low-brass swell), D (4: the drone and the chime's echo).
+- *Harmony:* i, ♭VII, ♭VI, V, ♭II, iv.
+- *Hostile, "the quake":* 57 bpm, B minor. Grinding low-brass clusters, tectonic hits (the bass drum, the tam-tam, the anvil), the low
+  strings' tremolo, SL4 in the tuba. Its own passage: two bars of timpani roll swelling into the tam-tam.
+
+**10. Darlok.** Shadows. F♯ harmonic minor, 66 bpm (3.6 s a bar).
+- *Form:* the introduction (2 bars: whispers, the air, one pizzicato pluck), A (8: the pizzicato on DK1 DK2 with the alto flute as its
+  shadow), B (6: the solo viola on a new phrase DK3 over ♭VI, ii° and V, the choir humming like a whisper), A2, the crest (6, at 58 to 80 s:
+  the alto flute on DK1 with the viola's counter-line, the low strings and the full bed), the end (2).
+- *Harmony:* i, iv, V, ♭VI, ii°.
+- *Hostile, "the knife":* 71 bpm. Short spiccato and the wood block ticking (the col legno idea), a soft double heartbeat in the bass drum,
+  the strings' tremolo, the tune in the bass clarinet. Its own passage: two bars of near-silence, a whisper and one high tremolo cluster.
+
+**Final listening stop.** All twenty, each the first 90 seconds, in the score player; the race group's marks re-judged in the table above.
+
+#### What is honest about the plan
+
+- There are no recordings of a xylophone, col legno strings or a real kora; the plan uses the closest ones the score has (the marimba, short
+  spiccato with the wood block, the harp doubled by the pizzicato), and they will be judged by ear at the listening stops.
+- The marks are judgment. The measures above (form, range, chords, chord tones, likeness) are what the tools can prove; whether a theme now
+  "is" its race is the user's call at each stop.
+- Each race is a sizeable piece of writing, about one working session for a theme and its reading, including measuring and rendering.
