@@ -662,3 +662,31 @@ the horns, the crest in fourths, glitching. Its nearest piece is now its own rea
 Rendered whole, after a second pass for the Klackon's opening (the sequencer and the bed under the clicks; it began at -32) and the Meklar's
 ghost (lifted; it sat ten decibels under the directive): the Klackon -18.1, the swarm -16.3, the Meklar -18.2, the factory -16.7 LUFS, trims
 then set for -17 and -15. The lint (840 seams) and the music QA pass; only the six rewritten pieces compile differently.
+
+*Heard (the user): interesting ideas, but a different direction for both, matching the race profiles.* Read against the races' own pages
+(the Klackon: a tireless, earnest hive digging for its Queen, "we are many, we are one"; the Meklar: cyborgs fused to their factories, erratic
+councils, deadpan) and offered three directions each, the user chose **a hive work song** for the Klackon and **retro science fiction** for the
+Meklar. Both written again from nothing:
+
+- **Klackon, the work song.** F mixolydian at 104, earthy, no synths: one worker calls (the cantor), the colony answers in unison (the men);
+  pickaxes on the beat (the anvil, the bass drum), the dirt's shuffle; a marimba and pizzicato ostinato that adds a worker each bar; the Queen a
+  warm, regal solo horn while the digging goes on softly under her (in the loop, the bassoon with the women); the crest the whole colony
+  singing one broad tune in octaves with the horns in thirds and the trumpets above, stamping. *The hive at war* (E-flat at 120): the calls
+  barked by the horns, the answers shouted by the men, the pickaxes become war drums, a muster of stamping and shouts with no tune, the Queen
+  commanding in the trumpets, the colony's tune in the men and the brass at the crest.
+- **Meklar, retro science fiction.** C minor at 108: a sequencer opening alone over the warm analogue pad, a seven-step figure drifting
+  against the beat (the erratic council), octave pulses in the synth bass; a singable synth melody doubled by the celeste; the flesh
+  remembering in one human voice (the cantor) over the pad, a Neapolitan chord at its close; brass and choir at the crest, the horns in thirds
+  with the synth brass over the strings, the choir on ah. *Malfunction* (B-flat minor at 124): the melody growling in the low brass and synth
+  brass over a harder sequencer, a passage where the machine stutters (steps dropping out, the chords turning to clusters, metal, whispers),
+  the flesh overridden by the horns, the crest with the men.
+
+| first 90 s | crest at | range | phrases | chords | chord tones | nearest |
+|---|---|---|---|---|---|---|
+| Klackon, work song | 65 s | 0.54 | 8 | 5 | 1.0 | its reading 0.90 |
+| the hive at war | 60 s | 0.42 | 8 | 5 | 1.0 | its theme 0.90 |
+| Meklar, retro | 63 s | 0.56 | 4 | 7 | 1.0 | its reading 0.89 |
+| malfunction | 58 s | 0.42 | 4 | 9 | 1.0 | its theme 0.89 |
+
+Rendered whole at -18.9, -15.4, -17.2 and -15.3 LUFS, trims then set for -17 and -15; the lint, the seams and the music QA pass.
+
