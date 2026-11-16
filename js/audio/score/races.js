@@ -99,47 +99,48 @@
     ],
   });
 
-  // The Klackon (second writing, after the user's direction: a hive work song; no human voices, an insect race): an earnest, tireless hive of ant-like workers digging for
-  // their Queen. F mixolydian, earthy and warm, no synths. A work song: one worker calls (the clarinet), the colony answers in unison (the bassoon and the pizzicato, many as one);
-  // the pickaxes strike on the beat (the anvil, the bass drum), the dirt shuffles (the shaker); a marimba and pizzicato ostinato that adds a
-  // worker each bar, tireless. The contrast is the Queen, a warm regal horn while the digging goes on softly under her. The crest is the
-  // whole colony in one broad tune in octaves (we are many, we are one: the cellos, the violas, the horns), stamping.
+  // The Klackon (fourth writing; the user's word: insectoid). Ant-like hive beings, and the music is an insect's world in the manner of
+  // Bartok's night music: E in the half-whole octatonic (its semitones chitter; its chords stand a minor third apart, round and round like a
+  // hive's cells). The gesture: a chitter (a semitone trill in sixteenths), a leap up the chord, a beat of stillness; legs skittering (the
+  // pizzicato and the spiccato in sixteenths, runs that dart up and stop), mandibles clicking (the claves, the wood block), wings buzzing (the
+  // violins' tremolo high, a faint sequencer whine), the cells passed between the marimba and the pizzicato in canon like a colony at work.
+  // The contrast is the night chorus: crickets (the glockenspiel's chirps), cicadas (the tremolo swelling and fading), a moth (the alto flute,
+  // slow), no voices. The crest is the swarm emerging: every skittering voice in canon, the buzz at full, the strike.
   Track('race:klackon', {
-    desc: 'Klackon: a hive work song — one worker calls on the clarinet, the colony answers in unison, pickaxes on the beat, an ostinato that adds a worker each bar; the Queen a warm regal horn; the whole colony in octaves at the crest',
-    motif: '5:1 5:.5 5:.5 8:1 5:1 | 3:2 r:2 | 6:1 4:1 6:1 5:1 | 1:4', motifInst: 'horn',   // the first bars of the theme: the next interlude carries them when this race is met
-    bpm: 104, trim: 2.18, root: 'F', mode: 'mixolydian', oct: -1, tens: false, loopFrom: 'A', rubato: 0.01,
-    forms: [['A', 'queen', 'crest', 'C', 'A2', 'queen2', 'crest', 'C'], ['A', 'queen', 'crest', 'C', 'queen2', 'A2', 'crest', 'C'], ['A', 'queen', 'crest', 'C', 'A2', 'crest', 'queen2', 'C']],
-    inst: { pad: 'cellos', pad2: 'strings', bass: 'deep', lead: 'clarIowa', lead2: 'bassoonIowa', lead3: 'pizz', lead4: 'horn', arp: 'marimba', arp2: 'pizz' },
+    desc: 'Klackon: insectoid — chittering semitone cells passed in canon between the marimba and the pizzicato, legs skittering, mandibles clicking, wings buzzing; a night chorus of crickets and cicadas; the swarm emerging at the crest',
+    motif: '1:.25 2:.25 1:.25 2:.25 1:.5 4:.5 6:1 r:1 | 3:.25 4:.25 3:.25 4:.25 3:.5 6:.5 8:1 r:1', motifInst: 'marimba',   // the first bars of the theme: the next interlude carries them when this race is met
+    bpm: 132, trim: 2.0, root: 'E', mode: 'octaH', tens: false, loopFrom: 'A',
+    forms: [['A', 'B', 'night', 'crest', 'C', 'B', 'night', 'crest', 'C'], ['A', 'B', 'night', 'crest', 'C', 'night', 'A', 'crest', 'C']],
+    inst: { pad: 'tremHi', pad2: 'strTrem', bass: 'pizz', lead: 'marimba', lead2: 'pizz', lead3: 'strOst', lead4: 'bell', arp: 'seqSyn', arp2: 'strOst' },
     ph: {
-      C1: '5:1 5:.5 5:.5 8:1 5:1 | 3:2 r:2', R1: '6:1 4:1 6:1 5:1 | 1:4',                   // the call (dig the tunnel) and the colony's answer (dig it deep)
-      C2: '8:1 8:.5 8:.5 10:1 8:1 | 6:2 r:2', R2: '7:1 6:1 4:1 2:1 | 1:4',                  // the call again, higher; the answer home by the flat seventh
-      S1: '4:2 6:2 | 5:2 3:2 | 4:1 6:1 8:2 | 7:2 5:2', S2: '4:2 6:2 | 5:2 8:2 | 7:1 6:1 4:2 | 1:4',   // the colony's broad tune
-      Q1: '6:3 5:1 | 4:2 6:2 | 5:4 | 4:2 2:2', Q2: '6:3 8:1 | 8:2 6:2 | 7:2 5:2 | 5:4',      // the Queen
+      // the workers: a chitter, a leap up the chord, a beat of stillness; up the hive's minor thirds and down again
+      KA: '1:.25 2:.25 1:.25 2:.25 1:.5 4:.5 6:1 r:1 | 3:.25 4:.25 3:.25 4:.25 3:.5 6:.5 8:1 r:1 | 5:.25 4:.25 5:.25 4:.25 5:.5 8:.5 10:1 r:1 | 7:.25 8:.25 7:.25 8:.25 7:.5 10:.5 12:1 r:1',
+      KB: '12:.25 11:.25 12:.25 11:.25 12:.5 10:.5 7:1 r:1 | 10:.25 9:.25 10:.25 9:.25 10:.5 8:.5 5:1 r:1 | 8:.25 7:.25 8:.25 7:.25 8:.5 6:.5 3:1 r:1 | 6:.5 4:.5 1:3',
+      KAc: 'r:1 1:.25 2:.25 1:.25 2:.25 1:.5 4:.5 6:1 | r:1 3:.25 4:.25 3:.25 4:.25 3:.5 6:.5 8:1 | r:1 5:.25 4:.25 5:.25 4:.25 5:.5 8:.5 10:1 | r:1 7:.25 8:.25 7:.25 8:.25 7:.5 10:.5 12:1',
+      KBc: 'r:1 12:.25 11:.25 12:.25 11:.25 12:.5 10:.5 7:1 | r:1 10:.25 9:.25 10:.25 9:.25 10:.5 8:.5 5:1 | r:1 8:.25 7:.25 8:.25 7:.25 8:.5 6:.5 3:1 | r:1 6:.5 4:.5 1:2',
+      SK: '1:.25 2:.25 3:.25 4:.25 6:.25 7:.25 8:.25 9:.25 r:2',                     // a skitter: a dart up the scale, and stop
+      CR: '9:.25 9:.25 9:.25 r:1.25 9:.25 9:.25 9:.25 r:1.25', CR2: '14:.25 14:.25 r:.5 14:.25 14:.25 r:2.5',   // the crickets
+      M1: '6:4 | 4:4 | 8:4 | 6:4', M2: '9:4 | 8:4 | 6:4 | 4:4',                         // the moth
+      KS: '1:.25 2:.25 1:.25 2:.25 1:.5 4:.5 6:1 r:1 | r:4 | 1:.25 2:.25 1:.25 2:.25 1:1 r:2 | r:4',
     },
     sec: [
-      { n: 'intro', bars: 4, cres: [0.46, 0.56], prog: 'I | I | IV | I', pad: { p: 'swell', n: 2, open: true, reg: [41, 57], vel: 0.5 }, bass: { pat: '1---', vel: 0.6 },
-        arp: { pat: ['................', '0...............', '0.......0.......', '0.......0...2...'], res: 4, vel: 0.5, reg: [53, 72] },
-        drums: { metal2: ['x.......x.......', 'x.......x.......', 'x.......x.......', 'x.......x...x...'], bd: 'x.......x.......', shk: ['................', '..o...o...o...o.', '..o...o...o...o.', '..o...o...o.o.o.'], vel: 0.55 } },
-      { n: 'A', bars: 8, lv: 0.64, prog: 'I | I | IV | I | I | vi | bVII | I', pad: { p: 'sus', n: 3, reg: [48, 62], vel: 0.5 }, bass: { pat: '1-5-', vel: 0.75 },
-        lead: { ph: 'C1 r2 C2 r2', vel: 0.75, shape: 0.35 }, lead2: { ph: 'r2 R1 r2 R2', vel: 0.7, shape: 0.3 }, lead3: { ph: 'r2 R1 r2 R2', oct: 1, vel: 0.5 },
-        arp: { pat: ['0.......2.......', '0...0...2.......', '0...0...2...2...', '0.1.0...2...2...', '0.1.0.1.2...2...', '0.1.0.1.2.1.2...', '0.1.0.1.2.1.2.1.', '0101010121212121'], res: 4, vel: 0.48, reg: [53, 72] },
-        drums: { metal2: 'x.......x.......', bd: 'x.......x.......', shk: '..o...o...o...o.', vel: 0.6 } },
-      { n: 'queen', bars: 8, lv: 0.56, prog: 'vi | IV | I | bVII | vi | IV | v | I', pad: { p: 'sus', inst: 'strings', n: 4, reg: [50, 72], vel: 0.55 }, pad2: { p: 'sus', n: 2, open: true, reg: [41, 55], vel: 0.45 }, bass: { pat: '1---', vel: 0.65 },
-        lead4: { ph: 'Q1 Q2', inst: 'hornSolo', vel: 0.72, shape: 0.45, swell: 0.4 }, arp2: { pat: '0.......2.......', res: 4, vel: 0.36, reg: [50, 69] },
-        drums: { metal2: 'x.......x.......', vel: 0.32 } },
-      { n: 'queen2', bars: 8, lv: 0.54, prog: 'vi | IV | I | bVII | vi | IV | v | I', pad: { p: 'sus', inst: 'strings', n: 4, reg: [50, 72], vel: 0.52 }, bass: { pat: '1---', vel: 0.6 },
-        lead4: { ph: 'Q1 Q2', inst: 'bassoonIowa', vel: 0.7, shape: 0.45, swell: 0.35 }, lead3: { ph: 'r4 Q2', inst: 'violas', vel: 0.45, shape: 0.45 }, arp2: { pat: '0.......2.......', res: 4, vel: 0.34, reg: [50, 69] }, drums: { metal2: 'x.......x.......', vel: 0.3 } },
-      { n: 'crest', bars: 8, cres: [0.84, 0.98], prog: 'IV | I | IV | v | IV | I | bVII | I', pad: { p: 'sus', inst: 'strings', n: 4, reg: [50, 74], vel: 0.65 }, pad2: { p: 'sus', n: 2, open: true, reg: [41, 55], vel: 0.55 }, bass: { pat: '1-5-', vel: 0.85 },
-        lead2: { ph: 'S1 S2', inst: 'cellos', vel: 0.75, shape: 0.35 }, lead3: { ph: 'S1 S2', inst: 'violas', oct: 1, vel: 0.62, shape: 0.35 }, lead4: { ph: 'S1 S2', vel: 0.7, harm: -2, shape: 0.35, swell: 0.3 }, lead: { ph: 'S1 S2', inst: 'tpts', oct: 1, vel: 0.4, shape: 0.35 },
-        arp: { pat: '0101010121212121', res: 4, vel: 0.5, reg: [53, 72] }, arp2: { pat: '0.2.0.2.', res: 2, vel: 0.42, reg: [48, 67] },
-        drums: { metal2: 'x.......x.......', bd: 'x.......x.......', clap: '....x.......x...', shk: 'o.o.o.o.o.o.o.o.', vel: 0.75 }, timp: 'two', hit: true, fill: 'tom' },
-      { n: 'C', bars: 4, cres: [0.6, 0.44], prog: 'IV | I | bVII | I', pad: { p: 'sus', n: 3, reg: [48, 62], vel: 0.5 }, bass: { pat: '1---', vel: 0.65 },
-        lead2: { ph: 'R1 R2', vel: 0.62, shape: 0.3 }, arp: { pat: ['0.1.0.1.2.1.2...', '0...0...2...2...', '0.......2.......', '0...............'], res: 4, vel: 0.44, reg: [53, 72] },
-        drums: { metal2: ['x.......x.......', 'x.......x.......', 'x.......x.......', 'x...............'], vel: 0.5 } },
-      { n: 'A2', bars: 8, lv: 0.7, prog: 'I | I | IV | I | I | vi | bVII | I', pad: { p: 'sus', n: 3, reg: [48, 62], vel: 0.55 }, bass: { pat: '1-5-', vel: 0.8 },
-        lead: { ph: 'C1 r2 C2 r2', inst: 'horn', vel: 0.72, shape: 0.35, swell: 0.3 }, lead2: { ph: 'r2 R1 r2 R2', vel: 0.7, shape: 0.3 }, lead3: { ph: 'r2 R1 r2 R2', inst: 'violas', oct: 1, vel: 0.5, shape: 0.35 },
-        arp: { pat: '0101010121212121', res: 4, vel: 0.48, reg: [53, 72] }, arp2: { pat: '0.2.0.2.', res: 2, vel: 0.4, reg: [48, 67] },
-        drums: { metal2: 'x.......x.......', bd: 'x.......x.......', clap: '....x.......x...', shk: '..o...o...o...o.', vel: 0.65 } },
+      { n: 'intro', bars: 4, cres: [0.5, 0.6], prog: 'I | I | I | I', pad: { p: 'swell', n: 2, reg: [76, 88], vel: 0.45 },
+        lead2: { ph: 'r1 SK r1 SK', vel: 0.55 }, arp: { pat: ['................', '0...............', '0.0.0.0.........', '0.0.0.0.0.0.0.0.'], res: 4, vel: 0.18, reg: [76, 88], gate: 0.3 },
+        drums: { click2: ['x.x.x.x.x.x.x.x.', 'x.x.x.x.x.x.xxxx', 'x.x.x.x.x.x.x.x.', 'x.xxx.x.x.xxxxxx'], click: ['................', '................', '..x.......x.....', '..x...x...x...x.'], vel: 0.55 } },
+      { n: 'A', bars: 8, lv: 0.64, prog: 'I | bIII | bV | VI | VI | bV | bIII | I', pad: { p: 'swell', n: 2, reg: [76, 88], vel: 0.38 }, bass: { pat: '1..1..1...1.1...', vel: 0.7 },
+        lead: { ph: 'KA KB', vel: 0.78 }, lead2: { ph: 'KAc KBc', vel: 0.58 }, arp: { pat: '0000', res: 4, vel: 0.12, reg: [79, 88], gate: 0.25 },
+        drums: { click2: 'x.x.x.x.x.x.x.x.', click: '..x.......x.....', click3: ['..............xx', '................', '..........xxx...', '................'], vel: 0.6 } },
+      { n: 'B', bars: 8, cres: [0.66, 0.78], prog: 'I | bIII | bV | VI | VI | bV | bIII | I', pad: { p: 'swell', n: 2, reg: [76, 88], vel: 0.42 }, pad2: { p: 'swell', n: 3, reg: [60, 76], vel: 0.35 }, bass: { pat: '1..1..1...1.1...', vel: 0.75 },
+        lead3: { ph: 'KA KB', vel: 0.72 }, lead: { ph: 'KAc KBc', vel: 0.65 }, lead4: { ph: 'KA KB', oct: 1, vel: 0.32 }, arp: { pat: '0000', res: 4, vel: 0.14, reg: [79, 88], gate: 0.25 },
+        drums: { click2: 'x.x.x.x.x.x.x.x.', click: '..x...x...x...x.', click3: ['..............xx', '................', '..........xxx...', '................'], shk: 'x.xxx.xxx.xxx.xx', vel: 0.62 } },
+      { n: 'night', bars: 8, lv: 0.5, prog: 'I | I | bIII | I | I | bIII | I | I', pad: { p: 'swell', n: 2, reg: [76, 91], vel: 0.5 }, pad2: { p: 'swell', n: 2, open: true, reg: [52, 64], vel: 0.3 }, bass: { pat: '1---', inst: 'deep', vel: 0.45 },
+        lead4: { ph: 'CR CR r1 CR CR r1 CR CR', vel: 0.4 }, lead2: { ph: 'CR2 r1 CR2 r1 CR2 r1 CR2 CR2', inst: 'glass', vel: 0.32 }, lead3: { ph: 'M1 M2', inst: 'altoFluteIowa', vel: 0.55, shape: 0.45, swell: 0.4 },
+        drums: { click2: ['x...............', '........x.......'], vel: 0.32 } },
+      { n: 'crest', bars: 8, cres: [0.84, 0.98], prog: 'I | bIII | bV | VI | VI | bV | bIII | I', pad: { p: 'sus', n: 3, reg: [72, 91], vel: 0.55 }, pad2: { p: 'sus', n: 4, reg: [55, 76], vel: 0.55 }, bass: { pat: '1..1..1...1.1...', vel: 0.85 },
+        lead: { ph: 'KA KB', vel: 0.85 }, lead2: { ph: 'KAc KBc', vel: 0.65 }, lead3: { ph: 'KA KB', vel: 0.7 }, lead4: { ph: 'KAc KBc', oct: 1, vel: 0.34 }, arp: { pat: '0000', res: 4, vel: 0.16, reg: [79, 88], gate: 0.25 }, arp2: { pat: '0.1.2.1.', res: 4, vel: 0.4, reg: [52, 71] },
+        drums: { click2: 'xxxxxxxxxxxxxxxx', click: '..x...x...x...x.', click3: ['..............xx', '..........xxx...'], shk: 'x.xxx.xxx.xxx.xx', kick: 'x..x....x.x.....', vel: 0.75 }, timp: 'two', hit: true },
+      { n: 'C', bars: 4, cres: [0.6, 0.42], prog: 'I | bIII | I | I', pad: { p: 'swell', n: 2, reg: [76, 88], vel: 0.38 }, bass: { pat: ['1..1..1...1.1...', '1..1..1.........', '1...............', '................'], vel: 0.65 },
+        lead: { ph: 'KS', vel: 0.65 }, drums: { click2: ['x.x.x.x.x.x.x.x.', 'x.x.x.x.x.x.x.x.', 'x...x...x...x...', 'x.......x.......'], vel: 0.5 } },
     ],
   });
 
@@ -349,34 +350,35 @@
     ],
   });
 
-  // The Klackon, hostile: the hive at war (every worker a soldier now). The work song barked: the calls in the horns, the answers shouted
-  // back by the low brass, the pickaxes become war drums, the ostinato in the spiccato; the muster (no tune: stamping, the anvil, brass stabs); the
-  // Queen commanding in the trumpets and horns; the colony's tune in the low brass, the horns and the strings at the crest.
-  Music._warVariant('race:klackon', { written: true, down: 2, bpm: 120, loopFrom: 'A',
-    desc: 'Klackon, hostile: the hive at war — the work song barked by the horns and answered by the low brass over war drums, a muster of stamping and brass stabs, the Queen commanding in the trumpets',
-    forms: [['A', 'muster', 'queen', 'crest', 'C', 'A', 'queen', 'muster', 'crest', 'C'], ['A', 'muster', 'queen', 'crest', 'C', 'muster', 'A', 'crest', 'C']],
-    inst: { pad: 'strTrem', pad2: 'cellos', pad3: 'brassStab', bass: 'deep', lead: 'horn', lead2: 'lowBrass', lead3: 'cellos', lead4: 'tpts', arp: 'strOst', arp2: 'marimba' },
-    def: { trim: 1.89 },
+  // The Klackon, hostile (insectoid): the swarm. The cells hammered in the spiccato with the brass a beat behind, the wings a saw's buzz; the
+  // workers in the horns, stabbing; the swarm itself (no tune: the buzz entering voice by voice, the hive's chords turning to clusters, the
+  // clicks thickening); the colony attacking at the crest, the tam-tam.
+  Music._warVariant('race:klackon', { written: true, down: 2, bpm: 145, loopFrom: 'A',
+    desc: 'Klackon, hostile: the swarm — the cells hammered in the spiccato with the brass a beat behind, wings buzzing, a swarm rising voice by voice into clusters, the colony attacking',
+    forms: [['A', 'B', 'swarm', 'crest', 'C', 'A', 'swarm', 'B', 'crest', 'C'], ['A', 'B', 'swarm', 'crest', 'C', 'swarm', 'A', 'crest', 'C']],
+    inst: { pad: 'strTrem', pad2: 'lowBrass', bass: 'pulseSyn', lead: 'strOst', lead2: 'synth', lead3: 'horn', lead4: 'bell', arp: 'arpSawSyn', arp2: 'arpSawSyn' },
+    def: { trim: 1.86 },
     sec: [
-      { n: 'march', bars: 2, cres: [0.58, 0.72], prog: 'I | I', pad2: { p: 'sus', n: 2, open: true, reg: [43, 57], vel: 0.6 },
-        drums: { t5: 'x.......x.......', metal: 'x.......x.......', clap: ['................', '....x.......x.x.'], t3: ['................', '..........x.x.xx'], vel: 0.72 } },
-      { n: 'A', bars: 8, lv: 0.82, prog: 'I | I | IV | I | I | vi | bVII | I', pad2: { p: 'sus', n: 2, open: true, reg: [43, 57], vel: 0.6 }, bass: { pat: '1-5-', vel: 0.85 },
-        lead: { ph: 'C1 r2 C2 r2', vel: 0.85, shape: 0.3, swell: 0.3 }, lead2: { ph: 'r2 R1 r2 R2', vel: 0.75 }, arp: { pat: '0101010121212121', res: 4, vel: 0.5, reg: [53, 72] },
-        drums: { t5: 'x.......x.......', metal: 'x.......x.......', clap: '....x.......x...', t3: '..x.......x.....', shk: 'x.x.x.x.x.x.x.x.', vel: 0.8 }, timp: 'two' },
-      { n: 'muster', bars: 4, cres: [0.76, 0.92], prog: 'I | bVII | IV | I', pad3: { p: 'stab', pat: 'x.....x.....x...', n: 3, open: true, reg: [45, 60], vel: 0.75, gate: 0.4 }, bass: { pat: '1.1.1.1.', vel: 0.85 },
-        arp2: { pat: '0.0.0.0.2.2.2.2.', res: 4, vel: 0.55, reg: [50, 69] },
-        drums: { t5: 'x...x...x...x...', metal: 'x.......x.......', clap: '..x...x...x...x.', t4: 'x..x..x.x..x..x.', t3: '....x.......x...', vel: 0.85 }, timp: 'beats' },
-      { n: 'queen', bars: 8, lv: 0.84, prog: 'vi | IV | I | bVII | vi | IV | v | I', pad: { p: 'sus', n: 4, reg: [52, 74], vel: 0.55 }, pad2: { p: 'sus', n: 2, open: true, reg: [43, 57], vel: 0.6 }, bass: { pat: '1-5-', vel: 0.8 },
-        lead4: { ph: 'Q1 Q2', vel: 0.85, shape: 0.35, swell: 0.3 }, lead: { ph: 'Q1 Q2', oct: -1, vel: 0.7, shape: 0.35 }, arp: { pat: '0.2.0.2.', res: 2, vel: 0.45, reg: [53, 72] },
-        drums: { t5: 'x.......x.......', metal: 'x.......x.......', clap: '....x.......x...', vel: 0.72 }, timp: 'two' },
-      { n: 'crest', bars: 8, cres: [0.9, 1.0], prog: 'IV | I | IV | v | IV | I | bVII | I', pad: { p: 'sus', n: 4, reg: [52, 74], vel: 0.6 }, pad3: { p: 'stab', pat: 'x.......x.......', n: 3, open: true, reg: [45, 60], vel: 0.6, gate: 0.4 }, bass: { pat: '1-5-', vel: 0.9 },
-        lead2: { ph: 'S1 S2', vel: 0.8 }, lead: { ph: 'S1 S2', vel: 0.88, harm: -2, shape: 0.3, swell: 0.3 }, lead3: { ph: 'S1 S2', oct: -1, vel: 0.7, shape: 0.3 }, lead4: { ph: 'S1 S2', oct: 1, vel: 0.5, shape: 0.3 },
-        arp: { pat: '0101010121212121', res: 4, vel: 0.5, reg: [53, 72] },
-        drums: { t5: 'x...x...x...x...', metal: 'x.......x.......', clap: '....x.......x...', t3: '..x.......x.....', shk: 'x.x.x.x.x.x.x.x.', crash: ['x...............', '................', '................', '................'], vel: 0.88 }, timp: 'beats', hit: 'tam', fill: 'tom' },
-      { n: 'C', bars: 4, cres: [0.8, 0.6], prog: 'IV | I | bVII | I', pad2: { p: 'sus', n: 2, open: true, reg: [43, 57], vel: 0.6 }, bass: { pat: '1---', vel: 0.8 },
-        lead2: { ph: 'R1 R2', vel: 0.72 }, drums: { t5: ['x.......x.......', 'x.......x.......', 'x...............', 'x...............'], metal: ['x...............', 'x...............', 'x...............', 'x...............'], vel: 0.75 } },
+      { n: 'alarm', bars: 2, cres: [0.55, 0.72], prog: 'I | bIII', pad: { p: 'swell', n: 3, reg: [64, 84], vel: 0.55 },
+        drums: { click2: ['xxxxxxxxxxxxxxxx', 'xxxxxxxxxxxxxxxx'], click: ['................', '..x...x...x.x.xx'], kick: ['................', '............x...'], vel: 0.6 } },
+      { n: 'A', bars: 8, lv: 0.82, prog: 'I | bIII | bV | VI | VI | bV | bIII | I', pad: { p: 'sus', n: 3, reg: [64, 84], vel: 0.45 }, bass: { pat: '1111111111111111', vel: 0.7 },
+        lead: { ph: 'KA KB', vel: 0.85 }, lead2: { ph: 'KAc KBc', vel: 0.6 }, arp: { pat: '0120', res: 4, vel: 0.26, reg: [62, 84], gate: 0.4 },
+        drums: { click2: 'x.xxx.xxx.xxx.xx', click: '..x...x...x...x.', kick: 'x..x....x.x.....', metal2: '....o.......o...', vel: 0.75 } },
+      { n: 'B', bars: 8, lv: 0.86, prog: 'I | bIII | bV | VI | VI | bV | bIII | I', pad: { p: 'sus', n: 3, reg: [64, 84], vel: 0.5 }, pad2: { p: 'stab', pat: 'x.....x.....x...', n: 3, reg: [43, 60], vel: 0.6, gate: 0.4 }, bass: { pat: '1111111111111111', vel: 0.75 },
+        lead3: { ph: 'KA KB', vel: 0.82, harm: -3 }, lead: { ph: 'KAc KBc', vel: 0.7 }, lead4: { ph: 'KA KB', oct: 1, vel: 0.3 },
+        drums: { click2: 'xxxxxxxxxxxxxxxx', click: '..x...x...x...x.', kick: 'x..x....x.x.....', metal2: '....o.......o...', vel: 0.78 }, timp: 'two' },
+      { n: 'swarm', bars: 8, cres: [0.6, 0.95], prog: 'I | bIII | bV | VI | Icl | bIIIcl | bVcl | VIcl', pad: { p: 'swell', n: 4, reg: [64, 88], vel: 0.6 }, pad2: { p: 'stab', pat: ['................', '................', '................', '................', 'x.....x.....x...', 'x.....x.....x...', 'x..x..x..x..x...', 'x..x..x..x..x.x.'], n: 3, reg: [43, 60], vel: 0.75, gate: 0.4 }, bass: { pat: '1111111111111111', vel: 0.75 },
+        arp: { pat: '0123', res: 4, vel: 0.3, reg: [60, 84], gate: 0.4 }, arp2: { pat: ['................', '................', '3210321032103210', '3210321032103210', '3210321032103210', '3210321032103210', '3210321032103210', '3210321032103210'], res: 4, vel: 0.28, reg: [67, 91], gate: 0.4 },
+        drums: { click2: ['x.x.x.x.x.x.x.x.', 'x.x.x.x.x.x.x.x.', 'x.xxx.xxx.xxx.xx', 'x.xxx.xxx.xxx.xx', 'xxxxxxxxxxxxxxxx', 'xxxxxxxxxxxxxxxx', 'xxxxxxxxxxxxxxxx', 'xxxxxxxxxxxxxxxx'], click: ['................', '................', '..x...x...x...x.', '..x...x...x...x.', '..x.x.x.x.x.x.x.', '..x.x.x.x.x.x.x.', 'x.x.x.x.x.x.x.x.', 'xxxxxxxxxxxxxxxx'], kick: 'x..x....x.x.....', vel: 0.8 }, fill: 'snare' },
+      { n: 'crest', bars: 8, cres: [0.9, 1.0], prog: 'I | bIII | bV | VI | VI | bV | bIII | I', pad: { p: 'sus', n: 4, reg: [64, 88], vel: 0.6 }, pad2: { p: 'stab', pat: 'x.....x.....x...', n: 3, reg: [43, 60], vel: 0.7, gate: 0.4 }, bass: { pat: '1111111111111111', vel: 0.8 },
+        lead: { ph: 'KA KB', vel: 0.9 }, lead2: { ph: 'KAc KBc', vel: 0.7 }, lead3: { ph: 'KA KB', vel: 0.85, harm: -3 }, lead4: { ph: 'KAc KBc', oct: 1, vel: 0.34 },
+        arp: { pat: '0123', res: 4, vel: 0.28, reg: [60, 84], gate: 0.4 }, arp2: { pat: '3210', res: 4, vel: 0.26, reg: [67, 91], gate: 0.4 },
+        drums: { click2: 'xxxxxxxxxxxxxxxx', click: '..x...x...x...x.', kick: 'x..x....x.x.....', metal2: '....o.......o...', crash: ['x...............', '................', '................', '................'], vel: 0.85 }, timp: 'beats', hit: 'tam' },
+      { n: 'C', bars: 4, cres: [0.8, 0.6], prog: 'I | bIII | I | I', pad: { p: 'swell', n: 3, reg: [64, 84], vel: 0.5 }, bass: { pat: ['1111111111111111', '1.1.1.1.1.1.1.1.', '1...1...1...1...', '1...............'], vel: 0.7 },
+        lead: { ph: 'KS', vel: 0.8 }, drums: { click2: ['xxxxxxxxxxxxxxxx', 'x.xxx.xxx.xxx.xx', 'x.x.x.x.x.x.x.x.', 'x...x...x...x...'], vel: 0.65 } },
     ],
   });
+
   // The Psilon, hostile: the cold equation. The invention ticking in the strings' spiccato over a tritone pedal, the countersubject in the low
   // brass; the calculation (no tune: the claves, the clusters trembling high, the pedal); the hypothesis turned to a verdict in the horns; the
   // proof in the brass and the spiccato.
