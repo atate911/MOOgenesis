@@ -472,6 +472,18 @@ every sung or blown line phrased with `shape` and `swell`); 0.8 or more of stron
 keep; no snaps that change the tune; likeness under 0.88 to every other piece. **For every reading**: nearer its own theme than any other
 piece, and under 0.88 to every other reading.
 
+#### The model (from the Sakkra, approved by ear)
+
+Each race is written as its creature, leaning in until it is unmistakable, inside the score's hall and sound:
+- **A scale with character**, chosen for the race (the Sakkra's Ukrainian dorian), the harmony then written for its own notes so every
+  strong beat is a chord tone; the colour notes marked to keep.
+- **A signature gesture in the tune** that is the creature moving (the coil: held, tensing, the slow rise, the slither).
+- **Idiomatic ornaments** for the culture it suggests (the duduk's mordent, the ney's turn).
+- **A creature palette**: percussion and effects that are the animal's own sounds (the rattle, the tongue's flick, the hiss, the growl).
+- **A bed or drone** that sets the place (the men's open fifth, the low tremolo).
+- **A strike at the crest**, and the 90-second form: the colour alone, the gesture, the contrast, the crest at 50 to 70 s, the settle.
+- **The hostile reading** the same tune and harmony with the creature attacking: its own instruments, a passage of its own with no tune.
+
 #### The ten races
 
 Times are the first pass. Nothing of the old race music has to survive (the user: any of it may go, in part or whole, unless it beats
@@ -621,3 +633,32 @@ turn, like a duduk; the alto flute's mist opens with a turn like a ney; the men 
 settle and the still; finger-cymbal pings (the triangle) on the off-beats and a doumbek's tek (the high tenor drum) at the crest. The hunt
 takes the same mode and harmony, the men's drone under the stalk and the pings in the hunt. Rendered whole at -17.3 and -15.3 LUFS; the
 lint (840 seams) passes.
+
+**2. Klackon: written, waiting to be heard (listening stop with the Meklar).** The hive, in E in the half-whole octatonic (its chords a minor third apart, I bIII bV VI, round
+and round; its semitones chitter). The gesture: a chitter (a semitone trill in sixteenths), a leap up the chord, a beat of stillness, climbing
+the minor thirds and down again. The colony assembles: the cell in the marimba, then in the sequencer with the marimba a beat behind in canon,
+the wings (the violins' tremolo high, the sequencer), the mandibles (wood block, claves); the queen's contrast, sung slow and eerie by the women
+over the buzzing with a far horn; the crest with the colony in canon and the queen's line round the minor thirds in the women and the horns,
+striking. The swarm (hostile, D at 145): the cells in the spiccato with the brass a beat behind, saws for wings, the swarm passage with no tune
+(the saws entering, the hive's chords turning to clusters, the clicks thickening), the queen commanding in the horns, the crest with the tam-tam.
+
+**3. Meklar: written, waiting to be heard.** The machine, B minor with the thirds mostly gone (open fifths, suspended chords), 120 (from 128).
+The algorithm: four notes rotated a place each bar in the sequencer; the directive above in long even notes by fourths and fifths (the celeste
+over the synth lead), glitching (stuttered notes) in its second reading; the clock, the anvil's clank, data bleeps on the celeste, a
+four-on-the-floor pulse with no gallop and no saws; the ghost in the machine (the solo cello over the glass pad, the pulse stopped, the men
+humming an open fifth); the crest in parallel fourths in the horns over the strings, the men chanting like machines, the tam-tam. The factory
+(hostile, A at 132): the directive in the low brass over the spiccato and the anvils, the machinery alone (no tune), the ghost overridden by
+the horns, the crest in fourths, glitching. Its nearest piece is now its own reading (0.87); it was the news bed (0.99).
+
+| first 90 s | crest at | range | phrases | chords | chord tones | nearest |
+|---|---|---|---|---|---|---|
+| Klackon, before | 44 s | 0.22 | 2 | 2 | 0.46 | lab3 0.83 |
+| Klackon, now | 66 s | 0.56 | 9 | 4 | 1.0 | its reading 0.88 |
+| the swarm | 57 s | 0.45 | 9 | 8 | 1.0 | its theme 0.88 |
+| Meklar, before | 45 s | 0.22 | 2 | 3 | 1.0 | the news bed 0.99 |
+| Meklar, now | 56 s | 0.56 | 6 | 9 | 1.0 | its reading 0.87 |
+| the factory | 55 s | 0.45 | 6 | 11 | 1.0 | its theme 0.87 |
+
+Rendered whole, after a second pass for the Klackon's opening (the sequencer and the bed under the clicks; it began at -32) and the Meklar's
+ghost (lifted; it sat ten decibels under the directive): the Klackon -18.1, the swarm -16.3, the Meklar -18.2, the factory -16.7 LUFS, trims
+then set for -17 and -15. The lint (840 seams) and the music QA pass; only the six rewritten pieces compile differently.
