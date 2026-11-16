@@ -2374,9 +2374,41 @@
     return name + qs + (parts[1] ? ':' + parts[1] : '');
   }
   const SOFT_LEADS = { flute: 1, reed: 1, kora: 1, pizz: 1, harp: 1, chime: 1, crystal: 1, glass: 1, seq: 1, marimba: 1, vibes: 1 };
+  // A written reading (o.written: true) is composed rather than derived: it keeps the theme's phrases (its `ph`, copied whole, so the tune
+  // is the theme's by construction) and, unless it names another, the theme's mode; everything else is the reading's own. o.sec: its own
+  // section list (written in its own mode, nothing re-spelled), or o.secs: settings merged over the theme's sections by name, and o.add:
+  // sections of its own after them; o.forms and o.loopFrom: its own order and opening; o.inst: its instruments over the theme's (none of the
+  // derived reading's brass, stabs, dark pad, moog bass, men or kick and snare); o.def: any other track field (trim, orch, hall, mix, tone,
+  // rubato...); o.desc: its description. o.down (default 0) and o.tempo or o.bpm set the key and the pace.
+  function writtenVariant(base, baseId, o) {
+    const d = JSON.parse(JSON.stringify(base)); delete d._p; delete d.id;
+    const mode = o.mode || base.mode || 'major', tpc = PCS[base.root], down = o.down || 0;
+    const baseTonic = base.tonic !== undefined ? base.tonic : 57 + mod12(tpc - 57) + 12 * (base.oct || 0);
+    d.root = PC_NAMES[mod12(tpc - down)]; d.mode = mode; d.tonic = baseTonic - down; delete d.oct;
+    d.bpm = o.bpm || Math.round(base.bpm * (o.tempo || 1));
+    d.inst = Object.assign({}, o.sec ? {} : base.inst || {}, o.inst || {});
+    if (o.sec) { d.sec = JSON.parse(JSON.stringify(o.sec)); delete d.forms; delete d.loopFrom; delete d.alts; delete d.eraAlts; }
+    else {
+      const oldScale = SCALES[base.mode || 'major'], newScale = SCALES[mode];
+      for (const sct of d.sec) {
+        if (mode !== (base.mode || 'major')) sct.prog = String(sct.prog).replace(/\|/g, ' ').trim().split(/\s+/).map(t => respell(t, oldScale, newScale)).join(' ');
+        const over = o.secs && o.secs[sct.n]; if (over) for (const k in over) { if (over[k] === null) delete sct[k]; else sct[k] = JSON.parse(JSON.stringify(over[k])); }
+      }
+      for (const a of o.add || []) d.sec.push(JSON.parse(JSON.stringify(a)));
+    }
+    if (o.forms) d.forms = JSON.parse(JSON.stringify(o.forms));
+    if (o.loopFrom) d.loopFrom = o.loopFrom;
+    if (o.def) Object.assign(d, JSON.parse(JSON.stringify(o.def)));
+    d.ph = JSON.parse(JSON.stringify(base.ph || {}));
+    d.desc = o.desc || (String(base.desc || baseId).split(':')[0] + ', hostile');
+    d.tens = false; d.lintMin = o.lintMin || d.lintMin || 0.6;
+    d.variantOf = baseId; d.written = true;
+    return Track(baseId + ':war', d);
+  }
   function warVariant(baseId, o) {
     const base = TRACKS[baseId]; if (!base) return null;
     o = o || {};
+    if (o.written) return writtenVariant(base, baseId, o);
     const d = JSON.parse(JSON.stringify(base)); delete d._p; delete d.id;
     const oldScale = SCALES[base.mode || 'major'], newMode = o.mode || DARK_MODE[base.mode || 'major'] || 'phrygian', newScale = SCALES[newMode];
     const tpc = PCS[base.root], down = o.down === undefined ? 3 : o.down;

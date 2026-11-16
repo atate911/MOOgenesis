@@ -17,7 +17,7 @@ for (const f of files) vm.runInContext(fs.readFileSync(path.join(ROOT, f), 'utf8
 const Music = ctx.MOO.Audio.Music, T = Music._tracks, INST = Music._INST, R = Music._rotation;
 const problems = [], warns = [];
 const bad = (id, msg) => problems.push(id + ': ' + msg), warn = (id, msg) => warns.push(id + ': ' + msg);
-const TOP = new Set(['dyn', 'smpK', 'id', 'desc', 'bpm', 'meter', 'root', 'mode', 'tonic', 'oct', 'bassC', 'trim', 'tone', 'mix', 'fx', 'sends', 'duck', 'bassTie', 'padTie', 'lowMono', 'orch', 'perform', 'tight', 'holdLow', 'part', 'subBass', 'refreshed', 'upgrade', 'lowBand', 'hall', 'accept', 'tens', 'gate', 'gentle', 'eraSens', 'rubato', 'loopFrom', 'forms', 'alts', 'eraAlts', 'inst', 'ph', 'base', 'variantOf', 'sec', 'strong', 'lintMin', 'hidden', 'interlude', 'bridge', 'tags', 'eraWin', 'motif', 'motifInst', 'quotes', 'tomTune', '_p']);
+const TOP = new Set(['dyn', 'smpK', 'id', 'desc', 'bpm', 'meter', 'root', 'mode', 'tonic', 'oct', 'bassC', 'trim', 'tone', 'mix', 'fx', 'sends', 'duck', 'bassTie', 'padTie', 'lowMono', 'orch', 'perform', 'tight', 'holdLow', 'part', 'subBass', 'refreshed', 'upgrade', 'lowBand', 'hall', 'accept', 'tens', 'gate', 'gentle', 'eraSens', 'rubato', 'loopFrom', 'forms', 'alts', 'eraAlts', 'inst', 'ph', 'base', 'variantOf', 'written', 'sec', 'strong', 'lintMin', 'hidden', 'interlude', 'bridge', 'tags', 'eraWin', 'motif', 'motifInst', 'quotes', 'tomTune', '_p']);
 const LAYERS = ['pad', 'pad2', 'pad3', 'bass', 'arp', 'arp2', 'drums', 'perc', 'timp', 'lead', 'lead2', 'lead3', 'lead4', 'bell', 'bell2', 'choir', 'choir2', 'choir3'];
 const SEC = new Set(['n', 'bars', 'barsVar', 'lv', 'cres', 'prog', 'fill', 'cr', 'rise', 'hit', 'tens', 'breath', 'verb', 'subBass'].concat(LAYERS));
 const AXES = ['solitude', 'contact', 'tension', 'war', 'grief', 'grandeur', 'energy', 'dark', 'ceremony'];
@@ -34,6 +34,7 @@ for (const id of ids) {
   for (const k in d.eraAlts || {}) if (!instOk(d.eraAlts[k])) bad(id, 'unknown instrument "' + d.eraAlts[k] + '" in eraAlts.' + k);
   if (d.tags) for (const a in d.tags) { if (AXES.indexOf(a) < 0) bad(id, 'unknown tag axis "' + a + '"'); const v = d.tags[a]; if (typeof v !== 'number' || v < 0 || v > 1) bad(id, 'tag ' + a + ' out of 0..1'); }
   if (d.eraWin && !(Array.isArray(d.eraWin) && d.eraWin.length === 2 && d.eraWin[0] >= 0 && d.eraWin[1] <= 1 && d.eraWin[0] < d.eraWin[1])) bad(id, 'bad eraWin');
+  if (d.written && (!T[d.variantOf] || JSON.stringify(d.ph || {}) !== JSON.stringify(T[d.variantOf].ph || {}))) bad(id, 'a written reading whose phrases are not its theme\'s');   // the same tune, by construction
   if (d.motif && !Music.setMotif(id)) bad(id, 'motif does not resolve'); Music.setMotif(null);
   const names = new Set(d.sec.map(x => x.n));
   if (d.loopFrom && !names.has(d.loopFrom)) bad(id, 'loopFrom "' + d.loopFrom + '" is not a section');

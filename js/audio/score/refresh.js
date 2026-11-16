@@ -231,6 +231,6 @@
   for (const id in R) {
     const b = T[id], w = T[id + ':war'], p = R[id]; if (!b) continue;
     const k = p.trim ? p.trim / b.trim : 1; apply(b, p);
-    if (w) apply(w, Object.assign({}, p, p.trim ? { trim: w.trim * k } : {}));   // its own trim, moved by the same ratio
+    if (w && !w.written) apply(w, Object.assign({}, p, p.trim ? { trim: w.trim * k } : {}));   // a written hostile reading takes an entry of its own ('race:x:war')   // its own trim, moved by the same ratio
   }
 })(window.MOO);

@@ -444,7 +444,8 @@ race copies), after the Meklar (the electronic branch), and at the end.
    brass lead, brass stabs, dark pad, moog bass, men's choir or kick and snare: the reading names its own). The reading still copies the
    theme's `ph`, so the tune is the theme's by construction; a QA check fails if a reading's phrases differ from its theme's. Until a race is
    rewritten its reading takes the old defaults, so nothing changes before its turn.
-3. **The review tool, for races.** `node tools/score-review.js --races` reports, over the first 90 seconds of the first pass: the time of the
+3. **The review tool, for races.** `node tools/score-review.js --races` reports (the baseline: `tools/races/baseline.txt`, with the
+   compile hashes from `node tools/races/hash.js` in `tools/races/baseline.hash`), over the first 90 seconds of the first pass: the time of the
    crest, the dynamic range, the phrases and chords heard, strong beats on a chord tone, the snaps; and for every race piece its nearest
    neighbour and likeness, and for every reading its likeness to its own theme and to the nearest other reading.
 4. **The refresh.** The race entries in `js/audio/score/refresh.js` are reset race by race as each is rewritten: the orchestral profile
@@ -455,7 +456,7 @@ race copies), after the Meklar (the electronic branch), and at the end.
 
 #### Every race: the same procedure
 
-1. Write the theme: the phrases (the old opening phrase kept, so the race still sounds like itself, with new phrases after it), the
+1. Write the theme: the phrases, the
    harmony, the sections, the 90-second first pass with its introduction (`loopFrom`), the longer loop after it (two `forms`, a still, three
    to four minutes in all).
 2. Measure: the review tool against the targets below; the lint, the QA and the 840 seam pairings.
@@ -473,7 +474,9 @@ piece, and under 0.88 to every other reading.
 
 #### The ten races
 
-Times are the first pass. Phrases named SK1, SK2 and so on are the existing ones, kept; the others are new.
+Times are the first pass. Nothing of the old race music has to survive (the user: any of it may go, in part or whole, unless it beats
+the better idea); the directions below are starting points, and a phrase named after an old one (SK1, KL1...) is replaced wherever a better
+one is written.
 
 **1. Sakkra (pilot).** Reptilian and jungle-warm. A dorian, 100 bpm (2.4 s a bar).
 - *Form:* the introduction (4 bars: the hiss, the shaker and a low marimba pulse alone), A (8: the kora line SK1 SK2 as the harp doubled by

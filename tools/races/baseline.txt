@@ -1,0 +1,44 @@
+piece           key            bpm  loop climax    @  end ch/min chords ctone leap snap%  out% poly mud%  seam / out of range
+race:alkari     G major         88   327   0.88 0.07 0.85     22      4 0.667    9     0     0    9    0  V > I
+race:bulrathi   D minor         76   316   0.95 0.07 0.85   17.1      5  0.73   12     0     0   13 1.25  V > i
+race:darlok     F# harmonic     66   349   0.85 0.09 0.85   8.25      3     1    7     0     0   10    0  iv > i
+race:human      F major        108   311      1 0.11  0.9     27      5     1    5     0     0    7    0  I > I
+race:klackon    C wholetone    132   349      1 0.13    1   16.5      2 0.462   26     0     0    8    0  II+ > I+
+race:meklar     B minor        128   300      1 0.16    1     26      3     1   12     0     0    8    0  i > i
+race:mrrshan    G phrygDom     112   300      1 0.11  0.8     28      3 0.857    7     0     0   10    0  iv > I
+race:psilon     C lydian        90   320   0.95 0.14 0.95   22.5      5     1   14     0  0.07    9    0  V > IM7 | crotales B5..B5 (bell, 2 beats)
+race:sakkra     A dorian       100   346   0.95 0.12 0.95   12.5      3 0.667    9     0     0    7    0  IV > i
+race:silicoid   C# minor        50   346   0.85 0.06  0.8   6.25      5     1   15     0     0    9    0  bII > i
+race:alkari:war E mixolydian   106   272   0.88 0.07 0.85   26.5      4 0.714    9     4     0   10    0  v > I
+race:bulrathi:warC minor         84   286   0.95 0.07 0.85   18.9      5  0.73   12     7     0   11    0  v > i
+race:darlok:war Eb dblHarm      71   325   0.85 0.09 0.85   8.87      3     1    7     0     0   11    0  iv > I
+race:human:war  D minor        121   278      1 0.11  0.9  30.25      8     1    6     3     0    8    0  i > i
+race:klackon:warA wholetone    145   318      1 0.13    1  18.13      2 0.462   14     0     0    9    0  II+ > I+
+race:meklar:war Ab phrygian    143   269      1 0.16    1  29.05      3     1   12     0     0    9    0  i > i
+race:mrrshan:warD phrygDom     129   260      1 0.11  0.8  32.25      3 0.857    7     4     0   10    0  iv > I
+race:psilon:war A phrygian     101   285   0.95 0.14 0.95  25.25      5     1    6     0     0   10    0  vo > i7
+race:sakkra:war Gb dorian      118   293   0.95 0.12 0.95  14.75      3 0.667    9     0     0    7    0  IV > i
+race:silicoid:warB phrygian      57   303   0.85 0.06  0.8   7.12      5     1   18     0     0   10    0  bII > i
+
+races, first 90 s
+piece              crest  at s range phr  ch  moving ctone snaps  nearest | to its theme | nearest reading
+race:alkari         0.88    22  0.13   4   4     0/5  0.67     0  race:mrrshan 0.87
+race:bulrathi       0.95    25  0.17   2   5     0/5  0.73     0  race:bulrathi:war 0.97
+race:darlok         0.85    29  0.15   2   3     0/4     1     0  race:sakkra 0.83
+race:human             1    36   0.2   4   5     0/6     1     0  council2 0.94
+race:klackon           1    44  0.22   2   2     0/7  0.46     0  lab3 0.83
+race:meklar            1    45  0.22   2   3     0/6     1     0  gnn 0.99
+race:mrrshan           1    34  0.22   2   3     0/6  0.86     0  race:alkari 0.87
+race:psilon         0.95    43  0.23   2   5     0/5     1     0  lab1 0.83
+race:sakkra         0.95    38  0.17   2   3     0/5  0.67     0  lab3 0.89
+race:silicoid       0.85    19  0.15   3   5     0/5     1     0  defeat 0.82
+race:alkari:war     0.88    18  0.13   4   4     0/5  0.71    15  victory 0.95 | 0.56 | race:sakkra:war 0.94
+race:bulrathi:war   0.95    23  0.17   2   5     0/5  0.73    15  race:bulrathi 0.97 | 0.97 | race:human:war 0.89
+race:darlok:war     0.85    27  0.15   2   3     0/4     1     0  galaxy19 0.92 | 0.6 | race:silicoid:war 0.89
+race:human:war         1    32   0.2   4   8     0/7     1    10  race:sakkra:war 0.96 | 0.88 | race:sakkra:war 0.96
+race:klackon:war       1    40  0.22   2   2     0/7  0.46     0  combat1 0.93 | 0.44 | race:meklar:war 0.92
+race:meklar:war        1    40  0.22   2   3     0/7     1     0  combat1 0.97 | 0.94 | race:mrrshan:war 0.94
+race:mrrshan:war       1    30  0.22   2   3     0/7  0.86    25  race:meklar:war 0.94 | 0.56 | race:meklar:war 0.94
+race:psilon:war     0.95    38  0.23   2   5     0/5     1     0  race:psilon 0.82 | 0.82 | race:alkari:war 0.65
+race:sakkra:war     0.95    33  0.17   2   3     0/6  0.67     0  race:human:war 0.96 | 0.61 | race:human:war 0.96
+race:silicoid:war   0.85    17  0.15   3   5     0/6     1     0  race:darlok:war 0.89 | 0.57 | race:darlok:war 0.89

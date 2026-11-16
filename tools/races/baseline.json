@@ -1,0 +1,2966 @@
+[
+ {
+  "id": "race:alkari",
+  "hidden": false,
+  "desc": "Alkari",
+  "key": "G major",
+  "bpm": 88,
+  "meter": 4,
+  "loopSec": 327,
+  "firstSec": 327,
+  "sections": 3,
+  "forms": 2,
+  "alts": 0,
+  "phrases": 4,
+  "arc": [
+   {
+    "n": "A",
+    "lv0": 0.75,
+    "lv1": 0.75,
+    "bars": 8
+   },
+   {
+    "n": "B",
+    "lv0": 0.88,
+    "lv1": 0.88,
+    "bars": 8
+   },
+   {
+    "n": "A2",
+    "lv0": 0.85,
+    "lv1": 0.85,
+    "bars": 8
+   },
+   {
+    "n": "A",
+    "lv0": 0.75,
+    "lv1": 0.75,
+    "bars": 8
+   },
+   {
+    "n": "B",
+    "lv0": 0.88,
+    "lv1": 0.88,
+    "bars": 8
+   },
+   {
+    "n": "A2",
+    "lv0": 0.85,
+    "lv1": 0.85,
+    "bars": 8
+   },
+   {
+    "n": "A",
+    "lv0": 0.75,
+    "lv1": 0.75,
+    "bars": 8
+   },
+   {
+    "n": "B",
+    "lv0": 0.88,
+    "lv1": 0.88,
+    "bars": 8
+   },
+   {
+    "n": "A2",
+    "lv0": 0.85,
+    "lv1": 0.85,
+    "bars": 8
+   },
+   {
+    "n": "A",
+    "lv0": 0.75,
+    "lv1": 0.75,
+    "bars": 8
+   },
+   {
+    "n": "B",
+    "lv0": 0.88,
+    "lv1": 0.88,
+    "bars": 8
+   },
+   {
+    "n": "A2",
+    "lv0": 0.85,
+    "lv1": 0.85,
+    "bars": 8
+   },
+   {
+    "n": "A",
+    "lv0": 0.75,
+    "lv1": 0.75,
+    "bars": 8
+   },
+   {
+    "n": "B",
+    "lv0": 0.88,
+    "lv1": 0.88,
+    "bars": 8
+   },
+   {
+    "n": "A2",
+    "lv0": 0.85,
+    "lv1": 0.85,
+    "bars": 8
+   }
+  ],
+  "climax": 0.88,
+  "climaxAt": 0.07,
+  "ending": 0.85,
+  "range": 0.13,
+  "chords": 4,
+  "chordsPerMin": 22,
+  "seam": "V > I",
+  "lead": {
+   "notes": 390,
+   "strongCT": 0.667,
+   "strongOK": 1,
+   "maxLeap": 9,
+   "bigLeaps": 0
+  },
+  "snaps": 0,
+  "snapRate": 0,
+  "variation": 0.369,
+  "eventsPerSec": 10.2,
+  "outsidePct": 0,
+  "outside": "",
+  "maxPoly": 9,
+  "meanPoly": 7.45,
+  "mudPct": 0,
+  "layers": "pad bass arp drums lead bell lead2",
+  "palette": "winds 47, strings 39, pluck 10, bells 5",
+  "warnings": []
+ },
+ {
+  "id": "race:bulrathi",
+  "hidden": false,
+  "desc": "Bulrathi",
+  "key": "D minor",
+  "bpm": 76,
+  "meter": 4,
+  "loopSec": 316,
+  "firstSec": 316,
+  "sections": 3,
+  "forms": 2,
+  "alts": 0,
+  "phrases": 2,
+  "arc": [
+   {
+    "n": "A",
+    "lv0": 0.78,
+    "lv1": 0.78,
+    "bars": 8
+   },
+   {
+    "n": "B",
+    "lv0": 0.95,
+    "lv1": 0.95,
+    "bars": 8
+   },
+   {
+    "n": "C",
+    "lv0": 0.85,
+    "lv1": 0.85,
+    "bars": 4
+   },
+   {
+    "n": "A",
+    "lv0": 0.78,
+    "lv1": 0.78,
+    "bars": 8
+   },
+   {
+    "n": "B",
+    "lv0": 0.95,
+    "lv1": 0.95,
+    "bars": 8
+   },
+   {
+    "n": "C",
+    "lv0": 0.85,
+    "lv1": 0.85,
+    "bars": 4
+   },
+   {
+    "n": "A",
+    "lv0": 0.78,
+    "lv1": 0.78,
+    "bars": 8
+   },
+   {
+    "n": "B",
+    "lv0": 0.95,
+    "lv1": 0.95,
+    "bars": 8
+   },
+   {
+    "n": "C",
+    "lv0": 0.85,
+    "lv1": 0.85,
+    "bars": 4
+   },
+   {
+    "n": "A",
+    "lv0": 0.78,
+    "lv1": 0.78,
+    "bars": 8
+   },
+   {
+    "n": "B",
+    "lv0": 0.95,
+    "lv1": 0.95,
+    "bars": 8
+   },
+   {
+    "n": "C",
+    "lv0": 0.85,
+    "lv1": 0.85,
+    "bars": 4
+   },
+   {
+    "n": "A",
+    "lv0": 0.78,
+    "lv1": 0.78,
+    "bars": 8
+   },
+   {
+    "n": "B",
+    "lv0": 0.95,
+    "lv1": 0.95,
+    "bars": 8
+   },
+   {
+    "n": "C",
+    "lv0": 0.85,
+    "lv1": 0.85,
+    "bars": 4
+   }
+  ],
+  "climax": 0.95,
+  "climaxAt": 0.07,
+  "ending": 0.85,
+  "range": 0.17,
+  "chords": 5,
+  "chordsPerMin": 17.1,
+  "seam": "V > i",
+  "lead": {
+   "notes": 210,
+   "strongCT": 0.73,
+   "strongOK": 1,
+   "maxLeap": 12,
+   "bigLeaps": 35
+  },
+  "snaps": 0,
+  "snapRate": 0,
+  "variation": 0.196,
+  "eventsPerSec": 10.2,
+  "outsidePct": 0,
+  "outside": "",
+  "maxPoly": 13,
+  "meanPoly": 7.11,
+  "mudPct": 1.25,
+  "layers": "pad bass drums timp lead bell lead2 choir",
+  "palette": "brass 61, strings 39",
+  "warnings": []
+ },
+ {
+  "id": "race:darlok",
+  "hidden": false,
+  "desc": "Darlok",
+  "key": "F# harmonic",
+  "bpm": 66,
+  "meter": 4,
+  "loopSec": 349,
+  "firstSec": 349,
+  "sections": 2,
+  "forms": 2,
+  "alts": 0,
+  "phrases": 2,
+  "arc": [
+   {
+    "n": "A",
+    "lv0": 0.7,
+    "lv1": 0.7,
+    "bars": 8
+   },
+   {
+    "n": "B",
+    "lv0": 0.85,
+    "lv1": 0.85,
+    "bars": 8
+   },
+   {
+    "n": "A",
+    "lv0": 0.7,
+    "lv1": 0.7,
+    "bars": 8
+   },
+   {
+    "n": "B",
+    "lv0": 0.85,
+    "lv1": 0.85,
+    "bars": 8
+   },
+   {
+    "n": "A",
+    "lv0": 0.7,
+    "lv1": 0.7,
+    "bars": 8
+   },
+   {
+    "n": "B",
+    "lv0": 0.85,
+    "lv1": 0.85,
+    "bars": 8
+   },
+   {
+    "n": "A",
+    "lv0": 0.7,
+    "lv1": 0.7,
+    "bars": 8
+   },
+   {
+    "n": "B",
+    "lv0": 0.85,
+    "lv1": 0.85,
+    "bars": 8
+   },
+   {
+    "n": "A",
+    "lv0": 0.7,
+    "lv1": 0.7,
+    "bars": 8
+   },
+   {
+    "n": "B",
+    "lv0": 0.85,
+    "lv1": 0.85,
+    "bars": 8
+   },
+   {
+    "n": "A",
+    "lv0": 0.7,
+    "lv1": 0.7,
+    "bars": 8
+   },
+   {
+    "n": "B",
+    "lv0": 0.85,
+    "lv1": 0.85,
+    "bars": 8
+   }
+  ],
+  "climax": 0.85,
+  "climaxAt": 0.09,
+  "ending": 0.85,
+  "range": 0.15,
+  "chords": 3,
+  "chordsPerMin": 8.25,
+  "seam": "iv > i",
+  "lead": {
+   "notes": 228,
+   "strongCT": 1,
+   "strongOK": 1,
+   "maxLeap": 7,
+   "bigLeaps": 0
+  },
+  "snaps": 0,
+  "snapRate": 0,
+  "variation": 0.384,
+  "eventsPerSec": 3.2,
+  "outsidePct": 0,
+  "outside": "",
+  "maxPoly": 10,
+  "meanPoly": 8.52,
+  "mudPct": 0,
+  "layers": "pad bass drums lead choir lead2 bell",
+  "palette": "strings 44, pluck 39, winds 16",
+  "warnings": []
+ },
+ {
+  "id": "race:human",
+  "hidden": false,
+  "desc": "Human",
+  "key": "F major",
+  "bpm": 108,
+  "meter": 4,
+  "loopSec": 311,
+  "firstSec": 311,
+  "sections": 4,
+  "forms": 2,
+  "alts": 0,
+  "phrases": 4,
+  "arc": [
+   {
+    "n": "A",
+    "lv0": 0.8,
+    "lv1": 0.8,
+    "bars": 8
+   },
+   {
+    "n": "B",
+    "lv0": 0.88,
+    "lv1": 0.88,
+    "bars": 8
+   },
+   {
+    "n": "A2",
+    "lv0": 1,
+    "lv1": 1,
+    "bars": 8
+   },
+   {
+    "n": "C",
+    "lv0": 0.9,
+    "lv1": 0.9,
+    "bars": 4
+   },
+   {
+    "n": "A",
+    "lv0": 0.8,
+    "lv1": 0.8,
+    "bars": 8
+   },
+   {
+    "n": "B",
+    "lv0": 0.88,
+    "lv1": 0.88,
+    "bars": 8
+   },
+   {
+    "n": "A2",
+    "lv0": 1,
+    "lv1": 1,
+    "bars": 8
+   },
+   {
+    "n": "C",
+    "lv0": 0.9,
+    "lv1": 0.9,
+    "bars": 4
+   },
+   {
+    "n": "A",
+    "lv0": 0.8,
+    "lv1": 0.8,
+    "bars": 8
+   },
+   {
+    "n": "B",
+    "lv0": 0.88,
+    "lv1": 0.88,
+    "bars": 8
+   },
+   {
+    "n": "A2",
+    "lv0": 1,
+    "lv1": 1,
+    "bars": 8
+   },
+   {
+    "n": "C",
+    "lv0": 0.9,
+    "lv1": 0.9,
+    "bars": 4
+   },
+   {
+    "n": "A",
+    "lv0": 0.8,
+    "lv1": 0.8,
+    "bars": 8
+   },
+   {
+    "n": "B",
+    "lv0": 0.88,
+    "lv1": 0.88,
+    "bars": 8
+   },
+   {
+    "n": "A2",
+    "lv0": 1,
+    "lv1": 1,
+    "bars": 8
+   },
+   {
+    "n": "C",
+    "lv0": 0.9,
+    "lv1": 0.9,
+    "bars": 4
+   },
+   {
+    "n": "A",
+    "lv0": 0.8,
+    "lv1": 0.8,
+    "bars": 8
+   },
+   {
+    "n": "B",
+    "lv0": 0.88,
+    "lv1": 0.88,
+    "bars": 8
+   },
+   {
+    "n": "A2",
+    "lv0": 1,
+    "lv1": 1,
+    "bars": 8
+   },
+   {
+    "n": "C",
+    "lv0": 0.9,
+    "lv1": 0.9,
+    "bars": 4
+   }
+  ],
+  "climax": 1,
+  "climaxAt": 0.11,
+  "ending": 0.9,
+  "range": 0.2,
+  "chords": 5,
+  "chordsPerMin": 27,
+  "seam": "I > I",
+  "lead": {
+   "notes": 325,
+   "strongCT": 1,
+   "strongOK": 1,
+   "maxLeap": 5,
+   "bigLeaps": 0
+  },
+  "snaps": 0,
+  "snapRate": 0,
+  "variation": 0.219,
+  "eventsPerSec": 13.6,
+  "outsidePct": 0,
+  "outside": "",
+  "maxPoly": 7,
+  "meanPoly": 5.15,
+  "mudPct": 0,
+  "layers": "pad bass drums timp lead bell lead2",
+  "palette": "brass 74, strings 19, bells 7",
+  "warnings": []
+ },
+ {
+  "id": "race:klackon",
+  "hidden": false,
+  "desc": "Klackon",
+  "key": "C wholetone",
+  "bpm": 132,
+  "meter": 4,
+  "loopSec": 349,
+  "firstSec": 349,
+  "sections": 4,
+  "forms": 2,
+  "alts": 0,
+  "phrases": 2,
+  "arc": [
+   {
+    "n": "A",
+    "lv0": 0.78,
+    "lv1": 0.78,
+    "bars": 8
+   },
+   {
+    "n": "B",
+    "lv0": 0.92,
+    "lv1": 0.92,
+    "bars": 8
+   },
+   {
+    "n": "A2",
+    "lv0": 0.85,
+    "lv1": 0.85,
+    "bars": 8
+   },
+   {
+    "n": "B2",
+    "lv0": 1,
+    "lv1": 1,
+    "bars": 8
+   },
+   {
+    "n": "A",
+    "lv0": 0.78,
+    "lv1": 0.78,
+    "bars": 8
+   },
+   {
+    "n": "B",
+    "lv0": 0.92,
+    "lv1": 0.92,
+    "bars": 8
+   },
+   {
+    "n": "A2",
+    "lv0": 0.85,
+    "lv1": 0.85,
+    "bars": 8
+   },
+   {
+    "n": "B2",
+    "lv0": 1,
+    "lv1": 1,
+    "bars": 8
+   },
+   {
+    "n": "A",
+    "lv0": 0.78,
+    "lv1": 0.78,
+    "bars": 8
+   },
+   {
+    "n": "B",
+    "lv0": 0.92,
+    "lv1": 0.92,
+    "bars": 8
+   },
+   {
+    "n": "A2",
+    "lv0": 0.85,
+    "lv1": 0.85,
+    "bars": 8
+   },
+   {
+    "n": "B2",
+    "lv0": 1,
+    "lv1": 1,
+    "bars": 8
+   },
+   {
+    "n": "A",
+    "lv0": 0.78,
+    "lv1": 0.78,
+    "bars": 8
+   },
+   {
+    "n": "B",
+    "lv0": 0.92,
+    "lv1": 0.92,
+    "bars": 8
+   },
+   {
+    "n": "A2",
+    "lv0": 0.85,
+    "lv1": 0.85,
+    "bars": 8
+   },
+   {
+    "n": "B2",
+    "lv0": 1,
+    "lv1": 1,
+    "bars": 8
+   },
+   {
+    "n": "A",
+    "lv0": 0.78,
+    "lv1": 0.78,
+    "bars": 8
+   },
+   {
+    "n": "B",
+    "lv0": 0.92,
+    "lv1": 0.92,
+    "bars": 8
+   },
+   {
+    "n": "A2",
+    "lv0": 0.85,
+    "lv1": 0.85,
+    "bars": 8
+   },
+   {
+    "n": "B2",
+    "lv0": 1,
+    "lv1": 1,
+    "bars": 8
+   },
+   {
+    "n": "A",
+    "lv0": 0.78,
+    "lv1": 0.78,
+    "bars": 8
+   },
+   {
+    "n": "B",
+    "lv0": 0.92,
+    "lv1": 0.92,
+    "bars": 8
+   },
+   {
+    "n": "A2",
+    "lv0": 0.85,
+    "lv1": 0.85,
+    "bars": 8
+   },
+   {
+    "n": "B2",
+    "lv0": 1,
+    "lv1": 1,
+    "bars": 8
+   }
+  ],
+  "climax": 1,
+  "climaxAt": 0.13,
+  "ending": 1,
+  "range": 0.22,
+  "chords": 2,
+  "chordsPerMin": 16.5,
+  "seam": "II+ > I+",
+  "lead": {
+   "notes": 1389,
+   "strongCT": 0.462,
+   "strongOK": 1,
+   "maxLeap": 26,
+   "bigLeaps": 604
+  },
+  "snaps": 0,
+  "snapRate": 0,
+  "variation": 0.052,
+  "eventsPerSec": 31.4,
+  "outsidePct": 0,
+  "outside": "",
+  "maxPoly": 8,
+  "meanPoly": 6.77,
+  "mudPct": 0,
+  "layers": "pad bass arp drums lead lead2",
+  "palette": "pluck 65, synth 29, bells 6",
+  "warnings": []
+ },
+ {
+  "id": "race:meklar",
+  "hidden": false,
+  "desc": "Meklar",
+  "key": "B minor",
+  "bpm": 128,
+  "meter": 4,
+  "loopSec": 300,
+  "firstSec": 300,
+  "sections": 4,
+  "forms": 2,
+  "alts": 0,
+  "phrases": 2,
+  "arc": [
+   {
+    "n": "A",
+    "lv0": 0.78,
+    "lv1": 0.78,
+    "bars": 8
+   },
+   {
+    "n": "B",
+    "lv0": 0.92,
+    "lv1": 0.92,
+    "bars": 8
+   },
+   {
+    "n": "A2",
+    "lv0": 0.88,
+    "lv1": 0.88,
+    "bars": 8
+   },
+   {
+    "n": "B2",
+    "lv0": 1,
+    "lv1": 1,
+    "bars": 8
+   },
+   {
+    "n": "A",
+    "lv0": 0.78,
+    "lv1": 0.78,
+    "bars": 8
+   },
+   {
+    "n": "B",
+    "lv0": 0.92,
+    "lv1": 0.92,
+    "bars": 8
+   },
+   {
+    "n": "A2",
+    "lv0": 0.88,
+    "lv1": 0.88,
+    "bars": 8
+   },
+   {
+    "n": "B2",
+    "lv0": 1,
+    "lv1": 1,
+    "bars": 8
+   },
+   {
+    "n": "A",
+    "lv0": 0.78,
+    "lv1": 0.78,
+    "bars": 8
+   },
+   {
+    "n": "B",
+    "lv0": 0.92,
+    "lv1": 0.92,
+    "bars": 8
+   },
+   {
+    "n": "A2",
+    "lv0": 0.88,
+    "lv1": 0.88,
+    "bars": 8
+   },
+   {
+    "n": "B2",
+    "lv0": 1,
+    "lv1": 1,
+    "bars": 8
+   },
+   {
+    "n": "A",
+    "lv0": 0.78,
+    "lv1": 0.78,
+    "bars": 8
+   },
+   {
+    "n": "B",
+    "lv0": 0.92,
+    "lv1": 0.92,
+    "bars": 8
+   },
+   {
+    "n": "A2",
+    "lv0": 0.88,
+    "lv1": 0.88,
+    "bars": 8
+   },
+   {
+    "n": "B2",
+    "lv0": 1,
+    "lv1": 1,
+    "bars": 8
+   },
+   {
+    "n": "A",
+    "lv0": 0.78,
+    "lv1": 0.78,
+    "bars": 8
+   },
+   {
+    "n": "B",
+    "lv0": 0.92,
+    "lv1": 0.92,
+    "bars": 8
+   },
+   {
+    "n": "A2",
+    "lv0": 0.88,
+    "lv1": 0.88,
+    "bars": 8
+   },
+   {
+    "n": "B2",
+    "lv0": 1,
+    "lv1": 1,
+    "bars": 8
+   }
+  ],
+  "climax": 1,
+  "climaxAt": 0.16,
+  "ending": 1,
+  "range": 0.22,
+  "chords": 3,
+  "chordsPerMin": 26,
+  "seam": "i > i",
+  "lead": {
+   "notes": 1180,
+   "strongCT": 1,
+   "strongOK": 1,
+   "maxLeap": 12,
+   "bigLeaps": 19
+  },
+  "snaps": 0,
+  "snapRate": 0,
+  "variation": 0.05,
+  "eventsPerSec": 32.9,
+  "outsidePct": 0,
+  "outside": "",
+  "maxPoly": 8,
+  "meanPoly": 7.13,
+  "mudPct": 0,
+  "layers": "pad bass arp drums lead lead2",
+  "palette": "brass 45, strings 37, pluck 14, bells 4",
+  "warnings": []
+ },
+ {
+  "id": "race:mrrshan",
+  "hidden": false,
+  "desc": "Mrrshan",
+  "key": "G phrygDom",
+  "bpm": 112,
+  "meter": 4,
+  "loopSec": 300,
+  "firstSec": 300,
+  "sections": 4,
+  "forms": 2,
+  "alts": 0,
+  "phrases": 2,
+  "arc": [
+   {
+    "n": "A",
+    "lv0": 0.78,
+    "lv1": 0.78,
+    "bars": 8
+   },
+   {
+    "n": "B",
+    "lv0": 0.9,
+    "lv1": 0.9,
+    "bars": 8
+   },
+   {
+    "n": "A2",
+    "lv0": 1,
+    "lv1": 1,
+    "bars": 8
+   },
+   {
+    "n": "C",
+    "lv0": 0.8,
+    "lv1": 0.8,
+    "bars": 4
+   },
+   {
+    "n": "A",
+    "lv0": 0.78,
+    "lv1": 0.78,
+    "bars": 8
+   },
+   {
+    "n": "B",
+    "lv0": 0.9,
+    "lv1": 0.9,
+    "bars": 8
+   },
+   {
+    "n": "A2",
+    "lv0": 1,
+    "lv1": 1,
+    "bars": 8
+   },
+   {
+    "n": "C",
+    "lv0": 0.8,
+    "lv1": 0.8,
+    "bars": 4
+   },
+   {
+    "n": "A",
+    "lv0": 0.78,
+    "lv1": 0.78,
+    "bars": 8
+   },
+   {
+    "n": "B",
+    "lv0": 0.9,
+    "lv1": 0.9,
+    "bars": 8
+   },
+   {
+    "n": "A2",
+    "lv0": 1,
+    "lv1": 1,
+    "bars": 8
+   },
+   {
+    "n": "C",
+    "lv0": 0.8,
+    "lv1": 0.8,
+    "bars": 4
+   },
+   {
+    "n": "A",
+    "lv0": 0.78,
+    "lv1": 0.78,
+    "bars": 8
+   },
+   {
+    "n": "B",
+    "lv0": 0.9,
+    "lv1": 0.9,
+    "bars": 8
+   },
+   {
+    "n": "A2",
+    "lv0": 1,
+    "lv1": 1,
+    "bars": 8
+   },
+   {
+    "n": "C",
+    "lv0": 0.8,
+    "lv1": 0.8,
+    "bars": 4
+   },
+   {
+    "n": "A",
+    "lv0": 0.78,
+    "lv1": 0.78,
+    "bars": 8
+   },
+   {
+    "n": "B",
+    "lv0": 0.9,
+    "lv1": 0.9,
+    "bars": 8
+   },
+   {
+    "n": "A2",
+    "lv0": 1,
+    "lv1": 1,
+    "bars": 8
+   },
+   {
+    "n": "C",
+    "lv0": 0.8,
+    "lv1": 0.8,
+    "bars": 4
+   }
+  ],
+  "climax": 1,
+  "climaxAt": 0.11,
+  "ending": 0.8,
+  "range": 0.22,
+  "chords": 3,
+  "chordsPerMin": 28,
+  "seam": "iv > I",
+  "lead": {
+   "notes": 620,
+   "strongCT": 0.857,
+   "strongOK": 0.857,
+   "maxLeap": 7,
+   "bigLeaps": 0
+  },
+  "snaps": 0,
+  "snapRate": 0,
+  "variation": 0.113,
+  "eventsPerSec": 21.8,
+  "outsidePct": 0,
+  "outside": "",
+  "maxPoly": 10,
+  "meanPoly": 6.61,
+  "mudPct": 0,
+  "layers": "pad bass drums lead arp lead2 choir",
+  "palette": "winds 55, strings 40, pluck 5",
+  "warnings": []
+ },
+ {
+  "id": "race:psilon",
+  "hidden": false,
+  "desc": "Psilon",
+  "key": "C lydian",
+  "bpm": 90,
+  "meter": 4,
+  "loopSec": 320,
+  "firstSec": 320,
+  "sections": 3,
+  "forms": 2,
+  "alts": 0,
+  "phrases": 2,
+  "arc": [
+   {
+    "n": "A",
+    "lv0": 0.72,
+    "lv1": 0.72,
+    "bars": 8
+   },
+   {
+    "n": "B",
+    "lv0": 0.85,
+    "lv1": 0.85,
+    "bars": 8
+   },
+   {
+    "n": "A2",
+    "lv0": 0.95,
+    "lv1": 0.95,
+    "bars": 8
+   },
+   {
+    "n": "A",
+    "lv0": 0.72,
+    "lv1": 0.72,
+    "bars": 8
+   },
+   {
+    "n": "B",
+    "lv0": 0.85,
+    "lv1": 0.85,
+    "bars": 8
+   },
+   {
+    "n": "A2",
+    "lv0": 0.95,
+    "lv1": 0.95,
+    "bars": 8
+   },
+   {
+    "n": "A",
+    "lv0": 0.72,
+    "lv1": 0.72,
+    "bars": 8
+   },
+   {
+    "n": "B",
+    "lv0": 0.85,
+    "lv1": 0.85,
+    "bars": 8
+   },
+   {
+    "n": "A2",
+    "lv0": 0.95,
+    "lv1": 0.95,
+    "bars": 8
+   },
+   {
+    "n": "A",
+    "lv0": 0.72,
+    "lv1": 0.72,
+    "bars": 8
+   },
+   {
+    "n": "B",
+    "lv0": 0.85,
+    "lv1": 0.85,
+    "bars": 8
+   },
+   {
+    "n": "A2",
+    "lv0": 0.95,
+    "lv1": 0.95,
+    "bars": 8
+   },
+   {
+    "n": "A",
+    "lv0": 0.72,
+    "lv1": 0.72,
+    "bars": 8
+   },
+   {
+    "n": "B",
+    "lv0": 0.85,
+    "lv1": 0.85,
+    "bars": 8
+   },
+   {
+    "n": "A2",
+    "lv0": 0.95,
+    "lv1": 0.95,
+    "bars": 8
+   }
+  ],
+  "climax": 0.95,
+  "climaxAt": 0.14,
+  "ending": 0.95,
+  "range": 0.23,
+  "chords": 5,
+  "chordsPerMin": 22.5,
+  "seam": "V > IM7",
+  "lead": {
+   "notes": 450,
+   "strongCT": 1,
+   "strongOK": 1,
+   "maxLeap": 14,
+   "bigLeaps": 39
+  },
+  "snaps": 0,
+  "snapRate": 0,
+  "variation": 0.342,
+  "eventsPerSec": 12.3,
+  "outsidePct": 0.07,
+  "outside": "crotales B5..B5 (bell, 2 beats)",
+  "maxPoly": 9,
+  "meanPoly": 7.8,
+  "mudPct": 0,
+  "layers": "pad bass arp drums lead lead2 bell",
+  "palette": "bells 44, strings 27, pluck 18, synth 11",
+  "warnings": []
+ },
+ {
+  "id": "race:sakkra",
+  "hidden": false,
+  "desc": "Sakkra",
+  "key": "A dorian",
+  "bpm": 100,
+  "meter": 4,
+  "loopSec": 346,
+  "firstSec": 346,
+  "sections": 3,
+  "forms": 2,
+  "alts": 0,
+  "phrases": 2,
+  "arc": [
+   {
+    "n": "A",
+    "lv0": 0.78,
+    "lv1": 0.78,
+    "bars": 8
+   },
+   {
+    "n": "B",
+    "lv0": 0.9,
+    "lv1": 0.9,
+    "bars": 8
+   },
+   {
+    "n": "A2",
+    "lv0": 0.95,
+    "lv1": 0.95,
+    "bars": 8
+   },
+   {
+    "n": "A",
+    "lv0": 0.78,
+    "lv1": 0.78,
+    "bars": 8
+   },
+   {
+    "n": "B",
+    "lv0": 0.9,
+    "lv1": 0.9,
+    "bars": 8
+   },
+   {
+    "n": "A2",
+    "lv0": 0.95,
+    "lv1": 0.95,
+    "bars": 8
+   },
+   {
+    "n": "A",
+    "lv0": 0.78,
+    "lv1": 0.78,
+    "bars": 8
+   },
+   {
+    "n": "B",
+    "lv0": 0.9,
+    "lv1": 0.9,
+    "bars": 8
+   },
+   {
+    "n": "A2",
+    "lv0": 0.95,
+    "lv1": 0.95,
+    "bars": 8
+   },
+   {
+    "n": "A",
+    "lv0": 0.78,
+    "lv1": 0.78,
+    "bars": 8
+   },
+   {
+    "n": "B",
+    "lv0": 0.9,
+    "lv1": 0.9,
+    "bars": 8
+   },
+   {
+    "n": "A2",
+    "lv0": 0.95,
+    "lv1": 0.95,
+    "bars": 8
+   },
+   {
+    "n": "A",
+    "lv0": 0.78,
+    "lv1": 0.78,
+    "bars": 8
+   },
+   {
+    "n": "B",
+    "lv0": 0.9,
+    "lv1": 0.9,
+    "bars": 8
+   },
+   {
+    "n": "A2",
+    "lv0": 0.95,
+    "lv1": 0.95,
+    "bars": 8
+   },
+   {
+    "n": "A",
+    "lv0": 0.78,
+    "lv1": 0.78,
+    "bars": 8
+   },
+   {
+    "n": "B",
+    "lv0": 0.9,
+    "lv1": 0.9,
+    "bars": 8
+   },
+   {
+    "n": "A2",
+    "lv0": 0.95,
+    "lv1": 0.95,
+    "bars": 8
+   }
+  ],
+  "climax": 0.95,
+  "climaxAt": 0.12,
+  "ending": 0.95,
+  "range": 0.17,
+  "chords": 3,
+  "chordsPerMin": 12.5,
+  "seam": "IV > i",
+  "lead": {
+   "notes": 522,
+   "strongCT": 0.667,
+   "strongOK": 1,
+   "maxLeap": 9,
+   "bigLeaps": 0
+  },
+  "snaps": 0,
+  "snapRate": 0,
+  "variation": 0.219,
+  "eventsPerSec": 16.7,
+  "outsidePct": 0,
+  "outside": "",
+  "maxPoly": 7,
+  "meanPoly": 5.22,
+  "mudPct": 0,
+  "layers": "pad bass arp drums lead lead2 bell",
+  "palette": "pluck 46, strings 38, winds 16",
+  "warnings": []
+ },
+ {
+  "id": "race:silicoid",
+  "hidden": false,
+  "desc": "Silicoid",
+  "key": "C# minor",
+  "bpm": 50,
+  "meter": 4,
+  "loopSec": 346,
+  "firstSec": 346,
+  "sections": 3,
+  "forms": 2,
+  "alts": 0,
+  "phrases": 3,
+  "arc": [
+   {
+    "n": "A",
+    "lv0": 0.7,
+    "lv1": 0.7,
+    "bars": 4
+   },
+   {
+    "n": "B",
+    "lv0": 0.85,
+    "lv1": 0.85,
+    "bars": 4
+   },
+   {
+    "n": "C",
+    "lv0": 0.8,
+    "lv1": 0.8,
+    "bars": 4
+   },
+   {
+    "n": "A",
+    "lv0": 0.7,
+    "lv1": 0.7,
+    "bars": 4
+   },
+   {
+    "n": "B",
+    "lv0": 0.85,
+    "lv1": 0.85,
+    "bars": 4
+   },
+   {
+    "n": "C",
+    "lv0": 0.8,
+    "lv1": 0.8,
+    "bars": 4
+   },
+   {
+    "n": "A",
+    "lv0": 0.7,
+    "lv1": 0.7,
+    "bars": 4
+   },
+   {
+    "n": "B",
+    "lv0": 0.85,
+    "lv1": 0.85,
+    "bars": 4
+   },
+   {
+    "n": "C",
+    "lv0": 0.8,
+    "lv1": 0.8,
+    "bars": 4
+   },
+   {
+    "n": "A",
+    "lv0": 0.7,
+    "lv1": 0.7,
+    "bars": 4
+   },
+   {
+    "n": "B",
+    "lv0": 0.85,
+    "lv1": 0.85,
+    "bars": 4
+   },
+   {
+    "n": "C",
+    "lv0": 0.8,
+    "lv1": 0.8,
+    "bars": 4
+   },
+   {
+    "n": "A",
+    "lv0": 0.7,
+    "lv1": 0.7,
+    "bars": 4
+   },
+   {
+    "n": "B",
+    "lv0": 0.85,
+    "lv1": 0.85,
+    "bars": 4
+   },
+   {
+    "n": "C",
+    "lv0": 0.8,
+    "lv1": 0.8,
+    "bars": 4
+   },
+   {
+    "n": "A",
+    "lv0": 0.7,
+    "lv1": 0.7,
+    "bars": 4
+   },
+   {
+    "n": "B",
+    "lv0": 0.85,
+    "lv1": 0.85,
+    "bars": 4
+   },
+   {
+    "n": "C",
+    "lv0": 0.8,
+    "lv1": 0.8,
+    "bars": 4
+   }
+  ],
+  "climax": 0.85,
+  "climaxAt": 0.06,
+  "ending": 0.8,
+  "range": 0.15,
+  "chords": 5,
+  "chordsPerMin": 6.25,
+  "seam": "bII > i",
+  "lead": {
+   "notes": 90,
+   "strongCT": 1,
+   "strongOK": 1,
+   "maxLeap": 15,
+   "bigLeaps": 11
+  },
+  "snaps": 0,
+  "snapRate": 0,
+  "variation": 0.554,
+  "eventsPerSec": 1.8,
+  "outsidePct": 0,
+  "outside": "",
+  "maxPoly": 9,
+  "meanPoly": 7.34,
+  "mudPct": 0,
+  "layers": "pad bass drums timp lead choir lead2",
+  "palette": "bells 55, strings 45",
+  "warnings": []
+ },
+ {
+  "id": "race:alkari:war",
+  "hidden": false,
+  "desc": "Alkari, hostile",
+  "key": "E mixolydian",
+  "bpm": 106,
+  "meter": 4,
+  "loopSec": 272,
+  "firstSec": 272,
+  "sections": 3,
+  "forms": 2,
+  "alts": 0,
+  "phrases": 4,
+  "arc": [
+   {
+    "n": "A",
+    "lv0": 0.75,
+    "lv1": 0.75,
+    "bars": 8
+   },
+   {
+    "n": "B",
+    "lv0": 0.88,
+    "lv1": 0.88,
+    "bars": 8
+   },
+   {
+    "n": "A2",
+    "lv0": 0.85,
+    "lv1": 0.85,
+    "bars": 8
+   },
+   {
+    "n": "A",
+    "lv0": 0.75,
+    "lv1": 0.75,
+    "bars": 8
+   },
+   {
+    "n": "B",
+    "lv0": 0.88,
+    "lv1": 0.88,
+    "bars": 8
+   },
+   {
+    "n": "A2",
+    "lv0": 0.85,
+    "lv1": 0.85,
+    "bars": 8
+   },
+   {
+    "n": "A",
+    "lv0": 0.75,
+    "lv1": 0.75,
+    "bars": 8
+   },
+   {
+    "n": "B",
+    "lv0": 0.88,
+    "lv1": 0.88,
+    "bars": 8
+   },
+   {
+    "n": "A2",
+    "lv0": 0.85,
+    "lv1": 0.85,
+    "bars": 8
+   },
+   {
+    "n": "A",
+    "lv0": 0.75,
+    "lv1": 0.75,
+    "bars": 8
+   },
+   {
+    "n": "B",
+    "lv0": 0.88,
+    "lv1": 0.88,
+    "bars": 8
+   },
+   {
+    "n": "A2",
+    "lv0": 0.85,
+    "lv1": 0.85,
+    "bars": 8
+   },
+   {
+    "n": "A",
+    "lv0": 0.75,
+    "lv1": 0.75,
+    "bars": 8
+   },
+   {
+    "n": "B",
+    "lv0": 0.88,
+    "lv1": 0.88,
+    "bars": 8
+   },
+   {
+    "n": "A2",
+    "lv0": 0.85,
+    "lv1": 0.85,
+    "bars": 8
+   }
+  ],
+  "climax": 0.88,
+  "climaxAt": 0.07,
+  "ending": 0.85,
+  "range": 0.13,
+  "chords": 4,
+  "chordsPerMin": 26.5,
+  "seam": "v > I",
+  "lead": {
+   "notes": 390,
+   "strongCT": 0.714,
+   "strongOK": 1,
+   "maxLeap": 9,
+   "bigLeaps": 0
+  },
+  "snaps": 15,
+  "snapRate": 0.04,
+  "variation": 0.261,
+  "eventsPerSec": 20,
+  "outsidePct": 0,
+  "outside": "",
+  "maxPoly": 10,
+  "meanPoly": 8.44,
+  "mudPct": 0,
+  "layers": "pad bass arp drums timp lead bell lead2",
+  "palette": "brass 52, strings 39, pluck 10",
+  "warnings": []
+ },
+ {
+  "id": "race:bulrathi:war",
+  "hidden": false,
+  "desc": "Bulrathi, hostile",
+  "key": "C minor",
+  "bpm": 84,
+  "meter": 4,
+  "loopSec": 286,
+  "firstSec": 286,
+  "sections": 3,
+  "forms": 2,
+  "alts": 0,
+  "phrases": 2,
+  "arc": [
+   {
+    "n": "A",
+    "lv0": 0.78,
+    "lv1": 0.78,
+    "bars": 8
+   },
+   {
+    "n": "B",
+    "lv0": 0.95,
+    "lv1": 0.95,
+    "bars": 8
+   },
+   {
+    "n": "C",
+    "lv0": 0.85,
+    "lv1": 0.85,
+    "bars": 4
+   },
+   {
+    "n": "A",
+    "lv0": 0.78,
+    "lv1": 0.78,
+    "bars": 8
+   },
+   {
+    "n": "B",
+    "lv0": 0.95,
+    "lv1": 0.95,
+    "bars": 8
+   },
+   {
+    "n": "C",
+    "lv0": 0.85,
+    "lv1": 0.85,
+    "bars": 4
+   },
+   {
+    "n": "A",
+    "lv0": 0.78,
+    "lv1": 0.78,
+    "bars": 8
+   },
+   {
+    "n": "B",
+    "lv0": 0.95,
+    "lv1": 0.95,
+    "bars": 8
+   },
+   {
+    "n": "C",
+    "lv0": 0.85,
+    "lv1": 0.85,
+    "bars": 4
+   },
+   {
+    "n": "A",
+    "lv0": 0.78,
+    "lv1": 0.78,
+    "bars": 8
+   },
+   {
+    "n": "B",
+    "lv0": 0.95,
+    "lv1": 0.95,
+    "bars": 8
+   },
+   {
+    "n": "C",
+    "lv0": 0.85,
+    "lv1": 0.85,
+    "bars": 4
+   },
+   {
+    "n": "A",
+    "lv0": 0.78,
+    "lv1": 0.78,
+    "bars": 8
+   },
+   {
+    "n": "B",
+    "lv0": 0.95,
+    "lv1": 0.95,
+    "bars": 8
+   },
+   {
+    "n": "C",
+    "lv0": 0.85,
+    "lv1": 0.85,
+    "bars": 4
+   }
+  ],
+  "climax": 0.95,
+  "climaxAt": 0.07,
+  "ending": 0.85,
+  "range": 0.17,
+  "chords": 5,
+  "chordsPerMin": 18.9,
+  "seam": "v > i",
+  "lead": {
+   "notes": 210,
+   "strongCT": 0.73,
+   "strongOK": 1,
+   "maxLeap": 12,
+   "bigLeaps": 35
+  },
+  "snaps": 15,
+  "snapRate": 0.07,
+  "variation": 0.112,
+  "eventsPerSec": 14.8,
+  "outsidePct": 0,
+  "outside": "",
+  "maxPoly": 11,
+  "meanPoly": 7.47,
+  "mudPct": 0,
+  "layers": "pad bass drums timp lead bell lead2 choir",
+  "palette": "brass 61, strings 39",
+  "warnings": []
+ },
+ {
+  "id": "race:darlok:war",
+  "hidden": false,
+  "desc": "Darlok, hostile",
+  "key": "Eb dblHarm",
+  "bpm": 71,
+  "meter": 4,
+  "loopSec": 325,
+  "firstSec": 325,
+  "sections": 2,
+  "forms": 2,
+  "alts": 0,
+  "phrases": 2,
+  "arc": [
+   {
+    "n": "A",
+    "lv0": 0.7,
+    "lv1": 0.7,
+    "bars": 8
+   },
+   {
+    "n": "B",
+    "lv0": 0.85,
+    "lv1": 0.85,
+    "bars": 8
+   },
+   {
+    "n": "A",
+    "lv0": 0.7,
+    "lv1": 0.7,
+    "bars": 8
+   },
+   {
+    "n": "B",
+    "lv0": 0.85,
+    "lv1": 0.85,
+    "bars": 8
+   },
+   {
+    "n": "A",
+    "lv0": 0.7,
+    "lv1": 0.7,
+    "bars": 8
+   },
+   {
+    "n": "B",
+    "lv0": 0.85,
+    "lv1": 0.85,
+    "bars": 8
+   },
+   {
+    "n": "A",
+    "lv0": 0.7,
+    "lv1": 0.7,
+    "bars": 8
+   },
+   {
+    "n": "B",
+    "lv0": 0.85,
+    "lv1": 0.85,
+    "bars": 8
+   },
+   {
+    "n": "A",
+    "lv0": 0.7,
+    "lv1": 0.7,
+    "bars": 8
+   },
+   {
+    "n": "B",
+    "lv0": 0.85,
+    "lv1": 0.85,
+    "bars": 8
+   },
+   {
+    "n": "A",
+    "lv0": 0.7,
+    "lv1": 0.7,
+    "bars": 8
+   },
+   {
+    "n": "B",
+    "lv0": 0.85,
+    "lv1": 0.85,
+    "bars": 8
+   }
+  ],
+  "climax": 0.85,
+  "climaxAt": 0.09,
+  "ending": 0.85,
+  "range": 0.15,
+  "chords": 3,
+  "chordsPerMin": 8.87,
+  "seam": "iv > I",
+  "lead": {
+   "notes": 228,
+   "strongCT": 1,
+   "strongOK": 1,
+   "maxLeap": 7,
+   "bigLeaps": 0
+  },
+  "snaps": 0,
+  "snapRate": 0,
+  "variation": 0.158,
+  "eventsPerSec": 7.5,
+  "outsidePct": 0,
+  "outside": "",
+  "maxPoly": 11,
+  "meanPoly": 9.47,
+  "mudPct": 0,
+  "layers": "pad bass drums timp lead choir lead2 bell",
+  "palette": "brass 56, strings 44",
+  "warnings": []
+ },
+ {
+  "id": "race:human:war",
+  "hidden": false,
+  "desc": "Human, hostile",
+  "key": "D minor",
+  "bpm": 121,
+  "meter": 4,
+  "loopSec": 278,
+  "firstSec": 278,
+  "sections": 4,
+  "forms": 2,
+  "alts": 0,
+  "phrases": 4,
+  "arc": [
+   {
+    "n": "A",
+    "lv0": 0.8,
+    "lv1": 0.8,
+    "bars": 8
+   },
+   {
+    "n": "B",
+    "lv0": 0.88,
+    "lv1": 0.88,
+    "bars": 8
+   },
+   {
+    "n": "A2",
+    "lv0": 1,
+    "lv1": 1,
+    "bars": 8
+   },
+   {
+    "n": "C",
+    "lv0": 0.9,
+    "lv1": 0.9,
+    "bars": 4
+   },
+   {
+    "n": "A",
+    "lv0": 0.8,
+    "lv1": 0.8,
+    "bars": 8
+   },
+   {
+    "n": "B",
+    "lv0": 0.88,
+    "lv1": 0.88,
+    "bars": 8
+   },
+   {
+    "n": "A2",
+    "lv0": 1,
+    "lv1": 1,
+    "bars": 8
+   },
+   {
+    "n": "C",
+    "lv0": 0.9,
+    "lv1": 0.9,
+    "bars": 4
+   },
+   {
+    "n": "A",
+    "lv0": 0.8,
+    "lv1": 0.8,
+    "bars": 8
+   },
+   {
+    "n": "B",
+    "lv0": 0.88,
+    "lv1": 0.88,
+    "bars": 8
+   },
+   {
+    "n": "A2",
+    "lv0": 1,
+    "lv1": 1,
+    "bars": 8
+   },
+   {
+    "n": "C",
+    "lv0": 0.9,
+    "lv1": 0.9,
+    "bars": 4
+   },
+   {
+    "n": "A",
+    "lv0": 0.8,
+    "lv1": 0.8,
+    "bars": 8
+   },
+   {
+    "n": "B",
+    "lv0": 0.88,
+    "lv1": 0.88,
+    "bars": 8
+   },
+   {
+    "n": "A2",
+    "lv0": 1,
+    "lv1": 1,
+    "bars": 8
+   },
+   {
+    "n": "C",
+    "lv0": 0.9,
+    "lv1": 0.9,
+    "bars": 4
+   },
+   {
+    "n": "A",
+    "lv0": 0.8,
+    "lv1": 0.8,
+    "bars": 8
+   },
+   {
+    "n": "B",
+    "lv0": 0.88,
+    "lv1": 0.88,
+    "bars": 8
+   },
+   {
+    "n": "A2",
+    "lv0": 1,
+    "lv1": 1,
+    "bars": 8
+   },
+   {
+    "n": "C",
+    "lv0": 0.9,
+    "lv1": 0.9,
+    "bars": 4
+   }
+  ],
+  "climax": 1,
+  "climaxAt": 0.11,
+  "ending": 0.9,
+  "range": 0.2,
+  "chords": 8,
+  "chordsPerMin": 30.25,
+  "seam": "i > i",
+  "lead": {
+   "notes": 325,
+   "strongCT": 1,
+   "strongOK": 1,
+   "maxLeap": 6,
+   "bigLeaps": 0
+  },
+  "snaps": 10,
+  "snapRate": 0.03,
+  "variation": 0.194,
+  "eventsPerSec": 15.8,
+  "outsidePct": 0,
+  "outside": "",
+  "maxPoly": 8,
+  "meanPoly": 5.84,
+  "mudPct": 0,
+  "layers": "pad bass drums timp lead bell lead2",
+  "palette": "brass 62, strings 38",
+  "warnings": []
+ },
+ {
+  "id": "race:klackon:war",
+  "hidden": false,
+  "desc": "Klackon, hostile",
+  "key": "A wholetone",
+  "bpm": 145,
+  "meter": 4,
+  "loopSec": 318,
+  "firstSec": 318,
+  "sections": 4,
+  "forms": 2,
+  "alts": 0,
+  "phrases": 2,
+  "arc": [
+   {
+    "n": "A",
+    "lv0": 0.78,
+    "lv1": 0.78,
+    "bars": 8
+   },
+   {
+    "n": "B",
+    "lv0": 0.92,
+    "lv1": 0.92,
+    "bars": 8
+   },
+   {
+    "n": "A2",
+    "lv0": 0.85,
+    "lv1": 0.85,
+    "bars": 8
+   },
+   {
+    "n": "B2",
+    "lv0": 1,
+    "lv1": 1,
+    "bars": 8
+   },
+   {
+    "n": "A",
+    "lv0": 0.78,
+    "lv1": 0.78,
+    "bars": 8
+   },
+   {
+    "n": "B",
+    "lv0": 0.92,
+    "lv1": 0.92,
+    "bars": 8
+   },
+   {
+    "n": "A2",
+    "lv0": 0.85,
+    "lv1": 0.85,
+    "bars": 8
+   },
+   {
+    "n": "B2",
+    "lv0": 1,
+    "lv1": 1,
+    "bars": 8
+   },
+   {
+    "n": "A",
+    "lv0": 0.78,
+    "lv1": 0.78,
+    "bars": 8
+   },
+   {
+    "n": "B",
+    "lv0": 0.92,
+    "lv1": 0.92,
+    "bars": 8
+   },
+   {
+    "n": "A2",
+    "lv0": 0.85,
+    "lv1": 0.85,
+    "bars": 8
+   },
+   {
+    "n": "B2",
+    "lv0": 1,
+    "lv1": 1,
+    "bars": 8
+   },
+   {
+    "n": "A",
+    "lv0": 0.78,
+    "lv1": 0.78,
+    "bars": 8
+   },
+   {
+    "n": "B",
+    "lv0": 0.92,
+    "lv1": 0.92,
+    "bars": 8
+   },
+   {
+    "n": "A2",
+    "lv0": 0.85,
+    "lv1": 0.85,
+    "bars": 8
+   },
+   {
+    "n": "B2",
+    "lv0": 1,
+    "lv1": 1,
+    "bars": 8
+   },
+   {
+    "n": "A",
+    "lv0": 0.78,
+    "lv1": 0.78,
+    "bars": 8
+   },
+   {
+    "n": "B",
+    "lv0": 0.92,
+    "lv1": 0.92,
+    "bars": 8
+   },
+   {
+    "n": "A2",
+    "lv0": 0.85,
+    "lv1": 0.85,
+    "bars": 8
+   },
+   {
+    "n": "B2",
+    "lv0": 1,
+    "lv1": 1,
+    "bars": 8
+   },
+   {
+    "n": "A",
+    "lv0": 0.78,
+    "lv1": 0.78,
+    "bars": 8
+   },
+   {
+    "n": "B",
+    "lv0": 0.92,
+    "lv1": 0.92,
+    "bars": 8
+   },
+   {
+    "n": "A2",
+    "lv0": 0.85,
+    "lv1": 0.85,
+    "bars": 8
+   },
+   {
+    "n": "B2",
+    "lv0": 1,
+    "lv1": 1,
+    "bars": 8
+   }
+  ],
+  "climax": 1,
+  "climaxAt": 0.13,
+  "ending": 1,
+  "range": 0.22,
+  "chords": 2,
+  "chordsPerMin": 18.13,
+  "seam": "II+ > I+",
+  "lead": {
+   "notes": 1320,
+   "strongCT": 0.462,
+   "strongOK": 1,
+   "maxLeap": 14,
+   "bigLeaps": 504
+  },
+  "snaps": 0,
+  "snapRate": 0,
+  "variation": 0.011,
+  "eventsPerSec": 45.7,
+  "outsidePct": 0,
+  "outside": "",
+  "maxPoly": 9,
+  "meanPoly": 7.61,
+  "mudPct": 0,
+  "layers": "pad bass arp drums timp lead lead2",
+  "palette": "brass 62, strings 29, pluck 9",
+  "warnings": []
+ },
+ {
+  "id": "race:meklar:war",
+  "hidden": false,
+  "desc": "Meklar, hostile",
+  "key": "Ab phrygian",
+  "bpm": 143,
+  "meter": 4,
+  "loopSec": 269,
+  "firstSec": 269,
+  "sections": 4,
+  "forms": 2,
+  "alts": 0,
+  "phrases": 2,
+  "arc": [
+   {
+    "n": "A",
+    "lv0": 0.78,
+    "lv1": 0.78,
+    "bars": 8
+   },
+   {
+    "n": "B",
+    "lv0": 0.92,
+    "lv1": 0.92,
+    "bars": 8
+   },
+   {
+    "n": "A2",
+    "lv0": 0.88,
+    "lv1": 0.88,
+    "bars": 8
+   },
+   {
+    "n": "B2",
+    "lv0": 1,
+    "lv1": 1,
+    "bars": 8
+   },
+   {
+    "n": "A",
+    "lv0": 0.78,
+    "lv1": 0.78,
+    "bars": 8
+   },
+   {
+    "n": "B",
+    "lv0": 0.92,
+    "lv1": 0.92,
+    "bars": 8
+   },
+   {
+    "n": "A2",
+    "lv0": 0.88,
+    "lv1": 0.88,
+    "bars": 8
+   },
+   {
+    "n": "B2",
+    "lv0": 1,
+    "lv1": 1,
+    "bars": 8
+   },
+   {
+    "n": "A",
+    "lv0": 0.78,
+    "lv1": 0.78,
+    "bars": 8
+   },
+   {
+    "n": "B",
+    "lv0": 0.92,
+    "lv1": 0.92,
+    "bars": 8
+   },
+   {
+    "n": "A2",
+    "lv0": 0.88,
+    "lv1": 0.88,
+    "bars": 8
+   },
+   {
+    "n": "B2",
+    "lv0": 1,
+    "lv1": 1,
+    "bars": 8
+   },
+   {
+    "n": "A",
+    "lv0": 0.78,
+    "lv1": 0.78,
+    "bars": 8
+   },
+   {
+    "n": "B",
+    "lv0": 0.92,
+    "lv1": 0.92,
+    "bars": 8
+   },
+   {
+    "n": "A2",
+    "lv0": 0.88,
+    "lv1": 0.88,
+    "bars": 8
+   },
+   {
+    "n": "B2",
+    "lv0": 1,
+    "lv1": 1,
+    "bars": 8
+   },
+   {
+    "n": "A",
+    "lv0": 0.78,
+    "lv1": 0.78,
+    "bars": 8
+   },
+   {
+    "n": "B",
+    "lv0": 0.92,
+    "lv1": 0.92,
+    "bars": 8
+   },
+   {
+    "n": "A2",
+    "lv0": 0.88,
+    "lv1": 0.88,
+    "bars": 8
+   },
+   {
+    "n": "B2",
+    "lv0": 1,
+    "lv1": 1,
+    "bars": 8
+   }
+  ],
+  "climax": 1,
+  "climaxAt": 0.16,
+  "ending": 1,
+  "range": 0.22,
+  "chords": 3,
+  "chordsPerMin": 29.05,
+  "seam": "i > i",
+  "lead": {
+   "notes": 1180,
+   "strongCT": 1,
+   "strongOK": 1,
+   "maxLeap": 12,
+   "bigLeaps": 19
+  },
+  "snaps": 0,
+  "snapRate": 0,
+  "variation": 0.014,
+  "eventsPerSec": 53.5,
+  "outsidePct": 0,
+  "outside": "",
+  "maxPoly": 9,
+  "meanPoly": 8.38,
+  "mudPct": 0,
+  "layers": "pad bass arp drums timp lead lead2",
+  "palette": "brass 54, strings 37, pluck 9",
+  "warnings": []
+ },
+ {
+  "id": "race:mrrshan:war",
+  "hidden": false,
+  "desc": "Mrrshan, hostile",
+  "key": "D phrygDom",
+  "bpm": 129,
+  "meter": 4,
+  "loopSec": 260,
+  "firstSec": 260,
+  "sections": 4,
+  "forms": 2,
+  "alts": 0,
+  "phrases": 2,
+  "arc": [
+   {
+    "n": "A",
+    "lv0": 0.78,
+    "lv1": 0.78,
+    "bars": 8
+   },
+   {
+    "n": "B",
+    "lv0": 0.9,
+    "lv1": 0.9,
+    "bars": 8
+   },
+   {
+    "n": "A2",
+    "lv0": 1,
+    "lv1": 1,
+    "bars": 8
+   },
+   {
+    "n": "C",
+    "lv0": 0.8,
+    "lv1": 0.8,
+    "bars": 4
+   },
+   {
+    "n": "A",
+    "lv0": 0.78,
+    "lv1": 0.78,
+    "bars": 8
+   },
+   {
+    "n": "B",
+    "lv0": 0.9,
+    "lv1": 0.9,
+    "bars": 8
+   },
+   {
+    "n": "A2",
+    "lv0": 1,
+    "lv1": 1,
+    "bars": 8
+   },
+   {
+    "n": "C",
+    "lv0": 0.8,
+    "lv1": 0.8,
+    "bars": 4
+   },
+   {
+    "n": "A",
+    "lv0": 0.78,
+    "lv1": 0.78,
+    "bars": 8
+   },
+   {
+    "n": "B",
+    "lv0": 0.9,
+    "lv1": 0.9,
+    "bars": 8
+   },
+   {
+    "n": "A2",
+    "lv0": 1,
+    "lv1": 1,
+    "bars": 8
+   },
+   {
+    "n": "C",
+    "lv0": 0.8,
+    "lv1": 0.8,
+    "bars": 4
+   },
+   {
+    "n": "A",
+    "lv0": 0.78,
+    "lv1": 0.78,
+    "bars": 8
+   },
+   {
+    "n": "B",
+    "lv0": 0.9,
+    "lv1": 0.9,
+    "bars": 8
+   },
+   {
+    "n": "A2",
+    "lv0": 1,
+    "lv1": 1,
+    "bars": 8
+   },
+   {
+    "n": "C",
+    "lv0": 0.8,
+    "lv1": 0.8,
+    "bars": 4
+   },
+   {
+    "n": "A",
+    "lv0": 0.78,
+    "lv1": 0.78,
+    "bars": 8
+   },
+   {
+    "n": "B",
+    "lv0": 0.9,
+    "lv1": 0.9,
+    "bars": 8
+   },
+   {
+    "n": "A2",
+    "lv0": 1,
+    "lv1": 1,
+    "bars": 8
+   },
+   {
+    "n": "C",
+    "lv0": 0.8,
+    "lv1": 0.8,
+    "bars": 4
+   }
+  ],
+  "climax": 1,
+  "climaxAt": 0.11,
+  "ending": 0.8,
+  "range": 0.22,
+  "chords": 3,
+  "chordsPerMin": 32.25,
+  "seam": "iv > I",
+  "lead": {
+   "notes": 620,
+   "strongCT": 0.857,
+   "strongOK": 0.857,
+   "maxLeap": 7,
+   "bigLeaps": 0
+  },
+  "snaps": 25,
+  "snapRate": 0.04,
+  "variation": 0.056,
+  "eventsPerSec": 34.2,
+  "outsidePct": 0,
+  "outside": "",
+  "maxPoly": 10,
+  "meanPoly": 7.18,
+  "mudPct": 0,
+  "layers": "pad bass drums timp lead arp lead2 choir",
+  "palette": "brass 55, strings 40, pluck 5",
+  "warnings": []
+ },
+ {
+  "id": "race:psilon:war",
+  "hidden": false,
+  "desc": "Psilon, hostile",
+  "key": "A phrygian",
+  "bpm": 101,
+  "meter": 4,
+  "loopSec": 285,
+  "firstSec": 285,
+  "sections": 3,
+  "forms": 2,
+  "alts": 0,
+  "phrases": 2,
+  "arc": [
+   {
+    "n": "A",
+    "lv0": 0.72,
+    "lv1": 0.72,
+    "bars": 8
+   },
+   {
+    "n": "B",
+    "lv0": 0.85,
+    "lv1": 0.85,
+    "bars": 8
+   },
+   {
+    "n": "A2",
+    "lv0": 0.95,
+    "lv1": 0.95,
+    "bars": 8
+   },
+   {
+    "n": "A",
+    "lv0": 0.72,
+    "lv1": 0.72,
+    "bars": 8
+   },
+   {
+    "n": "B",
+    "lv0": 0.85,
+    "lv1": 0.85,
+    "bars": 8
+   },
+   {
+    "n": "A2",
+    "lv0": 0.95,
+    "lv1": 0.95,
+    "bars": 8
+   },
+   {
+    "n": "A",
+    "lv0": 0.72,
+    "lv1": 0.72,
+    "bars": 8
+   },
+   {
+    "n": "B",
+    "lv0": 0.85,
+    "lv1": 0.85,
+    "bars": 8
+   },
+   {
+    "n": "A2",
+    "lv0": 0.95,
+    "lv1": 0.95,
+    "bars": 8
+   },
+   {
+    "n": "A",
+    "lv0": 0.72,
+    "lv1": 0.72,
+    "bars": 8
+   },
+   {
+    "n": "B",
+    "lv0": 0.85,
+    "lv1": 0.85,
+    "bars": 8
+   },
+   {
+    "n": "A2",
+    "lv0": 0.95,
+    "lv1": 0.95,
+    "bars": 8
+   },
+   {
+    "n": "A",
+    "lv0": 0.72,
+    "lv1": 0.72,
+    "bars": 8
+   },
+   {
+    "n": "B",
+    "lv0": 0.85,
+    "lv1": 0.85,
+    "bars": 8
+   },
+   {
+    "n": "A2",
+    "lv0": 0.95,
+    "lv1": 0.95,
+    "bars": 8
+   }
+  ],
+  "climax": 0.95,
+  "climaxAt": 0.14,
+  "ending": 0.95,
+  "range": 0.23,
+  "chords": 5,
+  "chordsPerMin": 25.25,
+  "seam": "vo > i7",
+  "lead": {
+   "notes": 450,
+   "strongCT": 1,
+   "strongOK": 1,
+   "maxLeap": 6,
+   "bigLeaps": 0
+  },
+  "snaps": 0,
+  "snapRate": 0,
+  "variation": 0.224,
+  "eventsPerSec": 19.4,
+  "outsidePct": 0,
+  "outside": "",
+  "maxPoly": 10,
+  "meanPoly": 8.8,
+  "mudPct": 0,
+  "layers": "pad bass arp drums timp lead lead2 bell",
+  "palette": "bells 48, strings 38, brass 14",
+  "warnings": []
+ },
+ {
+  "id": "race:sakkra:war",
+  "hidden": false,
+  "desc": "Sakkra, hostile",
+  "key": "Gb dorian",
+  "bpm": 118,
+  "meter": 4,
+  "loopSec": 293,
+  "firstSec": 293,
+  "sections": 3,
+  "forms": 2,
+  "alts": 0,
+  "phrases": 2,
+  "arc": [
+   {
+    "n": "A",
+    "lv0": 0.78,
+    "lv1": 0.78,
+    "bars": 8
+   },
+   {
+    "n": "B",
+    "lv0": 0.9,
+    "lv1": 0.9,
+    "bars": 8
+   },
+   {
+    "n": "A2",
+    "lv0": 0.95,
+    "lv1": 0.95,
+    "bars": 8
+   },
+   {
+    "n": "A",
+    "lv0": 0.78,
+    "lv1": 0.78,
+    "bars": 8
+   },
+   {
+    "n": "B",
+    "lv0": 0.9,
+    "lv1": 0.9,
+    "bars": 8
+   },
+   {
+    "n": "A2",
+    "lv0": 0.95,
+    "lv1": 0.95,
+    "bars": 8
+   },
+   {
+    "n": "A",
+    "lv0": 0.78,
+    "lv1": 0.78,
+    "bars": 8
+   },
+   {
+    "n": "B",
+    "lv0": 0.9,
+    "lv1": 0.9,
+    "bars": 8
+   },
+   {
+    "n": "A2",
+    "lv0": 0.95,
+    "lv1": 0.95,
+    "bars": 8
+   },
+   {
+    "n": "A",
+    "lv0": 0.78,
+    "lv1": 0.78,
+    "bars": 8
+   },
+   {
+    "n": "B",
+    "lv0": 0.9,
+    "lv1": 0.9,
+    "bars": 8
+   },
+   {
+    "n": "A2",
+    "lv0": 0.95,
+    "lv1": 0.95,
+    "bars": 8
+   },
+   {
+    "n": "A",
+    "lv0": 0.78,
+    "lv1": 0.78,
+    "bars": 8
+   },
+   {
+    "n": "B",
+    "lv0": 0.9,
+    "lv1": 0.9,
+    "bars": 8
+   },
+   {
+    "n": "A2",
+    "lv0": 0.95,
+    "lv1": 0.95,
+    "bars": 8
+   },
+   {
+    "n": "A",
+    "lv0": 0.78,
+    "lv1": 0.78,
+    "bars": 8
+   },
+   {
+    "n": "B",
+    "lv0": 0.9,
+    "lv1": 0.9,
+    "bars": 8
+   },
+   {
+    "n": "A2",
+    "lv0": 0.95,
+    "lv1": 0.95,
+    "bars": 8
+   }
+  ],
+  "climax": 0.95,
+  "climaxAt": 0.12,
+  "ending": 0.95,
+  "range": 0.17,
+  "chords": 3,
+  "chordsPerMin": 14.75,
+  "seam": "IV > i",
+  "lead": {
+   "notes": 522,
+   "strongCT": 0.667,
+   "strongOK": 1,
+   "maxLeap": 9,
+   "bigLeaps": 0
+  },
+  "snaps": 0,
+  "snapRate": 0,
+  "variation": 0.174,
+  "eventsPerSec": 22.6,
+  "outsidePct": 0,
+  "outside": "",
+  "maxPoly": 7,
+  "meanPoly": 5.89,
+  "mudPct": 0,
+  "layers": "pad bass arp drums timp lead lead2 bell",
+  "palette": "brass 55, strings 38, pluck 7",
+  "warnings": []
+ },
+ {
+  "id": "race:silicoid:war",
+  "hidden": false,
+  "desc": "Silicoid, hostile",
+  "key": "B phrygian",
+  "bpm": 57,
+  "meter": 4,
+  "loopSec": 303,
+  "firstSec": 303,
+  "sections": 3,
+  "forms": 2,
+  "alts": 0,
+  "phrases": 3,
+  "arc": [
+   {
+    "n": "A",
+    "lv0": 0.7,
+    "lv1": 0.7,
+    "bars": 4
+   },
+   {
+    "n": "B",
+    "lv0": 0.85,
+    "lv1": 0.85,
+    "bars": 4
+   },
+   {
+    "n": "C",
+    "lv0": 0.8,
+    "lv1": 0.8,
+    "bars": 4
+   },
+   {
+    "n": "A",
+    "lv0": 0.7,
+    "lv1": 0.7,
+    "bars": 4
+   },
+   {
+    "n": "B",
+    "lv0": 0.85,
+    "lv1": 0.85,
+    "bars": 4
+   },
+   {
+    "n": "C",
+    "lv0": 0.8,
+    "lv1": 0.8,
+    "bars": 4
+   },
+   {
+    "n": "A",
+    "lv0": 0.7,
+    "lv1": 0.7,
+    "bars": 4
+   },
+   {
+    "n": "B",
+    "lv0": 0.85,
+    "lv1": 0.85,
+    "bars": 4
+   },
+   {
+    "n": "C",
+    "lv0": 0.8,
+    "lv1": 0.8,
+    "bars": 4
+   },
+   {
+    "n": "A",
+    "lv0": 0.7,
+    "lv1": 0.7,
+    "bars": 4
+   },
+   {
+    "n": "B",
+    "lv0": 0.85,
+    "lv1": 0.85,
+    "bars": 4
+   },
+   {
+    "n": "C",
+    "lv0": 0.8,
+    "lv1": 0.8,
+    "bars": 4
+   },
+   {
+    "n": "A",
+    "lv0": 0.7,
+    "lv1": 0.7,
+    "bars": 4
+   },
+   {
+    "n": "B",
+    "lv0": 0.85,
+    "lv1": 0.85,
+    "bars": 4
+   },
+   {
+    "n": "C",
+    "lv0": 0.8,
+    "lv1": 0.8,
+    "bars": 4
+   },
+   {
+    "n": "A",
+    "lv0": 0.7,
+    "lv1": 0.7,
+    "bars": 4
+   },
+   {
+    "n": "B",
+    "lv0": 0.85,
+    "lv1": 0.85,
+    "bars": 4
+   },
+   {
+    "n": "C",
+    "lv0": 0.8,
+    "lv1": 0.8,
+    "bars": 4
+   }
+  ],
+  "climax": 0.85,
+  "climaxAt": 0.06,
+  "ending": 0.8,
+  "range": 0.15,
+  "chords": 5,
+  "chordsPerMin": 7.12,
+  "seam": "bII > i",
+  "lead": {
+   "notes": 97,
+   "strongCT": 1,
+   "strongOK": 1,
+   "maxLeap": 18,
+   "bigLeaps": 38
+  },
+  "snaps": 0,
+  "snapRate": 0,
+  "variation": 0.335,
+  "eventsPerSec": 3.4,
+  "outsidePct": 0,
+  "outside": "",
+  "maxPoly": 10,
+  "meanPoly": 8.33,
+  "mudPct": 0,
+  "layers": "pad bass drums timp lead choir lead2",
+  "palette": "brass 55, strings 45",
+  "warnings": []
+ }
+]

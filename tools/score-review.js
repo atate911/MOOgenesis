@@ -50,3 +50,36 @@ const pad = (s, w, r) => { s = String(s); return r ? s.padStart(w) : s.padEnd(w)
 console.log(pad('piece', 16) + pad('key', 13) + pad('bpm', 5, 1) + pad('loop', 6, 1) + pad('climax', 7, 1) + pad('@', 5, 1) + pad('end', 5, 1) + pad('ch/min', 7, 1) + pad('chords', 7, 1) + pad('ctone', 6, 1) + pad('leap', 5, 1) + pad('snap%', 6, 1) + pad('out%', 6, 1) + pad('poly', 5, 1) + pad('mud%', 5, 1) + '  seam / out of range');
 for (const o of out) { if (o.error) { console.log(pad(o.id, 16) + 'ERROR ' + o.error); continue; }
   console.log(pad(o.id, 16) + pad(o.key, 13) + pad(o.bpm, 5, 1) + pad(o.loopSec, 6, 1) + pad(o.climax, 7, 1) + pad(o.climaxAt, 5, 1) + pad(o.ending, 5, 1) + pad(o.chordsPerMin, 7, 1) + pad(o.chords, 7, 1) + pad(o.lead.strongCT === null ? '-' : o.lead.strongCT, 6, 1) + pad(o.lead.maxLeap, 5, 1) + pad(Math.round(o.snapRate * 100), 6, 1) + pad(o.outsidePct, 6, 1) + pad(o.maxPoly, 5, 1) + pad(o.mudPct, 5, 1) + '  ' + o.seam + (o.outside ? ' | ' + o.outside : '')); }
+// --races: the race themes and their hostile readings as they are heard (an audience lasts 60 to 90 seconds and always starts at the first
+// bar): over the first 90 s of the first pass, the crest and when it comes, the dynamic range, the phrases and chords heard, the sections
+// whose level moves; and each piece's likeness to the rest of the score (palette 0.6, tempo 0.2, mode 0.1, meter 0.1: a family measure,
+// not an ear), its nearest neighbour, and for a reading its likeness to its own theme and to the nearest other reading.
+if (args.indexOf('--races') >= 0) {
+  const WIN = 90, all = Object.keys(T).filter(id => !/^drift\d*:|^bridge:/.test(id) && !T[id].interlude);
+  const vec = id => { const p = CO.palette(T[id]), t = Object.values(p).reduce((x, y) => x + y, 0) || 1, v = {}; for (const k in p) v[k] = p[k] / t; return v; };
+  const V = {}; for (const id of all) { try { V[id] = vec(id); } catch (e) { /* skip */ } }
+  const SC = { major: [0, 2, 4, 5, 7, 9, 11], minor: [0, 2, 3, 5, 7, 8, 10], dorian: [0, 2, 3, 5, 7, 9, 10], phrygian: [0, 1, 3, 5, 7, 8, 10], lydian: [0, 2, 4, 6, 7, 9, 11], mixolydian: [0, 2, 4, 5, 7, 9, 10], locrian: [0, 1, 3, 5, 6, 8, 10], harmonic: [0, 2, 3, 5, 7, 8, 11], melodic: [0, 2, 3, 5, 7, 9, 11], phrygDom: [0, 1, 4, 5, 7, 8, 10], dblHarm: [0, 1, 4, 5, 7, 8, 11], wholetone: [0, 2, 4, 6, 8, 10], octatonic: [0, 2, 3, 5, 6, 8, 9, 11], octaH: [0, 1, 3, 4, 6, 7, 9, 10], lydDom: [0, 2, 4, 6, 7, 9, 10] };
+  const like = (a, b) => {
+    const A = T[a], B = T[b], va = V[a], vb = V[b]; if (!va || !vb) return 0;
+    let dot = 0, na = 0, nb = 0; for (const k of new Set([...Object.keys(va), ...Object.keys(vb)])) { const x = va[k] || 0, y = vb[k] || 0; dot += x * y; na += x * x; nb += y * y; }
+    const cos = dot / (Math.sqrt(na * nb) || 1), tempo = Math.max(0, 1 - Math.abs(Math.log(A.bpm / B.bpm)) / Math.log(2));
+    const sa = SC[A.mode || 'major'] || [], sb = SC[B.mode || 'major'] || [], mode = sa.filter(x => sb.indexOf(x) >= 0).length / new Set([...sa, ...sb]).size;
+    return 0.6 * cos + 0.2 * tempo + 0.1 * mode + 0.1 * ((A.meter || 4) === (B.meter || 4) ? 1 : 0);
+  };
+  const rows = [];
+  for (const id of Object.keys(T).filter(x => /^race:[a-z]+(:war)?$/.test(x))) {
+    const def = T[id], r0 = M._compile(id, 0), a = M.analyze(id), heard = r0.wraps.filter(w => w.t0 < WIN);
+    const lv = heard.map(w => [w.R.lv0, w.R.lv1]), tops = lv.map(x => Math.max(...x)), crest = Math.max(...tops), ci = tops.indexOf(crest), cw = heard[ci];
+    const crestT = cw.R.lv1 > cw.R.lv0 ? Math.min(WIN, (r0.wraps[r0.wraps.indexOf(cw) + 1] || { t0: r0.len }).t0) : cw.t0;
+    const lows = Math.min(...lv.map(x => Math.min(...x))), chords = new Set(), phr = new Set(), names = Object.keys(def.ph || {});
+    for (const w of heard) { for (const sg of w.R.segs) chords.add(sg.ch.sym); for (const k of ['lead', 'lead2', 'lead3', 'lead4', 'bell2']) { const L = w.R.L[k]; if (!L) continue; const src = typeof L === 'string' ? L : L.ph; for (const s of [].concat(src || [])) for (const tk of String(s).split(/\s+/)) { const n = tk.replace(/[+\-~^_*].*$/, ''); if (names.indexOf(n) >= 0) phr.add(n); } } }
+    const moving = heard.filter(w => Math.abs(w.R.lv1 - w.R.lv0) > 0.01).length;
+    const others = all.filter(x => x !== id && V[x]).map(x => [x, like(id, x)]).sort((p, q) => q[1] - p[1]);
+    const theme = def.variantOf ? like(id, def.variantOf) : null, oread = def.variantOf ? others.filter(([x]) => /:war$/.test(x) && /^race:/.test(x))[0] : null;
+    rows.push({ id, crest: r2(crest), crestT: Math.round(crestT), range: r2(crest - lows), phrases: phr.size, chords: chords.size, moving: moving + '/' + heard.length, ctone: a.lead.strongCT, snaps: a.snaps,
+      nearest: others[0][0] + ' ' + r2(others[0][1]), theme: theme === null ? '' : r2(theme), otherReading: oread ? oread[0] + ' ' + r2(oread[1]) : '' });
+  }
+  console.log('\nraces, first ' + WIN + ' s'); console.log(pad('piece', 18) + pad('crest', 6, 1) + pad('at s', 6, 1) + pad('range', 6, 1) + pad('phr', 4, 1) + pad('ch', 4, 1) + pad('moving', 8, 1) + pad('ctone', 6, 1) + pad('snaps', 6, 1) + '  nearest | to its theme | nearest reading');
+  for (const o of rows) console.log(pad(o.id, 18) + pad(o.crest, 6, 1) + pad(o.crestT, 6, 1) + pad(o.range, 6, 1) + pad(o.phrases, 4, 1) + pad(o.chords, 4, 1) + pad(o.moving, 8, 1) + pad(o.ctone === null ? '-' : r2(o.ctone), 6, 1) + pad(o.snaps, 6, 1) + '  ' + o.nearest + (o.theme !== '' ? ' | ' + o.theme + ' | ' + o.otherReading : ''));
+  if (jsonAt) fs.writeFileSync(jsonAt.replace(/\.json$/, '') + '.races.json', JSON.stringify(rows, null, 1));
+}
