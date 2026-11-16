@@ -32,7 +32,7 @@
   const SCALES = {
     major: [0, 2, 4, 5, 7, 9, 11], minor: [0, 2, 3, 5, 7, 8, 10], dorian: [0, 2, 3, 5, 7, 9, 10], phrygian: [0, 1, 3, 5, 7, 8, 10],
     lydian: [0, 2, 4, 6, 7, 9, 11], mixolydian: [0, 2, 4, 5, 7, 9, 10], locrian: [0, 1, 3, 5, 6, 8, 10],
-    harmonic: [0, 2, 3, 5, 7, 8, 11], melodic: [0, 2, 3, 5, 7, 9, 11], phrygDom: [0, 1, 4, 5, 7, 8, 10], dblHarm: [0, 1, 4, 5, 7, 8, 11],
+    harmonic: [0, 2, 3, 5, 7, 8, 11], melodic: [0, 2, 3, 5, 7, 9, 11], ukrDorian: [0, 2, 3, 6, 7, 9, 10], phrygDom: [0, 1, 4, 5, 7, 8, 10], dblHarm: [0, 1, 4, 5, 7, 8, 11],
     wholetone: [0, 2, 4, 6, 8, 10], octatonic: [0, 2, 3, 5, 6, 8, 9, 11], octaH: [0, 1, 3, 4, 6, 7, 9, 10],
     majPent: [0, 2, 4, 7, 9], minPent: [0, 3, 5, 7, 10], dorPent: [0, 2, 3, 7, 9], hirajoshi: [0, 2, 3, 7, 8],
   };
@@ -1671,7 +1671,7 @@
     return w ? sum / w : 0.5;
   }
   const FIFTHS = (() => { const o = {}; let pc = 0; for (let i = 0; i < 12; i++) { o[pc] = i; pc = (pc + 7) % 12; } return o; })();
-  const PARENT = { major: 0, lydian: 7, mixolydian: 5, dorian: 10, phrygian: 8, minor: 3, harmonic: 3, melodic: 3 };   // offset from a mode's root to its parent major
+  const PARENT = { major: 0, lydian: 7, mixolydian: 5, dorian: 10, ukrDorian: 10, phrygian: 8, minor: 3, harmonic: 3, melodic: 3 };   // offset from a mode's root to its parent major
   const centre = def => mod12(PCS[def.root] + num(PARENT[def.mode || 'major'], 0));
   const fifthsDist = (a, b) => { const d = Math.abs(FIFTHS[centre(a)] - FIFTHS[centre(b)]); return Math.min(d, 12 - d); };   // 0..6 steps round the circle
   // two pieces far apart in feel or key: the seam between them gets a quiet, longer interlude and a wider fade (the breath)
@@ -2348,7 +2348,7 @@
   const PC_NAMES = ['C', 'Db', 'D', 'Eb', 'E', 'F', 'Gb', 'G', 'Ab', 'A', 'Bb', 'B'];
   const DEG_NAME = ['I', 'bII', 'II', 'bIII', 'III', 'IV', 'bV', 'V', 'bVI', 'VI', 'bVII', 'VII'];
   const DARK_MODE = {
-    major: 'minor', lydian: 'phrygian', mixolydian: 'minor', dorian: 'phrygian', minor: 'phrygian', melodic: 'harmonic', harmonic: 'dblHarm',
+    major: 'minor', lydian: 'phrygian', mixolydian: 'minor', dorian: 'phrygian', minor: 'phrygian', melodic: 'harmonic', harmonic: 'dblHarm', ukrDorian: 'harmonic',
     phrygian: 'locrian', phrygDom: 'dblHarm', dblHarm: 'octaH', wholetone: 'octatonic', octatonic: 'octaH', octaH: 'octaH', locrian: 'locrian',
     majPent: 'minPent', minPent: 'hirajoshi', dorPent: 'minPent', hirajoshi: 'hirajoshi',
   };

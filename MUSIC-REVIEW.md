@@ -613,3 +613,11 @@ keep, in each phrase and in the still), a rattle (the shaker's sixteenths) close
 hisses breathe at the phrase openings, the low strings' tremolo growls under the opening and the settle, and the crest lands with a strike
 (the bass drum and the boom; in the hunt the tam-tam too); the hunt has the rattle, the flicks and the growl as well. Rendered whole at -17.8
 and -15.5 LUFS before the last trims.
+
+*Heard: better; lean further, more exotic.* The Sakkra are now in the Ukrainian dorian (dorian with a raised fourth, added to the engine as
+`ukrDorian`): the coil's quick tensing climbs an augmented second (F to G-sharp), the harmony takes the major II, an E7 and the augmented flat
+seventh, re-harmonised so every strong beat is still a chord tone; the coil's held notes carry a mordent after the beat and its long note a
+turn, like a duduk; the alto flute's mist opens with a turn like a ney; the men hum an open fifth as a drone under the opening, the coil, the
+settle and the still; finger-cymbal pings (the triangle) on the off-beats and a doumbek's tek (the high tenor drum) at the crest. The hunt
+takes the same mode and harmony, the men's drone under the stalk and the pings in the hunt. Rendered whole at -17.3 and -15.3 LUFS; the
+lint (840 seams) passes.
