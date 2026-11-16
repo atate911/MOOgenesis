@@ -81,19 +81,49 @@
     ],
   });
 
+  // The Darlok (rewritten from nothing; the word: shadowy): cloaked shape-shifters who trade in secrets ("face to one of my faces"). F
+  // melodic minor, sly. The gesture is a tiptoe: a tune of short notes and silences that never stays in one voice, each bar in another
+  // instrument (the pizzicato, the celeste, the alto flute, the harp), a shape-shifter; it ends each phrase with a quick snatch up the chord
+  // and a pause (mind your pockets). Whispers, the violins trembling high and far, a low drone, sudden silences. The contrast is the shadows,
+  // a slow line on the solo viola, half heard; the crest is the unmasking, the whole tune in every voice at once, struck.
   Track('race:darlok', {
-    desc: 'Darlok: eerie minor pads, whispering noise swells and plucked shadows',
-    motif: '5:1.5 6:.5 5:1 3:1 | 1:2 3:2', motifInst: 'flute',   // the first bars of the theme: the next interlude carries them when this race is met
-    bpm: 66, trim: 2.61, root: 'F#', mode: 'harmonic', tens: false,
-    forms: [['A', 'B', 'A', 'B', 'A', 'B', 'A', 'B', 'A', 'B', 'A', 'B'], ['A', 'A', 'B', 'B', 'A', 'A', 'B', 'B', 'A', 'A', 'B', 'B']],
-    inst: { pad: 'airPad', bass: 'deep', lead: 'pizz', lead2: 'flute', bell: 'chime', choir: 'uuh' },
+    desc: 'Darlok: shadowy — a tiptoeing tune that changes instrument every bar like a shape-shifter, a quick snatch and a pause, whispers and sudden silences; a slow line on the solo viola in the shadows; unmasked at the crest',
+    motif: '1:.5 r:.5 3:.5 r:.5 5:.5 r:.5 6:.5 5:.5 | 4:.5 r:.5 6:.5 r:.5 8:.5 r:.5 7:.5 6:.5', motifInst: 'pizz',   // the first bars of the theme: the next interlude carries them when this race is met
+    bpm: 84, trim: 1.6, root: 'F', mode: 'melodic', tens: false, loopFrom: 'A',
+    forms: [['A', 'shadows', 'unmask', 'C', 'A2', 'shadows', 'unmask', 'C'], ['A', 'shadows', 'unmask', 'C', 'shadows2', 'A2', 'unmask', 'C']],
+    inst: { pad: 'tremHi', pad2: 'drone', bass: 'deep', lead: 'pizz', lead2: 'glass', lead3: 'altoFluteIowa', lead4: 'harp' },
     ph: {
-      DK1: '5:1.5 6:.5 5:1 3:1 | 1:2 3:2 | 4:2 6:2 | 6:3 4:1',
-      DK2: '5:1.5 6:.5 5:1 3:1 | 3:2 1:2 | 5:2 7:2 | 5:3 r:1',
+      SA: '1:.5 r:.5 3:.5 r:.5 5:.5 r:.5 6:.5 5:.5 | r:4 | r:4 | r:4',
+      TA: '8:.5 r:.5 6:.5 r:.5 5:.5 r:.5 3:.5 r:.5 | r:4 | r:4 | r:4',
+      SB: 'r:4 | 4:.5 r:.5 6:.5 r:.5 8:.5 r:.5 7:.5 6:.5 | r:4 | r:4',
+      TB: 'r:4 | 2:.5 r:.5 4:.5 r:.5 6:.5 r:.5 4:.5 2:.5 | r:4 | r:4',
+      SC: 'r:4 | r:4 | 5:.5 r:.5 7:.5 r:.5 9:.5 r:.5 8:.5 7:.5 | r:4',
+      TC: 'r:4 | r:4 | 3:.5 r:.5 7:.5 r:.5 5:.5 r:.5 7:.5 r:.5 | r:4',
+      SD: 'r:4 | r:4 | r:4 | 1:.25 3:.25 5:.25 8:.25 r:1 8:.5 r:1.5',
+      TD: 'r:4 | r:4 | r:4 | 1:.25 3:.25 5:.25 8:.25 r:1 1:.5 r:1.5',
+      DF1: '1:.5 r:.5 3:.5 r:.5 5:.5 r:.5 6:.5 5:.5 | 4:.5 r:.5 6:.5 r:.5 8:.5 r:.5 7:.5 6:.5 | 5:.5 r:.5 7:.5 r:.5 9:.5 r:.5 8:.5 7:.5 | 1:.25 3:.25 5:.25 8:.25 r:1 8:.5 r:1.5',
+      DF2: '8:.5 r:.5 6:.5 r:.5 5:.5 r:.5 3:.5 r:.5 | 2:.5 r:.5 4:.5 r:.5 6:.5 r:.5 4:.5 2:.5 | 3:.5 r:.5 7:.5 r:.5 5:.5 r:.5 7:.5 r:.5 | 1:.25 3:.25 5:.25 8:.25 r:1 1:.5 r:1.5',
+      F1: '5:3 4:1 | 3:4 | 4:2 6:2 | 5:4',
+      F2: '5:3 6:1 | 6:4 | 6:2 4:2 | 7:4',
     },
     sec: [
-      { n: 'A', bars: 8, lv: 0.7, prog: 'i:2 iv:2 i:2 V:2', pad: { p: 'sus', n: 3, reg: [45, 66] }, bass: 'whole', lead: 'DK1 DK2', choir: { vel: 0.45 }, drums: { whisper: ['x...............', '................'], whisper2: ['................', '........x.......'] } },
-      { n: 'B', bars: 8, lv: 0.85, prog: 'i:2 V:2 i:2 iv:2', pad: { p: 'swell', n: 3, reg: [45, 66] }, bass: 'whole', lead: { ph: 'DK2 DK1', inst: 'flute', vel: 0.55, shape: 0.35, swell: 0.2 }, lead2: { ph: 'DK2 DK1', inst: 'pizz', oct: -1, vel: 0.5 }, bell: { dens: 0.2, res: 1, reg: [66, 90], vel: 0.45 }, choir: { v1: 'u', v2: 'o', vel: 0.55 }, drums: { whisper: ['x...............', '................'], whisper2: ['................', '........x.......'], rim: '..o.......o.....' } },
+      { n: 'veil', bars: 2, cres: [0.44, 0.54], prog: 'i | V', pad: { p: 'swell', n: 2, reg: [79, 91], vel: 0.4 }, pad2: { p: 'sus', n: 2, open: true, reg: [41, 53], vel: 0.4 },
+        drums: { whisper: ['x...............', '........x.......'], whisper2: ['......x.........', '..............x.'], vel: 0.45 } },
+      { n: 'A', bars: 8, lv: 0.6, prog: 'i | IV | V | i | i | ii | bIII+:.5 V:.5 | i', pad: { p: 'swell', n: 2, reg: [79, 91], vel: 0.36 }, pad2: { p: 'sus', n: 2, open: true, reg: [41, 53], vel: 0.42 }, bass: { pat: '1---', vel: 0.5 },
+        lead: { ph: 'SA TB', vel: 0.75 }, lead2: { ph: 'SB TC', vel: 0.62 }, lead3: { ph: 'SC TD', vel: 0.62, art: 0.5 }, lead4: { ph: 'SD TA', vel: 0.62 },
+        drums: { whisper: ['x...............', '................', '................', '................'], whisper2: ['................', '........x.......'], vel: 0.42 } },
+      { n: 'shadows', bars: 8, lv: 0.52, prog: 'i | bIII+ | IV | V | i | vio | IV | V', pad: { p: 'sus', n: 3, reg: [74, 91], vel: 0.42 }, pad2: { p: 'sus', n: 2, open: true, reg: [41, 53], vel: 0.45 }, bass: { pat: '1---', vel: 0.5 },
+        lead3: { ph: 'F1 F2', inst: 'vlaSolo', oct: -1, vel: 0.68, shape: 0.5, swell: 0.4 }, lead4: { ph: 'r4 SA', vel: 0.35 }, drums: { whisper: ['x...............', '................', '........x.......', '................'], vel: 0.4 } },
+      { n: 'shadows2', bars: 8, lv: 0.5, prog: 'i | bIII+ | IV | V | i | vio | IV | V', pad: { p: 'sus', n: 3, reg: [74, 91], vel: 0.42 }, pad2: { p: 'sus', n: 2, open: true, reg: [41, 53], vel: 0.45 }, bass: { pat: '1---', vel: 0.5 },
+        lead3: { ph: 'F1 F2', inst: 'bassClar', oct: -1, vel: 0.66, shape: 0.5, swell: 0.4 }, drums: { whisper: ['x...............', '................', '................', '........x.......'], vel: 0.38 } },
+      { n: 'unmask', bars: 8, cres: [0.82, 0.96], prog: 'i | IV | V | i | i | ii | bIII+:.5 V:.5 | i', pad: { p: 'sus', n: 3, reg: [74, 91], vel: 0.5 }, pad2: { p: 'sus', inst: 'strings', n: 4, reg: [50, 72], vel: 0.55 }, bass: { pat: '1-5-', vel: 0.75 },
+        lead: { ph: 'DF1 DF2', inst: 'strOst', vel: 0.82 }, lead2: { ph: 'DF1 DF2', oct: 1, vel: 0.45 }, lead3: { ph: 'DF1 DF2', vel: 0.55, art: 0.5 }, lead4: { ph: 'DF1 DF2', inst: 'horn', oct: -1, vel: 0.65 },
+        drums: { whisper: ['x...............', '................', '................', '................'], bdSoft: 'x.......x.......', vel: 0.6 }, timp: 'two', hit: true },
+      { n: 'C', bars: 2, cres: [0.56, 0.42], prog: 'i | i', pad: { p: 'swell', n: 2, reg: [79, 91], vel: 0.38 }, pad2: { p: 'sus', n: 2, open: true, reg: [41, 53], vel: 0.42 },
+        lead: { ph: 'r1 SD', vel: 0.6 }, drums: { whisper: ['................', 'x...............'], vel: 0.4 } },
+      { n: 'A2', bars: 8, lv: 0.64, prog: 'i | IV | V | i | i | ii | bIII+:.5 V:.5 | i', pad: { p: 'swell', n: 2, reg: [79, 91], vel: 0.36 }, pad2: { p: 'sus', n: 2, open: true, reg: [41, 53], vel: 0.42 }, bass: { pat: '1---', vel: 0.5 },
+        lead: { ph: 'SD TA', inst: 'harp', vel: 0.7 }, lead2: { ph: 'SA TB', inst: 'pizz', vel: 0.65 }, lead3: { ph: 'SB TC', inst: 'clarIowa', vel: 0.55, art: 0.5 }, lead4: { ph: 'SC TD', inst: 'glass', vel: 0.55 },
+        drums: { whisper2: ['................', '........x.......'], vel: 0.42 } },
     ],
   });
 
@@ -371,7 +401,7 @@
       { n: 'stone', bars: 4, lv: 0.56, prog: 'bVII5 | iv5 | Vq | i5', pad: { p: 'sus', n: 3, reg: [64, 84], vel: 0.42 }, pad2: { p: 'sus', n: 2, open: true, reg: [43, 55], vel: 0.45 }, bass: { pat: '1---', vel: 0.55 },
         lead3: { ph: 'ST2', oct: -1, vel: 0.75, shape: 0.5, swell: 0.4 }, lead4: { ph: 'ST2', vel: 0.45, shape: 0.5 }, bell: { dens: 0.1, res: 1, reg: [72, 96], vel: 0.35 } },
       { n: 'stone2', bars: 4, lv: 0.54, prog: 'i5 | Iq | Vq | i5', pad: { p: 'sus', n: 3, reg: [64, 84], vel: 0.42 }, pad2: { p: 'sus', n: 2, open: true, reg: [43, 55], vel: 0.45 }, bass: { pat: '1---', vel: 0.55 },
-        lead3: { ph: 'ST1', oct: -1, vel: 0.72, shape: 0.5, swell: 0.4 }, lead: { ph: 'r1 CR1', vel: 0.4, echo: 0.35 } },
+        lead3: { ph: 'ST1', oct: -1, vel: 0.72, shape: 0.5, swell: 0.4 }, lead: { ph: 'r1 FIN r1 FIN', vel: 0.4, echo: 0.35 } },
       { n: 'erupt', bars: 4, cres: [0.82, 0.98], prog: 'Iq | Iq | Vq | Vq', pad: { p: 'sus', n: 4, reg: [60, 84], vel: 0.55 }, pad2: { p: 'sus', n: 2, open: true, reg: [43, 55], vel: 0.6 }, bass: { pat: '1---', vel: 0.8 },
         lead: { ph: 'CR1', vel: 0.85, echo: 0.3 }, lead2: { ph: 'CR1', oct: 1, vel: 0.55, echo: 0.3 }, lead3: { ph: 'CR1', inst: 'bell', oct: 1, vel: 0.5 }, lead4: { ph: 'CR1', inst: 'horn', oct: -2, vel: 0.85, shape: 0.35, swell: 0.4 },
         arp: { pat: '0123012301230123', res: 4, vel: 0.34, reg: [60, 88] }, bell: { dens: 0.18, res: 1, reg: [60, 79], vel: 0.5 }, timp: { p: 'two', roll: 1 },
@@ -383,11 +413,7 @@
     ],
   });
 
-  // the hostile readings (research/06 §12.5: "same motif, lower register, faster, harsher timbre")
-  const WAR = {
-    darlok: { tempo: 1.08, inst: { lead: 'horn' }, drums: { kick: 'x..x....x..x....', rim: '......o.......o.', hiss: '....x.......x...' } },   // heartbeat pulse
-  };
-  for (const r in WAR) Music._warVariant('race:' + r, WAR[r]);
+  // the hostile readings: every race's is written for it (below); none is derived any more (Music._warVariant without written: true)
 
   // ------------------------------------------------------------------ the written hostile readings: the theme's tune, its own music
   // The Meklar, hostile: resistance is futile. The directive in the low brass and the synth brass in unison over a harder sequencer (the pulse
@@ -600,6 +626,31 @@
         drums: { bd: 'x...x...x...x...', metal: 'x.......x.......', tam: ['x...............', '................', '................', '................'], vel: 0.88 }, timp: 'beats', hit: 'tam' },
       { n: 'C', bars: 2, cres: [0.8, 0.6], prog: 'i5 | i5', pad2: { p: 'sus', n: 2, open: true, reg: [43, 55], vel: 0.65 }, bass: { pat: '1---', vel: 0.75 }, timp: { p: 'hits', vel: 0.6, dur: 3 },
         lead3: { ph: 'r1 ST1', vel: 0.6 } },
+    ],
+  });
+
+  // The Darlok, hostile: the knife. The tune whole in the bass clarinet and the short spiccato over a soft double heartbeat, the strings
+  // trembling; the knife itself (no tune: near silence, a whisper, one high trembling cluster, then the stroke); the shadows' line in the
+  // horns; the tune in the brass and the spiccato at the crest.
+  Music._warVariant('race:darlok', { written: true, bpm: 92, loopFrom: 'A',
+    desc: 'Darlok, hostile: the knife — the tiptoeing tune whole in the bass clarinet and spiccato over a heartbeat, a near-silence broken by one trembling cluster and the stroke, the shadows in the horns',
+    forms: [['A', 'knife', 'shadows', 'unmask', 'C', 'A', 'shadows', 'knife', 'unmask', 'C'], ['A', 'knife', 'shadows', 'unmask', 'C', 'knife', 'A', 'unmask', 'C']],
+    inst: { pad: 'strTrem', pad2: 'drone', pad3: 'tremHi', bass: 'deep', lead: 'bassClar', lead2: 'strOst', lead3: 'horn', lead4: 'lowBrass' },
+    def: { trim: 1.8 },
+    sec: [
+      { n: 'pulse', bars: 2, cres: [0.56, 0.7], prog: 'i | V', pad2: { p: 'sus', n: 2, open: true, reg: [41, 53], vel: 0.55 }, bass: { pat: '1---', vel: 0.7 },
+        drums: { bdSoft: 'x..x....x..x....', whisper: ['x...............', '........x.......'], vel: 0.65 } },
+      { n: 'A', bars: 8, lv: 0.8, prog: 'i | IV | V | i | i | ii | bIII+:.5 V:.5 | i', pad: { p: 'sus', n: 3, reg: [55, 74], vel: 0.45 }, pad2: { p: 'sus', n: 2, open: true, reg: [41, 53], vel: 0.55 }, bass: { pat: '1-5-', vel: 0.75 },
+        lead: { ph: 'DF1 DF2', vel: 0.85 }, lead2: { ph: 'DF1 DF2', vel: 0.65 }, drums: { bdSoft: 'x..x....x..x....', click2: '..x...x...x...x.', vel: 0.72 }, timp: 'two' },
+      { n: 'knife', bars: 2, cres: [0.5, 0.9], prog: 'icl | V', pad3: { p: 'swell', n: 4, reg: [79, 93], vel: 0.6 }, pad2: { p: 'sus', n: 2, open: true, reg: [41, 53], vel: 0.4 },
+        drums: { whisper: ['x...............', '................'], bd: ['................', '............x...'], vel: 0.8 }, timp: { p: 'hits', roll: 1 } },
+      { n: 'shadows', bars: 8, lv: 0.84, prog: 'i | bIII+ | IV | V | i | vio | IV | V', pad: { p: 'sus', n: 4, reg: [55, 76], vel: 0.55 }, pad2: { p: 'sus', n: 2, open: true, reg: [41, 53], vel: 0.55 }, bass: { pat: '1-5-', vel: 0.75 },
+        lead3: { ph: 'F1 F2', vel: 0.85, shape: 0.4, swell: 0.35 }, lead4: { ph: 'F1 F2', oct: -1, vel: 0.65, shape: 0.35 }, drums: { bdSoft: 'x..x....x..x....', vel: 0.65 }, timp: 'two' },
+      { n: 'unmask', bars: 8, cres: [0.9, 1.0], prog: 'i | IV | V | i | i | ii | bIII+:.5 V:.5 | i', pad: { p: 'sus', n: 4, reg: [55, 76], vel: 0.6 }, pad2: { p: 'sus', n: 2, open: true, reg: [41, 53], vel: 0.55 }, bass: { pat: '1-5-', vel: 0.85 },
+        lead: { ph: 'DF1 DF2', vel: 0.8 }, lead2: { ph: 'DF1 DF2', vel: 0.8 }, lead3: { ph: 'DF1 DF2', vel: 0.85, harm: -2 }, lead4: { ph: 'DF1 DF2', oct: -1, vel: 0.65 },
+        drums: { bd: 'x..x....x..x....', click2: '..x...x...x...x.', crash: ['x...............', '................', '................', '................'], vel: 0.85 }, timp: 'beats', hit: 'tam' },
+      { n: 'C', bars: 2, cres: [0.75, 0.55], prog: 'i | i', pad2: { p: 'sus', n: 2, open: true, reg: [41, 53], vel: 0.55 }, bass: { pat: '1---', vel: 0.7 },
+        lead: { ph: 'r1 SD', vel: 0.7 }, drums: { bdSoft: ['x..x....x..x....', 'x..x............'], vel: 0.65 } },
     ],
   });
 
