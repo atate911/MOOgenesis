@@ -690,3 +690,15 @@ Meklar. Both written again from nothing:
 
 Rendered whole at -18.9, -15.4, -17.2 and -15.3 LUFS, trims then set for -17 and -15; the lint, the seams and the music QA pass.
 
+*Heard: the human choir does not belong to an insect race; the Meklar too organic — it should be machine code, structured, robotic, a
+collective like the Borg.* The Klackon keeps the work song with no voices: the call on the clarinet, the colony's answer in the bassoon doubled
+by the pizzicato, the Queen's second reading in the bassoon and the violas, the crest in the cellos and the violas in octaves with the horns and
+trumpets; in the hive at war the answers are the low brass and the stabs brass. The Meklar is written a third time as code: C minor in open
+fifths at 116; the directive in even quarter notes alternating a fifth and a fourth on each chord's tones, then turned over, then closed; the
+sequencers write bit patterns that gain a bit a bar; data bleeps, the bass ticking eighths, four on the floor, the anvil marking each cycle;
+every block exactly eight bars; the collective mind (the directive at half speed in the low synth over a drone, a single tone pinging each
+beat); the crest the brass in locked unison octaves with stabs on the grid and the strings' spiccato. Its reading, *resistance is futile*
+(B-flat minor at 128): the directive in the low brass and synth brass in unison over the pulse sequencer and anvils, assimilation (every
+sequencer converging on one pattern, the stabs doubling each bar), the mind in the horns, the brass locked at the crest. Rendered at -17.8,
+-15.0, -16.5 and -14.6 LUFS before the trims.
+

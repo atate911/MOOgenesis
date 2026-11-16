@@ -101,8 +101,8 @@
     bulrathi: 'Deep, stomping drums and heavy low brass.',
     darlok: 'Eerie pads, whispering swells and plucked shadows.',
     human: 'A noble march with snare, strings and brass.',
-    klackon: 'A hive work song: one worker calls and the whole colony answers in unison over pickaxe strikes and an ostinato that adds a worker each bar; the Queen is a warm, regal horn; at the crest the colony sings as one.',
-    meklar: 'Retro science fiction: a sequencer opening alone over a warm analogue pad, a singable synth melody, one human voice remembering the flesh, then brass and choir in the manner of the great synthesizer film scores.',
+    klackon: 'A hive work song: one worker calls on the clarinet and the whole colony answers in unison over pickaxe strikes and an ostinato that adds a worker each bar; the Queen is a warm, regal horn; at the crest the colony plays as one.',
+    meklar: 'Machine code: a directive of even notes in fifths and fourths, sequencers writing bit patterns that gain a bit each bar, data bleeps and a four-on-the-floor clock; the collective mind on a deep drone; the brass locked in unison at the crest.',
     mrrshan: 'Interlocking drums under a snaking reed melody.',
     psilon: 'Crystalline bells and glassy overtones, cool and shimmering.',
     sakkra: 'A humid, coiled tune in the low bass clarinet over a marimba walking in three-three-two, the hiss and frame drums; an alto flute in the mist, the horns at the crest.',
@@ -114,8 +114,8 @@
   }
   // the hostile readings written for their race (the rest are derived: faster, lower, darker, brass and drums)
   const WAR = {
-    klackon: 'The hive at war: the work song barked by the horns and shouted back by the men over war drums, a muster of stamping and shouts, the Queen commanding in the brass.',
-    meklar: 'Malfunction: the melody growling in the low brass and synth brass over a harder sequencer, a passage where the machine stutters into clusters, the flesh overridden by the horns.',
+    klackon: 'The hive at war: the work song barked by the horns and answered by the low brass over war drums, a muster of stamping and brass stabs, the Queen commanding in the trumpets.',
+    meklar: 'Resistance is futile: the directive in the low brass and synth brass in unison over a harder sequencer and anvils, every sequencer converging on one pattern, the brass locked in unison at the crest.',
     sakkra: 'The hunt: the same coiled tune hammered out by the strings over growling low brass, the drums driving the marimba\'s three-three-two, the men shouting; a passage of drums and brass calls with no tune at all.',
   };
   function war(r) {

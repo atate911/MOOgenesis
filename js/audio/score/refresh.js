@@ -82,10 +82,10 @@
     'race:bulrathi': {secs: {C: {prog: 'i bVI bVII Vsus4'}}, hall: 'musikverein', tone: {lo: 1.15, hi: 2.28, pres: 0.6}, lowBand: 3, subBass: 0.1, mix: {lead: 1.45, choir: 1.58}, space: {A: {pad: {reg: [64,78]}}, B: {pad: {reg: [64,78]}, choir: {velK: 0.7}}, C: {pad: {reg: [62,76]}}}, trim: 1.04},
     'race:darlok': {hall: 'musikverein', tone: {lo: 0, hi: 0.3, pres: 1.4}, lowBand: 3, subBass: 0.37, mix: {lead: 2.84}, space: {A: {choir: {velK: 0.7}}, B: {choir: {velK: 0.7}}}, trim: 1.53},
     'race:human': {secs: {C: {prog: 'IV Vsus4 V I'}}, hall: 'musikverein', tone: {lo: 1.2, hi: 1.44, pres: 0.7}, lowBand: 3, mix: {lead: 1.2}, trim: 0.77},
-    'race:klackon': {settled: true, orch: true, brassHarm: false, hall: 'musikverein', tone: {lo: 1.2, hi: 0.3, pres: 1.4}, lowBand: 3, subBass: 0.3, mix: {lead: 1.5, choir: 1.2}, trim: 1.98},   // -17 LUFS (rendered whole: -18.9 at 1.6)
-    'race:klackon:war': {settled: true, orch: true, brassHarm: false, hall: 'musikverein', tone: {lo: 1.4, hi: 0.6, pres: 1.6}, lowBand: 3, subBass: 0.35, mix: {lead: 1.4}, trim: 1.89},   // -15 LUFS (rendered whole: -15.4 at 1.8)
-    'race:meklar': {settled: true, orch: true, brassHarm: false, hall: 'musikverein', tone: {lo: 1, hi: 0.8, pres: 1.3}, lowBand: 3, subBass: 0.3, mix: {lead: 1.4}, trim: 1.63},   // -17 LUFS (rendered whole: -17.2 at 1.6)
-    'race:meklar:war': {settled: true, orch: true, brassHarm: false, hall: 'musikverein', tone: {lo: 1.2, hi: 0.8, pres: 1.5}, lowBand: 3, subBass: 0.35, mix: {lead: 1.3}, trim: 1.66},   // -15 LUFS (rendered whole: -15.3 at 1.6)
+    'race:klackon': {settled: true, orch: true, brassHarm: false, hall: 'musikverein', tone: {lo: 1.2, hi: 0.3, pres: 1.4}, lowBand: 3, subBass: 0.3, mix: {lead: 1.5, choir: 1.2}, trim: 2.18},   // -17 LUFS (rendered whole: -17.8 at 1.98)
+    'race:klackon:war': {settled: true, orch: true, brassHarm: false, hall: 'musikverein', tone: {lo: 1.4, hi: 0.6, pres: 1.6}, lowBand: 3, subBass: 0.35, mix: {lead: 1.4}, trim: 1.89},   // -15 LUFS (rendered whole: -15.0 at 1.89)
+    'race:meklar': {settled: true, orch: true, brassHarm: false, hall: 'musikverein', tone: {lo: 1, hi: 1.2, pres: 1.6}, lowBand: 3, subBass: 0.3, mix: {lead: 1.4}, trim: 1.53},   // -17 LUFS (rendered whole: -16.5 at 1.63)
+    'race:meklar:war': {settled: true, orch: true, brassHarm: false, hall: 'musikverein', tone: {lo: 1.2, hi: 0.8, pres: 1.5}, lowBand: 3, subBass: 0.35, mix: {lead: 1.3}, trim: 1.58},   // -15 LUFS (rendered whole: -14.6 at 1.66)
     'race:mrrshan': {hall: 'musikverein', tone: {lo: 1.8, hi: 0.3, pres: 1.1}, lowBand: 3, subBass: 0.46, mix: {lead: 2.09, choir: 1.58}, trim: 1.02},
     'race:psilon': {hall: 'musikverein', tone: {lo: 1.7, hi: 1.2, pres: 0.9}, lowBand: 3, subBass: 0.57, trim: 1.06},
     // the rewritten races (settled: their own dynamics and percussion; the orchestral profile; a written hostile reading has its own entry)
