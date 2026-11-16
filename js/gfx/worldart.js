@@ -33,7 +33,7 @@
   // the bulletin's opening shot (one per bulletin, under the GNN titles): photos of the studio with the presenter in each wardrobe
   const GNN_OPEN_DRESS = ['ready', 'script', 'handoff', 'wide', 'backstage-script', 'backstage-rear', 'backstage-window', 'backstage-notes', 'bend-front', 'bend-side', 'bend-back'];
   const GNN_OPEN_JACKET = ['cue', 'desk-wide', 'desk-notes', 'behind', 'stool', 'desk-cue', 'window'];
-  const GNN_OPEN_RARE = ['offair', 'offair-leather'];                       // a rare treat in the regular news: the presenter caught off air between takes
+  const GNN_OPEN_RARE = ['offair', 'offair-leather', 'offair-desk'];                       // a rare treat in the regular news: the presenter caught off air between takes
   const GNN_ANCHOR = ['neutral', 'serious', 'encouraging', 'urgent', 'breaking', 'presenting', 'wry'];   // the GNN presenter's poses (docs/IMAGE-GEN-GNN-ANCHOR.md): cut-outs on one shared 1760x1536 canvas, face size and place matched
   const has = (a, k) => a.indexOf(k) >= 0;
 

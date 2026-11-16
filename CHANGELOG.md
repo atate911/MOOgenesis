@@ -14,7 +14,7 @@ Versions follow `MAJOR.MINOR.PATCH`; the live version is the `VERSION` file.
 - GNN on phones held sideways: the bumper's titles clear the ticker and buttons; the settled-galaxy shot is a usable size (her legs
   run a little under the headline there, the screen being so short).
 - GNN, off air: about one regular bulletin in a hundred opens on a rare easter egg instead of the usual bumper, the presenter caught
-  between takes with her feet up on the desk, in leather (`gnn-open-offair.webp` and `gnn-open-offair-leather.webp`, in turn); the
+  between takes with her feet up on the desk, or posed on it (`gnn-open-offair.webp`, `gnn-open-offair-leather.webp` and `gnn-open-offair-desk.webp`, in turn); the
   bulletin then runs as normal. Three more regular-news openers: the presenter bent over the desk marking up her script, from the
   front, the side (past a studio camera) and behind (`gnn-open-bend-*.webp`).
 - GNN, the settled galaxy: once the game looks decided (from turn 60: you hold two thirds of the galaxy's colonies and industry, or
