@@ -52,8 +52,8 @@ for (const o of out) { if (o.error) { console.log(pad(o.id, 16) + 'ERROR ' + o.e
   console.log(pad(o.id, 16) + pad(o.key, 13) + pad(o.bpm, 5, 1) + pad(o.loopSec, 6, 1) + pad(o.climax, 7, 1) + pad(o.climaxAt, 5, 1) + pad(o.ending, 5, 1) + pad(o.chordsPerMin, 7, 1) + pad(o.chords, 7, 1) + pad(o.lead.strongCT === null ? '-' : o.lead.strongCT, 6, 1) + pad(o.lead.maxLeap, 5, 1) + pad(Math.round(o.snapRate * 100), 6, 1) + pad(o.outsidePct, 6, 1) + pad(o.maxPoly, 5, 1) + pad(o.mudPct, 5, 1) + '  ' + o.seam + (o.outside ? ' | ' + o.outside : '')); }
 // --races: the race themes and their hostile readings as they are heard (an audience lasts 60 to 90 seconds and always starts at the first
 // bar): over the first 90 s of the first pass, the crest and when it comes, the dynamic range, the phrases and chords heard, the sections
-// whose level moves; and each piece's likeness to the rest of the score (palette 0.6, tempo 0.2, mode 0.1, meter 0.1: a family measure,
-// not an ear), its nearest neighbour, and for a reading its likeness to its own theme and to the nearest other reading.
+// whose level moves; and each piece's likeness to the rest of the score (palette 0.45, tempo 0.15, mode 0.1, meter 0.05, melody 0.25: the
+// share of three-note interval shapes the two pieces' phrases have in common; a family measure, not an ear), its nearest neighbour, and for a reading its likeness to its own theme and to the nearest other reading.
 if (args.indexOf('--races') >= 0) {
   const WIN = 90, all = Object.keys(T).filter(id => !/^drift\d*:|^bridge:/.test(id) && !T[id].interlude);
   const vec = id => { const p = CO.palette(T[id]), t = Object.values(p).reduce((x, y) => x + y, 0) || 1, v = {}; for (const k in p) v[k] = p[k] / t; return v; };
@@ -64,8 +64,11 @@ if (args.indexOf('--races') >= 0) {
     let dot = 0, na = 0, nb = 0; for (const k of new Set([...Object.keys(va), ...Object.keys(vb)])) { const x = va[k] || 0, y = vb[k] || 0; dot += x * y; na += x * x; nb += y * y; }
     const cos = dot / (Math.sqrt(na * nb) || 1), tempo = Math.max(0, 1 - Math.abs(Math.log(A.bpm / B.bpm)) / Math.log(2));
     const sa = SC[A.mode || 'major'] || [], sb = SC[B.mode || 'major'] || [], mode = sa.filter(x => sb.indexOf(x) >= 0).length / new Set([...sa, ...sb]).size;
-    return 0.6 * cos + 0.2 * tempo + 0.1 * mode + 0.1 * ((A.meter || 4) === (B.meter || 4) ? 1 : 0);
+    const ma = MEL(a), mb = MEL(b), mel = ma.size && mb.size ? [...ma].filter(x => mb.has(x)).length / new Set([...ma, ...mb]).size : 0;
+    return 0.45 * cos + 0.15 * tempo + 0.1 * mode + 0.05 * ((A.meter || 4) === (B.meter || 4) ? 1 : 0) + 0.25 * mel;
   };
+  // the melody: the set of three-note interval shapes (in scale steps) across a piece's own phrases; a reading shares its theme's
+  const melC = {}, MEL = id => { if (melC[id]) return melC[id]; const st = new Set(); for (const k in T[id].ph || {}) { const src = String(T[id].ph[k]); if (src[0] === '@') continue; const d = src.replace(/\|/g, ' ').split(/\s+/).map(t => /^(-?\d+)/.exec(t)).filter(Boolean).map(m => +m[1]); for (let i = 2; i < d.length; i++) st.add((d[i - 1] - d[i - 2]) + ',' + (d[i] - d[i - 1])); } return (melC[id] = st); };
   const rows = [];
   for (const id of Object.keys(T).filter(x => /^race:[a-z]+(:war)?$/.test(x))) {
     const def = T[id], r0 = M._compile(id, 0), a = M.analyze(id), heard = r0.wraps.filter(w => w.t0 < WIN);

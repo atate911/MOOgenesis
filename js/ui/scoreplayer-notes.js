@@ -105,14 +105,19 @@
     meklar: 'Cold machine arpeggios over a relentless pulse and metal strikes.',
     mrrshan: 'Interlocking drums under a snaking reed melody.',
     psilon: 'Crystalline bells and glassy overtones, cool and shimmering.',
-    sakkra: 'Hissing percussion and dry drums under a plucked kora line.',
+    sakkra: 'A humid, coiled tune in the low bass clarinet over a marimba walking in three-three-two, the hiss and frame drums; an alto flute in the mist, the horns at the crest.',
     silicoid: 'Vast ringing drones, slow metallic chimes and deep, geological pulses.',
   };
   const raceName = r => { try { const d = M.Data && M.Data.races && M.Data.races[r]; if (d && d.name) return d.name; } catch (e) { /* no data */ } return r.charAt(0).toUpperCase() + r.slice(1); };
   function race(r) {
     return { blurb: RACE[r] || 'The theme of the ' + raceName(r) + '.', where: 'Audiences with the ' + raceName(r) + ' ambassador.', listen: [] };
   }
+  // the hostile readings written for their race (the rest are derived: faster, lower, darker, brass and drums)
+  const WAR = {
+    sakkra: 'The hunt: the same coiled tune hammered out by the strings over growling low brass, the drums driving the marimba\'s three-three-two, the men shouting; a passage of drums and brass calls with no tune at all.',
+  };
   function war(r) {
+    if (WAR[r]) return { blurb: WAR[r], where: 'When the ' + raceName(r) + ' ambassador is angry with you.', listen: [[null, 'Switch between this and the peaceful version: the same tune, hunting.']] };
     return { blurb: 'The ' + raceName(r) + ' theme turned hostile: faster, lower and darker, led by brass over martial drums.', where: 'When the ' + raceName(r) + ' ambassador is angry with you.',
       listen: [[null, 'Switch between this and the peaceful version to hear the same tune change sides.']] };
   }

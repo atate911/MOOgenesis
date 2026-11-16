@@ -581,3 +581,29 @@ one is written.
 - The marks are judgment. The measures above (form, range, chords, chord tones, likeness) are what the tools can prove; whether a theme now
   "is" its race is the user's call at each stop.
 - Each race is a sizeable piece of writing, about one working session for a theme and its reading, including measuring and rendering.
+
+#### Progress
+
+**Stage 0: done.** `_warVariant(id, { written: true, ... })` builds a written reading on the theme's phrases (the lint fails if they differ);
+`node tools/score-review.js --races` reports the first 90 s and the likeness (the measure now has a melody term: the share of three-note
+interval shapes two pieces' phrases have in common, so a reading on its theme's tune reads as its kin); the baseline is in `tools/races`.
+
+**1. Sakkra: written, waiting to be heard.** Everything new. The theme: D dorian at 96, the coil (a held note, a quick tensing, the slow rise
+to the dorian sixth) in the bass clarinet over a low marimba walking three-three-two, the hiss and frame toms, the harp doubling far up; the
+mist in the alto flute over the flat third and seventh with the women far back; the crest with the coil in the horns in thirds over the
+strings, the alto flute's descant above, the toms and the timpani; the settle; in the loop a second reading (the harp and pizzicato as a kora,
+the bass clarinet below) and a still with the bass clarinet and the alto flute alone over the drone. The hunt: C dorian at 112, the coil
+hammered in the spiccato and doubled by the low brass, the marimba's gait harder in sixteenths, the toms in three-three-two; the hunt itself
+(four bars of drums, low-brass and men's shouts, no tune); the mist in the horns; the crest with the coil in the spiccato, the horns in thirds
+and the men; the low brass alone at the end.
+
+| first 90 s | crest at | range | phrases | chords | strong beats on a chord tone | snaps | mud | nearest |
+|---|---|---|---|---|---|---|---|---|
+| theme, before | 38 s | 0.17 | 2 | 3 | 0.67 | 0 | 0% | lab3 0.89 |
+| theme, now | 70 s | 0.54 | 6 | 6 | 1.0 | 0 | 6% | its reading 0.78 |
+| hostile, before | 33 s | 0.17 | 2 | 3 | 0.67 | 0 | 0% | Human hostile 0.96 |
+| hostile, now | 65 s | 0.45 | 4 | 6 | 1.0 | 0 | 3% | its theme 0.78 |
+
+Rendered: the theme's short-term loudness runs -28 (the marimba and the hiss) to -20 (the coil) to -15 (the crest) and back to -27; the hunt
+from -19 to -13.5. Trims set for -17 and -15 LUFS. The lint, the 840 seams and the music QA pass; only the two Sakkra pieces compile
+differently. Marks wait for the listening stop.
