@@ -702,3 +702,31 @@ beat); the crest the brass in locked unison octaves with stabs on the grid and t
 sequencer converging on one pattern, the stabs doubling each bar), the mind in the horns, the brass locked at the crest. Rendered at -17.8,
 -15.0, -16.5 and -14.6 LUFS before the trims.
 
+
+#### The method, settled (the user)
+
+**One word for each race, then the sounds and the mood that word calls up, leaning into the literal.** "This is a game, not an art piece":
+the Sakkra work because they sound literally reptilian (the hiss, the rattle) and exotic the way we picture reptiles (the snake charmer, the
+souk, shadowy, predatory, venomous). The images are idiomatic, almost cliché, and that is the point: the music is identifiable as the race
+in a bar, and none of it would translate to another race. The words:
+
+| race | word | the literal picture |
+|---|---|---|
+| Sakkra | reptilian | the hiss, the rattle, the slither, the snake charmer's augmented second |
+| Klackon | insectoid | chittering semitones, a bumblebee's buzz, skittering legs, clicking mandibles, crickets and cicadas at night |
+| Meklar | mechanical | machine code: sequencers, bit patterns, pistons hissing, servos, data bleeps, the brass locked in unison (a Borg-like collective) |
+| Psilon | cerebral | Bach's invention, the laboratory ticking and bubbling, the 1950s big-brained alien's theremin, a eureka |
+| Bulrathi | ursine | a lumbering gait, the Russian bear (a balalaika's strumming, a lumbering tuba), a growl, the fire, slow-building fury |
+| Human | diplomatic | a herald's fanfare, open American optimism, a market bustling, the oboe and clarinet negotiating, glasses at the reception |
+| Alkari | avian | the hawk's cry and glide, birdsong, wingbeats and wind, thermals circling, the eyrie's bells, the dive |
+| Mrrshan | feline | a slinking chromatic prowl, the pride's land (the African bell pattern, djembes), the long stare, the pounce and the roar |
+| Silicoid | crystalline | crystals growing in fourths and sparkling, grinding rock, lava bubbling and erupting, the stone speaking rarely |
+| Darlok | shadowy | the cartoon burglar's tiptoe, a tune that changes its face every bar, whispers, silences, the sting of unmasking |
+
+**4 to 10: written.** The Psilon, Bulrathi, Human, Alkari, Mrrshan, Silicoid and Darlok are new from nothing, each theme and its written hostile
+reading (the cold equation, roused, the ultimatum, the dive, the kill, the quake, the knife), and the Klackon is written a fourth time as
+insectoid (Bartók's night music for a hive; the work song and its voices gone). A literal pass then went over all of them (the list above).
+The engine gained a theremin (the procedural flute voice with a slow scoop into each note and a deep vibrato at once; other pieces compile
+unchanged) and the Ukrainian dorian; the refresh's old race entries, which still rewrote section chords, are replaced; no hostile reading is
+derived any more. Every theme crests between 58 and 74 s, every strong beat of every lead is a chord tone, the engine snaps no note in any of
+the twenty, and each theme's nearest piece is its own reading.

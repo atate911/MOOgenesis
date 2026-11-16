@@ -97,16 +97,16 @@
 
   // the race themes (an audience with that race) and their hostile readings (the ambassador is angry)
   const RACE = {
-    alkari: 'An airy flute over harp-like plucks and wind chimes: soaring and light.',
-    bulrathi: 'Deep, stomping drums and heavy low brass.',
-    darlok: 'Eerie pads, whispering swells and plucked shadows.',
-    human: 'A noble march with snare, strings and brass.',
-    klackon: 'A hive work song: one worker calls on the clarinet and the whole colony answers in unison over pickaxe strikes and an ostinato that adds a worker each bar; the Queen is a warm, regal horn; at the crest the colony plays as one.',
-    meklar: 'Machine code: a directive of even notes in fifths and fourths, sequencers writing bit patterns that gain a bit each bar, data bleeps and a four-on-the-floor clock; the collective mind on a deep drone; the brass locked in unison at the crest.',
-    mrrshan: 'Interlocking drums under a snaking reed melody.',
-    psilon: 'Crystalline bells and glassy overtones, cool and shimmering.',
+    alkari: 'Avian: the hawk\'s cry on the flute (an octave leap and a long glide down) over harp and violins circling like thermals, with birdsong, wind and wingbeats; the eyrie\'s proud horn call over its bells; the flight at the crest.',
+    bulrathi: 'Ursine: a lumbering fireside folk tune on the solo horn over a balalaika\'s strumming and a lumbering tuba, a growl in the cellos; a tender garden on the cor anglais; the anger, slow to come, in the low brass with the stomp.',
+    darlok: 'Shadowy: a tiptoeing tune that changes instrument every bar like a shape-shifter, a burglar\'s staccato sneak in the bass clarinet, whispers and sudden silences; a slow line on the solo viola in the shadows; unmasked at the crest.',
+    human: 'Diplomatic: a herald\'s fanfare, then an open, warm tune on the solo trumpet over a bustling market; the oboe and clarinet negotiating bar by bar as glasses clink; the treaty with horns, trumpets, strings and chorus.',
+    klackon: 'Insectoid: chittering cells passed between the marimba and the pizzicato in canon, a bumblebee\'s buzz, legs skittering and mandibles clicking; a night chorus of crickets, cicadas and a moth; the swarm emerging.',
+    meklar: 'Mechanical: machine code, a directive of even notes in fifths and fourths, sequencers writing bit patterns, pistons hissing, data bleeps and a four-on-the-floor clock; the collective mind on a deep drone; the brass locked in unison at the crest.',
+    mrrshan: 'Feline: a sleek, chromatic prowl on the solo cello in six-eight over soft footsteps, the African bell pattern and djembes; the stare, one long rising note in the horn; the pounce, with a roar.',
+    psilon: 'Cerebral: a cool two-part invention, the subject climbing on the clarinet over the bassoon, the laboratory ticking and its glassware ringing; the hypothesis sung by a 1950s theremin while the lab bubbles; the proof and a eureka.',
     sakkra: 'A humid, coiled tune in the low bass clarinet over a marimba walking in three-three-two, the hiss and frame drums; an alto flute in the mist, the horns at the crest.',
-    silicoid: 'Vast ringing drones, slow metallic chimes and deep, geological pulses.',
+    silicoid: 'Crystalline: crystals growing in fourths on the celeste and crotales, sparkling, over the lava\'s slow rumble and bubbles; the stone speaking rarely and low on the solo double bass; an eruption of bells with the horns far below.',
   };
   const raceName = r => { try { const d = M.Data && M.Data.races && M.Data.races[r]; if (d && d.name) return d.name; } catch (e) { /* no data */ } return r.charAt(0).toUpperCase() + r.slice(1); };
   function race(r) {
@@ -114,7 +114,14 @@
   }
   // the hostile readings written for their race (the rest are derived: faster, lower, darker, brass and drums)
   const WAR = {
-    klackon: 'The hive at war: the work song barked by the horns and answered by the low brass over war drums, a muster of stamping and brass stabs, the Queen commanding in the trumpets.',
+    darlok: 'The knife: the tiptoeing tune whole in the bass clarinet and spiccato over a heartbeat, a near-silence broken by one trembling cluster and the stroke, the shadows in the horns.',
+    silicoid: 'The quake: the crystal\'s climb shattering over low-brass clusters, the timpani rolling into the tam-tam, the stone speaking in the tuba.',
+    mrrshan: 'The kill: the prowl growled by the low brass over djembes crossing two against three, a crouched stalk rising to the spring, the stare in the trumpets, the pounce.',
+    alkari: 'The dive: the hawk\'s cry turned to a shriek over the trumpets, runs falling through the orchestra into the strike, the clans gathering in the horns.',
+    human: 'The ultimatum: the herald\'s fanfare turned to a minor march for the trumpets over the snare, an ultimatum of drums and brass hits, the negotiation become an argument.',
+    bulrathi: 'Roused: the fire song ripping in the horns over war drums, the balalaika driving, a roar of drums, the garden scorched in the trombones, the anger at full.',
+    psilon: 'The cold equation: the invention ticking in the strings over a tritone pedal, the countersubject in the low brass, a calculation of clicks and trembling clusters, the verdict in the horns with the theremin wailing above.',
+    klackon: 'The swarm: the bumblebee\'s buzz and the hive\'s cells hammered by the strings with the brass a beat behind, wings of saw synths, a swarm rising voice by voice into clusters.',
     meklar: 'Resistance is futile: the directive in the low brass and synth brass in unison over a harder sequencer and anvils, every sequencer converging on one pattern, the brass locked in unison at the crest.',
     sakkra: 'The hunt: the same coiled tune hammered out by the strings over growling low brass, the drums driving the marimba\'s three-three-two, the men shouting; a passage of drums and brass calls with no tune at all.',
   };
