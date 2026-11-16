@@ -6,22 +6,40 @@
   const Music = M.Audio.Music, Track = Music._define;
 
   // ================================================================== diplomacy race themes (45-70 s loops)
+  // The Alkari (rewritten from nothing; the word: avian): proud raptor clans who still glide on their own wings, ace pilots, their eyries
+  // high above. D mixolydian, open and proud. The gesture is the hawk's cry: a leap of an octave from the tonic, held, then a long gliding
+  // descent; the flute is the bird, high; the harp and the violins circle like thermals; wind (the whispered air, the cymbals' swells),
+  // wingbeats (soft timpani), the eyrie's bells (the tubular chimes). The contrast is the high eyrie, the clans' proud call on the solo horn
+  // over the bells; the crest is the flight, the cry in the flute and the violins with the horns beneath, the timpani, the dive's strike.
   Track('race:alkari', {
-    desc: 'Alkari: airy flute over harp-like plucks, soaring major pentatonic and wind chimes',
-    motif: '5:1.5 8:.5 6:1 5:1 | 9:1.5 8:.5 6:1 5:1', motifInst: 'flute',   // the first bars of the theme: the next interlude carries them when this race is met
-    bpm: 88, trim: 1.98, root: 'G', mode: 'major', tens: false,
-    forms: [['A', 'B', 'A2', 'A', 'B', 'A2', 'A', 'B', 'A2', 'A', 'B', 'A2', 'A', 'B', 'A2'], ['A', 'A2', 'B', 'A', 'A2', 'B', 'A', 'A2', 'B', 'A', 'A2', 'B', 'A', 'A2', 'B']],
-    inst: { pad: 'airPad', bass: 'deep', lead: 'flute', lead2: 'glass', arp: 'kora', bell: 'glass' },
+    desc: 'Alkari: avian — the hawk’s cry on the flute, an octave leap and a long glide down, over the harp and violins circling like thermals, wind and wingbeats; the eyrie’s proud horn call over its bells; the flight at the crest',
+    motif: '8:.5 15:2.5 12:1 | 14:1 13:.5 12:.5 11:1 9:1', motifInst: 'flute',   // the first bars of the theme: the next interlude carries them when this race is met
+    bpm: 88, trim: 1.6, root: 'D', mode: 'mixolydian', tens: false, loopFrom: 'A',
+    forms: [['A', 'eyrie', 'flight', 'C', 'A2', 'eyrie', 'flight', 'C'], ['A', 'eyrie', 'flight', 'C', 'eyrie2', 'A2', 'flight', 'C']],
+    inst: { pad: 'tremHi', pad2: 'strings', bass: 'deep', lead: 'fluteIowa', lead2: 'strings', lead3: 'hornSolo', lead4: 'horn', arp: 'harp', arp2: 'violas', bell: 'chime' },
     ph: {
-      AL1: '5:1.5 8:.5 6:1 5:1 | 9:1.5 8:.5 6:1 5:1 | 10:1.5 9:.5 8:1 6:1 | 5:1.5 6:.5 8:2',
-      AL2: '8:.5 9:.5 10:1 9:1 8:1 | 10:.5 12:.5 13:1 12:1 10:1 | 9:.5 10:.5 12:1 10:1 9:1 | 8:4',
-      AL3: '6:2 5:1 3:1 | 5:2 6:2 | 8:3 6:1 | 5:4',
-      AL4: '8:2 6:1 5:1 | 6:2 8:2 | 10:3 8:1 | 9:4',
+      AK1: '8:.5 15:2.5 12:1 | 14:1 13:.5 12:.5 11:1 9:1 | 11:3 12:1 | 10:2 8:2',     // the cry: an octave leap, held; the glide down
+      AK2: '8:.5 15:2.5 12:1 | 14:1 12:1 11:2 | 12:1.5 11:.5 9:2 | 8:4',
+      E1: '4:3 6:1 | 5:2 3:2 | 7:2 4:2 | 6:4', E2: '4:3 6:1 | 8:2 5:2 | 5:2 7:2 | 8:4',  // the eyrie's call
     },
     sec: [
-      { n: 'A', bars: 8, lv: 0.75, prog: 'I V vi IV | I V vi IV', pad: 'sus', bass: 'whole', lead: 'AL1 AL2', arp: { pat: '0121', res: 2, vel: 0.4, reg: [55, 79] }, drums: { shk: 'o.o.o.o.o.o.o.o.' } },
-      { n: 'B', bars: 8, lv: 0.88, prog: 'vi IV I V | vi IV I V', pad: 'sus', bass: 'half', lead: 'AL3 AL4', arp: { pat: '0121', res: 2, vel: 0.42, reg: [55, 81] }, bell: { dens: 0.3, res: 2, reg: [79, 100], vel: 0.5 }, drums: { shk: 'o.o.o.o.o.o.o.o.', kick: 'x...............' } },
-      { n: 'A2', bars: 8, lv: 0.85, prog: 'I V vi IV | I V vi IV', pad: 'sus', bass: 'half', lead: 'AL1 AL2', lead2: { ph: 'AL1 AL2', inst: 'glass', oct: 0, vel: 0.3 }, arp: { pat: '0121', res: 2, vel: 0.42, reg: [55, 81] }, bell: { dens: 0.25, res: 2, reg: [79, 100], vel: 0.5 }, drums: { shk: 'o.o.o.o.o.o.o.o.', kick: 'x...............' } },
+      { n: 'wind', bars: 2, cres: [0.46, 0.58], prog: 'I | bVII', pad: { p: 'swell', n: 3, reg: [76, 91], vel: 0.45 }, arp: { pat: ['0123456776543210', '0123456776543210'], res: 4, vel: 0.3, reg: [62, 88] },
+        drums: { whisper: ['x...............', '........x.......'], vel: 0.45 }, rise: 1 },
+      { n: 'A', bars: 8, lv: 0.62, prog: 'I | bVII | IV | I | I | bVII | v | I', pad: { p: 'sus', n: 3, reg: [74, 91], vel: 0.42 }, pad2: { p: 'sus', n: 3, reg: [55, 72], vel: 0.38 }, bass: { pat: '1---', vel: 0.6 },
+        lead: { ph: 'AK1 AK2', vel: 0.75, shape: 0.4, swell: 0.35 }, arp: { pat: '0123456776543210', res: 4, vel: 0.32, reg: [62, 88] },
+        drums: { whisper: ['x...............', '................', '................', '................'], vel: 0.4 } },
+      { n: 'eyrie', bars: 8, lv: 0.56, prog: 'IV | I | bVII | ii | IV | I | v | I', pad: { p: 'sus', n: 3, reg: [74, 91], vel: 0.42 }, pad2: { p: 'sus', n: 3, open: true, reg: [43, 60], vel: 0.45 }, bass: { pat: '1---', vel: 0.6 },
+        lead3: { ph: 'E1 E2', vel: 0.72, shape: 0.45, swell: 0.4 }, bell: { dens: 0.12, res: 1, reg: [62, 79], vel: 0.45 }, arp2: { pat: '0.......1.......', res: 4, vel: 0.3, reg: [57, 72] } },
+      { n: 'eyrie2', bars: 8, lv: 0.54, prog: 'IV | I | bVII | ii | IV | I | v | I', pad: { p: 'sus', n: 3, reg: [74, 91], vel: 0.42 }, bass: { pat: '1---', vel: 0.6 },
+        lead3: { ph: 'E1 E2', inst: 'cellos', vel: 0.66, shape: 0.45, swell: 0.4 }, lead: { ph: 'r4 E2', oct: 1, vel: 0.5, shape: 0.4 }, bell: { dens: 0.1, res: 1, reg: [62, 79], vel: 0.42 } },
+      { n: 'flight', bars: 8, cres: [0.84, 0.98], prog: 'I | bVII | IV | I | I | bVII | v | I', pad: { p: 'sus', n: 3, reg: [74, 91], vel: 0.5 }, pad2: { p: 'sus', n: 4, reg: [55, 76], vel: 0.6 }, bass: { pat: '1-5-', vel: 0.8 },
+        lead: { ph: 'AK1 AK2', vel: 0.85, shape: 0.4, swell: 0.35 }, lead2: { ph: 'AK1 AK2', vel: 0.6, shape: 0.4 }, lead4: { ph: 'AK1 AK2', oct: -1, vel: 0.72, harm: -2, shape: 0.35, swell: 0.3 },
+        arp: { pat: '0123456776543210', res: 4, vel: 0.36, reg: [62, 88] }, bell: { dens: 0.1, res: 1, reg: [62, 79], vel: 0.42 }, timp: { p: 'two', roll: 1 },
+        drums: { crash: ['x...............', '................', '................', '................'], vel: 0.55 }, rise: 1, hit: true },
+      { n: 'C', bars: 4, cres: [0.6, 0.44], prog: 'I | bVII | IV | I', pad: { p: 'swell', n: 3, reg: [74, 91], vel: 0.42 }, bass: { pat: '1---', vel: 0.55 },
+        lead: { ph: 'AK1', vel: 0.62, shape: 0.4, swell: 0.3 }, arp: { pat: ['0123456776543210', '01234567........', '0123............', '0...............'], res: 4, vel: 0.3, reg: [62, 88] }, drums: { whisper: ['................', 'x...............'], vel: 0.4 } },
+      { n: 'A2', bars: 8, lv: 0.66, prog: 'I | bVII | IV | I | I | bVII | v | I', pad: { p: 'sus', n: 3, reg: [74, 91], vel: 0.42 }, pad2: { p: 'sus', n: 3, reg: [55, 72], vel: 0.4 }, bass: { pat: '1---', vel: 0.62 },
+        lead: { ph: 'AK1 AK2', inst: 'oboeIowa', vel: 0.7, shape: 0.4, swell: 0.35 }, lead2: { ph: 'AK1 AK2', inst: 'fluteIowa', vel: 0.4, shape: 0.4 }, arp: { pat: '0123456776543210', res: 4, vel: 0.32, reg: [62, 88] } },
     ],
   });
 
@@ -330,7 +348,6 @@
 
   // the hostile readings (research/06 §12.5: "same motif, lower register, faster, harsher timbre")
   const WAR = {
-    alkari: { tempo: 1.2, down: 15, mode: 'mixolydian', inst: { lead: 'synth' } },                                                            // screeching, rapid
     darlok: { tempo: 1.08, inst: { lead: 'horn' }, drums: { kick: 'x..x....x..x....', rim: '......o.......o.', hiss: '....x.......x...' } },   // heartbeat pulse
     mrrshan: { tempo: 1.15, down: 5, mode: 'phrygDom' },                                                                           // growling low brass
     silicoid: { tempo: 1.15, down: 2, inst: { lead: 'horn' }, drums: { t5: 'X.......X.......', metal: 'x.......x.......', hiss: '....x.......x...' } },   // grinding pulses
@@ -470,6 +487,34 @@
         drums: { snare: ['x..x.xx.x..x.xx.', 'x..x.xx.x..xxxxx'], bd: 'x...x...x...x...', crash: ['x...............', '................', '................', '................'], vel: 0.88 }, timp: 'beats', hit: 'tam' },
       { n: 'C', bars: 4, cres: [0.8, 0.6], prog: 'i | iio | iv | V', pad2: { p: 'sus', n: 2, open: true, reg: [43, 57], vel: 0.6 }, bass: { pat: '1---', vel: 0.8 },
         lead2: { ph: 'HU1', vel: 0.75, shape: 0.3 }, drums: { snare: ['x..x.xx.x..x.xx.', 'x...x...x...x...', 'x.......x.......', 'x...............'], vel: 0.72 } },
+    ],
+  });
+
+  // The Alkari, hostile: the dive. The cry turned to a shriek (the flute over the trumpets), the strings' spiccato and the toms beneath; the
+  // dive itself (no tune: runs falling through the orchestra, a cymbal's swell into the strike); the clans gathering (the eyrie's call in the
+  // horns and trumpets); the attack at the crest.
+  Music._warVariant('race:alkari', { written: true, down: 3, bpm: 104, loopFrom: 'A',
+    desc: 'Alkari, hostile: the dive — the hawk’s cry turned to a shriek over the trumpets and the spiccato, runs falling through the orchestra into the strike, the clans gathering in the horns',
+    forms: [['A', 'dive', 'clans', 'flight', 'C', 'A', 'clans', 'dive', 'flight', 'C'], ['A', 'dive', 'clans', 'flight', 'C', 'dive', 'A', 'flight', 'C']],
+    inst: { pad: 'strTrem', pad2: 'cellos', pad3: 'brassStab', bass: 'deep', lead: 'fluteIowa', lead2: 'tpts', lead3: 'horn', lead4: 'lowBrass', arp: 'strOst', arp2: 'harp' },
+    def: { trim: 1.8 },
+    sec: [
+      { n: 'cry', bars: 2, cres: [0.6, 0.74], prog: 'I | bVII', pad: { p: 'swell', n: 3, reg: [60, 79], vel: 0.55 }, arp: { pat: ['7654321076543210', '7654321076543210'], res: 4, vel: 0.4, reg: [55, 84] },
+        drums: { t4: ['x...............', 'x.....x.....x.x.'], vel: 0.7 }, rise: 1 },
+      { n: 'A', bars: 8, lv: 0.82, prog: 'I | bVII | IV | I | I | bVII | v | I', pad: { p: 'sus', n: 3, reg: [60, 79], vel: 0.45 }, pad2: { p: 'sus', n: 2, open: true, reg: [43, 57], vel: 0.55 }, bass: { pat: '1-5-', vel: 0.8 },
+        lead: { ph: 'AK1 AK2', vel: 0.82 }, lead2: { ph: 'AK1 AK2', oct: -1, vel: 0.75, shape: 0.3 }, arp: { pat: '7654321076543210', res: 4, vel: 0.4, reg: [55, 84] },
+        drums: { t4: 'x.....x.....x...', t3: '...x.....x......', bd: 'x.......x.......', vel: 0.78 }, timp: 'two' },
+      { n: 'dive', bars: 4, cres: [0.7, 0.94], prog: 'I | bVII | IV | v', pad: { p: 'swell', n: 4, reg: [60, 84], vel: 0.6 }, pad3: { p: 'stab', pat: ['................', '................', 'x.......x.......', 'x...x...x...x.x.'], n: 3, reg: [55, 72], vel: 0.7, gate: 0.4 }, bass: { pat: '1.1.1.1.', vel: 0.8 },
+        arp: { pat: '7654321076543210', res: 4, vel: 0.46, reg: [48, 88] }, arp2: { pat: ['................', '7654321076543210', '7654321076543210', '7654321076543210'], res: 4, vel: 0.36, reg: [55, 96] },
+        drums: { t4: 'x.....x.....x...', t3: 'x..x..x.x..x..x.', bd: 'x...x...x...x...', vel: 0.82 }, timp: { p: 'beats', roll: 1 }, rise: 1 },
+      { n: 'clans', bars: 8, lv: 0.84, prog: 'IV | I | bVII | ii | IV | I | v | I', pad: { p: 'sus', n: 4, reg: [60, 79], vel: 0.55 }, pad2: { p: 'sus', n: 2, open: true, reg: [43, 57], vel: 0.55 }, bass: { pat: '1-5-', vel: 0.8 },
+        lead3: { ph: 'E1 E2', vel: 0.85, harm: -2, shape: 0.35, swell: 0.3 }, lead2: { ph: 'E1 E2', oct: 1, vel: 0.6, shape: 0.3 }, drums: { t4: 'x.......x.......', bd: 'x.......x.......', vel: 0.7 }, timp: 'two' },
+      { n: 'flight', bars: 8, cres: [0.9, 1.0], prog: 'I | bVII | IV | I | I | bVII | v | I', pad: { p: 'sus', n: 4, reg: [60, 79], vel: 0.6 }, pad3: { p: 'stab', pat: 'x.......x.......', n: 3, reg: [55, 72], vel: 0.6, gate: 0.4 }, bass: { pat: '1-5-', vel: 0.9 },
+        lead: { ph: 'AK1 AK2', vel: 0.85 }, lead2: { ph: 'AK1 AK2', oct: -1, vel: 0.85, shape: 0.3 }, lead3: { ph: 'AK1 AK2', oct: -1, vel: 0.75, harm: -2, shape: 0.3 }, lead4: { ph: 'AK1 AK2', oct: -2, vel: 0.6 },
+        arp: { pat: '7654321076543210', res: 4, vel: 0.42, reg: [55, 84] },
+        drums: { t4: 'x.....x.....x...', t3: '...x.....x......', bd: 'x...x...x...x...', crash: ['x...............', '................', '................', '................'], vel: 0.88 }, timp: 'beats', hit: 'tam' },
+      { n: 'C', bars: 4, cres: [0.8, 0.6], prog: 'I | bVII | IV | I', pad2: { p: 'sus', n: 2, open: true, reg: [43, 57], vel: 0.6 }, bass: { pat: '1---', vel: 0.75 },
+        lead2: { ph: 'AK1', oct: -1, vel: 0.75, shape: 0.3 }, drums: { t4: ['x.....x.....x...', 'x.......x.......', 'x...............', 'x...............'], vel: 0.72 } },
     ],
   });
 
