@@ -78,20 +78,27 @@
     'galaxy21': {oldMenK: 1.4, oldMen: {vel: 0.35}, orch: true, upgrade: true, holdLow: false, hall: 'musikverein', tone: {lo: 0, hi: 3.3, pres: 3.3}, lowBand: 1.5, subBass: 0.24, trim: 3.98},
     'galaxy22': {oldMenK: 1.4, oldMen: {vel: 0.35}, orch: true, upgrade: true, holdLow: false, hall: 'musikverein', tone: {lo: 1.7, hi: 1.56, pres: 1.1}, lowBand: 1.5, subBass: 0.22, mix: {lead: 1.91}, verb: {crest: 0.8}, space: {men: {pad: {reg: [62,76]}, choir2: {velK: 0.6}}, satb: {pad: {velK: 0.7}, choir2: {velK: 0.6}}, satb2: {pad: {velK: 0.75}, pad2: {velK: 0.7}, choir: {velK: 0.6}}, still: {pad: {reg: [58,72]}, choir2: {velK: 0.6}}, crest: {pad: {velK: 0.7}, choir: {velK: 0.6}, pad2: {velK: 0.7}}}, trim: 3.61},
     'galaxy23': {settled: true, oldMen: {vel: 0.3, reg: [38, 52]}, trim: 4.78},
-    'race:alkari': {hall: 'musikverein', tone: {lo: 1.15, hi: 0, pres: 1.5}, lowBand: 3, mix: {lead: 0.88}, trim: 1.46},
-    'race:bulrathi': {secs: {C: {prog: 'i bVI bVII Vsus4'}}, hall: 'musikverein', tone: {lo: 1.15, hi: 2.28, pres: 0.6}, lowBand: 3, subBass: 0.1, mix: {lead: 1.45, choir: 1.58}, space: {A: {pad: {reg: [64,78]}}, B: {pad: {reg: [64,78]}, choir: {velK: 0.7}}, C: {pad: {reg: [62,76]}}}, trim: 1.04},
-    'race:darlok': {hall: 'musikverein', tone: {lo: 0, hi: 0.3, pres: 1.4}, lowBand: 3, subBass: 0.37, mix: {lead: 2.84}, space: {A: {choir: {velK: 0.7}}, B: {choir: {velK: 0.7}}}, trim: 1.53},
-    'race:human': {secs: {C: {prog: 'IV Vsus4 V I'}}, hall: 'musikverein', tone: {lo: 1.2, hi: 1.44, pres: 0.7}, lowBand: 3, mix: {lead: 1.2}, trim: 0.77},
+    'race:alkari': {settled: true, orch: true, brassHarm: false, hall: 'musikverein', tone: {lo: 0.8, hi: 0.9, pres: 1.4}, lowBand: 3, subBass: 0.3, mix: {lead: 1.5}, trim: 1.6},
+    'race:alkari:war': {settled: true, orch: true, brassHarm: false, hall: 'musikverein', tone: {lo: 1, hi: 1, pres: 1.6}, lowBand: 3, subBass: 0.35, mix: {lead: 1.4}, trim: 1.8},
+    'race:bulrathi': {settled: true, orch: true, brassHarm: false, hall: 'musikverein', tone: {lo: 1.6, hi: 0, pres: 1.2}, lowBand: 3, subBass: 0.3, mix: {lead: 1.5}, trim: 1.6},
+    'race:bulrathi:war': {settled: true, orch: true, brassHarm: false, hall: 'musikverein', tone: {lo: 1.8, hi: 0.4, pres: 1.5}, lowBand: 3, subBass: 0.35, mix: {lead: 1.4}, trim: 1.8},
+    'race:darlok': {settled: true, orch: true, brassHarm: false, hall: 'musikverein', tone: {lo: 0.8, hi: 0.4, pres: 1.3}, lowBand: 3, subBass: 0.3, mix: {lead: 1.5}, trim: 1.6},
+    'race:darlok:war': {settled: true, orch: true, brassHarm: false, hall: 'musikverein', tone: {lo: 1, hi: 0.6, pres: 1.5}, lowBand: 3, subBass: 0.35, mix: {lead: 1.4}, trim: 1.8},
+    'race:human': {settled: true, orch: true, brassHarm: false, hall: 'musikverein', tone: {lo: 1.2, hi: 0.6, pres: 1.3}, lowBand: 3, subBass: 0.3, mix: {lead: 1.5}, trim: 1.6},
+    'race:human:war': {settled: true, orch: true, brassHarm: false, hall: 'musikverein', tone: {lo: 1.4, hi: 0.8, pres: 1.6}, lowBand: 3, subBass: 0.35, mix: {lead: 1.4}, trim: 1.8},
     'race:klackon': {settled: true, orch: true, brassHarm: false, hall: 'musikverein', tone: {lo: 1.2, hi: 0.3, pres: 1.4}, lowBand: 3, subBass: 0.3, mix: {lead: 1.5, choir: 1.2}, trim: 2.18},   // -17 LUFS (rendered whole: -17.8 at 1.98)
     'race:klackon:war': {settled: true, orch: true, brassHarm: false, hall: 'musikverein', tone: {lo: 1.4, hi: 0.6, pres: 1.6}, lowBand: 3, subBass: 0.35, mix: {lead: 1.4}, trim: 1.89},   // -15 LUFS (rendered whole: -15.0 at 1.89)
     'race:meklar': {settled: true, orch: true, brassHarm: false, hall: 'musikverein', tone: {lo: 1, hi: 1.2, pres: 1.6}, lowBand: 3, subBass: 0.3, mix: {lead: 1.4}, trim: 1.53},   // -17 LUFS (rendered whole: -16.5 at 1.63)
     'race:meklar:war': {settled: true, orch: true, brassHarm: false, hall: 'musikverein', tone: {lo: 1.2, hi: 0.8, pres: 1.5}, lowBand: 3, subBass: 0.35, mix: {lead: 1.3}, trim: 1.58},   // -15 LUFS (rendered whole: -14.6 at 1.66)
-    'race:mrrshan': {hall: 'musikverein', tone: {lo: 1.8, hi: 0.3, pres: 1.1}, lowBand: 3, subBass: 0.46, mix: {lead: 2.09, choir: 1.58}, trim: 1.02},
-    'race:psilon': {hall: 'musikverein', tone: {lo: 1.7, hi: 1.2, pres: 0.9}, lowBand: 3, subBass: 0.57, trim: 1.06},
+    'race:mrrshan': {settled: true, orch: true, brassHarm: false, hall: 'musikverein', tone: {lo: 1.2, hi: 0.4, pres: 1.4}, lowBand: 3, subBass: 0.3, mix: {lead: 1.5}, trim: 1.6},
+    'race:mrrshan:war': {settled: true, orch: true, brassHarm: false, hall: 'musikverein', tone: {lo: 1.4, hi: 0.6, pres: 1.6}, lowBand: 3, subBass: 0.35, mix: {lead: 1.4}, trim: 1.8},
+    'race:psilon': {settled: true, orch: true, brassHarm: false, hall: 'musikverein', tone: {lo: 0.8, hi: 0.8, pres: 1.4}, lowBand: 3, subBass: 0.3, mix: {lead: 1.5}, trim: 1.6},
+    'race:psilon:war': {settled: true, orch: true, brassHarm: false, hall: 'musikverein', tone: {lo: 1, hi: 0.8, pres: 1.6}, lowBand: 3, subBass: 0.35, mix: {lead: 1.4}, trim: 1.8},
     // the rewritten races (settled: their own dynamics and percussion; the orchestral profile; a written hostile reading has its own entry)
     'race:sakkra': {settled: true, orch: true, brassHarm: false, hall: 'musikverein', tone: {lo: 1.2, hi: 0, pres: 1.4}, lowBand: 3, subBass: 0.3, mix: {lead: 1.6}, trim: 2.1},   // -17 LUFS (rendered whole: -17.8 at 1.92)
     'race:sakkra:war': {settled: true, orch: true, brassHarm: false, hall: 'musikverein', tone: {lo: 1.5, hi: 0.5, pres: 1.6}, lowBand: 3, subBass: 0.35, mix: {lead: 1.4}, trim: 2.26},   // -15 LUFS (rendered whole: -15.5 at 2.13)
-    'race:silicoid': {hall: 'musikverein', tone: {lo: 0.5, hi: 0.96}, lowBand: 3, mix: {lead: 4.45}, space: {A: {pad: {reg: [70,84]}}, B: {pad: {reg: [71,85]}, choir: {velK: 0.7}}}, trim: 1.52},
+    'race:silicoid': {settled: true, orch: true, brassHarm: false, hall: 'musikverein', tone: {lo: 1.4, hi: 0.8, pres: 1.0}, lowBand: 3, subBass: 0.3, mix: {lead: 1.5}, trim: 1.6},
+    'race:silicoid:war': {settled: true, orch: true, brassHarm: false, hall: 'musikverein', tone: {lo: 1.6, hi: 0.8, pres: 1.3}, lowBand: 3, subBass: 0.35, mix: {lead: 1.4}, trim: 1.8},
   };
   // upgrade: the solo winds and brass from the one-layer recordings to the library's three-layer ones of the same instruments (soft, mid
   // and loud each recorded, so a phrase's dynamics change the tone as a player's do). The factor is the loudness of the old against the
