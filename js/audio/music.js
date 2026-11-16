@@ -289,7 +289,7 @@
     // the two machine races keep a little of their electronic character
     seqSyn: SYN.seq, arpSawSyn: SYN.arpSaw, moogSyn: SYN.moog, pulseSyn: SYN.pulse, synthSyn: SYN.synth,
     // the theremin of the 1950s science-fiction film (the big-brained aliens): a pure sine sliding slowly into each note, a deep vibrato at once
-    theremin: { lvl: 0.34, v: 'flute', h2: 0.05, h3: 0.012, breath: 0, vib: 30, vibHz: 6.2, vibAt: 0.04, scoop: 0.9, scoopT: 0.22, att: 0.14, rel: 0.35, gain: 0.6 },
+    theremin: { lvl: 0.12, v: 'flute', h2: 0.05, h3: 0.012, breath: 0, vib: 30, vibHz: 6.2, vibAt: 0.04, scoop: 0.9, scoopT: 0.22, att: 0.14, rel: 0.35, gain: 0.6 },
   });
   Music._SYN = SYN;
   // the sounding range of each recording (MIDI, C4 = 60): what the section or the player can give. A pad, choir, arpeggio or sparkle
