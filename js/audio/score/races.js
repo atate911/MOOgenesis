@@ -223,21 +223,39 @@
     ],
   });
 
+  // The Mrrshan (rewritten from nothing; the word: feline): proud hunting cats who treat gunnery as an art and diplomacy as an insult. B
+  // harmonic minor in a prowling six-eight. The gesture is the prowl: a sleek line on the solo cello that slinks up by steps and turns, over
+  // soft footsteps (the pizzicato basses, staccato), the purr and growl (the cellos' tremolo low), the tail's swish (the shaker), claws
+  // (rim clicks, precise as gunnery). The contrast is the stare: one long note in the horn rising a step at a time over the growl, unblinking;
+  // the crest is the pounce, struck, the prowl in the horns and the violas with the toms.
   Track('race:mrrshan', {
-    desc: 'Mrrshan: tribal polyrhythmic percussion under a snaking phrygian-dominant reed line',
-    motif: '1:.5 2:.5 3:1 2:.5! 1:.5 3:1 | 6:1.5 5:.5 4:1 2:1', motifInst: 'reed',   // the first bars of the theme: the next interlude carries them when this race is met
-    bpm: 112, trim: 1.34, root: 'G', mode: 'phrygDom', tens: false,
-    forms: [['A', 'B', 'A2', 'C', 'A', 'B', 'A2', 'C', 'A', 'B', 'A2', 'C', 'A', 'B', 'A2', 'C', 'A', 'B', 'A2', 'C'], ['A', 'C', 'A2', 'B', 'A', 'C', 'A2', 'B', 'A', 'C', 'A2', 'B', 'A', 'C', 'A2', 'B', 'A', 'C', 'A2', 'B']],
-    inst: { pad: 'dark', bass: 'moog', lead: 'reed', lead2: 'flute', arp: 'kora', bell: 'chime', choir: 'uuh' },
+    desc: 'Mrrshan: feline — a sleek prowl on the solo cello in six-eight over soft pizzicato footsteps, a purr and a growl, claws clicking; the stare, one long rising note in the horn; the pounce at the crest',
+    motif: '1:2 2:1 3:2 1:1 | 4:2 5:1 6:3', motifInst: 'cello',   // the first bars of the theme: the next interlude carries them when this race is met
+    bpm: 150, meter: 6, trim: 1.6, root: 'B', mode: 'harmonic', oct: -1, tens: false, loopFrom: 'A',
+    forms: [['A', 'stare', 'pounce', 'C', 'A2', 'stare', 'pounce', 'C'], ['A', 'stare', 'pounce', 'C', 'stare2', 'A2', 'pounce', 'C']],
+    inst: { pad: 'cellos', pad2: 'tremLo', bass: 'pizz', lead: 'vcSolo', lead2: 'violas', lead3: 'hornSolo', lead4: 'horn', arp: 'harp' },
     ph: {
-      MR1: '1:.5 2:.5 3:1 2:.5! 1:.5 3:1 | 6:1.5 5:.5 4:1 2:1 | 1:.5 2:.5 3:1 2:.5! 1:.5 3:1 | 6:2 4:1 3:1',
-      MR2: '5:1 6:.5 5:.5 3:1 5:1 | 9:2 6:1 4:1 | 5:1 6:.5 5:.5 3:1 5:1 | 4:1 3:1 1:2',
+      MR1: '1:2 2:1 3:2 1:1 | 4:2 5:1 6:3 | 5:2 7:1 9:2 7:1 | 8:3 5:3',              // the prowl: slinking up by steps, a turn
+      MR2: '8:2 7:1 5:2 4:1 | 6:2 5:1 3:3 | 4:2 2:1 7:2 5:1 | 1:6',
+      S1: '5:6 | 6:6 | 7:6 | 8:6', S2: '10:6 | 11:6 | 9:6 | 8:6',                      // the stare
     },
     sec: [
-      { n: 'A', bars: 8, lv: 0.78, prog: 'I bII I iv | I bII I iv', pad: { p: 'sus', n: 3, reg: [43, 65] }, bass: 'pulse8', lead: 'MR1 MR2', drums: { t1: 'x..x..x.x..x..x.', t2: '..x...x...x.x...', t3: 'x.......x.x.....', shk: 'x.x.x.x.x.x.x.x.', rim: '....x.......x...' } },
-      { n: 'B', bars: 8, lv: 0.9, prog: 'I bII I iv | I bII I iv', pad: { p: 'sus', n: 3, reg: [43, 65] }, bass: 'pulse8', lead: { ph: 'MR2 MR1', inst: 'flute', shape: 0.35, swell: 0.2 }, lead2: { ph: 'MR2 MR1', inst: 'reed', oct: -1, vel: 0.5 }, arp: { pat: '0.21.0.2', res: 2, vel: 0.35, reg: [55, 79] }, drums: { t1: 'x..x..x.x..x..x.', t2: '..x...x...x.x...', t3: 'x.......x.x.....', t4: '....x..x....x...', shk: 'x.x.x.x.x.x.x.x.', rim: '....x.......x...', kick: 'x...............' } },
-      { n: 'A2', bars: 8, lv: 1.0, prog: 'I bII I iv | I bII I iv', pad: { p: 'sus', n: 3, reg: [43, 65] }, bass: 'pulse8', lead: { ph: 'MR1 MR2', harm: -2 }, choir: { v1: 'u', v2: 'o', vel: 0.5, reg: [55, 72] }, arp: { pat: '0.21.0.2', res: 2, vel: 0.35, reg: [55, 79] }, drums: { t1: 'x..x..x.x..x..x.', t2: '..x...x...x.x...', t3: 'x.......x.x.....', t4: '....x..x....x...', shk: 'x.x.x.x.x.x.x.x.', rim: '....x.......x...', kick: 'x.......x.......' }, fill: 'tom' },
-      { n: 'C', bars: 4, lv: 0.8, prog: 'I bII I iv', pad: { p: 'sus', n: 3, reg: [43, 65] }, bass: 'pulse8', lead: 'MR1', drums: { t1: 'x..x..x.x..x..x.', t2: '..x...x...x.x...', shk: 'x.x.x.x.x.x.x.x.' } },
+      { n: 'steps', bars: 2, cres: [0.46, 0.56], prog: 'i | i', pad2: { p: 'swell', n: 2, open: true, reg: [47, 59], vel: 0.4 }, bass: { pat: '1..5..', vel: 0.6 },
+        drums: { rim: ['............', '.........x..'], shk: ['............', '......xxxx..'], vel: 0.45 } },
+      { n: 'A', bars: 8, lv: 0.62, prog: 'i | iv | V | i | i | bVI | iio:.5 V:.5 | i', pad: { p: 'sus', n: 2, open: true, reg: [47, 59], vel: 0.45 }, pad2: { p: 'swell', n: 2, open: true, reg: [47, 59], vel: 0.3 }, bass: { pat: '1..5..', vel: 0.65 },
+        lead: { ph: 'MR1 MR2', vel: 0.74, shape: 0.45, swell: 0.35 }, drums: { rim: ['............', '.........x..'], shk: '......o.....', t4: ['............', '............', '............', '.........x..'], vel: 0.48 } },
+      { n: 'stare', bars: 8, lv: 0.54, prog: 'i | bVI | V | i | bIII+ | iv | V | i', pad: { p: 'sus', n: 3, reg: [50, 67], vel: 0.45 }, pad2: { p: 'sus', n: 2, open: true, reg: [43, 55], vel: 0.5 }, bass: { pat: '1.....', inst: 'deep', vel: 0.55 },
+        lead3: { ph: 'S1 S2', vel: 0.66, shape: 0.5, swell: 0.5 }, arp: { pat: '0.....', res: 1, vel: 0.3, reg: [59, 79] }, timp: { p: 'hits', vel: 0.4 },
+        drums: { shk: ['............', '......xxxxxx'], vel: 0.35 } },
+      { n: 'stare2', bars: 8, lv: 0.52, prog: 'i | bVI | V | i | bIII+ | iv | V | i', pad: { p: 'sus', n: 3, reg: [50, 67], vel: 0.45 }, pad2: { p: 'sus', n: 2, open: true, reg: [43, 55], vel: 0.5 }, bass: { pat: '1.....', inst: 'deep', vel: 0.55 },
+        lead3: { ph: 'S1 S2', inst: 'reed', vel: 0.62, shape: 0.5, swell: 0.5 }, drums: { shk: ['............', '......xxxxxx'], vel: 0.32 } },
+      { n: 'pounce', bars: 8, cres: [0.86, 0.98], prog: 'i | iv | V | i | i | bVI | iio:.5 V:.5 | i', pad: { p: 'sus', n: 4, reg: [50, 72], vel: 0.6 }, pad2: { p: 'sus', n: 2, open: true, reg: [43, 55], vel: 0.5 }, bass: { pat: '1.5.1.', vel: 0.85 },
+        lead4: { ph: 'MR1 MR2', oct: 1, vel: 0.84, shape: 0.35, swell: 0.3 }, lead2: { ph: 'MR1 MR2', oct: 1, vel: 0.62, shape: 0.35 }, lead: { ph: 'MR1 MR2', vel: 0.55, shape: 0.4 },
+        drums: { t4: 'x.....x.....', t3: '....x.....x.', t1: '..x.....x...', rim: '.x..x..x..x.', bd: 'x...........', vel: 0.75 }, timp: 'two', hit: 'tam' },
+      { n: 'C', bars: 4, cres: [0.6, 0.44], prog: 'i | iv | V | i', pad: { p: 'sus', n: 2, open: true, reg: [47, 59], vel: 0.45 }, bass: { pat: ['1..5..', '1..5..', '1.....', '1.....'], vel: 0.6 },
+        lead: { ph: 'MR1', vel: 0.62, shape: 0.45, swell: 0.35 }, drums: { rim: ['............', '.........x..', '............', '............'], shk: ['............', '............', '......xxxxxx', '............'], vel: 0.42 } },
+      { n: 'A2', bars: 8, lv: 0.66, prog: 'i | iv | V | i | i | bVI | iio:.5 V:.5 | i', pad: { p: 'sus', n: 2, open: true, reg: [47, 59], vel: 0.45 }, pad2: { p: 'sus', inst: 'violas', n: 3, reg: [55, 67], vel: 0.32 }, bass: { pat: '1..5..', vel: 0.68 },
+        lead: { ph: 'MR1 MR2', inst: 'altoFluteIowa', oct: 1, vel: 0.68, shape: 0.45, swell: 0.35 }, lead2: { ph: 'MR1 MR2', inst: 'vcSolo', vel: 0.45, shape: 0.4 }, drums: { rim: ['............', '.........x..'], shk: '......o.....', vel: 0.5 } },
     ],
   });
 
@@ -349,7 +367,6 @@
   // the hostile readings (research/06 §12.5: "same motif, lower register, faster, harsher timbre")
   const WAR = {
     darlok: { tempo: 1.08, inst: { lead: 'horn' }, drums: { kick: 'x..x....x..x....', rim: '......o.......o.', hiss: '....x.......x...' } },   // heartbeat pulse
-    mrrshan: { tempo: 1.15, down: 5, mode: 'phrygDom' },                                                                           // growling low brass
     silicoid: { tempo: 1.15, down: 2, inst: { lead: 'horn' }, drums: { t5: 'X.......X.......', metal: 'x.......x.......', hiss: '....x.......x...' } },   // grinding pulses
   };
   for (const r in WAR) Music._warVariant('race:' + r, WAR[r]);
@@ -515,6 +532,31 @@
         drums: { t4: 'x.....x.....x...', t3: '...x.....x......', bd: 'x...x...x...x...', crash: ['x...............', '................', '................', '................'], vel: 0.88 }, timp: 'beats', hit: 'tam' },
       { n: 'C', bars: 4, cres: [0.8, 0.6], prog: 'I | bVII | IV | I', pad2: { p: 'sus', n: 2, open: true, reg: [43, 57], vel: 0.6 }, bass: { pat: '1---', vel: 0.75 },
         lead2: { ph: 'AK1', oct: -1, vel: 0.75, shape: 0.3 }, drums: { t4: ['x.....x.....x...', 'x.......x.......', 'x...............', 'x...............'], vel: 0.72 } },
+    ],
+  });
+
+  // The Mrrshan, hostile: the kill. The prowl growled by the low brass and the horns over the toms crossing two against three; the stalk
+  // (no tune: crouched low, the growl, the toms barely there, rising); the stare in the horns and trumpets, unblinking; the pounce.
+  Music._warVariant('race:mrrshan', { written: true, bpm: 168, loopFrom: 'A',
+    desc: 'Mrrshan, hostile: the kill — the prowl growled by the low brass and horns over toms crossing two against three, a crouched stalk rising to the spring, the stare in the trumpets, the pounce',
+    forms: [['A', 'stalk', 'stare', 'pounce', 'C', 'A', 'stare', 'stalk', 'pounce', 'C'], ['A', 'stalk', 'stare', 'pounce', 'C', 'stalk', 'A', 'pounce', 'C']],
+    inst: { pad: 'tremLo', pad2: 'strTrem', pad3: 'brassStab', bass: 'pizz', lead: 'lowBrass', lead2: 'horn', lead3: 'tpts', lead4: 'strOst' },
+    def: { trim: 1.8 },
+    sec: [
+      { n: 'crouch', bars: 2, cres: [0.58, 0.72], prog: 'i | V', pad: { p: 'swell', n: 2, open: true, reg: [43, 55], vel: 0.6 }, bass: { pat: '1..5..', vel: 0.7 },
+        drums: { t4: ['x.....x.....', 'x..x..x..x..'], rim: '.x..x..x..x.', vel: 0.7 } },
+      { n: 'A', bars: 8, lv: 0.82, prog: 'i | iv | V | i | i | bVI | iio:.5 V:.5 | i', pad: { p: 'sus', n: 2, open: true, reg: [43, 55], vel: 0.55 }, bass: { pat: '1.5.1.', vel: 0.85 },
+        lead: { ph: 'MR1 MR2', vel: 0.85, shape: 0.3 }, lead2: { ph: 'MR1 MR2', oct: 1, vel: 0.7, shape: 0.3 }, lead4: { ph: 'MR1 MR2', oct: 1, vel: 0.45 },
+        drums: { t4: 'x.....x.....', t3: 'x...x...x...', t1: '..x.....x...', rim: '.x..x..x..x.', vel: 0.8 }, timp: 'two' },
+      { n: 'stalk', bars: 4, cres: [0.6, 0.9], prog: 'i | i | V | V', pad: { p: 'swell', n: 2, open: true, reg: [43, 55], vel: 0.65 }, pad2: { p: 'swell', n: 3, reg: [55, 72], vel: 0.45 }, bass: { pat: '1.....', inst: 'deep', vel: 0.7 },
+        drums: { t4: ['x...........', 'x.....x.....', 'x..x..x..x..', 'x.x.x.x.x.x.'], t3: ['............', '............', 'x...x...x...', 'x.x.x.x.x.x.'], shk: ['............', '......xxxxxx', '......xxxxxx', 'xxxxxxxxxxxx'], vel: 0.82 }, timp: { p: 'beats', roll: 1 } },
+      { n: 'stare', bars: 8, lv: 0.84, prog: 'i | bVI | V | i | bIII+ | iv | V | i', pad: { p: 'sus', n: 2, open: true, reg: [43, 55], vel: 0.6 }, pad2: { p: 'sus', n: 4, reg: [55, 74], vel: 0.5 }, bass: { pat: '1.5.1.', vel: 0.8 },
+        lead3: { ph: 'S1 S2', vel: 0.85, shape: 0.4, swell: 0.4 }, lead2: { ph: 'S1 S2', oct: -1, vel: 0.7, shape: 0.4 }, drums: { t4: 'x.....x.....', rim: '.x..x..x..x.', vel: 0.7 }, timp: 'two' },
+      { n: 'pounce', bars: 8, cres: [0.9, 1.0], prog: 'i | iv | V | i | i | bVI | iio:.5 V:.5 | i', pad: { p: 'sus', n: 2, open: true, reg: [43, 55], vel: 0.6 }, pad2: { p: 'sus', n: 4, reg: [55, 74], vel: 0.55 }, pad3: { p: 'stab', pat: 'x.....x.....', n: 3, reg: [55, 70], vel: 0.6, gate: 0.4 }, bass: { pat: '1.5.1.', vel: 0.9 },
+        lead: { ph: 'MR1 MR2', vel: 0.85, shape: 0.3 }, lead2: { ph: 'MR1 MR2', oct: 1, vel: 0.85, harm: -2, shape: 0.3 }, lead3: { ph: 'MR1 MR2', oct: 1, vel: 0.6, shape: 0.3 }, lead4: { ph: 'MR1 MR2', oct: 1, vel: 0.45 },
+        drums: { t4: 'x.....x.....', t3: 'x...x...x...', t1: '..x.....x...', rim: '.x..x..x..x.', crash: ['x...........', '............', '............', '............'], vel: 0.88 }, timp: 'beats', hit: 'tam' },
+      { n: 'C', bars: 4, cres: [0.8, 0.6], prog: 'i | iv | V | i', pad: { p: 'sus', n: 2, open: true, reg: [43, 55], vel: 0.6 }, bass: { pat: '1.....', inst: 'deep', vel: 0.8 },
+        lead: { ph: 'MR1', vel: 0.75, shape: 0.3 }, drums: { t4: ['x.....x.....', 'x.....x.....', 'x...........', 'x...........'], vel: 0.72 } },
     ],
   });
 
