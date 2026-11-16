@@ -87,8 +87,8 @@
     'race:mrrshan': {hall: 'musikverein', tone: {lo: 1.8, hi: 0.3, pres: 1.1}, lowBand: 3, subBass: 0.46, mix: {lead: 2.09, choir: 1.58}, trim: 1.02},
     'race:psilon': {hall: 'musikverein', tone: {lo: 1.7, hi: 1.2, pres: 0.9}, lowBand: 3, subBass: 0.57, trim: 1.06},
     // the rewritten races (settled: their own dynamics and percussion; the orchestral profile; a written hostile reading has its own entry)
-    'race:sakkra': {settled: true, orch: true, brassHarm: false, hall: 'musikverein', tone: {lo: 1.2, hi: 0, pres: 1.4}, lowBand: 3, subBass: 0.3, mix: {lead: 1.6}, trim: 1.92},   // -17 LUFS (rendered whole: -18.3 at 1.66)
-    'race:sakkra:war': {settled: true, orch: true, brassHarm: false, hall: 'musikverein', tone: {lo: 1.5, hi: 0.5, pres: 1.6}, lowBand: 3, subBass: 0.35, mix: {lead: 1.4}, trim: 2.13},   // -15 LUFS (rendered whole: -16.0 at 1.9)
+    'race:sakkra': {settled: true, orch: true, brassHarm: false, hall: 'musikverein', tone: {lo: 1.2, hi: 0, pres: 1.4}, lowBand: 3, subBass: 0.3, mix: {lead: 1.6}, trim: 2.1},   // -17 LUFS (rendered whole: -17.8 at 1.92)
+    'race:sakkra:war': {settled: true, orch: true, brassHarm: false, hall: 'musikverein', tone: {lo: 1.5, hi: 0.5, pres: 1.6}, lowBand: 3, subBass: 0.35, mix: {lead: 1.4}, trim: 2.26},   // -15 LUFS (rendered whole: -15.5 at 2.13)
     'race:silicoid': {hall: 'musikverein', tone: {lo: 0.5, hi: 0.96}, lowBand: 3, mix: {lead: 4.45}, space: {A: {pad: {reg: [70,84]}}, B: {pad: {reg: [71,85]}, choir: {velK: 0.7}}}, trim: 1.52},
   };
   // upgrade: the solo winds and brass from the one-layer recordings to the library's three-layer ones of the same instruments (soft, mid

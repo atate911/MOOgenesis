@@ -607,3 +607,9 @@ and the men; the low brass alone at the end.
 Rendered: the theme's short-term loudness runs -28 (the marimba and the hiss) to -20 (the coil) to -15 (the crest) and back to -27; the hunt
 from -19 to -13.5. Trims set for -17 and -15 LUFS. The lint, the 840 seams and the music QA pass; only the two Sakkra pieces compile
 differently. Marks wait for the listening stop.
+
+*Heard (the user): good, the reptilian feel liked; lean into it a little more.* So the coil now slithers (a chromatic slide down, marked to
+keep, in each phrase and in the still), a rattle (the shaker's sixteenths) closes every phrase, the claves flick like a tongue, whispered
+hisses breathe at the phrase openings, the low strings' tremolo growls under the opening and the settle, and the crest lands with a strike
+(the bass drum and the boom; in the hunt the tam-tam too); the hunt has the rattle, the flicks and the growl as well. Rendered whole at -17.8
+and -15.5 LUFS before the last trims.
