@@ -277,8 +277,8 @@
     desc: 'Calm exploration, wonder: the flute\'s tune in G lydian over a light string bed and a gently rolling harp; the clarinet answers it with the flute moving in its gaps; a solo violin high with a horn beneath; a still for the cello and the women humming; the violins and the flute together at the gentle peak; the flute alone to close',
     bpm: 60, root: 'G', mode: 'lydian', orch: true, holdLow: false, tens: false, rubato: 0, hall: 'musikverein', trim: 2.4, bassC: 40, loopFrom: 'A1',
     forms: [['A1', 'A2', 'B', 'breath', 'C', 'A3', 'E'], ['A1', 'B', 'A2', 'breath', 'C', 'A3', 'E'], ['A1', 'A2', 'C', 'breath', 'B', 'A3', 'E']],
-    mix: { lead: 1.45, pad: 1.0, choir: 1.15, arp: 0.85, bell: 0.85, bass: 0.9 },
-    inst: { pad: 'violas', pad2: 'cellos', bass: 'deep', lead: 'fluteIowa', lead2: 'clarinet', arp: { p: 'harp', rel: 2.5, hold: 1.4 }, bell: 'glass', choir: 'choirOoh', choir2: 'choirWomen' },
+    mix: { lead: 1.45, pad: 1.0, choir: 1.15, arp: 0.85, bell: 0.85, bass: 0.65 },
+    inst: { pad: 'violas', pad2: 'cellos', bass: 'deep', lead: 'flute', lead2: 'clarinet', arp: { p: 'harp', rel: 2.5, hold: 1.4 }, bell: 'glass', choir: 'choirOoh', choir2: 'choirWomen' },
     quotes: ['wonder', 'planetarium'],
     ph: {
       W1: '@wonder.W1', W2: '5:2 7:1 8:1 | 10:3 8:1 | 8:2! 7:1 5:1 | 5:4', W3: '6:3 8:1 | 10:2 9:1 8:1 | 7:3 6:1 | 4:4', W4: '8:2 5:2 | 7:3 5:1 | 5:2 6:1 7:1 | 7:4',
@@ -286,34 +286,34 @@
     },
     sec: [
       { n: 'intro', bars: 4, cres: [0.3, 0.42], prog: 'IM7:2 II:2', pad: { p: 'swell', n: 3, reg: [55, 71], vel: 0.5 }, pad2: { p: 'swell', n: 2, reg: [43, 55], vel: 0.35, open: true },
-        arp: { pat: '0.......2.......', res: 2, vel: 0.14, reg: [55, 79] }, bell: { dens: 0.1, res: 1, reg: [79, 98], vel: 0.32 } },
+        arp: { pat: '0.......2.......', res: 2, vel: 0.14, reg: [55, 79] }, bell: { dens: 0.1, res: 1, reg: [79, 91], vel: 0.32 } },
       // the tune: the flute alone over the light bed, the harp rolling gently
-      { n: 'A1', bars: 8, lv: 0.6, prog: 'IM7 IM7 V II | IM7 IM7 V V', pad: { p: 'sus', n: 3, reg: [55, 71], vel: 0.32 }, pad2: { p: 'swell', n: 2, reg: [43, 55], vel: 0.3, open: true },
+      { n: 'A1', bars: 8, lv: 0.6, prog: 'IM7 IM7 V II | IM7 IM7 V V', pad: { p: 'sus', n: 3, reg: [55, 71], vel: 0.26 }, pad2: { p: 'swell', n: 2, reg: [43, 55], vel: 0.3, open: true },
         bass: { pat: '1---', vel: 0.6, inst: { p: 'deep', att: 1.2, rel: 2.4 } }, arp: { pat: '0.2.1.3.', res: 2, vel: 0.12, reg: [55, 79] },
-        lead: { ph: 'W1 W2', vel: 0.62 }, bell: { dens: 0.08, res: 1, reg: [79, 98], vel: 0.3 } },
+        lead: { ph: 'W1 W2', vel: 0.62 }, bell: { dens: 0.08, res: 1, reg: [79, 91], vel: 0.3 } },
       // the answer: the clarinet takes the tune, the flute's counter-line in its gaps
       { n: 'A2', bars: 8, lv: 0.64, prog: 'IM7 IM7 V II | IM7 IM7 V V', pad: { p: 'sus', n: 3, reg: [55, 71], vel: 0.3 }, pad2: { p: 'swell', n: 2, reg: [43, 55], vel: 0.3, open: true },
         bass: { pat: '1---', vel: 0.6, inst: { p: 'deep', att: 1.2, rel: 2.4 } }, arp: { pat: '0.2.1.3.', res: 2, vel: 0.12, reg: [55, 79] },
-        lead: { ph: 'W1 W4', inst: 'clarinet', vel: 0.62 }, lead2: { ph: '@counter', inst: 'fluteIowa', reg: [74, 88], vel: 0.4 } },
+        lead: { ph: 'W1 W4', inst: 'clarinet', vel: 0.62 }, lead2: { ph: '@counter', inst: 'flute', reg: [74, 88], vel: 0.4 } },
       // the B phrase: a solo violin high, a horn's counter-line low, the women humming
       { n: 'B', bars: 8, lv: 0.66, prog: 'vi iii V II | IM7 IM7 V V', pad: { p: 'sus', n: 3, reg: [55, 71], vel: 0.3 }, pad2: { p: 'swell', n: 2, reg: [43, 55], vel: 0.3, open: true },
         bass: { pat: '1---', vel: 0.62, inst: { p: 'deep', att: 1.0, rel: 2.2 } }, arp: { pat: '0...2...1...3...', res: 2, vel: 0.12, reg: [55, 79] },
-        lead: { ph: 'W3 W4', inst: 'vlnSolo', oct: 1, vel: 0.58 }, lead2: { ph: '@counter', inst: 'hornIowa', reg: [50, 64], vel: 0.38 },
+        lead: { ph: 'W3 W4', inst: 'vlnSolo', vel: 0.6 }, lead2: { ph: '@counter', inst: 'hornIowa', reg: [50, 62], vel: 0.38 },   /* the violin at pitch: an octave up its top was B6, piercing */
         choir2: { n: 2, reg: [64, 76], vel: 0.22, soft: true } },
-      { n: 'breath', bars: 1, barsVar: [1, 2], lv: 0.3, prog: 'IM7:4', pad: { p: 'swell', n: 2, reg: [62, 74], vel: 0.3 }, bell: { dens: 0.08, res: 1, reg: [79, 98], vel: 0.3 } },
+      { n: 'breath', bars: 1, barsVar: [1, 2], lv: 0.3, prog: 'IM7:4', pad: { p: 'swell', n: 2, reg: [62, 74], vel: 0.3 }, bell: { dens: 0.08, res: 1, reg: [79, 91], vel: 0.3 } },
       // the still: the cello's slow line, the women humming, no bass, the harp barely moving
       { n: 'C', bars: 8, lv: 0.46, prog: 'vi:2 IM7:2 | V:2 II:2', pad: { p: 'swell', n: 3, reg: [57, 72], vel: 0.32 },
         lead: { ph: 'FL C2', inst: 'cello', oct: -1, vel: 0.62 }, choir2: { n: 2, reg: [64, 76], vel: 0.26, soft: true },
-        arp: { pat: '0.......2.......', res: 2, vel: 0.1, reg: [55, 79] }, bell: { dens: 0.12, res: 1, reg: [79, 98], vel: 0.32 } },
+        arp: { pat: '0.......2.......', res: 2, vel: 0.1, reg: [55, 79] }, bell: { dens: 0.12, res: 1, reg: [79, 91], vel: 0.32 } },
       // the gentle peak: the violins and the flute together on the tune, the clarinet's counter-line, the horns and the voices softly
       { n: 'A3', bars: 8, cres: [0.68, 0.78], prog: 'IM7 IM7 V II | IM7 IM7 V V', pad: { p: 'sus', inst: 'strings', n: 3, reg: [57, 72], vel: 0.36 },
-        pad2: { p: 'swell', inst: 'horn', n: 3, reg: [50, 64], vel: 0.32 }, bass: { pat: '1---', vel: 0.66, inst: { p: 'deep', att: 0.8, rel: 2.0 } },
-        arp: { pat: '0.2.1.3.', res: 2, vel: 0.13, reg: [55, 79] }, lead: { ph: 'W1 W2', inst: 'strings', vel: 0.7 }, lead3: { ph: 'W1 W2', inst: 'fluteIowa', oct: 1, vel: 0.42 },
+        pad2: { p: 'swell', inst: 'horn', n: 3, reg: [50, 64], vel: 0.32 }, bass: { pat: '1---', vel: 0.5, inst: { p: 'deep', att: 0.8, rel: 2.0 } },
+        arp: { pat: '0.2.1.3.', res: 2, vel: 0.13, reg: [55, 79] }, lead: { ph: 'W1 W2', inst: 'strings', vel: 0.7 }, lead3: { ph: 'W1 W2', inst: 'flute', oct: 1, vel: 0.42 },
         lead2: { ph: '@counter', inst: 'clarinet', reg: [55, 70], vel: 0.38 }, choir2: { n: 3, reg: [62, 76], vel: 0.26, soft: true }, choir: { n: 2, reg: [50, 62], vel: 0.22, soft: true } },
       // the close: the flute alone again
-      { n: 'E', bars: 8, cres: [0.56, 0.42], prog: 'IM7 IM7 V II | IM7 IM7 V V', pad: { p: 'sus', n: 3, reg: [55, 71], vel: 0.3 }, pad2: { p: 'swell', n: 2, reg: [43, 55], vel: 0.28, open: true },
+      { n: 'E', bars: 8, cres: [0.56, 0.42], prog: 'IM7 IM7 V II | IM7 IM7 V V', pad: { p: 'sus', n: 3, reg: [55, 71], vel: 0.22 }, pad2: { p: 'swell', n: 2, reg: [43, 55], vel: 0.22, open: true },
         bass: { pat: '1---', vel: 0.55, inst: { p: 'deep', att: 1.2, rel: 2.6 } }, arp: { pat: '0...2...1...3...', res: 2, vel: 0.11, reg: [55, 79] },
-        lead: { ph: 'W1 W4', vel: 0.56 }, bell: { dens: 0.1, res: 1, reg: [79, 98], vel: 0.3 } },
+        lead: { ph: 'W1 W4', vel: 0.66 }, bell: { dens: 0.1, res: 1, reg: [79, 91], vel: 0.3 } },
     ],
   });
 })(window.MOO);
