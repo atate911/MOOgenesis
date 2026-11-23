@@ -511,7 +511,7 @@
       // first partials, never the rosin), and a bed voiced in the bass register (to E3) sul tasto, as an orchestra's low strings play a
       // held bed: warm, the bite of the bow gone (low-passed at ten times its note, 1.4 kHz at most). A part that sets its own cut keeps it.
       if (ly === 'bass' && o.cut === undefined && !plucked(inst)) { o.cut = clamp(mtof(midi) * 4, 100, 200); o.cutN = 2; }
-      else if (ly === 'pad' && midi <= 52 && o.cut === undefined) { o.cut = clamp(mtof(midi) * 10, 650, 1400); o.cutN = 2; }
+      else if (ly === 'pad' && midi <= 52 && o.cut === undefined && C.def.tasto !== false) { o.cut = clamp(mtof(midi) * 10, 650, 1400); o.cutN = 2; }   // (a piece's `tasto: false`: the low strings keep their bow and overtones — without them a held cello is a ringing tone)
       // the held foundation's fifth is tuned pure, as string players tune a held open fifth: tempered, the fifth's third partial against the
       // tonic's (D2 and A2 at 220.25 and 220 Hz) beats once every four seconds, a slow throb through the whole held low end
       if (ly === 'pad' && midi <= LOW_TOP && holdsLow(C) && mod12(midi - (C.tpc !== undefined ? C.tpc : C.P.tpc)) === 7) o.f = mtof(midi + 0.0196);
@@ -881,8 +881,9 @@
         if (ramp) v *= ramp[0] + (ramp[1] - ramp[0]) * (hits > 1 ? hi / (hits - 1) : 1);
         hi++;
         const m = nearestPc(sg.ch.bassPc, num(P.center, 40));
-        emitDrum(C, 'drums', { v: 'sample', smp: 'timpani', fb: 'timp', fbo: { f: mtof(m), dur: num(P.dur, 1.8) }, f: mtof(m), lvl: 1.0, sub: 0.18, dur: 1.6 }, s.start + beat, v);
-        if (v > 0.6) emitDrum(C, 'drums', { v: 'sample', smp: 'bassDrum', fb: 'kick', fbo: { f: 44, f0: 120, dur: 0.4 }, lvl: 0.4 }, s.start + beat, v);
+        const clean = C.def && C.def.timpClean;   // a piece's `timpClean`: the timpani as themselves (no sine under them, no bass drum doubling the loud strokes: together they were thunder)
+        emitDrum(C, 'drums', { v: 'sample', smp: 'timpani', fb: 'timp', fbo: { f: mtof(m), dur: num(P.dur, 1.8) }, f: mtof(m), lvl: 1.0, sub: clean ? 0 : 0.18, dur: 1.6 }, s.start + beat, v);
+        if (v > 0.6 && !clean) emitDrum(C, 'drums', { v: 'sample', smp: 'bassDrum', fb: 'kick', fbo: { f: 44, f0: 120, dur: 0.4 }, lvl: 0.4 }, s.start + beat, v);
       }
     }
   }
@@ -1408,6 +1409,19 @@
     if (t(/^organ/)) return 'organ'; if (t(/^(pad|subBass$)/) || !smp) return 'synth';
     return 'back';
   }
+  // each seat's channel EQ (the stage's `eq`): a mix engineer's carving, so every section has a register of its own and its own edge
+  // instead of all of them piling into 200-400 Hz — a high-pass under what the instrument really plays, a cut where it is boxy or muddy,
+  // a lift where its character lives. [hp Hz, [[Hz, dB, Q | 'hs' | 'ls'], ...]]
+  const SEAT_EQ = {
+    vln1: [180, [[350, -2, 1], [3000, 1.5, 0.9], [9000, 1.5, 'hs']]], vln2: [160, [[350, -2, 1], [2500, 1, 0.9]]], solo: [190, [[400, -1.5, 1], [3200, 2, 0.9]]],
+    vla: [110, [[250, -2, 1], [1600, 1.5, 1]]], vc: [55, [[300, -2.5, 1.1], [1200, 1.5, 1]]], soloVc: [60, [[300, -2, 1.1], [1400, 2, 1]]], cb: [30, [[90, 1, 1], [250, -3, 1], [5000, -3, 'hs']]],
+    harp: [110, [[300, -2, 1], [3000, 1.5, 1]]], cel: [250, []], glock: [500, []],
+    fl: [240, [[3500, 1, 1]]], ob: [200, [[1100, -1.5, 1.2], [3000, 1, 1]]], cl: [140, [[350, -1.5, 1]]], bn: [50, [[300, -2, 1.1], [1300, 1, 1]]],
+    hn: [75, [[250, -2.5, 1], [800, 1, 1], [3500, -1, 'hs']]], tpt: [150, [[300, -1.5, 1], [3000, -1.5, 1.2], [1500, 1, 1]]], tbn: [60, [[250, -2.5, 1], [1100, 1, 1]]], tuba: [26, [[200, -2, 1], [2500, -4, 'hs']]],
+    timp: [38, [[300, -3, 1], [2500, 2.5, 1]]], perc: [60, [[350, -2, 1], [4000, 1.5, 1]]],
+    women: [200, [[400, -2, 1], [3000, 1, 1]]], men: [90, [[250, -2.5, 1], [1500, 1, 1]]], cantor: [90, [[300, -1.5, 1]]],
+    organ: [22, [[250, -2, 1]]], synth: [150, [[400, -2, 1]]], back: [80, [[300, -2, 1]]],
+  };
   const ROOM = { w: 16, back: 19, h: 16 }, LIS = [0, -12, 1.2], C_SND = 343, R_REF = 15;
   function seatGeom(key) {
     const [x, y, w] = SEATS[key], z = key === 'women' || key === 'men' ? 2.6 : key === 'organ' ? 6 : 1.4;
@@ -1623,7 +1637,13 @@
       const ctx = this.eng.ctx, G = this._seatG || (this._seatG = {}), g = G[key] || (G[key] = seatGeom(key)), cfg = typeof this.def.seating === 'object' ? this.def.seating : {};
       const mk = n => { this.nodes.push(n); this.eng.nodeCount++; return n; }, gain = x => { const n = mk(ctx.createGain()); n.gain.value = x; return n; };
       const inp = gain(1), d = mk(ctx.createDelay(0.1)); d.delayTime.value = g.dly; inp.connect(d);
-      const air = mk(ctx.createBiquadFilter()); air.type = 'highshelf'; air.frequency.value = 5000; air.gain.value = g.air; d.connect(air);
+      let air = mk(ctx.createBiquadFilter()); air.type = 'highshelf'; air.frequency.value = 5000; air.gain.value = g.air; d.connect(air);
+      const EQ = cfg.eq !== false && SEAT_EQ[key];   // the seat's channel EQ (direct sound and reflections alike: it is the instrument's tone)
+      if (EQ) {
+        const hp = mk(ctx.createBiquadFilter()); hp.type = 'highpass'; hp.frequency.value = EQ[0]; hp.Q.value = 0.6; air.connect(hp); let nd = hp;
+        for (const [f, db, q] of EQ[1]) { const b = mk(ctx.createBiquadFilter()); b.type = q === 'hs' ? 'highshelf' : q === 'ls' ? 'lowshelf' : 'peaking'; b.frequency.value = f; b.gain.value = db; if (typeof q === 'number') b.Q.value = q; nd.connect(b); nd = b; }
+        air = nd;
+      }
       // the direct sound: from its angle, the far ear a fraction of a millisecond late
       const spread = num(cfg.spread, 1), panS = clamp(g.pan * spread, -0.95, 0.95);   // cfg.spread: the stage a little wider (each section further from its neighbours)
       const pn = mk(ctx.createStereoPanner()); pn.pan.value = panS; air.connect(pn);

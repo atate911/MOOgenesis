@@ -21,24 +21,29 @@
   // its own early reflections, a hall send that grows toward the back. sing: soloists join their notes as singers and string players do.
   const STAGE = { orch: true, holdLow: false, tens: false, hidden: true, rubato: 0, hall: 'musikverein', fx: { verb: 1.2, stage: 0.8, dly: 0 },
     seating: { hall: 0.1, er: 0.5, spread: 1.25, width: 0.65 }, sing: true, just: 1, pitchSpread: 0, bassXf: 0.3,   // held chords tuned pure, no random detune on the notes
+    tasto: false, timpClean: true,   // the low strings with their bow and overtones; the timpani as themselves
     conduct: { push: 1, broaden: 0.96, ease: 0.94 }, breathe: { beats: 2, k: 0.95 }, press: 0, behind: 0.006, ensemble: 0.3, speak: 1,   // an unhurried conductor: no pressing toward a climax, room at every section's end, the players on the beat
     tone: { lo: -1.5, hi: 4, pres: 1.5 }, sends: { lead: { verb: 0.16, stage: 0.32, dly: 0 }, choir: { verb: 0.34, stage: 0.14 } }, lowBand: 0, bassC: 40 };
   // A symphony's low end, not a film's: no sine under the basses, the basses' bow and body left in (the game cuts them to a 200 Hz boom),
   // the cellos singing in their own register instead of doubling the basses an octave up, the tuba's pedal lighter
   // the pipe organ at the back of the hall, behind the choir: a 16-foot pedal under the basses and full chords on the manuals, for the
   // great moments only (it enters at the first sunrise)
-  const ORGAN = (pedal, manual) => Object.assign({ pad3: { p: 'sus', inst: { p: 'organ', rel: 0.9 }, root: true, n: 1, reg: [31, 43], vel: pedal } },
+  const ORGAN = (pedal, manual) => Object.assign({ pad3: { p: 'sus', inst: { p: 'organ', rel: 0.9 }, root: true, n: 1, reg: [24, 36], vel: pedal } },
     manual ? { choir3: { p: 'sus', inst: { p: 'organ', rel: 0.9 }, n: 4, reg: [55, 76], vel: manual } } : {});   // the manuals only where asked (the amen, the last chord): elsewhere they thickened a chord the strings, the choir and the brass already hold
   function clarify(def) {
-    def.subBass = 0;
+    def.subBass = 0.4;   // the sub: a clean tone an octave under the basses, in a register of its own (under 60 Hz), at one level throughout
     const fix = b => { if (!b || typeof b !== 'object') return b; const i = b.inst; b.inst = i && typeof i === 'object' ? Object.assign({}, i, { cut: i.cut || 3200 }) : { p: i || def.inst.bass, cut: 3200 }; return b; };
     if (def.base && def.base.bass) fix(def.base.bass);
     for (const sec of def.sec) {
       delete sec.subBass; delete sec.verb; fix(sec.bass);   // (no hall washes at the climaxes: the room stays one room)
       const p2 = sec.pad2; if (p2 && typeof p2 === 'object' && (p2.inst || def.inst.pad2) === 'cellos' && p2.reg && p2.reg[0] < 43) { p2.reg = [43, 58]; delete p2.open; }
       if (sec.pad3 && sec.pad3.inst === 'tuba') sec.pad3.vel = (sec.pad3.vel || 0.6) * 0.7;
+      // the registers: the men's chords above the cellos (C3 up), the low brass's stabs open fifths, nothing piled in the mid-bass
+      for (const k of ['choir', 'choir2']) { const c = sec[k]; if (c && typeof c === 'object' && c.reg && c.reg[0] < 48) c.reg = [48, Math.max(c.reg[1], 62)]; }
+      if (p2 && typeof p2 === 'object' && p2.p === 'stab' && (p2.inst || def.inst.pad2) === 'lowBrass') { p2.open = true; p2.n = 2; p2.reg = [45, 58]; }
     }
-    def.mix = Object.assign({}, def.mix, { bass: 1.05 });
+    def.mix = Object.assign({}, def.mix, { bass: 1.05, drums: 0.7 });
+    def.trim *= 0.7;   // headroom: the limiter never touches a stroke (the suite's one gain sets the level afterwards)
     return def;
   }
 
@@ -77,56 +82,56 @@
     sec: [
       // the dark: the pedal and the violas, a glimmer, the flute's first notes
       { n: 'night', pad3: { p: 'swell', inst: 'analog', n: 3, reg: [60, 79], vel: 0.3 }, bars: 6, cres: [0.24, 0.36], prog: 'IM7:2 IVM7/I:2 IM7:2',
-        pad: { p: 'swell', n: 3, reg: [50, 65], vel: 0.6 }, pad2: { p: 'swell', n: 2, reg: [37, 50], vel: 0.55, open: true },
+        pad: { p: 'swell', n: 3, reg: [52, 65], vel: 0.6 }, pad2: { p: 'swell', n: 2, reg: [43, 55], vel: 0.5, open: true },
         bass: { pat: '1---', vel: 0.8, inst: { p: 'cbSolo', att: 3, rel: 3 } }, choir2: { inst: 'choirHum', n: 2, reg: [60, 72], vel: 0.32, soft: true, att: 4 },
-        bell: { dens: 0.06, res: 1, reg: [80, 96], vel: 0.3 }, lead: { ph: 'r4 DH', vel: 0.5, pan: -0.1 }, lead3: { ph: 'NL', inst: 'cello', oct: -1, vel: 0.42, pan: 0.2 } },
+        bell: { dens: 0.06, res: 1, reg: [80, 96], vel: 0.3 }, lead: { ph: 'r4 DH', vel: 0.5, pan: -0.1 } },
       // the grey: the dawn theme whole
       { n: 'grey', pad3: { p: 'swell', inst: 'analog', n: 3, reg: [60, 79], vel: 0.3 }, bars: 8, cres: [0.36, 0.48], prog: 'IM7:2 IVM7:2 | IM7:2 V:2',
-        pad: { p: 'sus', n: 3, reg: [50, 67], vel: 0.6 }, pad2: { p: 'swell', n: 2, reg: [37, 50], vel: 0.55, open: true },
-        bass: { pat: '1---', vel: 0.8, inst: { p: 'deep', att: 1.6, rel: 2.8 } }, arp: { pat: '01232101', res: 2, gate: 2.4, vel: 0.18, reg: [48, 72] },
-        bell: { dens: 0.06, res: 1, reg: [80, 96], vel: 0.3 }, lead: { ph: 'D1 D2r', vel: 0.55, pan: -0.1 }, lead3: { ph: 'r4 NL', inst: 'cello', oct: -1, vel: 0.36, pan: 0.2 } },
+        pad: { p: 'sus', n: 3, reg: [52, 67], vel: 0.6 }, pad2: { p: 'swell', n: 2, reg: [43, 55], vel: 0.5, open: true },
+        bass: { pat: '1---', vel: 0.8, inst: { p: 'deep', att: 1.6, rel: 2.8 } }, arp: { pat: '0...2...1...2...', res: 2, gate: 2.4, vel: 0.18, reg: [55, 74] },
+        bell: { dens: 0.06, res: 1, reg: [80, 96], vel: 0.3 }, lead: { ph: 'D1 D2', vel: 0.55, pan: -0.1 } },
       // the glow: the theme in the solo violin an octave up, the clarinet's counter-line beneath, the strings and the harp rolling
       { n: 'glow', bars: 8, bpm: 54, cres: [0.48, 0.62], prog: 'IM7:2 IVM7:2 | IM7:2 V:2',
-        pad: { p: 'sus', inst: 'strings', n: 4, reg: [50, 72], vel: 0.6 }, pad2: { p: 'swell', n: 2, reg: [37, 52], vel: 0.55, open: true },
-        bass: { pat: '1---', vel: 0.85, inst: { p: 'deep', att: 1.2, rel: 2.4 } }, arp: { pat: '01232101', res: 2, gate: 2.4, vel: 0.24, reg: [43, 67] },
-        lead: { ph: 'D1g D2g', inst: 'vlnSolo', oct: 1, vel: 0.62, pan: 0.05 }, lead2: { ph: 'CV1 CV2', oct: -1, vel: 0.5, pan: -0.25 },
-        arp2: { inst: 'violas', pat: '0212', res: 2, gate: 0.9, vel: 0.22, reg: [53, 68] }, choir: { n: 2, reg: [64, 77], vel: 0.24, soft: true } },
+        pad: { p: 'sus', inst: 'strings', n: 4, reg: [55, 74], vel: 0.6 }, pad2: { p: 'swell', n: 2, reg: [43, 57], vel: 0.5, open: true },
+        bass: { pat: '1---', vel: 0.85, inst: { p: 'deep', att: 1.2, rel: 2.4 } }, arp: { pat: '0.2.1.2.', res: 2, gate: 2.4, vel: 0.2, reg: [55, 79] },
+        lead: { ph: 'D1 D2', inst: 'vlnSolo', oct: 1, vel: 0.6, pan: 0.05 }, lead2: { ph: 'CV1 CV2', oct: -1, vel: 0.5, pan: -0.25 },
+        choir: { n: 2, reg: [64, 77], vel: 0.24, soft: true } },
       // the cloud: B-flat minor, the cellos singing, the strings trembling, the clarinet sighing against them
       { n: 'cloud', bars: 8, key: 'Bb', mode: 'minor', bpm: 56, cres: [0.5, 0.64], prog: 'i i iv V | i bVI iv V',
         pad: { p: 'swell', inst: 'strTrem', n: 3, reg: [57, 74], vel: 0.38 }, pad2: { p: 'stab', inst: 'violas', pat: 'x..x..x.x..x..x.', n: 3, reg: [50, 64], vel: 0.42, gate: 0.85 },
         bass: { pat: '1---', vel: 0.9, inst: { p: 'deep', att: 0.8, rel: 2.2 } }, lead: { ph: 'CL1 CL2', inst: 'cello', oct: -1, vel: 0.78, pan: 0.15 },
-        lead2: { ph: 'CL3 CL4', oct: 0, vel: 0.42, pan: -0.25 }, choir2: { inst: 'choirMen', n: 3, reg: [45, 58], vel: 0.32, soft: true }, timp: { p: 'hits', vel: 0.22, roll: 1 } },
+        lead2: { ph: 'CL3 CL4', oct: 0, vel: 0.42, pan: -0.25 }, choir2: { inst: 'choirMen', n: 3, reg: [50, 62], vel: 0.3, soft: true }, timp: { p: 'hits', vel: 0.22, roll: 1 } },
       // the rise: home again, the climb in sequence in the horns, the voices entering, pressing forward into the light
       { n: 'rise', arp2: { inst: 'arpSawSyn', pat: '01230123', res: 2, vel: 0.15, reg: [55, 74] }, bars: 8, bpm: 56, bpmTo: 62, cres: [0.62, 0.95], prog: 'vi7 IVM7 | ii7 V | vi7 IVM7 | II7 V7sus4:.5 V:.5',
-        pad: { p: 'sus', inst: 'strings', n: 4, reg: [52, 76], vel: 0.72 }, pad2: { p: 'sus', n: 2, reg: [40, 55], vel: 0.6 },
-        bass: { pat: '1---', vel: 0.95, inst: { p: 'deep', att: 0.6, rel: 1.8 } }, arp: { pat: '01234321', res: 2, vel: 0.26, reg: [50, 79] },
+        pad: { p: 'sus', inst: 'strings', n: 4, reg: [55, 76], vel: 0.72 }, pad2: { p: 'sus', n: 2, reg: [43, 57], vel: 0.55, open: true },
+        bass: { pat: '1---', vel: 0.95, inst: { p: 'deep', att: 0.6, rel: 1.8 } },
         lead: { ph: 'RS1 RS2', inst: 'horn', oct: -1, vel: 0.8, harm: -2, hvel: 0.6 }, lead3: { ph: 'r7 RUN', inst: 'strings', vel: 0.62 }, lead4: { ph: 'r7 RUN', inst: 'flute', oct: 1, vel: 0.5 }, lead2: { ph: '@counter', inst: 'cello', reg: [48, 64], vel: 0.5 },
-        choir: { n: 3, reg: [62, 76], vel: 0.42, soft: true }, choir2: { n: 3, reg: [45, 58], vel: 0.4, soft: true }, timp: { p: 'hits', vel: 0.4, roll: 2 } },
+        choir: { n: 3, reg: [62, 76], vel: 0.42, soft: true }, choir2: { n: 3, reg: [50, 62], vel: 0.36, soft: true }, timp: { p: 'hits', vel: 0.35, roll: 2 } },
       // the sunrise: the hymn in the horns, the solo horn an octave beneath, the voices open, the harp running up
       { n: 'sunrise', choir3: { p: 'swell', inst: 'air', n: 2, reg: [74, 88], vel: 0.3 }, bars: 8, bpm: 60, cres: [0.96, 1.06], prog: 'I | V:.5 IV:.5 | I | ii:.5 V:.5 | I | ii:.5 I/III:.5 | vi:.5 V:.5 | I',
-        pad: { p: 'sus', inst: 'strings', n: 4, reg: [62, 86], vel: 0.82 }, pad2: { p: 'sus', n: 3, reg: [41, 57], vel: 0.65 },
+        pad: { p: 'sus', inst: 'strings', n: 4, reg: [62, 86], vel: 0.82 }, pad2: { p: 'sus', n: 2, reg: [43, 57], vel: 0.6, open: true },
         bass: { pat: '1---', vel: 1.1, inst: { p: 'deep', att: 0.2, rel: 1.6 }, fresh: true }, ...ORGAN(0.5, 0),
         lead: { ph: 'H1 H2', inst: 'horn', vel: 1.0 }, lead2: { ph: '@', inst: 'hornIowa', oct: -1, vel: 0.8 }, bell2: { ph: 'H1 H2', inst: 'trombones', oct: -1, vel: 0.55 },
-        choir: { inst: 'choirMenAh', n: 3, reg: [45, 60], vel: 0.95 }, choir2: { inst: 'choirWomen', n: 3, reg: [66, 81], vel: 0.7 },
+        choir: { inst: 'choirMenAh', n: 3, reg: [50, 62], vel: 0.9 }, choir2: { inst: 'choirWomen', n: 3, reg: [66, 81], vel: 0.7 },
         arp: { p: 'up', vel: 0.3, reg: [55, 89] }, bell: { inst: 'bell', dens: 0.1, res: 2, reg: [84, 100], vel: 0.35 }, timp: { p: 'two', vel: 0.6 },
         drums: { crashS: at(8, { 0: 'x...............' }), tam: at(8, { 0: 'x...............' }) }, verb: 0.85, subBass: 0.7 },
       // the zenith: the hymn's second half higher, the trumpets on the tune, the horns beneath, the choir singing it, the violins' descant
       { n: 'zenith', choir3: { p: 'swell', inst: 'air', n: 2, reg: [74, 88], vel: 0.3 }, bars: 8, bpm: 60, bpmTo: 54, cres: [1.04, 1.1], prog: 'I iii vi V | IV I/III V I',
-        pad: { p: 'sus', inst: 'strings', n: 4, reg: [60, 84], vel: 0.85 }, pad2: { p: 'sus', n: 3, reg: [41, 57], vel: 0.7 },
+        pad: { p: 'sus', inst: 'strings', n: 4, reg: [60, 84], vel: 0.85 }, pad2: { p: 'sus', n: 2, reg: [43, 57], vel: 0.62, open: true },
         bass: { pat: '1---', vel: 1.1, inst: { p: 'deep', att: 0.3, rel: 1.8 } }, ...ORGAN(0.55, 0),
         lead: { ph: 'H3 H4', inst: 'tpts', vel: 0.95 }, lead2: { ph: '@', inst: 'horn', oct: -1, vel: 0.85 }, lead3: { ph: 'H3 H4', inst: 'choirMenAhNew', oct: -1, vel: 0.85 },
         lead4: { ph: 'DS1 DS2', inst: 'strings', vel: 0.55 }, bell2: { ph: 'H3 H4', inst: 'trombones', oct: -1, vel: 0.55 },
-        choir2: { inst: 'choirWomen', n: 3, reg: [66, 81], vel: 0.75 }, arp: { p: 'updown', vel: 0.26, reg: [55, 89] }, arp2: { inst: 'strOst', pat: '0.2.1.3.0.2.3.1.', res: 4, vel: 0.3, reg: [48, 62] }, timp: { p: 'beats', vel: 0.5, roll: 1 },
+        choir2: { inst: 'choirWomen', n: 3, reg: [66, 81], vel: 0.75 }, arp: { p: 'updown', vel: 0.26, reg: [55, 89] }, timp: { p: 'beats', vel: 0.45, roll: 1 },
         drums: { crashS: at(8, { 0: 'x...............', 7: 'x...............' }) }, verb: 0.9, subBass: 0.75 },
       // the day: the oboe with the dawn theme and its close, the clarinet beneath, the harp
       { n: 'day', bars: 8, bpm: 56, lv: 0.56, prog: 'IM7 IM7 IVM7 IVM7 | IV ii7 V7sus4:.5 V:.5 I',
-        pad: { p: 'sus', inst: 'strings', n: 3, reg: [52, 72], vel: 0.6 }, pad2: { p: 'swell', n: 2, reg: [40, 52], vel: 0.5, open: true },
-        bass: { pat: '1---', vel: 0.85, inst: { p: 'deep', att: 1.0, rel: 2.4 } }, arp: { pat: '01232101', res: 2, gate: 2.4, vel: 0.22, reg: [43, 67] },
-        lead: { ph: 'D1d D5', inst: 'oboe', vel: 0.62 }, lead2: { ph: '@counter', inst: 'bassoon', reg: [46, 60], vel: 0.4, pan: -0.25 }, arp2: { inst: 'pizz', pat: '0.1.2.1.', res: 2, vel: 0.3, reg: [50, 69] },
+        pad: { p: 'sus', inst: 'strings', n: 3, reg: [52, 72], vel: 0.6 }, pad2: { p: 'swell', n: 2, reg: [43, 55], vel: 0.5, open: true },
+        bass: { pat: '1---', vel: 0.85, inst: { p: 'deep', att: 1.0, rel: 2.4 } }, arp: { pat: '0.2.1.2.', res: 2, gate: 2.4, vel: 0.2, reg: [55, 79] },
+        lead: { ph: 'D1 D5', inst: 'oboe', vel: 0.6 }, lead2: { ph: '@counter', inst: 'bassoon', reg: [46, 60], vel: 0.38, pan: -0.25 },
         choir: { n: 2, reg: [64, 77], vel: 0.22, soft: true }, bell: { dens: 0.08, res: 1, reg: [80, 96], vel: 0.3 } },
       // dusk: the flute alone over the pedal, the climb in a far horn, the last light
       { n: 'dusk', pad3: { p: 'swell', inst: 'analog', n: 3, reg: [60, 79], vel: 0.3 }, bars: 8, bpm: 52, bpmTo: 42, cres: [0.46, 0.2], prog: 'IM7:2 IVM7/I:2 | Iadd9:4',
-        pad: { p: 'swell', n: 3, reg: [50, 67], vel: 0.55 }, pad2: { p: 'swell', n: 2, reg: [37, 50], vel: 0.5, open: true },
+        pad: { p: 'swell', n: 3, reg: [52, 67], vel: 0.55 }, pad2: { p: 'swell', n: 2, reg: [43, 55], vel: 0.45, open: true },
         bass: { pat: '1---', vel: 0.75, inst: { p: 'cbSolo', att: 2.5, rel: 4 } }, choir2: { inst: 'choirHum', n: 2, reg: [60, 72], vel: 0.3, soft: true },
         lead: { ph: 'D1 DE', vel: 0.5, pan: -0.1 }, lead2: { ph: 'r2 PAh r2', inst: 'hornIowa', oct: -1, vel: 0.42, pan: 0.3 },
         bell: { dens: 0.07, res: 1, reg: [80, 96], vel: 0.28 } },
@@ -175,15 +180,14 @@
     },
     base: { bass: { pat: GBASS, inst: { p: 'deep', att: 0.9, rel: 2.2 }, vel: 0.9 } },
     sec: [
-      { n: 'ground', bars: 4, cres: [0.36, 0.46], prog: 'i bVIM7 bIII V', bass: true, lead2: { ph: 'GB', oct: -1, vel: 0.66, art: 0.96 }, pad2: { p: 'swell', n: 2, reg: [40, 52], vel: 0.32, open: true } },
+      { n: 'ground', bars: 4, cres: [0.36, 0.46], prog: 'i bVIM7 bIII V', bass: true, lead2: { ph: 'GB', oct: -1, vel: 0.66, art: 0.96 } },
       { n: 'v1', bars: 8, lv: 0.5, prog: GROUND, bass: true, lead2: { ph: 'GB GB', oct: -1, vel: 0.62, art: 0.96 }, pad: { p: 'sus', inst: 'violas', n: 2, reg: [52, 64], vel: 0.42 },
         lead: { ph: 'P1 P2', vel: 0.66 } },
       { n: 'v2', bars: 8, cres: [0.54, 0.66], prog: GROUND, bass: true, lead2: { ph: 'GB GB', oct: -1, vel: 0.6, art: 0.96 }, pad: { p: 'sus', n: 3, reg: [52, 70], vel: 0.55 },
         lead: { ph: 'E1 E2', inst: 'strings', vel: 0.8 }, lead3: { ph: '@counter', inst: 'reed', reg: [55, 69], vel: 0.42 }, arp: { p: 'run', vel: 0.32, reg: [55, 86], gate: 0.8 },
         choir: { n: 2, reg: [66, 79], vel: 0.26, soft: true } },
-      { n: 'v3', bars: 8, lv: 0.56, prog: GROUND, bass: { pat: GBASS, inst: 'moog', vel: 0.95 }, arp: { inst: 'pizz', pat: '0.2.1.2.', res: 2, vel: 0.46, reg: [50, 72], gate: 0.5 },
-        lead: { ph: 'PSE PO2_', inst: 'bassoon', vel: 0.64, art: 0.55 }, lead2: { ph: 'PO2 r4', inst: 'oboe', vel: 0.5, art: 0.55 }, lead3: { ph: 'r4 PSE', inst: 'clarinet', vel: 0.56, art: 0.55 },   // the second half to the clarinet at pitch (the oboe an octave up was piercing at the top of its range) bell: { ph: 'r4 GB', inst: 'glass', oct: 1, vel: 0.3 },
-        drums: { click3: 'x.......x.......', vel: 0.26 } },
+      { n: 'v3', bars: 8, lv: 0.56, prog: GROUND, bass: { pat: GBASS, inst: 'moog', vel: 0.9 },   // the scherzo: the theme's perpetual motion in pizzicato (a real pluck, not a cut-off bow), the bassoon and then the clarinet answering it legato
+        lead: { ph: 'PSE PSE', inst: 'pizz', vel: 0.8 }, lead2: { ph: 'PO2_ r4', inst: 'bassoon', vel: 0.52 }, lead3: { ph: 'r4 PO2', inst: 'clarinet', vel: 0.5 }, bell: { ph: 'r4 GB', inst: 'glass', oct: 1, vel: 0.26 } },
       { n: 'v4', bars: 8, key: 'B', mode: 'major', cres: [0.46, 0.56], prog: 'I vi7 iii V | I vi7 iii V', bass: { pat: ['1---', '1--7', '1---', '1---'], inst: { p: 'deep', att: 1.2, rel: 2.6 }, vel: 0.8 },
         lead2: { ph: 'GB GB', oct: -1, vel: 0.55, art: 0.96 }, pad: { p: 'swell', inst: 'violas', n: 3, reg: [54, 68], vel: 0.48 }, pad2: { p: 'swell', inst: 'air', n: 2, reg: [72, 86], vel: 0.32 },
         lead: { ph: 'M1s M2s', inst: 'vlnSolo', oct: 1, vel: 0.64 }, arp: { pat: '0.......2...1...', res: 2, vel: 0.28, reg: [59, 86] }, arp2: { inst: 'violas', pat: '0212', res: 2, gate: 0.9, vel: 0.22, reg: [54, 68] }, bell: { inst: 'glass', dens: 0.08, res: 1, reg: [83, 99], vel: 0.3 } },
