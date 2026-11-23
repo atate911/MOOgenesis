@@ -429,7 +429,8 @@
     for (const name in A.irs) {
       const d = A.irs[name], ratio = sr / d.sr, len = Math.max(1, Math.round(d.ch[0].length * ratio)), buf = ctx.createBuffer(2, len, sr);
       for (let c = 0; c < 2; c++) { const src = d.ch[Math.min(c, d.ch.length - 1)], dst = buf.getChannelData(c);
-        for (let i = 0; i < len; i++) { const x = i / ratio, k = Math.floor(x), f = x - k; dst[i] = d.gain * ((src[k] || 0) * (1 - f) + (src[k + 1] || 0) * f); } }
+        const dk = A.hallRT > 0 ? 6.9 / (A.hallRT * sr) : 0;   // A.hallRT (s): a render may shorten the hall's tail, an added decay of that RT60 (a clearer room, the same early sound)
+        for (let i = 0; i < len; i++) { const x = i / ratio, k = Math.floor(x), f = x - k; dst[i] = d.gain * ((src[k] || 0) * (1 - f) + (src[k + 1] || 0) * f) * (dk ? Math.exp(-dk * i) : 1); } }
       const inp = mk(ctx.createGain()), h = mk(ctx.createBiquadFilter()), conv = mk(ctx.createConvolver()), l = mk(ctx.createBiquadFilter()), out = mk(ctx.createGain());
       h.type = 'highpass'; h.frequency.value = num(A.hallHp, 260); h.Q.value = 0.5; l.type = 'lowpass';   // A.hallHp: a render may let more of the low end into the hall (the concert suite's warmth)
       l.frequency.value = 11000; l.Q.value = 0.5;

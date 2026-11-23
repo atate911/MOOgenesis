@@ -1380,7 +1380,7 @@
     // the first reflections: the two side walls, the stage's back wall, the floor, the ceiling (with what each absorbs)
     const imgs = [[-2 * ROOM.w - x, y, z, 0.62], [2 * ROOM.w - x, y, z, 0.62], [x, 2 * ROOM.back - y, z, 0.5], [x, y, -z, 0.42], [x, y, 2 * ROOM.h - z, 0.5]];
     const er = imgs.map(([px, py, pz, a]) => { const ri = dist(px, py, pz); return { dt: (ri - r) / C_SND, g: a * r / ri, pan: panOf(px, py) * 0.85 }; });   // (the reflections a little inside the speakers: wide, not split)
-    return { r, w, er, pan: panOf(x, y), dly: Math.max(0, r - 13) / C_SND * 0.5, dir: Math.pow(R_REF / r, 0.7), air: -0.22 * Math.max(0, r - 13), hall: Math.pow(r / R_REF, 0.45) };
+    return { r, w, er, pan: panOf(x, y), dly: Math.max(0, r - 13) / C_SND * 0.5, dir: Math.pow(R_REF / r, 0.55), air: -0.1 * Math.max(0, r - 13), hall: Math.pow(r / R_REF, 0.45) };
   }
   Music._seats = { SEATS, seatOf, seatGeom };
 

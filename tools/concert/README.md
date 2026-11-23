@@ -170,3 +170,28 @@ own register. After the change, 20–40 Hz sits about 35 dB under the loudest ba
 Each part is now followed separately, so two lines on one bus are treated as two players.
 
 The game's own pieces don't use any of this. Every game track compiles byte-for-byte as before, and the game's master chain is untouched.
+
+## Revision 4: a clearer room, the organ, a brighter orchestra
+
+After listening, the feedback was that the room sounded boomy and the reverberation got in the way more than it helped. Changes:
+
+**The room**
+
+- The hall send is down about 4.5 dB.
+- The hall takes nothing below 220 Hz. It was 140 Hz, and the bass's reverberation is what read as boom.
+- The tail is shortened from about 2.3 s to about 1.65 s, roughly a modern concert hall's clarity. This uses `A.hallRT`, an added decay on
+  the recorded impulse.
+- There are no more reverb washes at the climaxes.
+- The early reflections, which carry the stereo placement, are only slightly lower.
+
+**The pipe organ.** A pipe organ now stands behind the choir. It plays a 16-foot pedal under the basses and full chords on the manuals,
+taking over the tuba's doubling of the bass at the great moments: the first sunrise, the passacaglia's climax, and the finale's hymn, amen
+and final chord. It's felt more than heard, about 13 dB under the tutti, the way a hall organ sits under an orchestra.
+
+**The reference sound.** The reference is a live orchestra playing a classic space-opera film score. The suite doesn't borrow any of that
+score's themes, but it aims at its sound and orchestral idiom:
+
+- **Brighter brass and percussion**: about +1.5 dB above 5 kHz and +0.5 dB of presence.
+- **Back rows less muffled by distance**: the brass and percussion lose less with distance, so they come through.
+- **Launching gestures**: rising string runs, with the flute an octave above, into the sunrise, the passacaglia's climax and the finale's
+  hymn, and a trumpet triplet call into the march.
