@@ -18,12 +18,12 @@
     'galaxy17': {theme: {pad: 0.494, bass: 0.224}, talk: {pad: 0.639, bass: 0.256}, canon2: {bass: 0.25, pad: 0.797}, canon3: {pad: 0.514, bass: 0.256}, still: {pad: 0.2, choir: 0.423}, canon3b: {pad: 0.263, bass: 0.152}, E: {bass: 0.295, pad: 0.748}},
     'galaxy18': {A1: {arp: 0.05, pad: 0.164, bass: 0.239}, A2: {arp: 0.074, pad: 0.238, bass: 0.348}, B: {arp: 0.135, pad: 0.241, bass: 0.508, choir: 0.885}, A3: {arp: 0.093, bass: 0.387, pad: 0.657}, crest: {arp: 0.131, bass: 0.153, pad: 0.337, choir: 0.582}, E: {arp: 0.147, bass: 0.542, pad: 0.796}},
     'galaxy19': {call: {bass: 0.381, drums: 0.757, pad: 0.904}, ch1: {pad: 0.547, bass: 0.145, drums: 0.578}, str: {arp: 0.096, bass: 0.821, pad: 1.0}, ch2: {pad: 0.61, bass: 0.25, choir: 0.736, drums: 0.778}, ch3: {pad: 0.663, bass: 0.619, choir: 0.761, drums: 0.624}},
-    'galaxy11': {drift1: {arp: 0.189, pad: 0.145, bass: 0.272}, drift2: {arp: 0.148, bass: 0.247, pad: 0.204}, rise: {arp: 0.12, pad: 0.291, bass: 0.475, choir: 0.247}, drift3: {arp: 0.108, bass: 0.19, pad: 0.097}},
+    'galaxy11': {drift1: {arp: 0.189, pad: 0.145, bass: 0.272}, drift2: {arp: 0.148, bass: 0.247, pad: 0.204}, rise: {arp: 0.12, pad: 0.241, bass: 0.475, choir: 0.247}, drift3: {arp: 0.108, bass: 0.19, pad: 0.097}},
     'galaxy23': {A1: {arp: 0.092, choir: 0.881}, A2: {arp: 0.115, bass: 0.293, choir: 0.921, pad: 0.96}, E: {arp: 0.095, choir: 0.91}},
-    'galaxy13': {W1: {pad: 0.064, bass: 0.348}, W2: {arp: 0.182, pad: 0.033, bass: 0.429}, H: {pad: 0.135, bass: 0.79}, mid: {pad: 0.593, choir: 1, bass: 0.27}, W3: {arp: 0.446, pad: 0.297, bass: 0.956}, dawn: {pad: 0.154, bass: 0.501, choir: 0.849}},
+    'galaxy13': {W1: {pad: 0.064, bass: 0.348}, W2: {arp: 0.182, pad: 0.033, bass: 0.429}, H: {pad: 0.135, bass: 0.79}, mid: {pad: 0.299, choir: 0.436, bass: 0.456}, W3: {arp: 0.446, pad: 0.297, bass: 0.956}, dawn: {pad: 0.151, bass: 0.501, choir: 0.849}},
     'galaxy20': {M1: {pad: 0.262, bass: 0.242}, M2: {pad: 0.365, bass: 0.377}, trio: {arp: 0.351, pad: 0.308, bass: 0.453, choir: 0.96}, M3: {pad: 0.385, choir: 0.734, bass: 0.922}, M4: {pad: 0.389, bass: 0.694}, still: {pad: 0.174}},
     'galaxy21': {S1: {arp: 0.148, bass: 0.388, pad: 0.679}, S2: {arp: 0.224, pad: 0.312, bass: 0.402, choir: 0.568}, L: {arp: 0.527, pad: 0.717, bass: 0.516}, still: {pad: 0.353, choir: 0.637}, S3: {arp: 0.287, pad: 0.251, bass: 0.135, choir: 0.782}, L2: {pad: 0.278, bass: 0.154, arp: 0.467}, E: {arp: 0.342, bass: 0.7}},
-    'galaxy22': {men: {pad: 0.42, bass: 0.365, choir: 0.478}, satb: {bass: 0.309, choir: 0.313, pad: 0.469}, organ: {pad: 0.109, bass: 0.073}, satb2: {pad: 0.091, bass: 0.127, choir: 0.179, arp: 0.217}, still: {pad: 0.317, choir: 0.314}, crest: {pad: 0.241, bass: 0.155, choir: 0.246, drums: 0.603}, amen: {pad: 0.214, bass: 0.389, choir: 0.369}},
+    'galaxy22': {men: {pad: 0.42, bass: 0.365, choir: 0.478}, satb: {bass: 0.309, choir: 0.313, pad: 0.469}, organ: {pad: 0.109, bass: 0.073}, satb2: {pad: 0.091, bass: 0.127, choir: 0.179, arp: 0.217}, still: {pad: 0.317, choir: 0.314}, crest: {pad: 0.241, bass: 0.155, choir: 0.241, drums: 0.603}, amen: {pad: 0.214, bass: 0.389, choir: 0.369}},
     'galaxy7': {A1: {arp: 0.06, pad: 0.311}, B: {arp: 0.06, pad: 0.166}, A2: {arp: 0.043, pad: 0.209}, C: {arp: 0.057, pad: 0.38}, B2: {arp: 0.042, pad: 0.208, choir: 0.941}, E: {arp: 0.045, pad: 0.24}, breath: {pad: 0.053}},
     'galaxy8': {A1: {bass: 0.567, pad: 0.271}, B: {bass: 0.774}, A2: {pad: 0.517, bass: 0.656}},
     'galaxy9': {A1: {pad: 0.325, bass: 0.74}, B: {bass: 0.578, choir: 0.596, pad: 0.941, drums: 0.711}, A2: {bass: 0.98, drums: 0.551}, E: {pad: 0.672, choir: 0.757, bass: 0.828}},
@@ -34,8 +34,8 @@
     'drift3': {A: {pad: 0.386, choir: 0.498}},
     'drift4': {},
     'drift5': {A: {pad: 0.449}},
-    'drift6': {A: {pad: 0.371, choir: 0.397}},
-    'drift7': {A: {pad: 0.034, arp: 0.126}},
+    'drift6': {A: {pad: 0.491, choir: 0.254}},
+    'drift7': {A: {pad: 0.034, arp: 0.119}},
   };
   function piece(id, def) {
     const old = Music._tracks[id]; if (old) for (const k of KEEP) if (def[k] === undefined && old[k] !== undefined) def[k] = JSON.parse(JSON.stringify(old[k]));
