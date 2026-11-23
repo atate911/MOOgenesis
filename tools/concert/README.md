@@ -195,3 +195,25 @@ score's themes, but it aims at its sound and orchestral idiom:
 - **Back rows less muffled by distance**: the brass and percussion lose less with distance, so they come through.
 - **Launching gestures**: rising string runs, with the flute an octave above, into the sunrise, the passacaglia's climax and the finale's
   hymn, and a trumpet triplet call into the march.
+
+## Revision 5: unhurried, and drier
+
+After listening, the feedback was that the timing felt hurried or slightly aggressive, and there was still too much room. The causes:
+
+- Revision 2 raised the tempos and added fast accompaniment.
+- The engine's conductor pressed 3.5% faster into every phrase climax.
+- The accompanying players leaned ahead of the beat as the music built.
+- Nobody breathed at section ends.
+- Revision 4's added brightness hardened the attacks.
+
+The fixes:
+
+- **Slower tempos.** The prelude is mostly 52–60 bpm, the passacaglia 52, the march 80, the trio 68, and the hymn 56. Each movement
+  is about 7% longer.
+- **A gentler conductor.** The new `conduct` setting (`{ push: 1 }`) turns off the pressing toward climaxes, and `press: 0` keeps the
+  players on the beat. The broadening on each climax and the easing at each phrase's end stay.
+- **Section breaths.** `breathe` gives the last two beats of every section a 12% ease before what comes next.
+- **Calmer accompaniment.** The spiccato under the sunrise hymn and the sixteenths in the rise are gone.
+- **A drier room.** The hall send is down another 4.4 dB, the tail is shortened to about 1.45 s, and the early reflections are a little
+  lower.
+- **Softer edges.** The top end and presence are back down by 1.5 and 1 dB.

@@ -637,13 +637,15 @@
     if (cur.length) phrases.push(cur);
     return phrases.map(N => Object.assign({ N }, phraseArc(N, n => n.m)));
   }
-  function tempoFromSolo(arcs) {
-    const iv = [];
+  // a piece's `conduct` ({ push, broaden, ease }) sets the conductor's hand: how far it presses toward a phrase's climax (1: not at all),
+  // broadens on it, and eases at the phrase's end
+  function tempoFromSolo(arcs, cd) {
+    const iv = [], push = num(cd && cd.push, 1.035), broaden = num(cd && cd.broaden, 0.93), ease = num(cd && cd.ease, 0.91);
     arcs.forEach(({ N, ci }, j) => {
       if (N.length < 2) return; const c = N[ci], last = N[N.length - 1], final = j === arcs.length - 1;
-      if (c.off - 2 >= N[0].off) iv.push([c.off - 2, c.off, 1.035]);                          // pressing on toward the climax
-      iv.push([c.off, c.off + Math.min(c.dur, 2), 0.93]);                                      // broadening on it
-      if (last !== c) iv.push([last.off, last.off + Math.min(last.dur, final ? 4 : 2), final ? 0.8 : 0.91]);   // easing at the phrase's end; the last one a true ritardando
+      if (push !== 1 && c.off - 2 >= N[0].off) iv.push([c.off - 2, c.off, push]);              // pressing on toward the climax
+      iv.push([c.off, c.off + Math.min(c.dur, 2), broaden]);                                   // broadening on it
+      if (last !== c) iv.push([last.off, last.off + Math.min(last.dur, final ? 4 : 2), final ? 0.8 : ease]);   // easing at the phrase's end; the last one a true ritardando
     });
     return iv;
   }
@@ -718,7 +720,7 @@
       const k = e.k || e.ly, p = part(k), P = p.P, r = p.r, b = e.b;
       const ev0 = moveAt(E, b), I = clamp((ev0 - 0.6) / 0.65, 0, 1), loose = 1.5 - 0.8 * I,   // tighter at the top, never mechanical (0.7 of the lean at full)
          slope = moveAt(E, b + 1) - moveAt(E, b - 1);
-      const lean = k === 'lead' ? 0 : slope > 0 ? -0.008 * clamp(slope / 0.08, 0, 1) : 0.012 * clamp(-slope / 0.08, 0, 1);
+      const press = num(C.def && C.def.press, 1), lean = k === 'lead' ? 0 : slope > 0 ? -0.008 * press * clamp(slope / 0.08, 0, 1) : 0.012 * clamp(-slope / 0.08, 0, 1);   // a piece's `press`: how far the players lean ahead as the music builds
       const dt = P.lat * (0.5 + 0.5 * loose) + P.drift * loose * p.t(b) + lean + P.jit * gauss(r);
       let g = P.lvl * p.l(b) + P.vj * gauss(r);
       if (P.follow) {
@@ -1222,7 +1224,13 @@
     C.lvStage = orchOf(def) && !Music._dbg.noStage;
     if (orchOf(def)) {
       soloArcs = soloPrepass(C, wraps);
-      const iv = tempoFromSolo(soloArcs);
+      const iv = tempoFromSolo(soloArcs, def.conduct);
+      // the breath at a section's end (a piece's `breathe`: { beats, k }; a section's own `rit`: [beats, k], or false): the conductor
+      // gives the last beats a little room before what comes next, as an orchestra never runs one section into the next on the grid
+      if (def.breathe || wraps.some(w => w.R.raw && w.R.raw.rit)) for (const w of wraps) {
+        const r = w.R.raw && w.R.raw.rit !== undefined ? w.R.raw.rit : def.breathe ? [def.breathe.beats, def.breathe.k] : null;
+        if (r && r[1] && r[1] !== 1) iv.push([w.start + w.beats - Math.min(r[0], w.beats), w.start + w.beats, r[1]]);
+      }
       if (iv.length) {                // the time map again, the solo's push and broadening in it: an orchestra following its soloist
         const tAt0 = C.tAt, K = 8, nK = Math.ceil(C.totalBeats * K) + 1, T = new Float64Array(nK + 1);
         for (let k = 0; k < nK; k++) { const b = k / K; let mul = 1; for (const [a, z, m] of iv) if (b + 0.5 / K >= a && b + 0.5 / K < z) mul *= m; T[k + 1] = T[k] + (tAt0(b + 1 / K) - tAt0(b)) / mul; }

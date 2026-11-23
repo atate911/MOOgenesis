@@ -43,7 +43,7 @@ const SR = 48000, PORT = +opt.port || 8772, TAIL = 11, TARGET_LUFS = -16, CEIL_D
   }
   if (opt.lint) { await browser.close(); srv.close(); return; }
 
-  const st = await page.evaluate(async () => { MOO.Audio.hallHp = 220; MOO.Audio.hallRT = 6; MOO.Audio.concert = true; await MOO.Audio.Samples.preload(); return MOO.Audio.Samples.status(); });
+  const st = await page.evaluate(async () => { MOO.Audio.hallHp = 220; MOO.Audio.hallRT = 4; MOO.Audio.concert = true; await MOO.Audio.Samples.preload(); return MOO.Audio.Samples.status(); });
   console.log('\nsamples: ' + JSON.stringify(st));
   fs.mkdirSync(OUT, { recursive: true });
   const rendered = [];
