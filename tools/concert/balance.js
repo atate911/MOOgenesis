@@ -21,10 +21,13 @@ const FILE = path.join(__dirname, '..', '..', 'js', 'audio', 'score', 'symphonic
       const M = MOO.Audio.Music, D = M._tracks[id]; if (D.forms && D.forms.length > 1) { D.forms = [D.forms[0]]; D._p = null; }
       const c = M._compile(id, 0), SR = 24000, lv = x => { let s = 0; for (const v of x) s += v * v; return 10 * Math.log10(s / x.length + 1e-15); }, out = {};
       for (const w of c.wraps) {
-        if (w.len < 4 || out[w.R.n]) continue;
+        if (w.len < 4 || out[w.R.n] || /^breath/.test(w.R.n)) continue;   // a breath between sections is its bed alone
         const from = w.t0 + Math.max(0, (w.len - secs) / 2), len = Math.min(secs, w.len);
-        const r = o => M.renderOffline(id, len + 6, { from: from - 6, loop: false, sampleRate: SR, only: o }).then(b => b.getChannelData(0).subarray(6 * SR));
-        const all = lv(await r()), mel = lv(await r(['lead'])) - all, row = { mel: +mel.toFixed(1) };
+        const pre = Math.max(6, from - w.t0 + 0.5);   // from the section's start: a chord held across its bars sounds in the window (a render skips notes begun before it)
+        const r = o => M.renderOffline(id, len + pre, { from: Math.max(0, from - pre), loop: false, sampleRate: SR, only: o }).then(b => b.getChannelData(0).subarray(Math.round(Math.min(pre, from) * SR)));
+        const tune = c.events.some(e => e.m && (e.ly === 'lead' || e.k === 'lead') && e.t >= from && e.t < from + len);   // the tune is playing in the window (not only a tail ringing into it)
+        const all = lv(await r()); if (all < -70 || !tune) { out[w.R.n] = { silent: true }; continue; }   // a window with nothing starting in it (a chord held from before it): no reading
+        const mel = lv(await r(['lead'])) - all, row = { mel: +mel.toFixed(1) };
         for (const k of Object.keys(CEIL)) row[k] = +(lv(await r([k])) - all).toFixed(1);
         out[w.R.n] = row;
       }
@@ -33,6 +36,7 @@ const FILE = path.join(__dirname, '..', '..', 'js', 'audio', 'score', 'symphonic
     const bal = {};
     console.log(`\n== ${id}`);
     for (const [sec, row] of Object.entries(res)) {
+      if (row.silent) { console.log(`  ${sec.padEnd(10)} (no tune in the window, or nothing starts in it)`); continue; }
       const fix = {};
       if (row.mel > -30) for (const k of Object.keys(CEIL)) if (row[k] > CEIL[k] && row[k] > -40) fix[k] = +Math.pow(10, (CEIL[k] - row[k]) / 20).toFixed(2);
       console.log(`  ${sec.padEnd(10)} melody ${String(row.mel).padStart(6)}  ` + Object.keys(CEIL).map(k => `${k} ${row[k] < -90 ? '  -' : String(row[k]).padStart(5)}`).join('  ') + (Object.keys(fix).length ? '   -> ' + JSON.stringify(fix) : ''));
