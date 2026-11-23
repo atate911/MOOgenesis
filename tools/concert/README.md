@@ -8,7 +8,39 @@ and an ending.
 node tools/concert/render.js            # all three → tools/concert/out/*.wav (24-bit) and *.mp3 (320k)
 node tools/concert/render.js --only 2   # one movement
 node tools/concert/render.js --lint     # compile only: form, timings, any note the engine had to move onto its chord
+node tools/concert/midi.js              # the score as MIDI → tools/concert/out/*.mid (one track per part, with the tempo map)
 ```
+
+## What these recordings are, and aren't
+
+The writing is meant to stand as concert music. The sound is a computer mock-up of an orchestra: free sample libraries (VSCO 2, Sonatina
+and the University of Iowa soloists) played by the game's engine. The engine shapes phrasing and timing, but the libraries have no true
+legato and only a few dynamic layers, and a trained ear will hear that.
+
+To get a real symphonic sound, take the MIDI files to a professional orchestral library in a DAW, or to an orchestrator and players. The
+MIDI has one track per part on the written beat grid, with every accelerando and ritardando in its tempo map.
+
+## Revision 2: from underscore to concert writing
+
+The first version was measured, and it read as game underscore:
+
+- In about 20% of each movement, no melodic or bass voice moved within a 2-second window.
+- The melody averaged one note every 2 to 2.5 seconds.
+- The texture was mostly a tune over held chords.
+
+The revision changed this:
+
+- **The passacaglia now speeds up its rhythm across the variations**, as the form traditionally does: quarters, then eighths in the
+  violins, a perpetual-motion scherzo for bassoon and oboe, an Alberti accompaniment under the B-major song, harp triplets under the
+  hymn, and spiccato sixteenths into the climax, where the violins' eighths run against the hymn.
+- **The melodies have more rhythmic shape**: dotted figures, pickups and passing eighths. Examples are the dawn theme's ornamented answer,
+  the violin's quickened reading, the oboe's dancing one, and the horns' climb.
+- **Accompaniment figures replace many held chords**: violas in broken chords, syncopated violas under the cloud, a spiccato ostinato
+  under the sunrise, pizzicato under the day and the march, and counter-lines in the bassoon and clarinet.
+- **The tempos are less funereal**, and the game's echo delay is gone; an orchestra plays in a hall.
+
+Measured the same way afterwards, the static stretches fell to 7–14% of each movement, against 23–28% for the game's originals. Four or
+more independent voices are moving in 43–53% of each movement. The quiet stretches that remain are deliberate.
 
 The score is `tools/concert/suite.js`. The render tool loads it into `tools/test-audio.html` and nowhere else, so nothing here is part of the game.
 
