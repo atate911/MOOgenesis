@@ -336,6 +336,25 @@
     return (z.onset = Math.max(0, at / sr - 0.012));
   }
   S._zoneOnset = zoneOnset;
+  // when a recording speaks: the moment its sound (a 10 ms RMS) first reaches 40% of its peak in the first half second, from the top of the file — the note's
+  // arrival as a listener hears it, not where its file starts (a string section takes a fifth of a second to bloom; a harp none)
+  function zoneSpeak(z) {
+    if (z.speak !== undefined) return z.speak;
+    const b = z.buf, sr = b.sampleRate, W = Math.max(1, Math.round(0.01 * sr)), N = Math.min(b.length, Math.round(0.5 * sr)), ch = [];   // (the first half second: a recording that keeps swelling after it has begun is heard to arrive when it begins)
+    for (let c = 0; c < b.numberOfChannels; c++) ch.push(b.getChannelData(c));
+    const env = []; for (let i = 0; i + W <= N; i += W) { let a = 0; for (const d of ch) for (let k = i; k < i + W; k++) a += d[k] * d[k]; env.push(Math.sqrt(a / (W * ch.length))); }
+    let pk = 0; for (const v of env) pk = Math.max(pk, v);
+    let at = 0; while (at < env.length && env[at] < pk * 0.4) at++;
+    return (z.speak = Math.min(0.2, at * 0.01));
+  }
+  // S.speak(name, midi, att): how long after its start a note of this instrument is heard to arrive (its nearest recordings' speaking
+  // time, or its envelope's fade-in if that is the slower), for a performance that starts each note that much early
+  S.speak = function (name, midi, att) {
+    const inst = S.inst[name]; if (!inst || !inst.ready || !inst.zones.length) return 0;
+    let best = Infinity; for (const z of inst.zones) best = Math.min(best, Math.abs(z.root - midi));
+    const near = inst.zones.filter(z => Math.abs(z.root - midi) === best); let sp = 0; for (const z of near) sp += zoneSpeak(z); sp /= near.length;
+    return Math.max(sp, 0.5 * num(att, inst.attack));
+  };
 
   function loadInstrument(name, def) {
     const inst = { name, kind: def.kind || 'sustain', pitched: def.pitched !== false, attack: num(def.attack, 0.01), release: num(def.release, 0.3), gain: dbtoa(num(def.gain, 0)),
@@ -578,7 +597,7 @@
     const ctx = eng.ctx;
     const oneShot = o.oneShot || (inst.kind !== 'sustain' && (o.dur === undefined || o.ring));
     const hum = o.hum !== undefined ? num(o.hum, 0) : (oneShot ? 0.5 : 1);
-    if (hum > 0) t += eng.rand() * 0.009 * hum;    // nobody in an orchestra starts on the same sample
+    if (hum > 0) t += eng.rand() * 0.009 * hum * num(o.humT, 1);    // nobody in an orchestra starts on the same sample (o.humT: the piece's ensemble scales the spread)
     const rate0 = Math.pow(2, (midi - z0.root) / 12);
     if (oneShot && o.alignEnd && o.dur) {           // swells and rolls that must peak on the downbeat: start early so the sample ends there
       t = t + o.dur - z0.buf.duration / rate0;

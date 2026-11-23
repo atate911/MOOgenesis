@@ -577,7 +577,7 @@
         let L = len;
         if (cfg.merge !== false) { while (i + 1 < segs.length && segs[i + 1].ch.sym === sg.ch.sym) { i++; L = segs[i].b1 - sg.b0; } }
         const att = style === 'swell' ? Math.min(L * C.spb * 0.6, 3.5) : undefined;
-        notes.forEach(function (m, j) { emit(C, 'pad', inst, b0, m, L, vel * (j === 0 ? 1 : 0.9), { pan: (j / Math.max(1, notes.length - 1) - 0.5) * 0.8 * num(cfg.width, 1) * C.widthK, att: att, dt: (rng() - 0.5) * 0.02, rel: cfg.rel }); });
+        notes.forEach(function (m, j) { emit(C, 'pad', inst, b0, m, L, vel * (j === 0 ? 1 : 0.9), { pan: (j / Math.max(1, notes.length - 1) - 0.5) * 0.8 * num(cfg.width, 1) * C.widthK, att: att, dt: (rng() - 0.5) * 0.02 * num(C.def && C.def.ensemble, 1), rel: cfg.rel }); });
       } else if (style === 'pulse' || style === 'stab') {
         const grid = cleanPat(cfg.pat || (style === 'pulse' ? 'x.x.x.x.' : 'x.......')), step = C.meter / grid.length;
         for (let bar0 = sg.b0; bar0 < sg.b1 - 1e-9; bar0 += C.meter) {      // the pattern is one bar; repeat it across the chord
@@ -721,7 +721,8 @@
       const ev0 = moveAt(E, b), I = clamp((ev0 - 0.6) / 0.65, 0, 1), loose = 1.5 - 0.8 * I,   // tighter at the top, never mechanical (0.7 of the lean at full)
          slope = moveAt(E, b + 1) - moveAt(E, b - 1);
       const press = num(C.def && C.def.press, 1), lean = k === 'lead' ? 0 : slope > 0 ? -0.008 * press * clamp(slope / 0.08, 0, 1) : 0.012 * clamp(-slope / 0.08, 0, 1);   // a piece's `press`: how far the players lean ahead as the music builds
-      const dt = P.lat * (0.5 + 0.5 * loose) + P.drift * loose * p.t(b) + lean + P.jit * gauss(r);
+      const ens = num(C.def && C.def.ensemble, 1);   // a piece's `ensemble`: how loose the players are together (1 the game's ease; a professional orchestra's ensemble is a third of it)
+      const dt = (P.lat * (0.5 + 0.5 * loose) + P.drift * loose * p.t(b) + lean + P.jit * gauss(r)) * ens;
       let g = P.lvl * p.l(b) + P.vj * gauss(r);
       if (P.follow) {
         g += P.follow * 20 * Math.log10(ev0);
@@ -732,15 +733,15 @@
       e.o.vel *= Math.pow(10, g / 20); e.t = Math.max(0, e.t + dt); e.pf = [Math.round(dt * 1000), Math.round(g * 10) / 10];
       // on the beat or behind it, never ahead (a piece's `behind`, s): an orchestra sits on the conductor's beat or a hair behind it, the
       // soloist (who leads) closest to it; a note the ensemble's looseness would have placed early is folded back behind the beat instead
-      if (C.def && C.def.behind !== undefined && e.v === 'sample' && !e.o.oneShot) { const fl = C.tAt(b) + num(C.def.behind, 0) * (k === 'lead' ? 0.4 : 1); if (e.t < fl) e.t = fl + (fl - e.t) * 0.3; }
+      if (C.def && C.def.behind !== undefined && e.v === 'sample' && !e.o.oneShot) { const fl = C.tAt(b) + num(C.def.behind, 0) * (k === 'lead' ? 0.4 : 1); if (e.t < fl) e.t = fl; }
       if (P.spread && e.m) { const ck = k + '@' + b.toFixed(4); (chords[ck] = chords[ck] || []).push([e, I, r]); }
     }
     // a chord's notes spread: 10 ms apart at the top of the movement, up to 40 ms when soft
-    for (const ck in chords) { const g = chords[ck]; if (g.length < 2) continue; const [, I, r] = g[0], w = 0.010 + 0.030 * (1 - I); for (const x of g) { const d = r() * w; x[0].t += d; x[0].pf[0] += Math.round(d * 1000); } }
+    for (const ck in chords) { const g = chords[ck]; if (g.length < 2) continue; const [, I, r] = g[0], w = (0.010 + 0.030 * (1 - I)) * num(C.def && C.def.ensemble, 1); for (const x of g) { const d = r() * w; x[0].t += d; x[0].pf[0] += Math.round(d * 1000); } }
   }
   function padFlush(C, o, m, endAbs, cont) {
     const L = endAbs - o.b0; if (L <= 0) return;
-    const ex = { pan: (o.j / Math.max(1, o.n - 1) - 0.5) * 0.8 * o.width * C.widthK, dt: (o.rng() - 0.5) * 0.02, rel: o.rel };
+    const ex = { pan: (o.j / Math.max(1, o.n - 1) - 0.5) * 0.8 * o.width * C.widthK, dt: (o.rng() - 0.5) * 0.02 * num(C.def && C.def.ensemble, 1), rel: o.rel };
     if (o.first) { if (o.style === 'swell') ex.att = Math.min(L * C.spb * 0.6, 3.5); } else { ex.leg = true; ex.legAtt = 0.4; ex.legOff = 'loop'; }
     emit(C, 'pad', o.inst, o.b0, m, L + (cont ? 0.12 : 0), o.vel * (o.j === 0 ? 1 : 0.9), ex);
   }
@@ -901,7 +902,7 @@
     const voices = cc && C.def && (C.def.padTie || C.def.orch) && Math.abs(cc.endAbs - s.start) < 1e-6 && sameVoice(cc.inst, inst) ? cc.voices : [];   // per part: { m, ev } of the note currently sounding (carried from the section before when it follows at once)
     const base = { v1: cfg.v1 || inst.v1, v2: cfg.v2 || inst.v2, att: cfg.att, rel: cfg.rel, width: cfg.width };
     const sing = (j, m, beat, L, k, first) => {           // one phrase of one voice: staggered entry, a small swell, breath-length
-      const dyn0 = (soft ? 0.3 : 0.55) + (soft ? 0.12 : 0.2) * (k % 2), dt = first ? j * 0.16 + rng() * 0.08 : j * 0.04 + rng() * 0.05;
+      const ens = num(C.def && C.def.ensemble, 1), dyn0 = (soft ? 0.3 : 0.55) + (soft ? 0.12 : 0.2) * (k % 2), dt = (first ? j * 0.16 + rng() * 0.08 : j * 0.04 + rng() * 0.05) * ens;
       const ex = Object.assign({}, base, { pan: (j - (n - 1) / 2) * 0.35, dt, dyn: dyn0, swell: dyn0 + (soft ? 0.22 : 0.18) });
       if (!first && soft && C.def && (C.def.padTie || C.def.orch)) ex.att = 1.0;          // a held piece's hum: a voice back from its breath fades in, unheard
       return emit(C, 'choir', inst, s.start + beat, m, Math.max(0.5, L), vel * (0.9 + 0.1 * (k % 2)), ex);
@@ -1014,7 +1015,7 @@
         if (!nt.keep && (strong || nt.dur >= 2) && !isChordTone(m, sg.ch) && clashes(m, sg.ch)) { const m0 = m; m = snapToChord(m, sg.ch); C.snaps++; (C.snapLog || (C.snapLog = [])).push({ sec: s.R.n, key, bar: Math.floor(off / C.meter) + 1, beat: +(off % C.meter + 1).toFixed(2), dur: nt.dur, from: m0, to: m, ch: sg.ch.sym }); }   // the log: where a written note met a chord it clashes with (a test hook: tools/qa)
         m = foldRange(inst, m);
         const pm = prevM; prevM = m;
-        const dt = (rng() - 0.5) * 0.012;
+        const dt = (rng() - 0.5) * 0.012 * num(C.def && C.def.ensemble, 1);
         if (flutterP && nt.dur >= 1.5 && rng() < flutterP) { for (let k = 0; k < 3; k++) emit(C, ly, inst, s.start + off - 0.17 + k * 0.055, foldRange(inst, stepMidi(C, step + (k % 2 === 0 ? 1 : 0), 0)), 0.055, vel * 0.6, { art: 1, dt: 0 }); }
         else if (graceP && nt.dur >= 1.5 && rng() < graceP) emit(C, ly, inst, s.start + off - 0.09, foldRange(inst, stepMidi(C, step - 1, 0)), 0.09, vel * 0.55, { art: 1, dt: 0 });
         let sw = swellK && nt.dur >= 2 ? { dyn: clamp(vel * C.lvAt(s.start + off) * (1 - swellK), 0.12, 1), swell: clamp(vel * C.lvAt(s.start + off + nt.dur), 0, 1) } : null;
@@ -1292,6 +1293,18 @@
       if (!e.o || e.v === 'expr' || e.v === 'fx' || e.b === undefined || e.o.alignEnd) continue;
       if (e.v === 'sample') e.o = Object.assign({}, e.o, { tight: true, hum: 0 });
       e.t = Math.max(0, C.tAt(e.b) - num(e.o.pre, 0));   // pre: an instrument whose sound blooms slowly starts that much early, so its note arrives with the beat
+    }
+    // speak (a piece's `speak`, 0..1): every note is started early by the time its recording takes to speak, so the sound — not the file —
+    // arrives on the beat, as players start a slow-speaking note early without thinking (a cello's bow before the beat, a harp on it).
+    // A legato note (already past its attack) and a slow swell (a fade, not an arrival) keep their time.
+    if (def.speak && A.Samples && A.Samples.speak) {
+      for (const e of C.ev) {
+        if (e.v !== 'sample' || !e.o || e.o.leg || e.o.alignEnd || !e.o.smp) continue;
+        const a = e.o.att; if (a !== undefined && a > 0.8) continue;
+        const sp = A.Samples.speak(e.o.smp, e.m || 60, a) * num(def.speak, 1);
+        if (sp > 0.004) e.t = Math.max(0, e.t - sp);
+      }
+      C.ev.sort((a, b) => a.t - b.t);
     }
     if (def.smpK) for (const e of C.ev) { const k = e.o && def.smpK[e.o.smp]; if (k) e.o = Object.assign({}, e.o, { lvl: num(e.o.lvl, 1) * k }); }   // a recording up or down in this piece (the refresh's oldMenK: the old men's choir)
     return { events: C.ev, beats: C.totalBeats, len: tAcc, wraps, pass, snaps: C.snaps, snapLog: C.snapLog || [], bars, beatsT, move: Emove };
@@ -1582,7 +1595,7 @@
         // a melodic line stays with its player: seated once, by its first note (the register split is for the chords of an ensemble recording)
         const line = /^(lead|bell)/.test(ev.k || ''), ps = this.partSeat || (this.partSeat = {}), pk = (ev.k || '') + '|' + o2.smp;
         const key = line ? (ps[pk] || (ps[pk] = /^strEns/.test(o2.smp) ? (ev.m >= 55 ? 'vln1' : 'vc') : /^(chorus$|choirOoh|choirHum)/.test(o2.smp) ? (ev.m >= 62 ? 'women' : 'men') : seatOf(o2.smp, ev.m))) : seatOf(o2.smp, ev.m);
-        dest = this.seatStrip(ev.ly, L, key); o3 = Object.assign({}, o2, { pan: 0, width: Math.min(num(o2.width, 1), SEATS[key][2] * num(this.def.seating.width, 1)) });
+        dest = this.seatStrip(ev.ly, L, key); o3 = Object.assign({}, o2, { humT: num(this.def.ensemble, 1), pan: 0, width: Math.min(num(o2.width, 1), SEATS[key][2] * num(this.def.seating.width, 1)) });
       }
       const v = V[ev.v](this.eng, dest, T, o3);
       if (v) this.live.add(v);

@@ -223,3 +223,26 @@ The fixes:
 seconds). With it, every note lands on or just behind the conductor's beat: about 8 ms back for the orchestra, and about 3 ms for the
 soloist, who leads. A note that would have been early is folded back behind the beat instead, so the looseness stays without rushing.
 After the change, no note in the suite is early, and the typical note sits 12–14 ms behind the beat.
+
+## Revision 6: a professional ensemble, aligned by sound
+
+After listening, the feedback was that revision 5's timing felt sloppy and uncoordinated. Two causes:
+
+- **The ensemble was loose.** The engine scatters timing on purpose, tuned for gentle ambient game music: each part drifts by up to about
+  18 ms, notes get random jitter, chord notes are spread 10–40 ms apart, choir voices enter staggered by up to 0.4 s, and the sampler adds
+  0–13 ms on top. Revision 5's "fold early notes behind the beat" kept all of that spread and widened it.
+- **Notes were aligned by when their files start, not by when they sound.** A string section takes up to a fifth of a second to bloom
+  into its note; a harp, pizzicato or timpani speaks at once. Started together, the strings arrive audibly late.
+
+The fixes, all gated so the game is unaffected:
+
+- **`ensemble`** (0.3 here) scales every source of looseness to a third. Notes meant to sound together now start within 4–8 ms of each
+  other typically (it was 15–27 ms), and the worst 10% within 28–36 ms (it was 94–126 ms). Early notes are now simply placed on the
+  floor, `behind` (6 ms; the soloist 40% of that), instead of folded.
+- **`speak`** starts every note early by the time its recording takes to speak, so the *sound* lands on the beat. The sampler measures
+  this per recording (`Samples.speak`): the moment its 10 ms loudness first reaches 40% of its peak in the first half second, capped at
+  200 ms. If the envelope's fade-in is slower, half of it counts instead. Measured values run about 0 ms for harp, pizzicato and
+  timpani; 20–60 ms for brass; 10–160 ms for woodwinds; and 30–200 ms for strings. Legato notes, which already start past their attack,
+  and slow swells keep their time.
+- **A steadier conductor.** The breath at section ends is now 5% (it was 12%), the broadening on climaxes 4%, and the ease at phrase
+  ends 6%.
