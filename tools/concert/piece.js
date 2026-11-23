@@ -21,6 +21,7 @@ const OUT = path.join(__dirname, 'out', 'pieces'), SR = 48000, PORT = +opt.port 
   for (const id of ids.length ? ids : ['title']) {
     const s = await page.evaluate(([id]) => {
       const M = MOO.Audio.Music, d = M._tracks[id]; if (!d) return { err: 'no such piece' };
+      if (d.forms && d.forms.length > 1) { d.forms = [d.forms[0]]; d._p = null; }   // its first form (the render and the numbers agree)
       const a = M.analyze(id), c0 = M._compile(id, 0), c1 = M._compile(id, 1);
       // the texture: share of 2 s windows of the first pass in which no line, bass or figure starts a note
       const W = 2, n = Math.ceil(c0.len / W), mv = new Array(n).fill(0);

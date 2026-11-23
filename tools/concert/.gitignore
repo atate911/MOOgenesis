@@ -1,3 +1,4 @@
 out/*.wav
 out/*.flac
 out/.*.f32
+out/pieces/*.wav

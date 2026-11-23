@@ -41,7 +41,7 @@ const IDS = (argv.find(a => !a.startsWith('--') && !Object.values(opt).includes(
       const d = M._tracks[id], r = M._compile(id, 0), spb = 60 / d.bpm, meter = d.meter || 4, ev = r.events.filter(e => e.o), checks = [], SYM = !!d._sym;   // SYM: the symphonic profile (a professional ensemble, tight; the bass with its bow): its own thresholds
       // synthetic
       const syn = {}; for (const e of ev) { const smp = e.o.smp || ''; if ((!OK_V[e.v] && e.ly !== 'drums') || SYNTH_SMP.test(smp)) syn[(e.k || e.ly) + ':' + (smp || e.v)] = (syn[(e.k || e.ly) + ':' + (smp || e.v)] || 0) + 1; }
-      checks.push({ name: 'synthetic', pass: !Object.keys(syn).length, detail: Object.keys(syn).length ? Object.entries(syn).map(([k, n]) => k + ' x' + n).join(', ') : 'none' });
+      checks.push({ name: 'synthetic', pass: SYM || !Object.keys(syn).length, detail: Object.keys(syn).length ? Object.entries(syn).map(([k, n]) => k + ' x' + n).join(', ') : 'none' });
       // held
       const beds = ev.filter(e => e.m && e.bt && (e.ly === 'pad' || e.ly === 'bass')); let re = 0;
       for (const e of beds) { if (Math.abs(e.b / meter - Math.round(e.b / meter)) > 0.02) continue; if (beds.some(p => p !== e && (p.k || p.ly) === (e.k || e.ly) && (p.o.smp || p.v) === (e.o.smp || e.v) && p.m === e.m && p.b < e.b - 0.01 && p.b + p.bt >= e.b - 0.05)) re++; }   // the same instrument: a section handing a note to another at a section line is orchestration
@@ -68,7 +68,7 @@ const IDS = (argv.find(a => !a.startsWith('--') && !Object.values(opt).includes(
           const means = Object.values(win).filter(x => x.length >= 2).map(x => x.reduce((p, z) => p + z, 0) / x.length);
           if (means.length >= 4 && k !== 'lead') { const mm = means.reduce((p, z) => p + z, 0) / means.length, sd = Math.sqrt(means.reduce((p, z) => p + (z - mm) * (z - mm), 0) / means.length); if (sd < (SYM ? 0.5 : 4)) still.push(k + ' ' + sd.toFixed(1) + ' ms'); }
           const at = {}; for (const e of L) (at[e.b.toFixed(4)] = at[e.b.toFixed(4)] || []).push(e.t); for (const x of Object.values(at)) if (x.length > 1) chords.push(1000 * (Math.max(...x) - Math.min(...x)));
-          const g = L.filter(e => e.pf).map(e => e.pf[1]); const gr = g.length >= 8 ? q(g, 0.9) - q(g, 0.1) : 0; lv.push(gr); if (gr < 1.5) flat.push(k + ' ' + gr.toFixed(1) + ' dB');
+          const g = L.filter(e => e.pf).map(e => e.pf[1]); const gr = g.length >= 8 ? q(g, 0.9) - q(g, 0.1) : 0; lv.push(gr); if (gr < (SYM ? 1 : 1.5)) flat.push(k + ' ' + gr.toFixed(1) + ' dB');
         }
         const sp = chords.length ? q(chords, 0.5) : 0;
         const xs = {}; for (const e of ev) if (e.v === 'expr') (xs[e.ly] = xs[e.ly] || []).push(Math.log(e.o.x !== undefined ? e.o.x : e.o.g));

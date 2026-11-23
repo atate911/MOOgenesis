@@ -31,7 +31,8 @@ for (let i = 0; i < args.length; i++) if (args[i].startsWith('--')) opt[args[i].
     const lv = x => { let s = 0; for (const v of x) s += v * v; return 10 * Math.log10(s / x.length + 1e-15); };
     for (let mi = 0; mi < suite.movements.length; mi++) {
       if (only && +only !== mi + 1) continue;
-      const id = suite.movements[mi].id, c = M._compile(id, 0);
+      const id = suite.movements[mi].id, D = M._tracks[id]; if (D.forms && D.forms.length > 1) { D.forms = [D.forms[0]]; D._p = null; }   // one form, the same in the render and the windows
+      const c = M._compile(id, 0);
       lines.push('\n== ' + suite.movements[mi].title);
       lines.push('  section        ' + bands.slice(0, -1).map((b, i) => (b + '-' + bands[i + 1]).padStart(9)).join('') + '   200-500  melody  layers (share of the passage, dB)');
       for (const w of c.wraps) {
