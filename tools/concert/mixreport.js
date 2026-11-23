@@ -3,6 +3,7 @@
 //   - the melody against everything else (the lead line alone vs the whole): does the tune lead?
 //   - each layer's share of the passage (the strings' beds, the choir, the bass, the lines, the percussion)
 //   node tools/concert/mixreport.js [--only 2] [--secs 12]      (renders a window from the middle of every section)
+//   node tools/concert/mixreport.js --track galaxy14             a piece of the game's score, through the game's master
 const { serve, open } = require('../qa/lib');
 const args = process.argv.slice(2), opt = {};
 for (let i = 0; i < args.length; i++) if (args[i].startsWith('--')) opt[args[i].slice(2)] = args[i + 1] && !args[i + 1].startsWith('--') ? args[++i] : true;
@@ -12,9 +13,10 @@ for (let i = 0; i < args.length; i++) if (args[i].startsWith('--')) opt[args[i].
   await page.goto('http://localhost:' + PORT + '/tools/test-audio.html');
   await page.waitForFunction(() => window.MOO && MOO.Audio && MOO.Audio.Music);
   await page.addScriptTag({ url: 'http://localhost:' + PORT + '/tools/concert/suite.js?' + Date.now() });
-  const out = await page.evaluate(async ([only, secs]) => {
-    MOO.Audio.hallHp = 220; MOO.Audio.hallRT = 4; MOO.Audio.hallLp = 6500; MOO.Audio.concert = true; await MOO.Audio.Samples.preload();
-    const M = MOO.Audio.Music, suite = window.CONCERT_SUITE, SR = 24000, lines = [];
+  const out = await page.evaluate(async ([only, secs, tracks]) => {
+    if (!tracks) { MOO.Audio.hallHp = 220; MOO.Audio.hallRT = 4; MOO.Audio.hallLp = 6500; MOO.Audio.concert = true; } await MOO.Audio.Samples.preload();   // a game piece is measured through the game's own (symphonic) master
+    const M = MOO.Audio.Music, SR = 24000, lines = [];
+    const suite = tracks ? { movements: tracks.split(',').map(id => ({ id, title: id })) } : window.CONCERT_SUITE;   // --track: any piece of the game's score
     const bands = [40, 80, 160, 320, 640, 1280, 2560, 5120, 10240];
     // octave-band energies of a buffer (a 4096-point FFT averaged over the window)
     function spectrum(x) {
@@ -44,7 +46,7 @@ for (let i = 0; i < args.length; i++) if (args[i].startsWith('--')) opt[args[i].
       }
     }
     return lines.join('\n');
-  }, [opt.only, +opt.secs || 10]);
+  }, [opt.only, +opt.secs || 10, typeof opt.track === 'string' ? opt.track : null]);
   console.log(out);
   await browser.close(); srv.close();
 })().catch(e => { console.error(e); process.exit(1); });
