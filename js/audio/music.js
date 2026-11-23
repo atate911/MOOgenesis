@@ -804,7 +804,8 @@
   function sameVoice(a, b) { return a === b || (!!a && !!b && a.v === b.v && (a.smp || '') === (b.smp || '')); }   // one instrument, whatever its envelope settings
   // a change of note is a crossfade, not an attack: the new note rises over 0.45 s from the steady part of its recording while the old one
   // holds a fifth of a beat into it and lets go over half a second (at 0.2 s and 0.08 of a beat the change was heard as a new bow)
-  function bassWrite(C, n) { emit(C, 'bass', n.inst0 || n.inst, n.beat, n.m, n.into ? n.len + 0.2 : n.len * 0.97, n.v, Object.assign(n.from ? { leg: true, legAtt: 0.45, legOff: 'loop' } : {}, n.into ? { rel: 0.5 } : {})); }
+  // (a piece's `bassXf`, 0..1, scales that crossfade: an orchestra's basses change note cleanly, the old note gone as the new one speaks)
+  function bassWrite(C, n) { const k = clamp(num(C.def && C.def.bassXf, 1), 0, 1); emit(C, 'bass', n.inst0 || n.inst, n.beat, n.m, n.into ? n.len + 0.2 * k : n.len * 0.97, n.v, Object.assign(n.from ? { leg: true, legAtt: Math.max(0.08, 0.45 * k), legOff: 'loop' } : {}, n.into ? { rel: Math.max(0.15, 0.5 * k) } : {})); }
 
   function genArp(C, s, cfg, key) {
     const P = norm(cfg, ARPS, 'arp'), inst = resolveInst(cfg.inst, C.inst[key] || DEF_INST[key]), reg = inRange(inst, P.reg || [55, 84]);
@@ -1416,7 +1417,7 @@
     // the first reflections: the two side walls, the stage's back wall, the floor, the ceiling (with what each absorbs)
     const imgs = [[-2 * ROOM.w - x, y, z, 0.62], [2 * ROOM.w - x, y, z, 0.62], [x, 2 * ROOM.back - y, z, 0.5], [x, y, -z, 0.42], [x, y, 2 * ROOM.h - z, 0.5]];
     const er = imgs.map(([px, py, pz, a]) => { const ri = dist(px, py, pz); return { dt: (ri - r) / C_SND, g: a * r / ri, pan: panOf(px, py) * 0.85 }; });   // (the reflections a little inside the speakers: wide, not split)
-    return { r, w, er, pan: panOf(x, y), dly: Math.max(0, r - 13) / C_SND * 0.5, dir: Math.pow(R_REF / r, 0.55), air: -0.1 * Math.max(0, r - 13), hall: Math.pow(r / R_REF, 0.45) };
+    return { r, w, er, pan: panOf(x, y), panRaw: panOf(x, y), dly: Math.max(0, r - 13) / C_SND * 0.5, dir: Math.pow(R_REF / r, 0.55), air: -0.1 * Math.max(0, r - 13), hall: Math.pow(r / R_REF, 0.45) };
   }
   Music._seats = { SEATS, seatOf, seatGeom };
 
@@ -1625,9 +1626,10 @@
       const inp = gain(1), d = mk(ctx.createDelay(0.1)); d.delayTime.value = g.dly; inp.connect(d);
       const air = mk(ctx.createBiquadFilter()); air.type = 'highshelf'; air.frequency.value = 5000; air.gain.value = g.air; d.connect(air);
       // the direct sound: from its angle, the far ear a fraction of a millisecond late
-      const pn = mk(ctx.createStereoPanner()); pn.pan.value = g.pan; air.connect(pn);
-      const sp = mk(ctx.createChannelSplitter(2)), mg = mk(ctx.createChannelMerger(2)), dl = mk(ctx.createDelay(0.01)), dr = mk(ctx.createDelay(0.01)), itd = 0.0004 * Math.abs(g.pan);
-      dl.delayTime.value = g.pan > 0 ? itd : 0; dr.delayTime.value = g.pan < 0 ? itd : 0;
+      const spread = num(cfg.spread, 1), panS = clamp(g.pan * spread, -0.95, 0.95);   // cfg.spread: the stage a little wider (each section further from its neighbours)
+      const pn = mk(ctx.createStereoPanner()); pn.pan.value = panS; air.connect(pn);
+      const sp = mk(ctx.createChannelSplitter(2)), mg = mk(ctx.createChannelMerger(2)), dl = mk(ctx.createDelay(0.01)), dr = mk(ctx.createDelay(0.01)), itd = 0.0004 * Math.abs(panS);
+      dl.delayTime.value = panS > 0 ? itd : 0; dr.delayTime.value = panS < 0 ? itd : 0;
       pn.connect(sp); sp.connect(dl, 0); sp.connect(dr, 1); dl.connect(mg, 0, 0); dr.connect(mg, 0, 1);
       const dir = gain(g.dir); mg.connect(dir); dir.connect(L.in);
       // the early reflections: this seat's walls, floor and ceiling, each from its own direction, a little darker than the direct sound

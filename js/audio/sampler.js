@@ -491,8 +491,11 @@
   // the zones that should sound for (midi, dyn): one zone, or — for instruments recorded in dynamic layers (inst.xf) — the two layers
   // around the asked dynamic with equal-power weights, so a swell moves through the real timbres (mp -> ff) instead of a lowpass.
   const altCount = Object.create(null);
-  function layersAt(inst, midi, alt) {
+  function layersAt(inst, midi0, alt) {
     const zs = inst.zones; if (!zs.length) return [];
+    // the recording is chosen by the nearest whole note; a note tuned a few cents off it (a pure third, the tuned fifth) is still that
+    // note, played from that note's recording (a fractional note fell between two zones' ranges and fell back to every layer at once)
+    const midi = inst.pitched ? Math.round(midi0) : midi0;
     let cands = inst.pitched ? zs.filter(z => midi >= z.lo && midi <= z.hi) : zs;
     if (alt && inst.pitched && cands.length) {          // alternate between this note's take and a neighbour's (if the neighbour was recorded)
       const k = inst.name + ':' + midi, n = (altCount[k] = ((altCount[k] || 0) + 1) % 3);
