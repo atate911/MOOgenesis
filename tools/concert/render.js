@@ -4,6 +4,7 @@
 //   node tools/concert/render.js --only 2             one movement (1-based), or a comma list
 //   node tools/concert/render.js --lint               compile only: length, sections, notes the engine had to move onto a chord
 //   node tools/concert/render.js --secs 40 --from 90  a window of a movement (from 90 s, 40 s long), for a quick check
+//   node tools/concert/render.js --score remaster.js  the remasters of the game's own pieces instead of the suite
 //   node tools/concert/render.js --out DIR
 // The levels: each movement is rendered at unity through the game's master chain, then the whole suite gets one gain (the same for every
 // movement, so a quiet movement stays quiet against a loud one), set so the loudest movement sits at -16 LUFS integrated with its true
@@ -23,7 +24,9 @@ const SR = 48000, PORT = +opt.port || 8772, TAIL = 11, TARGET_LUFS = -16, CEIL_D
   await page.addScriptTag({ url: `http://localhost:${PORT}/tools/lib/audio-metrics.js` });
   await page.waitForFunction(() => window.MOO && MOO.Audio && MOO.Audio.Music && window.AudioMetrics);
   await page.addScriptTag({ url: `http://localhost:${PORT}/tools/concert/suite.js?` + Date.now() });
-  const suite = await page.evaluate(() => window.CONCERT_SUITE);
+  // --score remaster.js: another score loaded after the suite (it may set window.CONCERT_REMASTER, rendered instead of the suite)
+  if (typeof opt.score === 'string') await page.addScriptTag({ url: `http://localhost:${PORT}/tools/concert/${opt.score}?` + Date.now() });
+  const suite = await page.evaluate(() => window.CONCERT_REMASTER || window.CONCERT_SUITE);
   if (!suite) throw new Error('suite.js did not register window.CONCERT_SUITE');
   let pick = suite.movements.map((m, i) => i);
   if (typeof opt.only === 'string') pick = opt.only.split(',').map(s => +s - 1);

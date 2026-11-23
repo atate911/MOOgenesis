@@ -338,6 +338,7 @@
     ],
   })));
 
+  window.CONCERT_KIT = { STAGE, clarify, ORGAN, at };   // for the remasters of the game's own pieces (tools/concert/remaster.js)
   window.CONCERT_SUITE = {
     title: 'Master of Orion — Reborn: Concert Suite', artist: 'MOOgenesis',
     movements: [
