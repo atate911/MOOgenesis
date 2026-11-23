@@ -12,7 +12,7 @@ for arg in sys.argv[1:]:
         mm = re.match(r"^  (\S+)\s+melody.*-> (\{.*\})$", line)
         if mm:
             sec = mm.group(1); cur.setdefault(sec, {}); n += 1
-            for k, g in json.loads(mm.group(2)).items(): cur[sec][k] = round(cur[sec].get(k, 1) * g, 3)
+            for k, g in json.loads(mm.group(2)).items(): cur[sec][k] = round(max(0.03, cur[sec].get(k, 1) * g ** 2), 3)   # squared: a velocity's gain reaches the level at about half its dB (the recording chosen by the dynamic, the velocity curve)
     table[pid] = cur; print(pid, n, 'sections corrected')
 body = '\n'.join("    '%s': %s," % (k, re.sub(r'"(\w+)": ', r'\1: ', json.dumps(v))) for k, v in table.items())
 s = s.replace(m.group(0), "  const BAL = {\n" + body + "\n  };"); open(p, 'w').write(s)

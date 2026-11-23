@@ -43,7 +43,7 @@ const FILE = path.join(__dirname, '..', '..', 'js', 'audio', 'score', 'symphonic
       const m = /  const BAL = \{\n([\s\S]*?)  \};/.exec(s); if (!m) throw new Error('no BAL table');
       const table = {}; for (const line of m[1].split('\n')) { const mm = /^    '?([\w:]+)'?: (\{.*\}),?$/.exec(line); if (mm) table[mm[1]] = JSON.parse(mm[2].replace(/(\w+):/g, '"$1":').replace(/'/g, '"')); }
       const cur = table[id] || {};
-      for (const [sec, f] of Object.entries(bal)) { cur[sec] = cur[sec] || {}; for (const [k, g] of Object.entries(f)) cur[sec][k] = +((cur[sec][k] || 1) * g).toFixed(3); }
+      for (const [sec, f] of Object.entries(bal)) { cur[sec] = cur[sec] || {}; for (const [k, g] of Object.entries(f)) cur[sec][k] = +Math.max(0.03, (cur[sec][k] || 1) * g * g).toFixed(3); }
       table[id] = cur;
       const body = Object.entries(table).map(([k, v]) => `    '${k}': ${JSON.stringify(v).replace(/"(\w+)":/g, '$1: ')},`).join('\n');
       s = s.replace(m[0], '  const BAL = {\n' + body + '\n  };');

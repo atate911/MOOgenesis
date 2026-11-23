@@ -20,6 +20,10 @@
     'galaxy19': {call: {bass: 0.61}, ch1: {pad: 0.716, bass: 0.192}, str: {arp: 0.096, bass: 0.606, pad: 0.756}, ch2: {pad: 0.704, bass: 0.391, choir: 0.921}, ch3: {pad: 0.663, bass: 0.619, choir: 0.761}},
     'galaxy11': {drift1: {arp: 0.378, pad: 0.376, bass: 0.344}, drift2: {arp: 0.205, bass: 0.28, pad: 0.576}, rise: {arp: 0.248, pad: 0.312, bass: 0.585, choir: 0.432}, breath: {pad: 0.242, choir: 0.99}, drift3: {arp: 0.275, bass: 0.254, pad: 0.577}},
     'galaxy23': {A1: {arp: 0.168, choir: 0.881}, A2: {arp: 0.23, bass: 0.396, choir: 0.921, pad: 0.98}, E: {arp: 0.152, choir: 0.91}},
+    'galaxy13': {W1: {pad: 0.111, bass: 0.348}, W2: {arp: 0.235, pad: 0.053, bass: 0.429}, H: {pad: 0.194, bass: 0.587}, mid: {pad: 0.367, choir: 0.515}, breath: {arp: 0.03, pad: 0.95, bass: 0.518}, W3: {arp: 0.525, pad: 0.35, bass: 0.576}, dawn: {pad: 0.145, bass: 0.532}},
+    'galaxy20': {M1: {pad: 0.267, bass: 0.242}, M2: {pad: 0.245, bass: 0.253}, trio: {arp: 0.351, pad: 0.247, bass: 0.453, choir: 0.96}, M3: {pad: 0.454, choir: 0.764, bass: 0.96}, M4: {pad: 0.389, bass: 0.694}},
+    'galaxy21': {S1: {arp: 0.148, bass: 0.388, pad: 0.679}, S2: {arp: 0.238, pad: 0.331, bass: 0.402, choir: 0.643}, L: {arp: 0.527, pad: 0.717, bass: 0.516}, still: {pad: 0.353, choir: 0.637}, S3: {arp: 0.287, pad: 0.251, bass: 0.091, choir: 0.904}, L2: {pad: 0.284, bass: 0.112, arp: 0.467}, E: {arp: 0.342, bass: 0.7}},
+    'galaxy22': {men: {pad: 0.708, bass: 0.365, choir: 0.478}, satb: {bass: 0.309, choir: 0.319, pad: 0.634}, organ: {pad: 0.109, bass: 0.073}, satb2: {pad: 0.095, bass: 0.127, choir: 0.211, arp: 0.245}, still: {pad: 0.241, choir: 0.314}, crest: {pad: 0.324, bass: 0.161, choir: 0.267, drums: 0.444}, amen: {pad: 0.248, bass: 0.405, choir: 0.476}},
   };
   function piece(id, def) {
     const old = Music._tracks[id]; if (old) for (const k of KEEP) if (def[k] === undefined && old[k] !== undefined) def[k] = JSON.parse(JSON.stringify(old[k]));
@@ -720,6 +724,138 @@
       // the close: the flute's tune, home
       { n: 'E', bars: 8, cres: [0.48, 0.3], prog: 'I IV I V | IV V I I', pad2: { p: 'swell', n: 3, reg: [48, 64], vel: 0.38 }, bass: { pat: '1--', vel: 0.5, inst: { p: 'deep', att: 1.2, rel: 2.6, sub: 0.7 } },
         arp: { pat: '01234.......', res: 2, gate: 2, vel: 0.22, reg: [50, 67] }, lead: { ph: 'WE PE', vel: 0.5, shape: 0.35, swell: 0.25 }, choir2: { n: 3, reg: [43, 57], vel: 0.28, soft: true } },
+    ],
+  });
+
+  piece('galaxy13', {
+    desc: 'The watch: a nocturne — a walking pizzicato bass under harp chords placed off the beat, an air pad far back, and a lone trumpet, very soft, with a line of its own: a fifth, then the octave, and the slow way down; the horn answers once with the procession’s theme and once with the leitmotif from across the ship, the chimes strike midnight, the strings come in only at the end of the watch',
+    tags: { solitude: 0.8, contact: 0.3, tension: 0.2, war: 0, grief: 0.2, grandeur: 0.2, energy: 0.2, dark: 0.4 },
+    orch: true, holdLow: false, hall: 'musikverein', bpm: 56, trim: 6.2, root: 'Ab', mode: 'major', oct: -1, loopFrom: 'W1', tens: false, gentle: true, rubato: 0,
+    forms: [['W1', 'W2', 'H', 'mid', 'breath', 'W3', 'dawn', 'E'], ['W1', 'H', 'mid', 'breath', 'W2', 'dawn', 'E'], ['W1', 'W2', 'mid', 'breath', 'H', 'W3', 'E'], ['W1', 'mid', 'breath', 'W2', 'H', 'E']],
+    alts: [{}, { lead: 'flute', lead2: 'cello' }, { lead: 'oboe', lead2: 'horn', arp2: 'glass' }], eraAlts: { pad: 'cellos', lead: 'hornSolo', choir: 'choirMen' },
+    inst: { pad: 'air', pad2: 'harp', bass: 'pizz', lead: 'tptSolo', lead2: 'hornSolo', bell: 'bell', bell2: 'chime', arp: 'harp', arp2: 'vibes', choir: 'choirWomen', choir2: 'choirMen' },
+    ph: {
+      N1: '1:2 5:2 | 8:3 7:1 | 6:2 5:1 3:1 | 2:4', N2: '1:2 5:2 | 10:3 9:1 | 8:2 6:1 5:1 | 5:4',                   // the nocturne: a fifth, then the octave, and the slow way down
+      N3: '3:3 2:1 | 5:3 4:1 | 3:2 1:2 | 4:2 5:2', N4: '6:2 8:2 | 8:3 5:1 | 3:2 2:2 | 1:4',
+      PA: '@procession.A1', CD: '@procession.CD',                    // the procession's theme and its cadence, quoted once by the horn
+      H1: '@hymn.H1', K: '@hymn.K',
+      CM: '@men.CM', CH: '8:8 | r:8 | 5:8 | r:8',
+    },
+    sec: [
+      { n: 'tread', bars: 4, cres: [0.45, 0.56], prog: 'Iadd9:2 IVM7:2', bass: { pat: '1-5-', vel: 0.9 }, pad2: { p: 'stab', pat: '..x.....', n: 3, reg: [55, 74], vel: 0.6, gate: 1.4 }, pad: { p: 'swell', n: 2, reg: [72, 88], vel: 0.36 } },
+      { n: 'W1', bars: 8, lv: 0.6, prog: 'I Isus2 IVadd9 V | I vi7 IVM7 Vsus4:.5 V:.5', bass: { pat: '1-5-', vel: 0.9 }, pad2: { p: 'stab', pat: '..x.....', n: 3, reg: [55, 74], vel: 0.6, gate: 1.4 }, pad: { p: 'swell', n: 2, reg: [72, 88], vel: 0.36 },
+        lead: { ph: ['N1 N2', 'N1 r4', 'r4 N2'], vel: 0.41, shape: 0.35, swell: 0.15 } },
+      { n: 'W2', bars: 8, lv: 0.66, prog: 'I Isus2 IVadd9 V | I vi7 IVM7 Vsus4:.5 V:.5', bass: { pat: ['1-5-', '1-3-'], vel: 0.9 }, pad2: { p: 'stab', pat: '..x...x.', n: 3, reg: [55, 74], vel: 0.6, gate: 1.2 }, pad: { p: 'swell', n: 2, reg: [72, 88], vel: 0.36 },
+        lead: { ph: ['N1 N2', 'N2 N1'], vel: 0.43, shape: 0.35, swell: 0.15 }, lead2: { ph: ['r4 PA', 'r8'], vel: 0.38, skip: 0.3, shape: 0.35, swell: 0.35 }, arp2: { pat: '0.......2.......', res: 2, vel: 0.3, reg: [67, 86], skip: 0.4 }, choir: { n: 2, reg: [65, 79], vel: 0.3, soft: true, skip: 0.4 } },
+      { n: 'H', bars: 8, lv: 0.62, prog: 'I V I IV:.5 V:.5 | IVM7 Vsus4 I:.5 V7:.5 I', bass: { pat: '1-5-', vel: 0.9 }, pad2: { p: 'stab', pat: '..x.....', n: 3, reg: [55, 74], vel: 0.55, gate: 1.4 }, pad: { p: 'swell', n: 2, reg: [72, 88], vel: 0.38 },
+        lead2: { ph: ['H1 r4', 'K r4'], vel: 0.44, shape: 0.35, swell: 0.35 }, lead: { ph: ['r4 N4', 'N3 N4', 'r4 CD'], vel: 0.43, shape: 0.35, swell: 0.15 }, choir: { n: 2, reg: [65, 79], vel: 0.32, soft: true } },
+      { n: 'mid', bars: 8, lv: 0.44, prog: 'Iadd9:2 Vsus4:2 | IVM7:2 I:2', pad: { p: 'swell', n: 2, reg: [72, 88], vel: 0.45 }, pad2: { p: 'swell', inst: 'analog', n: 3, reg: [52, 69], vel: 0.5 }, bass: { pat: '1---', pedal: true, inst: { p: 'deep', att: 1.6, rel: 2.8, sub: 0.5 } },
+        bell2: { ph: ['CH', 'r2 CH'], oct: 0, vel: 0.44, echo: 0.3 }, lead2: { ph: ['CM', 'r2 CM'], inst: 'choirMen', oct: -1, vel: 0.4, shape: 0.4 }, choir2: { n: 3, reg: [43, 60], vel: 0.32, soft: true }, bell: { dens: 0.08, res: 1, reg: [76, 91], vel: 0.26 } },
+      { n: 'breath', bars: 2, barsVar: [1, 2], lv: 0.3, prog: 'I:8', tens: false, pad: { p: 'swell', n: 2, reg: [72, 88], vel: 0.34 } },
+      { n: 'W3', bars: 8, lv: 0.68, prog: 'I Isus2 IVadd9 V | I vi7 IVM7 Vsus4:.5 V:.5', bass: { pat: ['1-5-', '1-3-'], vel: 0.95 }, pad2: { p: 'stab', pat: '..x...x.', n: 3, reg: [55, 74], vel: 0.62, gate: 1.2 }, pad: { p: 'swell', n: 2, reg: [72, 88], vel: 0.38 },
+        lead: { ph: ['N1 N2', 'N2 N1'], vel: 0.44, harm: -2, shape: 0.35, swell: 0.15 }, lead2: { ph: '@', vel: 0.36, skip: 0.3, shape: 0.35, swell: 0.35 }, arp2: { pat: '0.......2.......', res: 2, vel: 0.32, reg: [67, 86] }, choir: { n: 3, reg: [62, 79], vel: 0.4 } },
+      { n: 'dawn', bars: 8, cres: [0.66, 0.76], prog: 'I V I IV:.5 V:.5 | IVM7 Vsus4 I:.5 V7:.5 I', bass: { pat: '1-5-', vel: 0.95 }, pad2: { p: 'stab', pat: '..x.....', n: 3, reg: [55, 74], vel: 0.55, gate: 1.4 }, pad: { p: 'sus', inst: 'strings', n: 4, reg: [50, 76], vel: 0.6 },
+        lead2: { ph: 'H1 r4', vel: 0.46, shape: 0.35, swell: 0.35 }, lead: { ph: ['N3 N4', 'r4 N4'], vel: 0.46, harm: -2, shape: 0.35, swell: 0.15 }, choir: { n: 3, reg: [62, 79], vel: 0.48 }, choir2: { n: 3, reg: [43, 60], vel: 0.3, soft: true, skip: 0.4 }, bell: { dens: 0.1, res: 1, reg: [76, 91], vel: 0.26 } },
+      { n: 'E', bars: 8, cres: [0.56, 0.42], prog: 'I Isus2 IVadd9 V | IVM7 Vsus4 I:.5 V7:.5 I', bass: { pat: '1-5-', vel: 0.85 }, pad2: { p: 'stab', pat: '..x.....', n: 3, reg: [55, 74], vel: 0.5, gate: 1.4 }, pad: { p: 'swell', n: 2, reg: [72, 88], vel: 0.34 },
+        lead: { ph: ['N1 r4', 'r4 N2', 'N1 N2'], vel: 0.41, shape: 0.35, swell: 0.15 } },
+    ],
+  });
+
+  piece('galaxy20', {
+    desc: 'The late years, the frontier: a slow march — field drums at a whisper, the tuba on the step, the trombones with a dotted march theme of their own, the men chanting beneath, tubular bells; the strings tremble in the trio while the horn plays the hymn, a side-drum roll leads to the crest where the trombones intone the hymn at half speed, the drums fall silent for the phrygian step of the abyss; the border, held',
+    tags: { solitude: 0.2, contact: 0.3, tension: 0.8, war: 0.8, grief: 0.3, grandeur: 0.7, energy: 0.4, dark: 0.7 },
+    quotes: ['abyss'],
+    orch: true, holdLow: false, hall: 'musikverein', bpm: 44, trim: 5.23, root: 'F#', mode: 'minor', oct: -1, loopFrom: 'M1', tens: false, gentle: true, rubato: 0, eraWin: [0.4, 1], mix: { bass: 0.9, choir: 1.1, drums: 0.9, lead: 2.6 }, sends: { drums: { stage: 0.08, verb: 0.05, dly: 0 } },
+    forms: [['M1', 'M2', 'trio', 'M3', 'still', 'M4', 'E'], ['M1', 'trio', 'M2', 'still', 'M3', 'E'], ['M1', 'M2', 'still', 'trio', 'M4', 'E']],
+    alts: [{}, { lead: 'horn', lead2: 'trombones' }, { lead: 'cello', pad: 'strings', bass: 'deep' }],
+    inst: { pad: 'cellos', pad2: 'tremLo', bass: 'tuba', lead: 'trombones', lead2: 'horn', bell: 'chime', bell2: 'chime', arp: 'harp', choir: 'choirMen', choir2: 'aah' },
+    ph: {
+      MT: '1:3 1:1 | 3:2 1:2 | 7:3 7:1 | 6:2 3:2 | 1:3 1:1 | 3:2 5:2 | 4:3 3:1 | 5:4',                             // the march: the dotted step, a rise to the fifth
+      HA: '5:6 8:2 | 7:4 6:4 | 5:6 3:2 | 4:4 5:4', H1: '@hymn.H1', TA: '3:4 | 4:4 | 5:4 | 1:4',   // the hymn at half speed (the climax), at its own pace (the trio), the answer
+      Z: '3:4 | 2b:4 | 1:8', CH: '8:8 | r:8 | 5:8 | r:8', CMF: '1:8 | 7:8 | 5:4 3:4 | 4:4 5:4',
+    },
+    sec: [
+      { n: 'drums', bars: 4, cres: [0.42, 0.56], prog: 'i:4', bass: { pat: 'c---', pedal: true, inst: { p: 'tuba', att: 0.6, rel: 1.8 } }, drums: { bd: 'x.......x.......', sn: ['....x.......x...', '....x.......x.x.'], vel: 0.32 }, choir: { n: 3, reg: [43, 60], vel: 0.36, soft: true } },
+      { n: 'M1', bars: 8, lv: 0.62, prog: 'i:2 bVII bVI i:2 iv V', pad: { p: 'sus', n: 3, reg: [45, 69], vel: 0.6 }, bass: { pat: ['1---', 'c---'], inst: { p: 'tuba', att: 0.4, rel: 1.6 } }, drums: { bd: 'x.......x.......', sn: ['....x.......x...', '....x.......x.x.'], vel: 0.34 },
+        lead: { ph: 'MT', vel: 0.52, shape: 0.35, swell: 0.35 }, choir: { n: 3, reg: [43, 60], vel: 0.42, soft: true } },
+      { n: 'M2', bars: 8, lv: 0.68, prog: 'i:2 bVII bVI i:2 iv V', pad: { p: 'sus', n: 3, reg: [45, 69], vel: 0.6 }, bass: { pat: ['1---', 'c---'], inst: { p: 'tuba', att: 0.4, rel: 1.6 } }, drums: { bd: 'x.......x.......', sn: ['x...x...x...x...', 'x...x...x...x.x.'], vel: 0.36 },
+        lead: { ph: 'MT', vel: 0.54, shape: 0.35, swell: 0.35 }, lead2: { ph: 'CMF', inst: 'choirMen', oct: -1, vel: 0.44, shape: 0.4 }, choir: { n: 3, reg: [43, 60], vel: 0.45, soft: true }, bell2: { ph: ['r4 CH', 'r8'], oct: 0, vel: 0.36, skip: 0.3 } },
+      { n: 'trio', bars: 8, lv: 0.56, prog: 'i bVII i iv:.5 V:.5 | bVIM7 iv V i', pad2: { p: 'swell', n: 3, reg: [45, 66], vel: 0.5 }, pad: { p: 'sus', inst: 'strings', n: 3, reg: [55, 76], vel: 0.5 }, bass: { pat: '1---', inst: { p: 'deep', att: 1.0, rel: 2.2, sub: 0.55 } }, arp: { pat: '0.......2.......', res: 2, vel: 0.3, reg: [52, 76] },
+        lead2: { ph: ['H1 TA', 'H1 r4'], inst: 'horn', vel: 0.52, shape: 0.35, swell: 0.35 }, choir2: { n: 3, reg: [57, 74], vel: 0.36, soft: true } },
+      { n: 'M3', bars: 8, cres: [0.7, 0.84], prog: 'i bVII i iv:.5 V:.5 | bVI iv V i', pad: { p: 'sus', n: 4, reg: [45, 69], vel: 0.65 }, pad2: { p: 'swell', n: 3, reg: [45, 66], vel: 0.45 }, bass: { pat: ['1---', '1---', '1---', '1-1-', '1---', '1---', '1---', 'c---'], inst: { p: 'tuba', att: 0.4, rel: 1.6 } }, drums: { bd: 'x.......x.......', sn: ['x...x...x...x...', 'x...x...x...x.x.'], vel: 0.4 }, fill: 'rollS',
+        lead2: { ph: 'H1 TA', inst: 'horn', vel: 0.58, harm: -2, shape: 0.35, swell: 0.35 }, lead: { ph: ['r4 TA', 'r8'], vel: 0.52, shape: 0.35, swell: 0.35 }, choir: { n: 3, reg: [43, 60], vel: 0.62 }, choir2: { n: 3, reg: [57, 74], vel: 0.42, skip: 0.4 }, timp: { p: 'two', vel: 0.42 } },
+      { n: 'still', bars: 8, lv: 0.46, prog: 'i bII i:2 | i bII i:2', pad: { p: 'swell', n: 3, reg: [45, 67], vel: 0.55 }, bass: { pat: 'c---', pedal: true, inst: { p: 'tuba', att: 1.2, rel: 2.4 } },
+        lead: { ph: ['Z Z', 'r4 Z'], inst: 'cello', vel: 0.5, shape: 0.35 }, bell2: { ph: ['CH', 'r2 CH'], oct: 0, vel: 0.4, echo: 0.3 }, choir: { n: 3, reg: [43, 60], vel: 0.4, soft: true } },
+      { n: 'M4', bars: 8, cres: [0.76, 0.9], prog: 'i:2 bVII bVI i:2 iv V', pad: { p: 'sus', n: 4, reg: [45, 69], vel: 0.65 }, pad2: { p: 'sus', inst: 'strings', n: 3, reg: [55, 76], vel: 0.5 }, bass: { pat: ['1---', 'c---'], inst: { p: 'tuba', att: 0.4, rel: 1.6 } }, drums: { bd: 'x.......x.......', sn: ['x...x...x...x...', 'x...x...x...x.x.'], vel: 0.42 }, fill: 'rollS',
+        lead: { ph: 'HA', vel: 0.58, harm: -2, shape: 0.35, swell: 0.35 }, lead2: { ph: 'CMF', inst: 'choirMen', oct: -1, vel: 0.48, shape: 0.4 }, choir: { n: 3, reg: [43, 60], vel: 0.65 }, choir2: { n: 3, reg: [57, 74], vel: 0.45 }, timp: { p: 'two', vel: 0.45 } },
+      { n: 'E', bars: 8, cres: [0.58, 0.4], prog: 'i:2 bVII bVI i:2 iv i', pad: { p: 'sus', n: 3, reg: [45, 69], vel: 0.55 }, bass: { pat: ['1---', 'c---'], inst: { p: 'tuba', att: 0.6, rel: 1.8 } }, drums: { bd: 'x.......x.......', sn: ['....x.......x...', '....x.......x...', '....x.......x...', '....x...........', '....x...........', '................', '....x...........', '................'], vel: 0.3 },
+        lead: { ph: ['MT', 'r8'], vel: 0.48, shape: 0.35, swell: 0.35 }, choir: { n: 3, reg: [43, 60], vel: 0.42, soft: true }, bell2: { ph: ['r4 CH', 'r6 CH'], oct: 0, vel: 0.36, skip: 0.4 } },
+    ],
+  });
+
+  piece('galaxy21', {
+    desc: 'The late years, the embers: a sarabande — the low strings place the dance’s stressed second beat in every bar, the harp answers on the third, a cor anglais carries a sarabande melody with the long second beat, and in the middle turns the leitmotif upside down (the fourth falls, the steps climb back) over the lament’s descending bass from the passacaglia; the cellos tremble and a timpani roll leads to the crest, the women above it; what the wars cost',
+    tags: { solitude: 0.3, contact: 0.2, tension: 0.5, war: 0.4, grief: 1, grandeur: 0.3, energy: 0.3, dark: 0.8 },
+    quotes: ['hymn'],
+    orch: true, holdLow: false, hall: 'musikverein', bpm: 54, meter: 3, trim: 4.84, root: 'C#', mode: 'minor', loopFrom: 'S1', tens: false, gentle: true, rubato: 0, eraWin: [0.4, 1],
+    forms: [['S1', 'S2', 'L', 'still', 'breath', 'S3', 'L2', 'E'], ['S1', 'L', 'still', 'breath', 'S2', 'L2', 'E'], ['S1', 'S2', 'still', 'breath', 'L', 'S3', 'E']],
+    alts: [{}, { lead: 'altoFlute', lead2: 'horn' }, { lead: 'cello', pad2: 'cellos', arp: 'pizz' }],
+    inst: { pad: 'cellos', pad2: 'strings', bass: 'deep', lead: 'reed', lead2: 'cello', bell: 'chime', arp: 'harp', choir: 'choirWomen', choir2: 'choirMen' },
+    ph: {
+            SB1: '5:1 6:1.5 5:.5 | 3:1 4:1.5 3:.5 | 5:1 8:1.5 7:.5 | 6:1 5:1 3:1', SB2: '5:1 8:1.5 7:.5 | 6:1 8:1.5 6:.5 | 4:1 5:1.5 4:.5 | 7#:3',   // the sarabande: the long second beat
+      HI: '5:2 2:1 | 3:2 4:1 | 5:2 7:1 | 6:2 5:1', HI2: '5:2 2:1 | 3:2 4:1 | 3:2 2:1 | 7#:3',                                      // the leitmotif inverted: the fourth falls, the steps climb
+      E1: '3:2 4:1 | 5:3 | 3:2 2:1 | 2:3', E2: '5:2 6:1 | 5:2 3:1 | 1:2 7:1 | 1:3', LB: '1:3 | 7:3 | 6:3 | 5:3',
+    },
+    sec: [
+      { n: 'step', bars: 4, cres: [0.45, 0.56], prog: 'i:2 bVI:2', pad: { p: 'stab', pat: 'x.x...', n: 3, reg: [45, 64], vel: 0.7, gate: 1.0 }, bass: { pat: '1--', inst: { p: 'deep', att: 0.3, rel: 1.6, sub: 0.55 } }, arp: { pat: '....02', res: 2, vel: 0.36, reg: [55, 79] } },
+      { n: 'S1', bars: 8, lv: 0.62, prog: 'i bVI bIII iv | i bVI iv V', pad: { p: 'stab', pat: 'x.x...', n: 3, reg: [45, 64], vel: 0.7, gate: 1.0 }, bass: { pat: '1--', inst: { p: 'deep', att: 0.3, rel: 1.6, sub: 0.55 } }, arp: { pat: '....02', res: 2, vel: 0.38, reg: [55, 79] },
+        lead: { ph: ['SB1 SB2', 'SB1 r4', 'r4 SB2'], vel: 0.56 } },
+      { n: 'S2', bars: 8, lv: 0.68, prog: 'i bVI bIII iv | i bVI iv V', pad: { p: 'stab', pat: 'x.x...', n: 3, reg: [45, 64], vel: 0.72, gate: 1.0 }, pad2: { p: 'sus', n: 2, reg: [62, 79], vel: 0.4 }, bass: { pat: '1--', inst: { p: 'deep', att: 0.3, rel: 1.6, sub: 0.55 } }, arp: { pat: '....02', res: 2, vel: 0.4, reg: [55, 79] },
+        lead: { ph: ['SB1 SB2', 'HI HI2', 'SB1 HI2'], vel: 0.58 }, choir2: { n: 3, reg: [43, 60], vel: 0.34, soft: true, skip: 0.4 } },
+      { n: 'L', bars: 8, lv: 0.66, prog: 'i bVII bVI V | i bVII bVI i', pad: { p: 'stab', pat: 'x.x...', n: 3, reg: [45, 64], vel: 0.7, gate: 1.0 }, pad2: { p: 'sus', n: 3, reg: [55, 76], vel: 0.45 }, bass: { pat: '1--', inst: { p: 'deep', att: 0.3, rel: 1.6, sub: 0.55 } }, arp: { pat: '....02', res: 2, vel: 0.38, reg: [55, 79] },
+        lead: { ph: ['E1 E2', 'E1 r4', 'r4 E2'], vel: 0.58 }, lead2: { ph: 'LB LB', oct: -1, vel: 0.52, shape: 0.35 }, choir: { n: 2, reg: [65, 79], vel: 0.34, soft: true, skip: 0.3 } },
+      { n: 'still', bars: 8, lv: 0.46, prog: 'i bVII bVI V | i bVII bVI i', pad: { p: 'swell', inst: 'tremLo', n: 3, reg: [45, 66], vel: 0.48 }, pad2: { p: 'swell', inst: 'air', n: 2, reg: [72, 88], vel: 0.42 }, bass: { pat: '1--', pedal: true, inst: { p: 'deep', att: 1.6, rel: 2.8, sub: 0.55 } },
+        lead2: { ph: 'LB LB', oct: -1, vel: 0.48, shape: 0.35 }, choir2: { n: 3, reg: [43, 60], vel: 0.36, soft: true }, timp: { kick: '................', roll: 2, vel: 0.42 } },
+      { n: 'breath', bars: 2, barsVar: [1, 2], lv: 0.3, prog: 'i:4', tens: false, pad2: { p: 'swell', n: 2, reg: [62, 79], vel: 0.32 } },
+      { n: 'S3', bars: 8, cres: [0.68, 0.78], prog: 'i bVI bIII iv | i bVI iv V', pad: { p: 'stab', pat: 'x.x...', n: 3, reg: [45, 64], vel: 0.74, gate: 1.0 }, pad2: { p: 'sus', n: 3, reg: [55, 76], vel: 0.5 }, bass: { pat: '1--', inst: { p: 'deep', att: 0.3, rel: 1.6, sub: 0.55 } }, arp: { pat: '....02', res: 2, vel: 0.4, reg: [55, 79] },
+        lead: { ph: ['SB1 SB2', 'HI SB2'], vel: 0.6, harm: -2 }, lead2: { ph: '@', inst: 'cello', oct: -1, vel: 0.44, skip: 0.4, shape: 0.35 }, choir: { n: 3, reg: [62, 79], vel: 0.44, soft: true }, choir2: { n: 3, reg: [43, 60], vel: 0.36, soft: true } },
+      { n: 'L2', bars: 8, cres: [0.74, 0.86], prog: 'i bVII bVI V | i bVII bVI i', pad: { p: 'stab', pat: 'x.x...', n: 4, reg: [45, 66], vel: 0.76, gate: 1.0 }, pad2: { p: 'swell', inst: 'tremLo', n: 3, reg: [45, 66], vel: 0.55 }, bass: { pat: '1--', inst: { p: 'deep', att: 0.3, rel: 1.6, sub: 0.6 } }, arp: { pat: '....02', res: 2, vel: 0.4, reg: [55, 79] },
+        lead: { ph: 'E1 E2', vel: 0.62, harm: -2 }, lead2: { ph: 'LB LB', oct: -1, vel: 0.54, shape: 0.35 }, choir: { n: 3, reg: [62, 79], vel: 0.52 }, choir2: { n: 3, reg: [43, 60], vel: 0.42, soft: true }, timp: { kick: 'X..', vel: 0.4 } },
+      { n: 'E', bars: 8, cres: [0.56, 0.4], prog: 'i bVI bIII iv | i bVII bVI i', pad: { p: 'stab', pat: 'x.x...', n: 3, reg: [45, 64], vel: 0.6, gate: 1.0 }, bass: { pat: '1--', inst: { p: 'deep', att: 0.4, rel: 1.8, sub: 0.55 } }, arp: { pat: '....02', res: 2, vel: 0.34, reg: [55, 79] },
+        lead: { ph: ['SB1 E2', 'r4 E2'], vel: 0.52 } },
+    ],
+  });
+
+  piece('galaxy22', {
+    desc: 'The late years, the vigil: a sung chorale — the men alone at first on the chorale of the tenth piece, then the women above them in octaves, the organ beneath as a pedal, tubular bells; the organ takes a verse of its own, the women rise to a descant over the men’s second strain, the brass comes in only at the crest with timpani; the council’s hymn as the last verse; the long night watch of an old empire',
+    tags: { solitude: 0.3, contact: 0.3, tension: 0.5, war: 0.4, grief: 0.6, grandeur: 0.8, energy: 0.3, dark: 0.7 },
+    orch: true, holdLow: false, hall: 'musikverein', bpm: 48, trim: 4.27, root: 'F', mode: 'minor', loopFrom: 'men', tens: false, gentle: true, rubato: 0, eraWin: [0.4, 1], mix: { choir: 1.2, lead: 1.1, pad: 1.0 },
+    forms: [['men', 'satb', 'organ', 'satb2', 'still', 'crest', 'amen'], ['men', 'satb', 'still', 'organ', 'crest', 'amen'], ['men', 'organ', 'satb', 'still', 'satb2', 'amen']],
+    alts: [{}, { lead: 'aah', lead2: 'choirMenAh' }, { pad: 'strings', pad2: 'cellos' }],
+    inst: { pad: 'cellos', pad2: 'trombones', bass: 'deep', lead: 'choirWomen', lead2: 'choirMen', bell: 'chime', bell2: 'chime', arp: 'harp', choir: 'choirWomen', choir2: 'choirMen' },
+    ph: {
+      HY1: '@chorale.HY1', HY2: '@chorale.HY2',
+      HY3: '@chorale.HY3', HY4: '@chorale.HY4',
+      DS1: '5:2 8:2 | 7:2 5:2 | 8:3 6:1 | 6:4', DS2: '7:2 5:2 | 6:2 4:2 | 5:3 4:1 | 5:4',                           // the women's descant over the chorale's second strain
+      OV: '1:2 3:2 | 4:2 5:2 | 6:3 5:1 | 4:4', OV2: '5:2 7:2 | 6:2 4:2 | 5:2 2:2 | 8:4',                              // the organ's own verse
+      HY: '@procession.HY', CM2: '@men.CM2', CH: '8:8 | r:8 | 5:8 | r:8',
+    },
+    sec: [
+      { n: 'pedal', bars: 4, cres: [0.42, 0.54], prog: 'i:2 bVI:2', pad: { p: 'swell', n: 3, reg: [45, 67], vel: 0.6 }, bass: { pat: 'c---', pedal: true, inst: { p: 'deep', sub: 0.7, att: 1.0, rel: 2.2 } }, bell2: { ph: ['r2 CH', 'CH r2'], oct: 0, vel: 0.24, echo: 0.3 } },
+      { n: 'men', bars: 8, lv: 0.6, prog: 'i iv i bVI | bVI iv V i', pad: { p: 'sus', n: 3, reg: [45, 67], vel: 0.55 }, bass: { pat: ['1---', 'c---'], inst: { p: 'deep', sub: 0.65, att: 0.6, rel: 1.8 } },
+        lead2: { ph: ['HY1 HY2', 'HY1 r4'], oct: -1, vel: 0.6, shape: 0.4 }, choir2: { n: 3, reg: [43, 60], vel: 0.45, soft: true } },
+      { n: 'satb', bars: 8, lv: 0.68, prog: 'i iv i bVI | bVI iv V i', pad: { p: 'sus', n: 3, reg: [45, 67], vel: 0.55 }, bass: { pat: ['1---', 'c---'], inst: { p: 'deep', sub: 0.65, att: 0.6, rel: 1.8 } },
+        lead: { ph: 'HY1 HY2', vel: 0.55, shape: 0.4 }, lead2: { ph: 'HY1 HY2', oct: -1, vel: 0.6, shape: 0.4 }, choir: { n: 3, reg: [60, 77], vel: 0.5 }, choir2: { n: 3, reg: [43, 60], vel: 0.55 } },
+      { n: 'organ', bars: 8, lv: 0.6, prog: 'i bIII bVII iv | bVII iv V i', pad: { p: 'sus', inst: 'organ', n: 4, reg: [48, 72], vel: 0.75 }, bass: { pat: ['1---', 'c---'], inst: { p: 'deep', sub: 0.7, att: 0.4, rel: 1.6 } },
+        lead: { ph: ['OV OV2', 'OV r4'], inst: 'organ', vel: 0.6 }, bell2: { ph: ['r4 CH', 'r8'], oct: 0, vel: 0.36, skip: 0.4 } },
+      { n: 'satb2', bars: 8, cres: [0.7, 0.8], prog: 'i bIII bVII iv | bVII iv V i', pad: { p: 'sus', n: 4, reg: [45, 69], vel: 0.6 }, pad2: { p: 'swell', inst: 'cellos', n: 2, reg: [48, 67], vel: 0.5 }, bass: { pat: ['1---', 'c---'], inst: { p: 'deep', sub: 0.7, att: 0.4, rel: 1.6 } },
+        lead: { ph: 'DS1 DS2', vel: 0.58, shape: 0.4 }, lead2: { ph: 'HY3 HY4', oct: -1, vel: 0.62, shape: 0.4 }, choir: { n: 3, reg: [60, 77], vel: 0.55 }, choir2: { n: 3, reg: [43, 60], vel: 0.6 }, arp: { pat: '0...2...', res: 2, vel: 0.3, reg: [55, 84], skip: 0.3 } },
+      { n: 'still', bars: 8, lv: 0.46, prog: 'i:2 bVI:2 | bVII:2 i:2', pad: { p: 'swell', n: 3, reg: [45, 67], vel: 0.5 }, bass: { pat: 'c---', pedal: true, inst: { p: 'deep', sub: 0.7, att: 1.2, rel: 2.4 } },
+        lead2: { ph: 'CM2', oct: -1, vel: 0.5, shape: 0.4 }, choir2: { n: 3, reg: [43, 60], vel: 0.42, soft: true }, choir: { n: 2, reg: [65, 79], vel: 0.32, soft: true }, bell2: { ph: ['CH', 'r2 CH'], oct: 0, vel: 0.38, echo: 0.3 } },
+      { n: 'crest', bars: 8, cres: [0.82, 0.96], prog: 'i bIII bVII iv | bVII iv V i', pad: { p: 'sus', inst: 'organ', n: 4, reg: [48, 72], vel: 0.72 }, pad2: { p: 'sus', n: 3, reg: [50, 69], vel: 0.55 }, bass: { pat: ['1---', 'c---'], inst: { p: 'deep', sub: 0.75, att: 0.3, rel: 1.4 } },
+        lead: { ph: 'DS1 DS2', vel: 0.62, shape: 0.4 }, lead2: { ph: 'HY3 HY4', oct: -1, vel: 0.66, shape: 0.4 }, bell2: { ph: 'HY3 HY4', inst: 'horn', vel: 0.5, harm: -2, shape: 0.35, swell: 0.35 }, choir: { n: 3, reg: [60, 77], vel: 0.7 }, choir2: { n: 3, reg: [43, 60], vel: 0.75 }, timp: { p: 'two', vel: 0.45 }, drums: { bdSoft: 'x...............', vel: 0.3 } },
+      { n: 'amen', bars: 8, cres: [0.62, 0.44], prog: 'i bVI i iv | bVI iv V i', pad: { p: 'sus', n: 3, reg: [45, 67], vel: 0.55 }, bass: { pat: ['1---', 'c---'], inst: { p: 'deep', sub: 0.65, att: 0.6, rel: 1.8 } },
+        lead: { ph: ['HY HY2', 'HY r4'], vel: 0.52, shape: 0.4 }, lead2: { ph: ['HY HY2', 'HY r4'], oct: -1, vel: 0.56, shape: 0.4 }, choir2: { n: 3, reg: [43, 60], vel: 0.42, soft: true }, choir: { n: 2, reg: [65, 79], vel: 0.34, soft: true } },
     ],
   });
 })(window.MOO);
