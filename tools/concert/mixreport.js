@@ -8,10 +8,10 @@ const args = process.argv.slice(2), opt = {};
 for (let i = 0; i < args.length; i++) if (args[i].startsWith('--')) opt[args[i].slice(2)] = args[i + 1] && !args[i + 1].startsWith('--') ? args[++i] : true;
 
 (async () => {
-  const srv = await serve(8805), { browser, page } = await open();
-  await page.goto('http://localhost:8805/tools/test-audio.html');
+  const PORT = +opt.port || 8805, srv = await serve(PORT), { browser, page } = await open();
+  await page.goto('http://localhost:' + PORT + '/tools/test-audio.html');
   await page.waitForFunction(() => window.MOO && MOO.Audio && MOO.Audio.Music);
-  await page.addScriptTag({ url: 'http://localhost:8805/tools/concert/suite.js?' + Date.now() });
+  await page.addScriptTag({ url: 'http://localhost:' + PORT + '/tools/concert/suite.js?' + Date.now() });
   const out = await page.evaluate(async ([only, secs]) => {
     MOO.Audio.hallHp = 220; MOO.Audio.hallRT = 4; MOO.Audio.hallLp = 6500; MOO.Audio.concert = true; await MOO.Audio.Samples.preload();
     const M = MOO.Audio.Music, suite = window.CONCERT_SUITE, SR = 24000, lines = [];
