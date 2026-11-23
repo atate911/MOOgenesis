@@ -198,7 +198,7 @@
       H1: '@hymn.H1', H2: '@hymn.H2', H3: '@hymn.H3', H4: '@hymn.H4',
       DS1: '10:4 | 12:4 | 13:4 | 12:4', DS2: '13:4 | 12:4 | 12:4 | 15:4',
       CDx: '4:2 2:2 | 5:3 4:1 | 3:2 2:2 | 1:4',                                        // the close
-      AM: '6:4 | 6b:4 | 5:16', AMt: '8:4 | 8:4 | 8:16',                                 // the amen: the sixth, the flat sixth, home; the trumpets on the tonic
+      AM: '6:4 | 6b:4', AMt: '8:4 | 8:4', FIN: '5:16', FINt: '8:16',                                 // the amen: the sixth, the flat sixth, home; the trumpets on the tonic
     },
     sec: [
       // the call out of the night (B minor)
@@ -272,11 +272,17 @@
       { n: 'close', bars: 4, bpm: 60, bpmTo: 54, cres: [1.0, 0.92], prog: 'ii | V | I/III:.5 V:.5 | I',
         pad: { p: 'sus', n: 4, reg: [57, 81], vel: 0.82 }, pad2: { p: 'sus', inst: 'trombones', n: 3, reg: [45, 60], vel: 0.55 }, bass: { pat: '1---', inst: { p: 'deep', att: 0.3 }, vel: 1.0 },
         lead: { ph: 'CDx', inst: 'horn', vel: 0.95 }, lead2: { ph: '@', inst: 'strings', oct: 1, vel: 0.6 }, choir: { inst: 'choirMenAh', n: 3, reg: [45, 60], vel: 0.85 }, choir2: { inst: 'choirWomen', n: 3, reg: [64, 79], vel: 0.7 }, timp: 'two' },
-      { n: 'amen', bars: 6, bpm: 54, bpmTo: 40, cres: [0.9, 1.1], prog: 'IV iv | I:4',
+      { n: 'amen', bars: 2, bpm: 54, bpmTo: 46, cres: [0.9, 1.04], prog: 'IV iv',
         pad: { p: 'sus', n: 4, reg: [57, 84], vel: 0.85 }, pad2: { p: 'sus', inst: 'trombones', n: 3, reg: [45, 60], vel: 0.6 }, bass: { pat: '1---', inst: { p: 'deep', att: 0.4, rel: 3 }, vel: 1.05 },
         pad3: { p: 'sus', inst: 'tuba', root: true, n: 1, reg: [33, 45], vel: 0.7 }, lead: { ph: 'AM', inst: 'horn', vel: 0.95 }, lead4: { ph: 'AMt', inst: 'tpts', vel: 0.7 },
-        choir: { inst: 'choirMenAh', n: 3, reg: [45, 60], vel: 1.0 }, choir2: { inst: 'choirWomen', n: 3, reg: [64, 81], vel: 0.85 },
-        timp: { p: 'hits', vel: 0.7, roll: 2 }, drums: { crashS: at(6, { 2: 'x...............' }), tam: at(6, { 2: 'x...............' }) }, verb: 1.1, subBass: 0.9 },
+        choir: { inst: 'choirMenAh', n: 3, reg: [45, 60], vel: 1.0 }, choir2: { inst: 'choirWomen', n: 3, reg: [64, 81], vel: 0.85 }, timp: { p: 'hits', vel: 0.7, roll: 1 }, verb: 1.05, subBass: 0.9 },
+      // the last chord, held: struck with the tam-tam and the cymbal, swelling once, then let go into the hall
+      { n: 'final', bars: 4, bpm: 40, cres: [1.12, 0.62], prog: 'I:4',
+        pad: { p: 'sus', n: 4, reg: [57, 86], vel: 0.88, rel: 4 }, pad2: { p: 'sus', inst: 'trombones', n: 3, reg: [45, 60], vel: 0.62, rel: 3 }, bass: { pat: '1---', inst: { p: 'deep', att: 0.2, rel: 4.5 }, vel: 1.1 },
+        pad3: { p: 'sus', inst: 'tuba', root: true, n: 1, reg: [33, 45], vel: 0.7 }, lead: { ph: 'FIN', inst: 'horn', vel: 1.0 }, lead4: { ph: 'FINt', inst: 'tpts', vel: 0.75 },
+        choir: { inst: 'choirMenAh', n: 3, reg: [45, 60], vel: 1.05, rel: 4 }, choir2: { inst: 'choirWomen', n: 3, reg: [64, 81], vel: 0.9, rel: 4 },
+        timp: { kick: ['X...............', '................', '................', '................'], vel: 0.9 },
+        drums: { crashS: at(4, { 0: 'x...............' }), tam: at(4, { 0: 'x...............' }), bd: at(4, { 0: 'X...............' }) }, verb: 1.3, subBass: 0.9 },
     ],
   }));
 

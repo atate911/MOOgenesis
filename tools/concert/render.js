@@ -14,7 +14,7 @@ const { serve, open } = require('../qa/lib');
 const args = process.argv.slice(2), opt = {};
 for (let i = 0; i < args.length; i++) { const a = args[i]; if (a.startsWith('--')) { const k = a.slice(2); opt[k] = (i + 1 < args.length && !args[i + 1].startsWith('--')) ? args[++i] : true; } }
 const OUT = path.resolve(typeof opt.out === 'string' ? opt.out : path.join(__dirname, 'out'));
-const SR = 48000, PORT = +opt.port || 8772, TAIL = 9, TARGET_LUFS = -16, CEIL_DB = -1.0;
+const SR = 48000, PORT = +opt.port || 8772, TAIL = 11, TARGET_LUFS = -16, CEIL_DB = -1.0;
 
 (async () => {
   const srv = await serve(PORT);
