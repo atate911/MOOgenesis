@@ -36,6 +36,8 @@
     'drift5': {A: {pad: 0.449}},
     'drift6': {A: {pad: 0.491, choir: 0.254}},
     'drift7': {A: {pad: 0.034, arp: 0.119}},
+    'procession': {call: {pad: 0.338, choir: 0.774}, call2: {pad: 0.185, bass: 0.461, drums: 0.17}, A1: {bass: 0.408}, A2: {bass: 0.473, drums: 0.445}, B: {pad: 0.831, bass: 0.703, choir: 0.656, drums: 0.272}, turn: {pad: 0.543, bass: 0.336}, T1: {arp: 0.698, pad: 0.497, choir: 0.573}, T2: {arp: 0.831, pad: 0.421}, D: {bass: 0.624, choir: 0.757}, dev1: {bass: 0.238, drums: 0.757}, dev2: {bass: 0.353, drums: 0.763, choir: 0.884}, dev3: {bass: 0.778, choir: 0.96, drums: 0.74}, R: {bass: 0.556, choir: 0.747, drums: 0.403, pad: 0.96}, amen: {bass: 0.301, pad: 0.96}},
+    'council2': {fan: {pad: 0.529, bass: 0.295, choir: 0.44, drums: 0.347}, B: {bass: 0.449, choir: 0.617, drums: 0.192, pad: 1}, A1: {bass: 0.297}, R: {bass: 0.558, drums: 0.526, choir: 1}, D: {bass: 0.712, choir: 1}, amen: {pad: 0.702, bass: 0.292}},
   };
   function piece(id, def) {
     const old = Music._tracks[id]; if (old) for (const k of KEEP) if (def[k] === undefined && old[k] !== undefined) def[k] = JSON.parse(JSON.stringify(old[k]));
@@ -1235,7 +1237,7 @@
         lead: { ph: 'K', inst: 'horn', oct: -1, vel: 0.9 }, lead2: { ph: 'r2 KH', inst: 'tpts', vel: 0.58 }, choir: { inst: 'choirMenAh', n: 3, reg: [48, 62], vel: 0.6 }, timp: { p: 'two', vel: 0.6 }, drums: { sn: 'o.o.o.o.o.o.o.o.', vel: 0.5 } },
       { n: 'dev3', bars: 4, bpm: 80, bpmTo: 64, cres: [0.88, 1.0], prog: 'V7sus4 V | V7sus4 V',
         pad: { p: 'sus', inst: 'strTrem', n: 4, reg: [55, 79], vel: 0.75 }, pad2: { p: 'swell', inst: 'analog', n: 4, reg: [55, 76], vel: 0.36 }, bass: { pat: '1---', inst: { p: 'lowBrass', att: 0.1 }, vel: 0.75 },
-        lead: { ph: 'KH KH', inst: 'tpts', vel: 0.85 }, lead2: { ph: 'KH KH', inst: 'horn', oct: -1, vel: 0.75 }, lead3: { ph: 'r3 RUN', inst: 'strings', vel: 0.62 },
+        lead: { ph: 'KH KH', inst: 'tpts', vel: 0.68 }, lead2: { ph: 'KH KH', inst: 'horn', oct: -1, vel: 0.75 }, lead3: { ph: 'r3 RUN', inst: 'strings', vel: 0.62 },
         choir: { inst: 'choirMenAh', n: 3, reg: [48, 62], vel: 0.78 }, choir2: { inst: 'choirWomen', n: 3, reg: [64, 79], vel: 0.58 },
         timp: { p: 'hits', vel: 0.7, roll: 2 }, drums: { snRoll: at(4, { 2: 'x...............', 3: 'x.......x.......' }), vel: 0.6 } },
       // the procession's answer, in full: the horns, the trumpets an octave above, the trombones beneath, the strings' counter-melody, both choirs
@@ -1265,7 +1267,7 @@
     const organ = sec => { sec.pad = { p: 'sus', inst: 'organ', n: 4, reg: [52, 76], vel: 0.55 }; return sec; };
     const fan = { n: 'fan', bars: 4, bpm: 76, cres: [0.85, 1.0], prog: 'I:1 IV:1 I:1 V7:1',
       pad: { p: 'sus', inst: 'organ', n: 4, reg: [52, 76], vel: 0.7 }, pad2: { p: 'sus', inst: 'brass', n: 3, reg: [48, 67], vel: 0.6 }, bass: { pat: '1---', inst: { p: 'lowBrass', att: 0.06 }, vel: 0.85 },
-      ...ORGAN(0.55, 0), lead: { ph: 'r2 TF8 TF', inst: 'tpts', vel: 0.62 }, lead2: { ph: 'r2 KH', inst: 'horn', oct: -1, vel: 0.6 },
+      ...ORGAN(0.55, 0), lead: { ph: 'r2 TF8 TF', inst: 'tpts', vel: 0.48 }, lead2: { ph: 'r2 KH', inst: 'horn', oct: -1, vel: 0.6 },
       choir: { inst: 'choirMenAh', n: 3, reg: [48, 62], vel: 0.7 }, choir2: { inst: 'choirWomen', n: 3, reg: [64, 79], vel: 0.55 },
       timp: { p: 'hits', vel: 0.7, roll: 2 }, drums: { crashS: at(4, { 0: 'x...............' }), tam: at(4, { 0: 'x...............' }), snRoll: at(4, { 3: 'x.......x.......' }), vel: 0.6 } };
     const B = S('B'); B.bars = 8; B.bpm = 80; B.prog = 'IV V | vi iii | bVI bVII | V I'; B.lead.ph = 'B1 B2'; B.lead4.ph = 'B1 B2'; B.drums.crashS = at(8, { 0: 'x...............' }); organ(B); B.pad.vel = 0.5;
