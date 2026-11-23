@@ -562,6 +562,7 @@
   function emitDrum(C, ly, dv, beat, vel, ex) {
     if (beat < 0 || beat >= C.totalBeats) return;
     const o = Object.assign({}, dv); o.vel = vel * C.lvAt(beat) * (dv.lvl === undefined ? 1 : dv.lvl); if (dv.dyn === undefined) o.dyn = clamp(vel * C.lvAt(beat), 0, 1); if (ex) Object.assign(o, ex);
+    { const mk = C.curW && C.curW.R.raw && C.curW.R.raw.mixK; if (mk) o.vel *= num(mk[C.key] !== undefined ? mk[C.key] : mk[ly], 1); }   // the section's balance (its `mixK`), as for the pitched parts
     C.ev.push({ t: C.tAt(beat), v: dv.v, ly, o, m: 0, b: beat, bt: 0, k: C.key });
   }
   function stepMidi(C, step, acc) {
