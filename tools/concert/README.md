@@ -278,3 +278,28 @@ The overall hall send is also down a further 1.6 dB.
 
 **Less doubling.** The organ's manual chords were stacking on top of strings, choir and brass already holding the same chord at the
 sunrise, the passacaglia's climax and the finale's hymn. They now play only at the amen and the final chord. The organ's pedal stays.
+
+## Revision 8: the scream, the slides, the mid-bass, and a hybrid layer
+
+- **The scream (I, 1:07 and 1:25).** This was a sampler bug exposed by the pure tuning. A note tuned a few cents off its whole note, such
+  as an F tuned 14 cents low (76.86), fell between two recordings' note ranges. The fallback then played every loudness layer of the
+  nearest note at once, slightly mistuned against each other: a grinding cluster of partials. The recording is now chosen by the nearest
+  whole note, with the fine tuning kept in the playback pitch.
+- **Slides.** In revision 3 the slides were too broad, and they turned into swoops on sections. The cello section sliding onto the
+  passacaglia's ground was a 200-cent bend in the mid-bass every four bars. Brass sections and the bassoon slid too. Now:
+  - **Solo strings and the cantor**: slide on leaps of a third or more, at 40% of the interval, over 60–140 ms.
+  - **Solo winds and brass**: only a hint of the old pitch, at most 40 cents over 40 ms.
+  - **Sections**: never.
+- **Pure tuning for the chords only.** A melody keeps one consistent intonation. Pure-tuned long notes among equal-tempered short ones
+  made the B-major violin solo lurch.
+- **The B-major song** is rewritten as a long stepwise arc, replacing a dotted figure in every bar.
+- **The gathering (II, about 4:20).** The tremolo now sits above the ground, the old men's choir is out, and the timpani is softer.
+- **The scherzo.** The oboe's high perpetual motion went to the clarinet at pitch. It had been piercing at the top of the oboe's range.
+- **The hybrid layer.** Synthesizers sit on a wide place of their own around the orchestra, not in a seat:
+  - An analog halo over the dawn and dusk.
+  - Air shimmer over the climaxes.
+  - A synth pulse under the rise, the march and the big phrase.
+  - Ticking sequencers in the passacaglia's gathering and the finale's development, with a dark drone.
+  - Choir humming under the trio.
+- **Separation.** The stage is 25% wider, the sections narrower, and the early reflections lower. The basses change note cleanly
+  (`bassXf`).

@@ -1360,13 +1360,12 @@
   // the singing line (a piece's `sing`): a legato note reached by a leap and held is joined to the one before as a singer or a string
   // player joins them, sliding from the old pitch onto the new (the sampler's glide). Strings and voices slide on a third or more, the
   // slide longer for a wider leap; winds and brass only connect, a short shade of the old pitch. Never into a short note.
-  const SING = { bow: /^(vlnSolo|vlaSolo|vcSolo|cbSolo|vcSus|vln1Sus|vlaSus|strEns|cantor|choir|chorus)/, wind: /^(oboe|flute|altoFlute|clarinet|clarIowa|corAnglais|bassoon|bassClar|fluteIowa|oboeIowa|altoFluteIowa|bassoonIowa)/, brass: /^(horn|tpt|tbn)/ };
+  const SING = { bow: /^(vlnSolo|vlaSolo|vcSolo|cantor)$/   /* soloists only: a section (the cellos on the ground, the choir) sliding together was a swoop in the bass */, wind: /^(oboe|flute|altoFlute|clarinet|clarIowa|corAnglais|bassoon|bassClar|fluteIowa|oboeIowa|altoFluteIowa|bassoonIowa)/, brass: /^(hornSolo|hornIowa|tptSolo|tptIowa|tbnSolo)$/ };   // brass: the soloists only (a section does not slide)
   function singGlide(o, iv) {
     const smp = o.smp || '', a = Math.abs(iv), dur = o.dur || 0;
     if (dur < 0.4 || a < 2) return;
     if (SING.bow.test(smp)) { if (a < 4 || dur < 0.6) return; o.glide = -iv * 100 * 0.4; o.glideT = clamp(0.06 + 0.008 * a, 0.06, 0.14); }   // a shade of the shift, not a swoop
-    else if (SING.wind.test(smp)) { o.glide = -iv * 100 * 0.25; o.glideT = 0.045; }
-    else if (SING.brass.test(smp)) { o.glide = -iv * 100 * 0.3; o.glideT = 0.06; }
+    else if (SING.wind.test(smp) || SING.brass.test(smp)) { o.glide = -Math.sign(iv) * Math.min(40, 8 * a); o.glideT = 0.04; }   // a hint of the old pitch, never a slide: winds and brass connect with the tongue and the lips
   }
   function markLegato(evs, def) {
     const last = Object.create(null), sing = !!(def && def.sing);
