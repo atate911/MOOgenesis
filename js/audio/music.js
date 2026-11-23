@@ -466,7 +466,15 @@
       const R = { n: s.n || 'S' + idx, bars: s.bars, lv: num(s.lv, 1), lv1: s.cres ? s.cres[1] : num(s.lv, 1), lv0: s.cres ? s.cres[0] : num(s.lv, 1), L: {}, raw: s };
       // a section's own meter and tempo (an interlude's opening bars keep the outgoing piece's; a tempo may ramp across a section)
       R.meter = num(s.meter, meter); R.strong = s.strong || def.strong || (STRONG[R.meter] || [0]); R.bpm = num(s.bpm, def.bpm); R.bpmTo = num(s.bpmTo, R.bpm);
-      R.segs = expandProg(s.prog, s.bars, R.meter, tpc);
+      // a section in a key of its own (a section's `key`, and `mode`): its chords are read in that key and its phrases' degrees counted
+      // from its tonic, the tonic placed nearest the piece's own (or the section's `tonic`) so the lines do not jump an octave at the change
+      R.tpc = tpc; R.scale = scale; R.tonic = P.tonic;
+      if (s.key !== undefined || s.mode !== undefined) {
+        if (s.key !== undefined) { R.tpc = PCS[s.key]; if (R.tpc === undefined) throw new Error(def.id + ': bad key "' + s.key + '" in ' + R.n); }
+        if (s.mode !== undefined) { R.scale = SCALES[s.mode]; if (!R.scale) throw new Error(def.id + ': bad mode "' + s.mode + '" in ' + R.n); }
+        R.tonic = s.tonic !== undefined ? s.tonic : P.tonic + (mod12(R.tpc - tpc + 6) - 6);
+      }
+      R.segs = expandProg(s.prog, s.bars, R.meter, R.tpc);
       for (const key of ['pad', 'pad2', 'pad3', 'bass', 'arp', 'arp2', 'drums', 'perc', 'timp', 'lead', 'lead2', 'lead3', 'lead4', 'bell', 'bell2', 'choir', 'choir2', 'choir3']) {
         let v = s[key] !== undefined ? s[key] : base[key];
         if (v === true) v = base[key];
@@ -506,7 +514,7 @@
       else if (ly === 'pad' && midi <= 52 && o.cut === undefined) { o.cut = clamp(mtof(midi) * 10, 650, 1400); o.cutN = 2; }
       // the held foundation's fifth is tuned pure, as string players tune a held open fifth: tempered, the fifth's third partial against the
       // tonic's (D2 and A2 at 220.25 and 220 Hz) beats once every four seconds, a slow throb through the whole held low end
-      if (ly === 'pad' && midi <= LOW_TOP && holdsLow(C) && mod12(midi - C.P.tpc) === 7) o.f = mtof(midi + 0.0196);
+      if (ly === 'pad' && midi <= LOW_TOP && holdsLow(C) && mod12(midi - (C.tpc !== undefined ? C.tpc : C.P.tpc)) === 7) o.f = mtof(midi + 0.0196);
     }
     delete o.p;
     const ev = { t: C.tAt(beat) + (ex && ex.dt || 0), v: inst.v, ly, o, m: midi, b: beat, bt: beats, k: C.key };
@@ -596,7 +604,7 @@
   function holdLow(C, notes, lo) {
     if (!holdsLow(C)) return notes;
     const low = notes.filter(m => m <= LOW_TOP); if (!low.length) return notes;
-    const P = []; for (let m = Math.max(24, Math.min(lo, Math.min(...low)) - 2); m <= LOW_TOP; m++) { const pc = mod12(m - C.P.tpc); if ((pc === 0 || pc === 7) && !(C.bassNow && C.bassNow.has(m))) P.push(m); }   // from the bed's floor (or a voice moved below it, out of the solo's way); never the bass's own note: two recordings in unison beat
+    const P = []; for (let m = Math.max(24, Math.min(lo, Math.min(...low)) - 2); m <= LOW_TOP; m++) { const pc = mod12(m - (C.tpc !== undefined ? C.tpc : C.P.tpc)); if ((pc === 0 || pc === 7) && !(C.bassNow && C.bassNow.has(m))) P.push(m); }   // from the bed's floor (or a voice moved below it, out of the solo's way); never the bass's own note: two recordings in unison beat
     if (!P.length) return notes;
     const out = P.slice(0, low.length);
     return out.concat(notes.filter(m => m > LOW_TOP && out.indexOf(m) < 0));
@@ -619,7 +627,7 @@
     const out = []; C.phPick = C.phPick || new Map();
     for (const w of wraps) {
       const cfg = w.R.L && w.R.L.lead; if (!cfg || (typeof cfg === 'object' && cfg.skip)) continue;
-      const C2 = Object.create(C); C2.ev = []; C2.key = 'lead'; C2.snaps = 0; C2.lvAt = () => 1; C2.vrng = makeRng(C.def.id + ':pre'); C2.warn = () => {}; C2.curW = w; C2.meter = w.R.meter; C2.strong = w.R.strong; C2.spb = 60 / w.R.bpm;
+      const C2 = Object.create(C); C2.ev = []; C2.key = 'lead'; C2.snaps = 0; C2.lvAt = () => 1; C2.vrng = makeRng(C.def.id + ':pre'); C2.warn = () => {}; C2.curW = w; C2.meter = w.R.meter; C2.strong = w.R.strong; C2.spb = 60 / w.R.bpm; C2.tonic = w.R.tonic; C2.scale = w.R.scale; C2.tpc = w.R.tpc;
       try { genLine(C2, { R: w.R, start: w.start, bars: w.bars, beats: w.beats }, cfg, 'lead'); } catch (e) { continue; }
       for (const e of C2.ev) if (e.m && e.bt && e.k === 'lead') out.push({ off: e.b, dur: e.bt, m: e.m });
     }
@@ -733,7 +741,7 @@
   }
   function padFlushAll(C, carry) { for (const [m, o] of carry.open) padFlush(C, o, m, carry.endAbs, false); carry.open.clear(); }
   function bassPitch(C, ch, tok, pedal) {
-    const rootPc = pedal ? C.P.tpc : ch.bassPc;
+    const rootPc = pedal ? (C.tpc !== undefined ? C.tpc : C.P.tpc) : ch.bassPc;
     let root = nearestPc(rootPc, C.bassC), m;
     switch (tok) {
       case '1': m = root; break; case '2': m = root + 2; break; case '3': m = root + ch.third; break; case '4': m = root + 5; break;
@@ -1190,10 +1198,10 @@
       let R = R0;
       if (R0.barsVar) {                                   // a breath is not always the same length: the next phrase waits a little longer, or less
         const bars = Math.max(1, R0.barsVar[0] + C.vrng.int(0, R0.barsVar[1] - R0.barsVar[0]));
-        if (bars !== R0.bars) R = Object.assign(Object.create(R0), { bars, segs: expandProg(R0.raw.prog, bars, R0.meter, P.tpc) });
+        if (bars !== R0.bars) R = Object.assign(Object.create(R0), { bars, segs: expandProg(R0.raw.prog, bars, R0.meter, R0.tpc) });
       }
       if (tenseP > 0) {                                   // the era colours some of the chords (the same ones every time at a given era, per take)
-        const segs = R.segs.map((sg, i, arr) => { const r = erng(); if (r >= tenseP || i === arr.length - 1) return sg; const sym = tenseChord(sg.ch.sym, E, erng()); return sym === sg.ch.sym ? sg : { ch: parseChord(sym, P.tpc), b0: sg.b0, b1: sg.b1 }; });   // never the cadence
+        const segs = R.segs.map((sg, i, arr) => { const r = erng(); if (r >= tenseP || i === arr.length - 1) return sg; const sym = tenseChord(sg.ch.sym, E, erng()); return sym === sg.ch.sym ? sg : { ch: parseChord(sym, R.tpc), b0: sg.b0, b1: sg.b1 }; });   // never the cadence
         R = Object.assign(Object.create(R), { segs });
       }
       wraps.push({ R, start: beat, beats: R.bars * R.meter, bars: R.bars }); beat += R.bars * R.meter;
@@ -1231,7 +1239,7 @@
     // the section it was written in: the symphony's held D2 played on the soft layer, 15 dB under the rest)
     C.lvAt = function (b) { return lvOfWraps(wraps, b); };
     for (const w of wraps) {
-      C.curW = w; C.meter = w.R.meter; C.strong = w.R.strong; C.spb = 60 / w.b0;   // the section's meter and (opening) tempo
+      C.curW = w; C.meter = w.R.meter; C.strong = w.R.strong; C.spb = 60 / w.b0; C.tonic = w.R.tonic; C.scale = w.R.scale; C.tpc = w.R.tpc;   // the section's meter and (opening) tempo, and its key
       const s = { R: w.R, start: w.start, bars: w.bars, beats: w.beats };
       const keys = Object.keys(w.R.L);
       if (orchOf(C.def)) for (const k of ['bass', 'lead']) if (keys.indexOf(k) > 0) { keys.splice(keys.indexOf(k), 1); keys.unshift(k); }   // the solo first (the beds keep its window), then the bass (the beds keep off its note)
