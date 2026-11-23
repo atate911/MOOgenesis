@@ -339,13 +339,13 @@
     (function () { const n = 2048, c = new Float32Array(n), d = 1.6; for (let i = 0; i < n; i++) { const x = (i / (n - 1)) * 2 - 1; c[i] = Math.tanh(d * x) / d; } sat.curve = c; try { sat.oversample = '2x'; } catch (e) { /* ignore */ } })();
     const duck = mk(ctx.createGain());
     const width = (function () {                   // M = (L+R)/2, S = (L-R)/2 ; S -> hp 120 -> +1.5 dB @ 6k -> x w ; L' = M + S', R' = M - S'
-      const w = 1.15 + 0.15 * A.soundstage, inG = mk(ctx.createGain()), split = mk(ctx.createChannelSplitter(2)), merge = mk(ctx.createChannelMerger(2));   // the soundstage lifts the side a little more
+      const w = A.concert ? 1 : 1.15 + 0.15 * A.soundstage, inG = mk(ctx.createGain()), split = mk(ctx.createChannelSplitter(2)), merge = mk(ctx.createChannelMerger(2));   // the soundstage lifts the side a little more
       const mid = mk(ctx.createGain()), side = mk(ctx.createGain()), lToM = mk(ctx.createGain()), rToM = mk(ctx.createGain()), lToS = mk(ctx.createGain()), rToS = mk(ctx.createGain());
       lToM.gain.value = 0.5; rToM.gain.value = 0.5; lToS.gain.value = 0.5; rToS.gain.value = -0.5;
       inG.connect(split); split.connect(lToM, 0); split.connect(rToM, 1); split.connect(lToS, 0); split.connect(rToS, 1);
       lToM.connect(mid); rToM.connect(mid); lToS.connect(side); rToS.connect(side);
       const sHp = mk(ctx.createBiquadFilter()); sHp.type = 'highpass'; sHp.frequency.value = 120; sHp.Q.value = 0.7;
-      const sAir = mk(ctx.createBiquadFilter()); sAir.type = 'highshelf'; sAir.frequency.value = 6000; sAir.gain.value = 1.0;
+      const sAir = mk(ctx.createBiquadFilter()); sAir.type = 'highshelf'; sAir.frequency.value = 6000; sAir.gain.value = A.concert ? 0 : 1.0;
       const sW = mk(ctx.createGain()); sW.gain.value = w; const sNeg = mk(ctx.createGain()); sNeg.gain.value = -1;
       side.connect(sHp); sHp.connect(sAir); sAir.connect(sW);
       mid.connect(merge, 0, 0); sW.connect(merge, 0, 0);            // L' = M + S'
@@ -371,11 +371,22 @@
       const lg = mk(ctx.createGain()); lg.gain.value = dbtoa(-makeupDb(-22, 2) + 1.0);
       lo.out.disconnect(); lo.out.connect(lc); lc.connect(lg); lg.connect(out);
       eng.mbLow = lg; eng.mbLowDb = -makeupDb(-22, 2) + 1.0;   // the low band's level after its compressor: a piece may lift it (Music: def.lowBand, dB)
+      eng._mb = { cp, cg, lc, lg };
       return { in: inG, out };
     })();
     eng.musicBus.connect(eqL); eqL.connect(eqM); eqM.connect(mb.in); mb.out.connect(eqH); eqH.connect(eqS); eqS.connect(eqA); eqA.connect(width.in); width.out.connect(glue); glue.connect(glueMake); glueMake.connect(sat); sat.connect(duck); duck.connect(master);
     eng.glue = glue; eng._stages = { eqL, eqM, mbIn: mb.in, mbOut: mb.out, eqH, widthIn: width.in, widthOut: width.out, glue, sat, duck };   // the bus's stages, for a listening test to tap
     eng.duck = duck; eng.duckUntil = 0; eng.duckLevel = 1;
+    // the concert master (A.concert, set by a render before the engine is made; never in the game): a recording of an orchestra in a hall,
+    // not a game's mix — the tone stage flat (no lift under 60 Hz, no cut at 220 where the orchestra's body is), the band compressors and
+    // the glue at unity (no band levelled against another, the dynamics as played), the side at its own width, no saturation. The peak
+    // limiter and the soft clipper stay as a safety that a well-levelled render never reaches.
+    if (A.concert) {
+      for (const f of [eqL, eqM, eqH, eqS, eqA]) f.gain.value = 0;
+      const B = eng._mb; B.cp.ratio.value = 1; B.cp.threshold.value = 0; B.cg.gain.value = 1; B.lc.ratio.value = 1; B.lc.threshold.value = 0; B.lg.gain.value = 1; eng.mbLowDb = 0;
+      glue.ratio.value = 1; glue.threshold.value = 0; glueMake.gain.value = 1; sat.curve = null;
+      eng.concert = true;
+    }
     // dip the music by `depthDb` for `hold` seconds (15 ms in, ~250 ms release). While an earlier duck is still holding, the depth
     // never decreases (the deeper one is kept, the hold is extended); a shorter + shallower request inside a running duck is ignored.
     eng.duckMusic = function (depthDb, hold) {
@@ -420,7 +431,8 @@
       for (let c = 0; c < 2; c++) { const src = d.ch[Math.min(c, d.ch.length - 1)], dst = buf.getChannelData(c);
         for (let i = 0; i < len; i++) { const x = i / ratio, k = Math.floor(x), f = x - k; dst[i] = d.gain * ((src[k] || 0) * (1 - f) + (src[k + 1] || 0) * f); } }
       const inp = mk(ctx.createGain()), h = mk(ctx.createBiquadFilter()), conv = mk(ctx.createConvolver()), l = mk(ctx.createBiquadFilter()), out = mk(ctx.createGain());
-      h.type = 'highpass'; h.frequency.value = 260; h.Q.value = 0.5; l.type = 'lowpass'; l.frequency.value = 11000; l.Q.value = 0.5;
+      h.type = 'highpass'; h.frequency.value = num(A.hallHp, 260); h.Q.value = 0.5; l.type = 'lowpass';   // A.hallHp: a render may let more of the low end into the hall (the concert suite's warmth)
+      l.frequency.value = 11000; l.Q.value = 0.5;
       conv.normalize = false; conv.buffer = buf; inp.connect(h); h.connect(conv); conv.connect(l); l.connect(out); out.connect(eng.musicBus);
       eng.halls[name] = inp;
     }

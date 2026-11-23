@@ -17,8 +17,25 @@
   const at = (bars, hits) => Array.from({ length: bars }, (_, i) => hits[i] || E16);
 
   // the stage every movement stands on: the orchestral profile in the recorded hall, the bass free to move with the harmony
+  // seating: every recording plays from its seat on a concert stage (js/audio/music.js, 'the concert stage'): its angle, its distance,
+  // its own early reflections, a hall send that grows toward the back. sing: soloists join their notes as singers and string players do.
   const STAGE = { orch: true, holdLow: false, tens: false, hidden: true, rubato: 0, hall: 'musikverein', fx: { verb: 1.2, stage: 0.8, dly: 0 },
-    tone: { lo: 1.5, hi: 1.5, pres: 1.5 }, sends: { lead: { verb: 0.16, stage: 0.32, dly: 0 }, choir: { verb: 0.34, stage: 0.14 } }, lowBand: 2.5, bassC: 40 };
+    seating: { hall: 0.34, er: 1.0 }, sing: true,
+    tone: { lo: -1.5, hi: 4, pres: 2 }, sends: { lead: { verb: 0.16, stage: 0.32, dly: 0 }, choir: { verb: 0.34, stage: 0.14 } }, lowBand: 0, bassC: 40 };
+  // A symphony's low end, not a film's: no sine under the basses, the basses' bow and body left in (the game cuts them to a 200 Hz boom),
+  // the cellos singing in their own register instead of doubling the basses an octave up, the tuba's pedal lighter
+  function clarify(def) {
+    def.subBass = 0;
+    const fix = b => { if (!b || typeof b !== 'object') return b; const i = b.inst; b.inst = i && typeof i === 'object' ? Object.assign({}, i, { cut: i.cut || 3200 }) : { p: i || def.inst.bass, cut: 3200 }; return b; };
+    if (def.base && def.base.bass) fix(def.base.bass);
+    for (const sec of def.sec) {
+      delete sec.subBass; fix(sec.bass);
+      const p2 = sec.pad2; if (p2 && typeof p2 === 'object' && (p2.inst || def.inst.pad2) === 'cellos' && p2.reg && p2.reg[0] < 43) { p2.reg = [43, 58]; delete p2.open; }
+      if (sec.pad3 && sec.pad3.inst === 'tuba') sec.pad3.vel = (sec.pad3.vel || 0.6) * 0.7;
+    }
+    def.mix = Object.assign({}, def.mix, { bass: 1.05 });
+    return def;
+  }
 
   // =====================================================================================================================================
   // I. FIRST LIGHT — Prelude
@@ -28,9 +45,9 @@
   // sunrise; the hymn — the game's leitmotif — in horns and voices; its second half higher, the trumpets on the tune and the choir singing
   // it; the day, pastoral, the oboe; and dusk, the flute alone, the commonwealth's climb in a far horn, the last light.
   // =====================================================================================================================================
-  Track('concert:1', Object.assign({}, STAGE, {
+  Track('concert:1', clarify(Object.assign({}, STAGE, {
     desc: 'Concert suite I: First Light — prelude',
-    bpm: 56, root: 'Db', mode: 'major', trim: 1.5, subBass: 0.35,
+    bpm: 56, root: 'Db', mode: 'major', trim: 0.63, subBass: 0.35,
     mix: { lead: 1.45, pad: 1.0, bass: 1.5, choir: 1.25, arp: 0.85, bell: 0.9 },
     inst: { pad: 'violas', pad2: 'cellos', bass: 'deep', lead: 'altoFluteIowa', lead2: 'clarinet', arp: { p: 'harp', rel: 3.5, hold: 2.2, cut: 4600 }, bell: 'glass', choir: 'choirOoh', choir2: 'choirMen' },
     quotes: ['hymn', 'procession', 'wonder'],
@@ -108,7 +125,7 @@
         lead: { ph: 'D1 DE', vel: 0.5, pan: -0.1 }, lead2: { ph: 'r2 PAh r2', inst: 'hornIowa', oct: -1, vel: 0.42, pan: 0.3 },
         bell: { dens: 0.07, res: 1, reg: [80, 96], vel: 0.28 } },
     ],
-  }));
+  })));
 
   // =====================================================================================================================================
   // II. THE LONG NIGHT — Passacaglia
@@ -122,9 +139,9 @@
   // =====================================================================================================================================
   const GROUND = 'i bVIM7 bIII V | i bVIM7 bIII V';
   const GBASS = ['1--b', '1--7', '1--2', '1---'];
-  Track('concert:2', Object.assign({}, STAGE, {
+  Track('concert:2', clarify(Object.assign({}, STAGE, {
     desc: 'Concert suite II: The Long Night — passacaglia',
-    bpm: 56, root: 'B', mode: 'minor', trim: 1.7, subBass: 0.4,
+    bpm: 56, root: 'B', mode: 'minor', trim: 0.71, subBass: 0.4,
     mix: { lead: 1.4, pad: 1.0, bass: 1.45, choir: 1.25, arp: 0.9, bell: 0.9 },
     inst: { pad: 'strings', pad2: 'cellos', bass: 'deep', lead: 'reed', lead2: 'cello', bell: 'chime', arp: 'harp', choir: 'choirWomen', choir2: 'choirMen' },
     quotes: ['hymn', 'planetarium'],
@@ -182,7 +199,7 @@
         lead2: { ph: 'GB GE', oct: -1, vel: 0.58, art: 0.96 }, pad: { p: 'swell', inst: 'violas', n: 3, reg: [52, 66], vel: 0.45 },
         lead: { ph: 'P1 CE', vel: 0.6 }, choir: { n: 3, reg: [62, 74], vel: 0.26, soft: true } },
     ],
-  }));
+  })));
 
   // =====================================================================================================================================
   // III. COMMONWEALTH — Finale
@@ -193,9 +210,9 @@
   // in the trumpets and the horns and the choir, over the strings' ostinato; the procession's answer in full; and an amen, the major
   // subdominant turned minor before the last chord.
   // =====================================================================================================================================
-  Track('concert:3', Object.assign({}, STAGE, {
+  Track('concert:3', clarify(Object.assign({}, STAGE, {
     desc: 'Concert suite III: Commonwealth — finale',
-    bpm: 84, root: 'D', mode: 'major', trim: 1.45, subBass: 0.4,
+    bpm: 84, root: 'D', mode: 'major', trim: 0.61, subBass: 0.4,
     mix: { lead: 1.35, pad: 1.0, bass: 1.4, choir: 1.25, drums: 0.95, arp: 0.85, bell: 0.9 },
     inst: { pad: 'strings', pad2: 'lowBrass', bass: 'lowBrass', lead: 'hornSolo', lead2: 'horn', arp: 'harp', bell: 'bell', choir: 'choirOoh', choir2: 'choirMen' },
     quotes: ['hymn', 'procession'],
@@ -295,7 +312,7 @@
         timp: { kick: ['X...............', '................', '................', '................'], vel: 0.9 },
         drums: { crashS: at(4, { 0: 'x...............' }), tam: at(4, { 0: 'x...............' }), bd: at(4, { 0: 'X...............' }) }, verb: 1.3, subBass: 0.9 },
     ],
-  }));
+  })));
 
   window.CONCERT_SUITE = {
     title: 'Master of Orion — Reborn: Concert Suite', artist: 'MOOgenesis',

@@ -124,3 +124,49 @@ Every movement compiles with no notes moved onto a chord: each written note eith
 
 The levels are one gain for the whole suite. It's set so the loudest movement reaches about −16 LUFS, with peaks under −1 dBFS, so the
 quiet movements stay quiet relative to the loud ones.
+
+## Revision 3: a stage, a symphony's low end, and singing soloists
+
+**The stage.** The pieces set `seating`. In that mode, every recording plays from its seat on a concert stage, heard from about 12 m back
+in the stalls. The seats and their geometry are in `js/audio/music.js`, under "the concert stage". The orchestra sits the usual way:
+
+- The first and second violins on the left; the violas, cellos and basses on the right.
+- The woodwinds in two rows in the middle.
+- The horns behind on the left; the trumpets, trombones and tuba across the back.
+- The timpani and percussion at the very back; the harp and celesta on the left.
+- The choir on risers behind the orchestra.
+
+Each seat gets:
+
+- **Angle**: panned by its real angle to the listener, with the far channel up to 0.4 ms late.
+- **Distance**: its direct sound slightly later, softer and duller the farther back it sits.
+- **Early reflections**: from the side walls, the stage's back wall, the floor and the ceiling, using an image-source model of the hall.
+  Every seat gets its own reflection pattern, and that's the main cue the ear uses to judge distance.
+- **Hall**: a send into the recorded Musikverein hall that grows toward the back.
+
+The full-ensemble recordings, whose stereo image spans the whole stage, are narrowed to their section's width. Their chords are split by
+register into the sections that would play them. A melodic line stays in one seat.
+
+**The low end.** The first renders had a film-score bass: 20–160 Hz within 0–8 dB of the loudest band, and a hole at 160–320 Hz where the
+cellos, violas, horns and low voices live. The causes, all from the game's mix:
+
+- A sine sub-bass under the basses.
+- The basses low-passed at 200 Hz, leaving a boom without a bow.
+- A low-band lift and a +2 dB shelf at 55 Hz.
+- A −2.5 dB "mud" cut at 220 Hz.
+- A compressor on the 160–450 Hz band alone, flattening the orchestra's body.
+- Cellos doubling the basses an octave up.
+
+Concert renders now set `A.concert`, which keeps the master flat: no band compression, no glue compression, no saturation and no added
+width. The peak limiter stays only as a safety. The suite also removes the sine, lets the basses' bow through, and gives the cellos their
+own register. After the change, 20–40 Hz sits about 35 dB under the loudest band and 160–320 Hz about 5 dB under it.
+
+**Singing soloists.** The pieces set `sing`. In that mode, a legato note reached by a leap and held is joined to the one before:
+
+- **Strings and voices** slide from the old pitch onto the new on a third or more. The slide takes 80–200 ms, longer for a wider leap,
+  like a string player shifting or a singer carrying the line.
+- **Winds and brass** get only a short shade of the old pitch.
+
+Each part is now followed separately, so two lines on one bus are treated as two players.
+
+The game's own pieces don't use any of this. Every game track compiles byte-for-byte as before, and the game's master chain is untouched.

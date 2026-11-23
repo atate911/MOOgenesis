@@ -1272,7 +1272,7 @@
     // tail filling every gap; a section may take the hall back a little and the next one gives it again (eased over a second or so)
     if (wraps.some(w => w.R.raw && w.R.raw.verb !== undefined)) for (const w of wraps) C.ev.push({ t: C.tAt(w.start), v: 'fx', ly: '_fx', o: { verb: clamp(num(w.R.raw && w.R.raw.verb, 1), 0.2, 1.5) }, m: 0, b: w.start, bt: 0, k: 'fx' });
     C.ev.sort((a, b) => a.t - b.t);
-    markLegato(C.ev);
+    markLegato(C.ev, C.def);
     if (perf && !Music._dbg.noPerform) { perform(C, Emove, pseed); C.ev.sort((a, b) => a.t - b.t); }   // the ensemble: after the legato is known, so a line's overlaps stay
     if (!Music._dbg.noLayerFlow && (def.orch || def.refreshed)) layerFlow(C.ev);   // the refreshed pieces and the orchestral profile
     // tight (a piece's `tight: true`, the news package): every part on the grid together, as a produced track is. No note placed off
@@ -1320,18 +1320,69 @@
   Music._layerFlow = layerFlow;
   // phrasing: in a melodic line, a note that follows straight on from the previous one is played legato (the sampler then starts past the
   // bow / breath attack and the previous note is held a little into it, like a player who does not re-attack every note)
-  function markLegato(evs) {
-    const last = Object.create(null);
+  // the singing line (a piece's `sing`): a legato note reached by a leap and held is joined to the one before as a singer or a string
+  // player joins them, sliding from the old pitch onto the new (the sampler's glide). Strings and voices slide on a third or more, the
+  // slide longer for a wider leap; winds and brass only connect, a short shade of the old pitch. Never into a short note.
+  const SING = { bow: /^(vlnSolo|vlaSolo|vcSolo|cbSolo|vcSus|vln1Sus|vlaSus|strEns|cantor|choir|chorus)/, wind: /^(oboe|flute|altoFlute|clarinet|clarIowa|corAnglais|bassoon|bassClar|fluteIowa|oboeIowa|altoFluteIowa|bassoonIowa)/, brass: /^(horn|tpt|tbn)/ };
+  function singGlide(o, iv) {
+    const smp = o.smp || '', a = Math.abs(iv), dur = o.dur || 0;
+    if (dur < 0.4 || a < 2) return;
+    if (SING.bow.test(smp)) { if (a < 3 || dur < 0.6) return; o.glide = -iv * 100 * 0.72; o.glideT = clamp(0.08 + 0.012 * a, 0.08, 0.2); }
+    else if (SING.wind.test(smp)) { o.glide = -iv * 100 * 0.25; o.glideT = 0.045; }
+    else if (SING.brass.test(smp)) { o.glide = -iv * 100 * 0.3; o.glideT = 0.06; }
+  }
+  function markLegato(evs, def) {
+    const last = Object.create(null), sing = !!(def && def.sing);
     for (const ev of evs) {
       if (ev.v !== 'sample' || !LINES[ev.ly] || !ev.o || ev.o.ring || ev.o.oneShot) continue;
-      const prev = last[ev.ly];
+      const lk = sing ? (ev.k || ev.ly) : ev.ly, prev = last[lk];   // a singing piece follows each part on its own (two lines on one bus are two players)
       if (prev && ev.m !== prev.m && Math.abs(ev.t - (prev.t + prev.o.dur)) < 0.09 && ev.o.dur > 0.25) {
         ev.o.leg = true;
         prev.o.dur = Math.max(prev.o.dur, ev.t - prev.t + 0.07);       // overlap into the new note; the old one releases under it
+        if (sing) singGlide(ev.o, ev.m - prev.m);
       }
-      last[ev.ly] = ev;
+      last[lk] = ev;
     }
   }
+
+  // ================================================================== the concert stage (a piece's `seating`)
+  // A listener in the stalls, twelve metres from the front of the stage, before an orchestra seated as orchestras sit: the first violins at
+  // the front left, the seconds behind them, the violas and the cellos to the right, the basses behind the cellos; the woodwinds in the
+  // middle in two rows; the horns behind them to the left, the trumpets, trombones and tuba across the back; the timpani and the percussion
+  // at the very back; the harp and the celesta at the left; the choir on risers behind everything. Each recording plays from its seat:
+  // placed by its angle to the listener (the far ear a fraction of a millisecond late), a little later and softer and duller the farther
+  // back it sits, with its own early reflections from the hall's side walls, back wall, floor and ceiling (an image-source model: the cue
+  // that tells the ear how far away a sound is), and a hall send that grows with the distance. A section recording is narrowed to the
+  // width its players take on the stage; the full-ensemble recordings (strings, brass, choir) are given to the section whose register
+  // the note is in. [x, y, width]: metres across (left negative) and back from the front of the stage; width 0..1 as recorded.
+  const SEATS = { vln1: [-6, 2.5, 0.45], vln2: [-2.8, 4.2, 0.4], vla: [2.8, 4.2, 0.4], vc: [5.6, 3, 0.45], cb: [8.2, 5.8, 0.35], solo: [-1.6, 0.8, 0.12], soloVc: [1.6, 1.1, 0.12], cantor: [0, 1, 0.12],
+    harp: [-8.6, 6, 0.2], cel: [-6.6, 8, 0.2], fl: [-1.8, 7, 0.18], ob: [1.8, 7, 0.18], cl: [-1.8, 8.8, 0.18], bn: [1.8, 8.8, 0.18],
+    hn: [-5, 10.5, 0.35], tpt: [0.6, 11.6, 0.28], tbn: [3.8, 11.6, 0.3], tuba: [6.3, 11.2, 0.18], timp: [-1.2, 13.2, 0.3], perc: [3.6, 13.6, 0.4], glock: [-4, 13.2, 0.2],
+    women: [-4.5, 15.6, 0.55], men: [4.5, 15.6, 0.55], organ: [0, 17.6, 0.8], back: [0, 14, 0.85] };
+  function seatOf(smp, m) {
+    const t = re => re.test(smp);
+    if (t(/^strEns/)) return m >= 69 ? 'vln1' : m >= 62 ? 'vln2' : m >= 55 ? 'vla' : m >= 43 ? 'vc' : 'cb';
+    if (t(/^vlnSolo/)) return 'solo'; if (t(/^(vlaSolo|vcSolo)/)) return 'soloVc'; if (t(/^vln/)) return 'vln1'; if (t(/^vla/)) return 'vla'; if (t(/^vc/)) return 'vc'; if (t(/^(cb|subBass)/)) return 'cb';
+    if (t(/^harp/)) return 'harp'; if (t(/^celeste/)) return 'cel'; if (t(/^(glock|crotales)/)) return 'glock'; if (t(/^(chimes|marimba)/)) return 'perc';
+    if (t(/^(flute|fluteSus|fluteIowa|altoFlute)/)) return 'fl'; if (t(/^(oboe|corAnglais)/)) return 'ob'; if (t(/^(clar|bassClar)/)) return 'cl'; if (t(/^bassoon/)) return 'bn';
+    if (t(/^horn/)) return 'hn'; if (t(/^tpt/)) return 'tpt'; if (t(/^(tbn|bassTbn)/)) return 'tbn'; if (t(/^tuba/)) return 'tuba';
+    if (t(/^brass/)) return m >= 67 ? 'tpt' : m >= 55 ? 'hn' : 'tbn'; if (t(/^lowBrass/)) return m && m < 45 ? 'tuba' : 'tbn';
+    if (t(/^timp/)) return 'timp'; if (t(/^(bassDrum|snare|crash|cymSwell|gong|tamb|claves|anvil|taps|tenor|triangle|bellTree|woodBlock|shaker|sleigh)/)) return 'perc';
+    if (t(/^chorusWomen/)) return 'women'; if (t(/^chorusMen/)) return 'men'; if (t(/^cantor/)) return 'cantor'; if (t(/^(chorus|choir)/)) return m >= 60 ? 'women' : 'men';
+    if (t(/^organ/)) return 'organ';
+    return 'back';
+  }
+  const ROOM = { w: 16, back: 19, h: 16 }, LIS = [0, -12, 1.2], C_SND = 343, R_REF = 15;
+  function seatGeom(key) {
+    const [x, y, w] = SEATS[key], z = key === 'women' || key === 'men' ? 2.6 : key === 'organ' ? 6 : 1.4;
+    const dist = (px, py, pz) => Math.hypot(px - LIS[0], py - LIS[1], pz - LIS[2]), r = dist(x, y, z);
+    const panOf = (px, py) => clamp(Math.sin(Math.atan2(px - LIS[0], py - LIS[1])) / Math.sin(34 * Math.PI / 180), -1, 1) * 0.92;
+    // the first reflections: the two side walls, the stage's back wall, the floor, the ceiling (with what each absorbs)
+    const imgs = [[-2 * ROOM.w - x, y, z, 0.62], [2 * ROOM.w - x, y, z, 0.62], [x, 2 * ROOM.back - y, z, 0.5], [x, y, -z, 0.42], [x, y, 2 * ROOM.h - z, 0.5]];
+    const er = imgs.map(([px, py, pz, a]) => { const ri = dist(px, py, pz); return { dt: (ri - r) / C_SND, g: a * r / ri, pan: panOf(px, py) * 0.85 }; });   // (the reflections a little inside the speakers: wide, not split)
+    return { r, w, er, pan: panOf(x, y), dly: Math.max(0, r - 13) / C_SND * 0.5, dir: Math.pow(R_REF / r, 0.7), air: -0.22 * Math.max(0, r - 13), hall: Math.pow(r / R_REF, 0.45) };
+  }
+  Music._seats = { SEATS, seatOf, seatGeom };
 
   // ================================================================== player
   const smooth = x => { x = clamp(x, 0, 1); return x * x * (3 - 2 * x); };
@@ -1363,10 +1414,11 @@
       this.loop = this.o.loop !== false; this.intensity = num(this.o.intensity, 0);
       const ctx = eng.ctx, mk = n => { this.nodes.push(n); eng.nodeCount++; return n; };
       this.bus = mk(ctx.createGain());
-      if (def.tone && (def.tone.hi || def.tone.lo || def.tone.pres)) {       // the piece's own tone: the exploration pieces sit darker than the dramatic cues; pres: a broad lift at 3 kHz where the shelf above 5 kHz does not reach (the voices' and the strings' presence)
+      if (def.tone && (def.tone.hi || def.tone.lo || def.tone.pres || def.tone.body)) {       // the piece's own tone: the exploration pieces sit darker than the dramatic cues; pres: a broad lift at 3 kHz where the shelf above 5 kHz does not reach (the voices' and the strings' presence)
         let n = this.bus;
         if (def.tone.hi) { const f = mk(ctx.createBiquadFilter()); f.type = 'highshelf'; f.frequency.value = 5000; f.gain.value = def.tone.hi; n.connect(f); n = f; }
         if (def.tone.lo) { const f = mk(ctx.createBiquadFilter()); f.type = 'lowshelf'; f.frequency.value = 120; f.gain.value = def.tone.lo; n.connect(f); n = f; }
+        if (def.tone.body) { const f = mk(ctx.createBiquadFilter()); f.type = 'peaking'; f.frequency.value = 210; f.Q.value = 0.85; f.gain.value = Math.max(-6, Math.min(9, def.tone.body)); n.connect(f); n = f; }   // body: a broad lift where the cellos, violas, horns and low voices live (the instruments' presets each cut there, for the game's clarity)
         if (def.tone.pres) { const f = mk(ctx.createBiquadFilter()); f.type = 'peaking'; f.frequency.value = 3000; f.Q.value = 0.8; f.gain.value = Math.max(-6, Math.min(6, def.tone.pres)); n.connect(f); n = f; }
         n.connect(eng.musicBus);
       } else this.bus.connect(eng.musicBus);
@@ -1412,9 +1464,15 @@
         const exG = mk(ctx.createGain()); exG.gain.value = 1; exG.connect(inG);   // the expression stage (orchestral pieces' curve); the dip under the solo is inG
         this.layers[name] = { in: exG, duck: inG, level: L.lvl * num(mix[name], 1), i0: L.i0 };
         inG.gain.value = this.layers[name].i0 !== undefined ? 0 : this.layers[name].level;
+        if (def.seating) {   // the concert stage: the seats' early reflections and their hall send ride the layer's own gains (its expression, its dip under the solo)
+          const L2 = this.layers[name], eE = mk(ctx.createGain()), eD = mk(ctx.createGain()), hE = mk(ctx.createGain()), hD = mk(ctx.createGain());
+          eE.connect(eD); eD.connect(this.bus); hE.connect(hD); hD.connect(this.verb); eD.gain.value = hD.gain.value = inG.gain.value;
+          L2.er = eE; L2.hv = hE; L2.exs = [exG, eE, hE]; L2.dks = [inG, eD, hD];
+          sv.gain.value = 0; ss.gain.value = 0; sd.gain.value = 0;   // the room comes from the seats, not from the layer
+        }
       }
       const gate = def.gate || {};
-      for (const name in gate) { const L = this.layers[name]; if (L && L.i0 === undefined && gate[name] > 0) { L.i0 = gate[name]; L.in.gain.value = 0; } }
+      for (const name in gate) { const L = this.layers[name]; if (L && L.i0 === undefined && gate[name] > 0) { L.i0 = gate[name]; for (const x of L.exs || [L.in]) x.gain.value = 0; } }
       this.trimBase = num(def.trim, DEFAULT_TRIM) * MIX_TRIM; this.trim = this.trimBase * (eng.offline ? 1 : dirMul()); this.offline = !!eng.offline; this.fadeEnd = 0;
       this.applyIntensity(this.intensity, true);
       this.pass = null; this.passNo = -1; this.idx = 0; this.t0 = 0; this.skipBefore = -1e9; this.shift = 0;
@@ -1464,8 +1522,8 @@
       if (!this.stopped) { try { const vg = this.verb.gain; vg.cancelScheduledValues(t); vg.setTargetAtTime((1 - 0.33 * x) * (this.verbK || 1), t, immediate ? 0.01 : 2.0); } catch (e) { /* ignore */ } }
       for (const name in this.layers) {
         const L = this.layers[name]; if (L.i0 === undefined) continue;
-        const target = L.level * smooth((x - L.i0) / 0.25), g = L.in.gain;
-        try { g.cancelScheduledValues(t); if (immediate) g.setValueAtTime(target, t); else g.setTargetAtTime(target, t, 1.6); } catch (e) { g.value = target; }   // layers swell in over seconds, never per hit
+        const target = L.level * smooth((x - L.i0) / 0.25);
+        for (const n of L.exs || [L.in]) { const g = n.gain; try { g.cancelScheduledValues(t); if (immediate) g.setValueAtTime(target, t); else g.setTargetAtTime(target, t, 1.6); } catch (e) { g.value = target; } }   // layers swell in over seconds, never per hit
       }
     }
     fadeIn(sec) {
@@ -1503,12 +1561,19 @@
     fire(ev, T) {
       if (ev.v === 'fx') { this.verbK = ev.o.verb; if (!this.stopped) { try { this.verb.gain.setTargetAtTime((1 - 0.33 * this.intensity) * this.verbK, T, 1.2); } catch (e) { /* ignore */ } } return; }
       const L = this.layers[ev.ly]; if (!L) return;
-      if (ev.v === 'expr') { try { L.in.gain.setTargetAtTime(clamp(ev.o.g, 0.02, 2), T, 0.45); } catch (e) { /* ignore */ } return; }
+      if (ev.v === 'expr') { for (const n of L.exs || [L.in]) { try { n.gain.setTargetAtTime(clamp(ev.o.g, 0.02, 2), T, 0.45); } catch (e) { /* ignore */ } } return; }
       if (this.only && !this.only[ev.ly] && !(ev.k && this.only[ev.k])) return;   // a bus, or one line by its own name (lead3)
       if (L.i0 !== undefined && this.intensity < L.i0 - 0.02) return;
       const o = this.stretch === 1 || !ev.o || !ev.o.dur ? ev.o : Object.assign({}, ev.o, { dur: ev.o.dur * this.stretch });
       const o2 = o && o.vib !== 0 && ev.v === 'sample' && this.def && this.def.bpm ? Object.assign({}, o, { vibRate: vibRateFor(this.bpmNow ? this.bpmNow(T) : this.def.bpm) }) : o;
-      const v = V[ev.v](this.eng, L.in, T, o2);
+      let dest = L.in, o3 = o2;
+      if (this.def.seating && o2 && o2.smp) {   // the concert stage: the recording plays from its seat
+        // a melodic line stays with its player: seated once, by its first note (the register split is for the chords of an ensemble recording)
+        const line = /^(lead|bell)/.test(ev.k || ''), ps = this.partSeat || (this.partSeat = {}), pk = (ev.k || '') + '|' + o2.smp;
+        const key = line ? (ps[pk] || (ps[pk] = /^strEns/.test(o2.smp) ? (ev.m >= 55 ? 'vln1' : 'vc') : /^(chorus$|choirOoh|choirHum)/.test(o2.smp) ? (ev.m >= 62 ? 'women' : 'men') : seatOf(o2.smp, ev.m))) : seatOf(o2.smp, ev.m);
+        dest = this.seatStrip(ev.ly, L, key); o3 = Object.assign({}, o2, { pan: 0, width: Math.min(num(o2.width, 1), SEATS[key][2] * num(this.def.seating.width, 1)) });
+      }
+      const v = V[ev.v](this.eng, dest, T, o3);
       if (v) this.live.add(v);
       if (ev.ly === 'lead' && o && o.dur > 0.2) this.duckBeds(T, o.dur);
     }
@@ -1516,18 +1581,41 @@
     // dip: a note that starts before the dip has come back (or within 0.6 s of it, a breath between two notes) moves the restore to its own
     // end instead of scheduling one inside itself (overlapping legato notes used to bring the beds up mid-note, and every gap between two
     // notes swelled them back, a pump of the whole duck depth against the solo). The restore is slower (0.6 s) so a real rest breathes.
+    // one seat's place on the stage, for one layer (made once, kept for the performance)
+    seatStrip(ly, L, key) {
+      const id = ly + '|' + key; this.seats = this.seats || {}; if (this.seats[id]) return this.seats[id];
+      const ctx = this.eng.ctx, G = this._seatG || (this._seatG = {}), g = G[key] || (G[key] = seatGeom(key)), cfg = typeof this.def.seating === 'object' ? this.def.seating : {};
+      const mk = n => { this.nodes.push(n); this.eng.nodeCount++; return n; }, gain = x => { const n = mk(ctx.createGain()); n.gain.value = x; return n; };
+      const inp = gain(1), d = mk(ctx.createDelay(0.1)); d.delayTime.value = g.dly; inp.connect(d);
+      const air = mk(ctx.createBiquadFilter()); air.type = 'highshelf'; air.frequency.value = 5000; air.gain.value = g.air; d.connect(air);
+      // the direct sound: from its angle, the far ear a fraction of a millisecond late
+      const pn = mk(ctx.createStereoPanner()); pn.pan.value = g.pan; air.connect(pn);
+      const sp = mk(ctx.createChannelSplitter(2)), mg = mk(ctx.createChannelMerger(2)), dl = mk(ctx.createDelay(0.01)), dr = mk(ctx.createDelay(0.01)), itd = 0.0004 * Math.abs(g.pan);
+      dl.delayTime.value = g.pan > 0 ? itd : 0; dr.delayTime.value = g.pan < 0 ? itd : 0;
+      pn.connect(sp); sp.connect(dl, 0); sp.connect(dr, 1); dl.connect(mg, 0, 0); dr.connect(mg, 0, 1);
+      const dir = gain(g.dir); mg.connect(dir); dir.connect(L.in);
+      // the early reflections: this seat's walls, floor and ceiling, each from its own direction, a little darker than the direct sound
+      const erLp = mk(ctx.createBiquadFilter()); erLp.type = 'lowpass'; erLp.frequency.value = 5500; air.connect(erLp);
+      const erK = num(cfg.er, 1);
+      for (const e of g.er) { const dd = mk(ctx.createDelay(0.25)); dd.delayTime.value = g.dly + e.dt; const eg = gain(e.g * erK * g.dir), ep = mk(ctx.createStereoPanner()); ep.pan.value = e.pan; erLp.connect(dd); dd.connect(eg); eg.connect(ep); ep.connect(L.er); }
+      const hv = gain(g.hall * num(cfg.hall, 0.3)); air.connect(hv); hv.connect(L.hv);
+      return (this.seats[id] = inp);
+    }
     duckBeds(T, dur) {
       const dk = this.def && this.def.duck !== undefined ? clamp(num(this.def.duck, 0.79), 0.3, 1) : (orchOf(this.def) ? 0.8 : 0.79);   // a piece may ask for a deeper dip under its soloist (the title: 0.7, 3.1 dB)
       const merge = Music.duckMerge !== false, end = T + dur, cont = merge && this._duckEnd !== undefined && T <= this._duckEnd + 0.6;
       for (const name of ['pad', 'pad2', 'choir', 'choir2', 'arp', 'arp2']) {
         const L = this.layers[name]; if (!L || L.i0 !== undefined) continue;
-        const g = (L.duck || L.in).gain, lv = L.level, k = name.indexOf('arp') === 0 ? 0.84 : dk;
-        try {
-          if (!merge) { g.setTargetAtTime(lv * k, T, 0.06); g.setTargetAtTime(lv, T + dur, 0.3); continue; }
-          if (cont) { g.cancelScheduledValues(Math.max(T, this._duckEnd - 0.001)); g.setTargetAtTime(lv * k, Math.max(T, this._duckEnd - 0.001), 0.06); }
-          else g.setTargetAtTime(lv * k, T, 0.06);
-          g.setTargetAtTime(lv, Math.max(end, cont ? this._duckEnd : 0) + 0.15, 0.6);
-        } catch (e) { /* ignore */ }
+        const lv = L.level, k = name.indexOf('arp') === 0 ? 0.84 : dk;
+        for (const n of L.dks || [L.duck || L.in]) {
+          const g = n.gain;
+          try {
+            if (!merge) { g.setTargetAtTime(lv * k, T, 0.06); g.setTargetAtTime(lv, T + dur, 0.3); continue; }
+            if (cont) { g.cancelScheduledValues(Math.max(T, this._duckEnd - 0.001)); g.setTargetAtTime(lv * k, Math.max(T, this._duckEnd - 0.001), 0.06); }
+            else g.setTargetAtTime(lv * k, T, 0.06);
+            g.setTargetAtTime(lv, Math.max(end, cont ? this._duckEnd : 0) + 0.15, 0.6);
+          } catch (e) { /* ignore */ }
+        }
       }
       if (merge) this._duckEnd = Math.max(end, cont ? this._duckEnd : 0);
     }

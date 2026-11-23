@@ -630,6 +630,9 @@
         if (fx.fOut !== null) { const a = t0 + fx.fOut * dur - XF / 2; sg.gain.setValueAtTime(1, Math.max(t0, a)); sg.gain.linearRampToValueAtTime(0, Math.max(t0, a) + XF); }
       } else if (g1 !== g0) { sg.gain.setValueAtTime(g0, t + delay); sg.gain.linearRampToValueAtTime(g1, t + delay + dur); }
       const t0 = t + delay;
+      // the slide (o.glide, cents; o.glideT, s): a legato note that starts at the pitch it came from and moves onto its own, as a singer or a
+      // string player joins two notes; an exponential-ish approach (fast at first, settling) rather than a straight ramp
+      if (leg && o.glide && !oneShot) { const gT = clamp(num(o.glideT, 0.1), 0.02, 0.4); src.detune.setValueAtTime(det + o.glide, t0); src.detune.setTargetAtTime(det, t0 + 0.005, gT / 3); }
       // legato: skip the bow / breath attack already heard on the previous note (but stay well before the loop)
       // (o.legOff 'loop': a held bed's or bass's moving voice comes in at the steady part of its note, just before the loop, past every
       //  trace of the bow's bite)
