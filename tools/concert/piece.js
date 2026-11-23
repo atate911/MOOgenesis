@@ -12,11 +12,12 @@ const args = process.argv.slice(2), opt = {}; const ids = [];
 for (let i = 0; i < args.length; i++) { if (args[i].startsWith('--')) opt[args[i].slice(2)] = args[i + 1] && !args[i + 1].startsWith('--') ? args[++i] : true; else ids.push(args[i]); }
 const OUT = path.join(__dirname, 'out', 'pieces'), SR = 48000, PORT = +opt.port || 8820;
 (async () => {
-  const srv = await serve(PORT), { browser, page } = await open();
+  const srv = await serve(PORT), { browser, page, errors } = await open();
   await page.goto(`http://localhost:${PORT}/tools/test-audio.html`);
   await page.addScriptTag({ url: `http://localhost:${PORT}/tools/lib/audio-metrics.js` });
   await page.waitForFunction(() => window.MOO && MOO.Audio && MOO.Audio.Music && window.AudioMetrics);
   if (!opt['no-render']) await page.evaluate(async () => { await MOO.Audio.Samples.preload(); });
+  const perr = errors.filter(e => /pageerror|symphonic|score/.test(e)); if (perr.length) { console.log('PAGE ERRORS (the score did not load as written):\n  ' + perr.join('\n  ')); process.exitCode = 1; }
   fs.mkdirSync(OUT, { recursive: true });
   for (const id of ids.length ? ids : ['title']) {
     const s = await page.evaluate(([id]) => {
