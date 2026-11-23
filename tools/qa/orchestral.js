@@ -1,6 +1,8 @@
 // The acceptance test for an orchestral piece (a piece with `orch: true`): what "an orchestra and a choir, held and clean" means, checked
 // on the piece itself before it is published. Run it on every render of an orchestral reading; a failure names the place to look.
 //   node tools/qa/orchestral.js title,title:reed,title:cello [--from 10 --to 100] [--json FILE]
+// Under the symphonic profile (js/audio/music.js, symphonize) the ensemble is a professional one (a part drifts 0.5 ms or more, a chord
+// spreads 3 ms or more), the bass keeps its bow (8 dB or more under its tone above 500 Hz) and a moving bass's level may move 5 dB.
 // Checks, from the compiled score (instant):
 //   synthetic   no synthesized voice and no synth-family recording sounds (drums, the timpani and struck bells aside)
 //   held        the beds and the bass do not strike a note again that they were holding into a bar line, on the same instrument (at most
@@ -28,7 +30,7 @@ const argv = process.argv.slice(2), opt = {}; for (let i = 0; i < argv.length; i
 const IDS = (argv.find(a => !a.startsWith('--') && !Object.values(opt).includes(a)) || 'title').split(','), T0 = +opt.from || 10, T1 = +opt.to || 100;
 (async () => {
   const PORT = +process.env.PORT || 8871, srv = await serve(PORT); const { browser, page } = await open();
-  await page.goto('http://localhost:' + PORT + '/tools/test-audio.html');
+  await page.goto('http://localhost:' + PORT + '/tools/test-audio.html' + (opt.query ? '?' + opt.query : ''));   // --query symphonic=0: the old profile
   await page.waitForFunction(() => window.MOO && MOO.Audio && MOO.Audio.Music);
   const res = await page.evaluate(async ([IDS, T0, T1]) => {
     const A = MOO.Audio, M = A.Music, S = A.Samples; await S.preload(); const out = {};
@@ -36,7 +38,7 @@ const IDS = (argv.find(a => !a.startsWith('--') && !Object.values(opt).includes(
     const num0 = (v, dflt) => (typeof v === 'number' && isFinite(v) ? v : dflt);
     const OK_V = { sample: 1, drum: 1, kick: 1, snare: 1, hat: 1, timp: 1, expr: 1, fx: 1 };   // expr: the expression curve, not a sound
     for (const id of IDS) {
-      const d = M._tracks[id], r = M._compile(id, 0), spb = 60 / d.bpm, meter = d.meter || 4, ev = r.events.filter(e => e.o), checks = [];
+      const d = M._tracks[id], r = M._compile(id, 0), spb = 60 / d.bpm, meter = d.meter || 4, ev = r.events.filter(e => e.o), checks = [], SYM = !!d._sym;   // SYM: the symphonic profile (a professional ensemble, tight; the bass with its bow): its own thresholds
       // synthetic
       const syn = {}; for (const e of ev) { const smp = e.o.smp || ''; if ((!OK_V[e.v] && e.ly !== 'drums') || SYNTH_SMP.test(smp)) syn[(e.k || e.ly) + ':' + (smp || e.v)] = (syn[(e.k || e.ly) + ':' + (smp || e.v)] || 0) + 1; }
       checks.push({ name: 'synthetic', pass: !Object.keys(syn).length, detail: Object.keys(syn).length ? Object.entries(syn).map(([k, n]) => k + ' x' + n).join(', ') : 'none' });
@@ -64,7 +66,7 @@ const IDS = (argv.find(a => !a.startsWith('--') && !Object.values(opt).includes(
           const L = parts[k]; if (L.length < 8) continue;
           const win = {}; for (const e of L) (win[Math.floor(e.b / 8)] = win[Math.floor(e.b / 8)] || []).push(1000 * (e.t - grid(e.b)));
           const means = Object.values(win).filter(x => x.length >= 2).map(x => x.reduce((p, z) => p + z, 0) / x.length);
-          if (means.length >= 4 && k !== 'lead') { const mm = means.reduce((p, z) => p + z, 0) / means.length, sd = Math.sqrt(means.reduce((p, z) => p + (z - mm) * (z - mm), 0) / means.length); if (sd < 4) still.push(k + ' ' + sd.toFixed(1) + ' ms'); }
+          if (means.length >= 4 && k !== 'lead') { const mm = means.reduce((p, z) => p + z, 0) / means.length, sd = Math.sqrt(means.reduce((p, z) => p + (z - mm) * (z - mm), 0) / means.length); if (sd < (SYM ? 0.5 : 4)) still.push(k + ' ' + sd.toFixed(1) + ' ms'); }
           const at = {}; for (const e of L) (at[e.b.toFixed(4)] = at[e.b.toFixed(4)] || []).push(e.t); for (const x of Object.values(at)) if (x.length > 1) chords.push(1000 * (Math.max(...x) - Math.min(...x)));
           const g = L.filter(e => e.pf).map(e => e.pf[1]); const gr = g.length >= 8 ? q(g, 0.9) - q(g, 0.1) : 0; lv.push(gr); if (gr < 1.5) flat.push(k + ' ' + gr.toFixed(1) + ' dB');
         }
@@ -72,7 +74,7 @@ const IDS = (argv.find(a => !a.startsWith('--') && !Object.values(opt).includes(
         const xs = {}; for (const e of ev) if (e.v === 'expr') (xs[e.ly] = xs[e.ly] || []).push(Math.log(e.o.x !== undefined ? e.o.x : e.o.g));
         const cor = (a, b) => { if (!a || !b) return 0; const n = Math.min(a.length, b.length); let ma = 0, mb = 0; for (let i = 0; i < n; i++) { ma += a[i] / n; mb += b[i] / n; } let ab = 0, aa = 0, bb = 0; for (let i = 0; i < n; i++) { ab += (a[i] - ma) * (b[i] - mb); aa += (a[i] - ma) ** 2; bb += (b[i] - mb) ** 2; } return ab / Math.sqrt(aa * bb + 1e-15); };
         const sung = ev.some(e => e.m && e.ly === 'choir'), pc = sung ? cor(xs.pad, xs.choir) : 0;
-        checks.push({ name: 'performed', pass: !still.length && !flat.length && sp >= 10 && pc < 0.97, detail: (still.length ? 'on the grid: ' + still.join(', ') + '; ' : 'every part leans; ') + 'chords spread ' + Math.round(sp) + ' ms; ' + (flat.length ? 'level fixed: ' + flat.join(', ') : 'note levels vary ' + Math.min(...lv).toFixed(1) + '-' + Math.max(...lv).toFixed(1) + ' dB') + (sung ? '; beds and choir correlate ' + pc.toFixed(2) : '') }); }
+        checks.push({ name: 'performed', pass: !still.length && !flat.length && sp >= (SYM ? 3 : 10) && pc < 0.97, detail: (still.length ? 'on the grid: ' + still.join(', ') + '; ' : 'every part leans; ') + 'chords spread ' + Math.round(sp) + ' ms; ' + (flat.length ? 'level fixed: ' + flat.join(', ') : 'note levels vary ' + Math.min(...lv).toFixed(1) + '-' + Math.max(...lv).toFixed(1) + ' dB') + (sung ? '; beds and choir correlate ' + pc.toFixed(2) : '') }); }
       // phase and carried: a rendered excerpt, bus by bus
       const corr = async (buf, lo, hi) => {
         const oc = new OfflineAudioContext(2, buf.length, buf.sampleRate), src = oc.createBufferSource(); src.buffer = buf; let n = src;
@@ -98,7 +100,7 @@ const IDS = (argv.find(a => !a.startsWith('--') && !Object.values(opt).includes(
         checks.push({ name: 'balance', pass: lead <= 4.5, detail: 'the choir ' + (lead >= 0 ? lead.toFixed(1) + ' dB over' : (-lead).toFixed(1) + ' dB under') + ' the strings, 250 Hz-4 kHz' }); }
       // clean: the bass's tone against its noise
       { const hi = await corr(stems.bass, 500, 6000), lo = await corr(stems.bass, 30, 250), dd = hi.db - lo.db;
-        checks.push({ name: 'clean', pass: lo.n < 10 || dd <= -35, detail: lo.n < 10 ? 'no bass' : 'the bass above 500 Hz ' + (-dd).toFixed(0) + ' dB under its tone' }); }
+        checks.push({ name: 'clean', pass: lo.n < 10 || dd <= (SYM ? -8 : -35), detail: lo.n < 10 ? 'no bass' : 'the bass above 500 Hz ' + (-dd).toFixed(0) + ' dB under its tone' }); }
       // continuous: the foundation holds, and the held bass does not pulse
       { const lowOn = ev.filter(e => e.m && e.bt && e.t >= 10 && (e.ly === 'bass' || (e.ly === 'pad' && e.m <= 52))).length, mins = Math.max(0.5, (r.len - 10) / 60), perMin = lowOn / mins;
         const oc = new OfflineAudioContext(1, stems.bass.length, stems.bass.sampleRate), src = oc.createBufferSource(); src.buffer = stems.bass; let n = src;
@@ -109,7 +111,7 @@ const IDS = (argv.find(a => !a.startsWith('--') && !Object.values(opt).includes(
         const sm = mav(e, 3), tr = mav(e, 60), f = []; for (let i = Math.round(T0 / 0.05); i < Math.min(e.length, Math.round(T1 / 0.05)); i++) if (e[i] > -90) f.push(sm[i] - tr[i]);
         const so = f.sort((p, q) => p - q), mv = so.length ? so[Math.floor(so.length * 0.95)] - so[Math.floor(so.length * 0.05)] : 0;
         const holds = d.holdLow !== false;   // only a piece that holds its low end (the main theme's bass moves with the chords: the user's choice)
-        checks.push({ name: 'continuous', pass: holds ? perMin <= 4 && mv <= 1.5 : mv <= 3, detail: perMin.toFixed(1) + ' low notes begin a minute' + (holds ? '' : ' (the bass moves with the chords)') + '; the held bass moves ' + mv.toFixed(1) + ' dB' }); }
+        checks.push({ name: 'continuous', pass: holds ? perMin <= 4 && mv <= 1.5 : mv <= (SYM ? 5 : 3), detail: perMin.toFixed(1) + ' low notes begin a minute' + (holds ? '' : ' (the bass moves with the chords)') + '; the held bass moves ' + mv.toFixed(1) + ' dB' }); }
       out[id] = { orch: !!d.orch, checks };
     }
     return out;

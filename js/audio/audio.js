@@ -168,6 +168,16 @@
   // little more. `?soundstage=0` plays the old staging for comparison.
   A.soundstage = 1;
   try { if (/[?&]soundstage=0\b/.test(location.search)) A.soundstage = 0; } catch (e) { /* ignore */ }
+  // The symphonic profile (the concert suite's sound, tools/concert/README.md, brought to the whole score): every piece played as an
+  // orchestra on a concert stage — each section in its seat with its own register, channel EQ and early reflections, chords tuned pure,
+  // a professional ensemble on the beat, notes started as their recordings speak, the low strings with their bow, a clean sub, a
+  // clearer hall (no reverb under 220 Hz, a shorter tail, its top rolled off) — through a master without the game's band compressors,
+  // its 220 Hz cut, its 55 Hz lift, its saturation or its added width, keeping only a gentle leveller (so the music sits under the
+  // effects in play) and the peak limiter. Music.symphonize(def) gives each piece the profile (a piece may opt out: symphonic: false).
+  // `?symphonic=0` plays the old sound for comparison.
+  A.symphonic = true;
+  try { if (/[?&]symphonic=0\b/.test(location.search)) A.symphonic = false; } catch (e) { /* ignore */ }
+  if (A.symphonic) { if (A.hallHp === undefined) A.hallHp = 220; if (A.hallRT === undefined) A.hallRT = 4; if (A.hallLp === undefined) A.hallLp = 6500; }
   function makeIR(ctx, o) { const b = new IRBuilder(ctx, o); b.run(Infinity); return b.buf; }
   // A.loadIR(name, url): a recorded hall's impulse (a WAV), decoded once and kept as plain channel data for every engine made after it;
   // its energy scaled to the generated hall's (IR_HALL), so choosing it changes the room's character and not its level
@@ -339,13 +349,13 @@
     (function () { const n = 2048, c = new Float32Array(n), d = 1.6; for (let i = 0; i < n; i++) { const x = (i / (n - 1)) * 2 - 1; c[i] = Math.tanh(d * x) / d; } sat.curve = c; try { sat.oversample = '2x'; } catch (e) { /* ignore */ } })();
     const duck = mk(ctx.createGain());
     const width = (function () {                   // M = (L+R)/2, S = (L-R)/2 ; S -> hp 120 -> +1.5 dB @ 6k -> x w ; L' = M + S', R' = M - S'
-      const w = A.concert ? 1 : 1.15 + 0.15 * A.soundstage, inG = mk(ctx.createGain()), split = mk(ctx.createChannelSplitter(2)), merge = mk(ctx.createChannelMerger(2));   // the soundstage lifts the side a little more
+      const w = A.concert || A.symphonic ? 1 : 1.15 + 0.15 * A.soundstage, inG = mk(ctx.createGain()), split = mk(ctx.createChannelSplitter(2)), merge = mk(ctx.createChannelMerger(2));   // the soundstage lifts the side a little more
       const mid = mk(ctx.createGain()), side = mk(ctx.createGain()), lToM = mk(ctx.createGain()), rToM = mk(ctx.createGain()), lToS = mk(ctx.createGain()), rToS = mk(ctx.createGain());
       lToM.gain.value = 0.5; rToM.gain.value = 0.5; lToS.gain.value = 0.5; rToS.gain.value = -0.5;
       inG.connect(split); split.connect(lToM, 0); split.connect(rToM, 1); split.connect(lToS, 0); split.connect(rToS, 1);
       lToM.connect(mid); rToM.connect(mid); lToS.connect(side); rToS.connect(side);
       const sHp = mk(ctx.createBiquadFilter()); sHp.type = 'highpass'; sHp.frequency.value = 120; sHp.Q.value = 0.7;
-      const sAir = mk(ctx.createBiquadFilter()); sAir.type = 'highshelf'; sAir.frequency.value = 6000; sAir.gain.value = A.concert ? 0 : 1.0;
+      const sAir = mk(ctx.createBiquadFilter()); sAir.type = 'highshelf'; sAir.frequency.value = 6000; sAir.gain.value = A.concert || A.symphonic ? 0 : 1.0;
       const sW = mk(ctx.createGain()); sW.gain.value = w; const sNeg = mk(ctx.createGain()); sNeg.gain.value = -1;
       side.connect(sHp); sHp.connect(sAir); sAir.connect(sW);
       mid.connect(merge, 0, 0); sW.connect(merge, 0, 0);            // L' = M + S'
@@ -381,6 +391,11 @@
     // not a game's mix — the tone stage flat (no lift under 60 Hz, no cut at 220 where the orchestra's body is), the band compressors and
     // the glue at unity (no band levelled against another, the dynamics as played), the side at its own width, no saturation. The peak
     // limiter and the soft clipper stay as a safety that a well-levelled render never reaches.
+    if (A.symphonic && !A.concert) {   // the symphonic master for play: flat tone, no band compressors, no saturation; the gentle leveller and the limiter stay
+      for (const f of [eqL, eqM, eqH, eqS, eqA]) f.gain.value = 0;
+      const B = eng._mb; B.cp.ratio.value = 1; B.cp.threshold.value = 0; B.cg.gain.value = 1; B.lc.ratio.value = 1; B.lc.threshold.value = 0; B.lg.gain.value = 1; eng.mbLowDb = 0;
+      sat.curve = null; eng.symphonic = true;
+    }
     if (A.concert) {
       for (const f of [eqL, eqM, eqH, eqS, eqA]) f.gain.value = 0;
       const B = eng._mb; B.cp.ratio.value = 1; B.cp.threshold.value = 0; B.cg.gain.value = 1; B.lc.ratio.value = 1; B.lc.threshold.value = 0; B.lg.gain.value = 1; eng.mbLowDb = 0;

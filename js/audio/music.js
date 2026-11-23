@@ -402,7 +402,7 @@
     for (const id in TRACKS) { const d = TRACKS[id]; if (d.hidden) continue; try { prepare(d); } catch (e) { continue; } for (const t in d._p.themes) (out[t] = out[t] || []).push(id); }
     return out;
   };
-  const DEFAULT_TRIM = 1, MIX_TRIM = 2.4;   // MIX_TRIM: the producer's master fader, set from the headless loudness report
+  const DEFAULT_TRIM = 1, MIX_TRIM = 2.4, SYM_TRIM = 0.827;   // SYM_TRIM: a symphonic piece 1.65 dB down, so the score keeps its level under the effects (measured on four pieces, before and after the profile)   // MIX_TRIM: the producer's master fader, set from the headless loudness report
 
   // ---------------------------------------------------------------- prepare (parse + validate once per track)
   // the vibrato in time with the music: a whole number of cycles to a beat, as near five a second as the tempo allows (58 bpm: five to a beat,
@@ -448,9 +448,45 @@
     return {};
   }
 
+  // ---------------------------------------------------------------- the symphonic profile (audio.js, A.symphonic)
+  // What the concert suite learned, given to every piece of the score that does not set it itself: the concert stage (seating; on the
+  // low and medium performance tiers the old staging, which costs less), soloists that join their notes as players do (sing), chords tuned pure
+  // (just) with no random detune (pitchSpread), the professional ensemble on the beat or a hair behind it (ensemble, behind, press),
+  // every note started as its recording speaks (speak), a steady conductor (conduct, breathe), clean bass changes (bassXf) with the bow
+  // left in (bassCut), the low strings with their overtones (tasto), the timpani as themselves (timpClean), a clean sub at one level, the
+  // concert tone (a broad dip where many instruments pile up, a presence lift for the articulation), and the register plan — the cellos'
+  // bed from G2, the men's chords from C3, the low brass's stabs in open fifths, the tuba's pedal lighter — so no section sits on another.
+  const SYM_TONE = { lo: -1.5, mud: 2.5, pres: 3, presHz: 2500, presQ: 0.6, hi: 2 };
+  const SYM_ORCH = { seating: { hall: 0.1, er: 0.5, spread: 1.25, width: 0.65 }, sing: true, just: 1, pitchSpread: 0, ensemble: 0.3, behind: 0.006, speak: 1,
+    conduct: { push: 1, broaden: 0.96, ease: 0.94 }, breathe: { beats: 2, k: 0.95 }, press: 0, bassXf: 0.3, bassCut: 3200, tasto: false, timpClean: true };
+  const SYM_OTHER = { seating: { hall: 0.1, er: 0.5, spread: 1.25, width: 0.65 }, sing: true, just: 1, pitchSpread: 0, speak: 1, timpClean: true };
+  function symphonize(def) {
+    if (def._sym || !A.symphonic || def.symphonic === false) return def;
+    if (A.Samples && A.Samples.enabled === false) return def;          // the synth voices (a phone, file://): the old staging suits them
+    def._sym = true;
+    const P = def.orch ? SYM_ORCH : SYM_OTHER;
+    for (const k in P) if (def[k] === undefined) def[k] = JSON.parse(JSON.stringify(P[k]));
+    try { if (M.Perf && (M.Perf.tier === 'low' || M.Perf.tier === 'medium') && def.seating && !def.seatingAlways) delete def.seating; } catch (e) { /* ignore */ }   // the stage costs a fifth more of the audio thread: the high and ultra tiers (a crossfade plays two pieces at once)
+    def.tone = Object.assign({}, def.symTone || SYM_TONE);
+    def.lowBand = 0;
+    def.subBass = Math.min(num(def.subBass, 0.4), 0.45);
+    for (const sec of def.sec || []) {
+      if (sec.subBass !== undefined) sec.subBass = Math.min(sec.subBass, 0.5);
+      if (sec.keepReg) continue;   // a section that voices its low register on purpose
+      for (const k of ['choir', 'choir2']) { const c = sec[k]; if (c && typeof c === 'object' && c.reg && c.reg[0] < 48 && (c.inst || (def.inst && def.inst[k]) || '').toString().indexOf('Women') < 0) c.reg = [48, Math.max(c.reg[1], 62)]; }
+      const p2 = sec.pad2; const p2i = p2 && typeof p2 === 'object' ? (p2.inst || (def.inst && def.inst.pad2)) : null;
+      if (p2i === 'cellos' && p2.reg && p2.reg[0] < 43) { p2.reg = [43, Math.max(p2.reg[1], 57)]; delete p2.open; }
+      if (p2i === 'lowBrass' && p2.p === 'stab') { p2.open = true; p2.n = Math.min(p2.n || 2, 2); }
+      if (sec.pad3 && sec.pad3.inst === 'tuba') sec.pad3.vel = num(sec.pad3.vel, 0.6) * 0.7;
+    }
+    return def;
+  }
+  Music.symphonize = symphonize;
+
   const STRONG = { 2: [0], 3: [0], 4: [0, 2], 5: [0, 3], 6: [0, 3], 7: [0, 4] };
   function prepare(def) {
     if (def._p) return def._p;
+    symphonize(def);
     const meter = def.meter || 4, tpc = PCS[def.root];
     if (tpc === undefined) throw new Error(def.id + ': bad root');
     const scale = SCALES[def.mode || 'major'];
@@ -510,7 +546,7 @@
       // the foundation is a tone, not a bow: the bass through a steep low-pass at four times its note, 200 Hz at most (its fundamental and
       // first partials, never the rosin), and a bed voiced in the bass register (to E3) sul tasto, as an orchestra's low strings play a
       // held bed: warm, the bite of the bow gone (low-passed at ten times its note, 1.4 kHz at most). A part that sets its own cut keeps it.
-      if (ly === 'bass' && o.cut === undefined && !plucked(inst)) { o.cut = clamp(mtof(midi) * 4, 100, 200); o.cutN = 2; }
+      if (ly === 'bass' && o.cut === undefined && !plucked(inst)) { if (C.def.bassCut) o.cut = C.def.bassCut; else { o.cut = clamp(mtof(midi) * 4, 100, 200); o.cutN = 2; } }   // (a piece's `bassCut`: the bass's bow and body kept, to that frequency)
       else if (ly === 'pad' && midi <= 52 && o.cut === undefined && C.def.tasto !== false) { o.cut = clamp(mtof(midi) * 10, 650, 1400); o.cutN = 2; }   // (a piece's `tasto: false`: the low strings keep their bow and overtones — without them a held cello is a ringing tone)
       // the held foundation's fifth is tuned pure, as string players tune a held open fifth: tempered, the fifth's third partial against the
       // tonic's (D2 and A2 at 220.25 and 220 Hz) beats once every four seconds, a slow throb through the whole held low end
@@ -1524,7 +1560,7 @@
       }
       const gate = def.gate || {};
       for (const name in gate) { const L = this.layers[name]; if (L && L.i0 === undefined && gate[name] > 0) { L.i0 = gate[name]; for (const x of L.exs || [L.in]) x.gain.value = 0; } }
-      this.trimBase = num(def.trim, DEFAULT_TRIM) * MIX_TRIM; this.trim = this.trimBase * (eng.offline ? 1 : dirMul()); this.offline = !!eng.offline; this.fadeEnd = 0;
+      this.trimBase = num(def.trim, DEFAULT_TRIM) * MIX_TRIM * (def._sym ? SYM_TRIM : 1); this.trim = this.trimBase * (eng.offline ? 1 : dirMul()); this.offline = !!eng.offline; this.fadeEnd = 0;
       this.applyIntensity(this.intensity, true);
       this.pass = null; this.passNo = -1; this.idx = 0; this.t0 = 0; this.skipBefore = -1e9; this.shift = 0;
       const rnd = () => (eng.offline ? eng.rand() : Math.random());
@@ -1653,7 +1689,8 @@
       pn.connect(sp); sp.connect(dl, 0); sp.connect(dr, 1); dl.connect(mg, 0, 0); dr.connect(mg, 0, 1);
       const dir = gain(g.dir); mg.connect(dir); dir.connect(L.in);
       // the early reflections: this seat's walls, floor and ceiling, each from its own direction, a little darker than the direct sound
-      const erLp = mk(ctx.createBiquadFilter()); erLp.type = 'lowpass'; erLp.frequency.value = 5500; air.connect(erLp);
+      const erHp = mk(ctx.createBiquadFilter()), erHp2 = mk(ctx.createBiquadFilter()); erHp.type = erHp2.type = 'highpass'; erHp.frequency.value = erHp2.frequency.value = 220; erHp.Q.value = erHp2.Q.value = 0.7; air.connect(erHp); erHp.connect(erHp2);   // the low end stays centred: a reflection under 150 Hz, panned to its wall, only decorrelated the bass
+      const erLp = mk(ctx.createBiquadFilter()); erLp.type = 'lowpass'; erLp.frequency.value = 5500; erHp2.connect(erLp);
       const WET = { dry: [1.4, 1.2], room: [0.8, 1], hall: [0.35, 0.6] }[wet || 'room'] || [1, 1], erK = num(cfg.er, 1) * WET[1];   // a recording that brought its own room gets less of this one
       for (const e of g.er) { const dd = mk(ctx.createDelay(0.25)); dd.delayTime.value = g.dly + e.dt; const eg = gain(e.g * erK * g.dir), ep = mk(ctx.createStereoPanner()); ep.pan.value = e.pan; erLp.connect(dd); dd.connect(eg); eg.connect(ep); ep.connect(L.er); }
       const hv = gain(g.hall * num(cfg.hall, 0.3) * WET[0]); air.connect(hv); hv.connect(L.hv);
@@ -2367,7 +2404,7 @@
     return A.renderWindowed(seconds, { sampleRate: opts.sampleRate || 44100, window: 1.5, seed: opts.seed || 1, small: !!opts.small, teardown: eng => { stats = eng.stats; } }, function (eng, t0, t1) {
       if (!pl) {
         pl = new Player(eng, def, { loop: opts.loop !== false, intensity: num(opts.intensity, S.intensity), era: opts.era, offline: true });
-        pl.trim = num(def.trim, DEFAULT_TRIM) * MIX_TRIM * num(opts.gain, 1);
+        pl.trim = num(def.trim, DEFAULT_TRIM) * MIX_TRIM * (def._sym ? SYM_TRIM : 1) * num(opts.gain, 1);
         pl.bus.gain.value = pl.trim; pl.verb.gain.value = 1;
         pl.shift = num(opts.from, 0); pl.skipBefore = 0;
         if (opts.only) { pl.only = {}; for (const k of [].concat(opts.only)) pl.only[k] = 1; }
