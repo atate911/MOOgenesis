@@ -253,11 +253,18 @@
         bass: { pat: '1---', vel: 0.85, inst: { p: 'deep', att: 1, rel: 2 } }, lead: { ph: 'K', inst: 'tptSolo', vel: 0.5, pan: -0.15 }, lead2: { ph: 'r3 TF', inst: 'tpts', vel: 0.54 },
         choir2: { n: 3, reg: [45, 58], vel: 0.4, soft: true }, timp: { p: 'hits', vel: 0.5, roll: 2 },
         drums: { sn: at(4, { 3: '........o.o.o.xx' }) } },
-      // the procession: the solo horn on the step of the low brass
+      // the march builds by layers, each heard alone before the next arrives: the strings' spiccato motor and a soft snare by themselves;
+      // then the low brass's foundation beneath them; then the tune on top
+      { n: 'motor1', bars: 2, lv: 0.6, prog: 'I I', pad: false, bass: false,
+        arp: { inst: 'strOst', pat: '0.120.120.120.12', res: 4, vel: 0.26, reg: [55, 69] }, drums: { sn: 'o...o...o...o.o.', vel: 0.45 } },
+      { n: 'motor2', bars: 2, lv: 0.66, prog: 'I V', pad: false,
+        bass: { p: 'half', inst: { p: 'lowBrass', att: 0.06 }, vel: 0.68 }, pad2: { p: 'stab', pat: 'x.......x.......', n: 2, reg: [43, 58], vel: 0.6, gate: 0.7 },
+        arp: { inst: 'strOst', pat: '0.120.120.120.12', res: 4, vel: 0.26, reg: [55, 69] }, drums: { bd: 'x.......x.......', sn: 'o...o...o...o.xx', vel: 0.55 } },
+      // the procession: the solo horn's tune arrives on top of the motor and the foundation — four layers, each still heard
       { n: 'march1', bars: 16, lv: 0.72, prog: 'I I IV V | I vi ii V | I I/III IV V | IVM7 IV V I',
-        pad: { p: 'sus', n: 4, reg: [50, 76], vel: 0.66 }, pad2: { p: 'stab', pat: 'x.......x.......', n: 2, reg: [43, 58], vel: 0.62, gate: 0.7 },
-        bass: { p: 'half', inst: { p: 'lowBrass', att: 0.06 }, vel: 0.7 }, lead: { ph: 'A1 A2 A1 CD', oct: -1, vel: 0.86 }, lead3: { ph: '@counter', inst: 'clarinet', reg: [60, 74], vel: 0.36 }, arp: { inst: 'strOst', pat: '0.120.120.120.12', res: 4, vel: 0.24, reg: [55, 69] },   /* the strings' march cell, short against the horn's long line */
-        drums: { p: 'field', vel: 0.72 }, bell: { dens: 0.05, res: 1, reg: [79, 96], vel: 0.34 } },
+        pad: false, pad2: { p: 'stab', pat: 'x.......x.......', n: 2, reg: [43, 58], vel: 0.62, gate: 0.7 },
+        bass: { p: 'half', inst: { p: 'lowBrass', att: 0.06 }, vel: 0.7 }, lead: { ph: 'A1 A2 A1 CD', oct: -1, vel: 0.86 }, arp: { inst: 'strOst', pat: '0.120.120.120.12', res: 4, vel: 0.24, reg: [55, 69] },   /* the strings' march cell, short against the horn's long line */
+        drums: { p: 'field', vel: 0.62 } },
       // the horns take the theme broad and legato; the strings become the motor in running spiccato; the flute's counter-melody moves in the tune's gaps; the trombones' simple line beneath
       { n: 'march2', arp2: { inst: 'arpSawSyn', pat: '0.2.1.3.0.2.3.1.', res: 4, vel: 0.13, reg: [57, 74] }, bars: 8, lv: 0.84, prog: 'I I IV V | IVM7 IV V I',
         pad: false, pad2: { p: 'stab', pat: 'x.......x...x...', n: 2, reg: [43, 58], vel: 0.72, gate: 0.7 },
@@ -265,7 +272,7 @@
         lead2: { ph: 'CT CT2', inst: 'trombones', oct: -1, vel: 0.5 }, arp: { inst: 'strOst', pat: '0123210123210123', res: 4, vel: 0.26, reg: [55, 72] }, drums: { p: 'field', vel: 0.6 }, timp: 'two', choir: { n: 3, reg: [60, 76], vel: 0.3 }, choir2: { n: 3, reg: [43, 58], vel: 0.45 } },
       // the big phrase and its flat-sixth lift
       { n: 'big', arp2: { inst: 'arpSawSyn', pat: '0.2.1.3.0.2.3.1.', res: 4, vel: 0.13, reg: [57, 74] }, bars: 16, cres: [0.9, 1.02], prog: 'IV V | vi iii | bVI bVII | I I | IV V | vi iii | IV V | I/III:.5 V:.5 I',
-        pad: { p: 'sus', n: 4, reg: [52, 79], vel: 0.45 }, pad2: { p: 'stab', pat: 'x.......x...x...', n: 3, reg: [43, 60], vel: 0.82, gate: 0.65 },
+        pad: { p: 'sus', n: 4, reg: [55, 79], vel: 0.6 }, pad2: { p: 'stab', pat: 'x.......x...x...', n: 3, reg: [43, 60], vel: 0.82, gate: 0.65 },
         bass: { p: 'half', inst: { p: 'lowBrass', att: 0.05 }, vel: 0.72 }, lead: { ph: 'B1 B2 B1 CDb', inst: 'horn', oct: -1, vel: 0.98 }, lead2: { ph: '@counter', inst: 'strings', reg: [67, 84], vel: 0.5 },
         arp: { inst: 'strOst', pat: '0123210123210123', res: 4, vel: 0.24, reg: [55, 72] },
         lead4: { ph: 'B1 B2 B1 CDb', inst: 'tpts', vel: 0.42 }, drums: { p: 'field', vel: 0.68, crashS: at(16, { 0: 'x...............', 8: 'x...............' }) }, timp: 'beats',
@@ -313,9 +320,10 @@
         choir: { inst: 'choirMenAh', n: 3, reg: [45, 60], vel: 0.9 }, choir2: { inst: 'choirWomen', n: 3, reg: [64, 79], vel: 0.7 }, timp: 'two',
         drums: { p: 'field', vel: 0.8, crashS: at(8, { 0: 'x...............' }) } },
       // the close and the amen
-      { n: 'close', bars: 4, bpm: 56, bpmTo: 52, cres: [1.0, 0.92], prog: 'ii | V | I/III:.5 V:.5 | I',
-        pad: { p: 'sus', n: 4, reg: [57, 81], vel: 0.82 }, pad2: { p: 'sus', inst: 'trombones', n: 3, reg: [45, 60], vel: 0.55 }, bass: { pat: '1---', inst: { p: 'deep', att: 0.3 }, vel: 1.0 },
-        lead: { ph: 'CDx', inst: 'horn', vel: 0.95 }, lead2: { ph: '@', inst: 'strings', oct: 1, vel: 0.6 }, choir: { inst: 'choirMenAh', n: 3, reg: [45, 60], vel: 0.85 }, choir2: { inst: 'choirWomen', n: 3, reg: [64, 79], vel: 0.7 }, timp: 'two' },
+      // the tutti breaks apart: the solo horn alone over the strings, before everyone returns for the amen
+      { n: 'close', bars: 4, bpm: 56, bpmTo: 52, cres: [0.7, 0.55], prog: 'ii | V | I/III:.5 V:.5 | I',
+        pad: { p: 'sus', n: 4, reg: [55, 79], vel: 0.55 }, bass: { pat: '1---', inst: { p: 'deep', att: 0.6, rel: 2 }, vel: 0.7 },
+        lead: { ph: 'CDx', inst: 'hornSolo', vel: 0.85 } },
       { n: 'amen', bars: 2, bpm: 50, bpmTo: 44, cres: [0.9, 1.04], prog: 'IV iv',
         pad: { p: 'sus', n: 4, reg: [57, 84], vel: 0.85 }, pad2: { p: 'sus', inst: 'trombones', n: 3, reg: [45, 60], vel: 0.6 }, bass: { pat: '1---', inst: { p: 'deep', att: 0.4, rel: 3 }, vel: 1.05 },
         ...ORGAN(0.8, 0.62), lead: { ph: 'AM', inst: 'horn', vel: 0.95 }, lead4: { ph: 'AMt', inst: 'tpts', vel: 0.7 },
