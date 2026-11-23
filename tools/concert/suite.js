@@ -20,15 +20,15 @@
   // seating: every recording plays from its seat on a concert stage (js/audio/music.js, 'the concert stage'): its angle, its distance,
   // its own early reflections, a hall send that grows toward the back. sing: soloists join their notes as singers and string players do.
   const STAGE = { orch: true, holdLow: false, tens: false, hidden: true, rubato: 0, hall: 'musikverein', fx: { verb: 1.2, stage: 0.8, dly: 0 },
-    seating: { hall: 0.12, er: 0.65 }, sing: true,
+    seating: { hall: 0.1, er: 0.6 }, sing: true, just: 1, pitchSpread: 0,   // held chords tuned pure, no random detune on the notes
     conduct: { push: 1, broaden: 0.96, ease: 0.94 }, breathe: { beats: 2, k: 0.95 }, press: 0, behind: 0.006, ensemble: 0.3, speak: 1,   // an unhurried conductor: no pressing toward a climax, room at every section's end, the players on the beat
     tone: { lo: -1.5, hi: 4, pres: 1.5 }, sends: { lead: { verb: 0.16, stage: 0.32, dly: 0 }, choir: { verb: 0.34, stage: 0.14 } }, lowBand: 0, bassC: 40 };
   // A symphony's low end, not a film's: no sine under the basses, the basses' bow and body left in (the game cuts them to a 200 Hz boom),
   // the cellos singing in their own register instead of doubling the basses an octave up, the tuba's pedal lighter
   // the pipe organ at the back of the hall, behind the choir: a 16-foot pedal under the basses and full chords on the manuals, for the
   // great moments only (it enters at the first sunrise)
-  const ORGAN = (pedal, manual) => ({ pad3: { p: 'sus', inst: { p: 'organ', rel: 0.9 }, root: true, n: 1, reg: [31, 43], vel: pedal },
-    choir3: { p: 'sus', inst: { p: 'organ', rel: 0.9 }, n: 4, reg: [55, 76], vel: manual } });
+  const ORGAN = (pedal, manual) => Object.assign({ pad3: { p: 'sus', inst: { p: 'organ', rel: 0.9 }, root: true, n: 1, reg: [31, 43], vel: pedal } },
+    manual ? { choir3: { p: 'sus', inst: { p: 'organ', rel: 0.9 }, n: 4, reg: [55, 76], vel: manual } } : {});   // the manuals only where asked (the amen, the last chord): elsewhere they thickened a chord the strings, the choir and the brass already hold
   function clarify(def) {
     def.subBass = 0;
     const fix = b => { if (!b || typeof b !== 'object') return b; const i = b.inst; b.inst = i && typeof i === 'object' ? Object.assign({}, i, { cut: i.cut || 3200 }) : { p: i || def.inst.bass, cut: 3200 }; return b; };
@@ -105,7 +105,7 @@
       // the sunrise: the hymn in the horns, the solo horn an octave beneath, the voices open, the harp running up
       { n: 'sunrise', bars: 8, bpm: 60, cres: [0.96, 1.06], prog: 'I | V:.5 IV:.5 | I | ii:.5 V:.5 | I | ii:.5 I/III:.5 | vi:.5 V:.5 | I',
         pad: { p: 'sus', inst: 'strings', n: 4, reg: [62, 86], vel: 0.82 }, pad2: { p: 'sus', n: 3, reg: [41, 57], vel: 0.65 },
-        bass: { pat: '1---', vel: 1.1, inst: { p: 'deep', att: 0.2, rel: 1.6 }, fresh: true }, ...ORGAN(0.5, 0.36),
+        bass: { pat: '1---', vel: 1.1, inst: { p: 'deep', att: 0.2, rel: 1.6 }, fresh: true }, ...ORGAN(0.5, 0),
         lead: { ph: 'H1 H2', inst: 'horn', vel: 1.0 }, lead2: { ph: '@', inst: 'hornIowa', oct: -1, vel: 0.8 }, bell2: { ph: 'H1 H2', inst: 'trombones', oct: -1, vel: 0.55 },
         choir: { inst: 'choirMenAh', n: 3, reg: [45, 60], vel: 0.95 }, choir2: { inst: 'choirWomen', n: 3, reg: [66, 81], vel: 0.7 },
         arp: { p: 'up', vel: 0.3, reg: [55, 89] }, bell: { inst: 'bell', dens: 0.1, res: 2, reg: [84, 100], vel: 0.35 }, timp: { p: 'two', vel: 0.6 },
@@ -113,7 +113,7 @@
       // the zenith: the hymn's second half higher, the trumpets on the tune, the horns beneath, the choir singing it, the violins' descant
       { n: 'zenith', bars: 8, bpm: 60, bpmTo: 54, cres: [1.04, 1.1], prog: 'I iii vi V | IV I/III V I',
         pad: { p: 'sus', inst: 'strings', n: 4, reg: [60, 84], vel: 0.85 }, pad2: { p: 'sus', n: 3, reg: [41, 57], vel: 0.7 },
-        bass: { pat: '1---', vel: 1.1, inst: { p: 'deep', att: 0.3, rel: 1.8 } }, ...ORGAN(0.55, 0.42),
+        bass: { pat: '1---', vel: 1.1, inst: { p: 'deep', att: 0.3, rel: 1.8 } }, ...ORGAN(0.55, 0),
         lead: { ph: 'H3 H4', inst: 'tpts', vel: 0.95 }, lead2: { ph: '@', inst: 'horn', oct: -1, vel: 0.85 }, lead3: { ph: 'H3 H4', inst: 'choirMenAhNew', oct: -1, vel: 0.85 },
         lead4: { ph: 'DS1 DS2', inst: 'strings', vel: 0.55 }, bell2: { ph: 'H3 H4', inst: 'trombones', oct: -1, vel: 0.55 },
         choir2: { inst: 'choirWomen', n: 3, reg: [66, 81], vel: 0.75 }, arp: { p: 'updown', vel: 0.26, reg: [55, 89] }, arp2: { inst: 'strOst', pat: '0.2.1.3.0.2.3.1.', res: 4, vel: 0.3, reg: [48, 62] }, timp: { p: 'beats', vel: 0.5, roll: 1 },
@@ -197,7 +197,7 @@
         lead4: { ph: 'r7 RUN', inst: 'strings', vel: 0.6 }, lead: { ph: 'E1 E2', inst: 'strings', oct: 1, vel: 0.8 }, arp: { inst: 'strOst', pat: '0121012101210121', res: 4, vel: 0.26, reg: [50, 66] }, lead3: { ph: 'FL', inst: 'flute', vel: 0.4 }, bell: { ph: 'CH CH', inst: 'chime', vel: 0.4 },
         choir2: { inst: 'choirMenOld', n: 3, reg: [43, 57], vel: 0.42 }, timp: { p: 'two', vel: 0.4, roll: 2 } },
       { n: 'v8', bars: 8, cres: [1.02, 1.12], prog: 'i bVIM7 bIII V | i bVIM7 bIII V7', bass: { pat: GBASS, inst: { p: 'deep', att: 0.3, rel: 1.8 }, vel: 1.05, fresh: true },
-        lead2: { ph: 'GB GB', oct: -1, vel: 0.7, art: 0.96 }, bell2: { ph: 'GB GB', inst: 'trombones', oct: -1, vel: 0.66 }, ...ORGAN(0.5, 0.38),
+        lead2: { ph: 'GB GB', oct: -1, vel: 0.7, art: 0.96 }, bell2: { ph: 'GB GB', inst: 'trombones', oct: -1, vel: 0.66 }, ...ORGAN(0.5, 0),
         pad: { p: 'sus', n: 4, reg: [55, 79], vel: 0.82 }, lead: { ph: 'H1 H1', inst: 'horn', vel: 1.0, harm: -2, hvel: 0.6 }, lead4: { ph: 'DS DS2', inst: 'tpts', vel: 0.6 },
         lead3: { ph: 'H1 H1', inst: 'choirMenAhNew', oct: -1, vel: 0.8 }, choir2: { inst: 'choirWomen', n: 3, reg: [66, 81], vel: 0.7 }, timp: { p: 'beats', vel: 0.6 },
         arp: { inst: 'strOst', pat: '0121012101210121', res: 4, vel: 0.3, reg: [50, 66] }, bell: { ph: 'E1 E2', inst: 'strings', oct: 1, vel: 0.46 },
@@ -289,13 +289,13 @@
       // the apotheosis: the hymn whole, broad
       { n: 'hymn1', bars: 8, bpm: 56, cres: [1.0, 1.06], prog: 'I | V:.5 IV:.5 | I | ii:.5 V:.5 | I | ii:.5 I/III:.5 | vi:.5 V:.5 | I',
         pad: { p: 'sus', n: 4, reg: [62, 86], vel: 0.85 }, pad2: { p: 'sus', inst: 'trombones', n: 3, reg: [45, 60], vel: 0.55 }, bass: { pat: '1---', inst: { p: 'deep', att: 0.2, rel: 1.6 }, vel: 1.1, fresh: true },
-        ...ORGAN(0.55, 0.42), arp: { inst: 'strOst', pat: '0.2.1.3.0.2.3.1.', res: 4, vel: 0.32, reg: [50, 62] },
+        ...ORGAN(0.55, 0), arp: { inst: 'strOst', pat: '0.2.1.3.0.2.3.1.', res: 4, vel: 0.32, reg: [50, 62] },
         lead: { ph: 'H1 H2', inst: 'horn', vel: 1.05 }, lead2: { ph: '@', inst: 'hornIowa', oct: -1, vel: 0.85 }, lead3: { ph: 'H1 H2', inst: 'choirMenAhNew', oct: -1, vel: 0.85 },
         choir2: { inst: 'choirWomen', n: 3, reg: [66, 81], vel: 0.75 }, timp: { p: 'two', vel: 0.65 },
         drums: { crashS: at(8, { 0: 'x...............' }), tam: at(8, { 0: 'x...............' }), bd: at(8, { 0: 'X...............', 4: 'x...............' }) }, verb: 0.85, subBass: 0.8 },
       { n: 'hymn2', bars: 8, bpm: 56, cres: [1.06, 1.12], prog: 'I iii vi V | IV I/III V I',
         pad: { p: 'sus', n: 4, reg: [60, 86], vel: 0.88 }, pad2: { p: 'sus', inst: 'trombones', n: 3, reg: [45, 60], vel: 0.6 }, bass: { pat: '1---', inst: { p: 'deep', att: 0.3, rel: 1.8 }, vel: 1.1 },
-        ...ORGAN(0.6, 0.46), arp: { inst: 'strOst', pat: '0.2.1.3.0.2.3.1.', res: 4, vel: 0.34, reg: [50, 62] },
+        ...ORGAN(0.6, 0), arp: { inst: 'strOst', pat: '0.2.1.3.0.2.3.1.', res: 4, vel: 0.34, reg: [50, 62] },
         lead: { ph: 'H3 H4', inst: 'tpts', vel: 1.0 }, lead2: { ph: '@', inst: 'horn', oct: -1, vel: 0.9 }, lead3: { ph: 'H3 H4', inst: 'choirMenAhNew', oct: -1, vel: 0.85 },
         lead4: { ph: 'DS1 DS2', inst: 'strings', vel: 0.6 }, choir2: { inst: 'choirWomen', n: 3, reg: [66, 81], vel: 0.8 }, timp: { p: 'beats', vel: 0.62, roll: 1 },
         drums: { crashS: at(8, { 0: 'x...............', 7: 'x...............' }) }, verb: 0.9, subBass: 0.85 },

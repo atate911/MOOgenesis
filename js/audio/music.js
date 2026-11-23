@@ -1306,6 +1306,18 @@
       }
       C.ev.sort((a, b) => a.t - b.t);
     }
+    // just (a piece's `just`, 0..1): a held chord tone is tuned toward its pure interval above the chord's root, as a practised orchestra
+    // and a choir tune a sustained chord by ear (the third some 14 cents under the piano's, the fifth 2 over), so the chords lock instead
+    // of beating; a passing tone, a short note and the percussion keep equal temperament. Each note keeps the tuning it began with.
+    if (def.just) {
+      const JI = [0, 11.7, 3.9, 15.6, -13.7, -2.0, -9.8, 2.0, 13.7, -15.6, -3.9, -11.7], k = clamp(num(def.just, 1), 0, 1);
+      for (const e of C.ev) {
+        if (e.v !== 'sample' || !e.m || !e.o || e.o.oneShot || !(e.bt >= 0.75)) continue;
+        let w = null; for (const x of wraps) { if (e.b >= x.start - 1e-6 && e.b < x.start + x.beats - 1e-6) { w = x; break; } } if (!w) continue;
+        const sg = segAt(w.R.segs, e.b - w.start); if (!sg || sg.ch.pcs.indexOf(mod12(e.m)) < 0) continue;
+        const c = JI[mod12(e.m - sg.ch.pc)] * k; if (c) e.o = Object.assign({}, e.o, { f: mtof(e.m + c / 100) });
+      }
+    }
     if (def.smpK) for (const e of C.ev) { const k = e.o && def.smpK[e.o.smp]; if (k) e.o = Object.assign({}, e.o, { lvl: num(e.o.lvl, 1) * k }); }   // a recording up or down in this piece (the refresh's oldMenK: the old men's choir)
     return { events: C.ev, beats: C.totalBeats, len: tAcc, wraps, pass, snaps: C.snaps, snapLog: C.snapLog || [], bars, beatsT, move: Emove };
   }
@@ -1595,7 +1607,7 @@
         // a melodic line stays with its player: seated once, by its first note (the register split is for the chords of an ensemble recording)
         const line = /^(lead|bell)/.test(ev.k || ''), ps = this.partSeat || (this.partSeat = {}), pk = (ev.k || '') + '|' + o2.smp;
         const key = line ? (ps[pk] || (ps[pk] = /^strEns/.test(o2.smp) ? (ev.m >= 55 ? 'vln1' : 'vc') : /^(chorus$|choirOoh|choirHum)/.test(o2.smp) ? (ev.m >= 62 ? 'women' : 'men') : seatOf(o2.smp, ev.m))) : seatOf(o2.smp, ev.m);
-        dest = this.seatStrip(ev.ly, L, key); o3 = Object.assign({}, o2, { humT: num(this.def.ensemble, 1), pan: 0, width: Math.min(num(o2.width, 1), SEATS[key][2] * num(this.def.seating.width, 1)) });
+        dest = this.seatStrip(ev.ly, L, key, A.Samples && A.Samples.wet ? A.Samples.wet(o2.smp) : 'room'); o3 = Object.assign({}, o2, { humT: num(this.def.ensemble, 1), humP: num(this.def.pitchSpread, 1), pan: 0, width: Math.min(num(o2.width, 1), SEATS[key][2] * num(this.def.seating.width, 1)) });
       }
       const v = V[ev.v](this.eng, dest, T, o3);
       if (v) this.live.add(v);
@@ -1606,8 +1618,8 @@
     // end instead of scheduling one inside itself (overlapping legato notes used to bring the beds up mid-note, and every gap between two
     // notes swelled them back, a pump of the whole duck depth against the solo). The restore is slower (0.6 s) so a real rest breathes.
     // one seat's place on the stage, for one layer (made once, kept for the performance)
-    seatStrip(ly, L, key) {
-      const id = ly + '|' + key; this.seats = this.seats || {}; if (this.seats[id]) return this.seats[id];
+    seatStrip(ly, L, key, wet) {
+      const id = ly + '|' + key + '|' + (wet || 'room'); this.seats = this.seats || {}; if (this.seats[id]) return this.seats[id];
       const ctx = this.eng.ctx, G = this._seatG || (this._seatG = {}), g = G[key] || (G[key] = seatGeom(key)), cfg = typeof this.def.seating === 'object' ? this.def.seating : {};
       const mk = n => { this.nodes.push(n); this.eng.nodeCount++; return n; }, gain = x => { const n = mk(ctx.createGain()); n.gain.value = x; return n; };
       const inp = gain(1), d = mk(ctx.createDelay(0.1)); d.delayTime.value = g.dly; inp.connect(d);
@@ -1620,9 +1632,9 @@
       const dir = gain(g.dir); mg.connect(dir); dir.connect(L.in);
       // the early reflections: this seat's walls, floor and ceiling, each from its own direction, a little darker than the direct sound
       const erLp = mk(ctx.createBiquadFilter()); erLp.type = 'lowpass'; erLp.frequency.value = 5500; air.connect(erLp);
-      const erK = num(cfg.er, 1);
+      const WET = { dry: [1.4, 1.2], room: [0.8, 1], hall: [0.35, 0.6] }[wet || 'room'] || [1, 1], erK = num(cfg.er, 1) * WET[1];   // a recording that brought its own room gets less of this one
       for (const e of g.er) { const dd = mk(ctx.createDelay(0.25)); dd.delayTime.value = g.dly + e.dt; const eg = gain(e.g * erK * g.dir), ep = mk(ctx.createStereoPanner()); ep.pan.value = e.pan; erLp.connect(dd); dd.connect(eg); eg.connect(ep); ep.connect(L.er); }
-      const hv = gain(g.hall * num(cfg.hall, 0.3)); air.connect(hv); hv.connect(L.hv);
+      const hv = gain(g.hall * num(cfg.hall, 0.3) * WET[0]); air.connect(hv); hv.connect(L.hv);
       return (this.seats[id] = inp);
     }
     duckBeds(T, dur) {

@@ -246,3 +246,35 @@ The fixes, all gated so the game is unaffected:
   and slow swells keep their time.
 - **A steadier conductor.** The breath at section ends is now 5% (it was 12%), the broadening on climaxes 4%, and the ease at phrase
   ends 6%.
+
+## Revision 7: chords that lock, and one room instead of two
+
+After listening, the feedback was that the orchestra still didn't sound practiced and integrated: muddy, possibly slightly out of tune
+between sections, and still too much room or effect.
+
+**Tuning.** The sampler already measures every recording's true pitch to a fraction of a cent, so the libraries agree. But two things
+worked against a practiced orchestra's sound:
+
+- **Random detune on every note.** The sampler added ±3 cents of random detune per note, ±4.5 for the choirs. The section recordings
+  already contain many players, so this only made two notes of a held chord drift up to 6–9 cents apart and beat slowly. Pieces can now
+  set `pitchSpread: 0` to remove it.
+- **Equal temperament on held chords.** A practiced orchestra and choir tune a sustained chord by ear toward pure intervals, so it locks
+  and rings. Pieces can now set `just`: a held chord tone (at least three quarters of a beat long, and in its chord) is tuned toward its
+  pure interval above the chord's root. Fifths go 2 cents wide, major thirds 14 cents low, minor thirds 16 cents high, major sixths
+  16 cents low, and major sevenths 12 cents low. Passing tones, short notes and percussion stay in equal temperament, and each note keeps
+  the tuning it began with. About a third of the suite's pitched notes are retuned.
+
+**One room, not two.** Most of these libraries carry their own room in the recording. The Sonatina set was recorded in a hall, VSCO in a
+room, and only the University of Iowa soloists are dry. Adding the same hall to all of them doubled the reverb on the wet ones. The
+concert stage now scales its added hall and early reflections by what each recording brought (`Samples.wet`):
+
+| Library | Added hall | Early reflections |
+|---|---|---|
+| Dry (Iowa soloists) | ×1.4 | ×1.2 |
+| Room (VSCO) | ×0.8 | ×1 |
+| Hall (Sonatina) | ×0.35 | ×0.6 |
+
+The overall hall send is also down a further 1.6 dB.
+
+**Less doubling.** The organ's manual chords were stacking on top of strings, choir and brass already holding the same chord at the
+sunrise, the passacaglia's climax and the finale's hymn. They now play only at the amen and the final chord. The organ's pedal stays.

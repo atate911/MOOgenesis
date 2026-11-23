@@ -336,6 +336,9 @@
     return (z.onset = Math.max(0, at / sr - 0.012));
   }
   S._zoneOnset = zoneOnset;
+  // how much room a recording carries already: the University of Iowa soloists are dry (anechoic), the Sonatina set ('sso') was
+  // recorded in a hall, the rest (VSCO) in a room — a concert stage adds less hall to a recording that brought its own
+  S.wet = function (name) { if (/Iowa$/.test(name) || /^(vlnSolo|vlaSolo|vcSolo|cbSolo|bassClar|tbnSolo|bassTbn)$/.test(name)) return 'dry'; const i = S.inst[name]; return i && i.src === 'sso' ? 'hall' : 'room'; };
   // when a recording speaks: the moment its sound (a 10 ms RMS) first reaches 40% of its peak in the first half second, from the top of the file — the note's
   // arrival as a listener hears it, not where its file starts (a string section takes a fifth of a second to bloom; a harp none)
   function zoneSpeak(z) {
@@ -358,7 +361,7 @@
 
   function loadInstrument(name, def) {
     const inst = { name, kind: def.kind || 'sustain', pitched: def.pitched !== false, attack: num(def.attack, 0.01), release: num(def.release, 0.3), gain: dbtoa(num(def.gain, 0)),
-      loop: def.kind === 'sustain', vib: num(def.vib, 0), cutK: num(def.cutK, 0), xf: !!def.xf, pan: def.pan !== undefined ? num(def.pan, 0) : undefined, legOff: num(def.legOff, 0.22), zones: [], ready: false, failed: 0 };
+      loop: def.kind === 'sustain', vib: num(def.vib, 0), cutK: num(def.cutK, 0), xf: !!def.xf, pan: def.pan !== undefined ? num(def.pan, 0) : undefined, legOff: num(def.legOff, 0.22), zones: [], ready: false, failed: 0, src: def.src || '' };
     S.inst[name] = inst;
     const jobs = (def.zones || []).map(z => loadBuf(z.file).then(buf => {
       let loop = z.loop ? [z.loop[0] + S.offset, z.loop[1] + S.offset] : null, root = num(z.root, 60);
@@ -635,7 +638,7 @@
     }
     node.connect(env); env.connect(v.out);
     const vib = o.vib !== undefined ? o.vib : inst.vib;
-    const detHum = hum > 0 ? (eng.rand() * 2 - 1) * 3 * hum : 0;
+    const detHum = hum > 0 ? (eng.rand() * 2 - 1) * 3 * hum * num(o.humP, 1) : 0;   // (o.humP: a piece may take the random detune out: a section recording is already many players)
     const makeSrc = (z, det, delay, g0, g1, fx) => {
       const src = v.add(ctx.createBufferSource());
       const rate = Math.pow(2, (midi - z.root) / 12);
