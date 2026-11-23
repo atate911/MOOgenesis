@@ -316,4 +316,164 @@
         lead: { ph: 'W1 W4', vel: 0.66 }, bell: { dens: 0.1, res: 1, reg: [79, 91], vel: 0.3 } },
     ],
   });
+
+  // =====================================================================================================================================
+  // Deep Field (the planetarium, in the Serrie manner): kept spacious and still by design — the analog sky, a lone flute, points of light
+  // =====================================================================================================================================
+  piece('galaxy4', {
+    desc: 'Deep field — the analog sky and a high air, a lone flute with its slow phrases, a celesta answering with the four slow notes, the cello\'s long line and the men\'s chant far below, the harp and the celesta as single points of light: the planetarium, in the Serrie manner',
+    bpm: 50, root: 'A', mode: 'lydian', orch: true, holdLow: false, tens: false, rubato: 0, hall: 'musikverein', trim: 4.4, bassC: 40, loopFrom: 'A1',
+    forms: [['A1', 'breath', 'B', 'C', 'E'], ['A1', 'C', 'breath', 'B', 'E']],
+    mix: { lead: 1.45, pad: 1.0, choir: 1.1, arp: 0.8, bell: 0.85, bass: 0.6 },
+    inst: { pad: 'analog', pad2: 'violas', bass: 'deep', lead: 'flute', lead2: 'cello', bell: 'glass', arp: { p: 'harp', rel: 3, hold: 2 }, choir: 'choirHum', choir2: 'choirMen' },
+    quotes: ['planetarium', 'men'],
+    ph: { S1: '5:4 | 8:4 | 7:4 | 5:4', S2: '6:4 | 8:2 9:2 | 8:4 | 5:4', S3: '10:4 | 9:4 | 8:2 7:2 | 5:4', S4: '5:2 8:2 | 7:3 6:1 | 5:4 | 3:4',
+      FL: '@planetarium.FL', CL: '1:8 | 3:8 | 2:6 1:2 | 5:8', CM: '@men.CM' },
+    sec: [
+      { n: 'intro', bars: 8, cres: [0.3, 0.42], prog: 'IM7:4 II:4', pad: { p: 'swell', n: 3, reg: [57, 74], vel: 0.5 }, pad3: { p: 'swell', inst: 'air', n: 2, reg: [74, 88], vel: 0.32 },
+        bass: { pat: '1---', vel: 0.5, inst: { p: 'deep', att: 2, rel: 3 } }, bell: { dens: 0.06, res: 1, reg: [79, 93], vel: 0.28 } },
+      // the flute's slow phrases under the sky
+      { n: 'A1', bars: 16, lv: 0.5, prog: 'IM7:4 II:4 | IM7:4 vi:4 | IM7:4 II:4 | V:4 IM7:4', pad: { p: 'sus', n: 3, reg: [57, 74], vel: 0.42 }, pad2: { p: 'swell', n: 2, reg: [52, 64], vel: 0.24 },
+        bass: { pat: '1---', vel: 0.5, inst: { p: 'deep', att: 1.6, rel: 2.8 } }, lead: { ph: 'S1 r8 S2 r4', vel: 0.58 },
+        arp: { pat: '0...............', res: 1, vel: 0.1, reg: [57, 81] }, bell: { dens: 0.06, res: 1, reg: [79, 93], vel: 0.28 } },
+      { n: 'breath', bars: 2, barsVar: [1, 2], lv: 0.28, prog: 'IM7:8', pad: { p: 'swell', n: 2, reg: [62, 76], vel: 0.32 }, bell: { dens: 0.05, res: 1, reg: [79, 93], vel: 0.26 } },
+      // the four slow notes in the celesta, the cello's long line beneath, the men's chant far below
+      { n: 'B', bars: 16, lv: 0.5, prog: 'vi:4 II:4 | IM7:4 IM7:4', pad: { p: 'sus', n: 3, reg: [57, 74], vel: 0.4 }, pad3: { p: 'swell', inst: 'air', n: 2, reg: [74, 88], vel: 0.3 },
+        bass: { pat: '1---', vel: 0.48, inst: { p: 'deep', att: 1.6, rel: 2.8 } }, lead: { ph: 'r4 FL r8', inst: 'glass', vel: 0.42 }, lead2: { ph: 'r8 CL', oct: -1, vel: 0.5 },
+        bell2: { ph: 'CM r8', inst: 'choirMenOldLine', oct: -1, vel: 0.32 }, arp: { pat: '0.......2.......', res: 1, vel: 0.09, reg: [57, 81] } },
+      // the still: the strings and the air, the women humming, no bass
+      { n: 'C', bars: 8, lv: 0.36, prog: 'IM7:4 II:4', pad: { p: 'swell', inst: 'strings', n: 3, reg: [60, 76], vel: 0.36 }, pad3: { p: 'swell', inst: 'air', n: 2, reg: [74, 88], vel: 0.32 },
+        choir: { n: 2, reg: [62, 74], vel: 0.24, soft: true }, bell: { dens: 0.1, res: 1, reg: [79, 93], vel: 0.3 } },
+      // the flute again, and away
+      { n: 'E', bars: 8, cres: [0.46, 0.3], prog: 'IM7:8', pad: { p: 'sus', n: 3, reg: [57, 74], vel: 0.38 }, bass: { pat: '1---', vel: 0.45, inst: { p: 'deep', att: 1.6, rel: 3 } },
+        lead: { ph: 'r4 S4', vel: 0.5 }, bell: { dens: 0.07, res: 1, reg: [79, 93], vel: 0.26 } },
+    ],
+  });
+
+  // =====================================================================================================================================
+  // The Veil (calm exploration): a waltz of the spheres — the harp's waltz under the oboe, answers and counter-lines, a gentle peak
+  // =====================================================================================================================================
+  piece('galaxy5', {
+    desc: 'Calm exploration, the veil: a slow waltz of the spheres — the bass on the one and the harp on two and three under the oboe\'s tune; the flute answers with the oboe in its gaps; a clarinet with a horn beneath; a still; the violins take the tune at the gentle peak; the commonwealth\'s tune in three to close',
+    bpm: 54, meter: 3, root: 'Eb', mode: 'major', orch: true, holdLow: false, tens: false, rubato: 0, hall: 'musikverein', trim: 2.6, bassC: 40, loopFrom: 'A1',
+    forms: [['A1', 'A2', 'B', 'C', 'breath', 'A3', 'E'], ['A1', 'B', 'A2', 'C', 'breath', 'A3', 'E']],
+    mix: { lead: 1.45, pad: 1.0, choir: 1.1, arp: 0.85, bell: 0.85, bass: 0.65 },
+    inst: { pad: 'violas', pad2: 'cellos', bass: 'deep', lead: 'oboe', lead2: 'flute', bell: 'glass', arp: { p: 'harp', rel: 1.6, hold: 0.6 }, choir: 'choirHum', choir2: 'choirMen' },
+    quotes: ['procession'],
+    ph: {
+      PA3: '1:2 2:1 | 3:1 5:2 | 6:2 5:1 | 3:2 2:1',
+      V1: '5:2 6:1 | 8:3 | 7:2 5:1 | 6:3', V1b: '5:1 6:1 8:1 | 8:3 | 7:1 6:1 5:1 | 6:3',
+      V2: '8:2 9:1 | 10:3 | 9:2 8:1 | 5:3', V2b: '8:3 | 10:2 9:1 | 8:2 7:1 | 5:3',
+      V3: '3:2 5:1 | 6:2 5:1 | 4:2 3:1 | 2:3', V4: '6:2 8:1 | 7:2 6:1 | 5:2 4:1 | 5:3', V4b: '6:2 8:1 | 7:2 6:1 | 5:2 2:1 | 1:3',
+    },
+    sec: [
+      // the waltz alone: the bass on the one, the harp on two and three
+      { n: 'intro', bars: 4, cres: [0.4, 0.5], prog: 'I IV | I V', bass: { pat: '1--', vel: 0.55, inst: { p: 'deep', att: 0.4, rel: 1.6 } },
+        arp: { pat: '.12', res: 1, vel: 0.16, reg: [55, 79] }, bell: { dens: 0.08, res: 1, reg: [79, 93], vel: 0.3 } },
+      // the oboe's tune over it
+      { n: 'A1', bars: 8, lv: 0.6, prog: 'I IV | V IV | ii V | I I', pad: { p: 'sus', n: 3, reg: [55, 70], vel: 0.24 }, bass: { pat: '1--', vel: 0.55, inst: { p: 'deep', att: 0.4, rel: 1.6 } },
+        arp: { pat: '.12', res: 1, vel: 0.15, reg: [55, 79] }, lead: { ph: 'V1 V2', vel: 0.66 } },
+      // the flute answers, the oboe moving in its gaps
+      { n: 'A2', bars: 8, lv: 0.64, prog: 'I IV | V IV | ii V | I I', pad: { p: 'sus', n: 3, reg: [55, 70], vel: 0.24 }, bass: { pat: '1--', vel: 0.55, inst: { p: 'deep', att: 0.4, rel: 1.6 } },
+        arp: { pat: '.12', res: 1, vel: 0.15, reg: [55, 79] }, lead: { ph: 'V1b V2b', inst: 'flute', vel: 0.62 }, lead2: { ph: '@counter', inst: 'oboe', reg: [60, 74], vel: 0.38 } },
+      // the clarinet, a horn's counter-line beneath, the women humming
+      { n: 'B', bars: 8, lv: 0.62, prog: 'vi IV | IV V | vi ii | V I', pad: { p: 'sus', n: 3, reg: [55, 70], vel: 0.24 }, pad2: { p: 'swell', n: 2, reg: [43, 57], vel: 0.28, open: true },
+        bass: { pat: ['1--', '1-5'], vel: 0.55, inst: { p: 'deep', att: 0.4, rel: 1.6 } }, arp: { pat: '.12', res: 1, vel: 0.14, reg: [55, 79] },
+        lead: { ph: 'V3 V4', inst: 'clarinet', vel: 0.62 }, lead2: { ph: '@counter', inst: 'hornIowa', reg: [50, 62], vel: 0.36 }, choir: { n: 2, reg: [62, 74], vel: 0.22, soft: true } },
+      // the still: the oboe alone over the strings, no bass
+      { n: 'C', bars: 8, lv: 0.44, prog: 'I ii V I | I ii V I', pad: { p: 'swell', n: 3, reg: [57, 72], vel: 0.3 }, lead: { ph: 'V4 V4b', vel: 0.55 },
+        arp: { pat: '1..', res: 1, vel: 0.1, reg: [55, 79] }, bell: { dens: 0.1, res: 1, reg: [79, 93], vel: 0.3 } },
+      { n: 'breath', bars: 2, barsVar: [1, 2], lv: 0.3, prog: 'I:2', pad: { p: 'swell', n: 2, reg: [62, 74], vel: 0.3 }, bell: { dens: 0.06, res: 1, reg: [79, 93], vel: 0.28 } },
+      // the gentle peak: the violins on the tune, the oboe's counter-line, the voices softly
+      { n: 'A3', bars: 8, cres: [0.6, 0.74], prog: 'I IV | V IV | ii V | I I', pad: { p: 'sus', inst: 'strings', n: 3, reg: [57, 72], vel: 0.3 }, pad2: { p: 'swell', n: 2, reg: [43, 57], vel: 0.28, open: true },
+        bass: { pat: '1--', vel: 0.58, inst: { p: 'deep', att: 0.4, rel: 1.6 } }, arp: { pat: '.12', res: 1, vel: 0.15, reg: [55, 79] },
+        lead: { ph: 'V1 V2', inst: 'strings', vel: 0.62 }, lead2: { ph: '@counter', inst: 'oboe', reg: [60, 74], vel: 0.36 }, choir: { n: 3, reg: [60, 74], vel: 0.15, soft: true } },
+      // the close: the commonwealth's tune in three on the oboe, then home
+      { n: 'E', bars: 8, cres: [0.54, 0.4], prog: 'I V | IV I | IV V | I I', pad: { p: 'sus', n: 3, reg: [55, 70], vel: 0.22 }, bass: { pat: '1--', vel: 0.5, inst: { p: 'deep', att: 0.6, rel: 2 } },
+        arp: { pat: '.12', res: 1, vel: 0.13, reg: [55, 79] }, lead: { ph: 'PA3 V4b', vel: 0.58 }, bell: { dens: 0.07, res: 1, reg: [79, 93], vel: 0.28 } },
+    ],
+  });
+
+  // =====================================================================================================================================
+  // Patience (calm exploration): the marimba's short ostinato as the motor under the cor anglais's legato tune, counter-lines in its gaps
+  // =====================================================================================================================================
+  piece('galaxy2', {
+    desc: 'Calm exploration, patience: a marimba\'s short ostinato under the cor anglais\'s tune in D dorian; a bassoon\'s counter-line in its gaps; a clarinet with a horn beneath; a still for the celesta; the violins on the tune with the cor anglais beneath at the peak; the cello to close',
+    bpm: 60, root: 'D', mode: 'dorian', orch: true, holdLow: false, tens: false, rubato: 0, hall: 'musikverein', trim: 2.4, bassC: 40, loopFrom: 'A1',
+    forms: [['A1', 'A2', 'B', 'C', 'breath', 'A3', 'B2'], ['A1', 'B', 'A2', 'C', 'breath', 'B2', 'A3']],
+    mix: { lead: 1.45, pad: 1.0, choir: 1.1, arp: 0.85, bell: 0.85, bass: 0.65 },
+    inst: { pad: 'violas', pad2: 'cellos', bass: 'deep', lead: 'reed', lead2: 'bassoon', bell: 'glass', arp: 'marimba', choir: 'choirHum', choir2: 'choirMen' },
+    quotes: ['procession'],
+    ph: {
+      P1c: '1:1.5 2:.5 3:2 | 5:1.5 6:.5 5:2 | 5:2 3:2 | 4:1 5:1 6:2', P1: '5:1.5 6:.5 8:2 | 8:1.5 7:.5 6:2 | 5:2 3:2 | 4:1 5:1 6:2',
+      P2: '7:2 5:2 | 4:2 6:2 | 5:2 8:2 | 8:3 r:1', P3: '9:2 8:1 7:1 | 5:2 7:2 | 8:2 6:1 4:1 | 6:2 5:2', P4: '8:2 10:2 | 9:2 7:2 | 8:2 6:2 | 5:2 1:2',
+      Q1: '5:4 | 6:4 | 8:4 | 5:4', Q2: '4:4 | 3:4 | 5:4 | 1:4',
+    },
+    sec: [
+      { n: 'intro', bars: 4, cres: [0.44, 0.54], prog: 'i:2 IV:2', pad: { p: 'swell', n: 3, reg: [55, 70], vel: 0.32 }, arp: { pat: '0.2.1.2.', res: 2, vel: 0.16, reg: [57, 76] } },
+      // the cor anglais's tune over the marimba's motor
+      { n: 'A1', bars: 8, lv: 0.64, prog: 'i:1 IV:1 i:1 IV:1 bVII:1 IV:1 i:2', pad: { p: 'sus', n: 3, reg: [55, 70], vel: 0.24 }, bass: { p: 'half', vel: 0.55, inst: { p: 'deep', att: 0.3 } },
+        arp: { pat: '0.2.1.2.', res: 2, vel: 0.15, reg: [57, 76] }, lead: { ph: 'P1 P2', vel: 0.7 } },
+      // the bassoon's counter-line moves in the tune's gaps
+      { n: 'A2', bars: 8, lv: 0.68, prog: 'i:1 IV:1 i:1 IV:1 bVII:1 IV:1 i:2', pad: { p: 'sus', n: 3, reg: [55, 70], vel: 0.24 }, bass: { p: 'half', vel: 0.55, inst: { p: 'deep', att: 0.3 } },
+        arp: { pat: '0.2.1.2.', res: 2, vel: 0.15, reg: [57, 76] }, lead: { ph: 'P1c P2', vel: 0.7 }, lead2: { ph: '@counter', reg: [46, 60], vel: 0.42 } },
+      // the clarinet, a horn beneath, the cellos
+      { n: 'B', bars: 8, lv: 0.66, prog: 'bVII:2 IV:2 i:1 v:1 IV:1 i:1', pad: { p: 'sus', n: 3, reg: [55, 70], vel: 0.24 }, pad2: { p: 'swell', n: 2, reg: [43, 57], vel: 0.3, open: true },
+        bass: { p: 'whole', vel: 0.55, inst: { p: 'deep', att: 0.5 } }, arp: { pat: '0.1.0.1.', res: 2, vel: 0.13, reg: [57, 76] },
+        lead: { ph: 'P3 P4', inst: 'clarinet', vel: 0.66 }, lead2: { ph: '@counter', inst: 'hornIowa', reg: [50, 62], vel: 0.38 } },
+      // the still: the celesta's long notes over the strings, no bass, the marimba silent
+      { n: 'C', bars: 8, lv: 0.46, prog: 'i:2 bVII:2 IV:2 i:2', pad: { p: 'swell', n: 3, reg: [57, 72], vel: 0.3 }, lead: { ph: 'Q1 Q2', inst: 'vibes', vel: 0.5 },
+        choir: { n: 2, reg: [60, 72], vel: 0.22, soft: true } },
+      { n: 'breath', bars: 1, barsVar: [1, 2], lv: 0.3, prog: 'i:4', pad: { p: 'swell', n: 2, reg: [62, 74], vel: 0.3 } },
+      // the peak: the violins on the tune, the cor anglais's counter-line, the horns warm beneath, the voices softly
+      { n: 'A3', bars: 8, cres: [0.62, 0.76], prog: 'i:1 IV:1 i:1 IV:1 bVII:1 IV:1 i:2', pad: { p: 'sus', inst: 'strings', n: 3, reg: [57, 72], vel: 0.28 }, pad2: { p: 'swell', inst: 'horn', n: 3, reg: [50, 64], vel: 0.26 },
+        bass: { p: 'half', vel: 0.58, inst: { p: 'deep', att: 0.3 } }, arp: { pat: '0.2.1.2.', res: 2, vel: 0.15, reg: [57, 76] },
+        lead: { ph: 'P1c P2', inst: 'strings', vel: 0.62 }, lead2: { ph: '@counter', inst: 'reed', reg: [57, 70], vel: 0.38 }, choir: { n: 3, reg: [60, 74], vel: 0.22, soft: true } },
+      // the cello to close
+      { n: 'B2', bars: 8, cres: [0.6, 0.48], prog: 'bVII:2 IV:2 i:1 v:1 IV:1 i:1', pad: { p: 'sus', n: 3, reg: [55, 70], vel: 0.24 }, bass: { p: 'whole', vel: 0.5, inst: { p: 'deep', att: 0.5 } },
+        arp: { pat: '0.1.0.1.', res: 2, vel: 0.13, reg: [57, 76] }, lead: { ph: 'P3 P4', inst: 'cello', vel: 0.66 } },
+    ],
+  });
+
+  // =====================================================================================================================================
+  // Determination (calm exploration, contested): a march-like build — the motor, the pizzicato basses, the horn's resolute theme on top
+  // =====================================================================================================================================
+  piece('galaxy3', {
+    desc: 'Calm exploration, determination: the strings\' spiccato motor alone, the pizzicato basses beneath, then the horn\'s resolute theme legato on top; the violins\' counter-line joins; everyone at the big phrase; a still for the flute; the theme again; the horn quieter to close',
+    bpm: 72, root: 'A', mode: 'minor', orch: true, holdLow: false, tens: false, rubato: 0, hall: 'musikverein', trim: 2.3, bassC: 40, loopFrom: 'A1',
+    forms: [['A1', 'A2', 'B', 'C', 'A3', 'E'], ['A1', 'B', 'A2', 'C', 'A3', 'E']],
+    mix: { lead: 1.4, pad: 1.0, choir: 1.1, arp: 0.85, bell: 0.85, bass: 0.7, drums: 0.7 },
+    inst: { pad: 'strings', pad2: 'cellos', bass: 'deep', lead: 'horn', lead2: 'strings', bell: 'glass', arp: 'strOst', choir: 'choirMenAh', choir2: 'choirWomen' },
+    quotes: ['procession'],
+    ph: {
+      D1c: '1:1.5 2:.5 3:1 5:1 | 6:1.5 5:.5 3:2 | 7:1.5 5:.5 2:2 | 1:3 r:1', D1: '1:1.5 3:.5 5:1 3:1 | 6:1.5 5:.5 3:2 | 7:1.5 5:.5 2:2 | 1:3 r:1',
+      D2: '5:1.5 6:.5 8:1 6:1 | 8:1.5 6:.5 3:2 | 4:1.5 6:.5 8:2 | 7#:2 5:2', D3: '8:2 6:2 | 7:2 5:2 | 8:2 5:2 | 3:4', D4: '10:2 8:2 | 9:2 7:2 | 7#:2 9:2 | 5:4',
+      D5: '8:4 | 6:4 | 5:4 | 3:4', D6: '6:4 | 8:4 | 7#:4 | 5:4',
+    },
+    sec: [
+      // the motor alone, then the pizzicato basses beneath
+      { n: 'intro', bars: 2, lv: 0.56, prog: 'i i', arp: { pat: '0.1.2.1.', res: 2, vel: 0.22, reg: [57, 69] } },
+      { n: 'intro2', bars: 2, lv: 0.6, prog: 'i V', arp: { pat: '0.1.2.1.', res: 2, vel: 0.22, reg: [57, 69] }, bass: { p: 'half', vel: 0.7, inst: 'moog' }, timp: { p: 'two', vel: 0.16 } },
+      // the horn's theme on top
+      { n: 'A1', bars: 8, lv: 0.68, prog: 'i bVI bVII i | i bVI bVII i', arp: { pat: '0.1.2.1.', res: 2, vel: 0.2, reg: [57, 69] }, bass: { p: 'half', vel: 0.7, inst: 'moog' },
+        pad: { p: 'sus', inst: 'violas', n: 2, reg: [55, 67], vel: 0.2 }, lead: { ph: 'D1 D1c', oct: -1, vel: 0.86 } },
+      // the violins' counter-line joins, high, in the theme's gaps
+      { n: 'A2', bars: 8, lv: 0.74, prog: 'i bVI bVII i | i bVI iv V', arp: { pat: '0.1.2.1.', res: 2, vel: 0.2, reg: [57, 69] }, bass: { p: 'half', vel: 0.72, inst: 'moog' },
+        pad: { p: 'sus', inst: 'violas', n: 2, reg: [55, 67], vel: 0.2 }, lead: { ph: 'D1 D2', oct: -1, vel: 0.88 }, lead2: { ph: '@counter', reg: [69, 84], vel: 0.42 }, timp: { p: 'two', vel: 0.32 } },
+      // everyone: the big phrase, the horns and the trumpets, the strings full, the voices, the low brass beneath
+      { n: 'B', bars: 8, cres: [0.8, 0.92], prog: 'bVI bVII i i | bVI bVII V V', pad: { p: 'sus', n: 4, reg: [57, 76], vel: 0.42 }, pad2: { p: 'sus', n: 2, reg: [43, 57], vel: 0.32, open: true },
+        arp: { pat: '0123210123210123', res: 4, vel: 0.2, reg: [57, 72] }, bass: { p: 'half', vel: 0.66, inst: { p: 'lowBrass', att: 0.06, cut: 1800 } },
+        lead: { ph: 'D3 D4', oct: -1, vel: 0.92 }, lead4: { ph: 'D3 D4', inst: 'tpts', vel: 0.42 }, lead2: { ph: '@counter', reg: [69, 84], vel: 0.4 },
+        choir: { n: 3, reg: [50, 62], vel: 0.5 }, choir2: { n: 3, reg: [64, 76], vel: 0.38 }, timp: { p: 'two', vel: 0.42 } },
+      // the still: the flute over the strings, the women humming, no motor
+      { n: 'C', bars: 8, lv: 0.48, prog: 'iv:2 i:2 bVI:2 V:2', pad: { p: 'swell', n: 3, reg: [57, 72], vel: 0.3 }, lead: { ph: 'D5 D6', inst: 'flute', vel: 0.72 },
+        choir2: { inst: 'choirHum', n: 2, reg: [60, 72], vel: 0.22, soft: true }, bass: { pat: '1---', vel: 0.45, inst: { p: 'deep', att: 1, rel: 2 } } },
+      // the theme again over the motor, the violins' counter-line above
+      { n: 'A3', bars: 8, cres: [0.68, 0.8], prog: 'i bVI bVII i | i bVI iv V', arp: { pat: '0.1.2.1.', res: 2, vel: 0.2, reg: [57, 69] }, bass: { p: 'half', vel: 0.7, inst: 'moog' },
+        pad: { p: 'sus', inst: 'violas', n: 2, reg: [55, 67], vel: 0.22 }, lead: { ph: 'D1c D2', oct: -1, vel: 0.88 }, lead2: { ph: '@counter', reg: [69, 84], vel: 0.42 }, timp: { p: 'two', vel: 0.3 } },
+      // the close: the horn quieter, the motor thinning
+      { n: 'E', bars: 8, cres: [0.62, 0.48], prog: 'i bVI bVII i | i bVI i i', arp: { pat: '0...2...1...2...', res: 2, vel: 0.18, reg: [57, 69] }, bass: { p: 'whole', vel: 0.6, inst: 'moog' },
+        pad: { p: 'sus', inst: 'violas', n: 2, reg: [55, 67], vel: 0.2 }, lead: { ph: 'D1 D5', oct: -1, vel: 0.76 } },
+    ],
+  });
 })(window.MOO);
