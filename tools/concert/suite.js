@@ -23,7 +23,7 @@
     seating: { hall: 0.1, er: 0.5, spread: 1.25, width: 0.65 }, sing: true, just: 1, pitchSpread: 0, bassXf: 0.3,   // held chords tuned pure, no random detune on the notes
     tasto: false, timpClean: true,   // the low strings with their bow and overtones; the timpani as themselves
     conduct: { push: 1, broaden: 0.96, ease: 0.94 }, breathe: { beats: 2, k: 0.95 }, press: 0, behind: 0.006, ensemble: 0.3, speak: 1,   // an unhurried conductor: no pressing toward a climax, room at every section's end, the players on the beat
-    tone: { lo: -1.5, hi: 4, pres: 1.5 }, sends: { lead: { verb: 0.16, stage: 0.32, dly: 0 }, choir: { verb: 0.34, stage: 0.14 } }, lowBand: 0, bassC: 40 };
+    tone: { lo: -1.5, mud: 2.5, pres: 3, presHz: 2500, presQ: 0.6, hi: 2 }, sends: { lead: { verb: 0.16, stage: 0.32, dly: 0 }, choir: { verb: 0.34, stage: 0.14 } }, lowBand: 0, bassC: 40 };
   // A symphony's low end, not a film's: no sine under the basses, the basses' bow and body left in (the game cuts them to a 200 Hz boom),
   // the cellos singing in their own register instead of doubling the basses an octave up, the tuba's pedal lighter
   // the pipe organ at the back of the hall, behind the choir: a 16-foot pedal under the basses and full chords on the manuals, for the

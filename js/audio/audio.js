@@ -433,7 +433,7 @@
         for (let i = 0; i < len; i++) { const x = i / ratio, k = Math.floor(x), f = x - k; dst[i] = d.gain * ((src[k] || 0) * (1 - f) + (src[k + 1] || 0) * f) * (dk ? Math.exp(-dk * i) : 1); } }
       const inp = mk(ctx.createGain()), h = mk(ctx.createBiquadFilter()), conv = mk(ctx.createConvolver()), l = mk(ctx.createBiquadFilter()), out = mk(ctx.createGain());
       h.type = 'highpass'; h.frequency.value = num(A.hallHp, 260); h.Q.value = 0.5; l.type = 'lowpass';   // A.hallHp: a render may let more of the low end into the hall (the concert suite's warmth)
-      l.frequency.value = 11000; l.Q.value = 0.5;
+      l.frequency.value = num(A.hallLp, 11000); l.Q.value = 0.5;   // A.hallLp: the hall's top rolled off early, so the room adds depth and not haze over the detail
       conv.normalize = false; conv.buffer = buf; inp.connect(h); h.connect(conv); conv.connect(l); l.connect(out); out.connect(eng.musicBus);
       eng.halls[name] = inp;
     }

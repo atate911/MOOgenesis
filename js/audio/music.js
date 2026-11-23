@@ -1414,7 +1414,7 @@
   // a lift where its character lives. [hp Hz, [[Hz, dB, Q | 'hs' | 'ls'], ...]]
   const SEAT_EQ = {
     vln1: [180, [[350, -2, 1], [3000, 1.5, 0.9], [9000, 1.5, 'hs']]], vln2: [160, [[350, -2, 1], [2500, 1, 0.9]]], solo: [190, [[400, -1.5, 1], [3200, 2, 0.9]]],
-    vla: [110, [[250, -2, 1], [1600, 1.5, 1]]], vc: [55, [[300, -2.5, 1.1], [1200, 1.5, 1]]], soloVc: [60, [[300, -2, 1.1], [1400, 2, 1]]], cb: [30, [[90, 1, 1], [250, -3, 1], [5000, -3, 'hs']]],
+    vla: [110, [[250, -2, 1], [1600, 1.5, 1]]], vc: [55, [[300, -2.5, 1.1], [1200, 1.5, 1], [6000, 1, 'hs']]], soloVc: [60, [[300, -2, 1.1], [1400, 2, 1]]], cb: [30, [[90, 1, 1], [250, -3, 1], [2200, 1.5, 1]]],   // (the bow's presence: a bass heard as an instrument, not a rumble)
     harp: [110, [[300, -2, 1], [3000, 1.5, 1]]], cel: [250, []], glock: [500, []],
     fl: [240, [[3500, 1, 1]]], ob: [200, [[1100, -1.5, 1.2], [3000, 1, 1]]], cl: [140, [[350, -1.5, 1]]], bn: [50, [[300, -2, 1.1], [1300, 1, 1]]],
     hn: [75, [[250, -2.5, 1], [800, 1, 1], [3500, -1, 'hs']]], tpt: [150, [[300, -1.5, 1], [3000, -1.5, 1.2], [1500, 1, 1]]], tbn: [60, [[250, -2.5, 1], [1100, 1, 1]]], tuba: [26, [[200, -2, 1], [2500, -4, 'hs']]],
@@ -1464,12 +1464,13 @@
       this.loop = this.o.loop !== false; this.intensity = num(this.o.intensity, 0);
       const ctx = eng.ctx, mk = n => { this.nodes.push(n); eng.nodeCount++; return n; };
       this.bus = mk(ctx.createGain());
-      if (def.tone && (def.tone.hi || def.tone.lo || def.tone.pres || def.tone.body)) {       // the piece's own tone: the exploration pieces sit darker than the dramatic cues; pres: a broad lift at 3 kHz where the shelf above 5 kHz does not reach (the voices' and the strings' presence)
+      if (def.tone && (def.tone.hi || def.tone.lo || def.tone.pres || def.tone.body || def.tone.mud)) {       // the piece's own tone: the exploration pieces sit darker than the dramatic cues; pres: a broad lift at 3 kHz where the shelf above 5 kHz does not reach (the voices' and the strings' presence)
         let n = this.bus;
         if (def.tone.hi) { const f = mk(ctx.createBiquadFilter()); f.type = 'highshelf'; f.frequency.value = 5000; f.gain.value = def.tone.hi; n.connect(f); n = f; }
         if (def.tone.lo) { const f = mk(ctx.createBiquadFilter()); f.type = 'lowshelf'; f.frequency.value = 120; f.gain.value = def.tone.lo; n.connect(f); n = f; }
         if (def.tone.body) { const f = mk(ctx.createBiquadFilter()); f.type = 'peaking'; f.frequency.value = 210; f.Q.value = 0.85; f.gain.value = Math.max(-6, Math.min(9, def.tone.body)); n.connect(f); n = f; }   // body: a broad lift where the cellos, violas, horns and low voices live (the instruments' presets each cut there, for the game's clarity)
-        if (def.tone.pres) { const f = mk(ctx.createBiquadFilter()); f.type = 'peaking'; f.frequency.value = 3000; f.Q.value = 0.8; f.gain.value = Math.max(-6, Math.min(6, def.tone.pres)); n.connect(f); n = f; }
+        if (def.tone.mud) { const f = mk(ctx.createBiquadFilter()); f.type = 'peaking'; f.frequency.value = 300; f.Q.value = 0.7; f.gain.value = Math.max(-6, Math.min(0, -Math.abs(def.tone.mud))); n.connect(f); n = f; }   // mud: a broad dip where many instruments together pile up (a mastering move, small and wide)
+        if (def.tone.pres) { const f = mk(ctx.createBiquadFilter()); f.type = 'peaking'; f.frequency.value = num(def.tone.presHz, 3000); f.Q.value = num(def.tone.presQ, 0.8); f.gain.value = Math.max(-6, Math.min(6, def.tone.pres)); n.connect(f); n = f; }
         n.connect(eng.musicBus);
       } else this.bus.connect(eng.musicBus);
       this.verb = mk(ctx.createGain());
