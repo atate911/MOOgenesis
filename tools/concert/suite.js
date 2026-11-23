@@ -21,7 +21,7 @@
   // its own early reflections, a hall send that grows toward the back. sing: soloists join their notes as singers and string players do.
   const STAGE = { orch: true, holdLow: false, tens: false, hidden: true, rubato: 0, hall: 'musikverein', fx: { verb: 1.2, stage: 0.8, dly: 0 },
     seating: { hall: 0.12, er: 0.65 }, sing: true,
-    conduct: { push: 1, broaden: 0.94, ease: 0.9 }, breathe: { beats: 2, k: 0.88 }, press: 0,   // an unhurried conductor: no pressing toward a climax, room at every section's end, the players on the beat
+    conduct: { push: 1, broaden: 0.94, ease: 0.9 }, breathe: { beats: 2, k: 0.88 }, press: 0, behind: 0.008,   // an unhurried conductor: no pressing toward a climax, room at every section's end, the players on the beat
     tone: { lo: -1.5, hi: 4, pres: 1.5 }, sends: { lead: { verb: 0.16, stage: 0.32, dly: 0 }, choir: { verb: 0.34, stage: 0.14 } }, lowBand: 0, bassC: 40 };
   // A symphony's low end, not a film's: no sine under the basses, the basses' bow and body left in (the game cuts them to a 200 Hz boom),
   // the cellos singing in their own register instead of doubling the basses an octave up, the tuba's pedal lighter

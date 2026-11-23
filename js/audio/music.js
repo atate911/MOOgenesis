@@ -730,6 +730,9 @@
         if (e.o.swell !== undefined) e.o.swell = clamp(e.o.swell * bright, 0, 1);
       }
       e.o.vel *= Math.pow(10, g / 20); e.t = Math.max(0, e.t + dt); e.pf = [Math.round(dt * 1000), Math.round(g * 10) / 10];
+      // on the beat or behind it, never ahead (a piece's `behind`, s): an orchestra sits on the conductor's beat or a hair behind it, the
+      // soloist (who leads) closest to it; a note the ensemble's looseness would have placed early is folded back behind the beat instead
+      if (C.def && C.def.behind !== undefined && e.v === 'sample' && !e.o.oneShot) { const fl = C.tAt(b) + num(C.def.behind, 0) * (k === 'lead' ? 0.4 : 1); if (e.t < fl) e.t = fl + (fl - e.t) * 0.3; }
       if (P.spread && e.m) { const ck = k + '@' + b.toFixed(4); (chords[ck] = chords[ck] || []).push([e, I, r]); }
     }
     // a chord's notes spread: 10 ms apart at the top of the movement, up to 40 ms when soft

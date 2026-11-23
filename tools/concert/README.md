@@ -217,3 +217,9 @@ The fixes:
 - **A drier room.** The hall send is down another 4.4 dB, the tail is shortened to about 1.45 s, and the early reflections are a little
   lower.
 - **Softer edges.** The top end and presence are back down by 1.5 and 1 dB.
+
+**On the beat, or behind it.** Measured, 15–25% of the notes were landing ahead of their beat, typically by about 6 ms and as much as
+27 ms. That came from the ensemble's random timing variation, which drifted both ways around the beat. Pieces can now set `behind` (in
+seconds). With it, every note lands on or just behind the conductor's beat: about 8 ms back for the orchestra, and about 3 ms for the
+soloist, who leads. A note that would have been early is folded back behind the beat instead, so the looseness stays without rushing.
+After the change, no note in the suite is early, and the typical note sits 12–14 ms behind the beat.
