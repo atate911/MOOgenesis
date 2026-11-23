@@ -540,7 +540,7 @@
     if ((inst.v === 'bell' || inst.v === 'chime') && inst.dur) o.dur = inst.dur * clamp(0.7 + 0.15 * beats, 0.7, 1.4);
     if (ex) for (const k in ex) if (k !== 'art' && k !== 'dt' && ex[k] !== undefined) o[k] = ex[k];
     if (C.def && C.def.part && C.def.part[C.key] !== undefined) o.vel *= num(C.def.part[C.key], 1);
-    { const mk = C.curW && C.curW.R.raw && C.curW.R.raw.mixK; if (mk) o.vel *= num(mk[C.key] !== undefined ? mk[C.key] : mk[ly], 1); }   // a section's own balance (its `mixK`: { bus or part: gain }), the level only, the recording chosen by the written dynamic   // the balance of parts that share a layer (pad and pad2, choir and choir2)
+    { const mk = mixKAt(C, beat); if (mk) o.vel *= num(mk[C.key] !== undefined ? mk[C.key] : mk[ly], 1); }   // a section's own balance (its `mixK`: { bus or part: gain }), the level only, the recording chosen by the written dynamic   // the balance of parts that share a layer (pad and pad2, choir and choir2)
     // outside the profile a piece's subBass is a floor under its recorded bass's own sub (the refresh gives the synth-era cues their weight)
     if (C.def && !C.def.orch && ly === 'bass' && inst.v === 'sample' && C.def.subBass !== undefined) o.sub = Math.max(num(o.sub, 0), clamp(num(C.def.subBass, 0), 0, 1.5));
     if (C.def && C.def.orch && inst.v === 'sample') {
@@ -559,10 +559,15 @@
     C.ev.push(ev);
     return ev;
   }
+  // the balance (`mixK`) of the section a note begins in: a held chord is written when it changes, which may be after the next section began
+  function mixKAt(C, beat) {
+    const w = (C.wraps && C.wraps.find(x => beat >= x.start - 1e-9 && beat < x.start + x.beats - 1e-9)) || C.curW;
+    return w && w.R.raw && w.R.raw.mixK;
+  }
   function emitDrum(C, ly, dv, beat, vel, ex) {
     if (beat < 0 || beat >= C.totalBeats) return;
     const o = Object.assign({}, dv); o.vel = vel * C.lvAt(beat) * (dv.lvl === undefined ? 1 : dv.lvl); if (dv.dyn === undefined) o.dyn = clamp(vel * C.lvAt(beat), 0, 1); if (ex) Object.assign(o, ex);
-    { const mk = C.curW && C.curW.R.raw && C.curW.R.raw.mixK; if (mk) o.vel *= num(mk[C.key] !== undefined ? mk[C.key] : mk[ly], 1); }   // the section's balance (its `mixK`), as for the pitched parts
+    { const mk = mixKAt(C, beat); if (mk) o.vel *= num(mk[C.key] !== undefined ? mk[C.key] : mk[ly], 1); }   // the section's balance (its `mixK`), as for the pitched parts
     C.ev.push({ t: C.tAt(beat), v: dv.v, ly, o, m: 0, b: beat, bt: 0, k: C.key });
   }
   function stepMidi(C, step, acc) {
