@@ -470,6 +470,7 @@
     def.tone = Object.assign({}, def.symTone || SYM_TONE);
     def.lowBand = 0;
     def.subBass = Math.min(num(def.subBass, 0.4), 0.45);
+    def.lowMono = Object.assign({ lead: 250, arp: 200, bell: 250, drums: 120 }, ORCH_LOWMONO, def.lowMono || {});   // every layer's low end centred: a line in a seat (the cellos on the right) panned its fundamentals too
     for (const sec of def.sec || []) {
       if (sec.subBass !== undefined) sec.subBass = Math.min(sec.subBass, 0.5);
       if (sec.keepReg) continue;   // a section that voices its low register on purpose
@@ -1553,7 +1554,13 @@
         inG.gain.value = this.layers[name].i0 !== undefined ? 0 : this.layers[name].level;
         if (def.seating) {   // the concert stage: the seats' early reflections and their hall send ride the layer's own gains (its expression, its dip under the solo)
           const L2 = this.layers[name], eE = mk(ctx.createGain()), eD = mk(ctx.createGain()), hE = mk(ctx.createGain()), hD = mk(ctx.createGain());
-          eE.connect(eD); eD.connect(this.bus); hE.connect(hD); hD.connect(this.verb); eD.gain.value = hD.gain.value = inG.gain.value;
+          eE.connect(eD); hE.connect(hD); hD.connect(this.verb); eD.gain.value = hD.gain.value = inG.gain.value;
+          { // the reflections made one below 200 Hz (their side high-passed), as the direct sound's low end is
+            const sp = mk(ctx.createChannelSplitter(2)), mg = mk(ctx.createChannelMerger(2)), m = mk(ctx.createGain()), sd0 = mk(ctx.createGain()), inv = mk(ctx.createGain()), so = mk(ctx.createGain()), sn = mk(ctx.createGain());
+            eD.connect(sp); sp.connect(m, 0); sp.connect(m, 1); m.gain.value = 0.5; sp.connect(sd0, 0); sp.connect(inv, 1); inv.gain.value = -1; inv.connect(sd0); sd0.gain.value = 0.5;
+            let nd = sd0; for (let k = 0; k < 2; k++) { const h = mk(ctx.createBiquadFilter()); h.type = 'highpass'; h.frequency.value = 200; h.Q.value = 0.707; nd.connect(h); nd = h; }
+            nd.connect(so); nd.connect(sn); sn.gain.value = -1; m.connect(mg, 0, 0); m.connect(mg, 0, 1); so.connect(mg, 0, 0); sn.connect(mg, 0, 1); mg.connect(this.bus);
+          }
           L2.er = eE; L2.hv = hE; L2.exs = [exG, eE, hE]; L2.dks = [inG, eD, hD];
           sv.gain.value = 0; ss.gain.value = 0; sd.gain.value = 0;   // the room comes from the seats, not from the layer
         }
