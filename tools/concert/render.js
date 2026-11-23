@@ -1,6 +1,6 @@
 // The concert suite: render the movements of tools/concert/suite.js through the game's own engine and orchestra (headless Chromium,
 // OfflineAudioContext), as finished recordings rather than loops.
-//   node tools/concert/render.js                      every movement, to tools/concert/out/ (WAV 24-bit + MP3 320k)
+//   node tools/concert/render.js                      every movement, to tools/concert/out/ (WAV and FLAC 24-bit 48 kHz, MP3 320k)
 //   node tools/concert/render.js --only 2             one movement (1-based), or a comma list
 //   node tools/concert/render.js --lint               compile only: length, sections, notes the engine had to move onto a chord
 //   node tools/concert/render.js --secs 40 --from 90  a window of a movement (from 90 s, 40 s long), for a quick check
@@ -85,7 +85,8 @@ const SR = 48000, PORT = +opt.port || 8772, TAIL = 11, TARGET_LUFS = -16, CEIL_D
     const meta = ['-metadata', `title=${r.mv.title}`, '-metadata', `album=${suite.title}`, '-metadata', `track=${r.i + 1}/${suite.movements.length}`, '-metadata', `artist=${suite.artist}`];
     execFileSync('ffmpeg', ['-y', '-loglevel', 'error', '-f', 'f32le', '-ar', String(SR), '-ac', '2', '-i', r.raw, '-af', af, '-c:a', 'pcm_s24le', ...meta, base + '.wav']);
     execFileSync('ffmpeg', ['-y', '-loglevel', 'error', '-f', 'f32le', '-ar', String(SR), '-ac', '2', '-i', r.raw, '-af', af, '-c:a', 'libmp3lame', '-b:a', '320k', ...meta, base + '.mp3']);
+    execFileSync('ffmpeg', ['-y', '-loglevel', 'error', '-f', 'f32le', '-ar', String(SR), '-ac', '2', '-i', r.raw, '-af', af, '-c:a', 'flac', '-sample_fmt', 's32', '-bits_per_raw_sample', '24', '-compression_level', '8', ...meta, base + '.flac']);   // lossless, full bandwidth (24-bit in a 32-bit container)
     fs.unlinkSync(r.raw);
-    console.log('  ' + base + '.{wav,mp3}');
+    console.log('  ' + base + '.{wav,flac,mp3}');
   }
 })().catch(e => { console.error(e); process.exit(1); });
