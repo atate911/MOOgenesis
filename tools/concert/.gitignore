@@ -2,3 +2,5 @@ out/*.wav
 out/*.flac
 out/.*.f32
 out/pieces/*.wav
+out/pieces/
+out/compare/*-after.mp3
