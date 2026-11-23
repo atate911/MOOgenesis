@@ -1,0 +1,85 @@
+{
+ "combat3": {
+  "A1": "i i bVI bVII | i bIIM7 i bVI:.5 V:.5 | i i bVI bVII | i bIIM7 bVI i:.5 V:.5",
+  "A2": "i i bVI bVII | i bIIM7 i bVI:.5 V:.5 | i i bVI bVII | i bIIM7 bVI i:.5 V:.5"
+ },
+ "combat1": {
+  "A1": "i:2 bVI:2 i:2 bVII:2 i:2 bVI:2 bIII:2 bVII:2",
+  "A2": "i:2 bVI:2 i:2 bVII:2 i:2 bVI:2 bIII:2 bVII:2",
+  "A3": "i:2 bVI:2 i:2 bVII:2 i:2 bVI:2 bIII:2 bVII:2"
+ },
+ "ground": {
+  "D": "i:2 bII:2 i:2 bvii:2"
+ },
+ "council2": {
+  "T": "vi IV | I V | vi ii | V I | vi IV | I V | bVI bVII | I I"
+ },
+ "victory": {
+  "A3": "I V ii7 V | IV V I I"
+ },
+ "defeat": {
+  "B": "i bVIM7 bIII bVIIsus4 | iv i V i",
+  "E": "i bVIM7 bIII bVIIsus4 | iv i V i"
+ },
+ "galaxy4": {
+  "A1": "IM7:4 II:4 | IM7:4 IM7:4",
+  "B": "vi:4 IM7:4 | IM7:4 vi:4",
+  "E": "IM7:4 vi7:4 | IM7:4 V:4"
+ },
+ "galaxy2": {
+  "A1": "Isus2:1 IVsus4:1 i:1 IV:1 bVII:1 IV:1 i:2",
+  "A2": "i:1 IVsus4:1 i:1 IV:1 bVII:1 IV:1 i:2",
+  "B": "bVIIsus4:1 bVII:1 IV:2 i:1 ii:1 IV:1 i:1",
+  "A3": "Isus2:1 IVsus4:1 i:1 IV:1 bVIIsus4:1 IVsus4:1 i:2",
+  "B2": "bVIIsus4:1 bVII:1 IV:2 i:1 ii:1 IV:1 i:1"
+ },
+ "galaxy3": {
+  "A1": "i bVI bVII i | i bVI bVII V:.5 i:.5",
+  "E": "i bVI bVII i | i bVI bIII bVI"
+ },
+ "galaxy5": {
+  "A1": "I IV | vi V | ii V | I I",
+  "A2": "I IV | ii7 IV | ii V | I I",
+  "B": "vi V | I V | vi ii | V I",
+  "A3": "I IV | iii IV | ii V | I I",
+  "B2": "vi V | I V | vi ii | V I"
+ },
+ "galaxy8": {
+  "A1": "I:2 bVIIM7:2 | I:2 bVII:2 | Isus4:2 bVIIM7:2 | I:2 bVII:2",
+  "A2": "I:2 bVII:2 | Isus4:2 bVIIM7:2 | Isus4:2 bVIIM7:2 | I:2 bVII:2",
+  "E": "I:2 bVIIM7:2 | I:2 bVII:2"
+ },
+ "galaxy11": {
+  "rise": "IM7:2 V:2 | IM7:2 Vsus4:2"
+ },
+ "galaxy15": {
+  "still": "IM7:2 IV:2 | IM7:2 I:2"
+ },
+ "galaxy16": {
+  "add": "vi7:2 V/IV:2 | IM7:2 V:2",
+  "full": "IM7:2 vi9:2 | IVM7:2 V:2",
+  "full2": "vi7:2 V/IV:1 IVM7:1 | Isus4:1 IM7:1 V:2"
+ },
+ "galaxy18": {
+  "crest": "IM7:2 V:2 | IM7:2 V:1.5 Vsus4:.5"
+ },
+ "galaxy19": {
+  "str": "I IV ii V | IVM7 I V I",
+  "ch3": "I IV I V | IVM7 I V I"
+ },
+ "galaxy20": {
+  "trio": "i bVII i iv:.5 V:.5 | bVIM7 iv V i"
+ },
+ "race:bulrathi": {
+  "C": "i bVI bVII Vsus4"
+ },
+ "race:human": {
+  "C": "IV Vsus4 V I"
+ },
+ "race:bulrathi:war": {
+  "C": "i bVI bVII Vsus4"
+ },
+ "race:human:war": {
+  "C": "IV Vsus4 V I"
+ }
+}

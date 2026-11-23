@@ -470,7 +470,7 @@
     def.tone = Object.assign({}, def.symTone || SYM_TONE);
     def.lowBand = 0;
     def.subBass = Math.min(num(def.subBass, 0.4), 0.45);
-    def.lowMono = Object.assign({ lead: 250, arp: 200, bell: 250, drums: 120 }, ORCH_LOWMONO, def.lowMono || {});   // every layer's low end centred: a line in a seat (the cellos on the right) panned its fundamentals too
+    def.lowMono = Object.assign({ lead: 250, arp: 200, bell: 250, drums: 200 }, ORCH_LOWMONO, def.lowMono || {});   // (the drums to 200 Hz: a timpani's fundamentals)   // every layer's low end centred: a line in a seat (the cellos on the right) panned its fundamentals too
     for (const sec of def.sec || []) {
       if (sec.subBass !== undefined) sec.subBass = Math.min(sec.subBass, 0.5);
       if (sec.keepReg) continue;   // a section that voices its low register on purpose
@@ -539,7 +539,8 @@
     // struck/ringing voices (bells, chimes) keep their own ring time; it only stretches a little with the written length
     if ((inst.v === 'bell' || inst.v === 'chime') && inst.dur) o.dur = inst.dur * clamp(0.7 + 0.15 * beats, 0.7, 1.4);
     if (ex) for (const k in ex) if (k !== 'art' && k !== 'dt' && ex[k] !== undefined) o[k] = ex[k];
-    if (C.def && C.def.part && C.def.part[C.key] !== undefined) o.vel *= num(C.def.part[C.key], 1);   // the balance of parts that share a layer (pad and pad2, choir and choir2)
+    if (C.def && C.def.part && C.def.part[C.key] !== undefined) o.vel *= num(C.def.part[C.key], 1);
+    { const mk = C.curW && C.curW.R.raw && C.curW.R.raw.mixK; if (mk) o.vel *= num(mk[C.key] !== undefined ? mk[C.key] : mk[ly], 1); }   // a section's own balance (its `mixK`: { bus or part: gain }), the level only, the recording chosen by the written dynamic   // the balance of parts that share a layer (pad and pad2, choir and choir2)
     // outside the profile a piece's subBass is a floor under its recorded bass's own sub (the refresh gives the synth-era cues their weight)
     if (C.def && !C.def.orch && ly === 'bass' && inst.v === 'sample' && C.def.subBass !== undefined) o.sub = Math.max(num(o.sub, 0), clamp(num(C.def.subBass, 0), 0, 1.5));
     if (C.def && C.def.orch && inst.v === 'sample') {
