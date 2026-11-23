@@ -1313,7 +1313,7 @@
     if (def.just) {
       const JI = [0, 11.7, 3.9, 15.6, -13.7, -2.0, -9.8, 2.0, 13.7, -15.6, -3.9, -11.7], k = clamp(num(def.just, 1), 0, 1);
       for (const e of C.ev) {
-        if (e.v !== 'sample' || !e.m || !e.o || e.o.oneShot || !(e.bt >= 0.75)) continue;
+        if (e.v !== 'sample' || !e.m || !e.o || e.o.oneShot || !(e.bt >= 0.75) || /^(lead|bell)/.test(e.k || '')) continue;   // the chords only: a melody keeps one intonation of its own (pure long notes among tempered short ones made a solo lurch)
         let w = null; for (const x of wraps) { if (e.b >= x.start - 1e-6 && e.b < x.start + x.beats - 1e-6) { w = x; break; } } if (!w) continue;
         const sg = segAt(w.R.segs, e.b - w.start); if (!sg || sg.ch.pcs.indexOf(mod12(e.m)) < 0) continue;
         const c = JI[mod12(e.m - sg.ch.pc)] * k; if (c) e.o = Object.assign({}, e.o, { f: mtof(e.m + c / 100) });
@@ -1364,7 +1364,7 @@
   function singGlide(o, iv) {
     const smp = o.smp || '', a = Math.abs(iv), dur = o.dur || 0;
     if (dur < 0.4 || a < 2) return;
-    if (SING.bow.test(smp)) { if (a < 3 || dur < 0.6) return; o.glide = -iv * 100 * 0.72; o.glideT = clamp(0.08 + 0.012 * a, 0.08, 0.2); }
+    if (SING.bow.test(smp)) { if (a < 4 || dur < 0.6) return; o.glide = -iv * 100 * 0.4; o.glideT = clamp(0.06 + 0.008 * a, 0.06, 0.14); }   // a shade of the shift, not a swoop
     else if (SING.wind.test(smp)) { o.glide = -iv * 100 * 0.25; o.glideT = 0.045; }
     else if (SING.brass.test(smp)) { o.glide = -iv * 100 * 0.3; o.glideT = 0.06; }
   }
@@ -1395,7 +1395,7 @@
   const SEATS = { vln1: [-6, 2.5, 0.45], vln2: [-2.8, 4.2, 0.4], vla: [2.8, 4.2, 0.4], vc: [5.6, 3, 0.45], cb: [8.2, 5.8, 0.35], solo: [-1.6, 0.8, 0.12], soloVc: [1.6, 1.1, 0.12], cantor: [0, 1, 0.12],
     harp: [-8.6, 6, 0.2], cel: [-6.6, 8, 0.2], fl: [-1.8, 7, 0.18], ob: [1.8, 7, 0.18], cl: [-1.8, 8.8, 0.18], bn: [1.8, 8.8, 0.18],
     hn: [-5, 10.5, 0.35], tpt: [0.6, 11.6, 0.28], tbn: [3.8, 11.6, 0.3], tuba: [6.3, 11.2, 0.18], timp: [-1.2, 13.2, 0.3], perc: [3.6, 13.6, 0.4], glock: [-4, 13.2, 0.2],
-    women: [-4.5, 15.6, 0.55], men: [4.5, 15.6, 0.55], organ: [0, 17.6, 0.8], back: [0, 14, 0.85] };
+    women: [-4.5, 15.6, 0.55], men: [4.5, 15.6, 0.55], organ: [0, 17.6, 0.8], back: [0, 14, 0.85], synth: [0, 9, 1] };   // synth: the electronic layer, wide around the orchestra rather than in a seat
   function seatOf(smp, m) {
     const t = re => re.test(smp);
     if (t(/^strEns/)) return m >= 69 ? 'vln1' : m >= 62 ? 'vln2' : m >= 55 ? 'vla' : m >= 43 ? 'vc' : 'cb';
@@ -1406,7 +1406,7 @@
     if (t(/^brass/)) return m >= 67 ? 'tpt' : m >= 55 ? 'hn' : 'tbn'; if (t(/^lowBrass/)) return m && m < 45 ? 'tuba' : 'tbn';
     if (t(/^timp/)) return 'timp'; if (t(/^(bassDrum|snare|crash|cymSwell|gong|tamb|claves|anvil|taps|tenor|triangle|bellTree|woodBlock|shaker|sleigh)/)) return 'perc';
     if (t(/^chorusWomen/)) return 'women'; if (t(/^chorusMen/)) return 'men'; if (t(/^cantor/)) return 'cantor'; if (t(/^(chorus|choir)/)) return m >= 60 ? 'women' : 'men';
-    if (t(/^organ/)) return 'organ';
+    if (t(/^organ/)) return 'organ'; if (t(/^(pad|subBass$)/) || !smp) return 'synth';
     return 'back';
   }
   const ROOM = { w: 16, back: 19, h: 16 }, LIS = [0, -12, 1.2], C_SND = 343, R_REF = 15;
@@ -1604,11 +1604,11 @@
       const o = this.stretch === 1 || !ev.o || !ev.o.dur ? ev.o : Object.assign({}, ev.o, { dur: ev.o.dur * this.stretch });
       const o2 = o && o.vib !== 0 && ev.v === 'sample' && this.def && this.def.bpm ? Object.assign({}, o, { vibRate: vibRateFor(this.bpmNow ? this.bpmNow(T) : this.def.bpm) }) : o;
       let dest = L.in, o3 = o2;
-      if (this.def.seating && o2 && o2.smp) {   // the concert stage: the recording plays from its seat
+      if (this.def.seating && o2 && (o2.smp || ev.v === 'pluck' || ev.v === 'pad' || ev.v === 'brass')) {   // the concert stage: the recording (or the synthesizer) plays from its place
         // a melodic line stays with its player: seated once, by its first note (the register split is for the chords of an ensemble recording)
         const line = /^(lead|bell)/.test(ev.k || ''), ps = this.partSeat || (this.partSeat = {}), pk = (ev.k || '') + '|' + o2.smp;
-        const key = line ? (ps[pk] || (ps[pk] = /^strEns/.test(o2.smp) ? (ev.m >= 55 ? 'vln1' : 'vc') : /^(chorus$|choirOoh|choirHum)/.test(o2.smp) ? (ev.m >= 62 ? 'women' : 'men') : seatOf(o2.smp, ev.m))) : seatOf(o2.smp, ev.m);
-        dest = this.seatStrip(ev.ly, L, key, A.Samples && A.Samples.wet ? A.Samples.wet(o2.smp) : 'room'); o3 = Object.assign({}, o2, { humT: num(this.def.ensemble, 1), humP: num(this.def.pitchSpread, 1), pan: 0, width: Math.min(num(o2.width, 1), SEATS[key][2] * num(this.def.seating.width, 1)) });
+        const key = !o2.smp ? 'synth' : line ? (ps[pk] || (ps[pk] = /^strEns/.test(o2.smp) ? (ev.m >= 55 ? 'vln1' : 'vc') : /^(chorus$|choirOoh|choirHum)/.test(o2.smp) ? (ev.m >= 62 ? 'women' : 'men') : seatOf(o2.smp, ev.m))) : seatOf(o2.smp, ev.m);
+        dest = this.seatStrip(ev.ly, L, key, !o2.smp ? 'room' : A.Samples && A.Samples.wet ? A.Samples.wet(o2.smp) : 'room'); o3 = Object.assign({}, o2, { humT: num(this.def.ensemble, 1), humP: num(this.def.pitchSpread, 1), pan: 0, width: key === 'synth' ? 1 : Math.min(num(o2.width, 1), SEATS[key][2] * num(this.def.seating.width, 1)) });
       }
       const v = V[ev.v](this.eng, dest, T, o3);
       if (v) this.live.add(v);
