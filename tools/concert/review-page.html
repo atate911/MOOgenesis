@@ -1,0 +1,239 @@
+<title>Symphonic Score Review</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Condensed:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&family=Marcellus+SC&display=swap">
+<style>
+/* Layout: one listening room, the same room as the last review. Groups of chamfered piece rows, and a transport pinned to the bottom edge
+   whose centre is the A/B switch: the published game and the symphonic score, the same moment in both, at matched loudness. */
+:root {
+  --void: #0c0f22;
+  --glow: #1a2152;
+  --panel: #151a3a;
+  --panel-hi: #1e2652;
+  --brass: #c8a65a;
+  --brass-dim: #6f5f3a;
+  --ivory: #ece6d3;
+  --ivory-dim: #aaa690;
+  --cyan: #74d3e2;
+  --font-display: 'Marcellus SC', 'Palatino Linotype', Georgia, serif;
+  --font-body: 'IBM Plex Sans Condensed', 'Arial Narrow', 'Roboto Condensed', system-ui, sans-serif;
+  --font-mono: 'IBM Plex Mono', ui-monospace, 'SFMono-Regular', Menlo, monospace;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body {
+  background-color: var(--void);
+  background-image: radial-gradient(1100px 520px at 75% -8%, var(--glow) 0%, transparent 62%);
+  background-repeat: no-repeat;
+  color: var(--ivory);
+  font-family: var(--font-body);
+  font-size: 16px;
+  line-height: 1.5;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 32px 200px;
+}
+.wrap { max-width: 860px; margin: 0 auto; }
+.eyebrow { font-size: 0.78rem; letter-spacing: 0.16em; text-transform: uppercase; color: var(--brass); margin: 0 0 10px; }
+h1 { font-family: var(--font-display); font-weight: 400; font-size: clamp(2rem, 6vw, 3.1rem); line-height: 1.08; letter-spacing: 0.03em; margin: 0 0 14px; text-wrap: balance; }
+.lead { max-width: 64ch; margin: 0; color: var(--ivory-dim); }
+.lead b { color: var(--ivory); font-weight: 500; }
+.warn { margin-top: 14px; color: var(--brass); max-width: 62ch; }
+.facts { display: flex; flex-wrap: wrap; gap: 8px 28px; margin: 22px 0 0; padding: 0; list-style: none; font-family: var(--font-mono); font-size: 0.8rem; color: var(--ivory-dim); font-variant-numeric: tabular-nums; }
+.facts b { font-family: var(--font-display); font-weight: 400; font-size: 1.35rem; color: var(--brass); margin-right: 6px; }
+.legend { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 6px 12px; margin: 22px 0 0; max-width: 70ch; font-size: 0.9rem; color: var(--ivory-dim); align-items: baseline; }
+section { margin-top: 40px; }
+h2 { font-family: var(--font-display); font-weight: 400; font-size: 1.4rem; letter-spacing: 0.06em; margin: 0 0 14px; border-bottom: 1px solid var(--brass-dim); padding-bottom: 8px; display: flex; justify-content: space-between; align-items: baseline; gap: 12px; text-wrap: balance; }
+h2 small { font-family: var(--font-mono); font-size: 0.75rem; letter-spacing: 0.04em; color: var(--ivory-dim); white-space: nowrap; }
+.list { display: grid; gap: 10px; }
+.mv { --c: 12px; background: var(--brass-dim); padding: 1px; clip-path: polygon(var(--c) 0, 100% 0, 100% calc(100% - var(--c)), calc(100% - var(--c)) 100%, 0 100%, 0 var(--c)); }
+.mv-in { --c2: 11px; display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 2px 16px; align-items: center; background: var(--panel); padding: 12px 16px 12px 12px;
+  clip-path: polygon(var(--c2) 0, 100% 0, 100% calc(100% - var(--c2)), calc(100% - var(--c2)) 100%, 0 100%, 0 var(--c2)); }
+.mv.on { background: var(--brass); }
+.mv.on .mv-in { background: var(--panel-hi); }
+.pb { width: 46px; height: 46px; display: grid; place-items: center; grid-row: 1 / span 2; background: transparent; color: var(--brass); border: 0; cursor: pointer; padding: 0;
+  clip-path: polygon(8px 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%, 0 8px); position: relative; }
+.pb::before { content: ""; position: absolute; inset: 0; background: var(--brass-dim); clip-path: inherit; }
+.pb::after { content: ""; position: absolute; inset: 1px; background: var(--panel); clip-path: polygon(7px 0, 100% 0, 100% calc(100% - 7px), calc(100% - 7px) 100%, 0 100%, 0 7px); }
+.pb svg { position: relative; z-index: 1; }
+.pb:hover::after, .on .pb::after { background: var(--brass); }
+.pb:hover, .on .pb { color: var(--void); }
+button:focus-visible, input:focus-visible { outline: 2px solid var(--cyan); outline-offset: 2px; }
+h3 { font-family: var(--font-display); font-weight: 400; font-size: 1.2rem; letter-spacing: 0.04em; margin: 0; line-height: 1.2; text-wrap: balance; min-width: 0; }
+.line { grid-column: 2; color: var(--ivory-dim); font-size: 0.92rem; margin: 0; min-width: 0; }
+.line .was { display: block; margin-top: 4px; font-size: 0.82rem; color: var(--brass-dim); }
+.meta { grid-column: 3; grid-row: 1 / span 2; text-align: right; font-family: var(--font-mono); font-size: 0.78rem; color: var(--ivory-dim); font-variant-numeric: tabular-nums; display: grid; gap: 4px; justify-items: end; }
+.tag { font-size: 0.68rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--cyan); border: 1px solid currentColor; padding: 0 5px; line-height: 1.5; white-space: nowrap; }
+.tag.new { color: var(--brass); }
+.sync { font-size: 0.68rem; color: var(--ivory-dim); white-space: nowrap; }
+.bar { position: fixed; left: 0; right: 0; bottom: 0; z-index: 5; background: rgba(12, 15, 34, 0.96); border-top: 1px solid var(--brass-dim);
+  padding: 12px max(16px, env(safe-area-inset-right, 0px)) calc(12px + env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px)); }
+.bar-in { max-width: 860px; margin: 0 auto; display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 8px 16px; align-items: center; }
+.ctl { display: flex; gap: 6px; align-items: center; }
+.ib { width: 40px; height: 40px; display: grid; place-items: center; background: var(--panel); color: var(--ivory); border: 1px solid var(--brass-dim); cursor: pointer; padding: 0; }
+.ib.big { width: 48px; height: 48px; background: var(--brass); color: var(--void); border-color: var(--brass); }
+.now { min-width: 0; }
+.now-t { font-family: var(--font-display); letter-spacing: 0.04em; font-size: 1.05rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.now-s { font-family: var(--font-mono); font-size: 0.72rem; color: var(--brass); min-height: 1.1em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.seek { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 10px; align-items: center; font-family: var(--font-mono); font-size: 0.78rem; color: var(--ivory-dim); font-variant-numeric: tabular-nums; }
+input[type=range] { width: 100%; accent-color: var(--brass); margin: 0; }
+.ab { display: grid; grid-template-columns: 1fr 1fr; border: 1px solid var(--brass-dim); }
+.ab button { font-family: var(--font-body); font-size: 0.86rem; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; background: transparent; color: var(--ivory-dim); border: 0; padding: 8px 12px; cursor: pointer; display: grid; line-height: 1.15; text-align: center; }
+.ab button small { font-family: var(--font-mono); font-weight: 400; letter-spacing: 0.02em; text-transform: none; font-size: 0.7rem; }
+.ab button[aria-pressed=true] { background: var(--brass); color: var(--void); }
+.ab-wrap { display: grid; gap: 4px; justify-items: stretch; }
+.vol { display: flex; gap: 8px; align-items: center; font-size: 0.75rem; color: var(--ivory-dim); }
+.vol input { width: 90px; }
+@media (max-width: 640px) {
+  .bar-in { grid-template-columns: minmax(0, 1fr) auto; }
+  .ctl { grid-row: 2; }
+  .now { grid-column: 1 / -1; }
+  .vol { display: none; }
+  .mv-in { grid-template-columns: auto minmax(0, 1fr); }
+  .meta { grid-column: 2; grid-row: auto; justify-items: start; text-align: left; display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+}
+@media (prefers-reduced-motion: no-preference) { .mv, .mv-in, .pb::after { transition: background-color 0.15s; } }
+</style>
+
+<div class="wrap">
+  <p class="eyebrow">Master of Orion &middot; Reborn &middot; the symphonic score</p>
+  <h1>Symphonic Score Review</h1>
+  <p class="lead">Every piece rewritten or ported so far, side by side with the game as it is published now. <b>A</b> is the published game, rendered from the main branch. <b>B</b> is the new symphonic score: the concert stage, the recorded hall, each section in its own register and balanced under the tune. Both play the same course at matched loudness. Switch while a piece plays, with the buttons at the bottom or the <b>A</b> and <b>B</b> keys. Space plays and pauses.</p>
+  <p class="warn" id="warn" hidden>This browser can't play the Opus audio these recordings use. Chrome, Edge, Firefox and Safari 17 or newer can.</p>
+  <ul class="facts" id="facts"></ul>
+  <div class="legend">
+    <span class="tag new">Rewritten</span><span>Recomposed for the new sound: a new form, new lines and counter-melodies.</span>
+    <span class="tag">Ported</span><span>The same composition, re-orchestrated, re-voiced and re-balanced for the new sound.</span>
+    <span class="sync">in step</span><span>The two follow the same bars, so a switch lands on the same moment in the music.</span>
+    <span class="sync">same time</span><span>The forms differ, so a switch lands on the same clock time.</span>
+  </div>
+  <div id="groups"></div>
+</div>
+
+<div class="bar" role="region" aria-label="Player">
+  <div class="bar-in">
+    <div class="ctl">
+      <button class="ib" id="prev" aria-label="Previous piece"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M6 5h2v14H6zM20 5v14L9 12z" fill="currentColor"/></svg></button>
+      <button class="ib big" id="play" aria-label="Play"></button>
+      <button class="ib" id="next" aria-label="Next piece"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M16 5h2v14h-2zM4 5v14l11-7z" fill="currentColor"/></svg></button>
+    </div>
+    <div class="now">
+      <div class="now-t" id="nowT">Choose a piece</div>
+      <div class="now-s" id="nowS"></div>
+      <div class="seek"><span id="tCur">0:00</span><input type="range" id="seek" min="0" max="1000" value="0" aria-label="Position"><span id="tDur">0:00</span></div>
+    </div>
+    <div class="ab-wrap">
+      <div class="ab" role="group" aria-label="Version">
+        <button id="abA" aria-pressed="false"><span>A</span><small>published</small></button>
+        <button id="abB" aria-pressed="true"><span>B</span><small>symphonic</small></button>
+      </div>
+      <div class="vol"><label for="vol">Volume</label><input type="range" id="vol" min="0" max="100" value="85"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function () {
+  'use strict';
+  var DATA = /*DATA*/null;
+  var GROUPS = DATA.groups, TRACKS = DATA.tracks, byId = {};
+  TRACKS.forEach(function (t, i) { t.i = i; byId[t.id] = t; });
+  var PLAY = '<svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="M7 4v16l13-8z" fill="currentColor"/></svg>';
+  var PAUSE = '<svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="M6 4h4v16H6zM14 4h4v16h-4z" fill="currentColor"/></svg>';
+  var $ = function (id) { return document.getElementById(id); };
+  var fmt = function (s) { s = Math.max(0, Math.round(s || 0)); return Math.floor(s / 60) + ':' + ('0' + s % 60).slice(-2); };
+  var esc = function (s) { return String(s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); };
+
+  var probe = document.createElement('audio');
+  if (!probe.canPlayType('audio/webm; codecs="opus"')) $('warn').hidden = false;
+
+  // the facts
+  var total = 0, nRe = 0; TRACKS.forEach(function (t) { total += t.b.secs; if (t.kind === 'rewritten') nRe++; });
+  $('facts').innerHTML = '<li><b>' + TRACKS.length + '</b>pieces</li><li><b>' + nRe + '</b>rewritten</li><li><b>' + (TRACKS.length - nRe) + '</b>ported</li><li><b>' + Math.round(total / 60) + '</b>minutes of the new score</li>';
+
+  // the rows
+  var html = '';
+  GROUPS.forEach(function (g) {
+    html += '<section><h2>' + esc(g.name) + '<small>' + g.ids.length + (g.ids.length === 1 ? ' piece' : ' pieces') + '</small></h2><div class="list">';
+    g.ids.forEach(function (id) {
+      var t = byId[id];
+      html += '<div class="mv" id="row-' + t.i + '"><div class="mv-in"><button class="pb" data-i="' + t.i + '" aria-label="Play ' + esc(t.title) + '">' + PLAY + '</button>' +
+        '<h3>' + esc(t.title) + '</h3><p class="line">' + esc(t.line) + (t.was ? '<span class="was">Published: ' + esc(t.was) + '</span>' : '') + '</p>' +
+        '<div class="meta"><span>' + fmt(t.b.secs) + '</span><span class="tag' + (t.kind === 'rewritten' ? ' new' : '') + '">' + t.kind + '</span><span class="sync">' + (t.map ? 'in step' : 'same time') + '</span></div></div></div>';
+    });
+    html += '</div></section>';
+  });
+  $('groups').innerHTML = html;
+
+  // the player: one audio element per side, only the chosen one sounding
+  var el = { a: new Audio(), b: new Audio() }, side = 'b', cur = -1, playing = false, dragging = false;
+  el.a.preload = el.b.preload = 'auto';
+  var volume = function () { return +$('vol').value / 100; };
+  function gains(t) {   // matched loudness: the louder side is brought down to the quieter
+    var target = Math.min(t.a.lufs, t.b.lufs);
+    el.a.volume = Math.min(1, Math.pow(10, (target - t.a.lufs) / 20) * volume());
+    el.b.volume = Math.min(1, Math.pow(10, (target - t.b.lufs) / 20) * volume());
+  }
+  function mapTime(t, from, to, x) {   // a time in one version to the same moment in the other (piecewise linear through the bar lines)
+    var m = t.map, fi = from === 'a' ? 0 : 1, ti = 1 - fi;
+    if (!m) return Math.min(x, t[to].secs - 0.5);
+    if (x <= m[0][fi]) return m[0][ti] + (x - m[0][fi]);
+    for (var k = 1; k < m.length; k++) if (x <= m[k][fi]) { var p = m[k - 1], q = m[k], f = (x - p[fi]) / Math.max(1e-6, q[fi] - p[fi]); return p[ti] + f * (q[ti] - p[ti]); }
+    var last = m[m.length - 1]; return Math.min(last[ti] + (x - last[fi]), t[to].secs - 0.5);
+  }
+  function sectionAt(t, s, x) { var secs = t[s].sections, n = ''; for (var k = 0; k < secs.length; k++) if (x >= secs[k].t - 0.05) n = secs[k].n; return n; }
+  function paint() {
+    $('play').innerHTML = playing ? PAUSE : PLAY; $('play').setAttribute('aria-label', playing ? 'Pause' : 'Play');
+    document.querySelectorAll('.mv').forEach(function (r) { r.classList.remove('on'); });
+    document.querySelectorAll('.pb').forEach(function (b) { b.innerHTML = PLAY; });
+    if (cur >= 0) { var r = $('row-' + cur); r.classList.add('on'); if (playing) r.querySelector('.pb').innerHTML = PAUSE; }
+    $('abA').setAttribute('aria-pressed', side === 'a'); $('abB').setAttribute('aria-pressed', side === 'b');
+  }
+  function load(i, autoplay) {
+    el.a.pause(); el.b.pause();
+    cur = i; var t = TRACKS[i];
+    el.a.src = t.a.src; el.b.src = t.b.src; gains(t);
+    $('nowT').textContent = t.title; $('tDur').textContent = fmt(t[side].secs);
+    playing = false; paint();
+    if (autoplay) play();
+  }
+  function play() { if (cur < 0) { load(0, true); return; } el[side].play().then(function () { playing = true; paint(); }).catch(function () { playing = false; paint(); }); }
+  function pause() { el[side].pause(); playing = false; paint(); }
+  function choose(s) {
+    if (s === side) return;
+    if (cur < 0) { side = s; paint(); return; }
+    var t = TRACKS[cur], x = el[side].currentTime, to = el[s];
+    to.currentTime = Math.max(0, mapTime(t, side, s, x));
+    var was = playing; el[side].pause(); side = s; $('tDur').textContent = fmt(t[side].secs);
+    if (was) to.play().then(function () { playing = true; paint(); }).catch(function () { playing = false; paint(); }); else paint();
+  }
+  ['a', 'b'].forEach(function (s) {
+    el[s].addEventListener('timeupdate', function () {
+      if (s !== side || cur < 0) return; var t = TRACKS[cur], x = el[s].currentTime, d = t[s].secs;
+      $('tCur').textContent = fmt(x); if (!dragging) $('seek').value = Math.round(1000 * x / d);
+      $('nowS').textContent = (s === 'a' ? 'A · published · ' : 'B · symphonic · ') + sectionAt(t, s, x);
+    });
+    el[s].addEventListener('ended', function () { if (s === side) { playing = false; paint(); } });
+  });
+  document.addEventListener('click', function (e) {
+    var b = e.target.closest('.pb'); if (!b) return; var i = +b.dataset.i;
+    if (i === cur) { playing ? pause() : play(); } else load(i, true);
+  });
+  $('play').onclick = function () { playing ? pause() : play(); };
+  $('prev').onclick = function () { load(cur <= 0 ? TRACKS.length - 1 : cur - 1, playing); };
+  $('next').onclick = function () { load((cur + 1) % TRACKS.length, playing); };
+  $('abA').onclick = function () { choose('a'); };
+  $('abB').onclick = function () { choose('b'); };
+  $('vol').oninput = function () { if (cur >= 0) gains(TRACKS[cur]); };
+  $('seek').addEventListener('input', function () { dragging = true; if (cur >= 0) $('tCur').textContent = fmt(+this.value / 1000 * TRACKS[cur][side].secs); });
+  $('seek').addEventListener('change', function () { dragging = false; if (cur >= 0) el[side].currentTime = +this.value / 1000 * TRACKS[cur][side].secs; });
+  document.addEventListener('keydown', function (e) {
+    if (e.target.matches('input, textarea') && e.target.type !== 'range') return;
+    var k = e.key.toLowerCase();
+    if (k === 'a') choose('a'); else if (k === 'b') choose('b');
+    else if (k === ' ') { e.preventDefault(); playing ? pause() : play(); }
+  });
+  paint();
+})();
+</script>
