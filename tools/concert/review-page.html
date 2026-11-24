@@ -82,6 +82,11 @@ input[type=range] { width: 100%; accent-color: var(--brass); margin: 0; }
 .ab button { font-family: var(--font-body); font-size: 0.86rem; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; background: transparent; color: var(--ivory-dim); border: 0; padding: 8px 12px; cursor: pointer; display: grid; line-height: 1.15; text-align: center; }
 .ab button small { font-family: var(--font-mono); font-weight: 400; letter-spacing: 0.02em; text-transform: none; font-size: 0.7rem; }
 .ab button[aria-pressed=true] { background: var(--brass); color: var(--void); }
+.ab button:disabled { opacity: 0.35; cursor: default; }
+.mv.wait { opacity: 0.55; }
+.mv.wait .pb { cursor: default; }
+.pb:disabled:hover::after { background: var(--panel); }
+.pb:disabled:hover { color: var(--brass); }
 .ab-wrap { display: grid; gap: 4px; justify-items: stretch; }
 .vol { display: flex; gap: 8px; align-items: center; font-size: 0.75rem; color: var(--ivory-dim); }
 .vol input { width: 90px; }
@@ -149,8 +154,8 @@ input[type=range] { width: 100%; accent-color: var(--brass); margin: 0; }
   if (!probe.canPlayType('audio/webm; codecs="opus"')) $('warn').hidden = false;
 
   // the facts
-  var total = 0, nRe = 0; TRACKS.forEach(function (t) { total += t.b.secs; if (t.kind === 'rewritten') nRe++; });
-  $('facts').innerHTML = '<li><b>' + TRACKS.length + '</b>pieces</li><li><b>' + nRe + '</b>rewritten</li><li><b>' + (TRACKS.length - nRe) + '</b>ported</li><li><b>' + Math.round(total / 60) + '</b>minutes of the new score</li>';
+  var total = 0, nRe = 0, nReady = 0; TRACKS.forEach(function (t) { if (t.b) total += t.b.secs; if (t.kind === 'rewritten') nRe++; if (t.a && t.b) nReady++; });
+  $('facts').innerHTML = '<li><b>' + TRACKS.length + '</b>pieces</li><li><b>' + nRe + '</b>rewritten</li><li><b>' + (TRACKS.length - nRe) + '</b>ported</li><li><b>' + Math.round(total / 60) + '</b>minutes of the new score so far</li>' + (nReady < TRACKS.length ? '<li><b>' + (TRACKS.length - nReady) + '</b>still rendering</li>' : '');
 
   // the rows
   var html = '';
@@ -158,9 +163,10 @@ input[type=range] { width: 100%; accent-color: var(--brass); margin: 0; }
     html += '<section><h2>' + esc(g.name) + '<small>' + g.ids.length + (g.ids.length === 1 ? ' piece' : ' pieces') + '</small></h2><div class="list">';
     g.ids.forEach(function (id) {
       var t = byId[id];
-      html += '<div class="mv" id="row-' + t.i + '"><div class="mv-in"><button class="pb" data-i="' + t.i + '" aria-label="Play ' + esc(t.title) + '">' + PLAY + '</button>' +
+      var ready = t.a || t.b;
+      html += '<div class="mv' + (ready ? '' : ' wait') + '" id="row-' + t.i + '"><div class="mv-in"><button class="pb" data-i="' + t.i + '" aria-label="Play ' + esc(t.title) + '"' + (ready ? '' : ' disabled') + '>' + PLAY + '</button>' +
         '<h3>' + esc(t.title) + '</h3><p class="line">' + esc(t.line) + (t.was ? '<span class="was">Published: ' + esc(t.was) + '</span>' : '') + '</p>' +
-        '<div class="meta"><span>' + fmt(t.b.secs) + '</span><span class="tag' + (t.kind === 'rewritten' ? ' new' : '') + '">' + t.kind + '</span><span class="sync">' + (t.map ? 'in step' : 'same time') + '</span></div></div></div>';
+        '<div class="meta"><span>' + (t.b ? fmt(t.b.secs) : '') + '</span><span class="tag' + (t.kind === 'rewritten' ? ' new' : '') + '">' + t.kind + '</span><span class="sync">' + (!(t.a && t.b) ? (t.a || t.b ? 'rendering ' + (t.a ? 'B' : 'A') : 'rendering') : t.map ? 'in step' : 'same time') + '</span></div></div></div>';
     });
     html += '</div></section>';
   });
@@ -171,9 +177,9 @@ input[type=range] { width: 100%; accent-color: var(--brass); margin: 0; }
   el.a.preload = el.b.preload = 'auto';
   var volume = function () { return +$('vol').value / 100; };
   function gains(t) {   // matched loudness: the louder side is brought down to the quieter
-    var target = Math.min(t.a.lufs, t.b.lufs);
-    el.a.volume = Math.min(1, Math.pow(10, (target - t.a.lufs) / 20) * volume());
-    el.b.volume = Math.min(1, Math.pow(10, (target - t.b.lufs) / 20) * volume());
+    var target = Math.min(t.a ? t.a.lufs : 99, t.b ? t.b.lufs : 99);
+    if (t.a) el.a.volume = Math.min(1, Math.pow(10, (target - t.a.lufs) / 20) * volume());
+    if (t.b) el.b.volume = Math.min(1, Math.pow(10, (target - t.b.lufs) / 20) * volume());
   }
   function mapTime(t, from, to, x) {   // a time in one version to the same moment in the other (piecewise linear through the bar lines)
     var m = t.map, fi = from === 'a' ? 0 : 1, ti = 1 - fi;
@@ -189,20 +195,23 @@ input[type=range] { width: 100%; accent-color: var(--brass); margin: 0; }
     document.querySelectorAll('.pb').forEach(function (b) { b.innerHTML = PLAY; });
     if (cur >= 0) { var r = $('row-' + cur); r.classList.add('on'); if (playing) r.querySelector('.pb').innerHTML = PAUSE; }
     $('abA').setAttribute('aria-pressed', side === 'a'); $('abB').setAttribute('aria-pressed', side === 'b');
+    var t = cur >= 0 ? TRACKS[cur] : null; $('abA').disabled = !!t && !t.a; $('abB').disabled = !!t && !t.b;
   }
   function load(i, autoplay) {
     el.a.pause(); el.b.pause();
     cur = i; var t = TRACKS[i];
-    el.a.src = t.a.src; el.b.src = t.b.src; gains(t);
+    if (!t[side]) side = t.a ? 'a' : 'b';
+    el.a.removeAttribute('src'); el.b.removeAttribute('src'); if (t.a) el.a.src = t.a.src; if (t.b) el.b.src = t.b.src; gains(t);
     $('nowT').textContent = t.title; $('tDur').textContent = fmt(t[side].secs);
     playing = false; paint();
     if (autoplay) play();
   }
-  function play() { if (cur < 0) { load(0, true); return; } el[side].play().then(function () { playing = true; paint(); }).catch(function () { playing = false; paint(); }); }
+  function play() { if (cur < 0) { var f = TRACKS.findIndex(function (t) { return t.a || t.b; }); if (f >= 0) load(f, true); return; } el[side].play().then(function () { playing = true; paint(); }).catch(function () { playing = false; paint(); }); }
   function pause() { el[side].pause(); playing = false; paint(); }
   function choose(s) {
     if (s === side) return;
     if (cur < 0) { side = s; paint(); return; }
+    if (!TRACKS[cur][s]) return;
     var t = TRACKS[cur], x = el[side].currentTime, to = el[s];
     to.currentTime = Math.max(0, mapTime(t, side, s, x));
     var was = playing; el[side].pause(); side = s; $('tDur').textContent = fmt(t[side].secs);
@@ -217,12 +226,13 @@ input[type=range] { width: 100%; accent-color: var(--brass); margin: 0; }
     el[s].addEventListener('ended', function () { if (s === side) { playing = false; paint(); } });
   });
   document.addEventListener('click', function (e) {
-    var b = e.target.closest('.pb'); if (!b) return; var i = +b.dataset.i;
+    var b = e.target.closest('.pb'); if (!b || b.disabled) return; var i = +b.dataset.i;
     if (i === cur) { playing ? pause() : play(); } else load(i, true);
   });
   $('play').onclick = function () { playing ? pause() : play(); };
-  $('prev').onclick = function () { load(cur <= 0 ? TRACKS.length - 1 : cur - 1, playing); };
-  $('next').onclick = function () { load((cur + 1) % TRACKS.length, playing); };
+  function step(d) { var i = cur; for (var k = 0; k < TRACKS.length; k++) { i = (i + d + TRACKS.length) % TRACKS.length; if (TRACKS[i].a || TRACKS[i].b) { load(i, playing); return; } } }
+  $('prev').onclick = function () { step(-1); };
+  $('next').onclick = function () { step(1); };
   $('abA').onclick = function () { choose('a'); };
   $('abB').onclick = function () { choose('b'); };
   $('vol').oninput = function () { if (cur >= 0) gains(TRACKS[cur]); };

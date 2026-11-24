@@ -40,20 +40,24 @@ def bars_map(a, b):
   pts.append([a['first'], b['first']])
   return [[round(p, 3), round(q, 3)] for p, q in pts]
 tracks, groups, files = [], [], {}
+DESCS = json.load(open(os.path.join(OUT, 'descs.json'))) if os.path.exists(os.path.join(OUT, 'descs.json')) else {'a': {}, 'b': {}}
 for gname, ids in GROUPS:
-  have = []
   for i in ids:
-    pa, pb = os.path.join(OUT, 'a', fname(i) + '.json'), os.path.join(OUT, 'b', fname(i) + '.json')
-    if not (os.path.exists(pa) and os.path.exists(pb)): print('missing', i); continue
-    a, b = json.load(open(pa)), json.load(open(pb))
-    t = {'id': i, 'title': TITLES.get(i, i), 'kind': 'rewritten' if i in REWRITTEN else 'ported', 'line': tidy(b['desc']),
-         'was': tidy(a['desc']) if i in REWRITTEN and a['desc'] != b['desc'] else '', 'map': bars_map(a, b)}
-    for s, d in (('a', a), ('b', b)):
+    side = {}
+    for s in ('a', 'b'):
+      pj = os.path.join(OUT, s, fname(i) + '.json')
+      side[s] = json.load(open(pj)) if os.path.exists(pj) else None   # not rendered yet: the row says so
+    da, db = DESCS['a'].get(i, ''), DESCS['b'].get(i, '')
+    t = {'id': i, 'title': TITLES.get(i, i), 'kind': 'rewritten' if i in REWRITTEN else 'ported', 'line': tidy(db),
+         'was': tidy(da) if i in REWRITTEN and da and da != db else '', 'map': bars_map(side['a'], side['b']) if side['a'] and side['b'] else None}
+    for s in ('a', 'b'):
+      d = side[s]
+      if not d: t[s] = None; continue
       t[s] = {'src': 'audio/%s/%s.webm' % (s, fname(i)), 'secs': round(d['secs'], 2), 'lufs': round(d['lufs'], 2), 'sections': d['sections']}
       files['audio/%s/%s.webm' % (s, fname(i))] = os.path.join(OUT, s, fname(i) + '.webm')
-    tracks.append(t); have.append(i)
-  if have: groups.append({'name': gname, 'ids': have})
+    tracks.append(t)
+  groups.append({'name': gname, 'ids': ids})
 page = open(os.path.join(HERE, 'review-page.html')).read().replace('/*DATA*/null', json.dumps({'groups': groups, 'tracks': tracks}, separators=(',', ':')))
 open(os.path.join(OUT, 'index.html'), 'w').write(page)
 json.dump(files, open(os.path.join(OUT, 'files.json'), 'w'), indent=0)
-print('%d pieces, %d in step; page %d KB; audio %.0f MB' % (len(tracks), sum(1 for t in tracks if t['map']), len(page) // 1024, sum(os.path.getsize(f) for f in files.values()) / 1e6))
+print('%d pieces, %d ready, %d in step; page %d KB; audio %.0f MB' % (len(tracks), sum(1 for t in tracks if t['a'] and t['b']), sum(1 for t in tracks if t['map']), len(page) // 1024, sum(os.path.getsize(f) for f in files.values()) / 1e6))
