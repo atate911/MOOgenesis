@@ -989,10 +989,12 @@
   // a countermelody drawn from the harmony against the tune already written in the section (ph: '@counter'): where the tune moves the
   // counter holds a chord tone, joined smoothly to its last; where the tune holds or rests it moves, in quarter notes through the chord's
   // tones, against the tune's last direction; never the tune's own pitch, never a clash (chord tones only). The horns' answering line
-  // under a march, the strings' moving line under a held melody.
+  // under a march, the strings' moving line under a held melody. `fwd` (a gain, 1 by default) brings the counter forward where it fits:
+  // on its notes that fall while the tune holds or rests (no note of the tune starting with them), so it answers in the tune's gaps and
+  // stays under the tune's own entries.
   function genCounter(C, s, spec, key, ly, inst) {
     const segs = s.R.segs || []; if (!segs.length) return;
-    const end = segs[segs.length - 1].b1, reg = spec.reg || [53, 72], vel0 = num(spec.vel, 0.55);
+    const end = segs[segs.length - 1].b1, reg = spec.reg || [53, 72], vel0 = num(spec.vel, 0.55), fwd = num(spec.fwd, 1);
     const tune = C.ev.filter(e => e.k === 'lead' && e.m && e.b >= s.start - 1e-6 && e.b < s.start + end).sort((a, b) => a.b - b.b);
     const tuneAt = b => { let m = null; for (const e of tune) { if (e.b <= b + 1e-6 && e.b + e.bt > b) m = e.m; if (e.b > b) break; } return m; };
     let prev = Math.round((reg[0] + reg[1]) / 2), dir = 1;
@@ -1012,7 +1014,8 @@
         for (let b = 0; b < len - 1e-6; b += 1) {
           const want = prev + dir * 3, m = pick(sg.ch, want, s.start + b0 + b, prev); if (m === null) continue;
           if (m >= reg[1] - 1) dir = -1; else if (m <= reg[0] + 1) dir = 1;
-          emit(C, ly, inst, s.start + b0 + b, m, Math.min(1, len - b), vel0 * (b === 0 ? 1 : 0.9), { art: 0.92, pan: spec.pan }); prev = m;
+          const at = s.start + b0 + b, gap = fwd !== 1 && !tune.some(e => Math.abs(e.b - at) < 0.26);
+          emit(C, ly, inst, at, m, Math.min(1, len - b), vel0 * (b === 0 ? 1 : 0.9) * (gap ? fwd : 1), { art: 0.92, pan: spec.pan }); prev = m;
         }
       }
     }

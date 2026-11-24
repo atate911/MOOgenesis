@@ -60,12 +60,16 @@
   // measured against it band by band: the published master lifted the lows (a shelf at 55 Hz, the low band's lift, the piece's own
   // shelf) and held 160-450 Hz down with a band compressor and a cut at 220 Hz; the clean master has neither, so the piece's tone gives
   // the shelf back (lo), takes the 160-250 Hz build-up of the deep cellos and the men down (body) and carries the sine a half louder.
+  const COUNTER = { A: [1.6, 1.4], I1: [1.0, 1.3], A2: [1.3, 1.4] };   // by section: [the line's gain, its gain in the tune's gaps]
   const ORIG_TONE = { lo: 3.5, body: -5, mud: 2.5, pres: 3, presHz: 2500, presQ: 0.6, hi: 4 };
   // [published id, its id here, trim (the symphonic score's level), the low shelf (the grand reading's published master lifted its lows 2 dB more), the sine's gain]
   for (const [id, as, trim, lo, sub] of [['title', 'title:original', 0.73, 3.5, 1.35], ['title:grand', 'title:grand:original', 0.83, 5.5, 1.5]]) {
     const d = T(id); d.hidden = true; d.variantOf = 'title'; d.keepLow = true; d.symTone = Object.assign({}, ORIG_TONE, { lo }); delete d.accept;
     d.subBass = Math.min(1.5, (d.subBass === undefined ? 0.67 : d.subBass) * sub); d.trim = (d.trim === undefined ? 1 : d.trim) * trim;
     d.desc = 'The published ' + (id === 'title' ? 'main theme' : 'main theme, grand reading') + ', as written, on the concert stage through the symphonic master (its own sub and low registers kept)';
+    // the grand reading's countermelodies brought forward (they sat 6 to 10 LU under the tune): the whole line up, and its notes in the
+    // tune's gaps more (fwd) — the cellos under the cor anglais, the horns under the violins' interlude, the cellos under the trumpets
+    if (id === 'title:grand') for (const sec of d.sec) { const c = sec.bell2, k = COUNTER[sec.n]; if (c && c.ph === '@counter' && k) { c.vel = (c.vel === undefined ? 0.55 : c.vel) * k[0]; c.fwd = k[1]; } }
     Track(as, d);
   }
   const TP = Music._tracks.title.ph;   // the title's phrases (the commonwealth's tune, the interlude, the rise, the resolution)
