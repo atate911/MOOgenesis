@@ -469,9 +469,11 @@
     try { if (M.Perf && (M.Perf.tier === 'low' || M.Perf.tier === 'medium') && def.seating && !def.seatingAlways) delete def.seating; } catch (e) { /* ignore */ }   // the stage costs a fifth more of the audio thread: the high and ultra tiers (a crossfade plays two pieces at once)
     def.tone = Object.assign({}, def.symTone || SYM_TONE);
     def.lowBand = 0;
-    def.subBass = Math.min(num(def.subBass, 0.4), 0.45);
+    const keepLow = !!def.keepLow;   // a piece that keeps its own low end (the published main theme's sub and deep registers): the stage, the tuning, the ensemble and the clean master, without the register plan or the lighter sub
+    if (!keepLow) def.subBass = Math.min(num(def.subBass, 0.4), 0.45);
     def.lowMono = Object.assign({ lead: 250, arp: 200, bell: 250, drums: 200 }, ORCH_LOWMONO, def.lowMono || {});   // (the drums to 200 Hz: a timpani's fundamentals)   // every layer's low end centred: a line in a seat (the cellos on the right) panned its fundamentals too
     for (const sec of def.sec || []) {
+      if (keepLow) continue;
       if (sec.subBass !== undefined) sec.subBass = Math.min(sec.subBass, 0.5);
       if (sec.keepReg) continue;   // a section that voices its low register on purpose
       for (const k of ['choir', 'choir2']) { const c = sec[k]; if (c && typeof c === 'object' && c.reg && c.reg[0] < 48 && (c.inst || (def.inst && def.inst[k]) || '').toString().indexOf('Women') < 0) c.reg = [48, Math.max(c.reg[1], 62)]; }

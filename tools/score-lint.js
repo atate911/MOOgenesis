@@ -19,7 +19,7 @@ const problems = [], warns = [];
 const bad = (id, msg) => problems.push(id + ': ' + msg), warn = (id, msg) => warns.push(id + ': ' + msg);
 const TOP = new Set(['dyn', 'smpK', 'id', 'desc', 'bpm', 'meter', 'root', 'mode', 'tonic', 'oct', 'bassC', 'trim', 'tone', 'mix', 'fx', 'sends', 'duck', 'bassTie', 'padTie', 'lowMono', 'orch', 'perform', 'tight', 'holdLow', 'part', 'subBass', 'refreshed', 'upgrade', 'lowBand', 'hall', 'accept', 'tens', 'gate', 'gentle', 'eraSens', 'rubato', 'loopFrom', 'forms', 'alts', 'eraAlts', 'inst', 'ph', 'base', 'variantOf', 'sec', 'strong', 'lintMin', 'hidden', 'interlude', 'bridge', 'tags', 'eraWin', 'motif', 'motifInst', 'quotes', 'tomTune', '_p',
   // the symphonic profile (js/audio/music.js, symphonize) and the concert stage
-  'symphonic', 'symTone', '_sym', 'seating', 'seatingAlways', 'sing', 'just', 'pitchSpread', 'ensemble', 'behind', 'speak', 'conduct', 'breathe', 'press', 'bassXf', 'bassCut', 'tasto', 'timpClean']);
+  'symphonic', 'symTone', 'keepLow', '_sym', 'seating', 'seatingAlways', 'sing', 'just', 'pitchSpread', 'ensemble', 'behind', 'speak', 'conduct', 'breathe', 'press', 'bassXf', 'bassCut', 'tasto', 'timpClean']);
 const LAYERS = ['pad', 'pad2', 'pad3', 'bass', 'arp', 'arp2', 'drums', 'perc', 'timp', 'lead', 'lead2', 'lead3', 'lead4', 'bell', 'bell2', 'choir', 'choir2', 'choir3'];
 const SEC = new Set(['n', 'bars', 'barsVar', 'lv', 'cres', 'prog', 'fill', 'cr', 'rise', 'hit', 'tens', 'breath', 'verb', 'subBass', 'bpm', 'bpmTo', 'meter', 'strong', 'key', 'mode', 'tonic', 'rit', 'keepReg', 'mixK'].concat(LAYERS));
 const AXES = ['solitude', 'contact', 'tension', 'war', 'grief', 'grandeur', 'energy', 'dark', 'ceremony'];
